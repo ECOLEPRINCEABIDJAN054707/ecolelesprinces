@@ -949,88 +949,47 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
     const sheetsId = sheetsIdDirect;
     const infoEcole = getInfoEcole(sheetsId);
 
-    // Stratégie 1 : Chercher dans onglet SYNTHESE (1 seule requête !)
-    const onglets_prioritaires = ["SYNTHESE","ELEVES","BASE_ELEVES","LISTE_ELEVES"];
-    for (const onglet of onglets_prioritaires) {
-      try {
-        const range = encodeURIComponent(`${onglet}!A2:L5000`);
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
-        const res = await fetch(url);
-        if (!res.ok) continue;
-        const data = await res.json();
-        if (!data.values) continue;
-        for (const row of data.values) {
-          if (row[1] && String(row[1]).trim().toUpperCase() === matricule.toUpperCase()) {
-            return {
-              nom:      row[2]||"",
-              classe:   String(row[0]||onglet),
-              ecoleCode:codeEcole,
-              nomEcole: infoEcole.nom,
-              sheetsId: sheetsId,
-              tel1:     (row[6]||"").replace(/[\s\/]/g,""),
-              tel2:     (row[7]||"").replace(/[\s\/]/g,""),
-              tel3:     (row[8]||"").replace(/[\s\/]/g,""),
-              du:       parseFloat(row[3])||0,
-              verse:    parseFloat(row[4])||0,
-              solde:    parseFloat(row[5])||0,
-              gratuit:  false,
-            };
-          }
-        }
-      } catch(e2) { /* onglet inexistant */ }
+    // UNIQUEMENT onglet SYNTHESE — avec retry si 429
+    const range = encodeURIComponent(`SYNTHESE!A2:J5000`);
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+
+    let res = null;
+    // Essayer 3 fois avec délai si 429
+    for (let tentative = 0; tentative < 3; tentative++) {
+      if (tentative > 0) await new Promise(r => setTimeout(r, 2000 * tentative));
+      res = await fetch(url);
+      if (res.status !== 429) break;
     }
 
-    // Stratégie 2 : Récupérer liste onglets et chercher classe par classe
-    // avec délai pour éviter 429
-    const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}?key=${CONFIG.API_KEY}&fields=sheets.properties.title`;
-    const metaRes = await fetch(metaUrl);
-    if (!metaRes.ok) return null;
-    const metaData = await metaRes.json();
+    if (!res || !res.ok) return null;
 
-    let onglets = [];
-    if (metaData.sheets) {
-      onglets = metaData.sheets
-        .map(s => s.properties.title)
-        .filter(t => {
-          const tu = t.toUpperCase();
-          return !["IMPORT","SYNTHESE","ELEVES","ANNONCE","ABSENCE","NOTES_",
-            "BULLETIN","HIST_","STATS_","RECUS","JOURNAL","ALERTE","RAPPORT",
-            "HEURES","WHATSAP","ARCHIVE","RECHERCHE","HISTORIQUE","EMARG",
-            "CARTES","DASHBOARD","TABLEAU DE BORD","PAIEMENT","CONFIG",
-            "GUIDE","SOAKPE","GNONTINROU","KOUIBLY","AKEIKOI","ACADEMIE",
-            "GBOUGBO","RITA","ESBE"].some(x => tu.includes(x));
-        });
-    }
+    const data = await res.json();
+    if (!data.values) return null;
 
-    // Chercher avec délai entre requêtes
-    for (const onglet of onglets) {
-      try {
-        await new Promise(r => setTimeout(r, 150)); // délai 150ms
-        const range = encodeURIComponent(`${onglet}!A4:L200`);
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
-        const res = await fetch(url);
-        if (!res.ok) continue;
-        const data = await res.json();
-        if (!data.values) continue;
-        for (const row of data.values) {
-          if (row[1] && String(row[1]).trim().toUpperCase() === matricule.toUpperCase()) {
-            return {
-              nom:      row[2]||"",
-              classe:   onglet,
-              ecoleCode:codeEcole,
-              nomEcole: infoEcole.nom,
-              sheetsId: sheetsId,
-              tel1:     (row[6]||"").replace(/[\s\/]/g,""),
-              tel2:     (row[7]||"").replace(/[\s\/]/g,""),
-              tel3:     (row[8]||"").replace(/[\s\/]/g,""),
-              du:       parseFloat(row[3])||0,
-              verse:    parseFloat(row[4])||0,
-              solde:    parseFloat(row[5])||0,
-              gratuit:  false,
-            };
-          }
-        }
-      } catch(e2) { /* continuer */ }
+    for (const row of data.values) {
+      const matSheet = String(row[1] || "").trim();
+      if (matSheet.toUpperCase() === matricule.toUpperCase()) {
+        // Corriger zéro manquant sur téléphones
+        const fixTel = (v) => {
+          let t = String(v||"").replace(/[\s\/]/g,"");
+          if (t.length === 9 && !isNaN(t)) t = "0" + t;
+          return t;
+        };
+        return {
+          nom:      String(row[2]||""),
+          classe:   String(row[0]||""),
+          ecoleCode:codeEcole,
+          nomEcole: infoEcole.nom,
+          sheetsId: sheetsId,
+          tel1:     fixTel(row[6]),
+          tel2:     fixTel(row[7]),
+          tel3:     fixTel(row[8]),
+          du:       parseFloat(row[3])||0,
+          verse:    parseFloat(row[4])||0,
+          solde:    parseFloat(row[5])||0,
+          gratuit:  false,
+        };
+      }
     }
   } catch(e) {
     console.warn("Sheets inaccessible:", codeEcole, e.message);
