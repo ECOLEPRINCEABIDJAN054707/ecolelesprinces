@@ -859,6 +859,46 @@ document.addEventListener("click", e => {
 // ══════════════════════════════════════════════════════════
 // LOGIN
 // ══════════════════════════════════════════════════════════
+// Cache des photos chargees
+const PHOTOS_CACHE = {};
+// ID du Google Sheets contenant la liste des photos
+// Colonne A = Matricule, Colonne B = ID fichier Drive
+const PHOTOS_SHEETS_ID = "1rhkGvHSw2_9qIaL_2I4R0aNgzcsLwq8o3478Bfj3Tc8";
+
+async function chargerPhotoEleve(matricule, imgElement, fallback) {
+  // Verifier le cache
+  if (PHOTOS_CACHE[matricule]) {
+    imgElement.src = `https://drive.google.com/thumbnail?id=${PHOTOS_CACHE[matricule]}&sz=w200`;
+    return;
+  }
+  // Chercher dans le Sheets photos
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${PHOTOS_SHEETS_ID}/values/PHOTOS!A2:B5000?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const res = await fetch(url);
+    if (!res.ok) { imgElement.src = fallback; return; }
+    const data = await res.json();
+    if (!data.values) { imgElement.src = fallback; return; }
+    // Chercher le matricule
+    for (const row of data.values) {
+      if (String(row[0]||"").trim().toUpperCase() === matricule.toUpperCase()) {
+        const fileId = String(row[1]||"").trim();
+        if (fileId) {
+          PHOTOS_CACHE[matricule] = fileId;
+          imgElement.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w200`;
+          return;
+        }
+      }
+    }
+  } catch(e) {}
+  // Pas de photo - afficher initiales
+  imgElement.src = fallback;
+}
+
+function tryNextPhoto(img, matricule, fallback) {
+  img.onerror = null;
+  img.src = fallback;
+}
+
 async function login() {
   if (tentatives >= CONFIG.MAX_TENTATIVES) { demarrerBlocage(); return; }
 
@@ -949,14 +989,19 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
     const sheetsId = sheetsIdDirect;
     const infoEcole = getInfoEcole(sheetsId);
 
-    // UNIQUEMENT onglet SYNTHESE — avec retry si 429
+    // Chercher dans SYNTHESE avec retry automatique
     const range = encodeURIComponent(`SYNTHESE!A2:J5000`);
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
 
     let res = null;
-    // Essayer 3 fois avec délai si 429
-    for (let tentative = 0; tentative < 3; tentative++) {
-      if (tentative > 0) await new Promise(r => setTimeout(r, 2000 * tentative));
+    // Retry jusqu'a 4 fois si 429
+    for (let tentative = 0; tentative < 4; tentative++) {
+      if (tentative > 0) {
+        const delai = tentative * 3000; // 3s, 6s, 9s
+        document.getElementById("loadingEtape").textContent = 
+          `Attente ${delai/1000}s (limite API)... école ${codeEcole}`;
+        await new Promise(r => setTimeout(r, delai));
+      }
       res = await fetch(url);
       if (res.status !== 429) break;
     }
@@ -966,18 +1011,23 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
     const data = await res.json();
     if (!data.values) return null;
 
+    // Normaliser le matricule recherché
+    const matRecherche = matricule.trim().toUpperCase();
+
     for (const row of data.values) {
-      const matSheet = String(row[1] || "").trim();
-      if (matSheet.toUpperCase() === matricule.toUpperCase()) {
-        // Corriger zéro manquant sur téléphones
+      if (!row[1]) continue;
+      const matSheet = String(row[1]).trim().toUpperCase();
+      
+      // Comparaison exacte
+      if (matSheet === matRecherche) {
         const fixTel = (v) => {
-          let t = String(v||"").replace(/[\s\/]/g,"");
-          if (t.length === 9 && !isNaN(t)) t = "0" + t;
+          let t = String(v||"").replace(/[\s\/\.]/g,"");
+          if (t.length === 9 && !isNaN(Number(t))) t = "0" + t;
           return t;
         };
         return {
-          nom:      String(row[2]||""),
-          classe:   String(row[0]||""),
+          nom:      String(row[2]||"").trim(),
+          classe:   String(row[0]||"").trim(),
           ecoleCode:codeEcole,
           nomEcole: infoEcole.nom,
           sheetsId: sheetsId,
@@ -1094,14 +1144,34 @@ function afficherEspaceParent(eleve) {
   document.getElementById("headerTitle").textContent = `🏫 ${nomEcole}`;
   document.getElementById("headerSub").textContent = "Espace Parents — Suivi Scolaire";
 
-  // Carte élève
+  // Carte élève avec photo
+  const nomEncode = encodeURIComponent(eleve.nom);
+  const couleurSans = couleur.replace('#','');
+  const photoFallback = `https://ui-avatars.com/api/?name=${nomEncode}&background=${couleurSans}&color=fff&size=200&bold=true`;
+  
   document.getElementById("eleveCard").innerHTML = `
     <div class="eleve-header" style="background:linear-gradient(135deg,${couleur},${couleur}BB)">
-      <div class="eleve-mat-badge">${eleve.matricule}</div>
-      <div class="eleve-nom">${eleve.nom}</div>
-      <div class="eleve-infos">${eleve.classe} | ${nomEcole}</div>
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;">
+        <div style="width:70px;height:70px;border-radius:50%;border:3px solid white;overflow:hidden;flex-shrink:0;background:#fff;">
+          <img id="photoEleve"
+               src="${photoFallback}"
+               style="width:100%;height:100%;object-fit:cover;"
+               alt="Photo ${eleve.nom}">
+        </div>
+        <div style="flex:1;">
+          <div class="eleve-mat-badge">${eleve.matricule}</div>
+          <div class="eleve-nom">${eleve.nom}</div>
+          <div class="eleve-infos">${eleve.classe} | ${nomEcole}</div>
+        </div>
+      </div>
       <button class="btn-logout" onclick="logout()">Déconnexion</button>
     </div>`;
+
+  // Charger la photo de l'élève
+  setTimeout(function() {
+    const imgEl = document.getElementById("photoEleve");
+    if (imgEl) chargerPhotoEleve(eleve.matricule, imgEl, photoFallback);
+  }, 500);
 
   // Paiement
   const pay = document.getElementById("statutPay");
@@ -1605,26 +1675,30 @@ function mettreAJourMontant(eleve) {
   const matOrange = document.getElementById("matRefOrange");
   if (matOrange) matOrange.textContent = eleve.matricule || "—";
   
-  // Code Orange selon l'école
+  // Code Orange selon l'école de l'élève
   const codeOrange = document.getElementById("codeOrange");
   if (codeOrange) {
-    const codes = {
-      "25": "#144*43*1721*1#",  // CPP Les Princes
-      "pp": "#144*43*60*1#",    // CPP Professionnel
-      "pt": "#144*43*56*1#",    // CPP Technique
-      "pk": "#144*43*26*1#",    // Koutouan
-      "gv": "#144*43*29*1#",    // Guinglo Ville
-      "sk": "#144*43*27*1#",    // Soakpé-Douedy
-      "ap": "#144*43*23*1#",    // Akeikoi 1
-      "pp2":"#144*43*24*1#",    // Akeikoi 2
-      "ac": "#144*43*28*1#",    // Académie des Princes
-      "gb": "#144*43*59*1#",    // Gbougbo
-      "ep": "#144*43*58*1#",    // Kouibly Pro
-      "et": "#144*43*57*1#",    // Kouibly Technique
-      "esbe":"#144*43*30*1#",   // ESBE
+    // Correspondance code école -> code FastPay Orange (4 chiffres)
+    const codesOrange = {
+      "CPP":        { code: "1721", ussd: "#144*43*1721*1#" }, // Groupe Scolaire Les Princes
+      "ACADEMIE":   { code: "1728", ussd: "#144*43*1728*1#" }, // Les Princes Academie
+      "AKEIKOI_1":  { code: "1723", ussd: "#144*43*1723*1#" }, // Les Princes Akeikoi 1
+      "AKEIKOI_2":  { code: "1724", ussd: "#144*43*1724*1#" }, // Les Princes Akeikoi 2
+      "GUINGLO_V":  { code: "1729", ussd: "#144*43*1729*1#" }, // Les Princes Guinglo Ville
+      "GUINGLO":    { code: "1725", ussd: "#144*43*1725*1#" }, // Les Princes Guinglo
+      "KOUTOUAN":   { code: "1726", ussd: "#144*43*1726*1#" }, // Les Princes Koutouan
+      "SOAKPE":     { code: "1727", ussd: "#144*43*1727*1#" }, // Les Princes Soakpe
+      "ESBE":       { code: "1730", ussd: "#144*43*1730*1#" }, // Groupe Scolaire ESBE
+      "CPP_PRO":    { code: "1760", ussd: "#144*43*1760*1#" }, // CPP Professionnel
+      "CPP_TECH":   { code: "1756", ussd: "#144*43*1756*1#" }, // CPP Technique
+      "KOUIBLY_PRO":{ code: "1758", ussd: "#144*43*1758*1#" }, // Kouibly Pro
+      "KOUIBLY_TEC":{ code: "1757", ussd: "#144*43*1757*1#" }, // Kouibly Technique
+      "DABOU":      { code: "1759", ussd: "#144*43*1759*1#" }, // Dabou
+      "PETITE_ENF": { code: "1755", ussd: "#144*43*1755*1#" }, // Petite Enfance
     };
-    const prefix = (eleve.matricule||"").substring(0,2).toLowerCase();
-    codeOrange.textContent = codes[prefix] || "#144*43*1721*1#";
+    const ecoleCode = eleve.ecoleCode || eleve.ecole?.code || "CPP";
+    const infoOrange = codesOrange[ecoleCode] || { code: "1721", ussd: "#144*43*1721*1#" };
+    codeOrange.textContent = infoOrange.ussd;
   }
 }
 
