@@ -1680,21 +1680,22 @@ function mettreAJourMontant(eleve) {
   if (codeOrange) {
     // Correspondance code école -> code FastPay Orange (4 chiffres)
     const codesOrange = {
-      "CPP":        { code: "1721", ussd: "#144*43*1721*1#" }, // Groupe Scolaire Les Princes
-      "ACADEMIE":   { code: "1728", ussd: "#144*43*1728*1#" }, // Les Princes Academie
-      "AKEIKOI_1":  { code: "1723", ussd: "#144*43*1723*1#" }, // Les Princes Akeikoi 1
-      "AKEIKOI_2":  { code: "1724", ussd: "#144*43*1724*1#" }, // Les Princes Akeikoi 2
-      "GUINGLO_V":  { code: "1729", ussd: "#144*43*1729*1#" }, // Les Princes Guinglo Ville
-      "GUINGLO":    { code: "1725", ussd: "#144*43*1725*1#" }, // Les Princes Guinglo
-      "KOUTOUAN":   { code: "1726", ussd: "#144*43*1726*1#" }, // Les Princes Koutouan
-      "SOAKPE":     { code: "1727", ussd: "#144*43*1727*1#" }, // Les Princes Soakpe
-      "ESBE":       { code: "1730", ussd: "#144*43*1730*1#" }, // Groupe Scolaire ESBE
-      "CPP_PRO":    { code: "1760", ussd: "#144*43*1760*1#" }, // CPP Professionnel
-      "CPP_TECH":   { code: "1756", ussd: "#144*43*1756*1#" }, // CPP Technique
-      "KOUIBLY_PRO":{ code: "1758", ussd: "#144*43*1758*1#" }, // Kouibly Pro
-      "KOUIBLY_TEC":{ code: "1757", ussd: "#144*43*1757*1#" }, // Kouibly Technique
-      "DABOU":      { code: "1759", ussd: "#144*43*1759*1#" }, // Dabou
-      "PETITE_ENF": { code: "1755", ussd: "#144*43*1755*1#" }, // Petite Enfance
+      "CPP":         { code: "1721", ussd: "#144*43*1721*1#" }, // Groupe Scolaire Les Princes
+      "ACADEMIE":    { code: "1728", ussd: "#144*43*1728*1#" }, // Les Princes Academie
+      "AKEIKOI_1":   { code: "1723", ussd: "#144*43*1723*1#" }, // Les Princes Akeikoi 1
+      "AKEIKOI_2":   { code: "1724", ussd: "#144*43*1724*1#" }, // Les Princes Akeikoi 2
+      "GUINGLO_V":   { code: "1729", ussd: "#144*43*1729*1#" }, // Les Princes Guinglo Ville
+      "GUINGLO":     { code: "1725", ussd: "#144*43*1725*1#" }, // Les Princes Guinglo
+      "GNONTINROU":  { code: "1725", ussd: "#144*43*1725*1#" }, // Les Princes Guinglo/Gnontinrou
+      "KOUTOUAN":    { code: "1726", ussd: "#144*43*1726*1#" }, // Les Princes Koutouan
+      "SOAKPE":      { code: "1727", ussd: "#144*43*1727*1#" }, // Les Princes Soakpe
+      "ESBE":        { code: "1730", ussd: "#144*43*1730*1#" }, // Groupe Scolaire ESBE
+      "CPP_PRO":     { code: "1760", ussd: "#144*43*1760*1#" }, // CPP Professionnel
+      "CPP_TECH":    { code: "1756", ussd: "#144*43*1756*1#" }, // CPP Technique
+      "KOUIBLY_PRO": { code: "1758", ussd: "#144*43*1758*1#" }, // Kouibly Pro
+      "KOUIBLY_TEC": { code: "1757", ussd: "#144*43*1757*1#" }, // Kouibly Technique
+      "DABOU":       { code: "1759", ussd: "#144*43*1759*1#" }, // Dabou
+      "PETITE_ENF":  { code: "1755", ussd: "#144*43*1755*1#" }, // Petite Enfance
     };
     const ecoleCode = eleve.ecoleCode || eleve.ecole?.code || "CPP";
     const infoOrange = codesOrange[ecoleCode] || { code: "1721", ussd: "#144*43*1721*1#" };
