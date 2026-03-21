@@ -859,26 +859,42 @@ document.addEventListener("click", e => {
 // ══════════════════════════════════════════════════════════
 // LOGIN
 // ══════════════════════════════════════════════════════════
-// Essayer plusieurs formats de photo
+// Cache des photos chargees
+const PHOTOS_CACHE = {};
+// ID du Google Sheets contenant la liste des photos
+// Colonne A = Matricule, Colonne B = ID fichier Drive
+const PHOTOS_SHEETS_ID = "1rhkGvHSw2_9qIaL_2I4R0aNgzcsLwq8o3478Bfj3Tc8";
+
+async function chargerPhotoEleve(matricule, imgElement, fallback) {
+  // Verifier le cache
+  if (PHOTOS_CACHE[matricule]) {
+    imgElement.src = `https://drive.google.com/thumbnail?id=${PHOTOS_CACHE[matricule]}&sz=w200`;
+    return;
+  }
+  // Chercher dans le Sheets photos
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${PHOTOS_SHEETS_ID}/values/PHOTOS!A2:B5000?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const res = await fetch(url);
+    if (!res.ok) { imgElement.src = fallback; return; }
+    const data = await res.json();
+    if (!data.values) { imgElement.src = fallback; return; }
+    // Chercher le matricule
+    for (const row of data.values) {
+      if (String(row[0]||"").trim().toUpperCase() === matricule.toUpperCase()) {
+        const fileId = String(row[1]||"").trim();
+        if (fileId) {
+          PHOTOS_CACHE[matricule] = fileId;
+          imgElement.src = `https://drive.google.com/thumbnail?id=${fileId}&sz=w200`;
+          return;
+        }
+      }
+    }
+  } catch(e) {}
+  // Pas de photo - afficher initiales
+  imgElement.src = fallback;
+}
+
 function tryNextPhoto(img, matricule, fallback) {
-  const formats = ['jpg', 'jpeg', 'png', 'jfif', 'webp'];
-  const FOLDER_ID = "14FCpdm65AemHtUZCM1t_J9sTn1im_mCT";
-  
-  // D'abord essayer via thumbnail Drive (marche pour tous les formats)
-  // Si ca ne marche pas, essayer les URLs directes
-  if (!img.dataset.tried) {
-    img.dataset.tried = "1";
-    // Essayer URL directe avec le nom du fichier
-    img.src = `https://drive.google.com/thumbnail?id=${matricule}&sz=w200&authuser=0`;
-    return;
-  }
-  if (img.dataset.tried === "1") {
-    img.dataset.tried = "2";
-    // Essayer avec le dossier
-    img.src = `https://lh3.googleusercontent.com/d/${matricule}=w200-h200-p-k-nu`;
-    return;
-  }
-  // Si tout echoue - afficher initiales
   img.onerror = null;
   img.src = fallback;
 }
@@ -1137,9 +1153,8 @@ function afficherEspaceParent(eleve) {
     <div class="eleve-header" style="background:linear-gradient(135deg,${couleur},${couleur}BB)">
       <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;">
         <div style="width:70px;height:70px;border-radius:50%;border:3px solid white;overflow:hidden;flex-shrink:0;background:#fff;">
-          <img id="photoEleve_${eleve.matricule}"
-               src="https://drive.google.com/thumbnail?id=${eleve.matricule}&sz=w200"
-               onerror="tryNextPhoto(this, '${eleve.matricule}', '${photoFallback}')"
+          <img id="photoEleve"
+               src="${photoFallback}"
                style="width:100%;height:100%;object-fit:cover;"
                alt="Photo ${eleve.nom}">
         </div>
@@ -1151,6 +1166,12 @@ function afficherEspaceParent(eleve) {
       </div>
       <button class="btn-logout" onclick="logout()">Déconnexion</button>
     </div>`;
+
+  // Charger la photo de l'élève
+  setTimeout(function() {
+    const imgEl = document.getElementById("photoEleve");
+    if (imgEl) chargerPhotoEleve(eleve.matricule, imgEl, photoFallback);
+  }, 500);
 
   // Paiement
   const pay = document.getElementById("statutPay");
