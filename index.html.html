@@ -949,14 +949,19 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
     const sheetsId = sheetsIdDirect;
     const infoEcole = getInfoEcole(sheetsId);
 
-    // UNIQUEMENT onglet SYNTHESE — avec retry si 429
+    // Chercher dans SYNTHESE avec retry automatique
     const range = encodeURIComponent(`SYNTHESE!A2:J5000`);
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
 
     let res = null;
-    // Essayer 3 fois avec délai si 429
-    for (let tentative = 0; tentative < 3; tentative++) {
-      if (tentative > 0) await new Promise(r => setTimeout(r, 2000 * tentative));
+    // Retry jusqu'a 4 fois si 429
+    for (let tentative = 0; tentative < 4; tentative++) {
+      if (tentative > 0) {
+        const delai = tentative * 3000; // 3s, 6s, 9s
+        document.getElementById("loadingEtape").textContent = 
+          `Attente ${delai/1000}s (limite API)... école ${codeEcole}`;
+        await new Promise(r => setTimeout(r, delai));
+      }
       res = await fetch(url);
       if (res.status !== 429) break;
     }
@@ -966,18 +971,23 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
     const data = await res.json();
     if (!data.values) return null;
 
+    // Normaliser le matricule recherché
+    const matRecherche = matricule.trim().toUpperCase();
+
     for (const row of data.values) {
-      const matSheet = String(row[1] || "").trim();
-      if (matSheet.toUpperCase() === matricule.toUpperCase()) {
-        // Corriger zéro manquant sur téléphones
+      if (!row[1]) continue;
+      const matSheet = String(row[1]).trim().toUpperCase();
+      
+      // Comparaison exacte
+      if (matSheet === matRecherche) {
         const fixTel = (v) => {
-          let t = String(v||"").replace(/[\s\/]/g,"");
-          if (t.length === 9 && !isNaN(t)) t = "0" + t;
+          let t = String(v||"").replace(/[\s\/\.]/g,"");
+          if (t.length === 9 && !isNaN(Number(t))) t = "0" + t;
           return t;
         };
         return {
-          nom:      String(row[2]||""),
-          classe:   String(row[0]||""),
+          nom:      String(row[2]||"").trim(),
+          classe:   String(row[0]||"").trim(),
           ecoleCode:codeEcole,
           nomEcole: infoEcole.nom,
           sheetsId: sheetsId,
@@ -1094,12 +1104,26 @@ function afficherEspaceParent(eleve) {
   document.getElementById("headerTitle").textContent = `🏫 ${nomEcole}`;
   document.getElementById("headerSub").textContent = "Espace Parents — Suivi Scolaire";
 
-  // Carte élève
+  // Carte élève avec photo
+  const nomEncode = encodeURIComponent(eleve.nom);
+  const couleurSans = couleur.replace('#','');
+  const photoFallback = `https://ui-avatars.com/api/?name=${nomEncode}&background=${couleurSans}&color=fff&size=200&bold=true`;
+  
   document.getElementById("eleveCard").innerHTML = `
     <div class="eleve-header" style="background:linear-gradient(135deg,${couleur},${couleur}BB)">
-      <div class="eleve-mat-badge">${eleve.matricule}</div>
-      <div class="eleve-nom">${eleve.nom}</div>
-      <div class="eleve-infos">${eleve.classe} | ${nomEcole}</div>
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;">
+        <div style="width:70px;height:70px;border-radius:50%;border:3px solid white;overflow:hidden;flex-shrink:0;background:#fff;">
+          <img src="https://drive.google.com/thumbnail?id=${eleve.matricule}&sz=w200"
+               onerror="this.onerror=null;this.src='${photoFallback}'"
+               style="width:100%;height:100%;object-fit:cover;"
+               alt="Photo ${eleve.nom}">
+        </div>
+        <div style="flex:1;">
+          <div class="eleve-mat-badge">${eleve.matricule}</div>
+          <div class="eleve-nom">${eleve.nom}</div>
+          <div class="eleve-infos">${eleve.classe} | ${nomEcole}</div>
+        </div>
+      </div>
       <button class="btn-logout" onclick="logout()">Déconnexion</button>
     </div>`;
 
