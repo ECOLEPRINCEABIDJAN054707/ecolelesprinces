@@ -717,37 +717,7 @@ function getSheetsId(matricule) {
   const mat = (matricule || "").trim().toUpperCase();
   
   // Correspondance matricule → Sheets ID
-  const MATRICULE_SHEETS = {
-    // CPP Les Princes Abobo
-    "25": "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI",
-    "24": "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI",
-    "23": "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI",
-    // Gnontinrou (PG...)
-    "PG": "1fWeG8aP7du5EHxUAtiUaIxpuZ1lwnPSmIsXoZKKQo7U",
-    // Académie (AP, CB)
-    "AP": "16gHm_I9NziBAeqXbvimaxU1LfN14e0bjYMPNZBe3l_Q",
-    "CB": "16gHm_I9NziBAeqXbvimaxU1LfN14e0bjYMPNZBe3l_Q",
-    // Akéikoi 2 (PP)
-    "PP": "11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog",
-    // Matricules numériques CPP Pro/Tech
-    "19": "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs",
-    "20": "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs",
-    "21": "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs",
-    "18": "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs",
-    "17": "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc",
-    "16": "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc",
-    "15": "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc",
-    "14": "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc",
-    // ETL Kouibly
-    "26": "1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s",
-  };
-
-  // Essayer préfixe 2 chiffres/lettres
-  const p2 = mat.substring(0,2);
-  if (MATRICULE_SHEETS[p2]) return MATRICULE_SHEETS[p2];
-  if (MATRICULE_SHEETS[p2.toUpperCase()]) return MATRICULE_SHEETS[p2.toUpperCase()];
-  
-  // Par défaut = chercher dans toutes les écoles (via chercherDansEcole)
+  // Plus de préfixes — la recherche se fait dans toutes les écoles
   return CONFIG.SHEETS_ID;
 }
 
@@ -979,57 +949,47 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
     const sheetsId = sheetsIdDirect;
     const infoEcole = getInfoEcole(sheetsId);
 
-    // Récupérer liste des onglets
-    const metaUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}?key=${CONFIG.API_KEY}&fields=sheets.properties.title`;
-    const metaRes = await fetch(metaUrl);
-    const metaData = await metaRes.json();
+    // UNIQUEMENT onglet SYNTHESE — avec retry si 429
+    const range = encodeURIComponent(`SYNTHESE!A2:J5000`);
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
 
-    let onglets = [];
-    if (metaData.sheets) {
-      onglets = metaData.sheets
-        .map(s => s.properties.title)
-        .filter(t => !["IMPORT","SYNTHESE","ANNONCES","ABSENCES","NOTES_T",
-          "BULLETIN","HIST_","STATS_","RECUS","JOURNAL","ALERTE","RAPPORT",
-          "HEURES","WHATSAPP","ARCHIVE","RECHERCHE","HISTORIQUE","EMARG",
-          "CARTES","DASHBOARD","CENTRALE"].some(x => t.toUpperCase().includes(x)));
+    let res = null;
+    // Essayer 3 fois avec délai si 429
+    for (let tentative = 0; tentative < 3; tentative++) {
+      if (tentative > 0) await new Promise(r => setTimeout(r, 2000 * tentative));
+      res = await fetch(url);
+      if (res.status !== 429) break;
     }
 
-    if (onglets.length === 0) {
-      onglets = ["GSA","MSA","PSA","CP1A","CP1B","CP2A","CP2B","CP2C",
-                 "CE1A","CE1B","CE1C","CE2A","CE2B","CM1A","CM1B","CM2A","CM2B",
-                 "6EME 1","6EME 2","5EME 1","5EME 2","4EME 1","4EME 2",
-                 "3EME 1","3EME 2","2NDE","1ERE","TLE",
-                 "1A BT BATIMENT","1A BT ELT BAT","1A BT TOPO","1A BT SMS",
-                 "1A BT ELN","1A BT COMPTA","1A BT SECRETARIAT","1A BT TH",
-                 "2NDE F2","2NDE G1","2NDE G2","1ERE G2","2NDE AB"];
-    }
+    if (!res || !res.ok) return null;
 
-    for (const onglet of onglets) {
-      try {
-        const range = encodeURIComponent(`${onglet}!A4:L500`);
-        const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
-        const res = await fetch(url);
-        const data = await res.json();
-        if (!data.values) continue;
-        for (const row of data.values) {
-          if (row[1] && String(row[1]).trim().toUpperCase() === matricule.toUpperCase()) {
-            return {
-              nom:      row[2]||"",
-              classe:   onglet,
-              ecoleCode:codeEcole,
-              nomEcole: infoEcole.nom,
-              sheetsId: sheetsId,
-              tel1:     (row[6]||"").replace(/[\s\/]/g,""),
-              tel2:     (row[7]||"").replace(/[\s\/]/g,""),
-              tel3:     (row[8]||"").replace(/[\s\/]/g,""),
-              du:       parseFloat(row[3])||0,
-              verse:    parseFloat(row[4])||0,
-              solde:    parseFloat(row[5])||0,
-              gratuit:  false,
-            };
-          }
-        }
-      } catch(e2) { /* continuer */ }
+    const data = await res.json();
+    if (!data.values) return null;
+
+    for (const row of data.values) {
+      const matSheet = String(row[1] || "").trim();
+      if (matSheet.toUpperCase() === matricule.toUpperCase()) {
+        // Corriger zéro manquant sur téléphones
+        const fixTel = (v) => {
+          let t = String(v||"").replace(/[\s\/]/g,"");
+          if (t.length === 9 && !isNaN(t)) t = "0" + t;
+          return t;
+        };
+        return {
+          nom:      String(row[2]||""),
+          classe:   String(row[0]||""),
+          ecoleCode:codeEcole,
+          nomEcole: infoEcole.nom,
+          sheetsId: sheetsId,
+          tel1:     fixTel(row[6]),
+          tel2:     fixTel(row[7]),
+          tel3:     fixTel(row[8]),
+          du:       parseFloat(row[3])||0,
+          verse:    parseFloat(row[4])||0,
+          solde:    parseFloat(row[5])||0,
+          gratuit:  false,
+        };
+      }
     }
   } catch(e) {
     console.warn("Sheets inaccessible:", codeEcole, e.message);
