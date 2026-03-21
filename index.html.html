@@ -859,6 +859,30 @@ document.addEventListener("click", e => {
 // ══════════════════════════════════════════════════════════
 // LOGIN
 // ══════════════════════════════════════════════════════════
+// Essayer plusieurs formats de photo
+function tryNextPhoto(img, matricule, fallback) {
+  const formats = ['jpg', 'jpeg', 'png', 'jfif', 'webp'];
+  const FOLDER_ID = "14FCpdm65AemHtUZCM1t_J9sTn1im_mCT";
+  
+  // D'abord essayer via thumbnail Drive (marche pour tous les formats)
+  // Si ca ne marche pas, essayer les URLs directes
+  if (!img.dataset.tried) {
+    img.dataset.tried = "1";
+    // Essayer URL directe avec le nom du fichier
+    img.src = `https://drive.google.com/thumbnail?id=${matricule}&sz=w200&authuser=0`;
+    return;
+  }
+  if (img.dataset.tried === "1") {
+    img.dataset.tried = "2";
+    // Essayer avec le dossier
+    img.src = `https://lh3.googleusercontent.com/d/${matricule}=w200-h200-p-k-nu`;
+    return;
+  }
+  // Si tout echoue - afficher initiales
+  img.onerror = null;
+  img.src = fallback;
+}
+
 async function login() {
   if (tentatives >= CONFIG.MAX_TENTATIVES) { demarrerBlocage(); return; }
 
@@ -1113,8 +1137,9 @@ function afficherEspaceParent(eleve) {
     <div class="eleve-header" style="background:linear-gradient(135deg,${couleur},${couleur}BB)">
       <div style="display:flex;align-items:center;gap:12px;padding:8px 12px;">
         <div style="width:70px;height:70px;border-radius:50%;border:3px solid white;overflow:hidden;flex-shrink:0;background:#fff;">
-          <img src="https://drive.google.com/thumbnail?id=${eleve.matricule}&sz=w200"
-               onerror="this.onerror=null;this.src='${photoFallback}'"
+          <img id="photoEleve_${eleve.matricule}"
+               src="https://drive.google.com/thumbnail?id=${eleve.matricule}&sz=w200"
+               onerror="tryNextPhoto(this, '${eleve.matricule}', '${photoFallback}')"
                style="width:100%;height:100%;object-fit:cover;"
                alt="Photo ${eleve.nom}">
         </div>
