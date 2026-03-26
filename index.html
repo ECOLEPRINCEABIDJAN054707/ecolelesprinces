@@ -1097,7 +1097,8 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
     const data = await res.json();
     if (!data.values) return null;
 
-    for (const row of data.values) {
+ for (let i = 3; i < data.values.length; i++) {
+      const row = data.values[i];
       const mat = String(row[1]||"").trim().toUpperCase();
       if (mat !== matricule) continue;
       return {
