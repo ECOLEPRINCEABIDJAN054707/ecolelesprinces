@@ -1520,13 +1520,13 @@ function afficherNotesVides(div) {
 async function chargerExamenBlanc(eleve) {
   const div = document.getElementById("examenBlancBody");
   if (!div) return;
-  const classeUpper = (eleve.classe || "").toUpperCase();
+const classe = (eleve.classe || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
   let nomOnglet = null;
-  if (classeUpper.includes("3") && (classeUpper.includes("EME") || classeUpper.includes("ÈME") || classeUpper.includes("EME"))) {
+  if (classe.includes("3")) {
     nomOnglet = "EXAM_BLANC_3EME";
-  } else if (classeUpper.includes("TLE") && classeUpper.includes("A")) {
+  } else if (classe.includes("tle") && (classe.includes("a") || classe.includes("2"))) {
     nomOnglet = "EXAM_BLANC_TLE_A2";
-  } else if (classeUpper.includes("TLE") && classeUpper.includes("D")) {
+  } else if (classe.includes("tle") && classe.includes("d")) {
     nomOnglet = "EXAM_BLANC_TLE_D";
   }
   if (!nomOnglet) return;
