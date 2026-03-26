@@ -1082,7 +1082,7 @@ async function login() {
 async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
   try {
     const sheetsId = sheetsIdDirect;
-    const range = encodeURIComponent("SYNTHESE!A2:L5000");
+    const range = encodeURIComponent("SYNTHESE!A1:L5000");
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
 
     let res = null;
@@ -1101,7 +1101,7 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
       const mat = String(row[1]||"").trim().toUpperCase();
       if (mat !== matricule) continue;
       return {
-        classe:    String(row[0]||"").trim(),
+        classe:    String((data.values[1]||[])[0]||"").trim(),
         matricule: mat,
         nom:       String(row[2]||"").trim(),
         du:        parseFloat(row[3])||0,
