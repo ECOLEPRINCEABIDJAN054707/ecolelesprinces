@@ -1539,7 +1539,7 @@ async function chargerExamenBlanc(eleve) {
     if (!data.values || data.values.length < 5) return;
     const mat = eleve.matricule.trim().toUpperCase();
     let eleveRow = null;
-    for (let i = 4; i < data.values.length; i++) {
+    for (let i = 3; i < data.values.length; i++) {
       const row = data.values[i];
       if (!row[1]) continue;
       if (String(row[1]).trim().toUpperCase() === mat) { eleveRow = row; break; }
