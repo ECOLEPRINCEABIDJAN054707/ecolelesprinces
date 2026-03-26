@@ -1093,7 +1093,7 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
     for (let li = 0; li < Math.min(3, data.values.length); li++) {
       const val = String((data.values[li]||[])[0]||"").trim();
       if (val && isNaN(parseFloat(val)) && val.length > 5) {
-        classeDetectee = val;
+        classeDetectee = val.split(/[—\-]/)[0].trim();
         break;
       }
     }
