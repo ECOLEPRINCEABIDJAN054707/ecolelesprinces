@@ -408,7 +408,17 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
       </div>
     </div>
   </div>
-
+<!-- EXAMEN BLANC -->
+  <div class="section" id="sectionExamenBlanc" style="display:none;">
+    <div class="sec-header" style="background:linear-gradient(135deg,#E65100,#F57F17)" onclick="toggleSec(this)">
+      🎯 EXAMEN BLANC <span>v</span>
+    </div>
+    <div class="sec-body" id="examenBlancBody">
+      <div style="text-align:center;padding:20px;color:#666;">
+        <p style="font-size:0.85em;">Chargement...</p>
+      </div>
+    </div>
+  </div>
   <!-- ABSENCES -->
   <div class="section">
     <div class="sec-header" style="background:#E65100" onclick="toggleSec(this)">
@@ -1260,7 +1270,8 @@ function afficherEspaceParent(eleve) {
     // Chercher les notes dans Google Sheets
     chargerAnnonces(eleve);
     chargerNotes(eleve);
-    chargerAbsences(eleve);
+   chargerAbsences(eleve);
+    chargerExamenBlanc(eleve);
     mettreAJourMontant(eleve);
     afficherClubs(eleve);
     chargerReponsesMessages(eleve);
@@ -1506,7 +1517,86 @@ function afficherNotesVides(div) {
 }
 
 // ============================================================
-// CHARGER LES ABSENCES
+async function chargerExamenBlanc(eleve) {
+  const div = document.getElementById("examenBlancBody");
+  if (!div) return;
+  const classeUpper = (eleve.classe || "").toUpperCase();
+  let nomOnglet = null;
+  if (classeUpper.includes("3") && (classeUpper.includes("EME") || classeUpper.includes("ÈME") || classeUpper.includes("EME"))) {
+    nomOnglet = "EXAM_BLANC_3EME";
+  } else if (classeUpper.includes("TLE") && classeUpper.includes("A")) {
+    nomOnglet = "EXAM_BLANC_TLE_A2";
+  } else if (classeUpper.includes("TLE") && classeUpper.includes("D")) {
+    nomOnglet = "EXAM_BLANC_TLE_D";
+  }
+  if (!nomOnglet) return;
+  try {
+    const sheetsId = eleve.sheetsId || getSheetsId(eleve.matricule);
+    const range = encodeURIComponent(nomOnglet + "!A1:Z200");
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.values || data.values.length < 5) return;
+    const mat = eleve.matricule.trim().toUpperCase();
+    let eleveRow = null;
+    for (let i = 4; i < data.values.length; i++) {
+      const row = data.values[i];
+      if (!row[1]) continue;
+      if (String(row[1]).trim().toUpperCase() === mat) { eleveRow = row; break; }
+    }
+    if (!eleveRow) return;
+    const headers = data.values[2] || [];
+    const totalCols = eleveRow.length;
+    const colAppre   = totalCols - 1;
+    const colMention = totalCols - 2;
+    const colRang    = totalCols - 3;
+    const colMoy     = totalCols - 4;
+    const colTotal   = totalCols - 5;
+    const moy     = parseFloat(eleveRow[colMoy]) || 0;
+    const rang    = eleveRow[colRang] || "-";
+    const mention = eleveRow[colMention] || "-";
+    const appre   = eleveRow[colAppre] || "";
+    const mc = moy >= 14 ? "#2E7D32" : moy >= 10 ? "#E65100" : "#C62828";
+    const bg = moy >= 14 ? "#E8F5E9" : moy >= 10 ? "#FFF3E0" : "#FFEBEE";
+    let lignes = "";
+    for (let c = 3; c < colTotal; c++) {
+      const matNom = headers[c] || "";
+      if (!matNom) continue;
+      const note = eleveRow[c];
+      const noteVal = parseFloat(note);
+      const noteStr = (!isNaN(noteVal)) ? noteVal.toFixed(2) : "—";
+      const nc = noteVal >= 14 ? "#2E7D32" : noteVal >= 10 ? "#1F4E79" : "#C62828";
+      lignes += `<tr style="border-bottom:1px solid #eee;">
+        <td style="padding:6px 10px;font-size:0.82em;font-weight:bold;">${matNom}</td>
+        <td style="text-align:center;padding:6px;font-weight:bold;color:${nc}">${noteStr}</td>
+      </tr>`;
+    }
+    div.innerHTML = `
+      <div style="background:#FFF3E0;border-radius:8px;padding:10px 14px;margin-bottom:12px;border-left:4px solid #E65100;">
+        <p style="font-size:0.8em;color:#E65100;font-weight:bold;">🎯 EXAMEN BLANC — Document d'entraînement</p>
+      </div>
+      <table style="width:100%;border-collapse:collapse;margin-bottom:12px;">
+        <tr style="background:#1F4E79;color:white;">
+          <th style="text-align:left;padding:7px 10px;font-size:0.78em;">MATIÈRE</th>
+          <th style="text-align:center;padding:7px;font-size:0.78em;">NOTE/20</th>
+        </tr>
+        ${lignes}
+      </table>
+      <div style="background:${bg};border-radius:10px;padding:14px;border-top:3px solid ${mc};display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:10px;">
+        <div><p style="font-size:0.78em;color:#666;margin-bottom:2px;">MOYENNE</p>
+          <p style="font-size:2em;font-weight:bold;color:${mc}">${moy.toFixed(2)}<span style="font-size:0.45em;color:#999">/20</span></p></div>
+        <div><p style="font-size:0.78em;color:#666;margin-bottom:2px;">RANG</p>
+          <p style="font-size:1.3em;font-weight:bold;color:#4A148C">${rang}</p></div>
+        <div><span style="background:${mc};color:white;padding:5px 12px;border-radius:12px;font-size:0.85em;font-weight:bold;">${mention}</span></div>
+      </div>
+      <div style="background:#FFF9C4;border-left:4px solid #F57F17;border-radius:0 8px 8px 0;padding:10px 14px;">
+        <p style="font-size:0.75em;color:#777;font-weight:bold;margin-bottom:4px;">💬 APPRÉCIATION :</p>
+        <p style="font-size:0.88em;font-weight:bold;color:#E65100;">${appre || "En attente de recalcul..."}</p>
+      </div>`;
+    document.getElementById("sectionExamenBlanc").style.display = "block";
+  } catch(e) { console.warn("Examen blanc:", e); }
+}
+  // CHARGER LES ABSENCES
 // ============================================================
 async function chargerAbsences(eleve) {
   const div = document.getElementById("absencesBody");
