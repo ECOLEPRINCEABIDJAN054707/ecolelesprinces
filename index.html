@@ -1089,14 +1089,17 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
 
     // Detecter la classe dans les 3 premieres lignes
     // Cherche la premiere valeur texte (pas un nombre) de longueur > 5
-    let classeDetectee = "";
-    for (let li = 0; li < Math.min(3, data.values.length); li++) {
-      const val = String((data.values[li]||[])[0]||"").trim();
-      if (val && isNaN(parseFloat(val)) && val.length > 5) {
-        classeDetectee = val.split(/[—\-]/)[0].trim();
-        break;
-      }
-    }
+// Lire la classe depuis la cellule A1 de chaque onglet classe
+// On cherche dans toutes les lignes du debut une valeur qui ressemble a une classe
+let classeDetectee = "";
+for (let li = 0; li < Math.min(4, data.values.length); li++) {
+  const val = String((data.values[li]||[])[0]||"").trim();
+  const valUp = val.toUpperCase();
+  if (val && (valUp.includes("EME") || valUp.includes("ÈME") || valUp.includes("TLE") || valUp.includes("NDE") || valUp.includes("ERE") || valUp.includes("EX"))) {
+    classeDetectee = val.split(/[—\-\|]/)[0].trim();
+    break;
+  }
+}
 
     for (let i = 3; i < data.values.length; i++) {
       const row = data.values[i];
