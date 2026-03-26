@@ -1102,7 +1102,7 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
       const mat = String(row[1]||"").trim().toUpperCase();
       if (mat !== matricule) continue;
       return {
-        classe:    String((data.values[1]||[])[0]||"").trim(),
+        classe:    String((data.values[0]||[])[0]||"").trim(),
         matricule: mat,
         nom:       String(row[2]||"").trim(),
         du:        parseFloat(row[3])||0,
