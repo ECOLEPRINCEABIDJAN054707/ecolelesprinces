@@ -316,7 +316,6 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
 </div>
 
 <div class="login-wrapper" id="loginWrapper">
-<div class="login-wrapper" id="loginWrapper">
   <div class="login-box">
     <p class="login-titre"> Acces Espace Parents</p>
     <p class="login-sous">Entrez les informations ci-dessous pour acceder au dossier scolaire de votre enfant</p>
@@ -1119,8 +1118,8 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
         du:        parseFloat(row[3])||0,
         verse:     parseFloat(row[4])||0,
         solde:     parseFloat(row[5])||0,
-        tel1:      String(row[6]||"").trim(),
-        tel2:      String(row[7]||"").trim(),
+      tel1:      String(row[6]||"").trim(),
+      tel2:      String(row[8]||"").trim(),,
         tel3:      String(row[8]||"").trim(),
         statut:    String(row[9]||"").trim(),
         club1:     String(row[10]||"").trim(),
