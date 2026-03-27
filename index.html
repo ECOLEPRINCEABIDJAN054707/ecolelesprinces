@@ -304,17 +304,11 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
     style="width:70px;height:70px;object-fit:contain;border-radius:50%;
            background:rgba(255,255,255,0.15);padding:6px;margin-bottom:10px;
            display:block;margin-left:auto;margin-right:auto;">
-  <h1 id="headerTitle">ECOLE LES PRINCES</h1>
+  <h1 id="headerTitle"> ECOLE LES PRINCES</h1>
   <p id="headerSub">Espace Parents - Suivi Scolaire en Ligne</p>
 </div>
 
 <!-- LOGIN -->
-  <div style="width:100%;max-height:200px;overflow:hidden;">
-  <img src="ecole.jpg" 
-       style="width:100%;height:200px;object-fit:cover;display:block;" 
-       alt="CPP Les Princes d'Abidjan">
-</div>
-
 <div class="login-wrapper" id="loginWrapper">
   <div class="login-box">
     <p class="login-titre"> Acces Espace Parents</p>
@@ -1096,30 +1090,22 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
     // Lire la classe depuis la ligne 1 colonne A (meme si fusionnee)
     // Format: "3EME EX1 — COLLEGE PRIVE LES PRINCES D'ABIDJAN — 2025-2026"
     // On prend juste la partie avant le premier "—"
-    // Lire la classe depuis ligne 1 col A
-    // Ignorer si c'est l'onglet SYNTHESE global (contient "SYNTHESE" ou "PSA")
     const ligne1A = String((data.values[0]||[])[0]||"").trim();
-    const ligne1Up = ligne1A.toUpperCase();
-    let classeDetectee = "";
-    if (ligne1Up.includes("SYNTHESE") || ligne1Up.includes("PSA") || ligne1Up.includes("BASE_")) {
-      classeDetectee = ""; // onglet non-classe, on skip
-    } else {
-      classeDetectee = ligne1A.replace(/\s*—\s*/, " | ");
-    }
+    const classeDetectee = ligne1A.replace('—', '|');
 
     for (let i = 3; i < data.values.length; i++) {
       const row = data.values[i];
       const mat = String(row[1]||"").trim().toUpperCase();
       if (mat !== matricule) continue;
-  return {
-  classe:    String(row[7]||"").trim(), 
+      return {
+        classe:    classeDetectee,
         matricule: mat,
         nom:       String(row[2]||"").trim(),
         du:        parseFloat(row[3])||0,
         verse:     parseFloat(row[4])||0,
         solde:     parseFloat(row[5])||0,
-      tel1:      String(row[6]||"").trim(),
-      tel2:      String(row[8]||"").trim(),
+        tel1:      String(row[6]||"").trim(),
+        tel2:      String(row[7]||"").trim(),
         tel3:      String(row[8]||"").trim(),
         statut:    String(row[9]||"").trim(),
         club1:     String(row[10]||"").trim(),
