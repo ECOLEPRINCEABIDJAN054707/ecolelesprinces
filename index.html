@@ -1407,7 +1407,7 @@ async function chargerNotes(eleve) {
     let rowTrouve = null, trimNom = "";
 
     for (let t = 0; t < trimestres.length; t++) {
-      const range = encodeURIComponent(`${trimestres[t]}!A1:R2000`);
+      const range = encodeURIComponent(`${trimestres[t]}!A1:T2000`);
       const sheetsId = getSheetsId(mat);
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
       try {
@@ -1465,6 +1465,39 @@ async function chargerNotes(eleve) {
       ]},
     ];
 
+    // Lire Moyenne et Rang si disponibles (colonnes 19 et 20)
+    const moyenneVal = row[18] !== undefined && row[18] !== "" && row[18] !== null
+      ? parseFloat(String(row[18]).replace(",",".")) : null;
+    const rangVal = row[19] !== undefined && row[19] !== "" && row[19] !== null
+      ? String(row[19]).trim() : null;
+
+    // Bloc Moyenne si disponible
+    let blocMoyenne = "";
+    if (moyenneVal !== null && !isNaN(moyenneVal)) {
+      const bgMoy   = moyenneVal >= 10 ? "#E8F5E9" : "#FFEBEE";
+      const bdMoy   = moyenneVal >= 10 ? "#2E7D32" : "#C62828";
+      const fgMoy   = moyenneVal >= 10 ? "#2E7D32" : "#C62828";
+      const emojMoy = moyenneVal >= 14 ? "🏆" : moyenneVal >= 10 ? "✅" : "⚠️";
+      const mention = moyenneVal >= 16 ? "Très Bien" : moyenneVal >= 14 ? "Bien"
+                    : moyenneVal >= 12 ? "Assez Bien" : moyenneVal >= 10 ? "Passable" : "Insuffisant";
+      const rangTxt = rangVal ? `<span style="font-size:0.78em;color:#666;margin-left:8px;">Rang : <strong>${rangVal}</strong></span>` : "";
+      blocMoyenne = `
+        <div style="background:${bgMoy};border:2px solid ${bdMoy};border-radius:10px;
+          padding:14px;margin-bottom:14px;text-align:center;">
+          <p style="font-size:0.75em;color:${fgMoy};font-weight:bold;margin-bottom:4px;">
+            MOYENNE GÉNÉRALE DU TRIMESTRE
+          </p>
+          <div style="display:flex;align-items:center;justify-content:center;gap:12px;">
+            <span style="font-size:2.2em;font-weight:bold;color:${fgMoy};">
+              ${emojMoy} ${moyenneVal.toFixed(2)}
+            </span>
+            <span style="font-size:0.8em;color:white;background:${fgMoy};
+              padding:4px 10px;border-radius:20px;font-weight:bold;">${mention}</span>
+          </div>
+          ${rangTxt}
+        </div>`;
+    }
+
     let html = `
       <div style="background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;
         border-left:4px solid #1F4E79;">
@@ -1475,6 +1508,7 @@ async function chargerNotes(eleve) {
           Classe : <strong>${niveau}</strong> — Matricule : <strong>${mat}</strong>
         </p>
       </div>
+      ${blocMoyenne}
       <div style="background:#FFF8E1;border:1px solid #FFD54F;border-radius:8px;
         padding:10px 12px;margin-bottom:14px;">
         <p style="font-size:0.76em;color:#6D4C10;line-height:1.6;">
