@@ -785,10 +785,9 @@ const NOMS_ECOLES = {
 };
 
 function getSheetsId(matricule) {
-  const mat = (matricule || "").trim().toUpperCase();
-  
-  // Correspondance matricule -> Sheets ID
-  // Plus de prefixes - la recherche se fait dans toutes les ecoles
+  // Utiliser le sheetsId de l'élève connecté si disponible
+  const eleveConnecte = JSON.parse(sessionStorage.getItem("eleveConnecte") || "{}");
+  if (eleveConnecte && eleveConnecte.sheetsId) return eleveConnecte.sheetsId;
   return CONFIG.SHEETS_ID;
 }
 
