@@ -1439,8 +1439,8 @@ async function chargerNotes(eleve) {
     let rowTrouve = null, trimNom = "";
 
     for (let t = 0; t < trimestres.length; t++) {
-      const range = encodeURIComponent(`${trimestres[t]}!A1:R2000`);
-      const sheetsId = getSheetsId(mat);
+      const range = encodeURIComponent(`${trimestres[t]}!A1:T2000`);
+      const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
       try {
         const res = await fetch(url);
@@ -1580,7 +1580,7 @@ async function chargerAbsences(eleve) {
   try {
     const mat = eleve.matricule;
     const range = encodeURIComponent(`ABSENCES!B4:I200`);
-    const sheetsId = getSheetsId(mat); const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID; const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
     const res = await fetch(url);
     const data = await res.json();
 
@@ -2154,7 +2154,7 @@ async function chargerReponsesMessages(eleve) {
 async function chargerAnnonces(eleve) {
   try {
     const range = encodeURIComponent(`ANNONCES!A4:G60`);
-    const sheetsId = getSheetsId(mat); const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID; const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
     const res = await fetch(url);
     const data = await res.json();
 
