@@ -2021,23 +2021,16 @@ async function envoyerViaAppsScript(row, type) {
   // URLs Web App par ecole
   const WEBAPP_URLS = {
     "CPP":        "https://script.google.com/macros/s/AKfycbwVFM7w6ro4Yf6HO9-EpiWfBBY3Ie1P4wqJnN03v93mf8uUF_1J0hTzxTcRFjKT1NWQ/exec",
-    "AKEIKOI_1":  "https://script.google.com/macros/s/AKfycbzgmV4TS8Mzn6GDwhObXVSyARWd68_rL7-yuFaq13qg6FaJMwDokDnBDCsrX8FS2sCY/exec",
+    "AKEIKOI_1":  "https://script.google.com/macros/s/AKfycbwgbnr_LJRpm3Oalsr0zVXydWfT6IWvfWGt_D58J4U61a0InS020n00aplQOAuLKe0C-w/exec",
+    "AKEIKOI_2":  "https://script.google.com/macros/s/AKfycbyHlMbxguRQvwpJOk9p0yIHlwL84wa0Zmg0E1d-FWA_kuEiUNHjJcrwuh4hOTscpkBGlA/exec",
     "GNONTINROU": "https://script.google.com/macros/s/AKfycbzzzLF_V2-2BgAHqyjzRLAcWJnq8BzKvcUzB2uG-JzkaiDCSOaCyySvxnmfyPxPwQPn/exec",
     "GUINGLO_V":  "https://script.google.com/macros/s/AKfycbzUvysrHpmcWSPieSrY37r4iLtGP4RTQpbh5CJydTExB0A5c3q4TwvRJMXytVLzg2dk/exec",
     "KOUTOUAN":   "https://script.google.com/macros/s/AKfycbwpJRfiiD5MosYKNICaOfF3At0BvjK7rkkeMJ-_dAOpZ0bjWfwR47xbTE7_T77P8NLrtw/exec",
     "SOAKPE":     "https://script.google.com/macros/s/AKfycbyUxGKPqRAHMf9eCirQkj0CvudJmoj8dz3WoeTFsz1rcWVS8Lsy6aWQejYtg6uuRKa6/exec",
-    "AKEIKOI_2":  "https://script.google.com/macros/s/AKfycbyHlMbxguRQvwpJOk9p0yIHlwL84wa0Zmg0E1d-FWA_kuEiUNHjJcrwuh4hOTscpkBGlA/exec",
     "CPP_PRO":    "https://script.google.com/macros/s/AKfycbz_zd5KMUCi7xiWa17Cq_t-QO3HBhbZEuob9YX7z880nNV1H6mxJlLC06_QsY_m2ylKYA/exec",
     "ACADEMIE":   "https://script.google.com/macros/s/AKfycbyW4xc4SQsbMNrVVJsL9RwDuZJQ_EIYhFARY_IMeLXFRdzafp4Fpv2ZepTeudSPTjx9-g/exec",
-    "KOUIBLY_TEC":"https://script.google.com/macros/s/AKfycbzLXFpiUL5Hvji2G7ON79fAQoxZ_1h99zbwIikTASdbv3BHJ1yKwVGpZDskgwQp4Zmw/exec",
     "CPP_TECH":   "https://script.google.com/macros/s/AKfycbzdkxrdrNzzBXkzLvkUMZdh3hhYOVSCeOxspdJnuyQtcXD7_j4wr3r0DNLYdua7Cfrm/exec",
-    "KOUTOUAN":   "https://script.google.com/macros/s/AKfycbwpJRfiiD5MosYKNICaOfF3At0BvjK7rkkeMJ-_dAOpZ0bjWfwR47xbTE7_T77P8NLrtw/exec",
-    "SOAKPE":     "https://script.google.com/macros/s/AKfycbyUxGKPqRAHMf9eCirQkj0CvudJmoj8dz3WoeTFsz1rcWVS8Lsy6aWQejYtg6uuRKa6/exec",
-    "AKEIKOI_2":  "https://script.google.com/macros/s/AKfycbyHlMbxguRQvwpJOk9p0yIHlwL84wa0Zmg0E1d-FWA_kuEiUNHjJcrwuh4hOTscpkBGlA/exec",
-    "CPP_PRO":    "https://script.google.com/macros/s/AKfycbz_zd5KMUCi7xiWa17Cq_t-QO3HBhbZEuob9YX7z880nNV1H6mxJlLC06_QsY_m2ylKYA/exec",
-    "ACADEMIE":   "https://script.google.com/macros/s/AKfycbyW4xc4SQsbMNrVVJsL9RwDuZJQ_EIYhFARY_IMeLXFRdzafp4Fpv2ZepTeudSPTjx9-g/exec",
     "KOUIBLY_TEC":"https://script.google.com/macros/s/AKfycbzLXFpiUL5Hvji2G7ON79fAQoxZ_1h99zbwIikTASdbv3BHJ1yKwVGpZDskgwQp4Zmw/exec",
-    "CPP_TECH":   "https://script.google.com/macros/s/AKfycbzdkxrdrNzzBXkzLvkUMZdh3hhYOVSCeOxspdJnuyQtcXD7_j4wr3r0DNLYdua7Cfrm/exec",
     "DEFAULT":    "https://script.google.com/macros/s/AKfycbwVFM7w6ro4Yf6HO9-EpiWfBBY3Ie1P4wqJnN03v93mf8uUF_1J0hTzxTcRFjKT1NWQ/exec",
   };
   const eleveConnecte = JSON.parse(sessionStorage.getItem("eleveConnecte") || "{}");
