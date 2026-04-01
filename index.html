@@ -800,7 +800,13 @@ function getInfoEcole(sheetsId) {
 // ============================================================
 // BASE LOCALE (pour test)
 // ============================================================
-const ELEVES_LOCAL = {};
+const ELEVES_LOCAL = {
+  "25129856P": { nom:"AKE KOFFI ELIE CHAMAR",      classe:"6eme Ex1", ecoleCode:"CPP", tel1:"0546772799", tel2:"", du:51500, verse:51500, solde:0,     gratuit:false },
+  "25342663Q": { nom:"AKOREDE SORFIATOU AKANKE",   classe:"6eme Ex1", ecoleCode:"CPP", tel1:"0505940347", tel2:"", du:51500, verse:51500, solde:0 },
+  "25284914U": { nom:"DJODAN CHRIST EMMANUEL",     classe:"6eme Ex1", ecoleCode:"CPP", tel1:"0748155888", tel2:"", du:51500, verse:0,     solde:51500 },
+  "25046831J": { nom:"DIBY KOUAKOU EZECHIEL",      classe:"6eme Ex1", ecoleCode:"CPP", tel1:"0505677655", tel2:"", du:51500, verse:30000, solde:21500 },
+  "25128861Z": { nom:"MAHAN DOUAN ANGE PRINCESSE", classe:"6eme Ex1", ecoleCode:"CPP", tel1:"0789771991", tel2:"", du:51500, verse:2000,  solde:49500 },
+};
 
 // ============================================================
 // VARIABLES
@@ -2014,7 +2020,7 @@ async function envoyerSuggestion() {
 async function envoyerViaAppsScript(row, type) {
   // URLs Web App par ecole
   const WEBAPP_URLS = {
-    "CPP":        "https://script.google.com/macros/s/AKfycbwYWMhEitUVn3_bNqvp60nYqyBDaLlcpX2Is60cjd6u5-Gv-VsUdt8JgSR003vLWpg0mw/exec",
+    "CPP":        "https://script.google.com/macros/s/AKfycbwVFM7w6ro4Yf6HO9-EpiWfBBY3Ie1P4wqJnN03v93mf8uUF_1J0hTzxTcRFjKT1NWQ/exec",
     "AKEIKOI_1":  "https://script.google.com/macros/s/AKfycbzgmV4TS8Mzn6GDwhObXVSyARWd68_rL7-yuFaq13qg6FaJMwDokDnBDCsrX8FS2sCY/exec",
     "GNONTINROU": "https://script.google.com/macros/s/AKfycbzzzLF_V2-2BgAHqyjzRLAcWJnq8BzKvcUzB2uG-JzkaiDCSOaCyySvxnmfyPxPwQPn/exec",
     "GUINGLO_V":  "https://script.google.com/macros/s/AKfycbzUvysrHpmcWSPieSrY37r4iLtGP4RTQpbh5CJydTExB0A5c3q4TwvRJMXytVLzg2dk/exec",
@@ -2032,7 +2038,7 @@ async function envoyerViaAppsScript(row, type) {
     "ACADEMIE":   "https://script.google.com/macros/s/AKfycbyW4xc4SQsbMNrVVJsL9RwDuZJQ_EIYhFARY_IMeLXFRdzafp4Fpv2ZepTeudSPTjx9-g/exec",
     "KOUIBLY_TEC":"https://script.google.com/macros/s/AKfycbzLXFpiUL5Hvji2G7ON79fAQoxZ_1h99zbwIikTASdbv3BHJ1yKwVGpZDskgwQp4Zmw/exec",
     "CPP_TECH":   "https://script.google.com/macros/s/AKfycbzdkxrdrNzzBXkzLvkUMZdh3hhYOVSCeOxspdJnuyQtcXD7_j4wr3r0DNLYdua7Cfrm/exec",
-    "DEFAULT":    "https://script.google.com/macros/s/AKfycbwYWMhEitUVn3_bNqvp60nYqyBDaLlcpX2Is60cjd6u5-Gv-VsUdt8JgSR003vLWpg0mw/exec",
+    "DEFAULT":    "https://script.google.com/macros/s/AKfycbwVFM7w6ro4Yf6HO9-EpiWfBBY3Ie1P4wqJnN03v93mf8uUF_1J0hTzxTcRFjKT1NWQ/exec",
   };
   const eleveConnecte = JSON.parse(sessionStorage.getItem("eleveConnecte") || "{}");
   const ecoleCode = eleveConnecte.ecoleCode || "DEFAULT";
