@@ -785,9 +785,10 @@ const NOMS_ECOLES = {
 };
 
 function getSheetsId(matricule) {
-  // Utiliser le sheetsId de l'élève connecté si disponible
-  const eleveConnecte = JSON.parse(sessionStorage.getItem("eleveConnecte") || "{}");
-  if (eleveConnecte && eleveConnecte.sheetsId) return eleveConnecte.sheetsId;
+  const mat = (matricule || "").trim().toUpperCase();
+  
+  // Correspondance matricule -> Sheets ID
+  // Plus de prefixes - la recherche se fait dans toutes les ecoles
   return CONFIG.SHEETS_ID;
 }
 
@@ -1298,23 +1299,55 @@ function afficherEspaceParent(eleve) {
 // ============================================================
 // TELECHARGER BULLETIN
 // ============================================================
-function telechargerBulletin() {
+async function telechargerBulletin() {
   const eleve = window._eleveActuel;
   if (!eleve) return;
-  
-  if (parseFloat(eleve.solde) > 0) {
-    alert("Votre bulletin est accessible uniquement si votre scolarite est entierement payee.\n\nSolde restant : " + parseFloat(eleve.solde).toLocaleString("fr-FR") + " F CFA");
+
+  // Verifier scolarite a jour
+  const solde = parseFloat(String(eleve.solde||"").replace(/\s/g,"")) || 0;
+  if (solde > 0) {
+    alert("Votre bulletin est accessible uniquement si votre scolarite est entierement payee.\n\nSolde restant : " + solde.toLocaleString("fr-FR") + " F CFA");
     return;
   }
-  
-  // Chercher bulletin dans le Sheets BULLETINS_T1/T2/T3
-  const sheetsId = getSheetsId(eleve.matricule);
-  const msg = ` Bulletin de ${eleve.nom}\n\nPour telecharger votre bulletin :\n\n` +
-    `1. Demandez a l'ecole de generer votre bulletin\n` +
-    `2. L'ecole vous enverra un PDF par WhatsApp\n\n` +
-    ` WhatsApp : ${getInfoEcole(sheetsId).tel || "0708111269"}\n\n` +
-    `Ou venez le recuperer directement a l'ecole.`;
-  alert(msg);
+
+  // Afficher chargement
+  const btn = document.querySelector("#sectionBulletin button");
+  if (btn) { btn.textContent = "⏳ Chargement..."; btn.disabled = true; }
+
+  try {
+    const mat = eleve.matricule.trim().toUpperCase();
+    const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
+    const range = encodeURIComponent("BULLETINS_T2!A2:D500");
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.values || data.values.length === 0) {
+      alert("Bulletin non disponible pour le moment.\nContactez l'ecole.");
+      return;
+    }
+
+    // Chercher le matricule dans BULLETINS_T2
+    let fileId = null;
+    for (const row of data.values) {
+      const matRow = String(row[0]||"").trim().toUpperCase();
+      if (matRow === mat) { fileId = String(row[2]||"").trim(); break; }
+    }
+
+    if (!fileId) {
+      alert("📄 Bulletin non encore disponible pour votre enfant.\nContactez l'ecole pour plus d'informations.");
+      return;
+    }
+
+    // Ouvrir le PDF dans un nouvel onglet
+    window.open("https://drive.google.com/file/d/" + fileId + "/view", "_blank");
+
+  } catch(e) {
+    alert("Erreur de chargement. Verifiez votre connexion et reessayez.");
+  } finally {
+    if (btn) { btn.textContent = "📥 Telecharger mon bulletin PDF"; btn.disabled = false; }
+  }
 }
 
 // ============================================================
@@ -1401,14 +1434,13 @@ async function chargerNotes(eleve) {
   // ---- Chargement depuis Sheets ----
   try {
     const mat = eleve.matricule;
-    const sheetsIdEleve = eleve.sheetsId || getSheetsId(mat);
     const trimestres = ['NOTES_T2','NOTES_T1','NOTES_T3'];
     const trimNoms   = ['2ème Trimestre','1er Trimestre','3ème Trimestre'];
     let rowTrouve = null, trimNom = "";
 
     for (let t = 0; t < trimestres.length; t++) {
-      const range = encodeURIComponent(`${trimestres[t]}!A1:T2000`);
-      const sheetsId = sheetsIdEleve;
+      const range = encodeURIComponent(`${trimestres[t]}!A1:R2000`);
+      const sheetsId = getSheetsId(mat);
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
       try {
         const res = await fetch(url);
@@ -1465,39 +1497,6 @@ async function chargerNotes(eleve) {
       ]},
     ];
 
-    // Lire Moyenne et Rang si disponibles (colonnes 19 et 20)
-    const moyenneVal = row[18] !== undefined && row[18] !== "" && row[18] !== null
-      ? parseFloat(String(row[18]).replace(",",".")) : null;
-    const rangVal = row[19] !== undefined && row[19] !== "" && row[19] !== null
-      ? String(row[19]).trim() : null;
-
-    // Bloc Moyenne si disponible
-    let blocMoyenne = "";
-    if (moyenneVal !== null && !isNaN(moyenneVal)) {
-      const bgMoy   = moyenneVal >= 10 ? "#E8F5E9" : "#FFEBEE";
-      const bdMoy   = moyenneVal >= 10 ? "#2E7D32" : "#C62828";
-      const fgMoy   = moyenneVal >= 10 ? "#2E7D32" : "#C62828";
-      const emojMoy = moyenneVal >= 14 ? "🏆" : moyenneVal >= 10 ? "✅" : "⚠️";
-      const mention = moyenneVal >= 16 ? "Très Bien" : moyenneVal >= 14 ? "Bien"
-                    : moyenneVal >= 12 ? "Assez Bien" : moyenneVal >= 10 ? "Passable" : "Insuffisant";
-      const rangTxt = rangVal ? `<span style="font-size:0.78em;color:#666;margin-left:8px;">Rang : <strong>${rangVal}</strong></span>` : "";
-      blocMoyenne = `
-        <div style="background:${bgMoy};border:2px solid ${bdMoy};border-radius:10px;
-          padding:14px;margin-bottom:14px;text-align:center;">
-          <p style="font-size:0.75em;color:${fgMoy};font-weight:bold;margin-bottom:4px;">
-            MOYENNE GÉNÉRALE DU TRIMESTRE
-          </p>
-          <div style="display:flex;align-items:center;justify-content:center;gap:12px;">
-            <span style="font-size:2.2em;font-weight:bold;color:${fgMoy};">
-              ${emojMoy} ${moyenneVal.toFixed(2)}
-            </span>
-            <span style="font-size:0.8em;color:white;background:${fgMoy};
-              padding:4px 10px;border-radius:20px;font-weight:bold;">${mention}</span>
-          </div>
-          ${rangTxt}
-        </div>`;
-    }
-
     let html = `
       <div style="background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;
         border-left:4px solid #1F4E79;">
@@ -1508,7 +1507,6 @@ async function chargerNotes(eleve) {
           Classe : <strong>${niveau}</strong> — Matricule : <strong>${mat}</strong>
         </p>
       </div>
-      ${blocMoyenne}
       <div style="background:#FFF8E1;border:1px solid #FFD54F;border-radius:8px;
         padding:10px 12px;margin-bottom:14px;">
         <p style="font-size:0.76em;color:#6D4C10;line-height:1.6;">
@@ -2054,18 +2052,25 @@ async function envoyerSuggestion() {
 async function envoyerViaAppsScript(row, type) {
   // URLs Web App par ecole
   const WEBAPP_URLS = {
-    "CPP":        "https://script.google.com/macros/s/AKfycbwVFM7w6ro4Yf6HO9-EpiWfBBY3Ie1P4wqJnN03v93mf8uUF_1J0hTzxTcRFjKT1NWQ/exec",
-    "AKEIKOI_1":  "https://script.google.com/macros/s/AKfycbwgbnr_LJRpm3Oalsr0zVXydWfT6IWvfWGt_D58J4U61a0InS020n00aplQOAuLKe0C-w/exec",
-    "AKEIKOI_2":  "https://script.google.com/macros/s/AKfycbyHlMbxguRQvwpJOk9p0yIHlwL84wa0Zmg0E1d-FWA_kuEiUNHjJcrwuh4hOTscpkBGlA/exec",
+    "CPP":        "https://script.google.com/macros/s/AKfycbwYWMhEitUVn3_bNqvp60nYqyBDaLlcpX2Is60cjd6u5-Gv-VsUdt8JgSR003vLWpg0mw/exec",
+    "AKEIKOI_1":  "https://script.google.com/macros/s/AKfycbzgmV4TS8Mzn6GDwhObXVSyARWd68_rL7-yuFaq13qg6FaJMwDokDnBDCsrX8FS2sCY/exec",
     "GNONTINROU": "https://script.google.com/macros/s/AKfycbzzzLF_V2-2BgAHqyjzRLAcWJnq8BzKvcUzB2uG-JzkaiDCSOaCyySvxnmfyPxPwQPn/exec",
     "GUINGLO_V":  "https://script.google.com/macros/s/AKfycbzUvysrHpmcWSPieSrY37r4iLtGP4RTQpbh5CJydTExB0A5c3q4TwvRJMXytVLzg2dk/exec",
     "KOUTOUAN":   "https://script.google.com/macros/s/AKfycbwpJRfiiD5MosYKNICaOfF3At0BvjK7rkkeMJ-_dAOpZ0bjWfwR47xbTE7_T77P8NLrtw/exec",
     "SOAKPE":     "https://script.google.com/macros/s/AKfycbyUxGKPqRAHMf9eCirQkj0CvudJmoj8dz3WoeTFsz1rcWVS8Lsy6aWQejYtg6uuRKa6/exec",
+    "AKEIKOI_2":  "https://script.google.com/macros/s/AKfycbyHlMbxguRQvwpJOk9p0yIHlwL84wa0Zmg0E1d-FWA_kuEiUNHjJcrwuh4hOTscpkBGlA/exec",
     "CPP_PRO":    "https://script.google.com/macros/s/AKfycbz_zd5KMUCi7xiWa17Cq_t-QO3HBhbZEuob9YX7z880nNV1H6mxJlLC06_QsY_m2ylKYA/exec",
     "ACADEMIE":   "https://script.google.com/macros/s/AKfycbyW4xc4SQsbMNrVVJsL9RwDuZJQ_EIYhFARY_IMeLXFRdzafp4Fpv2ZepTeudSPTjx9-g/exec",
-    "CPP_TECH":   "https://script.google.com/macros/s/AKfycbzdkxrdrNzzBXkzLvkUMZdh3hhYOVSCeOxspdJnuyQtcXD7_j4wr3r0DNLYdua7Cfrm/exec",
     "KOUIBLY_TEC":"https://script.google.com/macros/s/AKfycbzLXFpiUL5Hvji2G7ON79fAQoxZ_1h99zbwIikTASdbv3BHJ1yKwVGpZDskgwQp4Zmw/exec",
-    "DEFAULT":    "https://script.google.com/macros/s/AKfycbwVFM7w6ro4Yf6HO9-EpiWfBBY3Ie1P4wqJnN03v93mf8uUF_1J0hTzxTcRFjKT1NWQ/exec",
+    "CPP_TECH":   "https://script.google.com/macros/s/AKfycbzdkxrdrNzzBXkzLvkUMZdh3hhYOVSCeOxspdJnuyQtcXD7_j4wr3r0DNLYdua7Cfrm/exec",
+    "KOUTOUAN":   "https://script.google.com/macros/s/AKfycbwpJRfiiD5MosYKNICaOfF3At0BvjK7rkkeMJ-_dAOpZ0bjWfwR47xbTE7_T77P8NLrtw/exec",
+    "SOAKPE":     "https://script.google.com/macros/s/AKfycbyUxGKPqRAHMf9eCirQkj0CvudJmoj8dz3WoeTFsz1rcWVS8Lsy6aWQejYtg6uuRKa6/exec",
+    "AKEIKOI_2":  "https://script.google.com/macros/s/AKfycbyHlMbxguRQvwpJOk9p0yIHlwL84wa0Zmg0E1d-FWA_kuEiUNHjJcrwuh4hOTscpkBGlA/exec",
+    "CPP_PRO":    "https://script.google.com/macros/s/AKfycbz_zd5KMUCi7xiWa17Cq_t-QO3HBhbZEuob9YX7z880nNV1H6mxJlLC06_QsY_m2ylKYA/exec",
+    "ACADEMIE":   "https://script.google.com/macros/s/AKfycbyW4xc4SQsbMNrVVJsL9RwDuZJQ_EIYhFARY_IMeLXFRdzafp4Fpv2ZepTeudSPTjx9-g/exec",
+    "KOUIBLY_TEC":"https://script.google.com/macros/s/AKfycbzLXFpiUL5Hvji2G7ON79fAQoxZ_1h99zbwIikTASdbv3BHJ1yKwVGpZDskgwQp4Zmw/exec",
+    "CPP_TECH":   "https://script.google.com/macros/s/AKfycbzdkxrdrNzzBXkzLvkUMZdh3hhYOVSCeOxspdJnuyQtcXD7_j4wr3r0DNLYdua7Cfrm/exec",
+    "DEFAULT":    "https://script.google.com/macros/s/AKfycbwYWMhEitUVn3_bNqvp60nYqyBDaLlcpX2Is60cjd6u5-Gv-VsUdt8JgSR003vLWpg0mw/exec",
   };
   const eleveConnecte = JSON.parse(sessionStorage.getItem("eleveConnecte") || "{}");
   const ecoleCode = eleveConnecte.ecoleCode || "DEFAULT";
