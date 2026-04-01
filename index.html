@@ -1475,45 +1475,81 @@ async function chargerNotes(eleve) {
 
     if (!rowTrouve) { afficherNotesVides(div); return; }
 
-    // Format NOTES_T2 :
-    // [0]=N° [1]=Matricule [2]=Nom [3]=Niveau
-    // [4]=Comp.FR [5]=Oral.FR [6]=Ortho
-    // [7]=Anglais [8]=Hist-Géo
-    // [9]=Maths [10]=Sci.Phy [11]=SVT
-    // [12]=EPS [13]=EDHC
-    // [14]=Arts [15]=Musique [16]=TIC [17]=Conduite
-    const row    = rowTrouve;
-    // Utiliser la vraie classe depuis SYNTHESE, sinon le niveau de NOTES_T2
+    const row = rowTrouve;
+
+    // Détecter format : GUINGLO (mat en col 0) ou CPP (mat en col 1)
+    const isGuinglo = String(row[0]||"").trim().toUpperCase() === mat.toUpperCase();
+
+    // Niveau
     const niveau = (eleve.classe && eleve.classe !== "CLASSE" && eleve.classe.length > 2)
       ? eleve.classe
-      : String(row[3]||"").trim();
+      : isGuinglo ? String(row[4]||"").trim() : String(row[3]||"").trim();
 
-    const groupes = [
-      { titre:"📖 FRANÇAIS",                    couleur:"#1565C0", matieres:[
-        {nom:"Comp. Française",    val:row[4]},
-        {nom:"Oral Français",      val:row[5]},
-        {nom:"Orthographe",        val:row[6]},
-      ]},
-      { titre:"🌍 LETTRES & SCIENCES HUMAINES", couleur:"#2E7D32", matieres:[
-        {nom:"Anglais",            val:row[7]},
-        {nom:"Histoire-Géographie",val:row[8]},
-      ]},
-      { titre:"🔬 SCIENCES",                    couleur:"#C62828", matieres:[
-        {nom:"Mathématiques",      val:row[9]},
-        {nom:"Sciences Physiques", val:row[10]},
-        {nom:"SVT",                val:row[11]},
-      ]},
-      { titre:"⭐ AUTRES MATIÈRES",             couleur:"#E65100", matieres:[
-        {nom:"EPS",                val:row[12]},
-        {nom:"EDHC",               val:row[13]},
-        {nom:"Arts Plastiques",    val:row[14]},
-        {nom:"Musique",            val:row[15]},
-        {nom:"TIC",                val:row[16]},
-        {nom:"Conduite",           val:row[17]},
-      ]},
-    ];
+    let groupes;
+    if (isGuinglo) {
+      // Format GUINGLO : mat(0),nom(1),prenom(2),etab(3),niveau(4),
+      // cf(5),og(6),eo(7),philo(8),an(9),ma(10),phy(11),svt(12),hg(13),
+      // lv2(14),ed(15),ap(16),ti(17),co(18),ep(19),moy(20),rang(21)
+      groupes = [
+        { titre:"📖 FRANÇAIS",                    couleur:"#1565C0", matieres:[
+          {nom:"Comp. Française",    val:row[5]},
+          {nom:"Orthographe",        val:row[6]},
+          {nom:"Oral Français",      val:row[7]},
+        ]},
+        { titre:"🌍 LETTRES & SCIENCES HUMAINES", couleur:"#2E7D32", matieres:[
+          {nom:"Anglais",            val:row[9]},
+          {nom:"Histoire-Géographie",val:row[13]},
+        ]},
+        { titre:"🔬 SCIENCES",                    couleur:"#C62828", matieres:[
+          {nom:"Mathématiques",      val:row[10]},
+          {nom:"Sciences Physiques", val:row[11]},
+          {nom:"SVT",                val:row[12]},
+        ]},
+        { titre:"⭐ AUTRES MATIÈRES",             couleur:"#E65100", matieres:[
+          {nom:"EPS",                val:row[19]},
+          {nom:"EDHC",               val:row[15]},
+          {nom:"Conduite",           val:row[18]},
+        ]},
+      ];
+    } else {
+      // Format CPP : N°(0),mat(1),nom(2),niveau(3),
+      // cf(4),eo(5),og(6),an(7),hg(8),ma(9),phy(10),svt(11),
+      // eps(12),ed(13),arts(14),musique(15),tic(16),conduite(17)
+      groupes = [
+        { titre:"📖 FRANÇAIS",                    couleur:"#1565C0", matieres:[
+          {nom:"Comp. Française",    val:row[4]},
+          {nom:"Oral Français",      val:row[5]},
+          {nom:"Orthographe",        val:row[6]},
+        ]},
+        { titre:"🌍 LETTRES & SCIENCES HUMAINES", couleur:"#2E7D32", matieres:[
+          {nom:"Anglais",            val:row[7]},
+          {nom:"Histoire-Géographie",val:row[8]},
+        ]},
+        { titre:"🔬 SCIENCES",                    couleur:"#C62828", matieres:[
+          {nom:"Mathématiques",      val:row[9]},
+          {nom:"Sciences Physiques", val:row[10]},
+          {nom:"SVT",                val:row[11]},
+        ]},
+        { titre:"⭐ AUTRES MATIÈRES",             couleur:"#E65100", matieres:[
+          {nom:"EPS",                val:row[12]},
+          {nom:"EDHC",               val:row[13]},
+          {nom:"Arts Plastiques",    val:row[14]},
+          {nom:"Musique",            val:row[15]},
+          {nom:"TIC",                val:row[16]},
+          {nom:"Conduite",           val:row[17]},
+        ]},
+      ];
+    }
 
-    let html = `
+    // Moyenne et Rang selon format
+    const moyIdx   = isGuinglo ? 20 : 18;
+    const rngIdx   = isGuinglo ? 21 : 19;
+    const moyenneVal = (row[moyIdx] !== undefined && row[moyIdx] !== "" && row[moyIdx] !== null)
+      ? parseFloat(String(row[moyIdx]).replace(",",".")) : null;
+    const rangVal = (row[rngIdx] !== undefined && row[rngIdx] !== "" && row[rngIdx] !== null)
+      ? String(row[rngIdx]).trim() : null;
+
+        let html = `
       <div style="background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;
         border-left:4px solid #1F4E79;">
         <p style="font-size:0.82em;color:#1F4E79;font-weight:bold;margin-bottom:2px;">
