@@ -1317,33 +1317,47 @@ async function telechargerBulletin() {
   try {
     const mat = eleve.matricule.trim().toUpperCase();
     const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
-    const range = encodeURIComponent("BULLETINS_T2!A2:D500");
+    const range = encodeURIComponent("BULLETINS_T2!A2:D1000");
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
 
     const res = await fetch(url);
     const data = await res.json();
 
     if (!data.values || data.values.length === 0) {
-      alert("Bulletin non disponible pour le moment.\nContactez l'ecole.\n\n[DEBUG: onglet BULLETINS_T2 vide - Sheets: " + sheetsId.substring(0,10) + "]");
+      alert("BULLETINS_T2 VIDE\nSheetsId: " + sheetsId);
       return;
     }
 
     // Chercher le matricule dans BULLETINS_T2
-    let fileId = null;
+    let lienPDF = null;
+    let debugInfo = "Total lignes: " + data.values.length + "\n";
+    debugInfo += "Matricule cherche: [" + mat + "]\n";
+    debugInfo += "3 premiers: " + data.values.slice(0,3).map(r => "[" + String(r[0]||"") + "]").join(", ") + "\n";
+
     for (const row of data.values) {
-      const matRow = String(row[0]||"").trim().toUpperCase();
-      if (matRow === mat) { fileId = String(row[2]||"").trim(); break; }
+      const matRow = String(row[0]||"").trim().toUpperCase().replace(/\s/g,"");
+      const matClean = mat.replace(/\s/g,"");
+      if (matRow === matClean) {
+        const lienD = String(row[3]||"").trim();
+        const fileId = String(row[2]||"").trim();
+        debugInfo += "TROUVE! fileId: " + fileId + "\nlienD: " + lienD.substring(0,50);
+        if (lienD) {
+          lienPDF = lienD;
+        } else if (fileId) {
+          lienPDF = "https://drive.google.com/file/d/" + fileId + "/view";
+        }
+        break;
+      }
     }
 
-    if (!fileId) {
-      // Debug : afficher les 3 premiers matricules trouvés
-      const premiers = data.values.slice(0,3).map(r => String(r[0]||"").trim()).join(", ");
-      alert("📄 Matricule " + mat + " non trouve dans BULLETINS_T2.\n\nPremiers matricules: " + premiers + "\nSheetsId: " + sheetsId.substring(0,15));
+    if (!lienPDF) {
+      alert("NON TROUVE\n" + debugInfo);
       return;
     }
 
-    // Ouvrir le PDF dans un nouvel onglet
-    window.open("https://drive.google.com/file/d/" + fileId + "/view", "_blank");
+    // Ouvrir le PDF
+    alert("DEBUG OK: " + lienPDF.substring(0,80));
+    window.open(lienPDF, "_blank");
 
   } catch(e) {
     alert("Erreur de chargement. Verifiez votre connexion et reessayez.");
