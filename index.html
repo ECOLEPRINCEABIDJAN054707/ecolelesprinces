@@ -1324,7 +1324,7 @@ async function telechargerBulletin() {
     const data = await res.json();
 
     if (!data.values || data.values.length === 0) {
-      alert("Bulletin non disponible pour le moment.\nContactez l'ecole.");
+      alert("Bulletin non disponible pour le moment.\nContactez l'ecole.\n\n[DEBUG: onglet BULLETINS_T2 vide - Sheets: " + sheetsId.substring(0,10) + "]");
       return;
     }
 
@@ -1336,7 +1336,9 @@ async function telechargerBulletin() {
     }
 
     if (!fileId) {
-      alert("📄 Bulletin non encore disponible pour votre enfant.\nContactez l'ecole pour plus d'informations.");
+      // Debug : afficher les 3 premiers matricules trouvés
+      const premiers = data.values.slice(0,3).map(r => String(r[0]||"").trim()).join(", ");
+      alert("📄 Matricule " + mat + " non trouve dans BULLETINS_T2.\n\nPremiers matricules: " + premiers + "\nSheetsId: " + sheetsId.substring(0,15));
       return;
     }
 
