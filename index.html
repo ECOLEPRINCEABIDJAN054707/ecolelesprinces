@@ -1477,16 +1477,47 @@ async function chargerNotes(eleve) {
 
     const row = rowTrouve;
 
-    // Détecter format : GUINGLO (mat en col 0) ou CPP (mat en col 1)
-    const isGuinglo = String(row[0]||"").trim().toUpperCase() === mat.toUpperCase();
+    // Détecter format selon sheetsId
+    // GUINGLO : mat(0),nom(1),prenom(2),etab(3),niveau(4),cf(5),og(6),eo(7),an(9),ma(10),phy(11),svt(12),hg(13),ed(15),co(18),eps(19)
+    // GNONTINROU : mat(0),nom(1),serie(2),niveau(3),cf(4),og(5),eo(6),an(7),hg(11),ma(12),phy(13),svt(14),eps(15),ed(16),co(20)
+    // CPP : N°(0),mat(1),nom(2),niveau(3),cf(4),eo(5),og(6),an(7),hg(8),ma(9),phy(10),svt(11)...
+    const sheetsIdEleve2 = eleve.sheetsId || "";
+    const isGuinglo    = sheetsIdEleve2 === "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA";
+    const isGnontinrou = sheetsIdEleve2 === "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4";
+    const isFormatA    = isGuinglo || isGnontinrou; // matricule en colonne 0
 
     // Niveau
     const niveau = (eleve.classe && eleve.classe !== "CLASSE" && eleve.classe.length > 2)
       ? eleve.classe
-      : isGuinglo ? String(row[4]||"").trim() : String(row[3]||"").trim();
+      : isFormatA ? (isGnontinrou ? String(row[3]||"").trim() : String(row[4]||"").trim()) : String(row[3]||"").trim();
 
     let groupes;
-    if (isGuinglo) {
+    if (isGnontinrou) {
+      // Format GNONTINROU : mat(0),nom(1),serie(2),niveau(3),
+      // cf(4),og(5),eo(6),an(7),ph(8),al(9),es(10),hg(11),
+      // ma(12),phy(13),svt(14),eps(15),ed(16),ap(17),_(18),tic(19),co(20)
+      groupes = [
+        { titre:"📖 FRANÇAIS",                    couleur:"#1565C0", matieres:[
+          {nom:"Comp. Française",    val:row[4]},
+          {nom:"Orthographe",        val:row[5]},
+          {nom:"Oral Français",      val:row[6]},
+        ]},
+        { titre:"🌍 LETTRES & SCIENCES HUMAINES", couleur:"#2E7D32", matieres:[
+          {nom:"Anglais",            val:row[7]},
+          {nom:"Histoire-Géographie",val:row[11]},
+        ]},
+        { titre:"🔬 SCIENCES",                    couleur:"#C62828", matieres:[
+          {nom:"Mathématiques",      val:row[12]},
+          {nom:"Sciences Physiques", val:row[13]},
+          {nom:"SVT",                val:row[14]},
+        ]},
+        { titre:"⭐ AUTRES MATIÈRES",             couleur:"#E65100", matieres:[
+          {nom:"EPS",                val:row[15]},
+          {nom:"EDHC",               val:row[16]},
+          {nom:"Conduite",           val:row[20]},
+        ]},
+      ];
+    } else if (isGuinglo) {
       // Format GUINGLO : mat(0),nom(1),prenom(2),etab(3),niveau(4),
       // cf(5),og(6),eo(7),philo(8),an(9),ma(10),phy(11),svt(12),hg(13),
       // lv2(14),ed(15),ap(16),ti(17),co(18),ep(19),moy(20),rang(21)
@@ -1544,6 +1575,7 @@ async function chargerNotes(eleve) {
     // Moyenne et Rang selon format
     const moyIdx   = isGuinglo ? 20 : 18;
     const rngIdx   = isGuinglo ? 21 : 19;
+    // Note: GNONTINROU n'a pas de colonne moyenne/rang dans NOTES_T2
     const moyenneVal = (row[moyIdx] !== undefined && row[moyIdx] !== "" && row[moyIdx] !== null)
       ? parseFloat(String(row[moyIdx]).replace(",",".")) : null;
     const rangVal = (row[rngIdx] !== undefined && row[rngIdx] !== "" && row[rngIdx] !== null)
