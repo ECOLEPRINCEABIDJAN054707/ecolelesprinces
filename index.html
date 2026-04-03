@@ -788,6 +788,7 @@ const SHEETS_IDS_COMPLET = {
   "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs": { nom:"CP Professionnel Les Princes d'Abidjan",  tel:"0708111269", wave:"0708111269" },
   "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc": { nom:"CP Technique Les Princes d'Abidjan",      tel:"0708111269", wave:"0708111269" },
   "1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s": { nom:"ETL Les Princes de Kouibly",              tel:"0759937994", wave:"0759937994" },
+  "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0": { nom:"Groupe Scolaire Rita Rosane Abobo", tel:"0757227049", wave:"0757227049" },
 };
 
 // Noms des ecoles selon le Sheets ID
@@ -1029,6 +1030,7 @@ async function login() {
       { code:"CPP_PRO",    id:"1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs" },
       { code:"CPP_TECH",   id:"15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc" },
       { code:"KOUIBLY_TEC",id:"1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s" },
+      { code:"RITA", id:"1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0" },
     ];
     for (let i=0; i<TOUTES_ECOLES.length; i++) {
       const ec = TOUTES_ECOLES[i];
@@ -2197,6 +2199,7 @@ async function envoyerViaAppsScript(row, type) {
     "KOUIBLY_TEC":"https://script.google.com/macros/s/AKfycbzLXFpiUL5Hvji2G7ON79fAQoxZ_1h99zbwIikTASdbv3BHJ1yKwVGpZDskgwQp4Zmw/exec",
     "CPP_TECH":   "https://script.google.com/macros/s/AKfycbzdkxrdrNzzBXkzLvkUMZdh3hhYOVSCeOxspdJnuyQtcXD7_j4wr3r0DNLYdua7Cfrm/exec",
     "DEFAULT":    "https://script.google.com/macros/s/AKfycbwYWMhEitUVn3_bNqvp60nYqyBDaLlcpX2Is60cjd6u5-Gv-VsUdt8JgSR003vLWpg0mw/exec",
+    "RITA": "https://script.google.com/macros/s/AKfycbzlKa8MmuBmxPJ4xOFfHuOUl2aZ_AYHD8N_h-3euVEAk0kmd9VZ5XkNfoIXOmX3g2DS/exec",
   };
   const eleveConnecte = JSON.parse(sessionStorage.getItem("eleveConnecte") || "{}");
   const ecoleCode = eleveConnecte.ecoleCode || "DEFAULT";
