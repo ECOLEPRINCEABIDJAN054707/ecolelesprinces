@@ -10,6 +10,18 @@
   <meta name="apple-mobile-web-app-title" content="CPP Les Princes">
   <meta name="application-name" content="CPP Les Princes">
   <meta name="theme-color" content="#1F4E79">
+  <link rel="manifest" href="data:application/json,{<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1F4E79">
+<meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CPP Les Princes">
+  <meta name="application-name" content="CPP Les Princes">
+  <meta name="theme-color" content="#1F4E79">
   <link rel="manifest" href="data:application/json,{
     %22name%22:%22CPP%20Les%20Princes%20d'Abidjan%22,
     %22short_name%22:%22CPP%20Les%20Princes%22,
@@ -1450,23 +1462,26 @@ async function chargerNotes(eleve) {
   // ---- Chargement depuis Sheets ----
   try {
     const mat = eleve.matricule;
-    const trimestres = ['NOTES_T2','NOTES_T1','NOTES_T3'];
-    const trimNoms   = ['2ème Trimestre','1er Trimestre','3ème Trimestre'];
-    let rowTrouve = null, trimNom = "";
+    const trimestres = ['TEMP_NOTES_T2','NOTES_T2','NOTES_T1','NOTES_T3'];
+    const trimNoms   = ['2ème Trimestre','2ème Trimestre','1er Trimestre','3ème Trimestre'];
+    let rowTrouve = null, trimNom = "", isTempFormat = false;
 
     for (let t = 0; t < trimestres.length; t++) {
-      const range = encodeURIComponent(`${trimestres[t]}!A1:T2000`);
+      const range = encodeURIComponent(`${trimestres[t]}!A1:V2000`);
       const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${CONFIG.API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
       try {
         const res = await fetch(url);
         const data = await res.json();
         if (!data.values) continue;
+        const isTemp = trimestres[t].indexOf('TEMP') >= 0;
         for (const row of data.values) {
-          // Chercher matricule en colonne B (index 1)
-          const matRow = String(row[1]||"").trim().toUpperCase();
+          // CORRECTION : matricule en col A (index 0) pour TEMP_NOTES_T2, col B (index 1) pour autres
+          const matRow = isTemp
+            ? String(row[0]||"").trim().toUpperCase()
+            : String(row[1]||"").trim().toUpperCase();
           if (matRow === mat.toUpperCase()) {
-            rowTrouve = row; trimNom = trimNoms[t]; break;
+            rowTrouve = row; trimNom = trimNoms[t]; isTempFormat = isTemp; break;
           }
         }
         if (rowTrouve) break;
@@ -1489,10 +1504,37 @@ async function chargerNotes(eleve) {
     // Niveau
     const niveau = (eleve.classe && eleve.classe !== "CLASSE" && eleve.classe.length > 2)
       ? eleve.classe
-      : isFormatA ? (isGnontinrou ? String(row[3]||"").trim() : String(row[4]||"").trim()) : String(row[3]||"").trim();
+      : isTempFormat ? String(row[3]||"").trim()
+      : isFormatA ? (isGnontinrou ? String(row[3]||"").trim() : String(row[4]||"").trim())
+      : String(row[3]||"").trim();
 
     let groupes;
-    if (isGnontinrou) {
+    // CORRECTION : Format TEMP_NOTES_T2 (6ème CPP)
+    // mat(0),nom(1),serie(2),niveau(3),cf(4),ortho(5),oral(6),an(7),philo(8),all(9),esp(10),hg(11),ma(12),phy(13),svt(14),eps(15),ed(16),arts(17),vide(18),tic(19),conduite(20)
+    if (isTempFormat) {
+      groupes = [
+        { titre:"📖 FRANÇAIS",                    couleur:"#1565C0", matieres:[
+          {nom:"Comp. Française",    val:row[4]},
+          {nom:"Orthographe",        val:row[5]},
+          {nom:"Oral Français",      val:row[6]},
+        ]},
+        { titre:"🌍 LETTRES & SCIENCES HUMAINES", couleur:"#2E7D32", matieres:[
+          {nom:"Anglais",            val:row[7]},
+          {nom:"Histoire-Géographie",val:row[11]},
+        ]},
+        { titre:"🔬 SCIENCES",                    couleur:"#C62828", matieres:[
+          {nom:"Mathématiques",      val:row[12]},
+          {nom:"Sciences Physiques", val:row[13]},
+          {nom:"SVT",                val:row[14]},
+        ]},
+        { titre:"⭐ AUTRES MATIÈRES",             couleur:"#E65100", matieres:[
+          {nom:"EPS",                val:row[15]},
+          {nom:"EDHC",               val:row[16]},
+          {nom:"Arts Plastiques",    val:row[17]},
+          {nom:"Conduite",           val:row[20]},
+        ]},
+      ];
+    } else if (isGnontinrou) {
       // Format GNONTINROU : mat(0),nom(1),serie(2),niveau(3),
       // cf(4),og(5),eo(6),an(7),ph(8),al(9),es(10),hg(11),
       // ma(12),phy(13),svt(14),eps(15),ed(16),ap(17),_(18),tic(19),co(20)
@@ -1573,12 +1615,12 @@ async function chargerNotes(eleve) {
     }
 
     // Moyenne et Rang selon format
-    const moyIdx   = isGuinglo ? 20 : 18;
-    const rngIdx   = isGuinglo ? 21 : 19;
-    // Note: GNONTINROU n'a pas de colonne moyenne/rang dans NOTES_T2
-    const moyenneVal = (row[moyIdx] !== undefined && row[moyIdx] !== "" && row[moyIdx] !== null)
+    const moyIdx   = isTempFormat ? null : isGuinglo ? 20 : 18;
+    const rngIdx   = isTempFormat ? null : isGuinglo ? 21 : 19;
+    // Note: GNONTINROU et TEMP_NOTES_T2 n'ont pas de colonne moyenne/rang
+    const moyenneVal = (!isTempFormat && moyIdx !== null && row[moyIdx] !== undefined && row[moyIdx] !== "" && row[moyIdx] !== null)
       ? parseFloat(String(row[moyIdx]).replace(",",".")) : null;
-    const rangVal = (row[rngIdx] !== undefined && row[rngIdx] !== "" && row[rngIdx] !== null)
+    const rangVal = (!isTempFormat && rngIdx !== null && row[rngIdx] !== undefined && row[rngIdx] !== "" && row[rngIdx] !== null)
       ? String(row[rngIdx]).trim() : null;
 
         let html = `
@@ -2378,6 +2420,710 @@ function installPWA() {
       </div>
     </div>
   </div>
+
+</body>
+</html>
+
+    %22name%22:%22CPP%20Les%20Princes%20d'Abidjan%22,
+    %22short_name%22:%22CPP%20Les%20Princes%22,
+    %22start_url%22:%22/%22,
+    %22display%22:%22standalone%22,
+    %22background_color%22:%22%231F4E79%22,
+    %22theme_color%22:%22%231F4E79%22
+  }">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231F4E79' rx='20'/><text y='.9em' font-size='80' x='10'></text></svg>">
+<meta name="apple-mobile-web-app-title" content="Les Princes">
+<title>Ecole Les Princes - Espace Parents</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:100vh; }
+
+/* -- HEADER -- */
+.header {
+  background:linear-gradient(135deg,#1F4E79,#1565C0);
+  color:white; padding:30px 20px 22px; text-align:center;
+  transition:background 0.4s;
+}
+.header h1 { font-size:1.15em; font-weight:bold; margin-bottom:5px; }
+.header p  { font-size:0.8em; opacity:0.88; }
+
+/* -- LOGIN -- */
+.login-wrapper { max-width:480px; margin:24px auto; padding:0 16px; }
+.login-box {
+  background:white; border-radius:16px; padding:28px 22px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.1);
+}
+.login-titre {
+  color:#1F4E79; font-size:1.05em; font-weight:bold;
+  margin-bottom:5px; text-align:center;
+}
+.login-sous {
+  font-size:0.8em; color:#888; margin-bottom:22px;
+  text-align:center; line-height:1.5;
+}
+
+.input-group { margin-bottom:16px; position:relative; }
+.input-group label {
+  font-size:0.8em; color:#444; font-weight:bold;
+  display:block; margin-bottom:6px;
+}
+.input-group .requis { color:#C62828; }
+.input-group .optionnel {
+  color:#888; font-weight:normal; font-size:0.85em;
+}
+.input-group input {
+  width:100%; padding:13px 16px; border:2px solid #E0E0E0;
+  border-radius:10px; font-size:0.95em; outline:none;
+  transition:border-color 0.2s;
+}
+.input-group input:focus { border-color:#1F4E79; }
+.input-group input::placeholder { color:#bbb; }
+
+/* -- AUTOCOMPLETE ECOLE -- */
+.autocomplete-wrapper { position:relative; }
+.autocomplete-input {
+  width:100%; padding:13px 40px 13px 16px;
+  border:2px solid #E0E0E0; border-radius:10px;
+  font-size:0.95em; outline:none; transition:border-color 0.2s;
+}
+.autocomplete-input:focus { border-color:#1F4E79; }
+.autocomplete-input::placeholder { color:#bbb; }
+.clear-btn {
+  position:absolute; right:12px; top:50%;
+  transform:translateY(-50%); background:none; border:none;
+  color:#aaa; font-size:1.1em; cursor:pointer; display:none;
+  padding:4px;
+}
+.suggestions {
+  position:absolute; top:calc(100% + 4px); left:0; right:0;
+  background:white; border:2px solid #1F4E79; border-radius:10px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.12); z-index:1000;
+  max-height:220px; overflow-y:auto; display:none;
+}
+.suggestion-item {
+  padding:12px 16px; cursor:pointer; border-bottom:1px solid #f0f0f0;
+  transition:background 0.15s; display:flex; align-items:center; gap:10px;
+}
+.suggestion-item:last-child { border-bottom:none; }
+.suggestion-item:hover { background:#F0F4FF; }
+.suggestion-item.selected { background:#D6E4F0; }
+.suggestion-icon { font-size:1.1em; flex-shrink:0; }
+.suggestion-text { flex:1; }
+.suggestion-nom { font-size:0.88em; font-weight:bold; color:#1F4E79; }
+.suggestion-ville { font-size:0.75em; color:#888; margin-top:2px; }
+.suggestion-empty {
+  padding:14px 16px; text-align:center;
+  color:#888; font-size:0.85em; font-style:italic;
+}
+.search-hint {
+  font-size:0.75em; color:#aaa; margin-top:5px;
+  padding-left:2px;
+}
+
+/* -- BOUTON LOGIN -- */
+.btn-login {
+  width:100%; padding:15px;
+  background:linear-gradient(135deg,#1F4E79,#1565C0);
+  color:white; border:none; border-radius:10px;
+  font-size:1em; font-weight:bold; cursor:pointer;
+  margin-top:8px; letter-spacing:0.3px;
+  box-shadow:0 3px 12px rgba(31,78,121,0.3);
+  transition:opacity 0.2s;
+}
+.btn-login:active { opacity:0.85; }
+
+.error-msg {
+  display:none; color:#C62828; font-size:0.82em;
+  background:#FFEBEE; padding:10px 14px; border-radius:8px;
+  margin-top:12px; text-align:center; border:1px solid #FFCDD2;
+}
+.security-note {
+  font-size:0.73em; color:#bbb; margin-top:14px;
+  text-align:center; line-height:1.7;
+}
+
+/* -- LOADING -- */
+.loading { display:none; text-align:center; padding:50px 20px; }
+.spinner {
+  width:40px; height:40px; border:4px solid #D6E4F0;
+  border-top-color:#1F4E79; border-radius:50%;
+  animation:spin 0.8s linear infinite; margin:0 auto 14px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading p { color:#1F4E79; font-size:0.88em; }
+.loading-etape {
+  font-size:0.78em; color:#aaa; margin-top:6px;
+}
+
+/* -- BLOQUE -- */
+.blocked-msg {
+  background:#FFEBEE; border:2px solid #C62828; border-radius:12px;
+  padding:24px 20px; text-align:center; margin:20px 16px; display:none;
+}
+.blocked-msg h3 { color:#C62828; margin-bottom:10px; }
+.blocked-timer { font-size:2em; font-weight:bold; color:#C62828; margin:12px 0; }
+.blocked-msg p { font-size:0.82em; color:#555; line-height:1.6; }
+
+/* -- ESPACE PARENT -- */
+.parent-space { display:none; padding-bottom:30px; }
+
+/* Carte eleve */
+.eleve-header { padding:20px 16px; color:white; position:relative; }
+.eleve-mat-badge {
+  display:inline-block; background:rgba(255,255,255,0.2);
+  padding:3px 12px; border-radius:20px;
+  font-size:0.78em; font-weight:bold; margin-bottom:10px;
+}
+.eleve-nom { font-size:1.15em; font-weight:bold; margin-bottom:4px; }
+.eleve-infos { font-size:0.82em; opacity:0.9; line-height:1.6; }
+.btn-logout {
+  position:absolute; top:16px; right:16px;
+  background:rgba(255,255,255,0.15); color:white;
+  border:1px solid rgba(255,255,255,0.35);
+  padding:5px 14px; border-radius:20px;
+  font-size:0.76em; cursor:pointer;
+}
+
+/* Statut paiement */
+.paiement-bar {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 16px;
+}
+.paiement-ok     { background:#E8F5E9; border-bottom:2px solid #2E7D32; }
+.paiement-partiel{ background:#FFFDE7; border-bottom:2px solid #B8860B; }
+.paiement-non    { background:#FFEBEE; border-bottom:2px solid #C62828; }
+.pay-icon  { font-size:2em; flex-shrink:0; }
+.pay-text h4 { font-size:0.92em; margin-bottom:3px; }
+.pay-text p  { font-size:0.8em; color:#555; }
+.pay-montant { font-size:1.05em; font-weight:bold; margin-top:3px; }
+.c-vert  { color:#2E7D32; }
+.c-or    { color:#B8860B; }
+.c-rouge { color:#C62828; }
+
+/* Sections */
+.section { background:white; margin-bottom:8px; overflow:hidden; }
+.sec-header {
+  padding:14px 16px; font-weight:bold; font-size:0.92em; color:white;
+  cursor:pointer; display:flex; justify-content:space-between; align-items:center;
+  user-select:none;
+}
+.sec-header.bleu   { background:#1F4E79; }
+.sec-header.vert   { background:#2E7D32; }
+.sec-header.rouge  { background:#C62828; }
+.sec-header.or     { background:#B8860B; }
+.sec-header.violet { background:#4A148C; }
+.sec-header.orange { background:#E65100; }
+.sec-body { padding:16px; display:none; }
+.sec-body.open { display:block; }
+
+/* Notes bloquees */
+.notes-lock {
+  text-align:center; padding:24px 16px; color:#C62828;
+}
+.notes-lock .lock-icon { font-size:2.5em; margin-bottom:10px; }
+.notes-lock h4 { margin-bottom:8px; font-size:0.95em; }
+.notes-lock p  { font-size:0.82em; color:#777; line-height:1.5; }
+
+/* Tableau notes */
+.t-notes { width:100%; border-collapse:collapse; font-size:0.82em; }
+.t-notes th {
+  background:#1F4E79; color:white; padding:9px 5px;
+  text-align:center; font-size:0.78em;
+}
+.t-notes td { padding:9px 5px; border-bottom:1px solid #eee; text-align:center; }
+.t-notes tr:nth-child(even) { background:#f8faff; }
+.t-notes td:first-child { text-align:left; font-weight:bold; color:#1F4E79; }
+
+/* Comment payer */
+.how-pay { background:#F8F9FA; border-radius:10px; padding:16px; }
+.how-pay h4 { color:#1F4E79; margin-bottom:12px; font-size:0.88em; }
+.step { display:flex; gap:12px; margin-bottom:10px; align-items:flex-start; }
+.step-n {
+  background:#1F4E79; color:white; width:24px; height:24px;
+  border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-size:0.73em; font-weight:bold; flex-shrink:0;
+}
+.step p { font-size:0.82em; color:#444; line-height:1.5; }
+.btn-wave {
+  width:100%; padding:13px; background:#00BCD4; color:white;
+  border:none; border-radius:10px; font-size:0.88em; font-weight:bold;
+  cursor:pointer; margin:8px 0;
+}
+.btn-orange-m {
+  width:100%; padding:13px; background:#FF6F00; color:white;
+  border:none; border-radius:10px; font-size:0.88em; font-weight:bold;
+  cursor:pointer; margin:4px 0;
+}
+
+/* EDT */
+.edt-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.t-edt { width:100%; min-width:460px; border-collapse:collapse; font-size:0.75em; }
+.t-edt th { background:#1F4E79; color:white; padding:8px 4px; text-align:center; }
+.t-edt td { padding:7px 4px; border:1px solid #eee; text-align:center; }
+.t-edt tr:nth-child(even) { background:#f8faff; }
+.edt-pause { background:#FFFDE7 !important; color:#B8860B; font-weight:bold; }
+
+/* Annonces */
+.annonce {
+  border-left:4px solid #1F4E79; padding:11px 14px;
+  margin-bottom:10px; border-radius:0 8px 8px 0; background:#f8faff;
+}
+.annonce.urgent { border-color:#C62828; background:#FFEBEE; }
+.annonce.info   { border-color:#2E7D32; background:#E8F5E9; }
+.annonce h4 { font-size:0.86em; margin-bottom:3px; color:#1F4E79; }
+.annonce.urgent h4 { color:#C62828; }
+.annonce.info   h4 { color:#2E7D32; }
+.annonce p  { font-size:0.79em; color:#555; line-height:1.5; }
+.annonce .adate { font-size:0.72em; color:#999; margin-top:5px; }
+
+/* Contact */
+.contact-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.c-item { background:#f8f8f8; border-radius:10px; padding:13px; text-align:center; }
+.c-item .ci { font-size:1.5em; margin-bottom:5px; }
+.c-item h4 { font-size:0.78em; color:#1F4E79; margin-bottom:3px; }
+.c-item p  { font-size:0.76em; color:#333; line-height:1.6; }
+.c-item a  { color:#1F4E79; text-decoration:none; font-weight:bold; }
+
+/* Footer */
+.footer {
+  background:#1F4E79; color:rgba(255,255,255,0.7);
+  text-align:center; padding:18px 16px; font-size:0.76em; line-height:1.8;
+}
+
+/* PWA */
+.pwa-banner {
+  background:#E8F5E9; border-bottom:2px solid #2E7D32;
+  padding:10px 16px; display:none; align-items:center; gap:12px;
+}
+.pwa-banner p { font-size:0.79em; color:#2E7D32; flex:1; }
+.pwa-banner button {
+  background:#2E7D32; color:white; border:none;
+  padding:7px 14px; border-radius:6px; font-size:0.78em; cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<!-- PWA Banner -->
+<div class="pwa-banner" id="pwaBanner">
+  <p>Installez l'application sur votre telephone !</p>
+  <button onclick="installPWA()">Installer</button>
+</div>
+
+<!-- HEADER -->
+<div class="header" id="mainHeader">
+  <img id="schoolLogo" src="data:image/png;base64,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"
+    alt="Logo Ecole Les Princes"
+    style="width:70px;height:70px;object-fit:contain;border-radius:50%;
+           background:rgba(255,255,255,0.15);padding:6px;margin-bottom:10px;
+           display:block;margin-left:auto;margin-right:auto;">
+  <h1 id="headerTitle"> ECOLE LES PRINCES</h1>
+  <p id="headerSub">Espace Parents - Suivi Scolaire en Ligne</p>
+</div>
+
+<!-- LOGIN -->
+<div class="login-wrapper" id="loginWrapper">
+  <div class="login-box">
+    <p class="login-titre"> Acces Espace Parents</p>
+    <p class="login-sous">Entrez les informations ci-dessous pour acceder au dossier scolaire de votre enfant</p>
+
+    <!-- Matricule -->
+    <div class="input-group">
+      <label>N MATRICULE <span class="requis">*</span></label>
+      <input type="text" id="inputMat" placeholder="Ex: 25129856P"
+        maxlength="15" autocomplete="off" autocorrect="off" spellcheck="false"
+        oninput="this.value=this.value.toUpperCase()">
+    </div>
+
+    <!-- Telephone -->
+    <div class="input-group">
+      <label>VOTRE TELEPHONE <span class="requis">*</span></label>
+      <input type="tel" id="inputTel" placeholder="Ex: 0708111269"
+        maxlength="10" autocomplete="off">
+    </div>
+
+
+
+    <button class="btn-login" onclick="login()"> ACCEDER A MON ESPACE</button>
+    <p class="error-msg" id="errorMsg"></p>
+    <p class="security-note">
+       Connexion securisee | 3 tentatives maximum<br>
+      Vos donnees sont protegees et confidentielles
+    </p>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading" id="loadingDiv">
+  <div class="spinner"></div>
+  <p>Verification en cours...</p>
+  <p class="loading-etape" id="loadingEtape"></p>
+</div>
+
+<!-- BLOQUE -->
+<div class="blocked-msg" id="blockedMsg">
+  <h3>Acces temporairement bloque</h3>
+  <div class="blocked-timer" id="blockedTimer">30:00</div>
+  <p>Trop de tentatives incorrectes.<br>
+     Reessayez dans le delai indique.<br><br>
+     Besoin d'aide ? <strong>07 08 11 12 69</strong>
+  </p>
+</div>
+
+<!-- ESPACE PARENT -->
+<div class="parent-space" id="parentSpace">
+
+  <!-- Carte eleve -->
+  <div id="eleveCard"></div>
+
+  <!-- Statut paiement -->
+  <div id="statutPay"></div>
+
+  <!-- ANNONCES -->
+  <div id="sectionAnnonces" style="display:none;">
+    <div class="section" style="border-left:4px solid #C62828;">
+      <div class="sec-header" style="background:#C62828;" onclick="toggleSec(this)">
+         ANNONCES DE L'ECOLE <span>v</span>
+      </div>
+      <div class="sec-body" id="annoncesBody"></div>
+    </div>
+  </div>
+
+  <!-- NOTES -->
+  <div class="section">
+    <div class="sec-header bleu" onclick="toggleSec(this)">
+       NOTES ET RESULTATS <span>v</span>
+    </div>
+    <div class="sec-body" id="notesBody"></div>
+  </div>
+
+  <!-- BULLETIN PDF -->
+  <div class="section" id="sectionBulletin" style="display:none;">
+    <div class="sec-header" style="background:#2E7D32" onclick="toggleSec(this)">
+       BULLETIN SCOLAIRE <span>v</span>
+    </div>
+    <div class="sec-body" id="bulletinBody">
+      <div style="text-align:center;padding:16px;">
+        <div style="font-size:48px;margin-bottom:12px;"></div>
+        <p style="font-weight:bold;color:#2E7D32;font-size:1em;margin-bottom:8px;">Bulletin disponible</p>
+        <p style="font-size:0.82em;color:#666;margin-bottom:16px;">
+          Votre bulletin scolaire est disponible uniquement si votre scolarite est a jour.
+        </p>
+        <button onclick="telechargerBulletin()" 
+          style="background:linear-gradient(135deg,#2E7D32,#388E3C);color:white;
+          border:none;border-radius:10px;padding:12px 24px;font-size:0.9em;
+          font-weight:bold;cursor:pointer;width:100%;">
+           Telecharger mon bulletin PDF
+        </button>
+        <p style="font-size:0.75em;color:#aaa;margin-top:10px;">
+           Le bulletin s'ouvre dans votre navigateur - utilisez Imprimer pour sauvegarder en PDF
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABSENCES -->
+  <div class="section">
+    <div class="sec-header" style="background:#E65100" onclick="toggleSec(this)">
+       ABSENCES ET RETARDS <span>v</span>
+    </div>
+    <div class="sec-body" id="absencesBody">
+      <div style="text-align:center;padding:20px;color:#666;">
+        <p style="font-size:0.85em;">Chargement des absences...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCOLARITE -->
+  <div class="section">
+    <div class="sec-header rouge" onclick="toggleSec(this)">
+       SCOLARITE ET PAIEMENTS <span>v</span>
+    </div>
+    <div class="sec-body">
+      <div class="how-pay">
+
+        <!-- Solde -->
+        <div id="montantDu" style="background:linear-gradient(135deg,#1F4E79,#2E86AB);
+          border-radius:10px;padding:14px;text-align:center;color:white;margin-bottom:16px;">
+          <p style="font-size:0.78em;opacity:0.85;margin-bottom:4px;">SOLDE A PAYER</p>
+          <p style="font-size:2em;font-weight:bold;" id="montantText">-</p>
+          <p style="font-size:0.75em;opacity:0.8;margin-top:2px;">F CFA</p>
+        </div>
+
+        <!-- Guide Wave -->
+        <div style="background:#EFF6FF;border-radius:10px;padding:14px;
+          margin-bottom:12px;border-left:4px solid #1F6FEB;">
+          <p style="font-weight:bold;color:#1F6FEB;font-size:0.9em;margin-bottom:12px;">
+             PAYER VIA WAVE
+          </p>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">1</div>
+            <p>Ouvrez l'application <strong>Wave</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">2</div>
+            <p>Appuyez sur <strong>Paiements</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">3</div>
+            <p>Recherchez <strong id="nomEcoleWave">GROUPE SCOLAIRE LES PRINCES</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">4</div>
+            <p>Selectionnez votre ecole : <strong id="nomEcoleWave2" style="color:#1F6FEB;">-</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">5</div>
+            <p>Matricule : <strong id="matRefWave" style="color:#1F6FEB;font-size:1.05em;
+              background:#DBEAFE;padding:2px 8px;border-radius:6px;">-</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">6</div>
+            <p>Entrez votre <strong>Nom, Prenom</strong> et <strong>Contact</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">7</div>
+            <p>Entrez le <strong>montant</strong> que vous pouvez payer</p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">8</div>
+            <p>Confirmez avec votre <strong>code PIN</strong></p></div>
+        </div>
+
+        <!-- Guide Orange Money -->
+        <div style="background:#FFF3E0;border-radius:10px;padding:14px;
+          margin-bottom:12px;border-left:4px solid #FF6600;">
+          <p style="font-weight:bold;color:#FF6600;font-size:0.9em;margin-bottom:12px;">
+             PAYER VIA ORANGE MONEY
+          </p>
+          <div class="step"><div class="step-n" style="background:#FF6600;">1</div>
+            <p>Composez <strong id="codeOrange" style="color:#FF6600;font-size:1.05em;
+              background:#FFE0CC;padding:2px 8px;border-radius:6px;">#144*43*1721*1#</strong>
+              sur votre telephone</p></div>
+          <div class="step"><div class="step-n" style="background:#FF6600;">2</div>
+            <p><strong id="nomEcoleOrange">GROUPE SCOLAIRE LES PRINCES</strong> s'affiche - validez</p></div>
+          <div class="step"><div class="step-n" style="background:#FF6600;">3</div>
+            <p>Entrez votre matricule : <strong id="matRefOrange" style="color:#FF6600;
+              font-size:1.05em;background:#FFE0CC;padding:2px 8px;border-radius:6px;">
+              -</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#FF6600;">4</div>
+            <p>Entrez le <strong>montant</strong> que vous pouvez payer</p></div>
+          <div class="step"><div class="step-n" style="background:#FF6600;">5</div>
+            <p>Entrez votre <strong>code PIN</strong> et validez </p></div>
+        </div>
+
+        <!-- WhatsApp confirmation -->
+        <div style="background:#E8F5E9;border-radius:10px;padding:12px;
+          border-left:4px solid #2E7D32;text-align:center;">
+          <p style="font-size:0.82em;color:#2E7D32;">
+             Apres paiement, envoyez votre recu par WhatsApp au<br>
+            <strong style="font-size:1.1em;">07 08 11 12 69</strong>
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- EMPLOI DU TEMPS -->
+  <div class="section">
+    <div class="sec-header vert" onclick="toggleSec(this)">
+       EMPLOI DU TEMPS <span>v</span>
+    </div>
+    <div class="sec-body">
+      <div class="edt-scroll">
+        <table class="t-edt">
+          <tr><th>HORAIRE</th><th>LUN</th><th>MAR</th><th>MER</th><th>JEU</th><th>VEN</th><th>SAM</th></tr>
+          <tr><td>07h45-08h55</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>08h55-09h50</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr class="edt-pause"><td colspan="7"> Recreation 09h50 - 10h10</td></tr>
+          <tr><td>10h10-11h05</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>11h05-12h00</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr class="edt-pause"><td colspan="7"> Dejeuner 12h00 - 13h05</td></tr>
+          <tr><td>13h05-14h00</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>14h00-14h55</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>14h55-15h50</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>15h50-16h45</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+          <tr><td>16h45-17h40</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANNONCES -->
+  <div class="section">
+    <div class="sec-header violet" onclick="toggleSec(this)">
+       ANNONCES <span>v</span>
+    </div>
+    <div class="sec-body open">
+      <div class="annonce info">
+        <h4> Bienvenue sur votre Espace Parents !</h4>
+        <p>Suivez la scolarite de votre enfant : notes, paiements, emploi du temps et annonces importantes.</p>
+        <div class="adate">Mars 2026</div>
+      </div>
+      <div class="annonce urgent">
+        <h4> Rappel scolarite</h4>
+        <p>Merci de regulariser les soldes restants. En cas de difficultes, contactez la direction.</p>
+        <div class="adate">Permanent</div>
+      </div>
+      <div class="annonce">
+        <h4> Reunion parents-professeurs</h4>
+        <p>Date a definir. Vous serez informes par WhatsApp une semaine a l'avance.</p>
+        <div class="adate">A venir</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALENDRIER SCOLAIRE -->
+  <div class="section" id="sectionCalendrier">
+    <div class="sec-header" style="background:#4A148C" onclick="toggleSec(this)">
+       CALENDRIER SCOLAIRE 2025-2026 <span>v</span>
+    </div>
+    <div class="sec-body">
+      <div style="display:grid;gap:10px;">
+        <!-- Trimestre 1 -->
+        <div style="background:#EDE7F6;border-radius:10px;padding:12px;border-left:4px solid #4A148C;">
+          <p style="font-weight:bold;color:#4A148C;font-size:0.9em;margin-bottom:8px;">1er Trimestre</p>
+          <div style="font-size:0.82em;color:#444;display:grid;gap:4px;">
+            <div style="display:flex;justify-content:space-between;"><span> Debut des cours</span><strong>16 Septembre 2025</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span> Vacances Noel</span><strong>20 Dec. 2025 - 4 Jan. 2026</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span> Fin T1</span><strong>20 Decembre 2025</strong></div>
+          </div>
+        </div>
+        <!-- Trimestre 2 -->
+        <div style="background:#E8F5E9;border-radius:10px;padding:12px;border-left:4px solid #2E7D32;">
+          <p style="font-weight:bold;color:#2E7D32;font-size:0.9em;margin-bottom:8px;">2eme Trimestre</p>
+          <div style="font-size:0.82em;color:#444;display:grid;gap:4px;">
+            <div style="display:flex;justify-content:space-between;"><span> Reprise</span><strong>5 Janvier 2026</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span> Vacances Paques</span><strong>28 Mar. - 12 Avr. 2026</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span> Fin T2</span><strong>28 Mars 2026</strong></div>
+          </div>
+        </div>
+        <!-- Trimestre 3 -->
+        <div style="background:#E3F2FD;border-radius:10px;padding:12px;border-left:4px solid #1F4E79;">
+          <p style="font-weight:bold;color:#1F4E79;font-size:0.9em;margin-bottom:8px;">3eme Trimestre</p>
+          <div style="font-size:0.82em;color:#444;display:grid;gap:4px;">
+            <div style="display:flex;justify-content:space-between;"><span> Reprise</span><strong>13 Avril 2026</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span> Fin d'annee</span><strong>Juillet 2026</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span> Examens CEPE/BEPC/BAC</span><strong>Juin - Juillet 2026</strong></div>
+          </div>
+        </div>
+        <!-- Infos importantes -->
+        <div style="background:#FFF8E1;border-radius:10px;padding:12px;border-left:4px solid #B8860B;">
+          <p style="font-weight:bold;color:#B8860B;font-size:0.9em;margin-bottom:6px;">Dates importantes</p>
+          <div style="font-size:0.82em;color:#444;display:grid;gap:3px;">
+            <p>Reunion parents T1 : <strong>Novembre 2025</strong></p>
+            <p>Reunion parents T2 : <strong>Fevrier 2026</strong></p>
+            <p>Conseil de classe : <strong>Fin de chaque trimestre</strong></p>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:0.73em;color:#aaa;margin-top:10px;text-align:center;">
+         Calendrier indicatif - peut etre ajuste selon le MENA
+      </p>
+    </div>
+  </div>
+
+
+  <!-- CLUBS SCOLAIRES -->
+  <div class="section" id="sectionClubs">
+    <div class="sec-header" style="background:linear-gradient(135deg,#6A1B9A,#7B1FA2)" onclick="toggleSec(this)">
+       CLUBS SCOLAIRES <span>v</span>
+    </div>
+    <div class="sec-body">
+      <div id="clubsEleve" style="margin-bottom:12px;"></div>
+      <div id="listeTousClubs"></div>
+    </div>
+  </div>
+
+  <!-- MESSAGERIE / BOITE DE DIALOGUE -->
+  <div class="section" id="sectionMessages">
+    <div class="sec-header" style="background:linear-gradient(135deg,#1A5276,#2874A6)" onclick="toggleSec(this)">
+       MESSAGERIE - CELLULE ECOUTE <span>v</span>
+    </div>
+    <div class="sec-body">
+      <!-- Affichage des reponses recues -->
+      <div id="reponsesMessages" style="margin-bottom:12px;"></div>
+      <!-- Formulaire envoi message -->
+      <div style="background:#F0F4F8;border-radius:10px;padding:14px;border:1px solid #BDD7EE;">
+        <p style="font-weight:bold;color:#1A5276;margin:0 0 10px 0;">Envoyer un message a la direction</p>
+        <select id="msgType" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin-bottom:10px;font-size:0.9em;">
+          <option value="">-- Type de message --</option>
+          <option value="Suggestion">Suggestion</option>
+          <option value="Reclamation">Reclamation</option>
+          <option value="Felicitation"> Felicitation</option>
+          <option value="Demande">Demande</option>
+          <option value="Signalement"> Signalement</option>
+          <option value="Autre"> Autre</option>
+        </select>
+        <input id="msgSujet" type="text" placeholder="Sujet du message..." 
+          style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin-bottom:10px;
+          font-size:0.9em;box-sizing:border-box;">
+        <textarea id="msgTexte" rows="4" placeholder="Votre message ici..."
+          style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin-bottom:10px;
+          font-size:0.9em;resize:vertical;box-sizing:border-box;"></textarea>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:0.85em;color:#555;">
+            <input type="checkbox" id="msgAnonyme"> Envoyer anonymement
+          </label>
+        </div>
+        <button onclick="envoyerMessage()" id="btnEnvoyerMsg"
+          style="width:100%;margin-top:10px;padding:12px;background:#1A5276;color:white;
+          border:none;border-radius:8px;font-size:0.95em;cursor:pointer;font-weight:bold;">
+           Envoyer le message
+        </button>
+        <p id="msgStatut" style="text-align:center;font-size:0.85em;margin:8px 0 0 0;"></p>
+      </div>
+
+      <!-- Boite de suggestions -->
+      <div style="margin-top:14px;background:#FFF9E6;border:1px solid #F9E547;border-radius:10px;padding:14px;">
+        <p style="font-weight:bold;color:#7D6608;margin:0 0 8px 0;">Boite de Suggestions - Cellule Ecoute et Anti-Decrage</p>
+        <p style="font-size:0.85em;color:#666;margin:0 0 10px 0;">
+          Vos suggestions sont lues et traitees par la Cellule Ecoute du reseau CPP.
+          Chaque message est traite avec confidentialite et bienveillance.
+        </p>
+        <textarea id="suggTexte" rows="3" placeholder="Votre suggestion pour ameliorer l'ecole..."
+          style="width:100%;padding:10px;border:1px solid #F9E547;border-radius:8px;
+          font-size:0.9em;resize:vertical;box-sizing:border-box;margin-bottom:8px;"></textarea>
+        <button onclick="envoyerSuggestion()"
+          style="width:100%;padding:10px;background:#B7950B;color:white;
+          border:none;border-radius:8px;font-size:0.9em;cursor:pointer;">
+           Envoyer la suggestion
+        </button>
+        <p id="suggStatut" style="text-align:center;font-size:0.85em;margin:8px 0 0 0;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTACT -->
+  <div class="section">
+    <div class="sec-header orange" onclick="toggleSec(this)">
+       CONTACT <span>v</span>
+    </div>
+    <div class="sec-body">
+      <div class="contact-grid">
+        <div class="c-item">
+          <div class="ci"></div><h4>Telephone</h4>
+          <p><a href="tel:0708111269">07 08 11 12 69</a><br>
+             <a href="tel:0789771991">07 89 77 19 91</a><br>
+             <a href="tel:0101238145">01 01 23 81 45</a></p>
+        </div>
+        <div class="c-item">
+          <div class="ci"></div><h4>WhatsApp</h4>
+          <p><a href="https://wa.me/2250708111269">07 08 11 12 69</a><br>Lun-Sam<br>07h30-18h00</p>
+        </div>
+        <div class="c-item">
+          <div class="ci"></div><h4>Email</h4>
+          <p>princeabidjanecole<br>@gmail.com</p>
+        </div>
+        <div class="c-item">
+          <div class="ci"></div><h4>Secretariat</h4>
+          <p>Lun - Sam<br>07h30 - 17h30</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:16px;">
+    <button onclick="logout()" style="width:100%;padding:13px;background:#f5f5f5;
+      color:#777;border:1px solid #ddd;border-radius:10px;font-size:0.86em;cursor:pointer;">
+       Se deconnecter
+    </button>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p><strong>Ecole Les Princes</strong> - Espace Parents</p>
+  <p>Tel : 07 08 11 12 69 | Code : 054707 | OID : E10433084</p>
+  <p style="opacity:0.5;margin-top:4px;"> 2025-2026</p>
+</div>
 
 </body>
 </html>
