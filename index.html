@@ -16,106 +16,38 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:100vh; }
-
-/* -- HEADER -- */
-.header {
-  background:linear-gradient(135deg,#1F4E79,#1565C0);
-  color:white; padding:30px 20px 22px; text-align:center;
-  transition:background 0.4s;
-}
+.header { background:linear-gradient(135deg,#1F4E79,#1565C0); color:white; padding:30px 20px 22px; text-align:center; transition:background 0.4s; }
 .header h1 { font-size:1.15em; font-weight:bold; margin-bottom:5px; }
 .header p  { font-size:0.8em; opacity:0.88; }
-
-/* -- LOGIN -- */
 .login-wrapper { max-width:480px; margin:24px auto; padding:0 16px; }
-.login-box {
-  background:white; border-radius:16px; padding:28px 22px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.1);
-}
-.login-titre {
-  color:#1F4E79; font-size:1.05em; font-weight:bold;
-  margin-bottom:5px; text-align:center;
-}
-.login-sous {
-  font-size:0.8em; color:#888; margin-bottom:22px;
-  text-align:center; line-height:1.5;
-}
+.login-box { background:white; border-radius:16px; padding:28px 22px; box-shadow:0 4px 20px rgba(0,0,0,0.1); }
+.login-titre { color:#1F4E79; font-size:1.05em; font-weight:bold; margin-bottom:5px; text-align:center; }
+.login-sous { font-size:0.8em; color:#888; margin-bottom:22px; text-align:center; line-height:1.5; }
 .input-group { margin-bottom:16px; position:relative; }
-.input-group label {
-  font-size:0.8em; color:#444; font-weight:bold;
-  display:block; margin-bottom:6px;
-}
+.input-group label { font-size:0.8em; color:#444; font-weight:bold; display:block; margin-bottom:6px; }
 .input-group .requis { color:#C62828; }
-.input-group input {
-  width:100%; padding:13px 16px; border:2px solid #E0E0E0;
-  border-radius:10px; font-size:0.95em; outline:none;
-  transition:border-color 0.2s;
-}
+.input-group input { width:100%; padding:13px 16px; border:2px solid #E0E0E0; border-radius:10px; font-size:0.95em; outline:none; transition:border-color 0.2s; }
 .input-group input:focus { border-color:#1F4E79; }
 .input-group input::placeholder { color:#bbb; }
-
-/* -- BOUTON LOGIN -- */
-.btn-login {
-  width:100%; padding:15px;
-  background:linear-gradient(135deg,#1F4E79,#1565C0);
-  color:white; border:none; border-radius:10px;
-  font-size:1em; font-weight:bold; cursor:pointer;
-  margin-top:8px; letter-spacing:0.3px;
-  box-shadow:0 3px 12px rgba(31,78,121,0.3);
-  transition:opacity 0.2s;
-}
+.btn-login { width:100%; padding:15px; background:linear-gradient(135deg,#1F4E79,#1565C0); color:white; border:none; border-radius:10px; font-size:1em; font-weight:bold; cursor:pointer; margin-top:8px; letter-spacing:0.3px; box-shadow:0 3px 12px rgba(31,78,121,0.3); transition:opacity 0.2s; }
 .btn-login:active { opacity:0.85; }
-.error-msg {
-  display:none; color:#C62828; font-size:0.82em;
-  background:#FFEBEE; padding:10px 14px; border-radius:8px;
-  margin-top:12px; text-align:center; border:1px solid #FFCDD2;
-}
-.security-note {
-  font-size:0.73em; color:#bbb; margin-top:14px;
-  text-align:center; line-height:1.7;
-}
-
-/* -- LOADING -- */
+.error-msg { display:none; color:#C62828; font-size:0.82em; background:#FFEBEE; padding:10px 14px; border-radius:8px; margin-top:12px; text-align:center; border:1px solid #FFCDD2; }
+.security-note { font-size:0.73em; color:#bbb; margin-top:14px; text-align:center; line-height:1.7; }
 .loading { display:none; text-align:center; padding:50px 20px; }
-.spinner {
-  width:40px; height:40px; border:4px solid #D6E4F0;
-  border-top-color:#1F4E79; border-radius:50%;
-  animation:spin 0.8s linear infinite; margin:0 auto 14px;
-}
+.spinner { width:40px; height:40px; border:4px solid #D6E4F0; border-top-color:#1F4E79; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 14px; }
 @keyframes spin { to { transform:rotate(360deg); } }
 .loading p { color:#1F4E79; font-size:0.88em; }
 .loading-etape { font-size:0.78em; color:#aaa; margin-top:6px; }
-
-/* -- BLOQUE -- */
-.blocked-msg {
-  background:#FFEBEE; border:2px solid #C62828; border-radius:12px;
-  padding:24px 20px; text-align:center; margin:20px 16px; display:none;
-}
+.blocked-msg { background:#FFEBEE; border:2px solid #C62828; border-radius:12px; padding:24px 20px; text-align:center; margin:20px 16px; display:none; }
 .blocked-msg h3 { color:#C62828; margin-bottom:10px; }
 .blocked-timer { font-size:2em; font-weight:bold; color:#C62828; margin:12px 0; }
 .blocked-msg p { font-size:0.82em; color:#555; line-height:1.6; }
-
-/* -- ESPACE PARENT -- */
 .parent-space { display:none; padding-bottom:30px; }
-
-/* Carte eleve */
 .eleve-header { padding:20px 16px; color:white; position:relative; }
-.eleve-mat-badge {
-  display:inline-block; background:rgba(255,255,255,0.2);
-  padding:3px 12px; border-radius:20px;
-  font-size:0.78em; font-weight:bold; margin-bottom:10px;
-}
+.eleve-mat-badge { display:inline-block; background:rgba(255,255,255,0.2); padding:3px 12px; border-radius:20px; font-size:0.78em; font-weight:bold; margin-bottom:10px; }
 .eleve-nom { font-size:1.15em; font-weight:bold; margin-bottom:4px; }
 .eleve-infos { font-size:0.82em; opacity:0.9; line-height:1.6; }
-.btn-logout {
-  position:absolute; top:16px; right:16px;
-  background:rgba(255,255,255,0.15); color:white;
-  border:1px solid rgba(255,255,255,0.35);
-  padding:5px 14px; border-radius:20px;
-  font-size:0.76em; cursor:pointer;
-}
-
-/* Statut paiement */
+.btn-logout { position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.35); padding:5px 14px; border-radius:20px; font-size:0.76em; cursor:pointer; }
 .paiement-bar { display:flex; align-items:center; gap:14px; padding:14px 16px; }
 .paiement-ok     { background:#E8F5E9; border-bottom:2px solid #2E7D32; }
 .paiement-partiel{ background:#FFFDE7; border-bottom:2px solid #B8860B; }
@@ -127,14 +59,8 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
 .c-vert  { color:#2E7D32; }
 .c-or    { color:#B8860B; }
 .c-rouge { color:#C62828; }
-
-/* Sections */
 .section { background:white; margin-bottom:8px; overflow:hidden; }
-.sec-header {
-  padding:14px 16px; font-weight:bold; font-size:0.92em; color:white;
-  cursor:pointer; display:flex; justify-content:space-between; align-items:center;
-  user-select:none;
-}
+.sec-header { padding:14px 16px; font-weight:bold; font-size:0.92em; color:white; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; }
 .sec-header.bleu   { background:#1F4E79; }
 .sec-header.vert   { background:#2E7D32; }
 .sec-header.rouge  { background:#C62828; }
@@ -143,36 +69,21 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
 .sec-header.orange { background:#E65100; }
 .sec-body { padding:16px; display:none; }
 .sec-body.open { display:block; }
-
-/* Notes bloquees */
 .notes-lock { text-align:center; padding:24px 16px; color:#C62828; }
 .notes-lock .lock-icon { font-size:2.5em; margin-bottom:10px; }
 .notes-lock h4 { margin-bottom:8px; font-size:0.95em; }
 .notes-lock p  { font-size:0.82em; color:#777; line-height:1.5; }
-
-/* Comment payer */
 .how-pay { background:#F8F9FA; border-radius:10px; padding:16px; }
 .step { display:flex; gap:12px; margin-bottom:10px; align-items:flex-start; }
-.step-n {
-  background:#1F4E79; color:white; width:24px; height:24px;
-  border-radius:50%; display:flex; align-items:center;
-  justify-content:center; font-size:0.73em; font-weight:bold; flex-shrink:0;
-}
+.step-n { background:#1F4E79; color:white; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.73em; font-weight:bold; flex-shrink:0; }
 .step p { font-size:0.82em; color:#444; line-height:1.5; }
-
-/* EDT */
 .edt-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
 .t-edt { width:100%; min-width:460px; border-collapse:collapse; font-size:0.75em; }
 .t-edt th { background:#1F4E79; color:white; padding:8px 4px; text-align:center; }
 .t-edt td { padding:7px 4px; border:1px solid #eee; text-align:center; }
 .t-edt tr:nth-child(even) { background:#f8faff; }
 .edt-pause { background:#FFFDE7 !important; color:#B8860B; font-weight:bold; }
-
-/* Annonces */
-.annonce {
-  border-left:4px solid #1F4E79; padding:11px 14px;
-  margin-bottom:10px; border-radius:0 8px 8px 0; background:#f8faff;
-}
+.annonce { border-left:4px solid #1F4E79; padding:11px 14px; margin-bottom:10px; border-radius:0 8px 8px 0; background:#f8faff; }
 .annonce.urgent { border-color:#C62828; background:#FFEBEE; }
 .annonce.info   { border-color:#2E7D32; background:#E8F5E9; }
 .annonce h4 { font-size:0.86em; margin-bottom:3px; color:#1F4E79; }
@@ -180,165 +91,105 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
 .annonce.info   h4 { color:#2E7D32; }
 .annonce p  { font-size:0.79em; color:#555; line-height:1.5; }
 .annonce .adate { font-size:0.72em; color:#999; margin-top:5px; }
-
-/* Contact */
 .contact-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .c-item { background:#f8f8f8; border-radius:10px; padding:13px; text-align:center; }
 .c-item .ci { font-size:1.5em; margin-bottom:5px; }
 .c-item h4 { font-size:0.78em; color:#1F4E79; margin-bottom:3px; }
 .c-item p  { font-size:0.76em; color:#333; line-height:1.6; }
 .c-item a  { color:#1F4E79; text-decoration:none; font-weight:bold; }
-
-/* Footer */
-.footer {
-  background:#1F4E79; color:rgba(255,255,255,0.7);
-  text-align:center; padding:18px 16px; font-size:0.76em; line-height:1.8;
-}
-
-/* PWA */
-.pwa-banner {
-  background:#E8F5E9; border-bottom:2px solid #2E7D32;
-  padding:10px 16px; display:none; align-items:center; gap:12px;
-}
+.footer { background:#1F4E79; color:rgba(255,255,255,0.7); text-align:center; padding:18px 16px; font-size:0.76em; line-height:1.8; }
+.pwa-banner { background:#E8F5E9; border-bottom:2px solid #2E7D32; padding:10px 16px; display:none; align-items:center; gap:12px; }
 .pwa-banner p { font-size:0.79em; color:#2E7D32; flex:1; }
-.pwa-banner button {
-  background:#2E7D32; color:white; border:none;
-  padding:7px 14px; border-radius:6px; font-size:0.78em; cursor:pointer;
-}
+.pwa-banner button { background:#2E7D32; color:white; border:none; padding:7px 14px; border-radius:6px; font-size:0.78em; cursor:pointer; }
 </style>
 </head>
 <body>
 
-<!-- PWA Banner -->
 <div class="pwa-banner" id="pwaBanner">
   <p>Installez l'application sur votre telephone !</p>
   <button onclick="installPWA()">Installer</button>
 </div>
 
-<!-- HEADER -->
 <div class="header" id="mainHeader">
   <h1 id="headerTitle">🏫 ECOLE LES PRINCES</h1>
   <p id="headerSub">Espace Parents - Suivi Scolaire en Ligne</p>
 </div>
 
-<!-- LOGIN -->
 <div class="login-wrapper" id="loginWrapper">
   <div class="login-box">
     <p class="login-titre">🔐 Acces Espace Parents</p>
     <p class="login-sous">Entrez les informations ci-dessous pour acceder au dossier scolaire de votre enfant</p>
     <div class="input-group">
       <label>N MATRICULE <span class="requis">*</span></label>
-      <input type="text" id="inputMat" placeholder="Ex: 25129856P"
-        maxlength="15" autocomplete="off" autocorrect="off" spellcheck="false"
-        oninput="this.value=this.value.toUpperCase()">
+      <input type="text" id="inputMat" placeholder="Ex: 25129856P" maxlength="15" autocomplete="off" autocorrect="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()">
     </div>
     <div class="input-group">
       <label>VOTRE TELEPHONE <span class="requis">*</span></label>
-      <input type="tel" id="inputTel" placeholder="Ex: 0708111269"
-        maxlength="10" autocomplete="off">
+      <input type="tel" id="inputTel" placeholder="Ex: 0708111269" maxlength="10" autocomplete="off">
     </div>
     <button class="btn-login" onclick="login()">🔓 ACCEDER A MON ESPACE</button>
     <p class="error-msg" id="errorMsg"></p>
-    <p class="security-note">
-      🔒 Connexion securisee | 3 tentatives maximum<br>
-      Vos donnees sont protegees et confidentielles
-    </p>
+    <p class="security-note">🔒 Connexion securisee | 3 tentatives maximum<br>Vos donnees sont protegees et confidentielles</p>
   </div>
 </div>
 
-<!-- LOADING -->
 <div class="loading" id="loadingDiv">
   <div class="spinner"></div>
   <p>Verification en cours...</p>
   <p class="loading-etape" id="loadingEtape"></p>
 </div>
 
-<!-- BLOQUE -->
 <div class="blocked-msg" id="blockedMsg">
   <h3>⛔ Acces temporairement bloque</h3>
   <div class="blocked-timer" id="blockedTimer">30:00</div>
-  <p>Trop de tentatives incorrectes.<br>
-     Reessayez dans le delai indique.<br><br>
-     Besoin d'aide ? <strong>07 08 11 12 69</strong>
-  </p>
+  <p>Trop de tentatives incorrectes.<br>Reessayez dans le delai indique.<br><br>Besoin d'aide ? <strong>07 08 11 12 69</strong></p>
 </div>
 
-<!-- ESPACE PARENT -->
 <div class="parent-space" id="parentSpace">
-
   <div id="eleveCard"></div>
   <div id="statutPay"></div>
 
-  <!-- ANNONCES -->
   <div id="sectionAnnonces" style="display:none;">
     <div class="section" style="border-left:4px solid #C62828;">
-      <div class="sec-header" style="background:#C62828;" onclick="toggleSec(this)">
-        📢 ANNONCES DE L'ECOLE <span>v</span>
-      </div>
+      <div class="sec-header" style="background:#C62828;" onclick="toggleSec(this)">📢 ANNONCES DE L'ECOLE <span>v</span></div>
       <div class="sec-body" id="annoncesBody"></div>
     </div>
   </div>
 
-  <!-- NOTES -->
   <div class="section">
-    <div class="sec-header bleu" onclick="toggleSec(this)">
-      📊 NOTES ET RESULTATS <span>v</span>
-    </div>
+    <div class="sec-header bleu" onclick="toggleSec(this)">📊 NOTES ET RESULTATS <span>v</span></div>
     <div class="sec-body" id="notesBody"></div>
   </div>
 
-  <!-- BULLETIN PDF -->
   <div class="section" id="sectionBulletin" style="display:none;">
-    <div class="sec-header" style="background:#2E7D32" onclick="toggleSec(this)">
-      📄 BULLETIN SCOLAIRE <span>v</span>
-    </div>
+    <div class="sec-header" style="background:#2E7D32" onclick="toggleSec(this)">📄 BULLETIN SCOLAIRE <span>v</span></div>
     <div class="sec-body" id="bulletinBody">
       <div style="text-align:center;padding:16px;">
         <div style="font-size:48px;margin-bottom:12px;">📋</div>
         <p style="font-weight:bold;color:#2E7D32;font-size:1em;margin-bottom:8px;">Bulletin disponible</p>
-        <p style="font-size:0.82em;color:#666;margin-bottom:16px;">
-          Votre bulletin scolaire est disponible uniquement si votre scolarite est a jour.
-        </p>
-        <button onclick="telechargerBulletin()"
-          style="background:linear-gradient(135deg,#2E7D32,#388E3C);color:white;
-          border:none;border-radius:10px;padding:12px 24px;font-size:0.9em;
-          font-weight:bold;cursor:pointer;width:100%;">
-          📥 Telecharger mon bulletin PDF
-        </button>
-        <p style="font-size:0.75em;color:#aaa;margin-top:10px;">
-          ℹ️ Le bulletin s'ouvre dans votre navigateur
-        </p>
+        <p style="font-size:0.82em;color:#666;margin-bottom:16px;">Votre bulletin scolaire est disponible uniquement si votre scolarite est a jour.</p>
+        <button onclick="telechargerBulletin()" style="background:linear-gradient(135deg,#2E7D32,#388E3C);color:white;border:none;border-radius:10px;padding:12px 24px;font-size:0.9em;font-weight:bold;cursor:pointer;width:100%;">📥 Telecharger mon bulletin PDF</button>
+        <p style="font-size:0.75em;color:#aaa;margin-top:10px;">ℹ️ Le bulletin s'ouvre dans votre navigateur</p>
       </div>
     </div>
   </div>
 
-  <!-- ABSENCES -->
   <div class="section">
-    <div class="sec-header" style="background:#E65100" onclick="toggleSec(this)">
-      📅 ABSENCES ET RETARDS <span>v</span>
-    </div>
+    <div class="sec-header" style="background:#E65100" onclick="toggleSec(this)">📅 ABSENCES ET RETARDS <span>v</span></div>
     <div class="sec-body" id="absencesBody">
-      <div style="text-align:center;padding:20px;color:#666;">
-        <p style="font-size:0.85em;">Chargement des absences...</p>
-      </div>
+      <div style="text-align:center;padding:20px;color:#666;"><p style="font-size:0.85em;">Chargement des absences...</p></div>
     </div>
   </div>
 
-  <!-- SCOLARITE -->
   <div class="section">
-    <div class="sec-header rouge" onclick="toggleSec(this)">
-      💰 SCOLARITE ET PAIEMENTS <span>v</span>
-    </div>
+    <div class="sec-header rouge" onclick="toggleSec(this)">💰 SCOLARITE ET PAIEMENTS <span>v</span></div>
     <div class="sec-body">
       <div class="how-pay">
-        <div id="montantDu" style="background:linear-gradient(135deg,#1F4E79,#2E86AB);
-          border-radius:10px;padding:14px;text-align:center;color:white;margin-bottom:16px;">
+        <div id="montantDu" style="background:linear-gradient(135deg,#1F4E79,#2E86AB);border-radius:10px;padding:14px;text-align:center;color:white;margin-bottom:16px;">
           <p style="font-size:0.78em;opacity:0.85;margin-bottom:4px;">SOLDE A PAYER</p>
           <p style="font-size:2em;font-weight:bold;" id="montantText">-</p>
           <p style="font-size:0.75em;opacity:0.8;margin-top:2px;">F CFA</p>
         </div>
-
-        <!-- Guide Wave -->
         <div style="background:#EFF6FF;border-radius:10px;padding:14px;margin-bottom:12px;border-left:4px solid #1F6FEB;">
           <p style="font-weight:bold;color:#1F6FEB;font-size:0.9em;margin-bottom:12px;">💙 PAYER VIA WAVE</p>
           <div class="step"><div class="step-n" style="background:#1F6FEB;">1</div><p>Ouvrez l'application <strong>Wave</strong></p></div>
@@ -350,8 +201,6 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
           <div class="step"><div class="step-n" style="background:#1F6FEB;">7</div><p>Entrez le <strong>montant</strong> que vous pouvez payer</p></div>
           <div class="step"><div class="step-n" style="background:#1F6FEB;">8</div><p>Confirmez avec votre <strong>code PIN</strong></p></div>
         </div>
-
-        <!-- Guide Orange Money -->
         <div id="sectionOrangeMoney" style="background:#FFF3E0;border-radius:10px;padding:14px;margin-bottom:12px;border-left:4px solid #FF6600;">
           <p style="font-weight:bold;color:#FF6600;font-size:0.9em;margin-bottom:12px;">🟠 PAYER VIA ORANGE MONEY</p>
           <div class="step"><div class="step-n" style="background:#FF6600;">1</div><p>Composez <strong id="codeOrange" style="color:#FF6600;font-size:1.05em;background:#FFE0CC;padding:2px 8px;border-radius:6px;">#144*43*1721*1#</strong> sur votre telephone</p></div>
@@ -360,22 +209,15 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
           <div class="step"><div class="step-n" style="background:#FF6600;">4</div><p>Entrez le <strong>montant</strong> que vous pouvez payer</p></div>
           <div class="step"><div class="step-n" style="background:#FF6600;">5</div><p>Entrez votre <strong>code PIN</strong> et validez ✅</p></div>
         </div>
-
         <div style="background:#E8F5E9;border-radius:10px;padding:12px;border-left:4px solid #2E7D32;text-align:center;">
-          <p style="font-size:0.82em;color:#2E7D32;">
-            ✅ Apres paiement, envoyez votre recu par WhatsApp au<br>
-            <strong style="font-size:1.1em;">07 08 11 12 69</strong>
-          </p>
+          <p style="font-size:0.82em;color:#2E7D32;">✅ Apres paiement, envoyez votre recu par WhatsApp au<br><strong style="font-size:1.1em;">07 08 11 12 69</strong></p>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- EMPLOI DU TEMPS -->
   <div class="section">
-    <div class="sec-header vert" onclick="toggleSec(this)">
-      🕐 EMPLOI DU TEMPS <span>v</span>
-    </div>
+    <div class="sec-header vert" onclick="toggleSec(this)">🕐 EMPLOI DU TEMPS <span>v</span></div>
     <div class="sec-body">
       <div class="edt-scroll">
         <table class="t-edt">
@@ -396,11 +238,8 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
     </div>
   </div>
 
-  <!-- ANNONCES STATIQUES -->
   <div class="section">
-    <div class="sec-header violet" onclick="toggleSec(this)">
-      📣 ANNONCES <span>v</span>
-    </div>
+    <div class="sec-header violet" onclick="toggleSec(this)">📣 ANNONCES <span>v</span></div>
     <div class="sec-body open">
       <div class="annonce info">
         <h4>👋 Bienvenue sur votre Espace Parents !</h4>
@@ -420,11 +259,8 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
     </div>
   </div>
 
-  <!-- CALENDRIER SCOLAIRE -->
   <div class="section">
-    <div class="sec-header" style="background:#4A148C" onclick="toggleSec(this)">
-      📆 CALENDRIER SCOLAIRE 2025-2026 <span>v</span>
-    </div>
+    <div class="sec-header" style="background:#4A148C" onclick="toggleSec(this)">📆 CALENDRIER SCOLAIRE 2025-2026 <span>v</span></div>
     <div class="sec-body">
       <div style="display:grid;gap:10px;">
         <div style="background:#EDE7F6;border-radius:10px;padding:12px;border-left:4px solid #4A148C;">
@@ -460,28 +296,20 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
           </div>
         </div>
       </div>
-      <p style="font-size:0.73em;color:#aaa;margin-top:10px;text-align:center;">
-        ℹ️ Calendrier indicatif - peut etre ajuste selon le MENA
-      </p>
+      <p style="font-size:0.73em;color:#aaa;margin-top:10px;text-align:center;">ℹ️ Calendrier indicatif - peut etre ajuste selon le MENA</p>
     </div>
   </div>
 
-  <!-- CLUBS SCOLAIRES -->
   <div class="section">
-    <div class="sec-header" style="background:linear-gradient(135deg,#6A1B9A,#7B1FA2)" onclick="toggleSec(this)">
-      🏆 CLUBS SCOLAIRES <span>v</span>
-    </div>
+    <div class="sec-header" style="background:linear-gradient(135deg,#6A1B9A,#7B1FA2)" onclick="toggleSec(this)">🏆 CLUBS SCOLAIRES <span>v</span></div>
     <div class="sec-body">
       <div id="clubsEleve" style="margin-bottom:12px;"></div>
       <div id="listeTousClubs"></div>
     </div>
   </div>
 
-  <!-- MESSAGERIE -->
   <div class="section">
-    <div class="sec-header" style="background:linear-gradient(135deg,#1A5276,#2874A6)" onclick="toggleSec(this)">
-      💬 MESSAGERIE - CELLULE ECOUTE <span>v</span>
-    </div>
+    <div class="sec-header" style="background:linear-gradient(135deg,#1A5276,#2874A6)" onclick="toggleSec(this)">💬 MESSAGERIE - CELLULE ECOUTE <span>v</span></div>
     <div class="sec-body">
       <div id="reponsesMessages" style="margin-bottom:12px;"></div>
       <div style="background:#F0F4F8;border-radius:10px;padding:14px;border:1px solid #BDD7EE;">
@@ -495,75 +323,41 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
           <option value="Signalement">🚨 Signalement</option>
           <option value="Autre">💬 Autre</option>
         </select>
-        <input id="msgSujet" type="text" placeholder="Sujet du message..."
-          style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin-bottom:10px;font-size:0.9em;box-sizing:border-box;">
-        <textarea id="msgTexte" rows="4" placeholder="Votre message ici..."
-          style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin-bottom:10px;font-size:0.9em;resize:vertical;box-sizing:border-box;"></textarea>
+        <input id="msgSujet" type="text" placeholder="Sujet du message..." style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin-bottom:10px;font-size:0.9em;box-sizing:border-box;">
+        <textarea id="msgTexte" rows="4" placeholder="Votre message ici..." style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin-bottom:10px;font-size:0.9em;resize:vertical;box-sizing:border-box;"></textarea>
         <div style="display:flex;gap:8px;align-items:center;">
-          <label style="font-size:0.85em;color:#555;">
-            <input type="checkbox" id="msgAnonyme"> Envoyer anonymement
-          </label>
+          <label style="font-size:0.85em;color:#555;"><input type="checkbox" id="msgAnonyme"> Envoyer anonymement</label>
         </div>
-        <button onclick="envoyerMessage()" id="btnEnvoyerMsg"
-          style="width:100%;margin-top:10px;padding:12px;background:#1A5276;color:white;border:none;border-radius:8px;font-size:0.95em;cursor:pointer;font-weight:bold;">
-          📤 Envoyer le message
-        </button>
+        <button onclick="envoyerMessage()" id="btnEnvoyerMsg" style="width:100%;margin-top:10px;padding:12px;background:#1A5276;color:white;border:none;border-radius:8px;font-size:0.95em;cursor:pointer;font-weight:bold;">📤 Envoyer le message</button>
         <p id="msgStatut" style="text-align:center;font-size:0.85em;margin:8px 0 0 0;"></p>
       </div>
       <div style="margin-top:14px;background:#FFF9E6;border:1px solid #F9E547;border-radius:10px;padding:14px;">
         <p style="font-weight:bold;color:#7D6608;margin:0 0 8px 0;">📬 Boite de Suggestions - Cellule Ecoute et Anti-Decrage</p>
-        <p style="font-size:0.85em;color:#666;margin:0 0 10px 0;">
-          Vos suggestions sont lues et traitees par la Cellule Ecoute du reseau CPP.
-        </p>
-        <textarea id="suggTexte" rows="3" placeholder="Votre suggestion pour ameliorer l'ecole..."
-          style="width:100%;padding:10px;border:1px solid #F9E547;border-radius:8px;font-size:0.9em;resize:vertical;box-sizing:border-box;margin-bottom:8px;"></textarea>
-        <button onclick="envoyerSuggestion()"
-          style="width:100%;padding:10px;background:#B7950B;color:white;border:none;border-radius:8px;font-size:0.9em;cursor:pointer;">
-          📨 Envoyer la suggestion
-        </button>
+        <p style="font-size:0.85em;color:#666;margin:0 0 10px 0;">Vos suggestions sont lues et traitees par la Cellule Ecoute du reseau CPP.</p>
+        <textarea id="suggTexte" rows="3" placeholder="Votre suggestion pour ameliorer l'ecole..." style="width:100%;padding:10px;border:1px solid #F9E547;border-radius:8px;font-size:0.9em;resize:vertical;box-sizing:border-box;margin-bottom:8px;"></textarea>
+        <button onclick="envoyerSuggestion()" style="width:100%;padding:10px;background:#B7950B;color:white;border:none;border-radius:8px;font-size:0.9em;cursor:pointer;">📨 Envoyer la suggestion</button>
         <p id="suggStatut" style="text-align:center;font-size:0.85em;margin:8px 0 0 0;"></p>
       </div>
     </div>
   </div>
 
-  <!-- CONTACT -->
   <div class="section">
-    <div class="sec-header orange" onclick="toggleSec(this)">
-      📞 CONTACT <span>v</span>
-    </div>
+    <div class="sec-header orange" onclick="toggleSec(this)">📞 CONTACT <span>v</span></div>
     <div class="sec-body">
       <div class="contact-grid">
-        <div class="c-item">
-          <div class="ci">📱</div><h4>Telephone</h4>
-          <p><a href="tel:0708111269">07 08 11 12 69</a><br>
-             <a href="tel:0789771991">07 89 77 19 91</a><br>
-             <a href="tel:0101238145">01 01 23 81 45</a></p>
-        </div>
-        <div class="c-item">
-          <div class="ci">💬</div><h4>WhatsApp</h4>
-          <p><a href="https://wa.me/2250708111269">07 08 11 12 69</a><br>Lun-Sam<br>07h30-18h00</p>
-        </div>
-        <div class="c-item">
-          <div class="ci">📧</div><h4>Email</h4>
-          <p>princeabidjanecole<br>@gmail.com</p>
-        </div>
-        <div class="c-item">
-          <div class="ci">🏫</div><h4>Secretariat</h4>
-          <p>Lun - Sam<br>07h30 - 17h30</p>
-        </div>
+        <div class="c-item"><div class="ci">📱</div><h4>Telephone</h4><p><a href="tel:0708111269">07 08 11 12 69</a><br><a href="tel:0789771991">07 89 77 19 91</a><br><a href="tel:0101238145">01 01 23 81 45</a></p></div>
+        <div class="c-item"><div class="ci">💬</div><h4>WhatsApp</h4><p><a href="https://wa.me/2250708111269">07 08 11 12 69</a><br>Lun-Sam<br>07h30-18h00</p></div>
+        <div class="c-item"><div class="ci">📧</div><h4>Email</h4><p>princeabidjanecole<br>@gmail.com</p></div>
+        <div class="c-item"><div class="ci">🏫</div><h4>Secretariat</h4><p>Lun - Sam<br>07h30 - 17h30</p></div>
       </div>
     </div>
   </div>
 
   <div style="padding:16px;">
-    <button onclick="logout()" style="width:100%;padding:13px;background:#f5f5f5;color:#777;border:1px solid #ddd;border-radius:10px;font-size:0.86em;cursor:pointer;">
-      🚪 Se deconnecter
-    </button>
+    <button onclick="logout()" style="width:100%;padding:13px;background:#f5f5f5;color:#777;border:1px solid #ddd;border-radius:10px;font-size:0.86em;cursor:pointer;">🚪 Se deconnecter</button>
   </div>
-
 </div>
 
-<!-- FOOTER -->
 <div class="footer">
   <p><strong>Ecole Les Princes</strong> - Espace Parents</p>
   <p>Tel : 07 08 11 12 69 | Code : 054707 | OID : E10433084</p>
@@ -571,28 +365,22 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
 </div>
 
 <script>
-// ============================================================
-// LISTE ECOLES
-// ============================================================
 const ECOLES = [
-  { code:"CPP_PRO",     nom:"College Prive Professionnel Les Princes d'Abidjan", ville:"Abobo / Abidjan",  couleur:"#1F4E79", mots:["professionnel","princes","abidjan","abobo","cpp"] },
-  { code:"CPP_TECH",    nom:"College Prive Technique Les Princes d'Abidjan",     ville:"Abobo / Abidjan",  couleur:"#2E7D32", mots:["technique","princes","abidjan","abobo","cpp"] },
-  { code:"CPP",         nom:"College Prive Les Princes d'Abidjan",               ville:"Abobo / Abidjan",  couleur:"#C62828", mots:["princes","abidjan","abobo","cpp","college"] },
-  { code:"KOUTOUAN",    nom:"Groupe Scolaire Koutouan Abobo",                    ville:"Abobo",    couleur:"#4A148C", mots:["koutouan","abobo","groupe","scolaire"] },
-  { code:"GUINGLO_V",   nom:"College Prive Les Princes de Guinglo Ville",        ville:"Guinglo",  couleur:"#E65100", mots:["guinglo","ville","princes"] },
-  { code:"SOAKPE",      nom:"College Prive Les Princes de Soakpe-Douedy",        ville:"Soakpe",   couleur:"#00695C", mots:["soakpe","douedy","princes"] },
-  { code:"GNONTINROU",  nom:"College Prive Gnontinrou Therese de Guinglo-Guezon",ville:"Guinglo",  couleur:"#1A237E", mots:["gnontinrou","therese","guinglo","guezon"] },
-  { code:"KOUIBLY_TEC", nom:"Etablissement Technique Les Princes de Kouibly",    ville:"Kouibly",  couleur:"#4E342E", mots:["technique","kouibly","princes","etablissement"] },
-  { code:"AKEIKOI_1",   nom:"EPV Les Princes Akeikoi 1",                         ville:"Abobo",    couleur:"#1F4E79", mots:["akeikoi","1","abobo","epv","princes"] },
-  { code:"AKEIKOI_2",   nom:"EPV Les Princes Akeikoi 2",                         ville:"Abobo",    couleur:"#C62828", mots:["akeikoi","2","abobo","epv","princes"] },
-  { code:"ACADEMIE",    nom:"EPV Academie des Princes",                          ville:"Abobo",    couleur:"#B8860B", mots:["academie","princes","abobo","epv"] },
-  { code:"RITA",        nom:"Groupe Scolaire Rita Rosane Abobo",                 ville:"Abobo",    couleur:"#607D8B", mots:["rita","rosane","abobo","groupe","scolaire"] },
-  { code:"ESBE",        nom:"Ecole Superieure ESBE",                             ville:"Abidjan",  couleur:"#006064", mots:["esbe","superieure","ecole"] },
+  { code:"CPP_PRO",     nom:"College Prive Professionnel Les Princes d'Abidjan", ville:"Abobo / Abidjan", couleur:"#1F4E79", mots:["professionnel","princes","abidjan","abobo","cpp"] },
+  { code:"CPP_TECH",    nom:"College Prive Technique Les Princes d'Abidjan",     ville:"Abobo / Abidjan", couleur:"#2E7D32", mots:["technique","princes","abidjan","abobo","cpp"] },
+  { code:"CPP",         nom:"College Prive Les Princes d'Abidjan",               ville:"Abobo / Abidjan", couleur:"#C62828", mots:["princes","abidjan","abobo","cpp","college"] },
+  { code:"KOUTOUAN",    nom:"Groupe Scolaire Koutouan Abobo",                    ville:"Abobo",   couleur:"#4A148C", mots:["koutouan","abobo","groupe","scolaire"] },
+  { code:"GUINGLO_V",   nom:"College Prive Les Princes de Guinglo Ville",        ville:"Guinglo", couleur:"#E65100", mots:["guinglo","ville","princes"] },
+  { code:"SOAKPE",      nom:"College Prive Les Princes de Soakpe-Douedy",        ville:"Soakpe",  couleur:"#00695C", mots:["soakpe","douedy","princes"] },
+  { code:"GNONTINROU",  nom:"College Prive Gnontinrou Therese de Guinglo-Guezon",ville:"Guinglo", couleur:"#1A237E", mots:["gnontinrou","therese","guinglo","guezon"] },
+  { code:"KOUIBLY_TEC", nom:"Etablissement Technique Les Princes de Kouibly",    ville:"Kouibly", couleur:"#4E342E", mots:["technique","kouibly","princes","etablissement"] },
+  { code:"AKEIKOI_1",   nom:"EPV Les Princes Akeikoi 1",                         ville:"Abobo",   couleur:"#1F4E79", mots:["akeikoi","1","abobo","epv","princes"] },
+  { code:"AKEIKOI_2",   nom:"EPV Les Princes Akeikoi 2",                         ville:"Abobo",   couleur:"#C62828", mots:["akeikoi","2","abobo","epv","princes"] },
+  { code:"ACADEMIE",    nom:"EPV Academie des Princes",                          ville:"Abobo",   couleur:"#B8860B", mots:["academie","princes","abobo","epv"] },
+  { code:"RITA",        nom:"Groupe Scolaire Rita Rosane Abobo",                 ville:"Abobo",   couleur:"#607D8B", mots:["rita","rosane","abobo","groupe","scolaire"] },
+  { code:"ESBE",        nom:"Ecole Superieure ESBE",                             ville:"Abidjan", couleur:"#006064", mots:["esbe","superieure","ecole"] },
 ];
 
-// ============================================================
-// CONFIG
-// ============================================================
 const CONFIG = {
   SHEETS_ID:      "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI",
   API_KEY:        "AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA",
@@ -600,33 +388,23 @@ const CONFIG = {
   BLOCAGE_MIN:    30,
 };
 
-// ============================================================
-// SHEETS IDS PAR ECOLE
-// ============================================================
 const SHEETS_IDS_COMPLET = {
-  "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI": { nom:"CPP Les Princes d'Abidjan",              tel:"0708111269", wave:"0708111269" },
-  "1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M": { nom:"Academie Les Princes d'Abidjan",          tel:"0747477926", wave:"0747477926" },
-  "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA": { nom:"CPP Les Princes de Guinglo Ville",        tel:"0747330128", wave:"0747330128" },
-  "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4": { nom:"CPP Gnontinrou Therese de Guinglo",       tel:"0778069066", wave:"0778069066" },
-  "167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg": { nom:"CPP Les Princes de Koutouan",             tel:"0747330128", wave:"0747330128" },
-  "1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys": { nom:"CPP Les Princes de Soakpe-Douedy",        tel:"0747477926", wave:"0747477926" },
-  "1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE": { nom:"EPV Les Princes 1 d'Abobo Akeikoi",       tel:"0747477926", wave:"0747477926" },
-  "11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog": { nom:"EPV Les Princes 2 d'Abobo Akeikoi",       tel:"0747477926", wave:"0747477926" },
-  "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs": { nom:"CP Professionnel Les Princes d'Abidjan",  tel:"0708111269", wave:"0708111269" },
-  "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc": { nom:"CP Technique Les Princes d'Abidjan",      tel:"0708111269", wave:"0708111269" },
-  "1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s": { nom:"ETL Les Princes de Kouibly",              tel:"0759937994", wave:"0759937994" },
-  "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0": { nom:"Groupe Scolaire Rita Rosane Abobo",       tel:"0757227049", wave:"0757227049" },
+  "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI": { nom:"CPP Les Princes d'Abidjan",             tel:"0708111269", wave:"0708111269" },
+  "1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M": { nom:"Academie Les Princes d'Abidjan",         tel:"0747477926", wave:"0747477926" },
+  "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA": { nom:"CPP Les Princes de Guinglo Ville",       tel:"0747330128", wave:"0747330128" },
+  "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4": { nom:"CPP Gnontinrou Therese de Guinglo",      tel:"0778069066", wave:"0778069066" },
+  "167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg": { nom:"CPP Les Princes de Koutouan",            tel:"0747330128", wave:"0747330128" },
+  "1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys": { nom:"CPP Les Princes de Soakpe-Douedy",       tel:"0747477926", wave:"0747477926" },
+  "1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE":  { nom:"EPV Les Princes 1 d'Abobo Akeikoi",      tel:"0747477926", wave:"0747477926" },
+  "11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog":  { nom:"EPV Les Princes 2 d'Abobo Akeikoi",      tel:"0747477926", wave:"0747477926" },
+  "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs":  { nom:"CP Professionnel Les Princes d'Abidjan", tel:"0708111269", wave:"0708111269" },
+  "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc":  { nom:"CP Technique Les Princes d'Abidjan",     tel:"0708111269", wave:"0708111269" },
+  "1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s":  { nom:"ETL Les Princes de Kouibly",             tel:"0759937994", wave:"0759937994" },
+  "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0":  { nom:"Groupe Scolaire Rita Rosane Abobo",      tel:"0757227049", wave:"0757227049" },
 };
 
-// ============================================================
-// VARIABLES
-// ============================================================
 let tentatives = 0;
 let blocageInterval = null;
-
-// ============================================================
-// LOGIN
-// ============================================================
 const PHOTOS_CACHE = {};
 
 async function chargerPhotoEleve(matricule, imgElement, fallback) {
@@ -675,7 +453,6 @@ async function login() {
   document.getElementById("loadingDiv").style.display = "block";
 
   let eleve = null;
-
   const TOUTES_ECOLES = [
     { code:"CPP",        id:"1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI" },
     { code:"ACADEMIE",   id:"1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M" },
@@ -731,9 +508,6 @@ async function login() {
   afficherEspaceParent(eleveComplet);
 }
 
-// ============================================================
-// RECHERCHE GOOGLE SHEETS
-// ============================================================
 async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
   try {
     const sheetsId = sheetsIdDirect;
@@ -781,9 +555,6 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
   return null;
 }
 
-// ============================================================
-// AFFICHAGE ESPACE PARENT
-// ============================================================
 function afficherEspaceParent(eleve) {
   const ecole = eleve.ecole;
   const couleur = ecole?.couleur || "#1F4E79";
@@ -856,59 +627,90 @@ function afficherEspaceParent(eleve) {
 }
 
 // ============================================================
-// TELECHARGER BULLETIN
+// TELECHARGER BULLETIN — VERSION CORRIGEE (UNE SEULE FONCTION)
 // ============================================================
 async function telechargerBulletin() {
   const eleve = window._eleveActuel;
   if (!eleve) return;
+
   const solde = parseFloat(String(eleve.solde||"").replace(/\s/g,"")) || 0;
   if (solde > 0) {
     alert("Votre bulletin est accessible uniquement si votre scolarite est entierement payee.\n\nSolde restant : " + solde.toLocaleString("fr-FR") + " F CFA");
     return;
   }
+
   const btn = document.querySelector("#sectionBulletin button");
   if (btn) { btn.textContent = "⏳ Chargement..."; btn.disabled = true; }
+
   try {
-    const mat = eleve.matricule.trim().toUpperCase();
+    const mat = eleve.matricule.trim().toUpperCase().replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g, "");
     const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
-    const range = encodeURIComponent("BULLETINS_T2!A2:E1000");
-    const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
-    const res = await fetch(url);
-    const data = await res.json();
-    if (!data.values || data.values.length === 0) {
-      alert("Bulletin non disponible pour le moment.");
-      return;
-    }
+    const onglets = ["BULLETINS_T2", "BULLETINS_T1", "BULLETINS"];
     let lienPDF = null;
-    for (const row of data.values) {
-      const matRow = String(row[0]||"").trim().toUpperCase().replace(/\s/g,"");
-      const matClean = mat.replace(/\s/g,"");
-      if (matRow === matClean) {
-        const lienD = String(row[4]||row[3]||"").trim();
-        const fileId = String(row[3]||row[2]||"").trim();
-        if (lienD && lienD.startsWith("http")) {
-          lienPDF = lienD;
-        } else if (fileId) {
-          lienPDF = "https://drive.google.com/file/d/" + fileId + "/view";
+
+    for (const onglet of onglets) {
+      if (lienPDF) break;
+      const range = encodeURIComponent(onglet + "!A1:F2000");
+      const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId
+                + "/values/" + range
+                + "?key=" + CONFIG.API_KEY
+                + "&valueRenderOption=UNFORMATTED_VALUE";
+      try {
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (!data.values || data.values.length === 0) continue;
+
+        for (const row of data.values) {
+          const matRow = String(row[0]||"")
+            .trim()
+            .toUpperCase()
+            .replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g, "");
+
+          if (matRow !== mat) continue;
+
+          let lienCandidat = "";
+          let idCandidat = "";
+
+          for (let c = 1; c < row.length; c++) {
+            const val = String(row[c]||"").trim();
+            if (val.startsWith("http")) { lienCandidat = val; break; }
+          }
+          for (let c = 1; c < row.length; c++) {
+            const val = String(row[c]||"").trim();
+            if (val && !val.startsWith("http") && val.length > 10) { idCandidat = val; break; }
+          }
+
+          if (lienCandidat) {
+            lienPDF = lienCandidat;
+          } else if (idCandidat) {
+            lienPDF = "https://drive.google.com/file/d/" + idCandidat + "/view";
+          }
+          if (lienPDF) break;
         }
-        break;
+      } catch(e) {
+        console.warn("Erreur onglet", onglet, e);
       }
     }
+
     if (!lienPDF) {
-      alert("Bulletin non disponible pour le moment.");
+      alert("Bulletin non disponible pour le moment.\n\nMatricule recherche : " + mat + "\nContactez l'ecole au 07 08 11 12 69");
       return;
     }
+
     window.open(lienPDF, "_blank");
+
   } catch(e) {
+    console.error("Erreur bulletin:", e);
     alert("Erreur de chargement. Verifiez votre connexion et reessayez.");
   } finally {
-    if (btn) { btn.textContent = "📥 Telecharger mon bulletin PDF"; btn.disabled = false; }
+    if (btn) {
+      btn.textContent = "📥 Telecharger mon bulletin PDF";
+      btn.disabled = false;
+    }
   }
 }
 
-// ============================================================
-// CHARGER LES NOTES
-// ============================================================
 async function chargerNotes(eleve) {
   const div = document.getElementById("notesBody");
   div.innerHTML = "<div style='text-align:center;padding:20px;color:#1F4E79;'><div class='spinner' style='width:24px;height:24px;border:3px solid #D6E4F0;border-top-color:#1F4E79;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;'></div><p style='font-size:0.82em;'>Chargement des notes...</p></div>";
@@ -961,9 +763,7 @@ async function chargerNotes(eleve) {
         if (!data.values) continue;
         for (const row of data.values) {
           const matRow = String(row[1]||"").trim().toUpperCase();
-          if (matRow === mat.toUpperCase()) {
-            rowTrouve = row; trimNom = trimNoms[t]; break;
-          }
+          if (matRow === mat.toUpperCase()) { rowTrouve = row; trimNom = trimNoms[t]; break; }
         }
         if (rowTrouve) break;
       } catch(e) { }
@@ -993,8 +793,8 @@ async function chargerNotes(eleve) {
         { titre:"⭐ AUTRES", couleur:"#E65100", matieres:[{nom:"EPS",val:row[19]},{nom:"EDHC",val:row[15]},{nom:"Conduite",val:row[18]}]},
       ];
     } else {
-      // Format CPP / RITA
-      groupes = [{ titre:"📖 FRANÇAIS", couleur:"#1565C0", matieres:[{nom:"Comp. Française",val:row[5]},{nom:"Oral Français",val:row[6]},{nom:"Orthographe",val:row[7]}]},
+      groupes = [
+        { titre:"📖 FRANÇAIS", couleur:"#1565C0", matieres:[{nom:"Comp. Française",val:row[5]},{nom:"Oral Français",val:row[6]},{nom:"Orthographe",val:row[7]}]},
         { titre:"🌍 LETTRES & SCIENCES HUMAINES", couleur:"#2E7D32", matieres:[{nom:"Anglais",val:row[8]},{nom:"Histoire-Géographie",val:row[11]}]},
         { titre:"🔬 SCIENCES", couleur:"#C62828", matieres:[{nom:"Mathématiques",val:row[12]},{nom:"Sciences Physiques",val:row[13]},{nom:"SVT",val:row[14]}]},
         { titre:"⭐ AUTRES MATIÈRES", couleur:"#E65100", matieres:[{nom:"EPS",val:row[15]},{nom:"EDHC",val:row[16]},{nom:"Conduite",val:row[17]}]},
@@ -1024,9 +824,6 @@ function afficherNotesVides(div) {
   div.innerHTML = "<div style='text-align:center;padding:30px 20px;'><div style='font-size:2.5em;margin-bottom:12px;'>📋</div><p style='font-size:0.86em;color:#666;margin-bottom:8px;font-weight:bold;'>Notes du 2ème Trimestre non encore disponibles.</p><p style='font-size:0.78em;color:#aaa;line-height:1.6;'>Les notes seront publiées dès la fin des évaluations.<br>Contactez l'école au <strong>07 08 11 12 69</strong></p></div>";
 }
 
-// ============================================================
-// ABSENCES
-// ============================================================
 async function chargerAbsences(eleve) {
   const div = document.getElementById("absencesBody");
   if (!div) return;
@@ -1063,9 +860,6 @@ async function chargerAbsences(eleve) {
   }
 }
 
-// ============================================================
-// MONTANT
-// ============================================================
 function mettreAJourMontant(eleve) {
   window._eleveActuel = eleve;
   const solde = parseFloat(eleve.solde) || 0;
@@ -1124,7 +918,6 @@ function mettreAJourMontant(eleve) {
     codeOrange.textContent = sheetsToOrange[sheetsIdEleve] || "#144*43*1721*1#";
   }
 
-  // Masquer Orange Money pour Rita Rosane (Wave uniquement)
   const sectionOM = document.getElementById("sectionOrangeMoney");
   if (sectionOM) {
     const isRita = sheetsIdEleve === "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0";
@@ -1132,9 +925,6 @@ function mettreAJourMontant(eleve) {
   }
 }
 
-// ============================================================
-// CLUBS
-// ============================================================
 const CLUBS_RESEAU = [
   { id:"SANTE",        nom:"Club Sante",               icon:"H", couleur:"#E53935", desc:"Prevention, hygiene et sante des eleves" },
   { id:"ROBOTIQUE",    nom:"Club Robotique",            icon:"R", couleur:"#1E88E5", desc:"Programmation, electronique et innovation" },
@@ -1166,7 +956,6 @@ function afficherClubs(eleve) {
     htmlEleve = "<div style='background:#FFF3E0;border:1px solid #FFB300;border-radius:8px;padding:10px;margin-bottom:10px;font-size:0.85em;color:#E65100;'>Aucun club pour le moment. Voir le directeur pour s'inscrire.</div>";
   }
   divEleve.innerHTML = htmlEleve;
-
   var html2 = "<p style='font-weight:bold;color:#6A1B9A;margin:0 0 6px 0;'>Tous les clubs disponibles</p><p style='font-size:0.82em;color:#777;margin:0 0 10px 0;'>Maximum 2 clubs par eleve</p><div style='display:grid;grid-template-columns:1fr 1fr;gap:8px;'>";
   for (var j = 0; j < CLUBS_RESEAU.length; j++) {
     var c = CLUBS_RESEAU[j];
@@ -1181,9 +970,6 @@ function afficherClubs(eleve) {
   divListe.innerHTML = html2;
 }
 
-// ============================================================
-// MESSAGERIE
-// ============================================================
 const MESSAGES_SHEETS_ID = "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI";
 
 async function envoyerMessage() {
@@ -1291,9 +1077,6 @@ async function chargerReponsesMessages(eleve) {
   } catch(e) { }
 }
 
-// ============================================================
-// ANNONCES
-// ============================================================
 async function chargerAnnonces(eleve) {
   try {
     const range = encodeURIComponent("ANNONCES!A4:G60");
@@ -1315,9 +1098,6 @@ async function chargerAnnonces(eleve) {
   } catch(e) { }
 }
 
-// ============================================================
-// UTILITAIRES
-// ============================================================
 function afficherErreur(msg) {
   const el = document.getElementById("errorMsg");
   el.textContent = msg; el.style.display = "block";
@@ -1360,18 +1140,15 @@ function demarrerBlocage() {
   }, 1000);
 }
 
-// Restaurer session
 window.addEventListener("load", () => {
   const saved = sessionStorage.getItem("eleveConnecte");
   if (saved) { try { afficherEspaceParent(JSON.parse(saved)); } catch(e) { sessionStorage.removeItem("eleveConnecte"); } }
 });
 
-// Entree clavier
 document.addEventListener("keypress", e => {
   if (e.key === "Enter") login();
 });
 
-// PWA
 let deferredPrompt;
 window.addEventListener("beforeinstallprompt", e => {
   e.preventDefault(); deferredPrompt = e;
@@ -1387,6 +1164,5 @@ function installPWA() {
   }
 }
 </script>
-
 </body>
 </html>
