@@ -645,7 +645,7 @@ async function telechargerBulletin() {
   try {
     const mat = eleve.matricule.trim().toUpperCase().replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g, "");
     const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
-    const onglets = ["BULLETINS_T2", "BULLETINS_T1", "BULLETINS"];
+   const onglets = ["BULLETINS_T3", "BULLETINS_T2", "BULLETINS_T1"];
     let lienPDF = null;
 
     for (const onglet of onglets) {
