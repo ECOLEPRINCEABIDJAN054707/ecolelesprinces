@@ -642,7 +642,7 @@ async function preparerLienBulletin(eleve) {
 
     for (const onglet of onglets) {
       if (window._lienBulletin) break;
-      const range = encodeURIComponent(onglet + "!A1:F2000");
+      const range = encodeURIComponent(onglet + "!A1:E2000");
       const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId
                 + "/values/" + range
                 + "?key=" + CONFIG.API_KEY
@@ -657,14 +657,20 @@ async function preparerLienBulletin(eleve) {
           const matRow = String(row[0]||"").trim().toUpperCase().replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g, "");
           if (matRow !== mat) continue;
 
-          // Chercher le lien ou l'ID Drive dans toutes les colonnes
+          // Chercher d'abord un lien complet Drive, puis un ID Drive
           let lienPDF = "";
           for (let c = 1; c < row.length; c++) {
             const val = String(row[c]||"").trim();
-            if (val.startsWith("https://drive.google.com")) {
+            if (val.startsWith("https://drive.google.com/file/d/")) {
               lienPDF = val; break;
-            } else if (val.length > 25 && !val.includes(" ") && !val.includes("EME") && !val.includes("BEP") && !val.includes("BAC")) {
-              lienPDF = "https://drive.google.com/file/d/" + val + "/view"; break;
+            }
+          }
+          if (!lienPDF) {
+            for (let c = 1; c < row.length; c++) {
+              const val = String(row[c]||"").trim();
+              if (val.length >= 30 && !val.includes(" ") && !val.includes("http") && !val.includes("EME") && !val.includes("BEP") && !val.includes("BAC") && !val.includes("2NDE") && !val.includes("TLE")) {
+                lienPDF = "https://drive.google.com/file/d/" + val + "/view"; break;
+              }
             }
           }
 
@@ -721,7 +727,7 @@ async function telechargerBulletin() {
 
     for (const onglet of onglets) {
       if (lienPDF) break;
-      const range = encodeURIComponent(onglet + "!A1:F2000");
+      const range = encodeURIComponent(onglet + "!A1:E2000");
       const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId
                 + "/values/" + range
                 + "?key=" + CONFIG.API_KEY
@@ -736,13 +742,19 @@ async function telechargerBulletin() {
           const matRow = String(row[0]||"").trim().toUpperCase().replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g, "");
           if (matRow !== mat) continue;
 
-          // Chercher le lien ou l'ID Drive dans toutes les colonnes
+          // Chercher d'abord un lien complet Drive, puis un ID Drive
           for (let c = 1; c < row.length; c++) {
             const val = String(row[c]||"").trim();
-            if (val.startsWith("https://drive.google.com")) {
+            if (val.startsWith("https://drive.google.com/file/d/")) {
               lienPDF = val; break;
-            } else if (val.length > 25 && !val.includes(" ") && !val.includes("EME") && !val.includes("BEP") && !val.includes("BAC")) {
-              lienPDF = "https://drive.google.com/file/d/" + val + "/view"; break;
+            }
+          }
+          if (!lienPDF) {
+            for (let c = 1; c < row.length; c++) {
+              const val = String(row[c]||"").trim();
+              if (val.length >= 30 && !val.includes(" ") && !val.includes("http") && !val.includes("EME") && !val.includes("BEP") && !val.includes("BAC") && !val.includes("2NDE") && !val.includes("TLE")) {
+                lienPDF = "https://drive.google.com/file/d/" + val + "/view"; break;
+              }
             }
           }
 
