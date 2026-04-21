@@ -678,7 +678,7 @@ async function telechargerBulletin() {
           }
           for (let c = 1; c < row.length; c++) {
             const val = String(row[c]||"").trim();
-            if (val && !val.startsWith("http") && val.length > 10) { idCandidat = val; break; }
+          if (val && !val.startsWith("http") && val.length >= 33) { idCandidat = val; break; }
           }
 
           if (lienCandidat) {
