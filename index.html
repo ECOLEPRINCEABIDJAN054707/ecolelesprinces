@@ -657,16 +657,15 @@ async function preparerLienBulletin(eleve) {
           const matRow = String(row[0]||"").trim().toUpperCase().replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g, "");
           if (matRow !== mat) continue;
 
-          // ✅ CORRECTION : l'ID Drive est toujours en colonne 5 (row[4])
-          // Structure du Sheets : Matricule | Niveau | Classe | Nom | ID_Drive
+          // Chercher le lien ou l'ID Drive dans toutes les colonnes
           let lienPDF = "";
-          const colLien = String(row[1]||"").trim(); // colonne B : peut contenir un lien http
-          const colId   = String(row[4]||"").trim(); // colonne E : contient l'ID Drive
-
-          if (colLien.startsWith("http")) {
-            lienPDF = colLien;
-          } else if (colId && colId.length > 20) {
-            lienPDF = "https://drive.google.com/file/d/" + colId + "/view";
+          for (let c = 1; c < row.length; c++) {
+            const val = String(row[c]||"").trim();
+            if (val.startsWith("https://drive.google.com")) {
+              lienPDF = val; break;
+            } else if (val.length > 25 && !val.includes(" ") && !val.includes("EME") && !val.includes("BEP") && !val.includes("BAC")) {
+              lienPDF = "https://drive.google.com/file/d/" + val + "/view"; break;
+            }
           }
 
           if (lienPDF) { window._lienBulletin = lienPDF; break; }
@@ -737,15 +736,14 @@ async function telechargerBulletin() {
           const matRow = String(row[0]||"").trim().toUpperCase().replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g, "");
           if (matRow !== mat) continue;
 
-          // ✅ CORRECTION : l'ID Drive est toujours en colonne 5 (row[4])
-          // Structure du Sheets : Matricule | Niveau | Classe | Nom | ID_Drive
-          const colLien = String(row[1]||"").trim();
-          const colId   = String(row[4]||"").trim();
-
-          if (colLien.startsWith("http")) {
-            lienPDF = colLien;
-          } else if (colId && colId.length > 20) {
-            lienPDF = "https://drive.google.com/file/d/" + colId + "/view";
+          // Chercher le lien ou l'ID Drive dans toutes les colonnes
+          for (let c = 1; c < row.length; c++) {
+            const val = String(row[c]||"").trim();
+            if (val.startsWith("https://drive.google.com")) {
+              lienPDF = val; break;
+            } else if (val.length > 25 && !val.includes(" ") && !val.includes("EME") && !val.includes("BEP") && !val.includes("BAC")) {
+              lienPDF = "https://drive.google.com/file/d/" + val + "/view"; break;
+            }
           }
 
           if (lienPDF) break;
