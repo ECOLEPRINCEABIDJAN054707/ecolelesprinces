@@ -908,48 +908,91 @@ async function chargerFicheRenseignement(eleve) {
   const div = document.getElementById('ficheRenseignement');
   if (!div) return;
 
-  // Infos statiques par école (nom, contacts, paiement)
+  // ── INFOS STATIQUES PAR ÉCOLE ─────────────────────────────
+  // tel1/tel2 = texte affiché — PAS de chiffres lus depuis Sheets
   const INFOS_ECOLES = {
-    "CPP":        { nom:"College Prive Les Princes d'Abidjan",               tel1:"07 08 11 12 69", tel2:"07 89 77 19 91", wave:"GROUPE SCOLAIRE LES PRINCES",    orange:"#144*43*1721*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"054707" },
-    "ACADEMIE":   { nom:"Academie Les Princes d'Abidjan",                    tel1:"07 47 47 79 26", tel2:"",               wave:"LES PRINCES ACADEMIE",            orange:"#144*43*1728*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
-    "GUINGLO_V":  { nom:"College Prive Les Princes de Guinglo-Ville",        tel1:"07 49 78 18 42", tel2:"05 55 27 11 84", wave:"LES PRINCES GUINGLO VILLE",       orange:"#144*43*1729*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"253854" },
-    "GNONTINROU": { nom:"College Prive Gnontinrou Therese de Guinglo-Guezon",tel1:"07 78 06 90 66", tel2:"",               wave:"LES PRINCES GUINGLO",             orange:"#144*43*1725*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
-    "KOUTOUAN":   { nom:"Groupe Scolaire Les Princes de Koutouan",           tel1:"07 47 33 01 28", tel2:"",               wave:"LES PRINCES KOUTOUAN",            orange:"#144*43*1726*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
-    "SOAKPE":     { nom:"College Prive Les Princes de Soakpe-Douedy",        tel1:"07 47 47 79 26", tel2:"",               wave:"LES PRINCES SOAKPE",              orange:"#144*43*1727*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
-    "AKEIKOI_1":  { nom:"EPV Les Princes Akeikoi 1",                         tel1:"07 47 47 79 26", tel2:"",               wave:"LES PRINCES AKEIKOI 1",           orange:"#144*43*1723*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
-    "AKEIKOI_2":  { nom:"EPV Les Princes Akeikoi 2",                         tel1:"07 47 47 79 26", tel2:"",               wave:"LES PRINCES AKEIKOI 2",           orange:"#144*43*1724*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
-    "CPP_PRO":    { nom:"College Prive Professionnel Les Princes d'Abidjan", tel1:"07 08 11 12 69", tel2:"",               wave:"COLLEGE PRIVE PROFESSIONNEL LES PRINCES", orange:"#144*43*1760*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
-    "CPP_TECH":   { nom:"College Prive Technique Les Princes d'Abidjan",     tel1:"07 08 11 12 69", tel2:"",               wave:"COLLEGE PRIVE TECHNIQUE LES PRINCES",     orange:"#144*43*1756*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
-    "KOUIBLY_TEC":{ nom:"Etablissement Technique Les Princes de Kouibly",    tel1:"07 59 93 79 94", tel2:"",               wave:"ETL LES PRINCES KOUIBLY",         orange:"#144*43*1758*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
-    "RITA":       { nom:"Groupe Scolaire Rita Rosane Abobo",                 tel1:"07 57 22 70 49", tel2:"",               wave:"GROUPE SCOLAIRE RITA ROSANE",     orange:"",               rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
+    "CPP":        { nom:"College Prive Les Princes d'Abidjan",               tel1:"0708111269", tel2:"0789771991", wave:"GROUPE SCOLAIRE LES PRINCES",           orange:"#144*43*1721*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"054707"  },
+    "ACADEMIE":   { nom:"Academie Les Princes d'Abidjan",                    tel1:"0747477926", tel2:"0708111269", wave:"LES PRINCES ACADEMIE",                  orange:"#144*43*1728*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:""       },
+    "GUINGLO_V":  { nom:"College Prive Les Princes de Guinglo-Ville",        tel1:"0749781842", tel2:"0555271184", wave:"LES PRINCES GUINGLO VILLE",             orange:"#144*43*1729*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"253854" },
+    "GNONTINROU": { nom:"College Prive Gnontinrou Therese de Guinglo-Guezon",tel1:"0778976708", tel2:"0708991975", wave:"LES PRINCES GUINGLO",                   orange:"#144*43*1725*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"310538" },
+    "KOUTOUAN":   { nom:"Groupe Scolaire Koutouan Nandjui Abobo",            tel1:"0708111269", tel2:"0747477926", wave:"LES PRINCES KOUTOUAN",                  orange:"#144*43*1726*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"000277" },
+    "SOAKPE":     { nom:"College Prive Les Princes de Soakpe-Douedy",        tel1:"0787866177", tel2:"",           wave:"LES PRINCES SOAKPE",                    orange:"#144*43*1727*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"321130" },
+    "AKEIKOI_1":  { nom:"EPV Les Princes Akeikoi 1",                         tel1:"0747477926", tel2:"0708111269", wave:"LES PRINCES AKEIKOI 1",                 orange:"#144*43*1723*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:""       },
+    "AKEIKOI_2":  { nom:"EPV Les Princes Akeikoi 2",                         tel1:"0707777545", tel2:"0747477926", wave:"LES PRINCES AKEIKOI 2",                 orange:"#144*43*1724*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:""       },
+    "CPP_PRO":    { nom:"College Prive Professionnel Les Princes d'Abidjan", tel1:"0708111269", tel2:"0797649941", wave:"COLLEGE PRIVE PROFESSIONNEL LES PRINCES",orange:"#144*43*1760*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"790219" },
+    "CPP_TECH":   { nom:"College Prive Technique Les Princes d'Abidjan",     tel1:"0708111269", tel2:"0797649941", wave:"COLLEGE PRIVE TECHNIQUE LES PRINCES",   orange:"#144*43*1756*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"780202" },
+    "KOUIBLY_TEC":{ nom:"College Prive Technique Les Princes Kouibly",       tel1:"0778976708", tel2:"0708991975", wave:"ETL LES PRINCES KOUIBLY",               orange:"#144*43*1758*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"782410" },
+    "RITA":       { nom:"Groupe Scolaire Rita Rosane Abobo",                 tel1:"0757227049", tel2:"",           wave:"GROUPE SCOLAIRE RITA ROSANE",           orange:"",               rentree:"Mardi 1er Septembre 2026 a 7h30", code:"033258" },
   };
 
   const info = INFOS_ECOLES[eleve.ecoleCode] || INFOS_ECOLES['CPP'];
 
   // Afficher squelette pendant chargement
-  div.innerHTML = '<div style="margin:8px 0;background:white;border-radius:8px;padding:12px;text-align:center;color:#1a3a6b;font-size:0.82em;">⏳ Chargement de la fiche de renseignement...</div>';
+  div.innerHTML = '<div style="margin:8px 0;background:white;border-radius:8px;padding:16px;text-align:center;color:#1a3a6b;"><div class="spinner" style="width:24px;height:24px;border:3px solid #D6E4F0;border-top-color:#1F4E79;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;"></div><p style="font-size:0.85em;">Chargement de la fiche...</p></div>';
 
-  // Charger tarifs depuis CONFIGURATION_TARIF
+  // ── CHARGER TARIFS depuis CONFIGURATION_TARIF ─────────────
+  // Structure créée par TARIFS.gs :
+  //   Lignes 1-4 : en-tête + infos école (à ignorer)
+  //   Ligne 5     : en-têtes colonnes (Niveau / Total / T1 / T2 / T3 / T4)
+  //   Lignes 6+   : données tarifs
+  //   Lignes label : cellules fusionnées (section), 1 seule colonne
   let tarifs = [];
   try {
-    const range   = encodeURIComponent("CONFIGURATION_TARIF!A1:J100");
-    const url     = "https://sheets.googleapis.com/v4/spreadsheets/" + eleve.sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
-    const res     = await fetch(url);
+    const range = encodeURIComponent("CONFIGURATION_TARIF!A1:F200");
+    const url   = "https://sheets.googleapis.com/v4/spreadsheets/" + eleve.sheetsId
+                + "/values/" + range
+                + "?key=" + CONFIG.API_KEY
+                + "&valueRenderOption=UNFORMATTED_VALUE";
+    const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
-      if (data.values && data.values.length > 1) {
-        // Ignorer la ligne d'en-tête
-        for (let i = 1; i < data.values.length; i++) {
-          const row = data.values[i];
-          if (!row[0]) continue;
-          const niveau = String(row[0]||'').trim();
-          const total  = parseFloat(String(row[1]||'').replace(/\s/g,'')) || 0;
-          const t1     = parseFloat(String(row[5]||'').replace(/\s/g,'')) || 0;
-          const t2     = parseFloat(String(row[7]||'').replace(/\s/g,'')) || 0;
-          const t3     = parseFloat(String(row[9]||'').replace(/\s/g,'')) || 0;
-          if (niveau && total) {
-            tarifs.push({ niveau, total, t1, t2, t3 });
+      if (data.values && data.values.length > 0) {
+        // Trouver la ligne d'en-têtes (contient "Niveau" ou "niveau")
+        let ligneEntete = -1;
+        for (let i = 0; i < data.values.length; i++) {
+          const cellule = String(data.values[i][0]||'').toLowerCase();
+          if (cellule.includes('niveau') || cellule.includes('classe') || cellule.includes('filiere')) {
+            ligneEntete = i;
+            break;
           }
+        }
+        // Si pas trouvé, chercher la 1ère ligne avec des chiffres en col B
+        if (ligneEntete === -1) {
+          for (let i = 0; i < data.values.length; i++) {
+            const valB = parseFloat(String(data.values[i][1]||'').replace(/\s/g,''));
+            if (!isNaN(valB) && valB > 1000) { ligneEntete = i - 1; break; }
+          }
+        }
+        const debut = Math.max(ligneEntete + 1, 0);
+
+        for (let i = debut; i < data.values.length; i++) {
+          const row    = data.values[i];
+          const colA   = String(row[0]||'').trim();
+          const colB   = String(row[1]||'').trim();
+          const colC   = String(row[2]||'').trim();
+          const colD   = String(row[3]||'').trim();
+          const colE   = String(row[4]||'').trim();
+          const colF   = String(row[5]||'').trim();
+
+          if (!colA) continue;
+
+          const total = parseFloat(colB.replace(/\s/g,'')) || 0;
+
+          // Ligne de section (label) : colA non vide mais colB vide ou non numérique
+          if (!total || isNaN(total)) {
+            tarifs.push({ label: colA });
+            continue;
+          }
+
+          // Ligne de tarif normale
+          tarifs.push({
+            niveau: colA,
+            total:  total,
+            t1:     parseFloat(colC.replace(/\s/g,'')) || 0,
+            t2:     parseFloat(colD.replace(/\s/g,'')) || 0,
+            t3:     parseFloat(colE.replace(/\s/g,'')) || 0,
+            t4:     parseFloat(colF.replace(/\s/g,'')) || 0,
+          });
         }
       }
     }
@@ -961,94 +1004,117 @@ async function chargerFicheRenseignement(eleve) {
 }
 
 function _htmlFiche(info, tarifs, eleve) {
-  const isRita = eleve.ecoleCode === 'RITA';
 
-  // Tableau des tarifs
+  // ── CONSTRUIRE LE TABLEAU DES TARIFS ─────────────────────
   let lignesTarifs = '';
-  if (tarifs.length > 0) {
-    tarifs.forEach((t, i) => {
-      const bg = i % 2 === 0 ? '' : 'style="background:#f8f9fd"';
-      lignesTarifs += '<tr ' + bg + '>' +
-        '<td style="padding:5px 8px;border:1px solid #dde3f0;font-weight:600;font-size:11px">' + t.niveau + '</td>' +
-        '<td style="padding:5px 8px;border:1px solid #dde3f0;text-align:center;color:#1a3a6b;font-weight:700">' + (t.total ? t.total.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
-        '<td style="padding:5px 8px;border:1px solid #dde3f0;text-align:center">' + (t.t1 ? t.t1.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
-        '<td style="padding:5px 8px;border:1px solid #dde3f0;text-align:center">' + (t.t2 ? t.t2.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
-        '<td style="padding:5px 8px;border:1px solid #dde3f0;text-align:center">' + (t.t3 ? t.t3.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
-        '</tr>';
+  const tarifsReels = tarifs.filter(t => !t.label);
+
+  if (tarifsReels.length > 0) {
+    let compteur = 0;
+    tarifs.forEach(t => {
+      if (t.label) {
+        // Ligne de section (fond doré)
+        lignesTarifs += '<tr><td colspan="5" class="fiche-section-row" style="background:#D4AF37;color:#1A3A5C;font-weight:700;font-size:12px;padding:6px 8px;border:1px solid #c8a000;text-align:center;letter-spacing:0.5px">' + t.label + '</td></tr>';
+      } else {
+        const bg = compteur % 2 === 0 ? '#ffffff' : '#f4f7fd';
+        compteur++;
+        lignesTarifs +=
+          '<tr style="background:' + bg + '">' +
+          '<td style="padding:7px 8px;border:1px solid #dde3f0;font-size:13px;font-weight:600;color:#222">'          + t.niveau + '</td>' +
+          '<td style="padding:7px 8px;border:1px solid #dde3f0;text-align:center;color:#1a3a6b;font-weight:700;font-size:13px">' + (t.total ? t.total.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
+          '<td style="padding:7px 8px;border:1px solid #dde3f0;text-align:center;font-size:12px">'                   + (t.t1 ? t.t1.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
+          '<td style="padding:7px 8px;border:1px solid #dde3f0;text-align:center;font-size:12px">'                   + (t.t2 ? t.t2.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
+          '<td style="padding:7px 8px;border:1px solid #dde3f0;text-align:center;font-size:12px">'                   + (t.t3 ? t.t3.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
+          '</tr>';
+      }
     });
   } else {
-    lignesTarifs = '<tr><td colspan="5" style="text-align:center;padding:12px;color:#aaa;font-size:0.82em;">Tarifs en cours de chargement. Contactez l\'ecole.</td></tr>';
+    lignesTarifs = '<tr><td colspan="5" style="text-align:center;padding:16px;color:#aaa;font-size:13px;">Tarifs non disponibles — Contactez l\'ecole au ' + info.tel1 + '</td></tr>';
   }
 
-  return '<div style="margin:8px 0;border:1.5px solid #c8d4eb;border-radius:8px;overflow:hidden;font-family:Arial,sans-serif">' +
+  // ── NUMÉROS DE TÉLÉPHONE (format lisible) ─────────────────
+  const formatTel = (t) => {
+    if (!t) return '';
+    const n = t.replace(/\D/g,'');
+    if (n.length === 10) return n.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+    return t;
+  };
+  const tel1Affiche = formatTel(info.tel1);
+  const tel2Affiche = info.tel2 ? formatTel(info.tel2) : '';
 
-    // En-tête
-    '<div style="background:#1a3a6b;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="var b=document.getElementById(\'fiche-body-cpp\');b.style.display=b.style.display===\'none\'?\'block\':\'none\'">' +
-    '<div style="flex:1;text-align:center">' +
-    '<div style="font-weight:700;font-size:13px;color:#fff">' + info.nom + '</div>' +
-    (info.tel2 ? '<div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:2px;">Tel : ' + info.tel1 + ' / ' + info.tel2 + '</div>' : '<div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:2px;">Tel : ' + info.tel1 + '</div>') +
+  return (
+    '<div style="margin:8px 0;border:1.5px solid #c8d4eb;border-radius:10px;overflow:hidden;font-family:Arial,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,0.08)">' +
+
+    // ── EN-TÊTE ──
+    '<div style="background:#1a3a6b;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="var b=document.getElementById(\'fiche-body-' + eleve.ecoleCode + '\');b.style.display=b.style.display===\'none\'?\'block\':\'none\'">' +
+    '<div style="flex:1">' +
+    '<div style="font-weight:700;font-size:15px;color:#fff;margin-bottom:3px">' + info.nom + '</div>' +
+    '<div style="font-size:13px;color:rgba(255,255,255,0.85)">📞 ' + tel1Affiche + (tel2Affiche ? ' / ' + tel2Affiche : '') + '</div>' +
     '</div>' +
-    '<div style="font-size:10px;color:#D4AF37;background:rgba(255,255,255,0.1);padding:3px 8px;border-radius:10px;white-space:nowrap;">▼ Voir fiche</div>' +
-    '</div>' +
-
-    // Bandeau code
-    (info.code ? '<div style="background:#D4AF37;padding:8px 14px;text-align:center">' +
-    '<div style="font-size:9px;font-weight:700;color:#5a3a00;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">CODE ETABLISSEMENT — Inscriptions en ligne</div>' +
-    '<div style="display:inline-block;font-size:22px;font-weight:700;color:#1a3a6b;font-family:monospace;letter-spacing:4px;background:#fff;padding:3px 16px;border-radius:5px;border:2px solid #1a3a6b">' + info.code + '</div>' +
-    '</div>' : '') +
-
-    '<div id="fiche-body-cpp">' +
-
-    // Titre
-    '<div style="background:#f0f4fc;padding:7px;text-align:center;border-bottom:1px solid #c8d4eb">' +
-    '<span style="font-weight:700;font-size:11px;color:#1a3a6b;text-decoration:underline;text-transform:uppercase;letter-spacing:.3px">Fiche de Renseignement — Annee Scolaire 2026 / 2027</span>' +
+    '<div style="font-size:11px;color:#D4AF37;border:1px solid #D4AF37;padding:3px 10px;border-radius:20px;white-space:nowrap;margin-left:10px">▼ Fiche</div>' +
     '</div>' +
 
-    '<div style="padding:12px 14px">' +
+    // ── TITRE FICHE DE RENSEIGNEMENT ──
+    '<div style="background:#D4AF37;padding:10px 16px;text-align:center">' +
+    '<div style="font-size:16px;font-weight:700;color:#1A3A5C;letter-spacing:0.5px">FICHE DE RENSEIGNEMENT</div>' +
+    '<div style="font-size:14px;font-weight:600;color:#5a3a00;margin-top:2px">ANNEE SCOLAIRE 2026 — 2027</div>' +
+    (info.code ? '<div style="margin-top:6px"><span style="font-size:11px;color:#5a3a00;font-weight:600">CODE ETABLISSEMENT : </span><span style="font-size:18px;font-weight:700;color:#1a3a6b;font-family:monospace;background:#fff;padding:2px 12px;border-radius:4px;border:2px solid #1a3a6b;letter-spacing:3px">' + info.code + '</span></div>' : '') +
+    '</div>' +
 
-    // Tableau tarifs
-    '<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:3px;margin-bottom:8px">Grille des frais de scolarite</div>' +
-    '<div style="overflow-x:auto;margin-bottom:12px">' +
-    '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
+    '<div id="fiche-body-' + eleve.ecoleCode + '">' +
+
+    '<div style="padding:14px 16px">' +
+
+    // ── TABLEAU TARIFS ──
+    '<div style="font-size:13px;font-weight:700;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;margin-bottom:10px;letter-spacing:0.5px">💰 GRILLE DES FRAIS DE SCOLARITE 2026-2027</div>' +
+    '<div style="overflow-x:auto;margin-bottom:14px;border-radius:6px;overflow:hidden;border:1px solid #dde3f0">' +
+    '<table style="width:100%;border-collapse:collapse;min-width:340px">' +
     '<thead><tr style="background:#1a3a6b;color:#fff">' +
-    '<th style="padding:6px 8px;text-align:left;border:1px solid #2a5298;font-size:10px">Niveau</th>' +
-    '<th style="padding:6px 8px;text-align:center;border:1px solid #2a5298;font-size:10px">Total</th>' +
-    '<th style="padding:6px 8px;text-align:center;border:1px solid #2a5298;font-size:10px">Tranche 1</th>' +
-    '<th style="padding:6px 8px;text-align:center;border:1px solid #2a5298;font-size:10px">Tranche 2</th>' +
-    '<th style="padding:6px 8px;text-align:center;border:1px solid #2a5298;font-size:10px">Tranche 3</th>' +
+    '<th style="padding:9px 8px;text-align:left;font-size:12px;font-weight:700">Classes</th>' +
+    '<th style="padding:9px 8px;text-align:center;font-size:12px;font-weight:700">Total</th>' +
+    '<th style="padding:9px 8px;text-align:center;font-size:11px">Inscription<br><span style="font-weight:400;font-size:10px">aout-oct.</span></th>' +
+    '<th style="padding:9px 8px;text-align:center;font-size:11px">1er vers.<br><span style="font-weight:400;font-size:10px">05 nov.</span></th>' +
+    '<th style="padding:9px 8px;text-align:center;font-size:11px">2e vers.<br><span style="font-weight:400;font-size:10px">05 dec.</span></th>' +
     '</tr></thead>' +
     '<tbody>' + lignesTarifs + '</tbody>' +
     '</table></div>' +
 
-    // Paiement Wave
-    '<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:3px;margin-bottom:8px">Mode de paiement</div>' +
-    '<div style="display:flex;gap:10px;margin-bottom:10px">' +
-    '<div style="flex:1;background:#f0fcf7;border:1.5px solid #1a9e6b;border-radius:6px;padding:10px;text-align:center">' +
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#0d6e49;margin-bottom:5px">WAVE</div>' +
-    '<div style="font-size:11px;color:#0d6e49;margin-bottom:4px">Recherchez dans l\'app Wave :</div>' +
-    '<div style="font-size:11px;font-weight:700;color:#0d6e49;background:#d4f5e8;padding:4px 8px;border-radius:4px">' + info.wave + '</div>' +
+    // ── MODE DE PAIEMENT ──
+    '<div style="font-size:13px;font-weight:700;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;margin-bottom:10px;letter-spacing:0.5px">💳 MODE DE PAIEMENT</div>' +
+    '<div style="display:flex;gap:10px;margin-bottom:12px">' +
+
+    // Wave
+    '<div style="flex:1;background:#e8faf2;border:2px solid #1a9e6b;border-radius:8px;padding:12px;text-align:center">' +
+    '<div style="font-size:13px;font-weight:700;color:#0d6e49;margin-bottom:6px">💙 WAVE</div>' +
+    '<div style="font-size:12px;color:#0d6e49;margin-bottom:6px">Recherchez dans l\'app Wave :</div>' +
+    '<div style="font-size:12px;font-weight:700;color:#0d6e49;background:#c8f0de;padding:6px 8px;border-radius:6px;word-break:break-all">' + info.wave + '</div>' +
     '</div>' +
 
-    (info.orange ? '<div style="display:flex;align-items:center;color:#aaa;font-weight:700;font-size:12px">OU</div>' +
-    '<div style="flex:1;background:#fff8f0;border:1.5px solid #e07010;border-radius:6px;padding:10px;text-align:center">' +
-    '<div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#b85a00;margin-bottom:5px">ORANGE MONEY</div>' +
-    '<div style="font-size:11px;color:#b85a00;margin-bottom:4px">Composez le code USSD :</div>' +
-    '<div style="font-size:12px;font-weight:700;color:#b85a00;background:#ffe8cc;padding:4px 8px;border-radius:4px;font-family:monospace">' + info.orange + '</div>' +
+    // Orange Money
+    (info.orange ?
+    '<div style="display:flex;align-items:center;color:#999;font-weight:700;font-size:14px;flex-shrink:0">OU</div>' +
+    '<div style="flex:1;background:#fff3e8;border:2px solid #e07010;border-radius:8px;padding:12px;text-align:center">' +
+    '<div style="font-size:13px;font-weight:700;color:#b85a00;margin-bottom:6px">🟠 ORANGE MONEY</div>' +
+    '<div style="font-size:12px;color:#b85a00;margin-bottom:6px">Composez le code USSD :</div>' +
+    '<div style="font-size:14px;font-weight:700;color:#b85a00;background:#ffe0c8;padding:6px 8px;border-radius:6px;font-family:monospace;letter-spacing:1px">' + info.orange + '</div>' +
     '</div>' : '') +
 
     '</div>' +
 
-    // Note légale
-    '<div style="background:#fffbf0;border:1px solid #e8d88a;border-left:4px solid #b8860b;padding:6px 10px;font-size:11px;color:#555;margin-bottom:10px">' +
-    'Le paiement se fait <strong style="color:#8b4a00">EXCLUSIVEMENT</strong> via ' + (info.orange ? 'Orange Money ou Wave' : 'Wave') + '. Toute scolarite entamee est entierement due. <strong>Aucun remboursement ne sera effectue.</strong>' +
+    // ── NOTE LÉGALE ──
+    '<div style="background:#fffbf0;border:1px solid #e8d88a;border-left:4px solid #b8860b;padding:10px 12px;font-size:12px;color:#555;margin-bottom:12px;border-radius:0 6px 6px 0;line-height:1.6">' +
+    '⚠️ Le paiement se fait <strong style="color:#8b4a00">EXCLUSIVEMENT</strong> via ' + (info.orange ? 'Orange Money ou Wave' : 'Wave') + '.<br>' +
+    'Toute scolarite entamee est entierement due. <strong>Aucun remboursement ne sera effectue.</strong>' +
     '</div>' +
 
-    // Date rentrée
-    '<div style="background:#1a3a6b;color:#fff;text-align:center;padding:8px;border-radius:4px;font-size:11px">' +
-    'Debut des cours : <strong style="color:#f5d97e">' + info.rentree + '</strong>' +
+    // ── DATE DE RENTRÉE ──
+    '<div style="background:linear-gradient(135deg,#1a3a6b,#2a5298);color:#fff;text-align:center;padding:14px 16px;border-radius:8px">' +
+    '<div style="font-size:12px;color:rgba(255,255,255,0.8);margin-bottom:4px;letter-spacing:0.5px">📅 DEBUT DES COURS</div>' +
+    '<div style="font-size:17px;font-weight:700;color:#f5d97e;letter-spacing:0.5px">' + info.rentree + '</div>' +
     '</div>' +
 
-    '</div></div></div>';
+    '</div></div></div>'
+  );
 }
 
 // ════════════════════════════════════════════════════════════
