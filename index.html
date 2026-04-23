@@ -238,23 +238,10 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
   </div>
 
   <div class="section">
-    <div class="sec-header vert" onclick="toggleSec(this)">🕐 EMPLOI DU TEMPS <span>v</span></div>
-    <div class="sec-body">
-      <div class="edt-scroll">
-        <table class="t-edt">
-          <tr><th>HORAIRE</th><th>LUN</th><th>MAR</th><th>MER</th><th>JEU</th><th>VEN</th><th>SAM</th></tr>
-          <tr><td>07h45-08h55</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td>08h55-09h50</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr class="edt-pause"><td colspan="7">⏸ Recreation 09h50 - 10h10</td></tr>
-          <tr><td>10h10-11h05</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td>11h05-12h00</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr class="edt-pause"><td colspan="7">🍽 Dejeuner 12h00 - 13h05</td></tr>
-          <tr><td>13h05-14h00</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td>14h00-14h55</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td>14h55-15h50</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td>15h50-16h45</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-          <tr><td>16h45-17h40</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
-        </table>
+    <div class="sec-header vert" onclick="toggleSec(this)" id="titreEDT">🕐 EMPLOI DU TEMPS <span>v</span></div>
+    <div class="sec-body" id="edtBody">
+      <div style="text-align:center;padding:20px;color:#2E7D32">
+        <p style="font-size:13px">Emploi du temps en cours de chargement...</p>
       </div>
     </div>
   </div>
@@ -714,6 +701,9 @@ function afficherEspaceParent(eleve) {
     document.getElementById("sectionResultats").style.display = "none";
     afficherSectionBloquee(eleve, soldeParsed, verseParsed);
   }
+
+  // Emploi du temps — visible pour tous
+  chargerEDT(eleve);
 
   // ⚡ FICHE DE RENSEIGNEMENT — visible pour tous (solde 0 ou > 0)
   chargerFicheRenseignement(eleve);
@@ -1295,6 +1285,108 @@ function afficherSectionBloquee(eleve, soldeParsed, verseParsed) {
   var infos = window.SHEETS_IDS_COMPLET[eleve.sheetsId] || {};
   var tel = infos.tel || "0708111269";
   div.innerHTML = "<div style='background:#FFEBEE;border-radius:10px;padding:20px;text-align:center;margin-bottom:14px'><div style='font-size:42px;margin-bottom:10px'>🔒</div><p style='font-size:15px;color:#C62828;font-weight:bold;margin-bottom:8px'>Acces restreint</p><p style='font-size:13px;color:#555;line-height:1.6;margin-bottom:10px'>" + msg + "<br>Payez pour acceder a vos resultats, bulletins et notes.</p></div><div style='background:#E8F5E9;border-radius:10px;padding:14px;border-left:4px solid #2E7D32'><p style='font-size:13px;font-weight:bold;color:#2E7D32;margin-bottom:8px'>💡 Comment debloquer votre espace ?</p><div style='font-size:13px;color:#444;line-height:2'>1️⃣ Payez via <strong>Wave</strong> ou <strong>Orange Money</strong><br>2️⃣ Envoyez votre recu par WhatsApp au <strong>" + tel + "</strong><br>3️⃣ Reconnectez-vous — votre espace est debloque ✅</div></div>";
+}
+
+// ════════════════════════════════════════════════════════════
+// EMPLOI DU TEMPS DYNAMIQUE
+// ════════════════════════════════════════════════════════════
+var EDT_HORAIRES = [
+  { type:"cours", h:"07h45 - 08h55" },
+  { type:"cours", h:"08h55 - 09h50" },
+  { type:"pause", h:"⏸ Recreation  09h50 - 10h10" },
+  { type:"cours", h:"10h10 - 11h05" },
+  { type:"cours", h:"11h05 - 12h00" },
+  { type:"pause", h:"🍽 Dejeuner  12h00 - 13h05" },
+  { type:"cours", h:"13h05 - 14h00" },
+  { type:"cours", h:"14h00 - 14h55" },
+  { type:"cours", h:"14h55 - 15h50" },
+  { type:"cours", h:"15h50 - 16h45" },
+  { type:"cours", h:"16h45 - 17h40" }
+];
+
+async function chargerEDT(eleve) {
+  var div = document.getElementById("edtBody");
+  var titre = document.getElementById("titreEDT");
+  if (!div) return;
+
+  // Calcul année EDT = année suivante (on prépare 2026-2027)
+  var parts = ANNEE_SCOLAIRE_ACTIVE.split("-");
+  var anneeEDT = parts.length === 2
+    ? (parseInt(parts[0])+1) + "-" + (parseInt(parts[1])+1)
+    : ANNEE_SCOLAIRE_ACTIVE;
+
+  if (titre) titre.innerHTML = "🕐 EMPLOI DU TEMPS " + anneeEDT + " <span>v</span>";
+
+  // Nom onglet selon classe
+  var classe = (eleve.classe || "").trim().toUpperCase().replace(/\s+/g, "_");
+  var onglet = "EDT_" + classe;
+
+  try {
+    var sid = eleve.sheetsId || CONFIG.SHEETS_ID;
+    var url = "https://sheets.googleapis.com/v4/spreadsheets/" + sid
+            + "/values/" + encodeURIComponent(onglet + "!A1:G15")
+            + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+    var res = await fetch(url);
+    if (!res.ok) { edtVide(div, eleve.classe, anneeEDT); return; }
+    var data = await res.json();
+    if (!data.values || data.values.length < 2) { edtVide(div, eleve.classe, anneeEDT); return; }
+
+    var rows = data.values.slice(1); // ignorer en-tête
+    var html = "<div style='font-size:12px;color:#2E7D32;margin-bottom:8px'>Classe : <strong>" + eleve.classe + "</strong> | Annee : <strong>" + anneeEDT + "</strong></div>";
+    html += "<div class='edt-scroll'><table class='t-edt'>";
+    html += "<tr><th>HORAIRE</th><th>LUN</th><th>MAR</th><th>MER</th><th>JEU</th><th>VEN</th><th>SAM</th></tr>";
+
+    var rowIdx = 0;
+    for (var i = 0; i < EDT_HORAIRES.length; i++) {
+      var slot = EDT_HORAIRES[i];
+      if (slot.type === "pause") {
+        html += "<tr class='edt-pause'><td colspan='7'>" + slot.h + "</td></tr>";
+      } else {
+        var row = rows[rowIdx] || [];
+        rowIdx++;
+        html += "<tr><td style='font-weight:600;font-size:11px;white-space:nowrap'>" + slot.h + "</td>";
+        for (var j = 1; j <= 6; j++) {
+          var mat = String(row[j] || "").trim();
+          var couleur = matCouleur(mat);
+          var style = mat && couleur
+            ? "background:" + couleur + ";color:#fff;font-weight:bold;font-size:11px;border-radius:3px"
+            : "font-size:11px";
+          html += "<td style='" + style + "'>" + mat + "</td>";
+        }
+        html += "</tr>";
+      }
+    }
+    html += "</table></div>";
+    div.innerHTML = html;
+
+  } catch(e) {
+    edtVide(div, eleve.classe, anneeEDT);
+  }
+}
+
+function edtVide(div, classe, annee) {
+  div.innerHTML = "<div style='text-align:center;padding:24px;background:#F1F8E9;border-radius:10px'>"
+    + "<div style='font-size:36px;margin-bottom:10px'>📅</div>"
+    + "<p style='font-weight:bold;color:#2E7D32;font-size:15px;margin-bottom:6px'>Emploi du temps " + annee + "</p>"
+    + "<p style='font-size:13px;color:#666;margin-bottom:4px'>Pas encore disponible pour la classe <strong>" + classe + "</strong></p>"
+    + "<p style='font-size:12px;color:#aaa'>Contactez l'ecole pour plus d'informations</p>"
+    + "</div>";
+}
+
+function matCouleur(mat) {
+  if (!mat) return "";
+  var m = mat.toUpperCase();
+  if (m.indexOf("MATH") >= 0)  return "#1565C0";
+  if (m.indexOf("FRANC") >= 0) return "#2E7D32";
+  if (m.indexOf("ANGL") >= 0)  return "#E65100";
+  if (m.indexOf("SVT") >= 0)   return "#00695C";
+  if (m.indexOf("HIST") >= 0)  return "#6A1B9A";
+  if (m.indexOf("PHYS") >= 0)  return "#AD1457";
+  if (m.indexOf("EPS") >= 0)   return "#558B2F";
+  if (m.indexOf("INFO") >= 0)  return "#37474F";
+  if (m.indexOf("EDHC") >= 0)  return "#F57F17";
+  if (m.indexOf("PHILO") >= 0) return "#4527A0";
+  return "#546E7A";
 }
 
 // ════════════════════════════════════════════════════════════
