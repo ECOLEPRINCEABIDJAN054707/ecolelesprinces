@@ -1317,8 +1317,14 @@ async function chargerEDT(eleve) {
 
   if (titre) titre.innerHTML = "🕐 EMPLOI DU TEMPS " + anneeEDT + " <span>v</span>";
 
-  // Nom onglet selon classe
-  var classe = (eleve.classe || "").trim().toUpperCase().replace(/\s+/g, "_");
+  // Nom onglet selon classe — nettoyage accents et espaces
+  var classe = (eleve.classe || "").trim().toUpperCase();
+  // Remplacer accents
+  classe = classe.replace(/È/g,"E").replace(/É/g,"E").replace(/Ê/g,"E")
+                 .replace(/À/g,"A").replace(/Â/g,"A").replace(/Î/g,"I")
+                 .replace(/Ô/g,"O").replace(/Û/g,"U").replace(/Ç/g,"C");
+  // Remplacer espaces par underscore
+  classe = classe.replace(/\s+/g, "_");
   var onglet = "EDT_" + classe;
 
   try {
