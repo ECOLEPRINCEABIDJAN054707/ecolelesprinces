@@ -11,7 +11,6 @@
 <meta name="application-name" content="CPP Les Princes">
 <link rel="manifest" href="data:application/json,{%22name%22:%22CPP%20Les%20Princes%22,%22short_name%22:%22CPP%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%231F4E79%22,%22theme_color%22:%22%231F4E79%22}">
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231F4E79' rx='20'/><text y='.9em' font-size='80' x='10'></text></svg>">
-<meta name="apple-mobile-web-app-title" content="Les Princes">
 <title>Ecole Les Princes - Espace Parents</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -101,6 +100,35 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
 .pwa-banner { background:#E8F5E9; border-bottom:2px solid #2E7D32; padding:10px 16px; display:none; align-items:center; gap:12px; }
 .pwa-banner p { font-size:0.79em; color:#2E7D32; flex:1; }
 .pwa-banner button { background:#2E7D32; color:white; border:none; padding:7px 14px; border-radius:6px; font-size:0.78em; cursor:pointer; }
+
+/* ── DECISIONS ANIMATIONS CSS ── */
+@keyframes cpp-bounce   { 0%,100%{transform:scale(1)}  50%{transform:scale(1.15)} }
+@keyframes cpp-float    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes cpp-float-soft { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+@keyframes cpp-pulse    { 0%,100%{opacity:1} 50%{opacity:0.55} }
+@keyframes cpp-confetti { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(220px) rotate(720deg);opacity:0} }
+@keyframes cpp-slide    { 0%{transform:translateY(30px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+.cpp-bounce      { animation:cpp-bounce      0.8s ease-in-out infinite }
+.cpp-float       { animation:cpp-float       1.5s ease-in-out infinite }
+.cpp-float-soft  { animation:cpp-float-soft  2.5s ease-in-out infinite }
+.cpp-pulse       { animation:cpp-pulse       1.2s ease-in-out infinite }
+.cpp-slide       { animation:cpp-slide       0.5s ease-out forwards }
+.cpp-confetti-item { position:absolute; font-size:18px; animation:cpp-confetti 2s ease-in forwards; pointer-events:none; }
+.cpp-decision-card { border-radius:12px; padding:20px 16px; text-align:center; margin-bottom:12px; position:relative; overflow:hidden; }
+.cpp-emoji-big  { font-size:56px; line-height:1; margin-bottom:10px; display:block; }
+.cpp-titre      { font-size:1.1em; font-weight:bold; color:#fff; margin-bottom:6px; }
+.cpp-sous       { font-size:0.83em; color:rgba(255,255,255,0.92); margin-bottom:10px; line-height:1.5; }
+.cpp-emoji-row  { font-size:22px; letter-spacing:5px; margin:8px 0; display:block; }
+.cpp-msg-box    { border-radius:8px; padding:10px 12px; font-size:0.8em; color:rgba(255,255,255,0.95); line-height:1.6; margin-top:8px; background:rgba(255,255,255,0.15); text-align:left; }
+.cpp-next-class { margin-top:12px; border-radius:8px; padding:8px; text-align:center; }
+.cpp-nc-label   { font-size:11px; opacity:0.8; margin-bottom:2px; }
+.cpp-nc-value   { font-size:15px; font-weight:bold; }
+.cpp-insc-block { background:#E8F5E9; border:1px solid #A5D6A7; border-radius:10px; padding:12px; margin-bottom:10px; }
+.cpp-etapes-block { background:#FFF8E1; border:1px solid #FFD54F; border-radius:10px; padding:12px; margin-bottom:10px; }
+.cpp-contact-block { background:#1A3A5C; border-radius:10px; padding:12px; text-align:center; }
+
+/* ── FICHE RENSEIGNEMENT CSS ── */
+.fiche-section-row td { background:#e8ecf5; color:#1a3a6b; font-weight:700; font-size:11px; letter-spacing:.8px; text-transform:uppercase; padding:4px 8px; border:1px solid #c8d4eb; }
 </style>
 </head>
 <body>
@@ -161,6 +189,12 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
     <div class="sec-body" id="notesBody"></div>
   </div>
 
+  <!-- ══ SECTION RESULTATS FIN D'ANNEE ══ -->
+  <div class="section" id="sectionDecision" style="display:none">
+    <div class="sec-header" style="background:linear-gradient(135deg,#D4AF37,#B8860B)" onclick="toggleSec(this)">🏆 RESULTATS FIN D'ANNEE <span>v</span></div>
+    <div class="sec-body open" id="decisionBody"></div>
+  </div>
+
   <div class="section" id="sectionBulletin" style="display:none;">
     <div class="sec-header" style="background:#2E7D32" onclick="toggleSec(this)">📄 BULLETIN SCOLAIRE <span>v</span></div>
     <div class="sec-body" id="bulletinBody">
@@ -180,6 +214,9 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
       <div style="text-align:center;padding:20px;color:#666;"><p style="font-size:0.85em;">Chargement des absences...</p></div>
     </div>
   </div>
+
+  <!-- ══ FICHE DE RENSEIGNEMENT ══ -->
+  <div id="ficheRenseignement"></div>
 
   <div class="section">
     <div class="sec-header rouge" onclick="toggleSec(this)">💰 SCOLARITE ET PAIEMENTS <span>v</span></div>
@@ -365,20 +402,22 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
 </div>
 
 <script>
+// ════════════════════════════════════════════════════════════
+// CONFIGURATION GLOBALE
+// ════════════════════════════════════════════════════════════
 const ECOLES = [
-  { code:"CPP_PRO",     nom:"College Prive Professionnel Les Princes d'Abidjan", ville:"Abobo / Abidjan", couleur:"#1F4E79", mots:["professionnel","princes","abidjan","abobo","cpp"] },
-  { code:"CPP_TECH",    nom:"College Prive Technique Les Princes d'Abidjan",     ville:"Abobo / Abidjan", couleur:"#2E7D32", mots:["technique","princes","abidjan","abobo","cpp"] },
-  { code:"CPP",         nom:"College Prive Les Princes d'Abidjan",               ville:"Abobo / Abidjan", couleur:"#C62828", mots:["princes","abidjan","abobo","cpp","college"] },
-  { code:"KOUTOUAN",    nom:"Groupe Scolaire Koutouan Abobo",                    ville:"Abobo",   couleur:"#4A148C", mots:["koutouan","abobo","groupe","scolaire"] },
-  { code:"GUINGLO_V",   nom:"College Prive Les Princes de Guinglo Ville",        ville:"Guinglo", couleur:"#E65100", mots:["guinglo","ville","princes"] },
-  { code:"SOAKPE",      nom:"College Prive Les Princes de Soakpe-Douedy",        ville:"Soakpe",  couleur:"#00695C", mots:["soakpe","douedy","princes"] },
-  { code:"GNONTINROU",  nom:"College Prive Gnontinrou Therese de Guinglo-Guezon",ville:"Guinglo", couleur:"#1A237E", mots:["gnontinrou","therese","guinglo","guezon"] },
-  { code:"KOUIBLY_TEC", nom:"Etablissement Technique Les Princes de Kouibly",    ville:"Kouibly", couleur:"#4E342E", mots:["technique","kouibly","princes","etablissement"] },
-  { code:"AKEIKOI_1",   nom:"EPV Les Princes Akeikoi 1",                         ville:"Abobo",   couleur:"#1F4E79", mots:["akeikoi","1","abobo","epv","princes"] },
-  { code:"AKEIKOI_2",   nom:"EPV Les Princes Akeikoi 2",                         ville:"Abobo",   couleur:"#C62828", mots:["akeikoi","2","abobo","epv","princes"] },
-  { code:"ACADEMIE",    nom:"EPV Academie des Princes",                          ville:"Abobo",   couleur:"#B8860B", mots:["academie","princes","abobo","epv"] },
-  { code:"RITA",        nom:"Groupe Scolaire Rita Rosane Abobo",                 ville:"Abobo",   couleur:"#607D8B", mots:["rita","rosane","abobo","groupe","scolaire"] },
-  { code:"ESBE",        nom:"Ecole Superieure ESBE",                             ville:"Abidjan", couleur:"#006064", mots:["esbe","superieure","ecole"] },
+  { code:"CPP_PRO",     nom:"College Prive Professionnel Les Princes d'Abidjan", ville:"Abobo / Abidjan", couleur:"#1F4E79" },
+  { code:"CPP_TECH",    nom:"College Prive Technique Les Princes d'Abidjan",     ville:"Abobo / Abidjan", couleur:"#2E7D32" },
+  { code:"CPP",         nom:"College Prive Les Princes d'Abidjan",               ville:"Abobo / Abidjan", couleur:"#C62828" },
+  { code:"KOUTOUAN",    nom:"Groupe Scolaire Koutouan Abobo",                    ville:"Abobo",           couleur:"#4A148C" },
+  { code:"GUINGLO_V",   nom:"College Prive Les Princes de Guinglo Ville",        ville:"Guinglo",         couleur:"#E65100" },
+  { code:"SOAKPE",      nom:"College Prive Les Princes de Soakpe-Douedy",        ville:"Soakpe",          couleur:"#00695C" },
+  { code:"GNONTINROU",  nom:"College Prive Gnontinrou Therese de Guinglo-Guezon",ville:"Guinglo",         couleur:"#1A237E" },
+  { code:"KOUIBLY_TEC", nom:"Etablissement Technique Les Princes de Kouibly",    ville:"Kouibly",         couleur:"#4E342E" },
+  { code:"AKEIKOI_1",   nom:"EPV Les Princes Akeikoi 1",                         ville:"Abobo",           couleur:"#1F4E79" },
+  { code:"AKEIKOI_2",   nom:"EPV Les Princes Akeikoi 2",                         ville:"Abobo",           couleur:"#C62828" },
+  { code:"ACADEMIE",    nom:"EPV Academie des Princes",                          ville:"Abobo",           couleur:"#B8860B" },
+  { code:"RITA",        nom:"Groupe Scolaire Rita Rosane Abobo",                 ville:"Abobo",           couleur:"#607D8B" },
 ];
 
 const CONFIG = {
@@ -402,29 +441,74 @@ const SHEETS_IDS_COMPLET = {
   "1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s":  { nom:"ETL Les Princes de Kouibly",             tel:"0759937994", wave:"0759937994" },
   "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0":  { nom:"Groupe Scolaire Rita Rosane Abobo",      tel:"0757227049", wave:"0757227049" },
 };
+window.SHEETS_IDS_COMPLET = SHEETS_IDS_COMPLET;
+
+// Rendre ECOLES accessible globalement pour les fiches
+window.ECOLES_LIST = ECOLES;
 
 let tentatives = 0;
 let blocageInterval = null;
 const PHOTOS_CACHE = {};
 
+// ════════════════════════════════════════════════════════════
+// DETECTION TYPE DE CLASSE
+// ════════════════════════════════════════════════════════════
+function detecterTypeClasse(classe, ecoleCode) {
+  // Seulement CPP Les Princes d'Abidjan a les 3 types
+  if (ecoleCode !== 'CPP') return 'STANDARD';
+  const c = (classe || '').toUpperCase().trim();
+  // Excellence : contient EX (ex: 6EX1, 2NDA2 EX1, 6EME EX)
+  if (/\bEX\b/.test(c) || /EX\d/.test(c)) return 'EXCELLENCE';
+  // Privilège : se termine par un espace + 3 ou 4
+  if (/\s[34]$/.test(c)) return 'PRIVILEGE';
+  return 'STANDARD';
+}
+
+// ════════════════════════════════════════════════════════════
+// PROGRESSION DES CLASSES
+// ════════════════════════════════════════════════════════════
+const PROGRESSION = {
+  'PSA':'MSA','MSA':'GSA','GSA':'CP1','CP1':'CP2','CP2':'CE1',
+  'CE1':'CE2','CE2':'CM1','CM1':'CM2','CM2':'6EME',
+  '6EME':'5EME','5EME':'4EME','4EME':'3EME','3EME':'2NDE C',
+  '6EX1':'5EX1','6EX2':'5EX2','5EX1':'4EX1','5EX2':'4EX2',
+  '4EX1':'3EX1','4EX2':'3EX2','3EX1':'2NDA2 EX1','3EX2':'2NDA2 EX1',
+  '6EME EX':'5EME EX','5EME EX':'4EME EX','4EME EX':'3EME EX','3EME EX':'2NDE C EX',
+  '2NDE C':'1ERE C','2NDA2':'1EREA2','2NDC':'1EREC',
+  '2NDA2 EX1':'1EREA2 EX1','2NDC EX1':'1EREC EX1',
+  '1ERE C':'TLE D','1EREC':'TLED','1EREA2':'TLEA2',
+  '1EREA2 EX1':'TLEA2 EX1','1EREC EX1':'TLED EX1',
+  '1ERE A':'TLE A','TLE A':'','TLE D':'',
+  '2NDE G1':'1ERE G1','2NDE F2':'1ERE F2',
+  '1ERE F2':'TLE F2','1ERE G1':'TLE G1',
+};
+
+function getProchaineClasse(classe) {
+  if (!classe) return null;
+  const c = classe.toUpperCase().trim();
+  return PROGRESSION[c] || null;
+}
+
+// ════════════════════════════════════════════════════════════
+// CHARGEMENT PHOTO
+// ════════════════════════════════════════════════════════════
 async function chargerPhotoEleve(matricule, imgElement, fallback) {
   if (!matricule) { imgElement.src = fallback; return; }
-  var matUpper = matricule.trim().toUpperCase();
+  const matUpper = matricule.trim().toUpperCase();
   if (PHOTOS_CACHE[matUpper]) {
     imgElement.src = 'https://drive.google.com/thumbnail?id=' + PHOTOS_CACHE[matUpper] + '&sz=w200';
     imgElement.onerror = function() { this.src = fallback; };
     return;
   }
   try {
-    var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + CONFIG.SHEETS_ID + '/values/PHOTOS!A2:B5000?key=' + CONFIG.API_KEY;
-    var res = await fetch(url);
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + CONFIG.SHEETS_ID + '/values/PHOTOS!A2:B5000?key=' + CONFIG.API_KEY;
+    const res = await fetch(url);
     if (res.ok) {
-      var data = await res.json();
+      const data = await res.json();
       if (data.values) {
-        for (var r = 0; r < data.values.length; r++) {
-          var row = data.values[r];
-          var mat = String(row[0] || '').trim().toUpperCase().replace(/\.(JPG|JPEG|PNG|JFIF|WEBP|GIF)$/i, '');
-          var fid = String(row[1] || '').trim();
+        for (const row of data.values) {
+          const mat = String(row[0]||'').trim().toUpperCase().replace(/\.(JPG|JPEG|PNG|JFIF|WEBP|GIF)$/i,'');
+          const fid = String(row[1]||'').trim();
           if (mat && fid) PHOTOS_CACHE[mat] = fid;
         }
         if (PHOTOS_CACHE[matUpper]) {
@@ -434,17 +518,19 @@ async function chargerPhotoEleve(matricule, imgElement, fallback) {
         }
       }
     }
-  } catch(e) { console.log('Photo erreur:', e); }
+  } catch(e) {}
   imgElement.src = fallback;
 }
 
+// ════════════════════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════════════════════
 async function login() {
   if (tentatives >= CONFIG.MAX_TENTATIVES) { demarrerBlocage(); return; }
   const mat = document.getElementById("inputMat").value.trim().toUpperCase();
   const tel = document.getElementById("inputTel").value.trim().replace(/\s/g,"");
   window._loginTel = tel;
-  const errEl = document.getElementById("errorMsg");
-  errEl.style.display = "none";
+  document.getElementById("errorMsg").style.display = "none";
   if (!mat || !tel) { afficherErreur("Veuillez remplir le matricule et le numero de telephone."); return; }
   if (mat.length < 5) { afficherErreur("Matricule trop court."); return; }
   if (tel.length < 10) { afficherErreur("Numero de telephone invalide."); return; }
@@ -508,10 +594,14 @@ async function login() {
   afficherEspaceParent(eleveComplet);
 }
 
+// ════════════════════════════════════════════════════════════
+// CHERCHER DANS ECOLE — SYNTHESE A2:N5000 (inclut M=DECISION, N=MOY_ANNUELLE)
+// ════════════════════════════════════════════════════════════
 async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
   try {
     const sheetsId = sheetsIdDirect;
-    const range = encodeURIComponent("SYNTHESE!A2:L5000");
+    // ⚡ ÉTENDU à N5000 pour récupérer col M (DECISION) et N (MOY_ANNUELLE)
+    const range = encodeURIComponent("SYNTHESE!A2:N5000");
     const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
     let res = null;
     for (let tentative = 0; tentative < 3; tentative++) {
@@ -533,20 +623,22 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
       if (col0.toUpperCase() === "CLASSE" || col0 === "") continue;
       const classeDetectee = col0.replace(/🏫\s*/g,"").replace(/🎓\s*/g,"").replace(/📚\s*/g,"").trim();
       return {
-        classe:    classeDetectee,
-        matricule: mat,
-        nom:       String(row[2]||"").trim(),
-        du:        parseMontant(row[3]),
-        verse:     parseMontant(row[4]),
-        solde:     parseMontant(row[5]),
-        tel1:      String(row[6]||"").trim(),
-        tel2:      String(row[7]||"").trim(),
-        tel3:      String(row[8]||"").trim(),
-        statut:    String(row[9]||"").trim(),
-        club1:     String(row[10]||"").trim(),
-        club2:     String(row[11]||"").trim(),
-        ecoleCode: codeEcole,
-        sheetsId:  sheetsId,
+        classe:       classeDetectee,
+        matricule:    mat,
+        nom:          String(row[2]||"").trim(),
+        du:           parseMontant(row[3]),
+        verse:        parseMontant(row[4]),
+        solde:        parseMontant(row[5]),
+        tel1:         String(row[6]||"").trim(),
+        tel2:         String(row[7]||"").trim(),
+        tel3:         String(row[8]||"").trim(),
+        statut:       String(row[9]||"").trim(),
+        club1:        String(row[10]||"").trim(),
+        club2:        String(row[11]||"").trim(),
+        decision:     String(row[12]||"").trim().toUpperCase(),   // COL M
+        moy_annuelle: parseFloat(String(row[13]||"").replace(",",".")) || 0, // COL N
+        ecoleCode:    codeEcole,
+        sheetsId:     sheetsId,
       };
     }
   } catch(e) {
@@ -555,26 +647,44 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
   return null;
 }
 
+// ════════════════════════════════════════════════════════════
+// AFFICHER ESPACE PARENT
+// ════════════════════════════════════════════════════════════
 function afficherEspaceParent(eleve) {
-  const ecole = eleve.ecole;
-  const couleur = ecole?.couleur || "#1F4E79";
-  const nomEcole = ecole?.nom || "Reseau Les Princes";
+  const ecole     = eleve.ecole;
+  const couleur   = ecole?.couleur || "#1F4E79";
+  const nomEcole  = ecole?.nom || "Reseau Les Princes";
+  const typeClasse = detecterTypeClasse(eleve.classe, eleve.ecoleCode);
 
   document.getElementById("mainHeader").style.background = "linear-gradient(135deg,#1F4E79,#1565C0)";
   document.getElementById("headerTitle").textContent = nomEcole;
   document.getElementById("headerSub").textContent = "Espace Parents - Suivi Scolaire";
 
-  const nomEncode = encodeURIComponent(eleve.nom);
-  const couleurSans = couleur.replace('#','');
+  const nomEncode    = encodeURIComponent(eleve.nom);
+  const couleurSans  = couleur.replace('#','');
   const photoFallback = "https://ui-avatars.com/api/?name=" + nomEncode + "&background=" + couleurSans + "&color=fff&size=200&bold=true";
 
-  document.getElementById("eleveCard").innerHTML = "<div class='eleve-header' style='background:linear-gradient(135deg," + couleur + "," + couleur + "BB)'>" +
+  // Badge selon type de classe (CPP uniquement)
+  let badgeHTML = '';
+  if (eleve.ecoleCode === 'CPP') {
+    if (typeClasse === 'EXCELLENCE') {
+      badgeHTML = '<div style="display:inline-block;background:linear-gradient(135deg,#D4AF37,#B8860B);color:#1A3A5C;font-weight:bold;font-size:0.8em;padding:4px 14px;border-radius:20px;margin-top:6px;letter-spacing:0.5px;">⭐ CLASSE D\'EXCELLENCE</div>';
+    } else if (typeClasse === 'PRIVILEGE') {
+      badgeHTML = '<div style="display:inline-block;background:linear-gradient(135deg,#7B1FA2,#4A148C);color:#fff;font-weight:bold;font-size:0.8em;padding:4px 14px;border-radius:20px;margin-top:6px;letter-spacing:0.5px;">💎 CLASSE PRIVILEGE</div>';
+    }
+  }
+
+  document.getElementById("eleveCard").innerHTML =
+    "<div class='eleve-header' style='background:linear-gradient(135deg," + couleur + "," + couleur + "BB)'>" +
     "<div style='display:flex;align-items:center;gap:12px;padding:8px 12px;'>" +
     "<div style='width:70px;height:70px;border-radius:50%;border:3px solid white;overflow:hidden;flex-shrink:0;background:#fff;'>" +
     "<img id='photoEleve' src='" + photoFallback + "' style='width:100%;height:100%;object-fit:cover;' alt='Photo'></div>" +
-    "<div style='flex:1;'><div class='eleve-mat-badge'>" + eleve.matricule + "</div>" +
+    "<div style='flex:1;'>" +
+    "<div class='eleve-mat-badge'>" + eleve.matricule + "</div>" +
     "<div class='eleve-nom'>" + eleve.nom + "</div>" +
-    "<div class='eleve-infos'>" + eleve.classe + " | " + nomEcole + "</div></div></div>" +
+    "<div class='eleve-infos'>" + eleve.classe + " | " + nomEcole + "</div>" +
+    badgeHTML +
+    "</div></div>" +
     "<button class='btn-logout' onclick='logout()'>Deconnexion</button></div>";
 
   setTimeout(function() {
@@ -582,6 +692,7 @@ function afficherEspaceParent(eleve) {
     if (imgEl) chargerPhotoEleve(eleve.matricule, imgEl, photoFallback);
   }, 500);
 
+  // Statut paiement
   const pay = document.getElementById("statutPay");
   const _pm = v => parseFloat(String(v||"").replace(/\s/g,"").replace(",",".")) || 0;
   const soldeParsed = _pm(eleve.solde);
@@ -618,7 +729,14 @@ function afficherEspaceParent(eleve) {
 
   if (accesNotes) {
     document.getElementById("sectionBulletin").style.display = "block";
+    // ⚡ ANIMATION DECISION — uniquement si solde = 0
+    afficherDecision(eleve);
+  } else {
+    document.getElementById("sectionDecision").style.display = "none";
   }
+
+  // ⚡ FICHE DE RENSEIGNEMENT — visible pour tous (solde 0 ou > 0)
+  chargerFicheRenseignement(eleve);
 
   window._eleveActuel = eleve;
   document.getElementById("loginWrapper").style.display = "none";
@@ -626,91 +744,369 @@ function afficherEspaceParent(eleve) {
   window.scrollTo(0, 0);
 }
 
-// ============================================================
-// TELECHARGER BULLETIN — VERSION CORRIGEE (UNE SEULE FONCTION)
-// ============================================================
+// ════════════════════════════════════════════════════════════
+// MODULE DECISIONS ET ANIMATIONS — COMPLET
+// ════════════════════════════════════════════════════════════
+function afficherDecision(eleve) {
+  const section = document.getElementById('sectionDecision');
+  const div     = document.getElementById('decisionBody');
+  if (!section || !div) return;
+
+  const decision   = (eleve.decision || '').trim().toUpperCase();
+  const classe     = (eleve.classe   || '').trim().toUpperCase();
+  const ecoleCode  = (eleve.ecoleCode|| '').trim().toUpperCase();
+  const moy        = parseFloat(eleve.moy_annuelle) || 0;
+  const prenom     = (eleve.nom || '').split(' ')[0];
+  const typeClasse = detecterTypeClasse(classe, ecoleCode);
+
+  // Masquer si pas de décision renseignée
+  if (!decision) { section.style.display = 'none'; return; }
+
+  const prochaineClasse = getProchaineClasse(classe);
+  section.style.display = 'block';
+
+  const info = SHEETS_IDS_COMPLET[eleve.sheetsId] || {};
+  const tel  = info.tel || '0708111269';
+
+  let html = '';
+
+  // ── CAS 1 : CLASSE EX + moy >= 10 → EXCELLENCE CONFIRMÉE
+  if (typeClasse === 'EXCELLENCE' && moy >= 10) {
+    html = _cardExcellence(prenom, classe, moy, prochaineClasse, tel);
+    setTimeout(() => _lancerConfettis('cardDecision', ['🌟','⭐','🏆','🥇','✨','🎊']), 300);
+
+  // ── CAS 2 : CLASSE EX + moy < 10 → ADMIS QUITTE EX
+  } else if (typeClasse === 'EXCELLENCE' && moy < 10) {
+    html = _cardQuitterEX(prenom, classe, moy, tel);
+    setTimeout(() => _lancerConfettis('cardDecision', ['🎉','🎊','🎈','✅','👏']), 300);
+
+  // ── CAS 3 : STANDARD/PRIV + moy >= 14 → ENTRE EN EX
+  } else if (typeClasse !== 'EXCELLENCE' && decision === 'ADMIS' && moy >= 14) {
+    html = _cardEntreEnEX(prenom, classe, moy, tel);
+    setTimeout(() => _lancerConfettis('cardDecision', ['🎉','🎊','🌟','⭐','🎈','🏅']), 300);
+
+  // ── CAS 4 : STANDARD/PRIV + ADMIS + moy >= 10 et < 14
+  } else if (typeClasse !== 'EXCELLENCE' && decision === 'ADMIS' && moy >= 10) {
+    html = _cardAdmisStandard(prenom, classe, moy, prochaineClasse, tel);
+
+  // ── CAS 5 : REDOUBLANT
+  } else if (decision === 'REDOUBLANT') {
+    html = _cardRedoublant(prenom, classe, moy, tel);
+
+  // ── CAS 6 : EXCLU (Standard/Priv uniquement)
+  } else if (decision === 'EXCLU') {
+    html = _cardExclu(prenom, classe, tel);
+  }
+
+  div.innerHTML = html;
+}
+
+function _cardExcellence(prenom, classe, moy, prochaineClasse, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#1A3A5C" id="cardDecision">' +
+    '<span class="cpp-emoji-big cpp-bounce">🏆</span>' +
+    '<div class="cpp-titre">Classe d\'Excellence Confirmee !</div>' +
+    '<div style="display:inline-block;background:#D4AF37;color:#1A3A5C;font-weight:bold;font-size:0.9em;padding:3px 14px;border-radius:20px;margin-bottom:8px;">' + classe + '</div>' +
+    '<div class="cpp-sous">' + prenom + ', vous conservez votre place en filiere Excellence<br>Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong></div>' +
+    '<span class="cpp-emoji-row">🌟 🏆 ⭐ 🥇 🎖️</span>' +
+    '<div class="cpp-msg-box">Votre serieux et votre excellence vous permettent de continuer dans la filiere d\'Elite. Continuez sur cette lancee remarquable !</div>' +
+    (prochaineClasse ? '<div class="cpp-next-class" style="background:#D4AF37"><div class="cpp-nc-label" style="color:#5a3a00">PROCHAINE CLASSE</div><div class="cpp-nc-value" style="color:#1A3A5C">' + prochaineClasse + '</div></div>' : '') +
+    '</div>' + _blocInscription(tel) + _blocContact(tel);
+}
+
+function _cardQuitterEX(prenom, classe, moy, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#2E7D32" id="cardDecision">' +
+    '<span class="cpp-emoji-big cpp-float">🎉</span>' +
+    '<div class="cpp-titre">Admis(e) !</div>' +
+    '<div class="cpp-sous">' + prenom + ', vous passez en classe superieure<br>Moyenne : <strong>' + moy.toFixed(2) + '/20</strong></div>' +
+    '<span class="cpp-emoji-row">🎉 🎊 🎈 ✅ 👏</span>' +
+    '<div class="cpp-msg-box">Vous quittez la filiere Excellence. La direction vous orientera vers une classe Standard ou Privilege selon votre profil. Contactez l\'ecole pour connaitre votre nouvelle affectation.</div>' +
+    '<div class="cpp-next-class" style="background:rgba(255,255,255,0.2)"><div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">ORIENTATION</div><div class="cpp-nc-value" style="color:#fff">Standard ou Privilege</div></div>' +
+    '</div>' + _blocInscription(tel) + _blocContact(tel);
+}
+
+function _cardEntreEnEX(prenom, classe, moy, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#2E7D32" id="cardDecision">' +
+    '<span class="cpp-emoji-big cpp-float">🎉</span>' +
+    '<div class="cpp-titre">Admis(e) avec Mention !</div>' +
+    '<div class="cpp-sous">' + prenom + ', votre moyenne vous ouvre les portes de la Classe d\'Excellence !<br>Moyenne : <strong>' + moy.toFixed(2) + '/20</strong></div>' +
+    '<span class="cpp-emoji-row">🌟 🎉 🎊 🎈 🏅</span>' +
+    '<div class="cpp-msg-box">Felicitations ! Avec une moyenne de ' + moy.toFixed(2) + '/20 vous entrez directement en Classe d\'Excellence l\'annee prochaine. Bravo pour ce travail exceptionnel !</div>' +
+    '</div>' + _blocInscription(tel) + _blocContact(tel);
+}
+
+function _cardAdmisStandard(prenom, classe, moy, prochaineClasse, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#1A3A5C" id="cardDecision">' +
+    '<span class="cpp-emoji-big cpp-float-soft">✅</span>' +
+    '<div class="cpp-titre">Admis(e) en classe superieure !</div>' +
+    '<div class="cpp-sous">Bien joue ' + prenom + ' — Moyenne : <strong>' + moy.toFixed(2) + '/20</strong></div>' +
+    '<span class="cpp-emoji-row">✅ 📚 💪 👍 🎯</span>' +
+    '<div class="cpp-msg-box">Vous avancez vers votre prochain niveau. Profitez des vacances et preparez-vous a donner le meilleur de vous-meme l\'annee prochaine !</div>' +
+    (prochaineClasse ? '<div class="cpp-next-class" style="background:rgba(255,255,255,0.2)"><div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">PROCHAINE CLASSE</div><div class="cpp-nc-value" style="color:#fff">' + prochaineClasse + '</div></div>' : '') +
+    '</div>' + _blocInscription(tel) + _blocContact(tel);
+}
+
+function _cardRedoublant(prenom, classe, moy, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#B8860B" id="cardDecision">' +
+    '<span class="cpp-emoji-big cpp-pulse">💪</span>' +
+    '<div class="cpp-titre">Redoublant(e)</div>' +
+    '<div class="cpp-sous">' + prenom + ', vous restez en <strong>' + classe + '</strong> pour l\'annee prochaine<br>Moyenne : <strong>' + moy.toFixed(2) + '/20</strong></div>' +
+    '<span class="cpp-emoji-row">💪 📖 🔄 🌱 ⏰</span>' +
+    '<div class="cpp-msg-box">Le redoublement est une nouvelle chance de maitriser les bases et de repartir plus fort. Avec du travail regulier, vous reussirez !</div>' +
+    '</div>' +
+    '<div class="cpp-etapes-block">' +
+    '<p style="font-weight:bold;color:#B8860B;font-size:0.88em;margin-bottom:8px;">📌 Etapes importantes :</p>' +
+    '<div style="font-size:0.82em;color:#444;line-height:2">✔️ Reinscrivez-vous avant le 31 Aout 2026<br>✔️ Contactez la direction pour un bilan<br>✔️ Travaillez vos matieres faibles pendant les vacances</div>' +
+    '</div>' + _blocContact(tel);
+}
+
+function _cardExclu(prenom, classe, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#C62828" id="cardDecision">' +
+    '<span class="cpp-emoji-big cpp-pulse">📞</span>' +
+    '<div class="cpp-titre">Contactez la direction</div>' +
+    '<div class="cpp-sous">Cher(e) parent, nous vous invitons a prendre contact avec la direction concernant la situation de votre enfant</div>' +
+    '<span class="cpp-emoji-row">📞 🤝 💬 🏫 📋</span>' +
+    '<div class="cpp-msg-box">Des solutions existent. La direction est disponible pour vous accompagner vers la meilleure orientation pour votre enfant.</div>' +
+    '</div>' + _blocContact(tel);
+}
+
+function _blocInscription(tel) {
+  return '<div class="cpp-insc-block">' +
+    '<p style="font-weight:bold;color:#2E7D32;font-size:0.88em;margin-bottom:8px;">📌 Inscrivez-vous tot pour 2026-2027 :</p>' +
+    '<div style="font-size:0.82em;color:#444;line-height:2">✅ Choisir votre classe (Excellence, Privilege, Standard)<br>✅ Beneficier du tarif preferentiel a l\'inscription<br>✅ Assurer votre place avant la limite de capacite</div>' +
+    '</div>';
+}
+
+function _blocContact(tel) {
+  return '<div class="cpp-contact-block">' +
+    '<p style="color:#D4AF37;font-weight:bold;font-size:0.88em;margin-bottom:6px;">📞 Contact — Inscription & Renseignements</p>' +
+    '<p style="color:#fff;font-size:1em;font-weight:bold;">' + tel + '</p>' +
+    '<p style="color:rgba(255,255,255,0.65);font-size:0.75em;margin-top:4px;">Lundi au Samedi — 7h30 a 17h30</p>' +
+    '</div>';
+}
+
+function _lancerConfettis(cardId, emojis) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  let count = 0;
+  const interval = setInterval(() => {
+    if (count++ > 24) { clearInterval(interval); return; }
+    const el = document.createElement('div');
+    el.className = 'cpp-confetti-item';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left  = Math.random() * 90 + '%';
+    el.style.top   = '-20px';
+    el.style.animationDuration = (1 + Math.random() * 1.5) + 's';
+    card.appendChild(el);
+    setTimeout(() => el.remove(), 2500);
+  }, 120);
+}
+
+// ════════════════════════════════════════════════════════════
+// MODULE FICHE DE RENSEIGNEMENT — DYNAMIQUE DEPUIS SHEETS
+// ════════════════════════════════════════════════════════════
+async function chargerFicheRenseignement(eleve) {
+  const div = document.getElementById('ficheRenseignement');
+  if (!div) return;
+
+  // Infos statiques par école (nom, contacts, paiement)
+  const INFOS_ECOLES = {
+    "CPP":        { nom:"College Prive Les Princes d'Abidjan",               tel1:"07 08 11 12 69", tel2:"07 89 77 19 91", wave:"GROUPE SCOLAIRE LES PRINCES",    orange:"#144*43*1721*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"054707" },
+    "ACADEMIE":   { nom:"Academie Les Princes d'Abidjan",                    tel1:"07 47 47 79 26", tel2:"",               wave:"LES PRINCES ACADEMIE",            orange:"#144*43*1728*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
+    "GUINGLO_V":  { nom:"College Prive Les Princes de Guinglo-Ville",        tel1:"07 49 78 18 42", tel2:"05 55 27 11 84", wave:"LES PRINCES GUINGLO VILLE",       orange:"#144*43*1729*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"253854" },
+    "GNONTINROU": { nom:"College Prive Gnontinrou Therese de Guinglo-Guezon",tel1:"07 78 06 90 66", tel2:"",               wave:"LES PRINCES GUINGLO",             orange:"#144*43*1725*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
+    "KOUTOUAN":   { nom:"Groupe Scolaire Les Princes de Koutouan",           tel1:"07 47 33 01 28", tel2:"",               wave:"LES PRINCES KOUTOUAN",            orange:"#144*43*1726*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
+    "SOAKPE":     { nom:"College Prive Les Princes de Soakpe-Douedy",        tel1:"07 47 47 79 26", tel2:"",               wave:"LES PRINCES SOAKPE",              orange:"#144*43*1727*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
+    "AKEIKOI_1":  { nom:"EPV Les Princes Akeikoi 1",                         tel1:"07 47 47 79 26", tel2:"",               wave:"LES PRINCES AKEIKOI 1",           orange:"#144*43*1723*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
+    "AKEIKOI_2":  { nom:"EPV Les Princes Akeikoi 2",                         tel1:"07 47 47 79 26", tel2:"",               wave:"LES PRINCES AKEIKOI 2",           orange:"#144*43*1724*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
+    "CPP_PRO":    { nom:"College Prive Professionnel Les Princes d'Abidjan", tel1:"07 08 11 12 69", tel2:"",               wave:"COLLEGE PRIVE PROFESSIONNEL LES PRINCES", orange:"#144*43*1760*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
+    "CPP_TECH":   { nom:"College Prive Technique Les Princes d'Abidjan",     tel1:"07 08 11 12 69", tel2:"",               wave:"COLLEGE PRIVE TECHNIQUE LES PRINCES",     orange:"#144*43*1756*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
+    "KOUIBLY_TEC":{ nom:"Etablissement Technique Les Princes de Kouibly",    tel1:"07 59 93 79 94", tel2:"",               wave:"ETL LES PRINCES KOUIBLY",         orange:"#144*43*1758*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
+    "RITA":       { nom:"Groupe Scolaire Rita Rosane Abobo",                 tel1:"07 57 22 70 49", tel2:"",               wave:"GROUPE SCOLAIRE RITA ROSANE",     orange:"",               rentree:"Mardi 1er Septembre 2026 a 7h30", code:"" },
+  };
+
+  const info = INFOS_ECOLES[eleve.ecoleCode] || INFOS_ECOLES['CPP'];
+
+  // Afficher squelette pendant chargement
+  div.innerHTML = '<div style="margin:8px 0;background:white;border-radius:8px;padding:12px;text-align:center;color:#1a3a6b;font-size:0.82em;">⏳ Chargement de la fiche de renseignement...</div>';
+
+  // Charger tarifs depuis CONFIGURATION_TARIF
+  let tarifs = [];
+  try {
+    const range   = encodeURIComponent("CONFIGURATION_TARIF!A1:J100");
+    const url     = "https://sheets.googleapis.com/v4/spreadsheets/" + eleve.sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+    const res     = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.values && data.values.length > 1) {
+        // Ignorer la ligne d'en-tête
+        for (let i = 1; i < data.values.length; i++) {
+          const row = data.values[i];
+          if (!row[0]) continue;
+          const niveau = String(row[0]||'').trim();
+          const total  = parseFloat(String(row[1]||'').replace(/\s/g,'')) || 0;
+          const t1     = parseFloat(String(row[5]||'').replace(/\s/g,'')) || 0;
+          const t2     = parseFloat(String(row[7]||'').replace(/\s/g,'')) || 0;
+          const t3     = parseFloat(String(row[9]||'').replace(/\s/g,'')) || 0;
+          if (niveau && total) {
+            tarifs.push({ niveau, total, t1, t2, t3 });
+          }
+        }
+      }
+    }
+  } catch(e) {
+    console.warn('Fiche tarifs:', e.message);
+  }
+
+  div.innerHTML = _htmlFiche(info, tarifs, eleve);
+}
+
+function _htmlFiche(info, tarifs, eleve) {
+  const isRita = eleve.ecoleCode === 'RITA';
+
+  // Tableau des tarifs
+  let lignesTarifs = '';
+  if (tarifs.length > 0) {
+    tarifs.forEach((t, i) => {
+      const bg = i % 2 === 0 ? '' : 'style="background:#f8f9fd"';
+      lignesTarifs += '<tr ' + bg + '>' +
+        '<td style="padding:5px 8px;border:1px solid #dde3f0;font-weight:600;font-size:11px">' + t.niveau + '</td>' +
+        '<td style="padding:5px 8px;border:1px solid #dde3f0;text-align:center;color:#1a3a6b;font-weight:700">' + (t.total ? t.total.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
+        '<td style="padding:5px 8px;border:1px solid #dde3f0;text-align:center">' + (t.t1 ? t.t1.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
+        '<td style="padding:5px 8px;border:1px solid #dde3f0;text-align:center">' + (t.t2 ? t.t2.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
+        '<td style="padding:5px 8px;border:1px solid #dde3f0;text-align:center">' + (t.t3 ? t.t3.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
+        '</tr>';
+    });
+  } else {
+    lignesTarifs = '<tr><td colspan="5" style="text-align:center;padding:12px;color:#aaa;font-size:0.82em;">Tarifs en cours de chargement. Contactez l\'ecole.</td></tr>';
+  }
+
+  return '<div style="margin:8px 0;border:1.5px solid #c8d4eb;border-radius:8px;overflow:hidden;font-family:Arial,sans-serif">' +
+
+    // En-tête
+    '<div style="background:#1a3a6b;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="var b=document.getElementById(\'fiche-body-cpp\');b.style.display=b.style.display===\'none\'?\'block\':\'none\'">' +
+    '<div style="flex:1;text-align:center">' +
+    '<div style="font-weight:700;font-size:13px;color:#fff">' + info.nom + '</div>' +
+    (info.tel2 ? '<div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:2px;">Tel : ' + info.tel1 + ' / ' + info.tel2 + '</div>' : '<div style="font-size:10px;color:rgba(255,255,255,0.75);margin-top:2px;">Tel : ' + info.tel1 + '</div>') +
+    '</div>' +
+    '<div style="font-size:10px;color:#D4AF37;background:rgba(255,255,255,0.1);padding:3px 8px;border-radius:10px;white-space:nowrap;">▼ Voir fiche</div>' +
+    '</div>' +
+
+    // Bandeau code
+    (info.code ? '<div style="background:#D4AF37;padding:8px 14px;text-align:center">' +
+    '<div style="font-size:9px;font-weight:700;color:#5a3a00;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">CODE ETABLISSEMENT — Inscriptions en ligne</div>' +
+    '<div style="display:inline-block;font-size:22px;font-weight:700;color:#1a3a6b;font-family:monospace;letter-spacing:4px;background:#fff;padding:3px 16px;border-radius:5px;border:2px solid #1a3a6b">' + info.code + '</div>' +
+    '</div>' : '') +
+
+    '<div id="fiche-body-cpp">' +
+
+    // Titre
+    '<div style="background:#f0f4fc;padding:7px;text-align:center;border-bottom:1px solid #c8d4eb">' +
+    '<span style="font-weight:700;font-size:11px;color:#1a3a6b;text-decoration:underline;text-transform:uppercase;letter-spacing:.3px">Fiche de Renseignement — Annee Scolaire 2026 / 2027</span>' +
+    '</div>' +
+
+    '<div style="padding:12px 14px">' +
+
+    // Tableau tarifs
+    '<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:3px;margin-bottom:8px">Grille des frais de scolarite</div>' +
+    '<div style="overflow-x:auto;margin-bottom:12px">' +
+    '<table style="width:100%;border-collapse:collapse;font-size:11px">' +
+    '<thead><tr style="background:#1a3a6b;color:#fff">' +
+    '<th style="padding:6px 8px;text-align:left;border:1px solid #2a5298;font-size:10px">Niveau</th>' +
+    '<th style="padding:6px 8px;text-align:center;border:1px solid #2a5298;font-size:10px">Total</th>' +
+    '<th style="padding:6px 8px;text-align:center;border:1px solid #2a5298;font-size:10px">Tranche 1</th>' +
+    '<th style="padding:6px 8px;text-align:center;border:1px solid #2a5298;font-size:10px">Tranche 2</th>' +
+    '<th style="padding:6px 8px;text-align:center;border:1px solid #2a5298;font-size:10px">Tranche 3</th>' +
+    '</tr></thead>' +
+    '<tbody>' + lignesTarifs + '</tbody>' +
+    '</table></div>' +
+
+    // Paiement Wave
+    '<div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:3px;margin-bottom:8px">Mode de paiement</div>' +
+    '<div style="display:flex;gap:10px;margin-bottom:10px">' +
+    '<div style="flex:1;background:#f0fcf7;border:1.5px solid #1a9e6b;border-radius:6px;padding:10px;text-align:center">' +
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#0d6e49;margin-bottom:5px">WAVE</div>' +
+    '<div style="font-size:11px;color:#0d6e49;margin-bottom:4px">Recherchez dans l\'app Wave :</div>' +
+    '<div style="font-size:11px;font-weight:700;color:#0d6e49;background:#d4f5e8;padding:4px 8px;border-radius:4px">' + info.wave + '</div>' +
+    '</div>' +
+
+    (info.orange ? '<div style="display:flex;align-items:center;color:#aaa;font-weight:700;font-size:12px">OU</div>' +
+    '<div style="flex:1;background:#fff8f0;border:1.5px solid #e07010;border-radius:6px;padding:10px;text-align:center">' +
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#b85a00;margin-bottom:5px">ORANGE MONEY</div>' +
+    '<div style="font-size:11px;color:#b85a00;margin-bottom:4px">Composez le code USSD :</div>' +
+    '<div style="font-size:12px;font-weight:700;color:#b85a00;background:#ffe8cc;padding:4px 8px;border-radius:4px;font-family:monospace">' + info.orange + '</div>' +
+    '</div>' : '') +
+
+    '</div>' +
+
+    // Note légale
+    '<div style="background:#fffbf0;border:1px solid #e8d88a;border-left:4px solid #b8860b;padding:6px 10px;font-size:11px;color:#555;margin-bottom:10px">' +
+    'Le paiement se fait <strong style="color:#8b4a00">EXCLUSIVEMENT</strong> via ' + (info.orange ? 'Orange Money ou Wave' : 'Wave') + '. Toute scolarite entamee est entierement due. <strong>Aucun remboursement ne sera effectue.</strong>' +
+    '</div>' +
+
+    // Date rentrée
+    '<div style="background:#1a3a6b;color:#fff;text-align:center;padding:8px;border-radius:4px;font-size:11px">' +
+    'Debut des cours : <strong style="color:#f5d97e">' + info.rentree + '</strong>' +
+    '</div>' +
+
+    '</div></div></div>';
+}
+
+// ════════════════════════════════════════════════════════════
+// TELECHARGER BULLETIN
+// ════════════════════════════════════════════════════════════
 async function telechargerBulletin() {
   const eleve = window._eleveActuel;
   if (!eleve) return;
-
   const solde = parseFloat(String(eleve.solde||"").replace(/\s/g,"")) || 0;
   if (solde > 0) {
     alert("Votre bulletin est accessible uniquement si votre scolarite est entierement payee.\n\nSolde restant : " + solde.toLocaleString("fr-FR") + " F CFA");
     return;
   }
-
   const btn = document.querySelector("#sectionBulletin button");
   if (btn) { btn.textContent = "⏳ Chargement..."; btn.disabled = true; }
-
   try {
-    const mat = eleve.matricule.trim().toUpperCase().replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g, "");
+    const mat      = eleve.matricule.trim().toUpperCase().replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g,"");
     const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
-   const onglets = ["BULLETINS_T3", "BULLETINS_T2", "BULLETINS_T1"];
-    let lienPDF = null;
-
+    const onglets  = ["BULLETINS_T3","BULLETINS_T2","BULLETINS_T1"];
+    let lienPDF    = null;
     for (const onglet of onglets) {
       if (lienPDF) break;
       const range = encodeURIComponent(onglet + "!A1:F2000");
-      const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId
-                + "/values/" + range
-                + "?key=" + CONFIG.API_KEY
-                + "&valueRenderOption=UNFORMATTED_VALUE";
+      const url   = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
       try {
-        const res = await fetch(url);
+        const res  = await fetch(url);
         if (!res.ok) continue;
         const data = await res.json();
-        if (!data.values || data.values.length === 0) continue;
-
+        if (!data.values) continue;
         for (const row of data.values) {
-          const matRow = String(row[0]||"")
-            .trim()
-            .toUpperCase()
-            .replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g, "");
-
+          const matRow = String(row[0]||"").trim().toUpperCase().replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g,"");
           if (matRow !== mat) continue;
-
-          let lienCandidat = "";
-          let idCandidat = "";
-
+          let lienCandidat = "", idCandidat = "";
           for (let c = 1; c < row.length; c++) {
             const val = String(row[c]||"").trim();
             if (val.startsWith("http")) { lienCandidat = val; break; }
           }
           for (let c = 1; c < row.length; c++) {
             const val = String(row[c]||"").trim();
-          if (val && !val.startsWith("http") && val.length >= 33) { idCandidat = val; break; }
+            if (val && !val.startsWith("http") && val.length >= 33) { idCandidat = val; break; }
           }
-
-          if (lienCandidat) {
-            lienPDF = lienCandidat;
-          } else if (idCandidat) {
-            lienPDF = "https://drive.google.com/file/d/" + idCandidat + "/view";
-          }
+          lienPDF = lienCandidat || (idCandidat ? "https://drive.google.com/file/d/" + idCandidat + "/view" : null);
           if (lienPDF) break;
         }
-      } catch(e) {
-        console.warn("Erreur onglet", onglet, e);
-      }
+      } catch(e) {}
     }
-
-    if (!lienPDF) {
-      alert("Bulletin non disponible pour le moment.\n\nMatricule recherche : " + mat + "\nContactez l'ecole au 07 08 11 12 69");
-      return;
-    }
-
+    if (!lienPDF) { alert("Bulletin non disponible.\nContactez l'ecole au 07 08 11 12 69"); return; }
     window.open(lienPDF, "_blank");
-
   } catch(e) {
-    console.error("Erreur bulletin:", e);
-    alert("Erreur de chargement. Verifiez votre connexion et reessayez.");
+    alert("Erreur de chargement. Verifiez votre connexion.");
   } finally {
-    if (btn) {
-      btn.textContent = "📥 Telecharger mon bulletin PDF";
-      btn.disabled = false;
-    }
+    if (btn) { btn.textContent = "📥 Telecharger mon bulletin PDF"; btn.disabled = false; }
   }
 }
 
+// ════════════════════════════════════════════════════════════
+// CHARGER NOTES
+// ════════════════════════════════════════════════════════════
 async function chargerNotes(eleve) {
   const div = document.getElementById("notesBody");
   div.innerHTML = "<div style='text-align:center;padding:20px;color:#1F4E79;'><div class='spinner' style='width:24px;height:24px;border:3px solid #D6E4F0;border-top-color:#1F4E79;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;'></div><p style='font-size:0.82em;'>Chargement des notes...</p></div>";
@@ -718,28 +1114,28 @@ async function chargerNotes(eleve) {
   function getAppreciation(matiere, note) {
     if (note === null) return { app:"", conseil:"" };
     const conseils = {
-      "Comp. Française":     { haut:{app:"Votre enfant s'exprime bien par écrit.",conseil:"Veillez à ce qu'il lise régulièrement."}, moyen:{app:"L'expression écrite est acceptable.",conseil:"Encouragez votre enfant à revoir ses productions."}, faible:{app:"Des difficultés sont notées en expression écrite.",conseil:"Vérifiez que les leçons sont revues chaque soir."} },
-      "Oral Français":       { haut:{app:"Votre enfant s'exprime correctement à l'oral.",conseil:"Invitez votre enfant à parler de sa journée."}, moyen:{app:"L'expression orale est en cours de développement.",conseil:"Encouragez votre enfant à prendre la parole."}, faible:{app:"Votre enfant a du mal à s'exprimer oralement.",conseil:"Échangez quotidiennement avec votre enfant."} },
-      "Orthographe":         { haut:{app:"La maîtrise de l'orthographe est satisfaisante.",conseil:"Faites régulièrement des dictées courtes."}, moyen:{app:"L'orthographe présente quelques faiblesses.",conseil:"Pratiquez des dictées deux fois par semaine."}, faible:{app:"De sérieuses lacunes en orthographe.",conseil:"Installez une routine de dictée quotidienne."} },
-      "Anglais":             { haut:{app:"Votre enfant suit bien les cours d'anglais.",conseil:"Exposez-le à l'anglais à la maison."}, moyen:{app:"Les résultats en anglais méritent attention.",conseil:"Vérifiez que le vocabulaire est appris."}, faible:{app:"L'anglais pose de réelles difficultés.",conseil:"Assurez-vous que votre enfant révise chaque soir."} },
-      "Histoire-Géographie": { haut:{app:"Bonne maîtrise de l'Histoire et de la Géographie.",conseil:"Invitez votre enfant à partager ce qu'il apprend."}, moyen:{app:"Les résultats en Hist-Géo sont irréguliers.",conseil:"Vérifiez que les leçons sont apprises."}, faible:{app:"Des lacunes importantes en Histoire-Géographie.",conseil:"Aidez votre enfant à réviser avec des fiches."} },
-      "Mathématiques":       { haut:{app:"Votre enfant travaille sérieusement en maths.",conseil:"La pratique quotidienne maintient le niveau."}, moyen:{app:"Le niveau en mathématiques nécessite de la régularité.",conseil:"Vérifiez que les exercices sont faits et corrigés."}, faible:{app:"Difficultés sérieuses en mathématiques.",conseil:"Un suivi quotidien est urgent."} },
-      "Sciences Physiques":  { haut:{app:"Les sciences physiques sont bien assimilées.",conseil:"Encouragez votre enfant à revoir ses formules."}, moyen:{app:"Des résultats acceptables en sciences.",conseil:"Vérifiez que les formules sont mémorisées."}, faible:{app:"Des difficultés en Sciences Physiques.",conseil:"Encouragez votre enfant à revoir ses cours."} },
-      "SVT":                 { haut:{app:"Bonne assimilation des Sciences de la Vie.",conseil:"Demandez à votre enfant de vous expliquer ses leçons."}, moyen:{app:"Des résultats moyens en SVT.",conseil:"Vérifiez que les définitions sont apprises."}, faible:{app:"Votre enfant présente des lacunes en SVT.",conseil:"Contrôlez que les leçons sont lues et relues."} },
+      "Comp. Française":     { haut:{app:"Votre enfant s'exprime bien par ecrit.",conseil:"Veillez a ce qu'il lise regulierement."}, moyen:{app:"L'expression ecrite est acceptable.",conseil:"Encouragez votre enfant a revoir ses productions."}, faible:{app:"Des difficultes sont notees en expression ecrite.",conseil:"Verifiez que les lecons sont revues chaque soir."} },
+      "Oral Français":       { haut:{app:"Votre enfant s'exprime correctement a l'oral.",conseil:"Invitez votre enfant a parler de sa journee."}, moyen:{app:"L'expression orale est en cours de developpement.",conseil:"Encouragez votre enfant a prendre la parole."}, faible:{app:"Votre enfant a du mal a s'exprimer oralement.",conseil:"Echangez quotidiennement avec votre enfant."} },
+      "Orthographe":         { haut:{app:"La maitrise de l'orthographe est satisfaisante.",conseil:"Faites regulierement des dictees courtes."}, moyen:{app:"L'orthographe presente quelques faiblesses.",conseil:"Pratiquez des dictees deux fois par semaine."}, faible:{app:"De serieuses lacunes en orthographe.",conseil:"Installez une routine de dictee quotidienne."} },
+      "Anglais":             { haut:{app:"Votre enfant suit bien les cours d'anglais.",conseil:"Exposez-le a l'anglais a la maison."}, moyen:{app:"Les resultats en anglais meritent attention.",conseil:"Verifiez que le vocabulaire est appris."}, faible:{app:"L'anglais pose de reelles difficultes.",conseil:"Assurez-vous que votre enfant revise chaque soir."} },
+      "Histoire-Géographie": { haut:{app:"Bonne maitrise de l'Histoire et de la Geographie.",conseil:"Invitez votre enfant a partager ce qu'il apprend."}, moyen:{app:"Les resultats en Hist-Geo sont irreguliers.",conseil:"Verifiez que les lecons sont apprises."}, faible:{app:"Des lacunes importantes en Histoire-Geographie.",conseil:"Aidez votre enfant a reviser avec des fiches."} },
+      "Mathématiques":       { haut:{app:"Votre enfant travaille serieusement en maths.",conseil:"La pratique quotidienne maintient le niveau."}, moyen:{app:"Le niveau en mathematiques necessite de la regularite.",conseil:"Verifiez que les exercices sont faits et corriges."}, faible:{app:"Difficultes serieuses en mathematiques.",conseil:"Un suivi quotidien est urgent."} },
+      "Sciences Physiques":  { haut:{app:"Les sciences physiques sont bien assimilees.",conseil:"Encouragez votre enfant a revoir ses formules."}, moyen:{app:"Des resultats acceptables en sciences.",conseil:"Verifiez que les formules sont memorisees."}, faible:{app:"Des difficultes en Sciences Physiques.",conseil:"Encouragez votre enfant a revoir ses cours."} },
+      "SVT":                 { haut:{app:"Bonne assimilation des Sciences de la Vie.",conseil:"Demandez a votre enfant de vous expliquer ses lecons."}, moyen:{app:"Des resultats moyens en SVT.",conseil:"Verifiez que les definitions sont apprises."}, faible:{app:"Votre enfant presente des lacunes en SVT.",conseil:"Controlez que les lecons sont lues et relues."} },
     };
     const tranche = note >= 14 ? "haut" : note >= 10 ? "moyen" : "faible";
-    const base = conseils[matiere] || { haut:{app:"Résultats satisfaisants.",conseil:"Continuez à suivre le travail de votre enfant."}, moyen:{app:"Résultats moyens.",conseil:"Vérifiez que les leçons sont apprises chaque soir."}, faible:{app:"Des difficultés sont constatées.",conseil:"Un suivi régulier à la maison est nécessaire."} };
+    const base = conseils[matiere] || { haut:{app:"Resultats satisfaisants.",conseil:"Continuez a suivre le travail de votre enfant."}, moyen:{app:"Resultats moyens.",conseil:"Verifiez que les lecons sont apprises chaque soir."}, faible:{app:"Des difficultes sont constatees.",conseil:"Un suivi regulier a la maison est necessaire."} };
     return base[tranche];
   }
 
   function carteMatiere(matiere, noteVal, couleurGroupe) {
     let v = null;
     if (noteVal !== undefined && noteVal !== "" && noteVal !== null) {
-      const s = String(noteVal).replace(",", ".");
+      const s = String(noteVal).replace(",",".");
       const f = parseFloat(s);
       if (!isNaN(f) && f !== 22) v = f;
     }
-    if (v === null) return "<div style='display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #f0f0f0;background:#fafafa;'><div style='flex:1;font-size:0.84em;color:#999;'>" + matiere + "</div><div style='font-size:0.8em;color:#ccc;font-style:italic;'>Non évalué</div></div>";
+    if (v === null) return "<div style='display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #f0f0f0;background:#fafafa;'><div style='flex:1;font-size:0.84em;color:#999;'>" + matiere + "</div><div style='font-size:0.8em;color:#ccc;font-style:italic;'>Non evalue</div></div>";
     const couleurNote = v >= 14 ? "#2E7D32" : v >= 10 ? "#B8860B" : "#C62828";
     const bgNote      = v >= 14 ? "#E8F5E9" : v >= 10 ? "#FFFDE7" : "#FFEBEE";
     const emoji       = v >= 14 ? "✅" : v >= 10 ? "⚠️" : "🔴";
@@ -750,60 +1146,53 @@ async function chargerNotes(eleve) {
   try {
     const mat = eleve.matricule;
     const trimestres = ['NOTES_T2','NOTES_T1','NOTES_T3'];
-    const trimNoms   = ['2ème Trimestre','1er Trimestre','3ème Trimestre'];
+    const trimNoms   = ['2eme Trimestre','1er Trimestre','3eme Trimestre'];
     let rowTrouve = null, trimNom = "";
-
     for (let t = 0; t < trimestres.length; t++) {
-      const range = encodeURIComponent(trimestres[t] + "!A1:V2000");
+      const range    = encodeURIComponent(trimestres[t] + "!A1:V2000");
       const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
-      const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+      const url      = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
       try {
-        const res = await fetch(url);
+        const res  = await fetch(url);
         const data = await res.json();
         if (!data.values) continue;
         for (const row of data.values) {
-          const matRow = String(row[1]||"").trim().toUpperCase();
-          if (matRow === mat.toUpperCase()) { rowTrouve = row; trimNom = trimNoms[t]; break; }
+          if (String(row[1]||"").trim().toUpperCase() === mat.toUpperCase()) { rowTrouve = row; trimNom = trimNoms[t]; break; }
         }
         if (rowTrouve) break;
-      } catch(e) { }
+      } catch(e) {}
     }
-
     if (!rowTrouve) { afficherNotesVides(div); return; }
-
-    const row = rowTrouve;
-    const niveau = (eleve.classe && eleve.classe !== "CLASSE" && eleve.classe.length > 2) ? eleve.classe : String(row[3]||"").trim();
-    const sheetsIdEleve = eleve.sheetsId || "";
-    const isGuinglo    = sheetsIdEleve === "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA";
-    const isGnontinrou = sheetsIdEleve === "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4";
-
+    const row      = rowTrouve;
+    const niveau   = (eleve.classe && eleve.classe !== "CLASSE" && eleve.classe.length > 2) ? eleve.classe : String(row[3]||"").trim();
+    const sheetsIdEleve  = eleve.sheetsId || "";
+    const isGuinglo      = sheetsIdEleve === "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA";
+    const isGnontinrou   = sheetsIdEleve === "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4";
     let groupes;
     if (isGnontinrou) {
       groupes = [
-        { titre:"📖 FRANÇAIS", couleur:"#1565C0", matieres:[{nom:"Comp. Française",val:row[4]},{nom:"Orthographe",val:row[5]},{nom:"Oral Français",val:row[6]}]},
+        { titre:"📖 FRANÇAIS",                    couleur:"#1565C0", matieres:[{nom:"Comp. Française",val:row[4]},{nom:"Orthographe",val:row[5]},{nom:"Oral Français",val:row[6]}]},
         { titre:"🌍 LETTRES & SCIENCES HUMAINES", couleur:"#2E7D32", matieres:[{nom:"Anglais",val:row[7]},{nom:"Histoire-Géographie",val:row[11]}]},
-        { titre:"🔬 SCIENCES", couleur:"#C62828", matieres:[{nom:"Mathématiques",val:row[12]},{nom:"Sciences Physiques",val:row[13]},{nom:"SVT",val:row[14]}]},
-        { titre:"⭐ AUTRES", couleur:"#E65100", matieres:[{nom:"EPS",val:row[15]},{nom:"EDHC",val:row[16]},{nom:"Conduite",val:row[20]}]},
+        { titre:"🔬 SCIENCES",                    couleur:"#C62828", matieres:[{nom:"Mathématiques",val:row[12]},{nom:"Sciences Physiques",val:row[13]},{nom:"SVT",val:row[14]}]},
+        { titre:"⭐ AUTRES",                       couleur:"#E65100", matieres:[{nom:"EPS",val:row[15]},{nom:"EDHC",val:row[16]},{nom:"Conduite",val:row[20]}]},
       ];
     } else if (isGuinglo) {
       groupes = [
-        { titre:"📖 FRANÇAIS", couleur:"#1565C0", matieres:[{nom:"Comp. Française",val:row[5]},{nom:"Orthographe",val:row[6]},{nom:"Oral Français",val:row[7]}]},
+        { titre:"📖 FRANÇAIS",                    couleur:"#1565C0", matieres:[{nom:"Comp. Française",val:row[5]},{nom:"Orthographe",val:row[6]},{nom:"Oral Français",val:row[7]}]},
         { titre:"🌍 LETTRES & SCIENCES HUMAINES", couleur:"#2E7D32", matieres:[{nom:"Anglais",val:row[9]},{nom:"Histoire-Géographie",val:row[13]}]},
-        { titre:"🔬 SCIENCES", couleur:"#C62828", matieres:[{nom:"Mathématiques",val:row[10]},{nom:"Sciences Physiques",val:row[11]},{nom:"SVT",val:row[12]}]},
-        { titre:"⭐ AUTRES", couleur:"#E65100", matieres:[{nom:"EPS",val:row[19]},{nom:"EDHC",val:row[15]},{nom:"Conduite",val:row[18]}]},
+        { titre:"🔬 SCIENCES",                    couleur:"#C62828", matieres:[{nom:"Mathématiques",val:row[10]},{nom:"Sciences Physiques",val:row[11]},{nom:"SVT",val:row[12]}]},
+        { titre:"⭐ AUTRES",                       couleur:"#E65100", matieres:[{nom:"EPS",val:row[19]},{nom:"EDHC",val:row[15]},{nom:"Conduite",val:row[18]}]},
       ];
     } else {
       groupes = [
-        { titre:"📖 FRANÇAIS", couleur:"#1565C0", matieres:[{nom:"Comp. Française",val:row[5]},{nom:"Oral Français",val:row[6]},{nom:"Orthographe",val:row[7]}]},
+        { titre:"📖 FRANÇAIS",                    couleur:"#1565C0", matieres:[{nom:"Comp. Française",val:row[5]},{nom:"Oral Français",val:row[6]},{nom:"Orthographe",val:row[7]}]},
         { titre:"🌍 LETTRES & SCIENCES HUMAINES", couleur:"#2E7D32", matieres:[{nom:"Anglais",val:row[8]},{nom:"Histoire-Géographie",val:row[11]}]},
-        { titre:"🔬 SCIENCES", couleur:"#C62828", matieres:[{nom:"Mathématiques",val:row[12]},{nom:"Sciences Physiques",val:row[13]},{nom:"SVT",val:row[14]}]},
-        { titre:"⭐ AUTRES MATIÈRES", couleur:"#E65100", matieres:[{nom:"EPS",val:row[15]},{nom:"EDHC",val:row[16]},{nom:"Conduite",val:row[17]}]},
+        { titre:"🔬 SCIENCES",                    couleur:"#C62828", matieres:[{nom:"Mathématiques",val:row[12]},{nom:"Sciences Physiques",val:row[13]},{nom:"SVT",val:row[14]}]},
+        { titre:"⭐ AUTRES MATIERES",              couleur:"#E65100", matieres:[{nom:"EPS",val:row[15]},{nom:"EDHC",val:row[16]},{nom:"Conduite",val:row[17]}]},
       ];
     }
-
-    let html = "<div style='background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;border-left:4px solid #1F4E79;'><p style='font-size:0.82em;color:#1F4E79;font-weight:bold;margin-bottom:2px;'>📋 RELEVÉ DE NOTES — " + trimNom + " 2025-2026</p><p style='font-size:0.76em;color:#666;'>Classe : <strong>" + niveau + "</strong> — Matricule : <strong>" + mat + "</strong></p></div>";
-    html += "<div style='background:#FFF8E1;border:1px solid #FFD54F;border-radius:8px;padding:10px 12px;margin-bottom:14px;'><p style='font-size:0.76em;color:#6D4C10;line-height:1.6;'><strong>📣 Chers parents,</strong><br>Ce relevé présente les résultats de votre enfant. Chaque note est accompagnée d'un conseil personnalisé pour mieux suivre son travail à la maison.</p></div>";
-
+    let html = "<div style='background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;border-left:4px solid #1F4E79;'><p style='font-size:0.82em;color:#1F4E79;font-weight:bold;margin-bottom:2px;'>📋 RELEVE DE NOTES — " + trimNom + " 2025-2026</p><p style='font-size:0.76em;color:#666;'>Classe : <strong>" + niveau + "</strong> — Matricule : <strong>" + mat + "</strong></p></div>";
+    html += "<div style='background:#FFF8E1;border:1px solid #FFD54F;border-radius:8px;padding:10px 12px;margin-bottom:14px;'><p style='font-size:0.76em;color:#6D4C10;line-height:1.6;'><strong>📣 Chers parents,</strong><br>Ce releve presente les resultats de votre enfant. Chaque note est accompagnee d'un conseil personnalise pour mieux suivre son travail a la maison.</p></div>";
     groupes.forEach(g => {
       const aDesNotes = g.matieres.some(m => { const f = parseFloat(String(m.val||"").replace(",",".")); return !isNaN(f) && f !== 22; });
       if (!aDesNotes) return;
@@ -811,120 +1200,91 @@ async function chargerNotes(eleve) {
       g.matieres.forEach(m => { html += carteMatiere(m.nom, m.val, g.couleur); });
       html += "</div>";
     });
-
-    html += "<div style='background:#E8F5E9;border-radius:8px;padding:12px;margin-top:4px;border-left:4px solid #2E7D32;text-align:center;'><p style='font-size:0.78em;color:#2E7D32;line-height:1.7;'><strong>🏫 Pour toute question,</strong><br>contactez l'école au<br><strong style='font-size:1.1em;'>07 08 11 12 69</strong></p></div>";
+    html += "<div style='background:#E8F5E9;border-radius:8px;padding:12px;margin-top:4px;border-left:4px solid #2E7D32;text-align:center;'><p style='font-size:0.78em;color:#2E7D32;line-height:1.7;'><strong>🏫 Pour toute question,</strong><br>contactez l'ecole au<br><strong style='font-size:1.1em;'>07 08 11 12 69</strong></p></div>";
     div.innerHTML = html;
-
-  } catch(e) {
-    afficherNotesVides(div);
-  }
+  } catch(e) { afficherNotesVides(div); }
 }
 
 function afficherNotesVides(div) {
-  div.innerHTML = "<div style='text-align:center;padding:30px 20px;'><div style='font-size:2.5em;margin-bottom:12px;'>📋</div><p style='font-size:0.86em;color:#666;margin-bottom:8px;font-weight:bold;'>Notes du 2ème Trimestre non encore disponibles.</p><p style='font-size:0.78em;color:#aaa;line-height:1.6;'>Les notes seront publiées dès la fin des évaluations.<br>Contactez l'école au <strong>07 08 11 12 69</strong></p></div>";
+  div.innerHTML = "<div style='text-align:center;padding:30px 20px;'><div style='font-size:2.5em;margin-bottom:12px;'>📋</div><p style='font-size:0.86em;color:#666;margin-bottom:8px;font-weight:bold;'>Notes du 2eme Trimestre non encore disponibles.</p><p style='font-size:0.78em;color:#aaa;line-height:1.6;'>Les notes seront publiees des la fin des evaluations.<br>Contactez l'ecole au <strong>07 08 11 12 69</strong></p></div>";
 }
 
+// ════════════════════════════════════════════════════════════
+// CHARGER ABSENCES
+// ════════════════════════════════════════════════════════════
 async function chargerAbsences(eleve) {
   const div = document.getElementById("absencesBody");
   if (!div) return;
   try {
-    const mat = eleve.matricule;
-    const range = encodeURIComponent("ABSENCES!B4:I200");
+    const mat      = eleve.matricule;
+    const range    = encodeURIComponent("ABSENCES!B4:I200");
     const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
-    const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
-    const res = await fetch(url);
-    const data = await res.json();
-    if (!data.values || data.values.length === 0) {
-      div.innerHTML = "<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>Aucune absence enregistree</p>";
-      return;
-    }
+    const url      = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+    const res      = await fetch(url);
+    const data     = await res.json();
+    if (!data.values || data.values.length === 0) { div.innerHTML = "<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>Aucune absence enregistree</p>"; return; }
     const absEleve = data.values.filter(row => String(row[1]||"").trim().toUpperCase() === mat.toUpperCase());
-    if (absEleve.length === 0) {
-      div.innerHTML = "<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>✅ Aucune absence enregistree</p>";
-      return;
-    }
+    if (absEleve.length === 0) { div.innerHTML = "<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>✅ Aucune absence enregistree</p>"; return; }
     let totalH = 0, justH = 0, nonJustH = 0;
-    absEleve.forEach(row => {
-      const h = parseFloat(row[3]) || 0;
-      totalH += h;
-      if (String(row[4]||"").toUpperCase() === "OUI") justH += h; else nonJustH += h;
-    });
-    const lignes = absEleve.map(row => {
-      const just = String(row[4]||"").toUpperCase() === "OUI";
-      return "<tr style='border-bottom:1px solid #eee;'><td style='padding:8px 10px;font-size:0.82em;'>" + (row[0]||"-") + "</td><td style='text-align:center;padding:8px;font-size:0.82em;font-weight:bold;'>" + (row[3]||"-") + "h</td><td style='text-align:center;padding:8px;'><span style='background:" + (just?"#E8F5E9":"#FFEBEE") + ";color:" + (just?"#2E7D32":"#C62828") + ";padding:2px 8px;border-radius:10px;font-size:0.75em;font-weight:bold;'>" + (just?"✅ Justifiee":"❌ Non justifiee") + "</span></td><td style='padding:8px 10px;font-size:0.78em;color:#666;'>" + (row[5]||"") + "</td></tr>";
-    }).join("");
+    absEleve.forEach(row => { const h = parseFloat(row[3])||0; totalH += h; if (String(row[4]||"").toUpperCase()==="OUI") justH+=h; else nonJustH+=h; });
+    const lignes = absEleve.map(row => { const just = String(row[4]||"").toUpperCase()==="OUI"; return "<tr style='border-bottom:1px solid #eee;'><td style='padding:8px 10px;font-size:0.82em;'>" + (row[0]||"-") + "</td><td style='text-align:center;padding:8px;font-size:0.82em;font-weight:bold;'>" + (row[3]||"-") + "h</td><td style='text-align:center;padding:8px;'><span style='background:" + (just?"#E8F5E9":"#FFEBEE") + ";color:" + (just?"#2E7D32":"#C62828") + ";padding:2px 8px;border-radius:10px;font-size:0.75em;font-weight:bold;'>" + (just?"✅ Justifiee":"❌ Non justifiee") + "</span></td><td style='padding:8px 10px;font-size:0.78em;color:#666;'>" + (row[5]||"") + "</td></tr>"; }).join("");
     div.innerHTML = "<div style='display:flex;gap:8px;margin-bottom:14px;'><div style='flex:1;background:#FFEBEE;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#C62828;margin-bottom:2px;'>TOTAL</p><p style='font-size:1.6em;font-weight:bold;color:#C62828;'>" + totalH + "h</p></div><div style='flex:1;background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#2E7D32;margin-bottom:2px;'>JUSTIFIEES</p><p style='font-size:1.6em;font-weight:bold;color:#2E7D32;'>" + justH + "h</p></div><div style='flex:1;background:#FFF3E0;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#E65100;margin-bottom:2px;'>NON JUST.</p><p style='font-size:1.6em;font-weight:bold;color:#E65100;'>" + nonJustH + "h</p></div></div><table style='width:100%;border-collapse:collapse;'><tr style='background:#f5f5f5;'><th style='text-align:left;padding:6px 10px;font-size:0.78em;color:#666;'>DATE</th><th style='text-align:center;padding:6px;font-size:0.78em;color:#666;'>HEURES</th><th style='text-align:center;padding:6px;font-size:0.78em;color:#666;'>STATUT</th><th style='text-align:left;padding:6px 10px;font-size:0.78em;color:#666;'>MOTIF</th></tr>" + lignes + "</table>";
-  } catch(e) {
-    const div2 = document.getElementById("absencesBody");
-    if(div2) div2.innerHTML = "<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>✅ Aucune absence enregistree</p>";
-  }
+  } catch(e) { const div2 = document.getElementById("absencesBody"); if(div2) div2.innerHTML = "<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>✅ Aucune absence enregistree</p>"; }
 }
 
+// ════════════════════════════════════════════════════════════
+// MONTANT ET PAIEMENT
+// ════════════════════════════════════════════════════════════
 function mettreAJourMontant(eleve) {
   window._eleveActuel = eleve;
   const solde = parseFloat(eleve.solde) || 0;
-  const el = document.getElementById("montantText");
+  const el    = document.getElementById("montantText");
   if (el) {
-    if (solde <= 0) {
-      el.textContent = "0";
-      const parent = document.getElementById("montantDu");
-      if (parent) { parent.style.background = "linear-gradient(135deg,#2E7D32,#388E3C)"; }
-    } else {
-      el.textContent = new Intl.NumberFormat("fr-FR").format(solde);
-    }
+    if (solde <= 0) { el.textContent = "0"; const parent = document.getElementById("montantDu"); if(parent) parent.style.background = "linear-gradient(135deg,#2E7D32,#388E3C)"; }
+    else { el.textContent = new Intl.NumberFormat("fr-FR").format(solde); }
   }
-  const matWave = document.getElementById("matRefWave");
-  if (matWave) matWave.textContent = eleve.matricule || "-";
-  const matOrange = document.getElementById("matRefOrange");
-  if (matOrange) matOrange.textContent = eleve.matricule || "-";
-
+  const matWave   = document.getElementById("matRefWave");   if(matWave)   matWave.textContent   = eleve.matricule || "-";
+  const matOrange = document.getElementById("matRefOrange"); if(matOrange) matOrange.textContent = eleve.matricule || "-";
   const nomOfficielOrange = {
-    "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI": "GROUPE SCOLAIRE LES PRINCES",
-    "1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M": "LES PRINCES ACADEMIE",
-    "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4": "LES PRINCES GUINGLO",
-    "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA": "LES PRINCES GUINGLO VILLE",
-    "167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg": "LES PRINCES KOUTOUAN",
-    "1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys": "LES PRINCES SOAKPE",
-    "1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE":  "LES PRINCES AKEIKOI 1",
-    "11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog":  "LES PRINCES AKEIKOI 2",
-    "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs":  "COLLEGE PRIVE PROFESSIONNEL LES PRINCES",
-    "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc":  "COLLEGE PRIVE TECHNIQUE LES PRINCES",
-    "1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s":  "ETL LES PRINCES KOUIBLY",
-    "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0":  "GROUPE SCOLAIRE RITA ROSANE",
+    "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI":"GROUPE SCOLAIRE LES PRINCES",
+    "1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M":"LES PRINCES ACADEMIE",
+    "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4":"LES PRINCES GUINGLO",
+    "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA":"LES PRINCES GUINGLO VILLE",
+    "167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg":"LES PRINCES KOUTOUAN",
+    "1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys":"LES PRINCES SOAKPE",
+    "1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE": "LES PRINCES AKEIKOI 1",
+    "11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog": "LES PRINCES AKEIKOI 2",
+    "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs": "COLLEGE PRIVE PROFESSIONNEL LES PRINCES",
+    "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc": "COLLEGE PRIVE TECHNIQUE LES PRINCES",
+    "1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s": "ETL LES PRINCES KOUIBLY",
+    "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0": "GROUPE SCOLAIRE RITA ROSANE",
   };
-  const sheetsIdEleve = eleve.sheetsId || "";
-  const nomOff = nomOfficielOrange[sheetsIdEleve] || "GROUPE SCOLAIRE LES PRINCES";
-  const nomEcoleOrange = document.getElementById("nomEcoleOrange");
-  const nomEcoleWave2  = document.getElementById("nomEcoleWave2");
-  if (nomEcoleOrange) nomEcoleOrange.textContent = nomOff;
-  if (nomEcoleWave2)  nomEcoleWave2.textContent  = nomOff;
-
-  const codeOrange = document.getElementById("codeOrange");
-  if (codeOrange) {
-    const sheetsToOrange = {
-      "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI": "#144*43*1721*1#",
-      "1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M": "#144*43*1728*1#",
-      "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4": "#144*43*1725*1#",
-      "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA": "#144*43*1729*1#",
-      "167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg": "#144*43*1726*1#",
-      "1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys": "#144*43*1727*1#",
-      "1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE":  "#144*43*1723*1#",
-      "11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog":  "#144*43*1724*1#",
-      "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs":  "#144*43*1760*1#",
-      "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc":  "#144*43*1756*1#",
-      "1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s":  "#144*43*1758*1#",
-      "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0":  "#144*43*1721*1#",
-    };
-    codeOrange.textContent = sheetsToOrange[sheetsIdEleve] || "#144*43*1721*1#";
-  }
-
-  const sectionOM = document.getElementById("sectionOrangeMoney");
-  if (sectionOM) {
-    const isRita = sheetsIdEleve === "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0";
-    sectionOM.style.display = isRita ? "none" : "block";
-  }
+  const sheetsIdEleve  = eleve.sheetsId || "";
+  const nomOff         = nomOfficielOrange[sheetsIdEleve] || "GROUPE SCOLAIRE LES PRINCES";
+  const nomEcoleOrange = document.getElementById("nomEcoleOrange"); if(nomEcoleOrange) nomEcoleOrange.textContent = nomOff;
+  const nomEcoleWave2  = document.getElementById("nomEcoleWave2");  if(nomEcoleWave2)  nomEcoleWave2.textContent  = nomOff;
+  const sheetsToOrange = {
+    "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI":"#144*43*1721*1#",
+    "1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M":"#144*43*1728*1#",
+    "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4":"#144*43*1725*1#",
+    "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA":"#144*43*1729*1#",
+    "167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg":"#144*43*1726*1#",
+    "1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys":"#144*43*1727*1#",
+    "1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE": "#144*43*1723*1#",
+    "11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog": "#144*43*1724*1#",
+    "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs": "#144*43*1760*1#",
+    "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc": "#144*43*1756*1#",
+    "1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s": "#144*43*1758*1#",
+    "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0": "",
+  };
+  const codeOrange = document.getElementById("codeOrange"); if(codeOrange) codeOrange.textContent = sheetsToOrange[sheetsIdEleve] || "#144*43*1721*1#";
+  const sectionOM  = document.getElementById("sectionOrangeMoney");
+  if(sectionOM) { const isRita = sheetsIdEleve === "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0"; sectionOM.style.display = isRita ? "none" : "block"; }
 }
 
+// ════════════════════════════════════════════════════════════
+// CLUBS
+// ════════════════════════════════════════════════════════════
 const CLUBS_RESEAU = [
   { id:"SANTE",        nom:"Club Sante",               icon:"H", couleur:"#E53935", desc:"Prevention, hygiene et sante des eleves" },
   { id:"ROBOTIQUE",    nom:"Club Robotique",            icon:"R", couleur:"#1E88E5", desc:"Programmation, electronique et innovation" },
@@ -936,91 +1296,77 @@ const CLUBS_RESEAU = [
 ];
 
 function afficherClubs(eleve) {
-  var divEleve = document.getElementById("clubsEleve");
-  var divListe = document.getElementById("listeTousClubs");
+  const divEleve = document.getElementById("clubsEleve");
+  const divListe = document.getElementById("listeTousClubs");
   if (!divEleve || !divListe) return;
-  var clubsEleve = [];
+  const clubsEleve = [];
   if (eleve.club1 && eleve.club1.trim()) clubsEleve.push(eleve.club1.trim().toUpperCase());
   if (eleve.club2 && eleve.club2.trim()) clubsEleve.push(eleve.club2.trim().toUpperCase());
-  var htmlEleve = "";
+  let htmlEleve = "";
   if (clubsEleve.length > 0) {
     htmlEleve = "<div style='background:#E8F5E9;border:1px solid #43A047;border-radius:10px;padding:12px;margin-bottom:12px;'><p style='font-weight:bold;color:#2E7D32;margin:0 0 8px 0;'>🏆 Mes Clubs</p><div style='display:flex;gap:8px;flex-wrap:wrap;'>";
-    for (var k = 0; k < clubsEleve.length; k++) {
-      var clubId = clubsEleve[k];
-      for (var m = 0; m < CLUBS_RESEAU.length; m++) {
-        if (CLUBS_RESEAU[m].id === clubId) { htmlEleve += "<span style='background:" + CLUBS_RESEAU[m].couleur + ";color:white;padding:6px 14px;border-radius:20px;font-size:0.85em;font-weight:bold;'>" + CLUBS_RESEAU[m].nom + "</span>"; break; }
-      }
-    }
+    for (const clubId of clubsEleve) { for (const c of CLUBS_RESEAU) { if (c.id===clubId) { htmlEleve += "<span style='background:" + c.couleur + ";color:white;padding:6px 14px;border-radius:20px;font-size:0.85em;font-weight:bold;'>" + c.nom + "</span>"; break; } } }
     htmlEleve += "</div></div>";
   } else {
     htmlEleve = "<div style='background:#FFF3E0;border:1px solid #FFB300;border-radius:8px;padding:10px;margin-bottom:10px;font-size:0.85em;color:#E65100;'>Aucun club pour le moment. Voir le directeur pour s'inscrire.</div>";
   }
   divEleve.innerHTML = htmlEleve;
-  var html2 = "<p style='font-weight:bold;color:#6A1B9A;margin:0 0 6px 0;'>Tous les clubs disponibles</p><p style='font-size:0.82em;color:#777;margin:0 0 10px 0;'>Maximum 2 clubs par eleve</p><div style='display:grid;grid-template-columns:1fr 1fr;gap:8px;'>";
-  for (var j = 0; j < CLUBS_RESEAU.length; j++) {
-    var c = CLUBS_RESEAU[j];
-    var estMembre = clubsEleve.indexOf(c.id) >= 0;
-    var bg = estMembre ? c.couleur + "22" : "#F9F9F9";
-    var bd = estMembre ? c.couleur : "#E0E0E0";
+  let html2 = "<p style='font-weight:bold;color:#6A1B9A;margin:0 0 6px 0;'>Tous les clubs disponibles</p><p style='font-size:0.82em;color:#777;margin:0 0 10px 0;'>Maximum 2 clubs par eleve</p><div style='display:grid;grid-template-columns:1fr 1fr;gap:8px;'>";
+  for (const c of CLUBS_RESEAU) {
+    const estMembre = clubsEleve.includes(c.id);
+    const bg = estMembre ? c.couleur + "22" : "#F9F9F9";
+    const bd = estMembre ? c.couleur : "#E0E0E0";
     html2 += "<div style='background:" + bg + ";border:2px solid " + bd + ";border-radius:10px;padding:10px;position:relative;'>";
     if (estMembre) html2 += "<span style='position:absolute;top:5px;right:5px;background:" + c.couleur + ";color:white;border-radius:8px;padding:2px 6px;font-size:0.7em;font-weight:bold;'>MEMBRE</span>";
     html2 += "<div style='width:32px;height:32px;border-radius:50%;background:" + c.couleur + ";color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1em;margin-bottom:6px;'>" + c.icon + "</div><div style='font-weight:bold;font-size:0.88em;color:" + c.couleur + ";'>" + c.nom + "</div><div style='font-size:0.76em;color:#777;margin-top:4px;'>" + c.desc + "</div></div>";
   }
-  html2 += "</div><p id='clubInscritStatut' style='text-align:center;font-size:0.85em;margin:10px 0 0 0;'></p>";
+  html2 += "</div>";
   divListe.innerHTML = html2;
 }
 
+// ════════════════════════════════════════════════════════════
+// MESSAGERIE
+// ════════════════════════════════════════════════════════════
 const MESSAGES_SHEETS_ID = "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI";
 
 async function envoyerMessage() {
-  const eleve = window._eleveActuel;
+  const eleve  = window._eleveActuel;
   if (!eleve) return;
   const type   = document.getElementById("msgType").value;
   const sujet  = document.getElementById("msgSujet").value.trim();
   const texte  = document.getElementById("msgTexte").value.trim();
   const anon   = document.getElementById("msgAnonyme").checked;
   const statut = document.getElementById("msgStatut");
-  if (!type)  { statut.style.color = "#C62828"; statut.textContent = "Choisir un type de message."; return; }
-  if (!sujet) { statut.style.color = "#C62828"; statut.textContent = "Entrer un sujet."; return; }
-  if (!texte) { statut.style.color = "#C62828"; statut.textContent = "Ecrire votre message."; return; }
+  if (!type)  { statut.style.color="#C62828"; statut.textContent="Choisir un type de message."; return; }
+  if (!sujet) { statut.style.color="#C62828"; statut.textContent="Entrer un sujet."; return; }
+  if (!texte) { statut.style.color="#C62828"; statut.textContent="Ecrire votre message."; return; }
   document.getElementById("btnEnvoyerMsg").disabled = true;
   document.getElementById("btnEnvoyerMsg").textContent = "Envoi en cours...";
   statut.textContent = "";
   try {
-    const now = new Date().toLocaleString("fr-FR", { timeZone: "Africa/Abidjan" });
-    const nom  = anon ? "Anonyme" : eleve.nom;
-    const mat  = anon ? "---" : eleve.matricule;
-    const row = [now, type, sujet, texte, nom, mat, eleve.classe || "", eleve.ecoleCode || "", "Non lu", ""];
-    await envoyerViaAppsScript(row, "MESSAGE");
-    statut.style.color = "#2E7D32";
-    statut.textContent = "✅ Message envoye ! La direction vous repondra bientot.";
-    document.getElementById("msgSujet").value = "";
-    document.getElementById("msgTexte").value = "";
-    document.getElementById("msgType").value = "";
-  } catch(e) {
-    statut.style.color = "#C62828";
-    statut.textContent = "❌ Erreur envoi. Contactez directement l'ecole.";
-  }
-  document.getElementById("btnEnvoyerMsg").disabled = false;
-  document.getElementById("btnEnvoyerMsg").textContent = "📤 Envoyer le message";
+    const now = new Date().toLocaleString("fr-FR",{timeZone:"Africa/Abidjan"});
+    const nom = anon ? "Anonyme" : eleve.nom;
+    const mat = anon ? "---" : eleve.matricule;
+    const row = [now,type,sujet,texte,nom,mat,eleve.classe||"",eleve.ecoleCode||"","Non lu",""];
+    await envoyerViaAppsScript(row,"MESSAGE");
+    statut.style.color="#2E7D32"; statut.textContent="✅ Message envoye ! La direction vous repondra bientot.";
+    document.getElementById("msgSujet").value=""; document.getElementById("msgTexte").value=""; document.getElementById("msgType").value="";
+  } catch(e) { statut.style.color="#C62828"; statut.textContent="❌ Erreur envoi. Contactez directement l'ecole."; }
+  document.getElementById("btnEnvoyerMsg").disabled=false; document.getElementById("btnEnvoyerMsg").textContent="📤 Envoyer le message";
 }
 
 async function envoyerSuggestion() {
-  const eleve = window._eleveActuel;
-  const texte = document.getElementById("suggTexte").value.trim();
+  const eleve  = window._eleveActuel;
+  const texte  = document.getElementById("suggTexte").value.trim();
   const statut = document.getElementById("suggStatut");
-  if (!texte) { statut.style.color = "#C62828"; statut.textContent = "Ecrire votre suggestion."; return; }
+  if (!texte) { statut.style.color="#C62828"; statut.textContent="Ecrire votre suggestion."; return; }
   try {
-    const now = new Date().toLocaleString("fr-FR", { timeZone: "Africa/Abidjan" });
-    const row = [now, "Suggestion", "Boite a suggestions", texte, "Anonyme", "---", eleve ? (eleve.classe || "") : "", eleve ? (eleve.ecoleCode || "") : "", "Non lu", ""];
-    await envoyerViaAppsScript(row, "SUGGESTION");
-    statut.style.color = "#2E7D32";
-    statut.textContent = "✅ Suggestion envoyee ! Merci pour votre contribution.";
-    document.getElementById("suggTexte").value = "";
-  } catch(e) {
-    statut.style.color = "#C62828";
-    statut.textContent = "❌ Erreur. Reessayer plus tard.";
-  }
+    const now = new Date().toLocaleString("fr-FR",{timeZone:"Africa/Abidjan"});
+    const row = [now,"Suggestion","Boite a suggestions",texte,"Anonyme","---",eleve?(eleve.classe||""):"",eleve?(eleve.ecoleCode||""):"","Non lu",""];
+    await envoyerViaAppsScript(row,"SUGGESTION");
+    statut.style.color="#2E7D32"; statut.textContent="✅ Suggestion envoyee ! Merci pour votre contribution.";
+    document.getElementById("suggTexte").value="";
+  } catch(e) { statut.style.color="#C62828"; statut.textContent="❌ Erreur. Reessayer plus tard."; }
 }
 
 async function envoyerViaAppsScript(row, type) {
@@ -1039,19 +1385,19 @@ async function envoyerViaAppsScript(row, type) {
     "RITA":       "https://script.google.com/macros/s/AKfycbzlKa8MmuBmxPJ4xOFfHuOUl2aZ_AYHD8N_h-3euVEAk0kmd9VZ5XkNfoIXOmX3g2DS/exec",
     "DEFAULT":    "https://script.google.com/macros/s/AKfycbwYWMhEitUVn3_bNqvp60nYqyBDaLlcpX2Is60cjd6u5-Gv-VsUdt8JgSR003vLWpg0mw/exec",
   };
-  const eleveConnecte = JSON.parse(sessionStorage.getItem("eleveConnecte") || "{}");
-  const ecoleCode = eleveConnecte.ecoleCode || "DEFAULT";
-  const WEB_APP_URL = WEBAPP_URLS[ecoleCode] || WEBAPP_URLS["DEFAULT"];
+  const eleveConnecte = JSON.parse(sessionStorage.getItem("eleveConnecte")||"{}");
+  const ecoleCode     = eleveConnecte.ecoleCode || "DEFAULT";
+  const WEB_APP_URL   = WEBAPP_URLS[ecoleCode] || WEBAPP_URLS["DEFAULT"];
   return new Promise(function(resolve) {
     try {
-      var cbName = "jsonp_" + Date.now();
-      var script = document.createElement("script");
+      const cbName = "jsonp_" + Date.now();
+      const script = document.createElement("script");
       window[cbName] = function(data) { delete window[cbName]; document.body.removeChild(script); resolve(data); };
-      script.onerror = function() { delete window[cbName]; try { document.body.removeChild(script); } catch(e) {} resolve({ ok: false }); };
-      script.src = WEB_APP_URL + "?callback=" + cbName + "&type=" + encodeURIComponent(type || "MESSAGE") + "&row=" + encodeURIComponent(JSON.stringify(row));
+      script.onerror = function() { delete window[cbName]; try{document.body.removeChild(script);}catch(e){} resolve({ok:false}); };
+      script.src = WEB_APP_URL + "?callback=" + cbName + "&type=" + encodeURIComponent(type||"MESSAGE") + "&row=" + encodeURIComponent(JSON.stringify(row));
       document.body.appendChild(script);
-      setTimeout(function() { if (window[cbName]) { delete window[cbName]; try { document.body.removeChild(script); } catch(e) {} resolve({ ok: true }); } }, 10000);
-    } catch(e) { resolve({ ok: false }); }
+      setTimeout(function() { if(window[cbName]){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:true});} }, 10000);
+    } catch(e) { resolve({ok:false}); }
   });
 }
 
@@ -1059,52 +1405,47 @@ async function chargerReponsesMessages(eleve) {
   const div = document.getElementById("reponsesMessages");
   if (!div || !eleve) return;
   try {
-    const mat = eleve.matricule;
+    const mat   = eleve.matricule;
     const range = encodeURIComponent("MESSAGES!A2:J500");
-    const url = "https://sheets.googleapis.com/v4/spreadsheets/" + MESSAGES_SHEETS_ID + "/values/" + range + "?key=" + CONFIG.API_KEY;
-    const res = await fetch(url);
+    const url   = "https://sheets.googleapis.com/v4/spreadsheets/" + MESSAGES_SHEETS_ID + "/values/" + range + "?key=" + CONFIG.API_KEY;
+    const res   = await fetch(url);
     if (!res.ok) return;
-    const data = await res.json();
+    const data  = await res.json();
     if (!data.values) return;
-    const reponses = data.values.filter(r => String(r[5]||"").trim().toUpperCase() === mat.toUpperCase() && r[9] && r[9].trim());
-    if (reponses.length === 0) {
-      div.innerHTML = "<p style='font-size:0.85em;color:#999;text-align:center;padding:8px 0;'>Aucune reponse recue pour le moment.</p>";
-      return;
-    }
+    const reponses = data.values.filter(r => String(r[5]||"").trim().toUpperCase()===mat.toUpperCase() && r[9] && r[9].trim());
+    if (reponses.length===0) { div.innerHTML="<p style='font-size:0.85em;color:#999;text-align:center;padding:8px 0;'>Aucune reponse recue pour le moment.</p>"; return; }
     let html = "<p style='font-weight:bold;color:#1A5276;margin:0 0 8px 0;'>Reponses recues</p>";
     reponses.forEach(r => { html += "<div style='background:#E8F4FD;border-left:4px solid #2874A6;border-radius:6px;padding:10px;margin-bottom:8px;'><div style='font-size:0.8em;color:#777;'>" + r[0] + " - " + r[1] + ": " + r[2] + "</div><div style='font-size:0.9em;color:#1A5276;margin-top:4px;font-weight:bold;'>Reponse : " + r[9] + "</div></div>"; });
     div.innerHTML = html;
-  } catch(e) { }
+  } catch(e) {}
 }
 
 async function chargerAnnonces(eleve) {
   try {
-    const range = encodeURIComponent("ANNONCES!A4:G60");
+    const range    = encodeURIComponent("ANNONCES!A4:G60");
     const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
-    const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
-    const res = await fetch(url);
-    const data = await res.json();
+    const url      = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+    const res      = await fetch(url);
+    const data     = await res.json();
     if (!data.values) return;
-    const annonces = data.values.filter(row => String(row[6]||"").toUpperCase() === "OUI");
-    if (annonces.length === 0) return;
+    const annonces = data.values.filter(row => String(row[6]||"").toUpperCase()==="OUI");
+    if (annonces.length===0) return;
     document.getElementById("sectionAnnonces").style.display = "block";
     const html = annonces.map(row => {
-      const date = row[1] || "";
-      const type = row[2] || "Info";
-      const msg  = row[3] || "";
+      const date = row[1]||""; const type = row[2]||"Info"; const msg = row[3]||"";
       return "<div style='border-left:4px solid #1F4E79;background:#FAFAFA;padding:10px 14px;margin-bottom:10px;border-radius:0 8px 8px 0;'><div style='display:flex;justify-content:space-between;margin-bottom:4px;'><span style='font-weight:bold;color:#1F4E79;font-size:0.82em;'>" + type + "</span><span style='font-size:0.75em;color:#999;'>" + date + "</span></div><p style='font-size:0.85em;color:#333;line-height:1.5;'>" + msg + "</p></div>";
     }).join("");
     document.getElementById("annoncesBody").innerHTML = html;
-  } catch(e) { }
+  } catch(e) {}
 }
 
-function afficherErreur(msg) {
-  const el = document.getElementById("errorMsg");
-  el.textContent = msg; el.style.display = "block";
-}
+// ════════════════════════════════════════════════════════════
+// UTILITAIRES
+// ════════════════════════════════════════════════════════════
+function afficherErreur(msg) { const el = document.getElementById("errorMsg"); el.textContent=msg; el.style.display="block"; }
 
 function toggleSec(header) {
-  const body = header.nextElementSibling;
+  const body  = header.nextElementSibling;
   const arrow = header.querySelector("span");
   body.classList.toggle("open");
   arrow.textContent = body.classList.contains("open") ? "^" : "v";
@@ -1112,42 +1453,39 @@ function toggleSec(header) {
 
 function logout() {
   sessionStorage.removeItem("eleveConnecte");
-  document.getElementById("parentSpace").style.display = "none";
+  document.getElementById("parentSpace").style.display  = "none";
   document.getElementById("loginWrapper").style.display = "block";
   document.getElementById("mainHeader").style.background = "linear-gradient(135deg,#1F4E79,#1565C0)";
   document.getElementById("headerTitle").textContent = "🏫 ECOLE LES PRINCES";
-  document.getElementById("headerSub").textContent = "Espace Parents - Suivi Scolaire en Ligne";
-  document.getElementById("inputMat").value = "";
-  document.getElementById("inputTel").value = "";
+  document.getElementById("headerSub").textContent   = "Espace Parents - Suivi Scolaire en Ligne";
+  document.getElementById("inputMat").value  = "";
+  document.getElementById("inputTel").value  = "";
   document.getElementById("errorMsg").style.display = "none";
-  window.scrollTo(0, 0);
+  window.scrollTo(0,0);
 }
 
 function demarrerBlocage() {
   document.getElementById("loginWrapper").style.display = "none";
-  document.getElementById("blockedMsg").style.display = "block";
+  document.getElementById("blockedMsg").style.display   = "block";
   let sec = CONFIG.BLOCAGE_MIN * 60;
   const timerEl = document.getElementById("blockedTimer");
   blocageInterval = setInterval(() => {
     sec--;
     const m = Math.floor(sec/60), s = sec%60;
     timerEl.textContent = m + ":" + s.toString().padStart(2,"0");
-    if (sec <= 0) {
-      clearInterval(blocageInterval); tentatives = 0;
-      document.getElementById("blockedMsg").style.display = "none";
-      document.getElementById("loginWrapper").style.display = "block";
-    }
+    if (sec <= 0) { clearInterval(blocageInterval); tentatives=0; document.getElementById("blockedMsg").style.display="none"; document.getElementById("loginWrapper").style.display="block"; }
   }, 1000);
 }
 
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
 window.addEventListener("load", () => {
   const saved = sessionStorage.getItem("eleveConnecte");
   if (saved) { try { afficherEspaceParent(JSON.parse(saved)); } catch(e) { sessionStorage.removeItem("eleveConnecte"); } }
 });
 
-document.addEventListener("keypress", e => {
-  if (e.key === "Enter") login();
-});
+document.addEventListener("keypress", e => { if (e.key==="Enter") login(); });
 
 let deferredPrompt;
 window.addEventListener("beforeinstallprompt", e => {
@@ -1157,10 +1495,7 @@ window.addEventListener("beforeinstallprompt", e => {
 function installPWA() {
   if (deferredPrompt) {
     deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => {
-      document.getElementById("pwaBanner").style.display = "none";
-      deferredPrompt = null;
-    });
+    deferredPrompt.userChoice.then(() => { document.getElementById("pwaBanner").style.display="none"; deferredPrompt=null; });
   }
 }
 </script>
