@@ -177,6 +177,7 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
   <div id="eleveCard"></div>
   <div id="statutPay"></div>
 
+  <!-- ══ ANNONCES ÉCOLE ══ -->
   <div id="sectionAnnonces" style="display:none;">
     <div class="section" style="border-left:4px solid #C62828;">
       <div class="sec-header" style="background:#C62828;" onclick="toggleSec(this)">📢 ANNONCES DE L'ECOLE <span>v</span></div>
@@ -184,36 +185,25 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
     </div>
   </div>
 
-  <div class="section">
-    <div class="sec-header bleu" onclick="toggleSec(this)">📊 NOTES ET RESULTATS <span>v</span></div>
-    <div class="sec-body" id="notesBody"></div>
+  <!-- ══ SECTION UNIFIÉE RÉSULTATS (solde = 0) ══ -->
+  <div class="section" id="sectionResultats" style="display:none">
+    <div class="sec-header" style="background:linear-gradient(135deg,#D4AF37,#B8860B);color:#fff" onclick="toggleSec(this)">🏆 RESULTATS DE FIN D'ANNEE <span>v</span></div>
+    <div class="sec-body open" id="resultatsBody"></div>
   </div>
 
-  <!-- ══ SECTION RESULTATS FIN D'ANNEE ══ -->
-  <div class="section" id="sectionDecision" style="display:none">
-    <div class="sec-header" style="background:linear-gradient(135deg,#D4AF37,#B8860B)" onclick="toggleSec(this)">🏆 RESULTATS FIN D'ANNEE <span>v</span></div>
-    <div class="sec-body open" id="decisionBody"></div>
+  <!-- ══ SECTION BLOQUÉE (solde > 0) ══ -->
+  <div class="section" id="sectionBloque" style="display:none">
+    <div class="sec-header" style="background:#C62828" onclick="toggleSec(this)">🔒 ESPACE SCOLAIRE BLOQUE <span>v</span></div>
+    <div class="sec-body open" id="bloqueBody"></div>
   </div>
 
-  <div class="section" id="sectionBulletin" style="display:none;">
-    <div class="sec-header" style="background:#2E7D32" onclick="toggleSec(this)">📄 BULLETIN SCOLAIRE <span>v</span></div>
-    <div class="sec-body" id="bulletinBody">
-      <div style="text-align:center;padding:16px;">
-        <div style="font-size:48px;margin-bottom:12px;">📋</div>
-        <p style="font-weight:bold;color:#2E7D32;font-size:1em;margin-bottom:8px;">Bulletin disponible</p>
-        <p style="font-size:0.82em;color:#666;margin-bottom:16px;">Votre bulletin scolaire est disponible uniquement si votre scolarite est a jour.</p>
-        <button onclick="telechargerBulletin()" style="background:linear-gradient(135deg,#2E7D32,#388E3C);color:white;border:none;border-radius:10px;padding:12px 24px;font-size:0.9em;font-weight:bold;cursor:pointer;width:100%;">📥 Telecharger mon bulletin PDF</button>
-        <p style="font-size:0.75em;color:#aaa;margin-top:10px;">ℹ️ Le bulletin s'ouvre dans votre navigateur</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="sec-header" style="background:#E65100" onclick="toggleSec(this)">📅 ABSENCES ET RETARDS <span>v</span></div>
-    <div class="sec-body" id="absencesBody">
-      <div style="text-align:center;padding:20px;color:#666;"><p style="font-size:0.85em;">Chargement des absences...</p></div>
-    </div>
-  </div>
+  <!-- Conteneurs cachés pour chargement asynchrone -->
+  <div style="display:none" id="notesBody"></div>
+  <div style="display:none" id="absencesBody"></div>
+  <div style="display:none" id="decisionBody"></div>
+  <div style="display:none" id="sectionDecision"></div>
+  <div style="display:none" id="sectionBulletin"></div>
+  <div style="display:none" id="bulletinBody"></div>
 
   <!-- ══ FICHE DE RENSEIGNEMENT ══ -->
   <div id="ficheRenseignement"></div>
@@ -713,26 +703,20 @@ function afficherEspaceParent(eleve) {
     pay.innerHTML = "<div class='paiement-bar paiement-non'><div class='pay-icon'>❌</div><div class='pay-text'><h4>Aucun paiement recu</h4><p class='pay-montant c-rouge'>" + duParsed.toLocaleString('fr-FR') + " F CFA a regler</p></div></div>";
   }
 
-  const notes = document.getElementById("notesBody");
-  const accesNotes = eleve.gratuit || soldeParsed === 0;
+  const accesComplet = eleve.gratuit || soldeParsed === 0;
 
-  if (!accesNotes) {
-    const msgBloque = eleve.verse === 0
-      ? "Scolarite non reglee. Payez via Orange Money ou Wave"
-      : "Solde restant : " + soldeParsed.toLocaleString('fr-FR') + " F CFA. Payez via Orange Money ou Wave";
-    notes.innerHTML = "<div class='notes-lock'><div class='lock-icon'>🔒</div><h4>Notes non disponibles</h4><p>" + msgBloque + "</p></div>";
-  } else {
+  if (accesComplet) {
+    // ── ACCÈS COMPLET — Solde = 0 ──
     chargerAnnonces(eleve);
     chargerNotes(eleve);
     chargerAbsences(eleve);
-  }
-
-  if (accesNotes) {
-    document.getElementById("sectionBulletin").style.display = "block";
-    // ⚡ ANIMATION DECISION — uniquement si solde = 0
     afficherDecision(eleve);
+    afficherSectionResultats(eleve);
+    document.getElementById("sectionBloque").style.display = "none";
   } else {
-    document.getElementById("sectionDecision").style.display = "none";
+    // ── ACCÈS BLOQUÉ — Solde > 0 ──
+    document.getElementById("sectionResultats").style.display = "none";
+    afficherSectionBloquee(eleve, soldeParsed);
   }
 
   // ⚡ FICHE DE RENSEIGNEMENT — visible pour tous (solde 0 ou > 0)
@@ -742,6 +726,189 @@ function afficherEspaceParent(eleve) {
   document.getElementById("loginWrapper").style.display = "none";
   document.getElementById("parentSpace").style.display = "block";
   window.scrollTo(0, 0);
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION RÉSULTATS UNIFIÉE
+// ════════════════════════════════════════════════════════════
+function afficherSectionResultats(eleve) {
+  const section = document.getElementById('sectionResultats');
+  const div     = document.getElementById('resultatsBody');
+  if (!section || !div) return;
+  section.style.display = 'block';
+
+  const decision = (eleve.decision || '').trim().toUpperCase();
+  const moy      = parseFloat(eleve.moy_annuelle) || 0;
+  const info     = window.SHEETS_IDS_COMPLET[eleve.sheetsId] || {};
+  const tel      = info.tel || '0708111269';
+
+  // ── BLOC ANIMATION (si décision disponible) ──
+  let htmlDecision = '';
+  if (decision) {
+    htmlDecision = '<div id="decisionAnimBlock"></div>';
+  } else {
+    htmlDecision = '<div style="background:#F0F4F8;border-radius:10px;padding:16px;text-align:center;margin-bottom:14px">' +
+      '<div style="font-size:36px;margin-bottom:8px">⏳</div>' +
+      '<p style="font-weight:bold;color:#1F4E79;font-size:15px;margin-bottom:6px">Resultats en cours de preparation</p>' +
+      '<p style="font-size:13px;color:#666">Les resultats de fin d'annee seront disponibles apres les evaluations du 3eme trimestre.</p>' +
+      '</div>';
+  }
+
+  // ── 3 BOUTONS BULLETINS ──
+  const htmlBulletins = '<div style="margin-bottom:12px">' +
+    '<div style="font-size:14px;font-weight:700;color:#2E7D32;border-bottom:2px solid #2E7D32;padding-bottom:4px;margin-bottom:10px">📄 MES BULLETINS SCOLAIRES</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">' +
+    _btnBulletin('T1', '1er Trimestre', eleve) +
+    _btnBulletin('T2', '2eme Trimestre', eleve) +
+    _btnBulletin('T3', '3eme Trimestre', eleve) +
+    '</div>' +
+    '<div id="bulletinContenu"></div>' +
+    '</div>';
+
+  // ── BOUTON NOTES ──
+  const htmlNotes = '<div style="margin-bottom:12px">' +
+    '<button onclick="toggleContenu('notesContenu', this)" style="width:100%;padding:13px;background:linear-gradient(135deg,#1F4E79,#1565C0);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:space-between">' +
+    '<span>📊 MES NOTES DÉTAILLÉES</span><span id="arrowNotes">▼</span>' +
+    '</button>' +
+    '<div id="notesContenu" style="display:none;margin-top:8px"></div>' +
+    '</div>';
+
+  // ── BOUTON ABSENCES ──
+  const htmlAbsences = '<div style="margin-bottom:12px">' +
+    '<button onclick="toggleContenu('absencesContenu', this)" style="width:100%;padding:13px;background:linear-gradient(135deg,#E65100,#F57C00);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:space-between">' +
+    '<span>📅 MES ABSENCES ET RETARDS</span><span id="arrowAbsences">▼</span>' +
+    '</button>' +
+    '<div id="absencesContenu" style="display:none;margin-top:8px"></div>' +
+    '</div>';
+
+  div.innerHTML = htmlDecision + htmlBulletins + htmlNotes + htmlAbsences;
+
+  // Afficher l'animation dans le bon bloc
+  if (decision) {
+    const animBlock = document.getElementById('decisionAnimBlock');
+    if (animBlock) {
+      const tempDiv = document.getElementById('decisionBody');
+      afficherDecision(eleve);
+      if (tempDiv) animBlock.innerHTML = tempDiv.innerHTML;
+    }
+  }
+}
+
+function _btnBulletin(trimestre, label, eleve) {
+  const onglet = 'BULLETINS_' + trimestre;
+  return '<button onclick="telechargerBulletinTrimestre('' + onglet + '', '' + label + '', this)" ' +
+    'style="padding:10px 6px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;text-align:center;width:100%">' +
+    '📋<br>' + label + '</button>';
+}
+
+function toggleContenu(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const ouvert = el.style.display !== 'none';
+  el.style.display = ouvert ? 'none' : 'block';
+
+  // Charger le contenu si première ouverture
+  if (!ouvert && el.innerHTML === '') {
+    const eleve = window._eleveActuel;
+    if (!eleve) return;
+    if (id === 'notesContenu') {
+      el.innerHTML = '<div style="padding:10px;text-align:center;color:#1F4E79"><div class="spinner" style="width:20px;height:20px;border:3px solid #D6E4F0;border-top-color:#1F4E79;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 8px"></div><p style="font-size:13px">Chargement des notes...</p></div>';
+      chargerNotes(eleve).then(() => {
+        const notesBody = document.getElementById('notesBody');
+        if (notesBody) el.innerHTML = notesBody.innerHTML;
+      });
+    } else if (id === 'absencesContenu') {
+      el.innerHTML = '<div style="padding:10px;text-align:center;color:#E65100"><div class="spinner" style="width:20px;height:20px;border:3px solid #FFE0CC;border-top-color:#E65100;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 8px"></div><p style="font-size:13px">Chargement des absences...</p></div>';
+      chargerAbsences(eleve).then(() => {
+        const absBody = document.getElementById('absencesBody');
+        if (absBody) el.innerHTML = absBody.innerHTML;
+      });
+    }
+  }
+}
+
+async function telechargerBulletinTrimestre(onglet, label, btn) {
+  const eleve = window._eleveActuel;
+  if (!eleve) return;
+
+  const txtOriginal = btn.innerHTML;
+  btn.innerHTML = '⏳<br>Recherche...';
+  btn.disabled  = true;
+
+  try {
+    const mat      = eleve.matricule.trim().toUpperCase().replace(/[\s ​‌‍﻿]/g, '');
+    const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
+    const range    = encodeURIComponent(onglet + '!A1:F2000');
+    const url      = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+
+    const res  = await fetch(url);
+    if (!res.ok) { _btnErreur(btn, txtOriginal, 'Pas disponible'); return; }
+    const data = await res.json();
+    if (!data.values) { _btnErreur(btn, txtOriginal, 'Pas disponible'); return; }
+
+    let lienPDF = null;
+    for (const row of data.values) {
+      const matRow = String(row[0]||'').trim().toUpperCase().replace(/[\s ​‌‍﻿]/g,'');
+      if (matRow !== mat) continue;
+      for (let c = 1; c < row.length; c++) {
+        const val = String(row[c]||'').trim();
+        if (val.startsWith('http')) { lienPDF = val; break; }
+        if (val && val.length >= 33) { lienPDF = 'https://drive.google.com/file/d/' + val + '/view'; break; }
+      }
+      break;
+    }
+
+    if (!lienPDF) { _btnErreur(btn, txtOriginal, 'Bientot dispo'); return; }
+
+    window.open(lienPDF, '_blank');
+    btn.innerHTML = txtOriginal;
+    btn.disabled  = false;
+
+  } catch(e) {
+    _btnErreur(btn, txtOriginal, 'Erreur reseau');
+  }
+}
+
+function _btnErreur(btn, txtOriginal, msg) {
+  btn.innerHTML = '⚠️<br>' + msg;
+  btn.style.background = 'linear-gradient(135deg,#9E9E9E,#757575)';
+  btn.disabled = true;
+  setTimeout(() => {
+    btn.innerHTML = txtOriginal;
+    btn.style.background = '';
+    btn.disabled = false;
+  }, 3000);
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION BLOQUÉE (solde > 0)
+// ════════════════════════════════════════════════════════════
+function afficherSectionBloquee(eleve, soldeParsed) {
+  const section = document.getElementById('sectionBloque');
+  const div     = document.getElementById('bloqueBody');
+  if (!section || !div) return;
+  section.style.display = 'block';
+
+  const verseParsed = parseFloat(String(eleve.verse||'').replace(/\s/g,'')) || 0;
+  const msg = verseParsed > 0
+    ? 'Il vous reste <strong style="color:#C62828">' + soldeParsed.toLocaleString('fr-FR') + ' F CFA</strong> a regler pour acceder a vos resultats, bulletins et notes.'
+    : 'Votre scolarite n'est pas encore reglee. Payez pour acceder a votre espace complet.';
+
+  div.innerHTML =
+    '<div style="background:#FFEBEE;border-radius:10px;padding:16px;text-align:center;margin-bottom:14px">' +
+    '<div style="font-size:40px;margin-bottom:10px">🔒</div>' +
+    '<p style="font-size:14px;color:#C62828;font-weight:bold;margin-bottom:8px">Acces restreint</p>' +
+    '<p style="font-size:13px;color:#555;line-height:1.6;margin-bottom:12px">' + msg + '</p>' +
+    '<p style="font-size:12px;color:#888">✅ La fiche de renseignement 2026-2027 reste accessible ci-dessous</p>' +
+    '</div>' +
+    '<div style="background:#E8F5E9;border-radius:10px;padding:14px;text-align:center;border-left:4px solid #2E7D32">' +
+    '<p style="font-size:13px;font-weight:bold;color:#2E7D32;margin-bottom:6px">💡 Comment debloquer votre espace ?</p>' +
+    '<p style="font-size:12px;color:#444;line-height:1.8">' +
+    '1️⃣ Payez via <strong>Wave</strong> ou <strong>Orange Money</strong><br>' +
+    '2️⃣ Envoyez votre recu par WhatsApp<br>' +
+    '3️⃣ Reconnectez-vous — votre espace est debloque ✅' +
+    '</p>' +
+    '</div>';
 }
 
 // ════════════════════════════════════════════════════════════
