@@ -1119,17 +1119,17 @@ async function afficherSectionResultats(eleve) {
   if (!decision) {
     htmlAnim = "<div style='background:#F0F4F8;border-radius:10px;padding:20px;text-align:center;margin-bottom:14px'><div style='font-size:40px;margin-bottom:10px'>⏳</div><p style='font-weight:bold;color:#1F4E79;font-size:16px;margin-bottom:8px'>Resultats en cours de preparation</p><p style='font-size:13px;color:#666;line-height:1.6'>Disponibles apres les evaluations T3.<br>Reconnectez-vous en Juin 2026.</p></div>";
   } else if (typeClasse === "EXCELLENCE" && moy >= 10) {
-    htmlAnim = buildAnimExcellence(prenom, classe, moy, nc, tel);
+    htmlAnim = _cardExcellence(prenom, classe, moy, nc, tel);
   } else if (typeClasse === "EXCELLENCE" && moy < 10) {
-    htmlAnim = buildAnimQuitterEX(prenom, classe, moy, tel);
+    htmlAnim = _cardQuitterEX(prenom, classe, moy, tel);
   } else if (decision === "ADMIS" && moy >= 14) {
-    htmlAnim = buildAnimEntreEnEX(prenom, classe, moy, tel);
+    htmlAnim = _cardEntreEnEX(prenom, classe, moy, tel);
   } else if (decision === "ADMIS") {
-    htmlAnim = buildAnimAdmisStd(prenom, classe, moy, nc, tel);
+    htmlAnim = _cardAdmisStandard(prenom, classe, moy, nc, tel);
   } else if (decision === "REDOUBLANT") {
-    htmlAnim = buildAnimRedoublant(prenom, classe, moy, tel);
+    htmlAnim = _cardRedoublant(prenom, classe, moy, tel);
   } else if (decision === "EXCLU") {
-    htmlAnim = buildAnimExclu(prenom, classe, tel);
+    htmlAnim = _cardExclu(prenom, classe, tel);
   }
 
   // Bulletins T1 T2 T3
