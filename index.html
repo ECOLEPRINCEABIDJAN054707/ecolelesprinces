@@ -1195,10 +1195,13 @@ async function dlBulletin(onglet, btn) {
     var data = await res.json();
     if (!data.values) throw new Error("Vide");
     var lien = null;
+    // Nettoyer le matricule recherché de tous caractères invisibles
+    var matClean = mat.replace(/[^A-Z0-9]/g, "");
     for (var i = 0; i < data.values.length; i++) {
       var row = data.values[i];
-      var m = String(row[0] || "").trim().toUpperCase().replace(/\s/g, "");
-      if (m !== mat) continue;
+      // Nettoyer le matricule de la ligne de tous caractères invisibles
+      var m = String(row[0] || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      if (m !== matClean) continue;
       // Chercher URL dans toutes les colonnes
       for (var c = 1; c < row.length; c++) {
         var v = String(row[c] || "").trim();
@@ -1450,7 +1453,7 @@ async function telechargerBulletin() {
         const data = await res.json();
         if (!data.values) continue;
         for (const row of data.values) {
-          const matRow = String(row[0]||"").trim().toUpperCase().replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g,"");
+          const matRow = String(row[0]||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
           if (matRow !== mat) continue;
           let lienCandidat = "", idCandidat = "";
           for (let c = 1; c < row.length; c++) {
