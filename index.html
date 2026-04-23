@@ -450,6 +450,8 @@ const PROGRESSION = {
   '6EX1':'5EX1','6EX2':'5EX2','5EX1':'4EX1','5EX2':'4EX2',
   '4EX1':'3EX1','4EX2':'3EX2','3EX1':'2NDA2 EX1','3EX2':'2NDA2 EX1',
   '6EME EX':'5EME EX','5EME EX':'4EME EX','4EME EX':'3EME EX','3EME EX':'2NDE C EX',
+  '6EME EX1':'5EME EX1','5EME EX1':'4EME EX1','4EME EX1':'3EME EX1','3EME EX1':'2NDE C EX',
+  '6EME EX2':'5EME EX2','5EME EX2':'4EME EX2','4EME EX2':'3EME EX2','3EME EX2':'2NDE C EX',
   '2NDE C':'1ERE C','2NDA2':'1EREA2','2NDC':'1EREC',
   '2NDA2 EX1':'1EREA2 EX1','2NDC EX1':'1EREC EX1',
   '1ERE C':'TLE D','1EREC':'TLED','1EREA2':'TLEA2',
@@ -1101,7 +1103,9 @@ async function afficherSectionResultats(eleve) {
   if (titreRes) titreRes.innerHTML = "&#127942; RESULTATS DE FIN D'ANNEE " + ANNEE_SCOLAIRE_ACTIVE + " <span>v</span>";
 
   var decision = (eleve.decision || "").trim().toUpperCase();
-  var moy = parseFloat(eleve.moy_annuelle) || 0;
+  var moyRaw = parseFloat(String(eleve.moy_annuelle || 0).replace(',', '.')) || 0;
+  // Si la valeur ressemble à une date sérialisée (> 1000) → c'est 0
+  var moy = (moyRaw > 0 && moyRaw <= 20) ? moyRaw : 0;
   var classe = (eleve.classe || "").trim().toUpperCase();
   var ecole = (eleve.ecoleCode || "").trim().toUpperCase();
   var prenom = (eleve.nom || "").split(" ")[0];
@@ -1181,6 +1185,12 @@ async function dlBulletin(onglet, btn) {
     var sid = eleve.sheetsId || CONFIG.SHEETS_ID;
     var url = "https://sheets.googleapis.com/v4/spreadsheets/" + sid + "/values/" + encodeURIComponent(onglet + "!A1:F2000") + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
     var res = await fetch(url);
+    // Onglet inexistant → bouton grisé sans bloquer les autres
+    if (res.status === 400 || res.status === 404) {
+      btn.innerHTML = "⏳<br>Bientot dispo";
+      setTimeout(function(){ btn.innerHTML = orig; btn.style.background = origBg; btn.disabled = false; }, 2000);
+      return;
+    }
     if (!res.ok) throw new Error("HTTP");
     var data = await res.json();
     if (!data.values) throw new Error("Vide");
@@ -1189,10 +1199,21 @@ async function dlBulletin(onglet, btn) {
       var row = data.values[i];
       var m = String(row[0] || "").trim().toUpperCase().replace(/\s/g, "");
       if (m !== mat) continue;
+      // Chercher URL dans toutes les colonnes
       for (var c = 1; c < row.length; c++) {
         var v = String(row[c] || "").trim();
+        if (v.indexOf("https://drive.google.com") === 0) { lien = v; break; }
         if (v.indexOf("http") === 0) { lien = v; break; }
-        if (v.length >= 33) { lien = "https://drive.google.com/file/d/" + v + "/view"; break; }
+      }
+      // Si pas d'URL, chercher ID Drive (33+ chars, pas de //)
+      if (!lien) {
+        for (var c = 1; c < row.length; c++) {
+          var v = String(row[c] || "").trim();
+          if (v.length >= 33 && v.indexOf("http") < 0 && v.indexOf(" ") < 0) {
+            lien = "https://drive.google.com/file/d/" + v + "/view";
+            break;
+          }
+        }
       }
       break;
     }
@@ -1317,23 +1338,43 @@ async function chargerEDT(eleve) {
 
   if (titre) titre.innerHTML = "🕐 EMPLOI DU TEMPS " + anneeEDT + " <span>v</span>";
 
-  // Nom onglet selon classe — nettoyage accents et espaces
-  var classe = (eleve.classe || "").trim().toUpperCase();
+  // Nom onglet selon classe — utiliser la classe EXACTE de la SYNTHESE
+  // Ex: "6EX1" → EDT_6EX1 | "3EME 7" → EDT_3EME_7
+  var classeRaw = (eleve.classe || "").trim().toUpperCase();
+  // Supprimer emojis et caractères spéciaux
+  classeRaw = classeRaw.replace(/[^\w\s]/g, "").trim();
   // Remplacer accents
-  classe = classe.replace(/È/g,"E").replace(/É/g,"E").replace(/Ê/g,"E")
-                 .replace(/À/g,"A").replace(/Â/g,"A").replace(/Î/g,"I")
-                 .replace(/Ô/g,"O").replace(/Û/g,"U").replace(/Ç/g,"C");
+  classeRaw = classeRaw.replace(/È/g,"E").replace(/É/g,"E").replace(/Ê/g,"E")
+                       .replace(/À/g,"A").replace(/Â/g,"A").replace(/Î/g,"I")
+                       .replace(/Ô/g,"O").replace(/Û/g,"U").replace(/Ç/g,"C");
   // Remplacer espaces par underscore
-  classe = classe.replace(/\s+/g, "_");
-  var onglet = "EDT_" + classe;
+  classeRaw = classeRaw.replace(/\s+/g, "_");
+  // Supprimer underscores multiples
+  classeRaw = classeRaw.replace(/_+/g, "_").replace(/^_|_$/g, "");
+  // Construire plusieurs variantes possibles du nom d'onglet
+  var onglet = "EDT_" + classeRaw;
+
+  // Variante courte : supprimer suffixes EME, ERE, NDE, etc.
+  // Ex: EDT_6EME_EX1 → aussi essayer EDT_6EX1
+  var ongletCourt = onglet
+    .replace(/_EME_/g, "_").replace(/_ERE_/g, "_")
+    .replace(/_NDE_/g, "_").replace(/_ALE_/g, "_")
+    .replace(/_LE_/g, "_");
+
+  console.log("EDT cherché:", onglet, "| variante:", ongletCourt, "| Classe:", eleve.classe);
 
   try {
     var sid = eleve.sheetsId || CONFIG.SHEETS_ID;
-    var url = "https://sheets.googleapis.com/v4/spreadsheets/" + sid
-            + "/values/" + encodeURIComponent(onglet + "!A1:G15")
-            + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
-    var res = await fetch(url);
-    if (!res.ok) { edtVide(div, eleve.classe, anneeEDT); return; }
+    // Essayer l'onglet principal puis la variante courte
+    var urlBase = "https://sheets.googleapis.com/v4/spreadsheets/" + sid + "/values/";
+    var urlParams = "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+
+    var res = await fetch(urlBase + encodeURIComponent(onglet + "!A1:G15") + urlParams);
+    if (!res.ok) {
+      // Essayer variante courte
+      res = await fetch(urlBase + encodeURIComponent(ongletCourt + "!A1:G15") + urlParams);
+      if (!res.ok) { edtVide(div, eleve.classe, anneeEDT); return; }
+    }
     var data = await res.json();
     if (!data.values || data.values.length < 2) { edtVide(div, eleve.classe, anneeEDT); return; }
 
