@@ -1333,25 +1333,25 @@ async function chargerEDT(eleve) {
 
     var rows = data.values.slice(1); // ignorer en-tête
     var html = "<div style='font-size:12px;color:#2E7D32;margin-bottom:8px'>Classe : <strong>" + eleve.classe + "</strong> | Annee : <strong>" + anneeEDT + "</strong></div>";
-    html += "<div class='edt-scroll'><table class='t-edt'>";
-    html += "<tr><th>HORAIRE</th><th>LUN</th><th>MAR</th><th>MER</th><th>JEU</th><th>VEN</th><th>SAM</th></tr>";
+    html += "<div class='edt-scroll'><table style='width:100%;min-width:420px;border-collapse:collapse'>";
+    html += "<tr style='background:#1F4E79'>";
+    var thStyle = "padding:9px 6px;color:#fff;font-size:12px;font-weight:700;border:1px solid #2a5298;text-align:center";
+    html += "<th style='" + thStyle + "'>HORAIRE</th><th style='" + thStyle + "'>LUN</th><th style='" + thStyle + "'>MAR</th><th style='" + thStyle + "'>MER</th><th style='" + thStyle + "'>JEU</th><th style='" + thStyle + "'>VEN</th><th style='" + thStyle + "'>SAM</th></tr>";
 
     var rowIdx = 0;
     for (var i = 0; i < EDT_HORAIRES.length; i++) {
       var slot = EDT_HORAIRES[i];
       if (slot.type === "pause") {
-        html += "<tr class='edt-pause'><td colspan='7'>" + slot.h + "</td></tr>";
+        html += "<tr style='background:#FFFDE7'><td colspan='7' style='text-align:center;font-weight:bold;color:#B8860B;font-size:12px;padding:6px;border:1px solid #FFE082'>" + slot.h + "</td></tr>";
       } else {
         var row = rows[rowIdx] || [];
         rowIdx++;
-        html += "<tr><td style='font-weight:600;font-size:11px;white-space:nowrap'>" + slot.h + "</td>";
+        var bgRow = (rowIdx % 2 === 0) ? "#ffffff" : "#f4f6fa";
+        html += "<tr style='background:" + bgRow + "'>";
+        html += "<td style='font-weight:600;font-size:12px;white-space:nowrap;color:#1F4E79;padding:7px 8px;border:1px solid #e0e6f0'>" + slot.h + "</td>";
         for (var j = 1; j <= 6; j++) {
           var mat = String(row[j] || "").trim();
-          var couleur = matCouleur(mat);
-          var style = mat && couleur
-            ? "background:" + couleur + ";color:#fff;font-weight:bold;font-size:11px;border-radius:3px"
-            : "font-size:11px";
-          html += "<td style='" + style + "'>" + mat + "</td>";
+          html += "<td style='font-size:12px;color:#222;padding:7px 4px;border:1px solid #e0e6f0;text-align:center'>" + mat + "</td>";
         }
         html += "</tr>";
       }
@@ -1373,21 +1373,7 @@ function edtVide(div, classe, annee) {
     + "</div>";
 }
 
-function matCouleur(mat) {
-  if (!mat) return "";
-  var m = mat.toUpperCase();
-  if (m.indexOf("MATH") >= 0)  return "#1565C0";
-  if (m.indexOf("FRANC") >= 0) return "#2E7D32";
-  if (m.indexOf("ANGL") >= 0)  return "#E65100";
-  if (m.indexOf("SVT") >= 0)   return "#00695C";
-  if (m.indexOf("HIST") >= 0)  return "#6A1B9A";
-  if (m.indexOf("PHYS") >= 0)  return "#AD1457";
-  if (m.indexOf("EPS") >= 0)   return "#558B2F";
-  if (m.indexOf("INFO") >= 0)  return "#37474F";
-  if (m.indexOf("EDHC") >= 0)  return "#F57F17";
-  if (m.indexOf("PHILO") >= 0) return "#4527A0";
-  return "#546E7A";
-}
+function matCouleur(mat) { return ""; }
 
 // ════════════════════════════════════════════════════════════
 // TELECHARGER BULLETIN
