@@ -579,7 +579,7 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
   try {
     const sheetsId = sheetsIdDirect;
     // ⚡ ÉTENDU à N5000 pour récupérer col M (DECISION) et N (MOY_ANNUELLE)
-    const range = encodeURIComponent("SYNTHESE!A2:N5000");
+    const range = encodeURIComponent("SYNTHESE!A2:P5000");
     const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
     let res = null;
     for (let tentative = 0; tentative < 3; tentative++) {
@@ -613,8 +613,8 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
         statut:       String(row[9]||"").trim(),
         club1:        String(row[10]||"").trim(),
         club2:        String(row[11]||"").trim(),
-        decision:     String(row[12]||"").trim().toUpperCase(),   // COL M
-        moy_annuelle: parseFloat(String(row[13]||"").replace(",",".")) || 0, // COL N
+        decision:     String(row[14]||"").trim().toUpperCase(),   // COL O
+        moy_annuelle: parseFloat(String(row[15]||"").replace(",",".")) || 0, // COL P
         ecoleCode:    codeEcole,
         sheetsId:     sheetsId,
       };
