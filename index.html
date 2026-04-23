@@ -185,7 +185,7 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
   </div>
 
   <div class="section" id="sectionResultats" style="display:none">
-    <div class="sec-header" style="background:linear-gradient(135deg,#D4AF37,#B8860B);color:#fff" onclick="toggleSec(this)">&#127942; RESULTATS DE FIN D'ANNEE <span>v</span></div>
+    <div class="sec-header" style="background:linear-gradient(135deg,#D4AF37,#B8860B);color:#fff" onclick="toggleSec(this)" id="titreResultats">&#127942; RESULTATS DE FIN D'ANNEE <span>v</span></div>
     <div class="sec-body open" id="resultatsBody"></div>
   </div>
   <div class="section" id="sectionBloque" style="display:none">
@@ -403,6 +403,11 @@ const ECOLES = [
   { code:"ACADEMIE",    nom:"EPV Academie des Princes",                          ville:"Abobo",           couleur:"#B8860B" },
   { code:"RITA",        nom:"Groupe Scolaire Rita Rosane Abobo",                 ville:"Abobo",           couleur:"#607D8B" },
 ];
+
+// ── ANNÉE SCOLAIRE — À MODIFIER CHAQUE JUILLET ──────────────
+// Changer cette ligne uniquement lors du changement d'année
+// Exemple : "2025-2026" → "2026-2027" en Juillet 2026
+const ANNEE_SCOLAIRE_ACTIVE = "2025-2026";
 
 const CONFIG = {
   SHEETS_ID:      "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI",
@@ -667,6 +672,7 @@ function afficherEspaceParent(eleve) {
     "<div class='eleve-mat-badge'>" + eleve.matricule + "</div>" +
     "<div class='eleve-nom'>" + eleve.nom + "</div>" +
     "<div class='eleve-infos'>" + eleve.classe + " | " + nomEcole + "</div>" +
+    "<div style='font-size:12px;color:rgba(255,255,255,0.85);margin-top:4px'>📅 Annee scolaire " + ANNEE_SCOLAIRE_ACTIVE + "</div>" +
     badgeHTML +
     "</div></div>" +
     "<button class='btn-logout' onclick='logout()'>Deconnexion</button></div>";
@@ -690,11 +696,11 @@ function afficherEspaceParent(eleve) {
   if (eleve.gratuit) {
     pay.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>🎓</div><div class='pay-text'><h4>Prise en charge etablissement</h4><p class='pay-montant c-vert'>Acces complet active</p></div></div>";
   } else if (soldeParsed === 0) {
-    pay.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>✅</div><div class='pay-text'><h4>Scolarite entierement payee</h4><p class='pay-montant c-vert'>" + verseParsed.toLocaleString('fr-FR') + " F CFA verses</p><p>Acces complet active - Merci !</p></div></div>";
+    pay.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>✅</div><div class='pay-text'><h4>Scolarite " + ANNEE_SCOLAIRE_ACTIVE + " entierement payee</h4><p class='pay-montant c-vert'>" + verseParsed.toLocaleString('fr-FR') + " F CFA verses</p><p>Merci pour votre confiance !</p></div></div>";
   } else if (verseParsed > 0) {
-    pay.innerHTML = "<div class='paiement-bar paiement-partiel'><div class='pay-icon'>⚠️</div><div class='pay-text'><h4>Solde restant a payer</h4><p class='pay-montant c-or'>" + soldeParsed.toLocaleString('fr-FR') + " F CFA restants</p><p>Verse : " + verseParsed.toLocaleString('fr-FR') + " sur " + duParsed.toLocaleString('fr-FR') + " F CFA</p></div></div>";
+    pay.innerHTML = "<div class='paiement-bar paiement-partiel'><div class='pay-icon'>⚠️</div><div class='pay-text'><h4>Solde " + ANNEE_SCOLAIRE_ACTIVE + " restant</h4><p class='pay-montant c-or'>" + soldeParsed.toLocaleString('fr-FR') + " F CFA restants</p><p>Verse : " + verseParsed.toLocaleString('fr-FR') + " sur " + duParsed.toLocaleString('fr-FR') + " F CFA</p></div></div>";
   } else {
-    pay.innerHTML = "<div class='paiement-bar paiement-non'><div class='pay-icon'>❌</div><div class='pay-text'><h4>Aucun paiement recu</h4><p class='pay-montant c-rouge'>" + duParsed.toLocaleString('fr-FR') + " F CFA a regler</p></div></div>";
+    pay.innerHTML = "<div class='paiement-bar paiement-non'><div class='pay-icon'>❌</div><div class='pay-text'><h4>Scolarite " + ANNEE_SCOLAIRE_ACTIVE + " non reglee</h4><p class='pay-montant c-rouge'>" + duParsed.toLocaleString('fr-FR') + " F CFA a regler</p></div></div>";
   }
 
   var accesComplet = eleve.gratuit || soldeParsed === 0;
@@ -1100,6 +1106,10 @@ async function afficherSectionResultats(eleve) {
   if (!section || !div) return;
   section.style.display = "block";
 
+  // Mettre à jour le titre avec l'année
+  var titreRes = document.getElementById("titreResultats");
+  if (titreRes) titreRes.innerHTML = "&#127942; RESULTATS DE FIN D'ANNEE " + ANNEE_SCOLAIRE_ACTIVE + " <span>v</span>";
+
   var decision = (eleve.decision || "").trim().toUpperCase();
   var moy = parseFloat(eleve.moy_annuelle) || 0;
   var classe = (eleve.classe || "").trim().toUpperCase();
@@ -1280,8 +1290,8 @@ function afficherSectionBloquee(eleve, soldeParsed, verseParsed) {
   if (!section || !div) return;
   section.style.display = "block";
   var msg = verseParsed > 0
-    ? "Il vous reste <strong style='color:#C62828'>" + soldeParsed.toLocaleString("fr-FR") + " F CFA</strong> a regler."
-    : "Votre scolarite n'est pas encore reglee.";
+    ? "Scolarite <strong>" + ANNEE_SCOLAIRE_ACTIVE + "</strong> — Il vous reste <strong style='color:#C62828'>" + soldeParsed.toLocaleString("fr-FR") + " F CFA</strong> a regler."
+    : "Scolarite <strong>" + ANNEE_SCOLAIRE_ACTIVE + "</strong> non encore reglee.";
   var infos = window.SHEETS_IDS_COMPLET[eleve.sheetsId] || {};
   var tel = infos.tel || "0708111269";
   div.innerHTML = "<div style='background:#FFEBEE;border-radius:10px;padding:20px;text-align:center;margin-bottom:14px'><div style='font-size:42px;margin-bottom:10px'>🔒</div><p style='font-size:15px;color:#C62828;font-weight:bold;margin-bottom:8px'>Acces restreint</p><p style='font-size:13px;color:#555;line-height:1.6;margin-bottom:10px'>" + msg + "<br>Payez pour acceder a vos resultats, bulletins et notes.</p></div><div style='background:#E8F5E9;border-radius:10px;padding:14px;border-left:4px solid #2E7D32'><p style='font-size:13px;font-weight:bold;color:#2E7D32;margin-bottom:8px'>💡 Comment debloquer votre espace ?</p><div style='font-size:13px;color:#444;line-height:2'>1️⃣ Payez via <strong>Wave</strong> ou <strong>Orange Money</strong><br>2️⃣ Envoyez votre recu par WhatsApp au <strong>" + tel + "</strong><br>3️⃣ Reconnectez-vous — votre espace est debloque ✅</div></div>";
