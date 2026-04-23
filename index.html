@@ -1247,6 +1247,20 @@ async function dlBulletin(onglet, btn) {
 }
 
 
+var EDT_HORAIRES = [
+  { type:"cours", h:"07h45 - 08h55" },
+  { type:"cours", h:"08h55 - 09h50" },
+  { type:"pause", h:"&#9208; Recreation  09h50 - 10h10" },
+  { type:"cours", h:"10h10 - 11h05" },
+  { type:"cours", h:"11h05 - 12h00" },
+  { type:"pause", h:"&#127860; Dejeuner  12h00 - 13h05" },
+  { type:"cours", h:"13h05 - 14h00" },
+  { type:"cours", h:"14h00 - 14h55" },
+  { type:"cours", h:"14h55 - 15h50" },
+  { type:"cours", h:"15h50 - 16h45" },
+  { type:"cours", h:"16h45 - 17h40" }
+];
+
 async function chargerEDT(eleve) {
   var div = document.getElementById("edtBody");
   var titre = document.getElementById("titreEDT");
