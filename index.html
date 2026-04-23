@@ -1186,7 +1186,7 @@ async function dlBulletin(onglet, btn) {
     var matClean = eleve.matricule.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
     var sid = eleve.sheetsId || CONFIG.SHEETS_ID;
     var url = "https://sheets.googleapis.com/v4/spreadsheets/" + sid
-            + "/values/" + encodeURIComponent(onglet + "!A1:F2000")
+            + "/values/" + encodeURIComponent(onglet + "!A1:F5000")
             + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
 
     console.log("Bulletin:", onglet, "| Mat:", matClean);
@@ -1377,7 +1377,7 @@ async function telechargerBulletin() {
     let lienPDF    = null;
     for (const onglet of onglets) {
       if (lienPDF) break;
-      const range = encodeURIComponent(onglet + "!A1:F2000");
+      const range = encodeURIComponent(onglet + "!A1:F5000");
       const url   = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
       try {
         const res  = await fetch(url);
