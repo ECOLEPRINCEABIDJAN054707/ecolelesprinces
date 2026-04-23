@@ -1341,18 +1341,17 @@ async function chargerEDT(eleve) {
 
   if (titre) titre.innerHTML = "🕐 EMPLOI DU TEMPS " + anneeEDT + " <span>v</span>";
 
-  // Nom onglet selon classe — utiliser la classe EXACTE de la SYNTHESE
-  // Ex: "6EX1" → EDT_6EX1 | "3EME 7" → EDT_3EME_7
+  // Nom onglet selon classe
   var classeRaw = (eleve.classe || "").trim().toUpperCase();
-  // Supprimer emojis et caractères spéciaux
-  classeRaw = classeRaw.replace(/[^\w\s]/g, "").trim();
-  // Remplacer accents
-  classeRaw = classeRaw.replace(/È/g,"E").replace(/É/g,"E").replace(/Ê/g,"E")
-                       .replace(/À/g,"A").replace(/Â/g,"A").replace(/Î/g,"I")
-                       .replace(/Ô/g,"O").replace(/Û/g,"U").replace(/Ç/g,"C");
+  // Remplacer accents EN PREMIER
+  classeRaw = classeRaw.replace(/[ÈÉÊË]/g,"E").replace(/[ÀÂÄ]/g,"A")
+                       .replace(/[ÎÏ]/g,"I").replace(/[ÔÖ]/g,"O")
+                       .replace(/[ÛÙÜ]/g,"U").replace(/Ç/g,"C");
   // Remplacer espaces par underscore
-  classeRaw = classeRaw.replace(/\s+/g, "_");
-  // Supprimer underscores multiples
+  classeRaw = classeRaw.replace(/ /g, "_");
+  // Garder uniquement lettres, chiffres, underscores
+  classeRaw = classeRaw.replace(/[^A-Z0-9_]/g, "");
+  // Nettoyer underscores multiples
   classeRaw = classeRaw.replace(/_+/g, "_").replace(/^_|_$/g, "");
   // Construire plusieurs variantes possibles du nom d'onglet
   var onglet = "EDT_" + classeRaw;
