@@ -177,7 +177,6 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
   <div id="eleveCard"></div>
   <div id="statutPay"></div>
 
-  <!-- ══ ANNONCES ÉCOLE ══ -->
   <div id="sectionAnnonces" style="display:none;">
     <div class="section" style="border-left:4px solid #C62828;">
       <div class="sec-header" style="background:#C62828;" onclick="toggleSec(this)">📢 ANNONCES DE L'ECOLE <span>v</span></div>
@@ -185,25 +184,25 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
     </div>
   </div>
 
-  <!-- ══ SECTION UNIFIÉE RÉSULTATS (solde = 0) ══ -->
+  <!-- ══ SECTION RÉSULTATS UNIFIÉE (solde=0) ══ -->
   <div class="section" id="sectionResultats" style="display:none">
     <div class="sec-header" style="background:linear-gradient(135deg,#D4AF37,#B8860B);color:#fff" onclick="toggleSec(this)">🏆 RESULTATS DE FIN D'ANNEE <span>v</span></div>
     <div class="sec-body open" id="resultatsBody"></div>
   </div>
 
-  <!-- ══ SECTION BLOQUÉE (solde > 0) ══ -->
+  <!-- ══ SECTION BLOQUÉE (solde>0) ══ -->
   <div class="section" id="sectionBloque" style="display:none">
-    <div class="sec-header" style="background:#C62828" onclick="toggleSec(this)">🔒 ESPACE SCOLAIRE BLOQUE <span>v</span></div>
+    <div class="sec-header" style="background:#C62828;color:#fff" onclick="toggleSec(this)">🔒 RESULTATS ET NOTES <span>v</span></div>
     <div class="sec-body open" id="bloqueBody"></div>
   </div>
 
   <!-- Conteneurs cachés pour chargement asynchrone -->
-  <div style="display:none" id="notesBody"></div>
-  <div style="display:none" id="absencesBody"></div>
-  <div style="display:none" id="decisionBody"></div>
-  <div style="display:none" id="sectionDecision"></div>
-  <div style="display:none" id="sectionBulletin"></div>
-  <div style="display:none" id="bulletinBody"></div>
+  <div id="sectionDecision" style="display:none"></div>
+  <div id="decisionBody" style="display:none"></div>
+  <div id="notesBody" style="display:none"></div>
+  <div id="absencesBody" style="display:none"></div>
+  <div id="sectionBulletin" style="display:none"></div>
+  <div id="bulletinBody" style="display:none"></div>
 
   <!-- ══ FICHE DE RENSEIGNEMENT ══ -->
   <div id="ficheRenseignement"></div>
@@ -706,17 +705,14 @@ function afficherEspaceParent(eleve) {
   const accesComplet = eleve.gratuit || soldeParsed === 0;
 
   if (accesComplet) {
-    // ── ACCÈS COMPLET — Solde = 0 ──
+    // Solde = 0 → Section résultats unifiée
     chargerAnnonces(eleve);
-    chargerNotes(eleve);
-    chargerAbsences(eleve);
-    afficherDecision(eleve);
     afficherSectionResultats(eleve);
-    document.getElementById("sectionBloque").style.display = "none";
+    document.getElementById('sectionBloque').style.display = 'none';
   } else {
-    // ── ACCÈS BLOQUÉ — Solde > 0 ──
-    document.getElementById("sectionResultats").style.display = "none";
-    afficherSectionBloquee(eleve, soldeParsed);
+    // Solde > 0 → Section bloquée
+    document.getElementById('sectionResultats').style.display = 'none';
+    afficherSectionBloquee(eleve, soldeParsed, verseParsed);
   }
 
   // ⚡ FICHE DE RENSEIGNEMENT — visible pour tous (solde 0 ou > 0)
@@ -726,189 +722,6 @@ function afficherEspaceParent(eleve) {
   document.getElementById("loginWrapper").style.display = "none";
   document.getElementById("parentSpace").style.display = "block";
   window.scrollTo(0, 0);
-}
-
-// ════════════════════════════════════════════════════════════
-// SECTION RÉSULTATS UNIFIÉE
-// ════════════════════════════════════════════════════════════
-function afficherSectionResultats(eleve) {
-  const section = document.getElementById('sectionResultats');
-  const div     = document.getElementById('resultatsBody');
-  if (!section || !div) return;
-  section.style.display = 'block';
-
-  const decision = (eleve.decision || '').trim().toUpperCase();
-  const moy      = parseFloat(eleve.moy_annuelle) || 0;
-  const info     = window.SHEETS_IDS_COMPLET[eleve.sheetsId] || {};
-  const tel      = info.tel || '0708111269';
-
-  // ── BLOC ANIMATION (si décision disponible) ──
-  let htmlDecision = '';
-  if (decision) {
-    htmlDecision = '<div id="decisionAnimBlock"></div>';
-  } else {
-    htmlDecision = '<div style="background:#F0F4F8;border-radius:10px;padding:16px;text-align:center;margin-bottom:14px">' +
-      '<div style="font-size:36px;margin-bottom:8px">⏳</div>' +
-      '<p style="font-weight:bold;color:#1F4E79;font-size:15px;margin-bottom:6px">Resultats en cours de preparation</p>' +
-      '<p style="font-size:13px;color:#666">Les resultats de fin d'annee seront disponibles apres les evaluations du 3eme trimestre.</p>' +
-      '</div>';
-  }
-
-  // ── 3 BOUTONS BULLETINS ──
-  const htmlBulletins = '<div style="margin-bottom:12px">' +
-    '<div style="font-size:14px;font-weight:700;color:#2E7D32;border-bottom:2px solid #2E7D32;padding-bottom:4px;margin-bottom:10px">📄 MES BULLETINS SCOLAIRES</div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">' +
-    _btnBulletin('T1', '1er Trimestre', eleve) +
-    _btnBulletin('T2', '2eme Trimestre', eleve) +
-    _btnBulletin('T3', '3eme Trimestre', eleve) +
-    '</div>' +
-    '<div id="bulletinContenu"></div>' +
-    '</div>';
-
-  // ── BOUTON NOTES ──
-  const htmlNotes = '<div style="margin-bottom:12px">' +
-    '<button onclick="toggleContenu('notesContenu', this)" style="width:100%;padding:13px;background:linear-gradient(135deg,#1F4E79,#1565C0);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:space-between">' +
-    '<span>📊 MES NOTES DÉTAILLÉES</span><span id="arrowNotes">▼</span>' +
-    '</button>' +
-    '<div id="notesContenu" style="display:none;margin-top:8px"></div>' +
-    '</div>';
-
-  // ── BOUTON ABSENCES ──
-  const htmlAbsences = '<div style="margin-bottom:12px">' +
-    '<button onclick="toggleContenu('absencesContenu', this)" style="width:100%;padding:13px;background:linear-gradient(135deg,#E65100,#F57C00);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:space-between">' +
-    '<span>📅 MES ABSENCES ET RETARDS</span><span id="arrowAbsences">▼</span>' +
-    '</button>' +
-    '<div id="absencesContenu" style="display:none;margin-top:8px"></div>' +
-    '</div>';
-
-  div.innerHTML = htmlDecision + htmlBulletins + htmlNotes + htmlAbsences;
-
-  // Afficher l'animation dans le bon bloc
-  if (decision) {
-    const animBlock = document.getElementById('decisionAnimBlock');
-    if (animBlock) {
-      const tempDiv = document.getElementById('decisionBody');
-      afficherDecision(eleve);
-      if (tempDiv) animBlock.innerHTML = tempDiv.innerHTML;
-    }
-  }
-}
-
-function _btnBulletin(trimestre, label, eleve) {
-  const onglet = 'BULLETINS_' + trimestre;
-  return '<button onclick="telechargerBulletinTrimestre('' + onglet + '', '' + label + '', this)" ' +
-    'style="padding:10px 6px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:bold;cursor:pointer;text-align:center;width:100%">' +
-    '📋<br>' + label + '</button>';
-}
-
-function toggleContenu(id, btn) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  const ouvert = el.style.display !== 'none';
-  el.style.display = ouvert ? 'none' : 'block';
-
-  // Charger le contenu si première ouverture
-  if (!ouvert && el.innerHTML === '') {
-    const eleve = window._eleveActuel;
-    if (!eleve) return;
-    if (id === 'notesContenu') {
-      el.innerHTML = '<div style="padding:10px;text-align:center;color:#1F4E79"><div class="spinner" style="width:20px;height:20px;border:3px solid #D6E4F0;border-top-color:#1F4E79;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 8px"></div><p style="font-size:13px">Chargement des notes...</p></div>';
-      chargerNotes(eleve).then(() => {
-        const notesBody = document.getElementById('notesBody');
-        if (notesBody) el.innerHTML = notesBody.innerHTML;
-      });
-    } else if (id === 'absencesContenu') {
-      el.innerHTML = '<div style="padding:10px;text-align:center;color:#E65100"><div class="spinner" style="width:20px;height:20px;border:3px solid #FFE0CC;border-top-color:#E65100;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 8px"></div><p style="font-size:13px">Chargement des absences...</p></div>';
-      chargerAbsences(eleve).then(() => {
-        const absBody = document.getElementById('absencesBody');
-        if (absBody) el.innerHTML = absBody.innerHTML;
-      });
-    }
-  }
-}
-
-async function telechargerBulletinTrimestre(onglet, label, btn) {
-  const eleve = window._eleveActuel;
-  if (!eleve) return;
-
-  const txtOriginal = btn.innerHTML;
-  btn.innerHTML = '⏳<br>Recherche...';
-  btn.disabled  = true;
-
-  try {
-    const mat      = eleve.matricule.trim().toUpperCase().replace(/[\s ​‌‍﻿]/g, '');
-    const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
-    const range    = encodeURIComponent(onglet + '!A1:F2000');
-    const url      = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-
-    const res  = await fetch(url);
-    if (!res.ok) { _btnErreur(btn, txtOriginal, 'Pas disponible'); return; }
-    const data = await res.json();
-    if (!data.values) { _btnErreur(btn, txtOriginal, 'Pas disponible'); return; }
-
-    let lienPDF = null;
-    for (const row of data.values) {
-      const matRow = String(row[0]||'').trim().toUpperCase().replace(/[\s ​‌‍﻿]/g,'');
-      if (matRow !== mat) continue;
-      for (let c = 1; c < row.length; c++) {
-        const val = String(row[c]||'').trim();
-        if (val.startsWith('http')) { lienPDF = val; break; }
-        if (val && val.length >= 33) { lienPDF = 'https://drive.google.com/file/d/' + val + '/view'; break; }
-      }
-      break;
-    }
-
-    if (!lienPDF) { _btnErreur(btn, txtOriginal, 'Bientot dispo'); return; }
-
-    window.open(lienPDF, '_blank');
-    btn.innerHTML = txtOriginal;
-    btn.disabled  = false;
-
-  } catch(e) {
-    _btnErreur(btn, txtOriginal, 'Erreur reseau');
-  }
-}
-
-function _btnErreur(btn, txtOriginal, msg) {
-  btn.innerHTML = '⚠️<br>' + msg;
-  btn.style.background = 'linear-gradient(135deg,#9E9E9E,#757575)';
-  btn.disabled = true;
-  setTimeout(() => {
-    btn.innerHTML = txtOriginal;
-    btn.style.background = '';
-    btn.disabled = false;
-  }, 3000);
-}
-
-// ════════════════════════════════════════════════════════════
-// SECTION BLOQUÉE (solde > 0)
-// ════════════════════════════════════════════════════════════
-function afficherSectionBloquee(eleve, soldeParsed) {
-  const section = document.getElementById('sectionBloque');
-  const div     = document.getElementById('bloqueBody');
-  if (!section || !div) return;
-  section.style.display = 'block';
-
-  const verseParsed = parseFloat(String(eleve.verse||'').replace(/\s/g,'')) || 0;
-  const msg = verseParsed > 0
-    ? 'Il vous reste <strong style="color:#C62828">' + soldeParsed.toLocaleString('fr-FR') + ' F CFA</strong> a regler pour acceder a vos resultats, bulletins et notes.'
-    : 'Votre scolarite n'est pas encore reglee. Payez pour acceder a votre espace complet.';
-
-  div.innerHTML =
-    '<div style="background:#FFEBEE;border-radius:10px;padding:16px;text-align:center;margin-bottom:14px">' +
-    '<div style="font-size:40px;margin-bottom:10px">🔒</div>' +
-    '<p style="font-size:14px;color:#C62828;font-weight:bold;margin-bottom:8px">Acces restreint</p>' +
-    '<p style="font-size:13px;color:#555;line-height:1.6;margin-bottom:12px">' + msg + '</p>' +
-    '<p style="font-size:12px;color:#888">✅ La fiche de renseignement 2026-2027 reste accessible ci-dessous</p>' +
-    '</div>' +
-    '<div style="background:#E8F5E9;border-radius:10px;padding:14px;text-align:center;border-left:4px solid #2E7D32">' +
-    '<p style="font-size:13px;font-weight:bold;color:#2E7D32;margin-bottom:6px">💡 Comment debloquer votre espace ?</p>' +
-    '<p style="font-size:12px;color:#444;line-height:1.8">' +
-    '1️⃣ Payez via <strong>Wave</strong> ou <strong>Orange Money</strong><br>' +
-    '2️⃣ Envoyez votre recu par WhatsApp<br>' +
-    '3️⃣ Reconnectez-vous — votre espace est debloque ✅' +
-    '</p>' +
-    '</div>';
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1282,6 +1095,183 @@ function _htmlFiche(info, tarifs, eleve) {
 
     '</div></div></div>'
   );
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION RÉSULTATS UNIFIÉE — Solde = 0
+// ════════════════════════════════════════════════════════════
+async function afficherSectionResultats(eleve) {
+  const section = document.getElementById('sectionResultats');
+  const div     = document.getElementById('resultatsBody');
+  if (!section || !div) return;
+  section.style.display = 'block';
+
+  const decision   = (eleve.decision || '').trim().toUpperCase();
+  const moy        = parseFloat(eleve.moy_annuelle) || 0;
+  const classe     = (eleve.classe || '').trim().toUpperCase();
+  const ecole      = (eleve.ecoleCode || '').trim().toUpperCase();
+  const prenom     = (eleve.nom || '').split(' ')[0];
+  const typeClasse = detecterTypeClasse(classe, ecole);
+  const info       = window.SHEETS_IDS_COMPLET[eleve.sheetsId] || {};
+  const tel        = info.tel || '0708111269';
+  const nc         = getProchaineClasse(classe);
+
+  // ── ANIMATION DÉCISION ──
+  let htmlAnim = '';
+  if (!decision) {
+    htmlAnim =
+      '<div style="background:#F0F4F8;border-radius:10px;padding:20px;text-align:center;margin-bottom:14px">' +
+      '<div style="font-size:40px;margin-bottom:10px">⏳</div>' +
+      '<p style="font-weight:bold;color:#1F4E79;font-size:16px;margin-bottom:8px">Resultats en cours de preparation</p>' +
+      '<p style="font-size:13px;color:#666;line-height:1.6">Les resultats seront publies apres les evaluations du 3eme trimestre.<br>Reconnectez-vous en Juin 2026.</p>' +
+      '</div>';
+  } else if (typeClasse === 'EXCELLENCE' && moy >= 10) {
+    htmlAnim = _animExcellence(prenom, classe, moy, nc, tel);
+  } else if (typeClasse === 'EXCELLENCE' && moy < 10) {
+    htmlAnim = _animQuitterEX(prenom, classe, moy, tel);
+  } else if (decision === 'ADMIS' && moy >= 14) {
+    htmlAnim = _animEntreEnEX(prenom, classe, moy, tel);
+  } else if (decision === 'ADMIS') {
+    htmlAnim = _animAdmisStd(prenom, classe, moy, nc, tel);
+  } else if (decision === 'REDOUBLANT') {
+    htmlAnim = _animRedoublant(prenom, classe, moy, tel);
+  } else if (decision === 'EXCLU') {
+    htmlAnim = _animExclu(prenom, classe, tel);
+  }
+
+  // ── 3 BOUTONS BULLETINS ──
+  const htmlBulletins =
+    '<div style="margin-bottom:14px">' +
+    '<div style="font-size:14px;font-weight:700;color:#2E7D32;border-bottom:2px solid #2E7D32;padding-bottom:5px;margin-bottom:10px">📄 MES BULLETINS SCOLAIRES</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' +
+    '<button onclick="dlBulletin('BULLETINS_T1',this)" style="padding:12px 6px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;line-height:1.5">📋<br>Trimestre 1</button>' +
+    '<button onclick="dlBulletin('BULLETINS_T2',this)" style="padding:12px 6px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;line-height:1.5">📋<br>Trimestre 2</button>' +
+    '<button onclick="dlBulletin('BULLETINS_T3',this)" style="padding:12px 6px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;line-height:1.5">📋<br>Trimestre 3</button>' +
+    '</div></div>';
+
+  // ── BOUTON NOTES ──
+  const htmlNotes =
+    '<div style="margin-bottom:10px">' +
+    '<button onclick="basculerSection('notesSection','arrowN')" style="width:100%;padding:13px 16px;background:linear-gradient(135deg,#1F4E79,#1565C0);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;justify-content:space-between;align-items:center">' +
+    '<span>📊 MES NOTES DETAILLEES</span><span id="arrowN">▼</span></button>' +
+    '<div id="notesSection" style="display:none;margin-top:8px;border-radius:8px;border:1px solid #D6E4F0;overflow:hidden">' +
+    '<div id="notesSectionBody" style="padding:20px;text-align:center;color:#1F4E79"><div class="spinner" style="width:22px;height:22px;border:3px solid #D6E4F0;border-top-color:#1F4E79;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px"></div><p style="font-size:13px">Chargement...</p></div>' +
+    '</div></div>';
+
+  // ── BOUTON ABSENCES ──
+  const htmlAbsences =
+    '<div style="margin-bottom:10px">' +
+    '<button onclick="basculerSection('absSection','arrowA')" style="width:100%;padding:13px 16px;background:linear-gradient(135deg,#E65100,#F57C00);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;justify-content:space-between;align-items:center">' +
+    '<span>📅 MES ABSENCES ET RETARDS</span><span id="arrowA">▼</span></button>' +
+    '<div id="absSection" style="display:none;margin-top:8px;border-radius:8px;border:1px solid #FFD5B0;overflow:hidden">' +
+    '<div id="absSectionBody" style="padding:20px;text-align:center;color:#E65100"><div class="spinner" style="width:22px;height:22px;border:3px solid #FFD5B0;border-top-color:#E65100;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px"></div><p style="font-size:13px">Chargement...</p></div>' +
+    '</div></div>';
+
+  div.innerHTML = htmlAnim + htmlBulletins + htmlNotes + htmlAbsences;
+
+  // Confettis
+  if (decision) {
+    if (typeClasse === 'EXCELLENCE' && moy >= 10)
+      setTimeout(() => _lancerConfettis('animCard', ['🌟','⭐','🏆','🥇','✨','🎊']), 400);
+    else if (decision === 'ADMIS' && moy >= 14)
+      setTimeout(() => _lancerConfettis('animCard', ['🎉','🎊','🎈','✅','👏','🏅']), 400);
+  }
+
+  // Pré-charger notes et absences en arrière-plan
+  chargerNotes(eleve);
+  chargerAbsences(eleve);
+}
+
+// ── Basculer notes / absences ──
+function basculerSection(idSection, idArrow) {
+  const el    = document.getElementById(idSection);
+  const arrow = document.getElementById(idArrow);
+  if (!el) return;
+  const ouvert = el.style.display !== 'none';
+  el.style.display = ouvert ? 'none' : 'block';
+  if (arrow) arrow.textContent = ouvert ? '▼' : '▲';
+  if (!ouvert) {
+    if (idSection === 'notesSection') {
+      const src = document.getElementById('notesBody');
+      const dst = document.getElementById('notesSectionBody');
+      if (src && dst && src.innerHTML.trim()) dst.innerHTML = src.innerHTML;
+    } else if (idSection === 'absSection') {
+      const src = document.getElementById('absencesBody');
+      const dst = document.getElementById('absSectionBody');
+      if (src && dst && src.innerHTML.trim()) dst.innerHTML = src.innerHTML;
+    }
+  }
+}
+
+// ── Télécharger bulletin par trimestre ──
+async function dlBulletin(onglet, btn) {
+  const eleve = window._eleveActuel;
+  if (!eleve) return;
+  const orig = btn.innerHTML;
+  btn.innerHTML = '⏳<br>Recherche...';
+  btn.disabled  = true;
+  btn.style.background = 'linear-gradient(135deg,#9E9E9E,#757575)';
+  try {
+    const mat  = eleve.matricule.trim().toUpperCase().replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g,'');
+    const sid  = eleve.sheetsId || CONFIG.SHEETS_ID;
+    const url  = 'https://sheets.googleapis.com/v4/spreadsheets/' + sid + '/values/' + encodeURIComponent(onglet + '!A1:F2000') + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error('HTTP');
+    const data = await res.json();
+    if (!data.values) throw new Error('Vide');
+    let lien = null;
+    for (const row of data.values) {
+      const m = String(row[0]||'').trim().toUpperCase().replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g,'');
+      if (m !== mat) continue;
+      for (let c = 1; c < row.length; c++) {
+        const v = String(row[c]||'').trim();
+        if (v.startsWith('http')) { lien = v; break; }
+        if (v.length >= 33) { lien = 'https://drive.google.com/file/d/' + v + '/view'; break; }
+      }
+      break;
+    }
+    if (lien) { window.open(lien,'_blank'); btn.innerHTML = orig; btn.style.background=''; btn.disabled=false; }
+    else { btn.innerHTML = '⏳<br>Bientot dispo'; setTimeout(()=>{btn.innerHTML=orig;btn.style.background='';btn.disabled=false;},3000); }
+  } catch(e) {
+    btn.innerHTML = '❌<br>Erreur';
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.background='';btn.disabled=false;},3000);
+  }
+}
+
+// ── Cartes animation ──
+function _animExcellence(prenom, classe, moy, nc, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#1A3A5C;margin-bottom:12px" id="animCard"><span class="cpp-emoji-big cpp-bounce">🏆</span><div class="cpp-titre">Classe d'Excellence Confirmee !</div><div style="display:inline-block;background:#D4AF37;color:#1A3A5C;font-weight:bold;font-size:14px;padding:4px 16px;border-radius:20px;margin-bottom:8px">' + classe + '</div><div class="cpp-sous">' + prenom + ', vous conservez votre place en filiere Excellence<br>Moyenne : <strong>' + moy.toFixed(2) + '/20</strong></div><span class="cpp-emoji-row">🌟 🏆 ⭐ 🥇 🎖️</span><div class="cpp-msg-box">Felicitations ! Votre serieux vous permet de continuer dans la filiere Excellence !</div>' + (nc?'<div class="cpp-next-class" style="background:#D4AF37"><div class="cpp-nc-label" style="color:#5a3a00">PROCHAINE CLASSE</div><div class="cpp-nc-value" style="color:#1A3A5C">'+nc+'</div></div>':'') + '</div>' + _blocContact(tel);
+}
+function _animQuitterEX(prenom, classe, moy, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#2E7D32;margin-bottom:12px" id="animCard"><span class="cpp-emoji-big cpp-float">🎉</span><div class="cpp-titre">Admis(e) !</div><div class="cpp-sous">' + prenom + ', vous passez en classe superieure<br>Moyenne : <strong>' + moy.toFixed(2) + '/20</strong></div><span class="cpp-emoji-row">🎉 🎊 🎈 ✅ 👏</span><div class="cpp-msg-box">Vous quittez la filiere Excellence. La direction vous orientera vers une classe Standard ou Privilege.</div></div>' + _blocContact(tel);
+}
+function _animEntreEnEX(prenom, classe, moy, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#2E7D32;margin-bottom:12px" id="animCard"><span class="cpp-emoji-big cpp-float">🎉</span><div class="cpp-titre">Admis(e) avec Mention — Entree en Excellence !</div><div class="cpp-sous">' + prenom + ', votre moyenne vous ouvre les portes de la Classe d'Excellence !<br>Moyenne : <strong>' + moy.toFixed(2) + '/20</strong></div><span class="cpp-emoji-row">🌟 🎉 🎊 🎈 🏅</span><div class="cpp-msg-box">Felicitations ! Avec ' + moy.toFixed(2) + '/20 vous entrez directement en Classe d'Excellence l'annee prochaine !</div></div>' + _blocContact(tel);
+}
+function _animAdmisStd(prenom, classe, moy, nc, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#1A3A5C;margin-bottom:12px" id="animCard"><span class="cpp-emoji-big cpp-float-soft">✅</span><div class="cpp-titre">Admis(e) en classe superieure !</div><div class="cpp-sous">Bien joue ' + prenom + ' — Moyenne : <strong>' + moy.toFixed(2) + '/20</strong></div><span class="cpp-emoji-row">✅ 📚 💪 👍 🎯</span><div class="cpp-msg-box">Vous avancez vers votre prochain niveau. Profitez des vacances et preparez-vous !</div>' + (nc?'<div class="cpp-next-class" style="background:rgba(255,255,255,0.2)"><div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">PROCHAINE CLASSE</div><div class="cpp-nc-value" style="color:#fff">'+nc+'</div></div>':'') + '</div>' + _blocContact(tel);
+}
+function _animRedoublant(prenom, classe, moy, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#B8860B;margin-bottom:12px" id="animCard"><span class="cpp-emoji-big cpp-pulse">💪</span><div class="cpp-titre">Redoublant(e)</div><div class="cpp-sous">' + prenom + ', vous restez en <strong>' + classe + '</strong><br>Moyenne : <strong>' + moy.toFixed(2) + '/20</strong></div><span class="cpp-emoji-row">💪 📖 🔄 🌱 ⏰</span><div class="cpp-msg-box">Le redoublement est une nouvelle chance. Avec du travail vous reussirez !</div></div><div class="cpp-etapes-block"><p style="font-weight:bold;color:#B8860B;font-size:14px;margin-bottom:8px">📌 Etapes importantes :</p><div style="font-size:13px;color:#444;line-height:2">✔️ Reinscrivez-vous avant le 31 Aout 2026<br>✔️ Contactez la direction pour un bilan<br>✔️ Travaillez vos matieres faibles pendant les vacances</div></div>' + _blocContact(tel);
+}
+function _animExclu(prenom, classe, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#C62828;margin-bottom:12px" id="animCard"><span class="cpp-emoji-big cpp-pulse">📞</span><div class="cpp-titre">Contactez la direction</div><div class="cpp-sous">Cher(e) parent, nous vous invitons a prendre contact avec la direction</div><span class="cpp-emoji-row">📞 🤝 💬 🏫 📋</span><div class="cpp-msg-box">Des solutions existent. La direction est disponible pour vous accompagner.</div></div>' + _blocContact(tel);
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION BLOQUÉE — Solde > 0
+// ════════════════════════════════════════════════════════════
+function afficherSectionBloquee(eleve, soldeParsed, verseParsed) {
+  const section = document.getElementById('sectionBloque');
+  const div     = document.getElementById('bloqueBody');
+  if (!section || !div) return;
+  section.style.display = 'block';
+  const msg = verseParsed > 0
+    ? 'Il vous reste <strong style="color:#C62828">' + soldeParsed.toLocaleString('fr-FR') + ' F CFA</strong> a regler.'
+    : 'Votre scolarite n'est pas encore reglee.';
+  div.innerHTML =
+    '<div style="background:#FFEBEE;border-radius:10px;padding:20px;text-align:center;margin-bottom:14px"><div style="font-size:42px;margin-bottom:10px">🔒</div><p style="font-size:15px;color:#C62828;font-weight:bold;margin-bottom:8px">Acces restreint</p><p style="font-size:13px;color:#555;line-height:1.6;margin-bottom:10px">' + msg + '<br>Payez pour acceder a vos resultats, bulletins et notes.</p></div>' +
+    '<div style="background:#E8F5E9;border-radius:10px;padding:14px;border-left:4px solid #2E7D32"><p style="font-size:13px;font-weight:bold;color:#2E7D32;margin-bottom:8px">💡 Comment debloquer votre espace ?</p><div style="font-size:13px;color:#444;line-height:2">1️⃣ Payez via <strong>Wave</strong> ou <strong>Orange Money</strong><br>2️⃣ Envoyez votre recu par WhatsApp au <strong>' + (window.SHEETS_IDS_COMPLET[eleve.sheetsId]?.tel || '0708111269') + '</strong><br>3️⃣ Reconnectez-vous — votre espace est debloque ✅</div></div>';
 }
 
 // ════════════════════════════════════════════════════════════
