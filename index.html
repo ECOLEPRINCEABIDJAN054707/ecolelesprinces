@@ -1744,7 +1744,54 @@ async function chargerAnnonces(eleve) {
     document.getElementById("annoncesBody").innerHTML = html;
   } catch(e) {}
 }
+function afficherSectionBloquee(eleve, soldeParsed, verseParsed) {
+  const div = document.getElementById("bloqueBody");
+  const section = document.getElementById("sectionBloque");
+  if (!div || !section) return;
 
+  section.style.display = "block";
+
+  const info = window.SHEETS_IDS_COMPLET[eleve.sheetsId] || {};
+  const tel  = info.tel || "0708111269";
+
+  div.innerHTML =
+    "<div style='text-align:center;padding:20px 16px;'>" +
+
+    // Icône cadenas
+    "<div style='font-size:56px;margin-bottom:12px;'>🔒</div>" +
+
+    // Titre
+    "<p style='font-size:1em;font-weight:bold;color:#C62828;margin-bottom:8px;'>" +
+    "Accès bloqué — Solde impayé</p>" +
+
+    // Montant
+    "<div style='background:#FFEBEE;border:2px solid #C62828;border-radius:10px;padding:14px;margin-bottom:16px;'>" +
+    "<p style='font-size:0.85em;color:#555;margin-bottom:4px;'>Solde restant à payer</p>" +
+    "<p style='font-size:1.8em;font-weight:bold;color:#C62828;'>" +
+    soldeParsed.toLocaleString('fr-FR') + " F CFA</p>" +
+    (verseParsed > 0 ? "<p style='font-size:0.78em;color:#888;margin-top:4px;'>Déjà versé : " +
+    verseParsed.toLocaleString('fr-FR') + " F CFA</p>" : "") +
+    "</div>" +
+
+    // Message
+    "<div style='background:#FFF8E1;border:1px solid #FFD54F;border-radius:10px;padding:14px;margin-bottom:16px;text-align:left;'>" +
+    "<p style='font-size:0.85em;color:#6D4C10;line-height:1.7;'>" +
+    "⚠️ Les <strong>notes</strong>, <strong>bulletins</strong> et <strong>résultats</strong> " +
+    "de votre enfant sont accessibles uniquement lorsque la scolarité est entièrement réglée.<br><br>" +
+    "Régularisez votre situation pour débloquer l'accès complet." +
+    "</p></div>" +
+
+    // Contact
+    "<div style='background:#1A3A5C;border-radius:10px;padding:14px;text-align:center;'>" +
+    "<p style='color:#D4AF37;font-weight:bold;font-size:0.88em;margin-bottom:6px;'>" +
+    "📞 Contactez l'école pour un arrangement</p>" +
+    "<p style='color:#fff;font-size:1.1em;font-weight:bold;'>" + tel + "</p>" +
+    "<p style='color:rgba(255,255,255,0.65);font-size:0.75em;margin-top:4px;'>" +
+    "Lundi au Samedi — 7h30 à 17h30</p>" +
+    "</div>" +
+
+    "</div>";
+}
 // ════════════════════════════════════════════════════════════
 // UTILITAIRES
 // ════════════════════════════════════════════════════════════
