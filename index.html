@@ -1,171 +1,1856 @@
-// ============================================================
-// MODIFICATION SITE HTML — RÉSULTATS BEPC 3EME
-// Remplacer la fonction afficherSectionResultats() existante
-// par cette version qui gère le cas RNO
-// ============================================================
-// COMMENT FAIRE :
-//   1. Ouvrez site_parents_cpp_final.html
-//   2. Cherchez : "async function afficherSectionResultats(eleve)"
-//   3. Remplacez toute la fonction par le code ci-dessous
-//   4. Ajoutez aussi les 3 nouvelles fonctions en dessous
-// ============================================================
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1F4E79">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CPP Les Princes">
+<meta name="application-name" content="CPP Les Princes">
+<link rel="manifest" href="data:application/json,{%22name%22:%22CPP%20Les%20Princes%22,%22short_name%22:%22CPP%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%231F4E79%22,%22theme_color%22:%22%231F4E79%22}">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%231F4E79' rx='20'/><text y='.9em' font-size='80' x='10'></text></svg>">
+<title>Ecole Les Princes - Espace Parents</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:100vh; }
+.header { background:linear-gradient(135deg,#1F4E79,#1565C0); color:white; padding:30px 20px 22px; text-align:center; transition:background 0.4s; }
+.header h1 { font-size:1.15em; font-weight:bold; margin-bottom:5px; }
+.header p  { font-size:0.8em; opacity:0.88; }
+.login-wrapper { max-width:480px; margin:24px auto; padding:0 16px; }
+.login-box { background:white; border-radius:16px; padding:28px 22px; box-shadow:0 4px 20px rgba(0,0,0,0.1); }
+.login-titre { color:#1F4E79; font-size:1.05em; font-weight:bold; margin-bottom:5px; text-align:center; }
+.login-sous { font-size:0.8em; color:#888; margin-bottom:22px; text-align:center; line-height:1.5; }
+.input-group { margin-bottom:16px; position:relative; }
+.input-group label { font-size:0.8em; color:#444; font-weight:bold; display:block; margin-bottom:6px; }
+.input-group .requis { color:#C62828; }
+.input-group input { width:100%; padding:13px 16px; border:2px solid #E0E0E0; border-radius:10px; font-size:0.95em; outline:none; transition:border-color 0.2s; }
+.input-group input:focus { border-color:#1F4E79; }
+.input-group input::placeholder { color:#bbb; }
+.btn-login { width:100%; padding:15px; background:linear-gradient(135deg,#1F4E79,#1565C0); color:white; border:none; border-radius:10px; font-size:1em; font-weight:bold; cursor:pointer; margin-top:8px; letter-spacing:0.3px; box-shadow:0 3px 12px rgba(31,78,121,0.3); transition:opacity 0.2s; }
+.btn-login:active { opacity:0.85; }
+.error-msg { display:none; color:#C62828; font-size:0.82em; background:#FFEBEE; padding:10px 14px; border-radius:8px; margin-top:12px; text-align:center; border:1px solid #FFCDD2; }
+.security-note { font-size:0.73em; color:#bbb; margin-top:14px; text-align:center; line-height:1.7; }
+.loading { display:none; text-align:center; padding:50px 20px; }
+.spinner { width:40px; height:40px; border:4px solid #D6E4F0; border-top-color:#1F4E79; border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 14px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading p { color:#1F4E79; font-size:0.88em; }
+.loading-etape { font-size:0.78em; color:#aaa; margin-top:6px; }
+.blocked-msg { background:#FFEBEE; border:2px solid #C62828; border-radius:12px; padding:24px 20px; text-align:center; margin:20px 16px; display:none; }
+.blocked-msg h3 { color:#C62828; margin-bottom:10px; }
+.blocked-timer { font-size:2em; font-weight:bold; color:#C62828; margin:12px 0; }
+.blocked-msg p { font-size:0.82em; color:#555; line-height:1.6; }
+.parent-space { display:none; padding-bottom:30px; }
+.eleve-header { padding:20px 16px; color:white; position:relative; }
+.eleve-mat-badge { display:inline-block; background:rgba(255,255,255,0.2); padding:3px 12px; border-radius:20px; font-size:0.78em; font-weight:bold; margin-bottom:10px; }
+.eleve-nom { font-size:1.15em; font-weight:bold; margin-bottom:4px; }
+.eleve-infos { font-size:0.82em; opacity:0.9; line-height:1.6; }
+.btn-logout { position:absolute; top:16px; right:16px; background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.35); padding:5px 14px; border-radius:20px; font-size:0.76em; cursor:pointer; }
+.paiement-bar { display:flex; align-items:center; gap:14px; padding:14px 16px; }
+.paiement-ok     { background:#E8F5E9; border-bottom:2px solid #2E7D32; }
+.paiement-partiel{ background:#FFFDE7; border-bottom:2px solid #B8860B; }
+.paiement-non    { background:#FFEBEE; border-bottom:2px solid #C62828; }
+.pay-icon  { font-size:2em; flex-shrink:0; }
+.pay-text h4 { font-size:0.92em; margin-bottom:3px; }
+.pay-text p  { font-size:0.8em; color:#555; }
+.pay-montant { font-size:1.05em; font-weight:bold; margin-top:3px; }
+.c-vert  { color:#2E7D32; }
+.c-or    { color:#B8860B; }
+.c-rouge { color:#C62828; }
+.section { background:white; margin-bottom:8px; overflow:hidden; }
+.sec-header { padding:14px 16px; font-weight:bold; font-size:0.92em; color:white; cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; }
+.sec-header.bleu   { background:#1F4E79; }
+.sec-header.vert   { background:#2E7D32; }
+.sec-header.rouge  { background:#C62828; }
+.sec-header.or     { background:#B8860B; }
+.sec-header.violet { background:#4A148C; }
+.sec-header.orange { background:#E65100; }
+.sec-body { padding:16px; display:none; }
+.sec-body.open { display:block; }
+.notes-lock { text-align:center; padding:24px 16px; color:#C62828; }
+.notes-lock .lock-icon { font-size:2.5em; margin-bottom:10px; }
+.notes-lock h4 { margin-bottom:8px; font-size:0.95em; }
+.notes-lock p  { font-size:0.82em; color:#777; line-height:1.5; }
+.how-pay { background:#F8F9FA; border-radius:10px; padding:16px; }
+.step { display:flex; gap:12px; margin-bottom:10px; align-items:flex-start; }
+.step-n { background:#1F4E79; color:white; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.73em; font-weight:bold; flex-shrink:0; }
+.step p { font-size:0.82em; color:#444; line-height:1.5; }
+.edt-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.t-edt { width:100%; min-width:460px; border-collapse:collapse; font-size:0.75em; }
+.t-edt th { background:#1F4E79; color:white; padding:8px 4px; text-align:center; }
+.t-edt td { padding:7px 4px; border:1px solid #eee; text-align:center; }
+.t-edt tr:nth-child(even) { background:#f8faff; }
+.edt-pause { background:#FFFDE7 !important; color:#B8860B; font-weight:bold; }
+.annonce { border-left:4px solid #1F4E79; padding:11px 14px; margin-bottom:10px; border-radius:0 8px 8px 0; background:#f8faff; }
+.annonce.urgent { border-color:#C62828; background:#FFEBEE; }
+.annonce.info   { border-color:#2E7D32; background:#E8F5E9; }
+.annonce h4 { font-size:0.86em; margin-bottom:3px; color:#1F4E79; }
+.annonce.urgent h4 { color:#C62828; }
+.annonce.info   h4 { color:#2E7D32; }
+.annonce p  { font-size:0.79em; color:#555; line-height:1.5; }
+.annonce .adate { font-size:0.72em; color:#999; margin-top:5px; }
+.contact-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.c-item { background:#f8f8f8; border-radius:10px; padding:13px; text-align:center; }
+.c-item .ci { font-size:1.5em; margin-bottom:5px; }
+.c-item h4 { font-size:0.78em; color:#1F4E79; margin-bottom:3px; }
+.c-item p  { font-size:0.76em; color:#333; line-height:1.6; }
+.c-item a  { color:#1F4E79; text-decoration:none; font-weight:bold; }
+.footer { background:#1F4E79; color:rgba(255,255,255,0.7); text-align:center; padding:18px 16px; font-size:0.76em; line-height:1.8; }
+.pwa-banner { background:#E8F5E9; border-bottom:2px solid #2E7D32; padding:10px 16px; display:none; align-items:center; gap:12px; }
+.pwa-banner p { font-size:0.79em; color:#2E7D32; flex:1; }
+.pwa-banner button { background:#2E7D32; color:white; border:none; padding:7px 14px; border-radius:6px; font-size:0.78em; cursor:pointer; }
 
-// ── ÉTAPE 1 : Dans chercherDansEcoleDirecte(), ajouter la lecture BEPC
-// Cherchez la ligne :
-//   decision: String(row[14]||"").trim().toUpperCase(),
-// Et ajoutez juste après :
-//   score_bepc: parseFloat(String(row[16]||"").replace(",",".")) || 0,
-//   statut_bepc: String(row[17]||"").trim().toUpperCase(),
-// ⚠️ Cela nécessite d'étendre la plage de A2:P5000 à A2:R5000
-// ET d'avoir les colonnes Q(score) et R(statut) dans SYNTHESE
-// → Alternative plus simple : lire l'onglet BEPC_2026 séparément (voir ci-dessous)
+/* ── DECISIONS ANIMATIONS CSS ── */
+@keyframes cpp-bounce   { 0%,100%{transform:scale(1)}  50%{transform:scale(1.15)} }
+@keyframes cpp-float    { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+@keyframes cpp-float-soft { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+@keyframes cpp-pulse    { 0%,100%{opacity:1} 50%{opacity:0.55} }
+@keyframes cpp-confetti { 0%{transform:translateY(-20px) rotate(0deg);opacity:1} 100%{transform:translateY(220px) rotate(720deg);opacity:0} }
+@keyframes cpp-slide    { 0%{transform:translateY(30px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+.cpp-bounce      { animation:cpp-bounce      0.8s ease-in-out infinite }
+.cpp-float       { animation:cpp-float       1.5s ease-in-out infinite }
+.cpp-float-soft  { animation:cpp-float-soft  2.5s ease-in-out infinite }
+.cpp-pulse       { animation:cpp-pulse       1.2s ease-in-out infinite }
+.cpp-slide       { animation:cpp-slide       0.5s ease-out forwards }
+.cpp-confetti-item { position:absolute; font-size:18px; animation:cpp-confetti 2s ease-in forwards; pointer-events:none; }
+.cpp-decision-card { border-radius:12px; padding:20px 16px; text-align:center; margin-bottom:12px; position:relative; overflow:hidden; }
+.cpp-emoji-big  { font-size:56px; line-height:1; margin-bottom:10px; display:block; }
+.cpp-titre      { font-size:1.1em; font-weight:bold; color:#fff; margin-bottom:6px; }
+.cpp-sous       { font-size:0.83em; color:rgba(255,255,255,0.92); margin-bottom:10px; line-height:1.5; }
+.cpp-emoji-row  { font-size:22px; letter-spacing:5px; margin:8px 0; display:block; }
+.cpp-msg-box    { border-radius:8px; padding:10px 12px; font-size:0.8em; color:rgba(255,255,255,0.95); line-height:1.6; margin-top:8px; background:rgba(255,255,255,0.15); text-align:left; }
+.cpp-next-class { margin-top:12px; border-radius:8px; padding:8px; text-align:center; }
+.cpp-nc-label   { font-size:11px; opacity:0.8; margin-bottom:2px; }
+.cpp-nc-value   { font-size:15px; font-weight:bold; }
+.cpp-insc-block { background:#E8F5E9; border:1px solid #A5D6A7; border-radius:10px; padding:12px; margin-bottom:10px; }
+.cpp-etapes-block { background:#FFF8E1; border:1px solid #FFD54F; border-radius:10px; padding:12px; margin-bottom:10px; }
+.cpp-contact-block { background:#1A3A5C; border-radius:10px; padding:12px; text-align:center; }
 
-// ============================================================
-// NOUVELLE FONCTION : chargerResultatBEPC
-// À ajouter dans le fichier HTML avant afficherSectionResultats
-// ============================================================
+/* ── FICHE RENSEIGNEMENT CSS ── */
+.fiche-section-row td { background:#e8ecf5; color:#1a3a6b; font-weight:700; font-size:11px; letter-spacing:.8px; text-transform:uppercase; padding:4px 8px; border:1px solid #c8d4eb; }
+</style>
+</head>
+<body>
 
-async function chargerResultatBEPC(eleve) {
-  // Lit l'onglet BEPC_2026 pour trouver le score de l'élève
+<div class="pwa-banner" id="pwaBanner">
+  <p>Installez l'application sur votre telephone !</p>
+  <button onclick="installPWA()">Installer</button>
+</div>
+
+<div class="header" id="mainHeader">
+  <h1 id="headerTitle">🏫 ECOLE LES PRINCES</h1>
+  <p id="headerSub">Espace Parents - Suivi Scolaire en Ligne</p>
+</div>
+
+<div class="login-wrapper" id="loginWrapper">
+  <div class="login-box">
+    <p class="login-titre">🔐 Acces Espace Parents</p>
+    <p class="login-sous">Entrez les informations ci-dessous pour acceder au dossier scolaire de votre enfant</p>
+    <div class="input-group">
+      <label>N MATRICULE <span class="requis">*</span></label>
+      <input type="text" id="inputMat" placeholder="Ex: 25129856P" maxlength="15" autocomplete="off" autocorrect="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div class="input-group">
+      <label>VOTRE TELEPHONE <span class="requis">*</span></label>
+      <input type="tel" id="inputTel" placeholder="Ex: 0708111269" maxlength="10" autocomplete="off">
+    </div>
+    <button class="btn-login" onclick="login()">🔓 ACCEDER A MON ESPACE</button>
+    <p class="error-msg" id="errorMsg"></p>
+    <p class="security-note">🔒 Connexion securisee | 3 tentatives maximum<br>Vos donnees sont protegees et confidentielles</p>
+  </div>
+</div>
+
+<div class="loading" id="loadingDiv">
+  <div class="spinner"></div>
+  <p>Verification en cours...</p>
+  <p class="loading-etape" id="loadingEtape"></p>
+</div>
+
+<div class="blocked-msg" id="blockedMsg">
+  <h3>⛔ Acces temporairement bloque</h3>
+  <div class="blocked-timer" id="blockedTimer">30:00</div>
+  <p>Trop de tentatives incorrectes.<br>Reessayez dans le delai indique.<br><br>Besoin d'aide ? <strong>07 08 11 12 69</strong></p>
+</div>
+
+<div class="parent-space" id="parentSpace">
+  <div id="eleveCard"></div>
+  <div id="statutPay"></div>
+
+  <div id="sectionAnnonces" style="display:none;">
+    <div class="section" style="border-left:4px solid #C62828;">
+      <div class="sec-header" style="background:#C62828;" onclick="toggleSec(this)">📢 ANNONCES DE L'ECOLE <span>v</span></div>
+      <div class="sec-body" id="annoncesBody"></div>
+    </div>
+  </div>
+
+  <div class="section" id="sectionResultats" style="display:none">
+    <div class="sec-header" style="background:linear-gradient(135deg,#D4AF37,#B8860B);color:#fff" onclick="toggleSec(this)" id="titreResultats">&#127942; RESULTATS DE FIN D'ANNEE <span>v</span></div>
+    <div class="sec-body open" id="resultatsBody"></div>
+  </div>
+  <div class="section" id="sectionBloque" style="display:none">
+    <div class="sec-header" style="background:#C62828;color:#fff" onclick="toggleSec(this)">&#128274; RESULTATS ET NOTES <span>v</span></div>
+    <div class="sec-body open" id="bloqueBody"></div>
+  </div>
+  <div id="sectionDecision" style="display:none"></div>
+  <div id="decisionBody" style="display:none"></div>
+  <div id="notesBody" style="display:none"></div>
+  <div id="absencesBody" style="display:none"></div>
+  <div id="sectionBulletin" style="display:none"></div>
+  <div id="bulletinBody" style="display:none"></div>
+
+  <!-- ══ FICHE DE RENSEIGNEMENT ══ -->
+  <div id="ficheRenseignement"></div>
+
+  <div class="section">
+    <div class="sec-header rouge" onclick="toggleSec(this)">💰 SCOLARITE ET PAIEMENTS <span>v</span></div>
+    <div class="sec-body">
+      <div class="how-pay">
+        <div id="montantDu" style="background:linear-gradient(135deg,#1F4E79,#2E86AB);border-radius:10px;padding:14px;text-align:center;color:white;margin-bottom:16px;">
+          <p style="font-size:0.78em;opacity:0.85;margin-bottom:4px;">SOLDE A PAYER</p>
+          <p style="font-size:2em;font-weight:bold;" id="montantText">-</p>
+          <p style="font-size:0.75em;opacity:0.8;margin-top:2px;">F CFA</p>
+        </div>
+        <div style="background:#EFF6FF;border-radius:10px;padding:14px;margin-bottom:12px;border-left:4px solid #1F6FEB;">
+          <p style="font-weight:bold;color:#1F6FEB;font-size:0.9em;margin-bottom:12px;">💙 PAYER VIA WAVE</p>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">1</div><p>Ouvrez l'application <strong>Wave</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">2</div><p>Appuyez sur <strong>Paiements</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">3</div><p>Recherchez <strong id="nomEcoleWave">GROUPE SCOLAIRE LES PRINCES</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">4</div><p>Selectionnez votre ecole : <strong id="nomEcoleWave2" style="color:#1F6FEB;">-</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">5</div><p>Matricule : <strong id="matRefWave" style="color:#1F6FEB;font-size:1.05em;background:#DBEAFE;padding:2px 8px;border-radius:6px;">-</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">6</div><p>Entrez votre <strong>Nom, Prenom</strong> et <strong>Contact</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">7</div><p>Entrez le <strong>montant</strong> que vous pouvez payer</p></div>
+          <div class="step"><div class="step-n" style="background:#1F6FEB;">8</div><p>Confirmez avec votre <strong>code PIN</strong></p></div>
+        </div>
+        <div id="sectionOrangeMoney" style="background:#FFF3E0;border-radius:10px;padding:14px;margin-bottom:12px;border-left:4px solid #FF6600;">
+          <p style="font-weight:bold;color:#FF6600;font-size:0.9em;margin-bottom:12px;">🟠 PAYER VIA ORANGE MONEY</p>
+          <div class="step"><div class="step-n" style="background:#FF6600;">1</div><p>Composez <strong id="codeOrange" style="color:#FF6600;font-size:1.05em;background:#FFE0CC;padding:2px 8px;border-radius:6px;">#144*43*1721*1#</strong> sur votre telephone</p></div>
+          <div class="step"><div class="step-n" style="background:#FF6600;">2</div><p><strong id="nomEcoleOrange">GROUPE SCOLAIRE LES PRINCES</strong> s'affiche - validez</p></div>
+          <div class="step"><div class="step-n" style="background:#FF6600;">3</div><p>Entrez votre matricule : <strong id="matRefOrange" style="color:#FF6600;font-size:1.05em;background:#FFE0CC;padding:2px 8px;border-radius:6px;">-</strong></p></div>
+          <div class="step"><div class="step-n" style="background:#FF6600;">4</div><p>Entrez le <strong>montant</strong> que vous pouvez payer</p></div>
+          <div class="step"><div class="step-n" style="background:#FF6600;">5</div><p>Entrez votre <strong>code PIN</strong> et validez ✅</p></div>
+        </div>
+        <div style="background:#E8F5E9;border-radius:10px;padding:12px;border-left:4px solid #2E7D32;text-align:center;">
+          <p style="font-size:0.82em;color:#2E7D32;">✅ Apres paiement, envoyez votre recu par WhatsApp au<br><strong style="font-size:1.1em;">07 08 11 12 69</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-header vert" onclick="toggleSec(this)" id="titreEDT">🕐 EMPLOI DU TEMPS <span>v</span></div>
+    <div class="sec-body" id="edtBody">
+      <div style="text-align:center;padding:20px;color:#2E7D32">
+        <p style="font-size:13px">Emploi du temps en cours de chargement...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-header violet" onclick="toggleSec(this)">📣 ANNONCES <span>v</span></div>
+    <div class="sec-body open">
+      <div class="annonce info">
+        <h4>👋 Bienvenue sur votre Espace Parents !</h4>
+        <p>Suivez la scolarite de votre enfant : notes, paiements, emploi du temps et annonces importantes.</p>
+        <div class="adate">Mars 2026</div>
+      </div>
+      <div class="annonce urgent">
+        <h4>⚠️ Rappel scolarite</h4>
+        <p>Merci de regulariser les soldes restants. En cas de difficultes, contactez la direction.</p>
+        <div class="adate">Permanent</div>
+      </div>
+      <div class="annonce">
+        <h4>📅 Reunion parents-professeurs</h4>
+        <p>Date a definir. Vous serez informes par WhatsApp une semaine a l'avance.</p>
+        <div class="adate">A venir</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-header" style="background:#4A148C" onclick="toggleSec(this)">📆 CALENDRIER SCOLAIRE 2025-2026 <span>v</span></div>
+    <div class="sec-body">
+      <div style="display:grid;gap:10px;">
+        <div style="background:#EDE7F6;border-radius:10px;padding:12px;border-left:4px solid #4A148C;">
+          <p style="font-weight:bold;color:#4A148C;font-size:0.9em;margin-bottom:8px;">1er Trimestre</p>
+          <div style="font-size:0.82em;color:#444;display:grid;gap:4px;">
+            <div style="display:flex;justify-content:space-between;"><span>📚 Debut des cours</span><strong>16 Septembre 2025</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span>🎄 Vacances Noel</span><strong>20 Dec. 2025 - 4 Jan. 2026</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span>🏁 Fin T1</span><strong>20 Decembre 2025</strong></div>
+          </div>
+        </div>
+        <div style="background:#E8F5E9;border-radius:10px;padding:12px;border-left:4px solid #2E7D32;">
+          <p style="font-weight:bold;color:#2E7D32;font-size:0.9em;margin-bottom:8px;">2eme Trimestre</p>
+          <div style="font-size:0.82em;color:#444;display:grid;gap:4px;">
+            <div style="display:flex;justify-content:space-between;"><span>▶️ Reprise</span><strong>5 Janvier 2026</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span>🐣 Vacances Paques</span><strong>28 Mar. - 12 Avr. 2026</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span>🏁 Fin T2</span><strong>28 Mars 2026</strong></div>
+          </div>
+        </div>
+        <div style="background:#E3F2FD;border-radius:10px;padding:12px;border-left:4px solid #1F4E79;">
+          <p style="font-weight:bold;color:#1F4E79;font-size:0.9em;margin-bottom:8px;">3eme Trimestre</p>
+          <div style="font-size:0.82em;color:#444;display:grid;gap:4px;">
+            <div style="display:flex;justify-content:space-between;"><span>▶️ Reprise</span><strong>13 Avril 2026</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span>🏁 Fin d'annee</span><strong>Juillet 2026</strong></div>
+            <div style="display:flex;justify-content:space-between;"><span>📝 Examens CEPE/BEPC/BAC</span><strong>Juin - Juillet 2026</strong></div>
+          </div>
+        </div>
+        <div style="background:#FFF8E1;border-radius:10px;padding:12px;border-left:4px solid #B8860B;">
+          <p style="font-weight:bold;color:#B8860B;font-size:0.9em;margin-bottom:6px;">Dates importantes</p>
+          <div style="font-size:0.82em;color:#444;display:grid;gap:3px;">
+            <p>Reunion parents T1 : <strong>Novembre 2025</strong></p>
+            <p>Reunion parents T2 : <strong>Fevrier 2026</strong></p>
+            <p>Conseil de classe : <strong>Fin de chaque trimestre</strong></p>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:0.73em;color:#aaa;margin-top:10px;text-align:center;">ℹ️ Calendrier indicatif - peut etre ajuste selon le MENA</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-header" style="background:linear-gradient(135deg,#6A1B9A,#7B1FA2)" onclick="toggleSec(this)">🏆 CLUBS SCOLAIRES <span>v</span></div>
+    <div class="sec-body">
+      <div id="clubsEleve" style="margin-bottom:12px;"></div>
+      <div id="listeTousClubs"></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-header" style="background:linear-gradient(135deg,#1A5276,#2874A6)" onclick="toggleSec(this)">💬 MESSAGERIE - CELLULE ECOUTE <span>v</span></div>
+    <div class="sec-body">
+      <div id="reponsesMessages" style="margin-bottom:12px;"></div>
+      <div style="background:#F0F4F8;border-radius:10px;padding:14px;border:1px solid #BDD7EE;">
+        <p style="font-weight:bold;color:#1A5276;margin:0 0 10px 0;">Envoyer un message a la direction</p>
+        <select id="msgType" style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin-bottom:10px;font-size:0.9em;">
+          <option value="">-- Type de message --</option>
+          <option value="Suggestion">Suggestion</option>
+          <option value="Reclamation">Reclamation</option>
+          <option value="Felicitation">🌟 Felicitation</option>
+          <option value="Demande">Demande</option>
+          <option value="Signalement">🚨 Signalement</option>
+          <option value="Autre">💬 Autre</option>
+        </select>
+        <input id="msgSujet" type="text" placeholder="Sujet du message..." style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin-bottom:10px;font-size:0.9em;box-sizing:border-box;">
+        <textarea id="msgTexte" rows="4" placeholder="Votre message ici..." style="width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;margin-bottom:10px;font-size:0.9em;resize:vertical;box-sizing:border-box;"></textarea>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <label style="font-size:0.85em;color:#555;"><input type="checkbox" id="msgAnonyme"> Envoyer anonymement</label>
+        </div>
+        <button onclick="envoyerMessage()" id="btnEnvoyerMsg" style="width:100%;margin-top:10px;padding:12px;background:#1A5276;color:white;border:none;border-radius:8px;font-size:0.95em;cursor:pointer;font-weight:bold;">📤 Envoyer le message</button>
+        <p id="msgStatut" style="text-align:center;font-size:0.85em;margin:8px 0 0 0;"></p>
+      </div>
+      <div style="margin-top:14px;background:#FFF9E6;border:1px solid #F9E547;border-radius:10px;padding:14px;">
+        <p style="font-weight:bold;color:#7D6608;margin:0 0 8px 0;">📬 Boite de Suggestions - Cellule Ecoute et Anti-Decrage</p>
+        <p style="font-size:0.85em;color:#666;margin:0 0 10px 0;">Vos suggestions sont lues et traitees par la Cellule Ecoute du reseau CPP.</p>
+        <textarea id="suggTexte" rows="3" placeholder="Votre suggestion pour ameliorer l'ecole..." style="width:100%;padding:10px;border:1px solid #F9E547;border-radius:8px;font-size:0.9em;resize:vertical;box-sizing:border-box;margin-bottom:8px;"></textarea>
+        <button onclick="envoyerSuggestion()" style="width:100%;padding:10px;background:#B7950B;color:white;border:none;border-radius:8px;font-size:0.9em;cursor:pointer;">📨 Envoyer la suggestion</button>
+        <p id="suggStatut" style="text-align:center;font-size:0.85em;margin:8px 0 0 0;"></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-header orange" onclick="toggleSec(this)">📞 CONTACT <span>v</span></div>
+    <div class="sec-body">
+      <div class="contact-grid">
+        <div class="c-item"><div class="ci">📱</div><h4>Telephone</h4><p><a href="tel:0708111269">07 08 11 12 69</a><br><a href="tel:0789771991">07 89 77 19 91</a><br><a href="tel:0101238145">01 01 23 81 45</a></p></div>
+        <div class="c-item"><div class="ci">💬</div><h4>WhatsApp</h4><p><a href="https://wa.me/2250708111269">07 08 11 12 69</a><br>Lun-Sam<br>07h30-18h00</p></div>
+        <div class="c-item"><div class="ci">📧</div><h4>Email</h4><p>princeabidjanecole<br>@gmail.com</p></div>
+        <div class="c-item"><div class="ci">🏫</div><h4>Secretariat</h4><p>Lun - Sam<br>07h30 - 17h30</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:16px;">
+    <button onclick="logout()" style="width:100%;padding:13px;background:#f5f5f5;color:#777;border:1px solid #ddd;border-radius:10px;font-size:0.86em;cursor:pointer;">🚪 Se deconnecter</button>
+  </div>
+</div>
+
+<div class="footer">
+  <p><strong>Ecole Les Princes</strong> - Espace Parents</p>
+  <p>Tel : 07 08 11 12 69 | Code : 054707 | OID : E10433084</p>
+  <p style="opacity:0.5;margin-top:4px;">© 2025-2026</p>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// CONFIGURATION GLOBALE
+// ════════════════════════════════════════════════════════════
+const ECOLES = [
+  { code:"CPP_PRO",     nom:"College Prive Professionnel Les Princes d'Abidjan", ville:"Abobo / Abidjan", couleur:"#1F4E79" },
+  { code:"CPP_TECH",    nom:"College Prive Technique Les Princes d'Abidjan",     ville:"Abobo / Abidjan", couleur:"#2E7D32" },
+  { code:"CPP",         nom:"College Prive Les Princes d'Abidjan",               ville:"Abobo / Abidjan", couleur:"#C62828" },
+  { code:"KOUTOUAN",    nom:"Groupe Scolaire Koutouan Abobo",                    ville:"Abobo",           couleur:"#4A148C" },
+  { code:"GUINGLO_V",   nom:"College Prive Les Princes de Guinglo Ville",        ville:"Guinglo",         couleur:"#E65100" },
+  { code:"SOAKPE",      nom:"College Prive Les Princes de Soakpe-Douedy",        ville:"Soakpe",          couleur:"#00695C" },
+  { code:"GNONTINROU",  nom:"College Prive Gnontinrou Therese de Guinglo-Guezon",ville:"Guinglo",         couleur:"#1A237E" },
+  { code:"KOUIBLY_TEC", nom:"Etablissement Technique Les Princes de Kouibly",    ville:"Kouibly",         couleur:"#4E342E" },
+  { code:"AKEIKOI_1",   nom:"EPV Les Princes Akeikoi 1",                         ville:"Abobo",           couleur:"#1F4E79" },
+  { code:"AKEIKOI_2",   nom:"EPV Les Princes Akeikoi 2",                         ville:"Abobo",           couleur:"#C62828" },
+  { code:"ACADEMIE",    nom:"EPV Academie des Princes",                          ville:"Abobo",           couleur:"#B8860B" },
+  { code:"RITA",        nom:"Groupe Scolaire Rita Rosane Abobo",                 ville:"Abobo",           couleur:"#607D8B" },
+];
+
+// ── ANNÉE SCOLAIRE — À MODIFIER CHAQUE JUILLET ──────────────
+// Changer cette ligne uniquement lors du changement d'année
+// Exemple : "2025-2026" → "2026-2027" en Juillet 2026
+const ANNEE_SCOLAIRE_ACTIVE = "2025-2026";
+
+const CONFIG = {
+  SHEETS_ID:      "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI",
+  API_KEY:        "AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA",
+  MAX_TENTATIVES: 3,
+  BLOCAGE_MIN:    30,
+};
+
+const SHEETS_IDS_COMPLET = {
+  "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI": { nom:"CPP Les Princes d'Abidjan",             tel:"0708111269", wave:"0708111269" },
+  "1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M": { nom:"Academie Les Princes d'Abidjan",         tel:"0747477926", wave:"0747477926" },
+  "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA": { nom:"CPP Les Princes de Guinglo Ville",       tel:"0747330128", wave:"0747330128" },
+  "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4": { nom:"CPP Gnontinrou Therese de Guinglo",      tel:"0778069066", wave:"0778069066" },
+  "167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg": { nom:"CPP Les Princes de Koutouan",            tel:"0747330128", wave:"0747330128" },
+  "1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys": { nom:"CPP Les Princes de Soakpe-Douedy",       tel:"0747477926", wave:"0747477926" },
+  "1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE":  { nom:"EPV Les Princes 1 d'Abobo Akeikoi",      tel:"0747477926", wave:"0747477926" },
+  "11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog":  { nom:"EPV Les Princes 2 d'Abobo Akeikoi",      tel:"0747477926", wave:"0747477926" },
+  "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs":  { nom:"CP Professionnel Les Princes d'Abidjan", tel:"0708111269", wave:"0708111269" },
+  "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc":  { nom:"CP Technique Les Princes d'Abidjan",     tel:"0708111269", wave:"0708111269" },
+  "1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s":  { nom:"ETL Les Princes de Kouibly",             tel:"0759937994", wave:"0759937994" },
+  "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0":  { nom:"Groupe Scolaire Rita Rosane Abobo",      tel:"0757227049", wave:"0757227049" },
+};
+window.SHEETS_IDS_COMPLET = SHEETS_IDS_COMPLET;
+
+// Rendre ECOLES accessible globalement pour les fiches
+window.ECOLES_LIST = ECOLES;
+
+let tentatives = 0;
+let blocageInterval = null;
+const PHOTOS_CACHE = {};
+
+// ════════════════════════════════════════════════════════════
+// DETECTION TYPE DE CLASSE
+// ════════════════════════════════════════════════════════════
+function detecterTypeClasse(classe, ecoleCode) {
+  // Seulement CPP Les Princes d'Abidjan a les 3 types
+  if (ecoleCode !== 'CPP') return 'STANDARD';
+  const c = (classe || '').toUpperCase().trim();
+  // Excellence : contient EX (ex: 6EX1, 2NDA2 EX1, 6EME EX)
+  if (/\bEX\b/.test(c) || /EX\d/.test(c)) return 'EXCELLENCE';
+  // Privilège : se termine par un espace + 3 ou 4
+  if (/\s[34]$/.test(c)) return 'PRIVILEGE';
+  return 'STANDARD';
+}
+
+// ════════════════════════════════════════════════════════════
+// PROGRESSION DES CLASSES
+// ════════════════════════════════════════════════════════════
+const PROGRESSION = {
+  'PSA':'MSA','MSA':'GSA','GSA':'CP1','CP1':'CP2','CP2':'CE1',
+  'CE1':'CE2','CE2':'CM1','CM1':'CM2','CM2':'6EME',
+  '6EME':'5EME','5EME':'4EME','4EME':'3EME','3EME':'2NDE C',
+  '6EX1':'5EX1','6EX2':'5EX2','5EX1':'4EX1','5EX2':'4EX2',
+  '4EX1':'3EX1','4EX2':'3EX2','3EX1':'2NDA2 EX1','3EX2':'2NDA2 EX1',
+  '6EME EX':'5EME EX','5EME EX':'4EME EX','4EME EX':'3EME EX','3EME EX':'2NDE C EX',
+  '6EME EX1':'5EME EX1','5EME EX1':'4EME EX1','4EME EX1':'3EME EX1','3EME EX1':'2NDE C EX',
+  '6EME EX2':'5EME EX2','5EME EX2':'4EME EX2','4EME EX2':'3EME EX2','3EME EX2':'2NDE C EX',
+  '2NDE C':'1ERE C','2NDA2':'1EREA2','2NDC':'1EREC',
+  '2NDA2 EX1':'1EREA2 EX1','2NDC EX1':'1EREC EX1',
+  '1ERE C':'TLE D','1EREC':'TLED','1EREA2':'TLEA2',
+  '1EREA2 EX1':'TLEA2 EX1','1EREC EX1':'TLED EX1',
+  '1ERE A':'TLE A','TLE A':'','TLE D':'',
+  '2NDE G1':'1ERE G1','2NDE F2':'1ERE F2',
+  '1ERE F2':'TLE F2','1ERE G1':'TLE G1',
+};
+
+function getProchaineClasse(classe) {
+  if (!classe) return null;
+  const c = classe.toUpperCase().trim();
+  return PROGRESSION[c] || null;
+}
+
+// ════════════════════════════════════════════════════════════
+// CHARGEMENT PHOTO
+// ════════════════════════════════════════════════════════════
+async function chargerPhotoEleve(matricule, imgElement, fallback) {
+  if (!matricule) { imgElement.src = fallback; return; }
+  const matUpper = matricule.trim().toUpperCase();
+  if (PHOTOS_CACHE[matUpper]) {
+    imgElement.src = 'https://drive.google.com/thumbnail?id=' + PHOTOS_CACHE[matUpper] + '&sz=w200';
+    imgElement.onerror = function() { this.src = fallback; };
+    return;
+  }
   try {
-    var mat = eleve.matricule.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
-    var sid = eleve.sheetsId;
-    var url = "https://sheets.googleapis.com/v4/spreadsheets/" + sid
-            + "/values/" + encodeURIComponent("BEPC_2026!A2:G200")
-            + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
-    var res = await fetch(url);
-    if (!res.ok) return null;
-    var data = await res.json();
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + CONFIG.SHEETS_ID + '/values/PHOTOS!A2:B5000?key=' + CONFIG.API_KEY;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.values) {
+        for (const row of data.values) {
+          const mat = String(row[0]||'').trim().toUpperCase().replace(/\.(JPG|JPEG|PNG|JFIF|WEBP|GIF)$/i,'');
+          const fid = String(row[1]||'').trim();
+          if (mat && fid) PHOTOS_CACHE[mat] = fid;
+        }
+        if (PHOTOS_CACHE[matUpper]) {
+          imgElement.src = 'https://drive.google.com/thumbnail?id=' + PHOTOS_CACHE[matUpper] + '&sz=w200';
+          imgElement.onerror = function() { this.src = fallback; };
+          return;
+        }
+      }
+    }
+  } catch(e) {}
+  imgElement.src = fallback;
+}
+
+// ════════════════════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════════════════════
+async function login() {
+  if (tentatives >= CONFIG.MAX_TENTATIVES) { demarrerBlocage(); return; }
+  const mat = document.getElementById("inputMat").value.trim().toUpperCase();
+  const tel = document.getElementById("inputTel").value.trim().replace(/\s/g,"");
+  window._loginTel = tel;
+  document.getElementById("errorMsg").style.display = "none";
+  if (!mat || !tel) { afficherErreur("Veuillez remplir le matricule et le numero de telephone."); return; }
+  if (mat.length < 5) { afficherErreur("Matricule trop court."); return; }
+  if (tel.length < 10) { afficherErreur("Numero de telephone invalide."); return; }
+
+  document.getElementById("loginWrapper").style.display = "none";
+  document.getElementById("loadingDiv").style.display = "block";
+
+  let eleve = null;
+  const TOUTES_ECOLES = [
+    { code:"CPP",        id:"1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI" },
+    { code:"ACADEMIE",   id:"1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M" },
+    { code:"GNONTINROU", id:"1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4" },
+    { code:"GUINGLO_V",  id:"1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA" },
+    { code:"KOUTOUAN",   id:"167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg" },
+    { code:"SOAKPE",     id:"1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys" },
+    { code:"AKEIKOI_1",  id:"1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE" },
+    { code:"AKEIKOI_2",  id:"11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog" },
+    { code:"CPP_PRO",    id:"1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs" },
+    { code:"CPP_TECH",   id:"15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc" },
+    { code:"KOUIBLY_TEC",id:"1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s" },
+    { code:"RITA",       id:"1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0" },
+  ];
+
+  for (let i = 0; i < TOUTES_ECOLES.length; i++) {
+    const ec = TOUTES_ECOLES[i];
+    document.getElementById("loadingEtape").textContent = "Recherche ecole " + (i+1) + "/" + TOUTES_ECOLES.length + "...";
+    eleve = await chercherDansEcoleDirecte(mat, ec.code, ec.id);
+    if (eleve) break;
+  }
+
+  document.getElementById("loadingDiv").style.display = "none";
+
+  if (!eleve) {
+    tentatives++;
+    document.getElementById("loginWrapper").style.display = "block";
+    afficherErreur("Matricule introuvable. Tentative " + tentatives + "/" + CONFIG.MAX_TENTATIVES);
+    if (tentatives >= CONFIG.MAX_TENTATIVES) demarrerBlocage();
+    return;
+  }
+
+  const _clean = s => (s||"").replace(/[\s\/\.\-]/g,"");
+  const t1 = _clean(eleve.tel1), t2 = _clean(eleve.tel2), t3 = _clean(eleve.tel3);
+  const telClean = _clean(tel);
+  const tels_valides = [t1,t2,t3].filter(t => t && t.length >= 8);
+  const telFin = telClean.slice(-8);
+  const telMatch = tels_valides.some(t => t.slice(-8) === telFin);
+
+  if (tels_valides.length > 0 && !telMatch) {
+    tentatives++;
+    document.getElementById("loginWrapper").style.display = "block";
+    afficherErreur("Numero de telephone incorrect. Tentative " + tentatives + "/" + CONFIG.MAX_TENTATIVES);
+    if (tentatives >= CONFIG.MAX_TENTATIVES) demarrerBlocage();
+    return;
+  }
+
+  tentatives = 0;
+  const ecoleInfo = ECOLES.find(e => e.code === (eleve.ecoleCode || "CPP")) || ECOLES[2];
+  if (eleve.nomEcole) ecoleInfo.nom = eleve.nomEcole;
+  const eleveComplet = { ...eleve, matricule: mat, ecole: ecoleInfo, ecoleCode: eleve.ecoleCode || "CPP" };
+  sessionStorage.setItem("eleveConnecte", JSON.stringify(eleveComplet));
+  afficherEspaceParent(eleveComplet);
+}
+
+// ════════════════════════════════════════════════════════════
+// CHERCHER DANS ECOLE — SYNTHESE A2:N5000 (inclut M=DECISION, N=MOY_ANNUELLE)
+// ════════════════════════════════════════════════════════════
+async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
+  try {
+    const sheetsId = sheetsIdDirect;
+    // ⚡ ÉTENDU à N5000 pour récupérer col M (DECISION) et N (MOY_ANNUELLE)
+    const range = encodeURIComponent("SYNTHESE!A2:P5000");
+    const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+    let res = null;
+    for (let tentative = 0; tentative < 3; tentative++) {
+      try {
+        res = await fetch(url);
+        if (res.status !== 429) break;
+        await new Promise(r => setTimeout(r, 2000 * (tentative + 1)));
+      } catch(fe) { break; }
+    }
+    if (!res || !res.ok) return null;
+    const data = await res.json();
     if (!data.values) return null;
-    for (var i = 0; i < data.values.length; i++) {
-      var row = data.values[i];
-      var m = String(row[1]||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
-      if (m !== mat) continue;
+    const parseMontant = (v) => parseFloat(String(v||"").replace(/\s/g,"").replace(",",".")) || 0;
+    for (let i = 0; i < data.values.length; i++) {
+      const row = data.values[i];
+      const mat = String(row[1]||"").trim().toUpperCase();
+      if (mat !== matricule) continue;
+      const col0 = String(row[0]||"").trim();
+      if (col0.toUpperCase() === "CLASSE" || col0 === "") continue;
+      const classeDetectee = col0.replace(/🏫\s*/g,"").replace(/🎓\s*/g,"").replace(/📚\s*/g,"").trim();
       return {
-        score:  row[3] !== undefined && row[3] !== "" ? parseFloat(row[3]) : null,
-        statut: String(row[4]||"").trim().toUpperCase(), // ADMIS ou REFUSE
-        dec:    String(row[6]||"").trim().toUpperCase(), // ADMIS ou RNO
+        classe:       classeDetectee,
+        matricule:    mat,
+        nom:          String(row[2]||"").trim(),
+        du:           parseMontant(row[3]),
+        verse:        parseMontant(row[4]),
+        solde:        parseMontant(row[5]),
+        tel1:         String(row[6]||"").trim(),
+        tel2:         String(row[7]||"").trim(),
+        tel3:         String(row[8]||"").trim(),
+        statut:       String(row[9]||"").trim(),
+        club1:        String(row[10]||"").trim(),
+        club2:        String(row[11]||"").trim(),
+        decision:     String(row[14]||"").trim().toUpperCase(),   // COL O
+        moy_annuelle: parseFloat(String(row[15]||"").replace(",",".")) || 0, // COL P
+        ecoleCode:    codeEcole,
+        sheetsId:     sheetsId,
       };
     }
-  } catch(e) { console.warn("BEPC:", e.message); }
+  } catch(e) {
+    console.warn("Sheets inaccessible:", codeEcole, e.message);
+  }
   return null;
 }
 
-// ============================================================
-// NOUVELLES CARTES ANIMATION — RNO
-// À ajouter dans le fichier HTML
-// ============================================================
+// ════════════════════════════════════════════════════════════
+// AFFICHER ESPACE PARENT
+// ════════════════════════════════════════════════════════════
+function afficherEspaceParent(eleve) {
+  const ecole     = eleve.ecole;
+  const couleur   = ecole?.couleur || "#1F4E79";
+  const nomEcole  = ecole?.nom || "Reseau Les Princes";
+  const typeClasse = detecterTypeClasse(eleve.classe, eleve.ecoleCode);
 
-function _cardRNO_Attente(prenom, moy) {
-  // Avant résultats BEPC — score non encore disponible
-  return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#1565C0,#1976D2)" id="cardDecision">' +
-    '<span class="cpp-emoji-big cpp-float-soft">⏳</span>' +
-    '<div class="cpp-titre">Résultats BEPC en attente</div>' +
-    '<div class="cpp-sous">' + prenom + ', vous avez terminé votre 3EME avec succès !<br>' +
-    (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div>' +
-    '<span class="cpp-emoji-row">📋 ✏️ 🏫 📚 🎯</span>' +
-    '<div class="cpp-msg-box">Vos résultats du BEPC seront publiés ici dès qu\'ils seront disponibles.<br><br>' +
-    'Revenez consulter cette page après la proclamation officielle des résultats.</div>' +
-    '<div class="cpp-next-class" style="background:rgba(255,255,255,0.2)">' +
-    '<div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">EN CAS D\'ORIENTATION</div>' +
-    '<div class="cpp-nc-value" style="color:#fff">2NDE C — Collège Les Princes d\'Abidjan</div>' +
-    '</div>' +
-    '</div>' + _blocContact("0708111269");
-}
+  document.getElementById("mainHeader").style.background = "linear-gradient(135deg,#1F4E79,#1565C0)";
+  document.getElementById("headerTitle").textContent = nomEcole;
+  document.getElementById("headerSub").textContent = "Espace Parents - Suivi Scolaire";
 
-function _cardRNO_Admis_BEPC(prenom, moy, score) {
-  // Résultats BEPC disponibles — élève ADMIS au BEPC
-  return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#2E7D32,#388E3C)" id="cardDecision">' +
-    '<span class="cpp-emoji-big cpp-bounce">🎉</span>' +
-    '<div class="cpp-titre">Félicitations ! Admis(e) au BEPC !</div>' +
-    '<div style="display:inline-block;background:#D4AF37;color:#1A3A5C;font-weight:bold;font-size:1em;padding:6px 20px;border-radius:20px;margin-bottom:10px;">' +
-    (score !== null ? 'Score BEPC : ' + score + ' points' : 'ADMIS(E) AU BEPC') +
-    '</div>' +
-    '<div class="cpp-sous">' + prenom + ', vous êtes orienté(e) au lycée !<br>' +
-    (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div>' +
-    '<span class="cpp-emoji-row">🎉 🏆 ⭐ 🎊 🥳</span>' +
-    '<div class="cpp-msg-box">Bravo pour ce résultat ! Toute l\'équipe du Collège Les Princes est fière de vous.<br><br>' +
-    '👉 <strong>Inscrivez-vous dès maintenant en 2NDE au Collège Les Princes d\'Abidjan</strong><br>' +
-    'pour continuer votre parcours d\'excellence !</div>' +
-    '<div class="cpp-next-class" style="background:#D4AF37">' +
-    '<div class="cpp-nc-label" style="color:#5a3a00">PROCHAINE CLASSE</div>' +
-    '<div class="cpp-nc-value" style="color:#1A3A5C">2NDE C — Collège Les Princes d\'Abidjan</div>' +
-    '</div>' +
-    '</div>' +
-    '<div class="cpp-insc-block">' +
-    '<p style="font-weight:bold;color:#2E7D32;font-size:0.9em;margin-bottom:8px;">📌 Inscrivez-vous maintenant pour 2026-2027 :</p>' +
-    '<div style="font-size:0.83em;color:#444;line-height:2">' +
-    '✅ Places limitées — venez tôt !<br>' +
-    '✅ Apportez votre relevé de notes et votre carte d\'élève<br>' +
-    '✅ Profitez du tarif préférentiel ancien élève</div>' +
-    '</div>' +
-    _blocContact("0708111269");
-}
+  const nomEncode    = encodeURIComponent(eleve.nom);
+  const couleurSans  = couleur.replace('#','');
+  const photoFallback = "https://ui-avatars.com/api/?name=" + nomEncode + "&background=" + couleurSans + "&color=fff&size=200&bold=true";
 
-function _cardRNO_Refuse_BEPC(prenom, moy, score) {
-  // Résultats BEPC disponibles — élève NON orienté
-  return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#E65100,#F57C00)" id="cardDecision">' +
-    '<span class="cpp-emoji-big cpp-pulse">💪</span>' +
-    '<div class="cpp-titre">Courage ' + prenom + ' !</div>' +
-    '<div style="display:inline-block;background:rgba(255,255,255,0.2);color:#fff;font-weight:bold;font-size:0.95em;padding:5px 16px;border-radius:20px;margin-bottom:10px;">' +
-    (score !== null ? 'Score BEPC : ' + score + ' points' : 'Non orienté(e) cette année') +
-    '</div>' +
-    '<div class="cpp-sous">Ce résultat n\'est pas une fin — c\'est un nouveau départ !<br>' +
-    (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div>' +
-    '<span class="cpp-emoji-row">💪 📖 🌱 🔄 ⏰</span>' +
-    '<div class="cpp-msg-box">Le redoublement en 3EME est une nouvelle chance de maîtriser les bases et de réussir le BEPC l\'année prochaine.<br><br>' +
-    'Beaucoup d\'élèves ont réussi après un redoublement. Avec du travail régulier et un bon suivi, vous y arriverez !</div>' +
-    '<div class="cpp-next-class" style="background:rgba(255,255,255,0.2)">' +
-    '<div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">CLASSE L\'ANNÉE PROCHAINE</div>' +
-    '<div class="cpp-nc-value" style="color:#fff">3EME — Collège Les Princes de Guinglo Ville</div>' +
-    '</div>' +
-    '</div>' +
-    '<div class="cpp-etapes-block">' +
-    '<p style="font-weight:bold;color:#E65100;font-size:0.88em;margin-bottom:8px;">📌 Étapes importantes :</p>' +
-    '<div style="font-size:0.82em;color:#444;line-height:2">' +
-    '✔️ Réinscrivez-vous avant le 31 Août 2026<br>' +
-    '✔️ Contactez la direction pour un bilan personnalisé<br>' +
-    '✔️ Travaillez les matières faibles pendant les vacances<br>' +
-    '✔️ Demandez un programme de révision à l\'école</div>' +
-    '</div>' +
-    _blocContact("0747330128");
-}
-
-// ============================================================
-// MODIFIER afficherSectionResultats — AJOUTER le cas RNO
-// Dans la fonction existante, REMPLACER le bloc :
-//
-//   var htmlAnim = "";
-//   if (!decision) { ... }
-//   else if (typeClasse === "EXCELLENCE" ...) { ... }
-//   ...
-//
-// PAR CE NOUVEAU BLOC :
-// ============================================================
-
-/*
-  // ── CAS RNO : élève de 3EME en attente BEPC ──
-  if (decision === "RNO") {
-    // Charger résultat BEPC depuis BEPC_2026
-    var bepc = await chargerResultatBEPC(eleve);
-
-    if (!bepc || bepc.score === null) {
-      // Pas encore de résultats BEPC
-      htmlAnim = _cardRNO_Attente(prenom, moy);
-    } else if (bepc.statut === "ADMIS") {
-      // Admis au BEPC → félicitations
-      htmlAnim = _cardRNO_Admis_BEPC(prenom, moy, bepc.score);
-      setTimeout(function(){ _lancerConfettis("cardDecision", ["🎉","🎊","🌟","⭐","🥳","🏆"]); }, 400);
-    } else {
-      // Non orienté → encouragement
-      htmlAnim = _cardRNO_Refuse_BEPC(prenom, moy, bepc.score);
+  // Badge selon type de classe (CPP uniquement)
+  let badgeHTML = '';
+  if (eleve.ecoleCode === 'CPP') {
+    if (typeClasse === 'EXCELLENCE') {
+      badgeHTML = '<div style="display:inline-block;background:linear-gradient(135deg,#D4AF37,#B8860B);color:#1A3A5C;font-weight:bold;font-size:0.8em;padding:4px 14px;border-radius:20px;margin-top:6px;letter-spacing:0.5px;">⭐ CLASSE D\'EXCELLENCE</div>';
+    } else if (typeClasse === 'PRIVILEGE') {
+      badgeHTML = '<div style="display:inline-block;background:linear-gradient(135deg,#7B1FA2,#4A148C);color:#fff;font-weight:bold;font-size:0.8em;padding:4px 14px;border-radius:20px;margin-top:6px;letter-spacing:0.5px;">💎 CLASSE PRIVILEGE</div>';
     }
   }
-  // ── AUTRES CAS (inchangés) ──
-  else if (!decision) {
-    htmlAnim = "<div style='...'><div style='font-size:40px'>⏳</div>...</div>";
+
+  document.getElementById("eleveCard").innerHTML =
+    "<div class='eleve-header' style='background:linear-gradient(135deg," + couleur + "," + couleur + "BB)'>" +
+    "<div style='display:flex;align-items:center;gap:12px;padding:8px 12px;'>" +
+    "<div style='width:70px;height:70px;border-radius:50%;border:3px solid white;overflow:hidden;flex-shrink:0;background:#fff;'>" +
+    "<img id='photoEleve' src='" + photoFallback + "' style='width:100%;height:100%;object-fit:cover;' alt='Photo'></div>" +
+    "<div style='flex:1;'>" +
+    "<div class='eleve-mat-badge'>" + eleve.matricule + "</div>" +
+    "<div class='eleve-nom'>" + eleve.nom + "</div>" +
+    "<div class='eleve-infos'>" + eleve.classe + " | " + nomEcole + "</div>" +
+    "<div style='font-size:12px;color:rgba(255,255,255,0.85);margin-top:4px'>📅 Annee scolaire " + ANNEE_SCOLAIRE_ACTIVE + "</div>" +
+    badgeHTML +
+    "</div></div>" +
+    "<button class='btn-logout' onclick='logout()'>Deconnexion</button></div>";
+
+  setTimeout(function() {
+    const imgEl = document.getElementById("photoEleve");
+    if (imgEl) chargerPhotoEleve(eleve.matricule, imgEl, photoFallback);
+  }, 500);
+
+  // Statut paiement
+  const pay = document.getElementById("statutPay");
+  const _pm = v => parseFloat(String(v||"").replace(/\s/g,"").replace(",",".")) || 0;
+  const soldeParsed = _pm(eleve.solde);
+  const verseParsed = _pm(eleve.verse);
+  const duParsed    = _pm(eleve.du);
+
+  mettreAJourMontant(eleve);
+  afficherClubs(eleve);
+  chargerReponsesMessages(eleve);
+
+  if (eleve.gratuit) {
+    pay.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>🎓</div><div class='pay-text'><h4>Prise en charge etablissement</h4><p class='pay-montant c-vert'>Acces complet active</p></div></div>";
+  } else if (soldeParsed === 0) {
+    pay.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>✅</div><div class='pay-text'><h4>Scolarite " + ANNEE_SCOLAIRE_ACTIVE + " entierement payee</h4><p class='pay-montant c-vert'>" + verseParsed.toLocaleString('fr-FR') + " F CFA verses</p><p>Merci pour votre confiance !</p></div></div>";
+  } else if (verseParsed > 0) {
+    pay.innerHTML = "<div class='paiement-bar paiement-partiel'><div class='pay-icon'>⚠️</div><div class='pay-text'><h4>Solde " + ANNEE_SCOLAIRE_ACTIVE + " restant</h4><p class='pay-montant c-or'>" + soldeParsed.toLocaleString('fr-FR') + " F CFA restants</p><p>Verse : " + verseParsed.toLocaleString('fr-FR') + " sur " + duParsed.toLocaleString('fr-FR') + " F CFA</p></div></div>";
+  } else {
+    pay.innerHTML = "<div class='paiement-bar paiement-non'><div class='pay-icon'>❌</div><div class='pay-text'><h4>Scolarite " + ANNEE_SCOLAIRE_ACTIVE + " non reglee</h4><p class='pay-montant c-rouge'>" + duParsed.toLocaleString('fr-FR') + " F CFA a regler</p></div></div>";
+  }
+
+  var accesComplet = eleve.gratuit || soldeParsed === 0;
+  if (accesComplet) {
+    chargerAnnonces(eleve);
+    chargerNotes(eleve);
+    chargerAbsences(eleve);
+    afficherSectionResultats(eleve);
+    document.getElementById("sectionBloque").style.display = "none";
+  } else {
+    document.getElementById("sectionResultats").style.display = "none";
+    afficherSectionBloquee(eleve, soldeParsed, verseParsed);
+  }
+
+  // Emploi du temps — visible pour tous
+  chargerEDT(eleve);
+
+  // ⚡ FICHE DE RENSEIGNEMENT — visible pour tous (solde 0 ou > 0)
+  chargerFicheRenseignement(eleve);
+
+  window._eleveActuel = eleve;
+  document.getElementById("loginWrapper").style.display = "none";
+  document.getElementById("parentSpace").style.display = "block";
+  window.scrollTo(0, 0);
+}
+
+// ════════════════════════════════════════════════════════════
+// MODULE DECISIONS ET ANIMATIONS — COMPLET
+// ════════════════════════════════════════════════════════════
+function afficherDecision(eleve) {
+  const section = document.getElementById('sectionDecision');
+  const div     = document.getElementById('decisionBody');
+  if (!section || !div) return;
+
+  const decision   = (eleve.decision || '').trim().toUpperCase();
+  const classe     = (eleve.classe   || '').trim().toUpperCase();
+  const ecoleCode  = (eleve.ecoleCode|| '').trim().toUpperCase();
+  const moy        = parseFloat(eleve.moy_annuelle) || 0;
+  const prenom     = (eleve.nom || '').split(' ')[0];
+  const typeClasse = detecterTypeClasse(classe, ecoleCode);
+
+  // Masquer si pas de décision renseignée
+  if (!decision) { section.style.display = 'none'; return; }
+
+  const prochaineClasse = getProchaineClasse(classe);
+  section.style.display = 'block';
+
+  const info = SHEETS_IDS_COMPLET[eleve.sheetsId] || {};
+  const tel  = info.tel || '0708111269';
+
+  let html = '';
+
+  // ── CAS 1 : CLASSE EX + moy >= 10 → EXCELLENCE CONFIRMÉE
+  if (typeClasse === 'EXCELLENCE' && moy >= 10) {
+    html = _cardExcellence(prenom, classe, moy, prochaineClasse, tel);
+    setTimeout(() => _lancerConfettis('cardDecision', ['🌟','⭐','🏆','🥇','✨','🎊']), 300);
+
+  // ── CAS 2 : CLASSE EX + moy < 10 → ADMIS QUITTE EX
+  } else if (typeClasse === 'EXCELLENCE' && moy < 10) {
+    html = _cardQuitterEX(prenom, classe, moy, tel);
+    setTimeout(() => _lancerConfettis('cardDecision', ['🎉','🎊','🎈','✅','👏']), 300);
+
+  // ── CAS 3 : STANDARD/PRIV + moy >= 14 → ENTRE EN EX
+  } else if (typeClasse !== 'EXCELLENCE' && decision === 'ADMIS' && moy >= 14) {
+    html = _cardEntreEnEX(prenom, classe, moy, tel);
+    setTimeout(() => _lancerConfettis('cardDecision', ['🎉','🎊','🌟','⭐','🎈','🏅']), 300);
+
+  // ── CAS 4 : STANDARD/PRIV + ADMIS + moy >= 10 et < 14
+  } else if (typeClasse !== 'EXCELLENCE' && decision === 'ADMIS' && moy >= 10) {
+    html = _cardAdmisStandard(prenom, classe, moy, prochaineClasse, tel);
+
+  // ── CAS 5 : REDOUBLANT
+  } else if (decision === 'REDOUBLANT') {
+    html = _cardRedoublant(prenom, classe, moy, tel);
+
+  // ── CAS 6 : EXCLU (Standard/Priv uniquement)
+  } else if (decision === 'EXCLU') {
+    html = _cardExclu(prenom, classe, tel);
+  }
+
+  div.innerHTML = html;
+}
+
+function _cardExcellence(prenom, classe, moy, prochaineClasse, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#1A3A5C" id="cardDecision">' +
+    '<span class="cpp-emoji-big cpp-bounce">🏆</span>' +
+    '<div class="cpp-titre">Classe d\'Excellence Confirmee !</div>' +
+    '<div style="display:inline-block;background:#D4AF37;color:#1A3A5C;font-weight:bold;font-size:0.9em;padding:3px 14px;border-radius:20px;margin-bottom:8px;">' + classe + '</div>' +
+    '<div class="cpp-sous">' + prenom + ', vous conservez votre place en filiere Excellence<br>Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong></div>' +
+    '<span class="cpp-emoji-row">🌟 🏆 ⭐ 🥇 🎖️</span>' +
+    '<div class="cpp-msg-box">Votre serieux et votre excellence vous permettent de continuer dans la filiere d\'Elite. Continuez sur cette lancee remarquable !</div>' +
+    (prochaineClasse ? '<div class="cpp-next-class" style="background:#D4AF37"><div class="cpp-nc-label" style="color:#5a3a00">PROCHAINE CLASSE</div><div class="cpp-nc-value" style="color:#1A3A5C">' + prochaineClasse + '</div></div>' : '') +
+    '</div>' + _blocInscription(tel) + _blocContact(tel);
+}
+
+function _cardQuitterEX(prenom, classe, moy, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#2E7D32" id="cardDecision">' +
+    '<span class="cpp-emoji-big cpp-float">🎉</span>' +
+    '<div class="cpp-titre">Admis(e) !</div>' +
+    '<div class="cpp-sous">' + prenom + ', vous passez en classe superieure<br>Moyenne : <strong>' + moy.toFixed(2) + '/20</strong></div>' +
+    '<span class="cpp-emoji-row">🎉 🎊 🎈 ✅ 👏</span>' +
+    '<div class="cpp-msg-box">Vous quittez la filiere Excellence. La direction vous orientera vers une classe Standard ou Privilege selon votre profil. Contactez l\'ecole pour connaitre votre nouvelle affectation.</div>' +
+    '<div class="cpp-next-class" style="background:rgba(255,255,255,0.2)"><div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">ORIENTATION</div><div class="cpp-nc-value" style="color:#fff">Standard ou Privilege</div></div>' +
+    '</div>' + _blocInscription(tel) + _blocContact(tel);
+}
+
+function _cardEntreEnEX(prenom, classe, moy, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#2E7D32" id="cardDecision">' +
+    '<span class="cpp-emoji-big cpp-float">🎉</span>' +
+    '<div class="cpp-titre">Admis(e) avec Mention !</div>' +
+    '<div class="cpp-sous">' + prenom + ', votre moyenne vous ouvre les portes de la Classe d\'Excellence !<br>Moyenne : <strong>' + moy.toFixed(2) + '/20</strong></div>' +
+    '<span class="cpp-emoji-row">🌟 🎉 🎊 🎈 🏅</span>' +
+    '<div class="cpp-msg-box">Felicitations ! Avec une moyenne de ' + moy.toFixed(2) + '/20 vous entrez directement en Classe d\'Excellence l\'annee prochaine. Bravo pour ce travail exceptionnel !</div>' +
+    '</div>' + _blocInscription(tel) + _blocContact(tel);
+}
+
+function _cardAdmisStandard(prenom, classe, moy, prochaineClasse, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#1A3A5C" id="cardDecision">' +
+    '<span class="cpp-emoji-big cpp-float-soft">✅</span>' +
+    '<div class="cpp-titre">Admis(e) en classe superieure !</div>' +
+    '<div class="cpp-sous">Bien joue ' + prenom + ' — Moyenne : <strong>' + moy.toFixed(2) + '/20</strong></div>' +
+    '<span class="cpp-emoji-row">✅ 📚 💪 👍 🎯</span>' +
+    '<div class="cpp-msg-box">Vous avancez vers votre prochain niveau. Profitez des vacances et preparez-vous a donner le meilleur de vous-meme l\'annee prochaine !</div>' +
+    (prochaineClasse ? '<div class="cpp-next-class" style="background:rgba(255,255,255,0.2)"><div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">PROCHAINE CLASSE</div><div class="cpp-nc-value" style="color:#fff">' + prochaineClasse + '</div></div>' : '') +
+    '</div>' + _blocInscription(tel) + _blocContact(tel);
+}
+
+function _cardRedoublant(prenom, classe, moy, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#B8860B" id="cardDecision">' +
+    '<span class="cpp-emoji-big cpp-pulse">💪</span>' +
+    '<div class="cpp-titre">Redoublant(e)</div>' +
+    '<div class="cpp-sous">' + prenom + ', vous restez en <strong>' + classe + '</strong> pour l\'annee prochaine<br>Moyenne : <strong>' + moy.toFixed(2) + '/20</strong></div>' +
+    '<span class="cpp-emoji-row">💪 📖 🔄 🌱 ⏰</span>' +
+    '<div class="cpp-msg-box">Le redoublement est une nouvelle chance de maitriser les bases et de repartir plus fort. Avec du travail regulier, vous reussirez !</div>' +
+    '</div>' +
+    '<div class="cpp-etapes-block">' +
+    '<p style="font-weight:bold;color:#B8860B;font-size:0.88em;margin-bottom:8px;">📌 Etapes importantes :</p>' +
+    '<div style="font-size:0.82em;color:#444;line-height:2">✔️ Reinscrivez-vous avant le 31 Aout 2026<br>✔️ Contactez la direction pour un bilan<br>✔️ Travaillez vos matieres faibles pendant les vacances</div>' +
+    '</div>' + _blocContact(tel);
+}
+
+function _cardExclu(prenom, classe, tel) {
+  return '<div class="cpp-decision-card cpp-slide" style="background:#C62828" id="cardDecision">' +
+    '<span class="cpp-emoji-big cpp-pulse">📞</span>' +
+    '<div class="cpp-titre">Contactez la direction</div>' +
+    '<div class="cpp-sous">Cher(e) parent, nous vous invitons a prendre contact avec la direction concernant la situation de votre enfant</div>' +
+    '<span class="cpp-emoji-row">📞 🤝 💬 🏫 📋</span>' +
+    '<div class="cpp-msg-box">Des solutions existent. La direction est disponible pour vous accompagner vers la meilleure orientation pour votre enfant.</div>' +
+    '</div>' + _blocContact(tel);
+}
+
+function _blocInscription(tel) {
+  return '<div class="cpp-insc-block">' +
+    '<p style="font-weight:bold;color:#2E7D32;font-size:0.88em;margin-bottom:8px;">📌 Inscrivez-vous tot pour 2026-2027 :</p>' +
+    '<div style="font-size:0.82em;color:#444;line-height:2">✅ Choisir votre classe (Excellence, Privilege, Standard)<br>✅ Beneficier du tarif preferentiel a l\'inscription<br>✅ Assurer votre place avant la limite de capacite</div>' +
+    '</div>';
+}
+
+function _blocContact(tel) {
+  return '<div class="cpp-contact-block">' +
+    '<p style="color:#D4AF37;font-weight:bold;font-size:0.88em;margin-bottom:6px;">📞 Contact — Inscription & Renseignements</p>' +
+    '<p style="color:#fff;font-size:1em;font-weight:bold;">' + tel + '</p>' +
+    '<p style="color:rgba(255,255,255,0.65);font-size:0.75em;margin-top:4px;">Lundi au Samedi — 7h30 a 17h30</p>' +
+    '</div>';
+}
+
+function _lancerConfettis(cardId, emojis) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  let count = 0;
+  const interval = setInterval(() => {
+    if (count++ > 24) { clearInterval(interval); return; }
+    const el = document.createElement('div');
+    el.className = 'cpp-confetti-item';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left  = Math.random() * 90 + '%';
+    el.style.top   = '-20px';
+    el.style.animationDuration = (1 + Math.random() * 1.5) + 's';
+    card.appendChild(el);
+    setTimeout(() => el.remove(), 2500);
+  }, 120);
+}
+
+// ════════════════════════════════════════════════════════════
+// MODULE FICHE DE RENSEIGNEMENT — DYNAMIQUE DEPUIS SHEETS
+// ════════════════════════════════════════════════════════════
+async function chargerFicheRenseignement(eleve) {
+  const div = document.getElementById('ficheRenseignement');
+  if (!div) return;
+
+  // ── INFOS STATIQUES PAR ÉCOLE ─────────────────────────────
+  // tel1/tel2 = texte affiché — PAS de chiffres lus depuis Sheets
+  const INFOS_ECOLES = {
+    "CPP":        { nom:"College Prive Les Princes d'Abidjan",               tel1:"0708111269", tel2:"0789771991", wave:"GROUPE SCOLAIRE LES PRINCES",           orange:"#144*43*1721*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"054707"  },
+    "ACADEMIE":   { nom:"Academie Les Princes d'Abidjan",                    tel1:"0747477926", tel2:"0708111269", wave:"LES PRINCES ACADEMIE",                  orange:"#144*43*1728*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:""       },
+    "GUINGLO_V":  { nom:"College Prive Les Princes de Guinglo-Ville",        tel1:"0749781842", tel2:"0555271184", wave:"LES PRINCES GUINGLO VILLE",             orange:"#144*43*1729*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"253854" },
+    "GNONTINROU": { nom:"College Prive Gnontinrou Therese de Guinglo-Guezon",tel1:"0778976708", tel2:"0708991975", wave:"LES PRINCES GUINGLO",                   orange:"#144*43*1725*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"310538" },
+    "KOUTOUAN":   { nom:"Groupe Scolaire Koutouan Nandjui Abobo",            tel1:"0708111269", tel2:"0747477926", wave:"LES PRINCES KOUTOUAN",                  orange:"#144*43*1726*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"000277" },
+    "SOAKPE":     { nom:"College Prive Les Princes de Soakpe-Douedy",        tel1:"0787866177", tel2:"",           wave:"LES PRINCES SOAKPE",                    orange:"#144*43*1727*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"321130" },
+    "AKEIKOI_1":  { nom:"EPV Les Princes Akeikoi 1",                         tel1:"0747477926", tel2:"0708111269", wave:"LES PRINCES AKEIKOI 1",                 orange:"#144*43*1723*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:""       },
+    "AKEIKOI_2":  { nom:"EPV Les Princes Akeikoi 2",                         tel1:"0707777545", tel2:"0747477926", wave:"LES PRINCES AKEIKOI 2",                 orange:"#144*43*1724*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:""       },
+    "CPP_PRO":    { nom:"College Prive Professionnel Les Princes d'Abidjan", tel1:"0708111269", tel2:"0797649941", wave:"COLLEGE PRIVE PROFESSIONNEL LES PRINCES",orange:"#144*43*1760*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"790219" },
+    "CPP_TECH":   { nom:"College Prive Technique Les Princes d'Abidjan",     tel1:"0708111269", tel2:"0797649941", wave:"COLLEGE PRIVE TECHNIQUE LES PRINCES",   orange:"#144*43*1756*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"780202" },
+    "KOUIBLY_TEC":{ nom:"College Prive Technique Les Princes Kouibly",       tel1:"0778976708", tel2:"0708991975", wave:"ETL LES PRINCES KOUIBLY",               orange:"#144*43*1758*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"782410" },
+    "RITA":       { nom:"Groupe Scolaire Rita Rosane Abobo",                 tel1:"0757227049", tel2:"",           wave:"GROUPE SCOLAIRE RITA ROSANE",           orange:"",               rentree:"Mardi 1er Septembre 2026 a 7h30", code:"033258" },
+  };
+
+  const info = INFOS_ECOLES[eleve.ecoleCode] || INFOS_ECOLES['CPP'];
+
+  // Afficher squelette pendant chargement
+  div.innerHTML = '<div style="margin:8px 0;background:white;border-radius:8px;padding:16px;text-align:center;color:#1a3a6b;"><div class="spinner" style="width:24px;height:24px;border:3px solid #D6E4F0;border-top-color:#1F4E79;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;"></div><p style="font-size:0.85em;">Chargement de la fiche...</p></div>';
+
+  // ── CHARGER TARIFS depuis CONFIGURATION_TARIF ─────────────
+  // Structure créée par TARIFS.gs :
+  //   Lignes 1-4 : en-tête + infos école (à ignorer)
+  //   Ligne 5     : en-têtes colonnes (Niveau / Total / T1 / T2 / T3 / T4)
+  //   Lignes 6+   : données tarifs
+  //   Lignes label : cellules fusionnées (section), 1 seule colonne
+  let tarifs = [];
+  try {
+    const range = encodeURIComponent("CONFIGURATION_TARIF!A1:F200");
+    const url   = "https://sheets.googleapis.com/v4/spreadsheets/" + eleve.sheetsId
+                + "/values/" + range
+                + "?key=" + CONFIG.API_KEY
+                + "&valueRenderOption=UNFORMATTED_VALUE";
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.values && data.values.length > 0) {
+        // Trouver la ligne d'en-têtes (contient "Niveau" ou "niveau")
+        let ligneEntete = -1;
+        for (let i = 0; i < data.values.length; i++) {
+          const cellule = String(data.values[i][0]||'').toLowerCase();
+          if (cellule.includes('niveau') || cellule.includes('classe') || cellule.includes('filiere')) {
+            ligneEntete = i;
+            break;
+          }
+        }
+        // Si pas trouvé, chercher la 1ère ligne avec des chiffres en col B
+        if (ligneEntete === -1) {
+          for (let i = 0; i < data.values.length; i++) {
+            const valB = parseFloat(String(data.values[i][1]||'').replace(/\s/g,''));
+            if (!isNaN(valB) && valB > 1000) { ligneEntete = i - 1; break; }
+          }
+        }
+        const debut = Math.max(ligneEntete + 1, 0);
+
+        for (let i = debut; i < data.values.length; i++) {
+          const row    = data.values[i];
+          const colA   = String(row[0]||'').trim();
+          const colB   = String(row[1]||'').trim();
+          const colC   = String(row[2]||'').trim();
+          const colD   = String(row[3]||'').trim();
+          const colE   = String(row[4]||'').trim();
+          const colF   = String(row[5]||'').trim();
+
+          if (!colA) continue;
+
+          const total = parseFloat(colB.replace(/\s/g,'')) || 0;
+
+          // Ligne de section (label) : colA non vide mais colB vide ou non numérique
+          if (!total || isNaN(total)) {
+            tarifs.push({ label: colA });
+            continue;
+          }
+
+          // Ligne de tarif normale
+          tarifs.push({
+            niveau: colA,
+            total:  total,
+            t1:     parseFloat(colC.replace(/\s/g,'')) || 0,
+            t2:     parseFloat(colD.replace(/\s/g,'')) || 0,
+            t3:     parseFloat(colE.replace(/\s/g,'')) || 0,
+            t4:     parseFloat(colF.replace(/\s/g,'')) || 0,
+          });
+        }
+      }
+    }
+  } catch(e) {
+    console.warn('Fiche tarifs:', e.message);
+  }
+
+  div.innerHTML = _htmlFiche(info, tarifs, eleve);
+}
+
+function _htmlFiche(info, tarifs, eleve) {
+
+  // ── CONSTRUIRE LE TABLEAU DES TARIFS ─────────────────────
+  let lignesTarifs = '';
+  const tarifsReels = tarifs.filter(t => !t.label);
+
+  if (tarifsReels.length > 0) {
+    let compteur = 0;
+    tarifs.forEach(t => {
+      if (t.label) {
+        // Ligne de section (fond doré)
+        lignesTarifs += '<tr><td colspan="5" class="fiche-section-row" style="background:#D4AF37;color:#1A3A5C;font-weight:700;font-size:12px;padding:6px 8px;border:1px solid #c8a000;text-align:center;letter-spacing:0.5px">' + t.label + '</td></tr>';
+      } else {
+        const bg = compteur % 2 === 0 ? '#ffffff' : '#f4f7fd';
+        compteur++;
+        lignesTarifs +=
+          '<tr style="background:' + bg + '">' +
+          '<td style="padding:7px 8px;border:1px solid #dde3f0;font-size:13px;font-weight:600;color:#222">'          + t.niveau + '</td>' +
+          '<td style="padding:7px 8px;border:1px solid #dde3f0;text-align:center;color:#1a3a6b;font-weight:700;font-size:13px">' + (t.total ? t.total.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
+          '<td style="padding:7px 8px;border:1px solid #dde3f0;text-align:center;font-size:12px">'                   + (t.t1 ? t.t1.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
+          '<td style="padding:7px 8px;border:1px solid #dde3f0;text-align:center;font-size:12px">'                   + (t.t2 ? t.t2.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
+          '<td style="padding:7px 8px;border:1px solid #dde3f0;text-align:center;font-size:12px">'                   + (t.t3 ? t.t3.toLocaleString('fr-FR') + ' F' : '-') + '</td>' +
+          '</tr>';
+      }
+    });
+  } else {
+    lignesTarifs = '<tr><td colspan="5" style="text-align:center;padding:16px;color:#aaa;font-size:13px;">Tarifs non disponibles — Contactez l\'ecole au ' + info.tel1 + '</td></tr>';
+  }
+
+  // ── NUMÉROS DE TÉLÉPHONE (format lisible) ─────────────────
+  const formatTel = (t) => {
+    if (!t) return '';
+    const n = t.replace(/\D/g,'');
+    if (n.length === 10) return n.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+    return t;
+  };
+  const tel1Affiche = formatTel(info.tel1);
+  const tel2Affiche = info.tel2 ? formatTel(info.tel2) : '';
+
+  return (
+    '<div style="margin:8px 0;border:1.5px solid #c8d4eb;border-radius:10px;overflow:hidden;font-family:Arial,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,0.08)">' +
+
+    // ── EN-TÊTE ──
+    '<div style="background:#1a3a6b;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="var b=document.getElementById(\'fiche-body-' + eleve.ecoleCode + '\');b.style.display=b.style.display===\'none\'?\'block\':\'none\'">' +
+    '<div style="flex:1">' +
+    '<div style="font-weight:700;font-size:15px;color:#fff;margin-bottom:3px">' + info.nom + '</div>' +
+    '<div style="font-size:13px;color:rgba(255,255,255,0.85)">📞 ' + tel1Affiche + (tel2Affiche ? ' / ' + tel2Affiche : '') + '</div>' +
+    '</div>' +
+    '<div style="font-size:11px;color:#D4AF37;border:1px solid #D4AF37;padding:3px 10px;border-radius:20px;white-space:nowrap;margin-left:10px">▼ Fiche</div>' +
+    '</div>' +
+
+    // ── TITRE FICHE DE RENSEIGNEMENT ──
+    '<div style="background:#D4AF37;padding:10px 16px;text-align:center">' +
+    '<div style="font-size:16px;font-weight:700;color:#1A3A5C;letter-spacing:0.5px">FICHE DE RENSEIGNEMENT</div>' +
+    '<div style="font-size:14px;font-weight:600;color:#5a3a00;margin-top:2px">ANNEE SCOLAIRE 2026 — 2027</div>' +
+    (info.code ? '<div style="margin-top:6px"><span style="font-size:11px;color:#5a3a00;font-weight:600">CODE ETABLISSEMENT : </span><span style="font-size:18px;font-weight:700;color:#1a3a6b;font-family:monospace;background:#fff;padding:2px 12px;border-radius:4px;border:2px solid #1a3a6b;letter-spacing:3px">' + info.code + '</span></div>' : '') +
+    '</div>' +
+
+    '<div id="fiche-body-' + eleve.ecoleCode + '">' +
+
+    '<div style="padding:14px 16px">' +
+
+    // ── TABLEAU TARIFS ──
+    '<div style="font-size:13px;font-weight:700;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;margin-bottom:10px;letter-spacing:0.5px">💰 GRILLE DES FRAIS DE SCOLARITE 2026-2027</div>' +
+    '<div style="overflow-x:auto;margin-bottom:14px;border-radius:6px;overflow:hidden;border:1px solid #dde3f0">' +
+    '<table style="width:100%;border-collapse:collapse;min-width:340px">' +
+    '<thead><tr style="background:#1a3a6b;color:#fff">' +
+    '<th style="padding:9px 8px;text-align:left;font-size:12px;font-weight:700">Classes</th>' +
+    '<th style="padding:9px 8px;text-align:center;font-size:12px;font-weight:700">Total</th>' +
+    '<th style="padding:9px 8px;text-align:center;font-size:11px">Inscription<br><span style="font-weight:400;font-size:10px">aout-oct.</span></th>' +
+    '<th style="padding:9px 8px;text-align:center;font-size:11px">1er vers.<br><span style="font-weight:400;font-size:10px">05 nov.</span></th>' +
+    '<th style="padding:9px 8px;text-align:center;font-size:11px">2e vers.<br><span style="font-weight:400;font-size:10px">05 dec.</span></th>' +
+    '</tr></thead>' +
+    '<tbody>' + lignesTarifs + '</tbody>' +
+    '</table></div>' +
+
+    // ── MODE DE PAIEMENT ──
+    '<div style="font-size:13px;font-weight:700;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;margin-bottom:10px;letter-spacing:0.5px">💳 MODE DE PAIEMENT</div>' +
+    '<div style="display:flex;gap:10px;margin-bottom:12px">' +
+
+    // Wave
+    '<div style="flex:1;background:#e8faf2;border:2px solid #1a9e6b;border-radius:8px;padding:12px;text-align:center">' +
+    '<div style="font-size:13px;font-weight:700;color:#0d6e49;margin-bottom:6px">💙 WAVE</div>' +
+    '<div style="font-size:12px;color:#0d6e49;margin-bottom:6px">Recherchez dans l\'app Wave :</div>' +
+    '<div style="font-size:12px;font-weight:700;color:#0d6e49;background:#c8f0de;padding:6px 8px;border-radius:6px;word-break:break-all">' + info.wave + '</div>' +
+    '</div>' +
+
+    // Orange Money
+    (info.orange ?
+    '<div style="display:flex;align-items:center;color:#999;font-weight:700;font-size:14px;flex-shrink:0">OU</div>' +
+    '<div style="flex:1;background:#fff3e8;border:2px solid #e07010;border-radius:8px;padding:12px;text-align:center">' +
+    '<div style="font-size:13px;font-weight:700;color:#b85a00;margin-bottom:6px">🟠 ORANGE MONEY</div>' +
+    '<div style="font-size:12px;color:#b85a00;margin-bottom:6px">Composez le code USSD :</div>' +
+    '<div style="font-size:14px;font-weight:700;color:#b85a00;background:#ffe0c8;padding:6px 8px;border-radius:6px;font-family:monospace;letter-spacing:1px">' + info.orange + '</div>' +
+    '</div>' : '') +
+
+    '</div>' +
+
+    // ── NOTE LÉGALE ──
+    '<div style="background:#fffbf0;border:1px solid #e8d88a;border-left:4px solid #b8860b;padding:10px 12px;font-size:12px;color:#555;margin-bottom:12px;border-radius:0 6px 6px 0;line-height:1.6">' +
+    '⚠️ Le paiement se fait <strong style="color:#8b4a00">EXCLUSIVEMENT</strong> via ' + (info.orange ? 'Orange Money ou Wave' : 'Wave') + '.<br>' +
+    'Toute scolarite entamee est entierement due. <strong>Aucun remboursement ne sera effectue.</strong>' +
+    '</div>' +
+
+    // ── DATE DE RENTRÉE ──
+    '<div style="background:linear-gradient(135deg,#1a3a6b,#2a5298);color:#fff;text-align:center;padding:14px 16px;border-radius:8px">' +
+    '<div style="font-size:12px;color:rgba(255,255,255,0.8);margin-bottom:4px;letter-spacing:0.5px">📅 DEBUT DES COURS</div>' +
+    '<div style="font-size:17px;font-weight:700;color:#f5d97e;letter-spacing:0.5px">' + info.rentree + '</div>' +
+    '</div>' +
+
+    '</div></div></div>'
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION RÉSULTATS UNIFIÉE
+// ════════════════════════════════════════════════════════════
+async function afficherSectionResultats(eleve) {
+  var section = document.getElementById("sectionResultats");
+  var div = document.getElementById("resultatsBody");
+  if (!section || !div) return;
+  section.style.display = "block";
+
+  // Mettre à jour le titre avec l'année
+  var titreRes = document.getElementById("titreResultats");
+  if (titreRes) titreRes.innerHTML = "&#127942; RESULTATS DE FIN D'ANNEE " + ANNEE_SCOLAIRE_ACTIVE + " <span>v</span>";
+
+  var decision = (eleve.decision || "").trim().toUpperCase();
+  var moyRaw = parseFloat(String(eleve.moy_annuelle || 0).replace(',', '.')) || 0;
+  // Si la valeur ressemble à une date sérialisée (> 1000) → c'est 0
+  var moy = (moyRaw > 0 && moyRaw <= 20) ? moyRaw : 0;
+  var classe = (eleve.classe || "").trim().toUpperCase();
+  var ecole = (eleve.ecoleCode || "").trim().toUpperCase();
+  var prenom = (eleve.nom || "").split(" ")[0];
+  var typeClasse = detecterTypeClasse(classe, ecole);
+  var info = window.SHEETS_IDS_COMPLET[eleve.sheetsId] || {};
+  var tel = info.tel || "0708111269";
+  var nc = getProchaineClasse(classe);
+
+  // Animation selon décision
+  var htmlAnim = "";
+  if (!decision) {
+    htmlAnim = "<div style='background:#F0F4F8;border-radius:10px;padding:20px;text-align:center;margin-bottom:14px'><div style='font-size:40px;margin-bottom:10px'>⏳</div><p style='font-weight:bold;color:#1F4E79;font-size:16px;margin-bottom:8px'>Resultats en cours de preparation</p><p style='font-size:13px;color:#666;line-height:1.6'>Disponibles apres les evaluations T3.<br>Reconnectez-vous en Juin 2026.</p></div>";
   } else if (typeClasse === "EXCELLENCE" && moy >= 10) {
     htmlAnim = _cardExcellence(prenom, classe, moy, nc, tel);
+  } else if (typeClasse === "EXCELLENCE" && moy < 10) {
+    htmlAnim = _cardQuitterEX(prenom, classe, moy, tel);
+  } else if (decision === "ADMIS" && moy >= 14) {
+    htmlAnim = _cardEntreEnEX(prenom, classe, moy, tel);
+  } else if (decision === "ADMIS") {
+    htmlAnim = _cardAdmisStandard(prenom, classe, moy, nc, tel);
+  } else if (decision === "REDOUBLANT") {
+    htmlAnim = _cardRedoublant(prenom, classe, moy, tel);
+  } else if (decision === "EXCLU") {
+    htmlAnim = _cardExclu(prenom, classe, tel);
   }
-  // ... etc (le reste du code existant)
-*/
+
+  // Bulletins T1 T2 T3
+  var btnStyle = "padding:12px 6px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:bold;cursor:pointer;line-height:1.5;width:100%";
+  var htmlBul = "<div style='margin-bottom:14px'><div style='font-size:14px;font-weight:700;color:#2E7D32;border-bottom:2px solid #2E7D32;padding-bottom:5px;margin-bottom:10px'>📄 MES BULLETINS SCOLAIRES</div><div style='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px'><button data-og='BULLETINS_T1' style='" + btnStyle + "'>📋<br>Trimestre 1</button><button data-og='BULLETINS_T2' style='" + btnStyle + "'>📋<br>Trimestre 2</button><button data-og='BULLETINS_T3' style='" + btnStyle + "'>📋<br>Trimestre 3</button></div></div>";
+
+  // Notes
+  var htmlNotes = "<div style='margin-bottom:10px'><button id='bNotes' style='width:100%;padding:13px 16px;background:linear-gradient(135deg,#1F4E79,#1565C0);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;justify-content:space-between;align-items:center'><span>📊 MES NOTES DETAILLEES</span><span id='arN'>▼</span></button><div id='noteSec' style='display:none;margin-top:8px;border-radius:8px;border:1px solid #D6E4F0'><div id='noteBody' style='padding:20px;text-align:center;color:#1F4E79'><p style='font-size:13px'>Chargement...</p></div></div></div>";
+
+  // Absences
+  var htmlAbs = "<div style='margin-bottom:10px'><button id='bAbs' style='width:100%;padding:13px 16px;background:linear-gradient(135deg,#E65100,#F57C00);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;justify-content:space-between;align-items:center'><span>📅 MES ABSENCES ET RETARDS</span><span id='arA'>▼</span></button><div id='absSec' style='display:none;margin-top:8px;border-radius:8px;border:1px solid #FFD5B0'><div id='absBody' style='padding:20px;text-align:center;color:#E65100'><p style='font-size:13px'>Chargement...</p></div></div></div>";
+
+  div.innerHTML = htmlAnim + htmlBul + htmlNotes + htmlAbs;
+
+  // Events — après injection HTML
+  // Events bulletins via data-og
+  var btnsOg = div.querySelectorAll("button[data-og]");
+  for (var bi = 0; bi < btnsOg.length; bi++) {
+    (function(b){ b.addEventListener("click", function(){ dlBulletin(b.getAttribute("data-og"), b); }); })(btnsOg[bi]);
+  }
+  document.getElementById("bNotes").addEventListener("click", function(){ bascSection("noteSec","arN","noteBody","notesBody"); });
+  document.getElementById("bAbs").addEventListener("click",   function(){ bascSection("absSec","arA","absBody","absencesBody"); });
+
+  // Confettis
+  if (typeClasse === "EXCELLENCE" && moy >= 10 && decision)
+    setTimeout(function(){ _lancerConfettis("animCard", ["🌟","⭐","🏆","🥇","✨","🎊"]); }, 400);
+  else if (decision === "ADMIS" && moy >= 14)
+    setTimeout(function(){ _lancerConfettis("animCard", ["🎉","🎊","🎈","✅","👏","🏅"]); }, 400);
+}
+
+function bascSection(idSec, idArr, idDst, idSrc) {
+  var el = document.getElementById(idSec);
+  var ar = document.getElementById(idArr);
+  if (!el) return;
+  var ouvert = el.style.display !== "none";
+  el.style.display = ouvert ? "none" : "block";
+  if (ar) ar.textContent = ouvert ? "▼" : "▲";
+  if (!ouvert) {
+    var src = document.getElementById(idSrc);
+    var dst = document.getElementById(idDst);
+    if (src && dst && src.innerHTML.trim()) dst.innerHTML = src.innerHTML;
+  }
+}
+
+async function dlBulletin(onglet, btn) {
+  var eleve = window._eleveActuel;
+  if (!eleve) return;
+  var orig = btn.innerHTML;
+  var origBg = btn.style.background;
+  btn.innerHTML = "⏳ Recherche...";
+  btn.disabled = true;
+  btn.style.background = "#9E9E9E";
+  try {
+    var matClean = eleve.matricule.trim().toUpperCase().replace(/[^A-Z0-9]/g, "");
+    var sid = eleve.sheetsId || CONFIG.SHEETS_ID;
+    var url = "https://sheets.googleapis.com/v4/spreadsheets/" + sid
+            + "/values/" + encodeURIComponent(onglet + "!A1:F5000")
+            + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+
+    console.log("Bulletin:", onglet, "| Mat:", matClean);
+    var res = await fetch(url);
+    console.log("Status:", res.status);
+
+    if (res.status === 400 || res.status === 404) {
+      btn.innerHTML = "⏳<br>Bientot dispo";
+      setTimeout(function(){ btn.innerHTML = orig; btn.style.background = origBg; btn.disabled = false; }, 2000);
+      return;
+    }
+    if (!res.ok) throw new Error("HTTP " + res.status);
+
+    var data = await res.json();
+    var nbLignes = data.values ? data.values.length : 0;
+    console.log("Lignes:", nbLignes);
+    if (!data.values || nbLignes === 0) throw new Error("Vide");
+
+    var lien = null;
+    for (var i = 0; i < data.values.length; i++) {
+      var row = data.values[i];
+      var m = String(row[0] || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      if (i < 3) console.log("Ligne " + i + ":", m, "vs", matClean);
+      if (m !== matClean) continue;
+      console.log("Trouvé ligne", i, "| row:", JSON.stringify(row));
+      // Chercher lien dans toutes les colonnes
+      for (var c = 0; c < row.length; c++) {
+        var v = String(row[c] || "").trim();
+        if (v.indexOf("https://drive.google.com") === 0) { lien = v; break; }
+        if (v.indexOf("http") === 0) { lien = v; break; }
+      }
+      // Si pas URL, chercher ID Drive
+      if (!lien) {
+        for (var c = 0; c < row.length; c++) {
+          var v = String(row[c] || "").trim();
+          if (v.length >= 25 && v.indexOf("http") < 0 && v.indexOf(" ") < 0 && v.indexOf("@") < 0) {
+            lien = "https://drive.google.com/file/d/" + v + "/view";
+            break;
+          }
+        }
+      }
+      break;
+    }
+
+    console.log("Lien trouvé:", lien);
+    if (lien) {
+      window.open(lien, "_blank");
+      btn.innerHTML = orig; btn.style.background = origBg; btn.disabled = false;
+    } else {
+      btn.innerHTML = "⏳<br>Bientot dispo";
+      setTimeout(function(){ btn.innerHTML = orig; btn.style.background = origBg; btn.disabled = false; }, 3000);
+    }
+  } catch(e) {
+    console.error("Erreur bulletin:", e.message);
+    btn.innerHTML = "❌<br>Erreur";
+    setTimeout(function(){ btn.innerHTML = orig; btn.style.background = origBg; btn.disabled = false; }, 3000);
+  }
+}
+
+
+var EDT_HORAIRES = [
+  { type:"cours", h:"07h45 - 08h55" },
+  { type:"cours", h:"08h55 - 09h50" },
+  { type:"pause", h:"&#9208; Recreation  09h50 - 10h10" },
+  { type:"cours", h:"10h10 - 11h05" },
+  { type:"cours", h:"11h05 - 12h00" },
+  { type:"pause", h:"&#127860; Dejeuner  12h00 - 13h05" },
+  { type:"cours", h:"13h05 - 14h00" },
+  { type:"cours", h:"14h00 - 14h55" },
+  { type:"cours", h:"14h55 - 15h50" },
+  { type:"cours", h:"15h50 - 16h45" },
+  { type:"cours", h:"16h45 - 17h40" }
+];
+
+async function chargerEDT(eleve) {
+  var div = document.getElementById("edtBody");
+  var titre = document.getElementById("titreEDT");
+  if (!div) return;
+
+  // Calcul année EDT = année suivante (on prépare 2026-2027)
+  var parts = ANNEE_SCOLAIRE_ACTIVE.split("-");
+  var anneeEDT = parts.length === 2
+    ? (parseInt(parts[0])+1) + "-" + (parseInt(parts[1])+1)
+    : ANNEE_SCOLAIRE_ACTIVE;
+
+  if (titre) titre.innerHTML = "🕐 EMPLOI DU TEMPS " + anneeEDT + " <span>v</span>";
+
+  // Nom onglet selon classe
+  var classeRaw = (eleve.classe || "").trim().toUpperCase();
+  // Remplacer accents EN PREMIER
+  classeRaw = classeRaw.replace(/[ÈÉÊË]/g,"E").replace(/[ÀÂÄ]/g,"A")
+                       .replace(/[ÎÏ]/g,"I").replace(/[ÔÖ]/g,"O")
+                       .replace(/[ÛÙÜ]/g,"U").replace(/Ç/g,"C");
+  // Remplacer espaces par underscore
+  classeRaw = classeRaw.replace(/ /g, "_");
+  // Garder uniquement lettres, chiffres, underscores
+  classeRaw = classeRaw.replace(/[^A-Z0-9_]/g, "");
+  // Nettoyer underscores multiples
+  classeRaw = classeRaw.replace(/_+/g, "_").replace(/^_|_$/g, "");
+  // Construire plusieurs variantes possibles du nom d'onglet
+  var onglet = "EDT_" + classeRaw;
+
+  // Variante courte : supprimer suffixes EME, ERE, NDE, etc.
+  // Ex: EDT_6EME_EX1 → aussi essayer EDT_6EX1
+  var ongletCourt = onglet
+    .replace(/_EME_/g, "_").replace(/_ERE_/g, "_")
+    .replace(/_NDE_/g, "_").replace(/_ALE_/g, "_")
+    .replace(/_LE_/g, "_");
+
+  console.log("EDT cherché:", onglet, "| variante:", ongletCourt, "| Classe:", eleve.classe);
+
+  try {
+    var sid = eleve.sheetsId || CONFIG.SHEETS_ID;
+    // Essayer l'onglet principal puis la variante courte
+    var urlBase = "https://sheets.googleapis.com/v4/spreadsheets/" + sid + "/values/";
+    var urlParams = "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+
+    var res = await fetch(urlBase + encodeURIComponent(onglet + "!A1:G15") + urlParams);
+    if (!res.ok) {
+      // Essayer variante courte
+      res = await fetch(urlBase + encodeURIComponent(ongletCourt + "!A1:G15") + urlParams);
+      if (!res.ok) { edtVide(div, eleve.classe, anneeEDT); return; }
+    }
+    var data = await res.json();
+    if (!data.values || data.values.length < 2) { edtVide(div, eleve.classe, anneeEDT); return; }
+
+    var rows = data.values.slice(1); // ignorer en-tête
+    var html = "<div style='font-size:12px;color:#2E7D32;margin-bottom:8px'>Classe : <strong>" + eleve.classe + "</strong> | Annee : <strong>" + anneeEDT + "</strong></div>";
+    html += "<div class='edt-scroll'><table style='width:100%;min-width:420px;border-collapse:collapse'>";
+    html += "<tr style='background:#1F4E79'>";
+    var thStyle = "padding:9px 6px;color:#fff;font-size:12px;font-weight:700;border:1px solid #2a5298;text-align:center";
+    html += "<th style='" + thStyle + "'>HORAIRE</th><th style='" + thStyle + "'>LUN</th><th style='" + thStyle + "'>MAR</th><th style='" + thStyle + "'>MER</th><th style='" + thStyle + "'>JEU</th><th style='" + thStyle + "'>VEN</th><th style='" + thStyle + "'>SAM</th></tr>";
+
+    var rowIdx = 0;
+    for (var i = 0; i < EDT_HORAIRES.length; i++) {
+      var slot = EDT_HORAIRES[i];
+      if (slot.type === "pause") {
+        html += "<tr style='background:#FFFDE7'><td colspan='7' style='text-align:center;font-weight:bold;color:#B8860B;font-size:12px;padding:6px;border:1px solid #FFE082'>" + slot.h + "</td></tr>";
+      } else {
+        var row = rows[rowIdx] || [];
+        rowIdx++;
+        var bgRow = (rowIdx % 2 === 0) ? "#ffffff" : "#f4f6fa";
+        html += "<tr style='background:" + bgRow + "'>";
+        html += "<td style='font-weight:600;font-size:12px;white-space:nowrap;color:#1F4E79;padding:7px 8px;border:1px solid #e0e6f0'>" + slot.h + "</td>";
+        for (var j = 1; j <= 6; j++) {
+          var mat = String(row[j] || "").trim();
+          html += "<td style='font-size:12px;color:#222;padding:7px 4px;border:1px solid #e0e6f0;text-align:center'>" + mat + "</td>";
+        }
+        html += "</tr>";
+      }
+    }
+    html += "</table></div>";
+    div.innerHTML = html;
+
+  } catch(e) {
+    edtVide(div, eleve.classe, anneeEDT);
+  }
+}
+
+function edtVide(div, classe, annee) {
+  div.innerHTML = "<div style='text-align:center;padding:24px;background:#F1F8E9;border-radius:10px'>"
+    + "<div style='font-size:36px;margin-bottom:10px'>📅</div>"
+    + "<p style='font-weight:bold;color:#2E7D32;font-size:15px;margin-bottom:6px'>Emploi du temps " + annee + "</p>"
+    + "<p style='font-size:13px;color:#666;margin-bottom:4px'>Pas encore disponible pour la classe <strong>" + classe + "</strong></p>"
+    + "<p style='font-size:12px;color:#aaa'>Contactez l'ecole pour plus d'informations</p>"
+    + "</div>";
+}
+
+function matCouleur(mat) { return ""; }
+
+// ════════════════════════════════════════════════════════════
+// TELECHARGER BULLETIN
+// ════════════════════════════════════════════════════════════
+async function telechargerBulletin() {
+  const eleve = window._eleveActuel;
+  if (!eleve) return;
+  const solde = parseFloat(String(eleve.solde||"").replace(/\s/g,"")) || 0;
+  if (solde > 0) {
+    alert("Votre bulletin est accessible uniquement si votre scolarite est entierement payee.\n\nSolde restant : " + solde.toLocaleString("fr-FR") + " F CFA");
+    return;
+  }
+  const btn = document.querySelector("#sectionBulletin button");
+  if (btn) { btn.textContent = "⏳ Chargement..."; btn.disabled = true; }
+  try {
+    const mat      = eleve.matricule.trim().toUpperCase().replace(/[\s\u00A0\u200B\u200C\u200D\uFEFF]/g,"");
+    const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
+    const onglets  = ["BULLETINS_T3","BULLETINS_T2","BULLETINS_T1"];
+    let lienPDF    = null;
+    for (const onglet of onglets) {
+      if (lienPDF) break;
+      const range = encodeURIComponent(onglet + "!A1:F5000");
+      const url   = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+      try {
+        const res  = await fetch(url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        if (!data.values) continue;
+        for (const row of data.values) {
+          const matRow = String(row[0]||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+          if (matRow !== mat) continue;
+          let lienCandidat = "", idCandidat = "";
+          for (let c = 1; c < row.length; c++) {
+            const val = String(row[c]||"").trim();
+            if (val.startsWith("http")) { lienCandidat = val; break; }
+          }
+          for (let c = 1; c < row.length; c++) {
+            const val = String(row[c]||"").trim();
+            if (val && !val.startsWith("http") && val.length >= 33) { idCandidat = val; break; }
+          }
+          lienPDF = lienCandidat || (idCandidat ? "https://drive.google.com/file/d/" + idCandidat + "/view" : null);
+          if (lienPDF) break;
+        }
+      } catch(e) {}
+    }
+    if (!lienPDF) { alert("Bulletin non disponible.\nContactez l'ecole au 07 08 11 12 69"); return; }
+    window.open(lienPDF, "_blank");
+  } catch(e) {
+    alert("Erreur de chargement. Verifiez votre connexion.");
+  } finally {
+    if (btn) { btn.textContent = "📥 Telecharger mon bulletin PDF"; btn.disabled = false; }
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// CHARGER NOTES
+// ════════════════════════════════════════════════════════════
+async function chargerNotes(eleve) {
+  const div = document.getElementById("notesBody");
+  div.innerHTML = "<div style='text-align:center;padding:20px;color:#1F4E79;'><div class='spinner' style='width:24px;height:24px;border:3px solid #D6E4F0;border-top-color:#1F4E79;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;'></div><p style='font-size:0.82em;'>Chargement des notes...</p></div>";
+
+  function getAppreciation(matiere, note) {
+    if (note === null) return { app:"", conseil:"" };
+    const conseils = {
+      "Comp. Française":     { haut:{app:"Votre enfant s'exprime bien par ecrit.",conseil:"Veillez a ce qu'il lise regulierement."}, moyen:{app:"L'expression ecrite est acceptable.",conseil:"Encouragez votre enfant a revoir ses productions."}, faible:{app:"Des difficultes sont notees en expression ecrite.",conseil:"Verifiez que les lecons sont revues chaque soir."} },
+      "Oral Français":       { haut:{app:"Votre enfant s'exprime correctement a l'oral.",conseil:"Invitez votre enfant a parler de sa journee."}, moyen:{app:"L'expression orale est en cours de developpement.",conseil:"Encouragez votre enfant a prendre la parole."}, faible:{app:"Votre enfant a du mal a s'exprimer oralement.",conseil:"Echangez quotidiennement avec votre enfant."} },
+      "Orthographe":         { haut:{app:"La maitrise de l'orthographe est satisfaisante.",conseil:"Faites regulierement des dictees courtes."}, moyen:{app:"L'orthographe presente quelques faiblesses.",conseil:"Pratiquez des dictees deux fois par semaine."}, faible:{app:"De serieuses lacunes en orthographe.",conseil:"Installez une routine de dictee quotidienne."} },
+      "Anglais":             { haut:{app:"Votre enfant suit bien les cours d'anglais.",conseil:"Exposez-le a l'anglais a la maison."}, moyen:{app:"Les resultats en anglais meritent attention.",conseil:"Verifiez que le vocabulaire est appris."}, faible:{app:"L'anglais pose de reelles difficultes.",conseil:"Assurez-vous que votre enfant revise chaque soir."} },
+      "Histoire-Géographie": { haut:{app:"Bonne maitrise de l'Histoire et de la Geographie.",conseil:"Invitez votre enfant a partager ce qu'il apprend."}, moyen:{app:"Les resultats en Hist-Geo sont irreguliers.",conseil:"Verifiez que les lecons sont apprises."}, faible:{app:"Des lacunes importantes en Histoire-Geographie.",conseil:"Aidez votre enfant a reviser avec des fiches."} },
+      "Mathématiques":       { haut:{app:"Votre enfant travaille serieusement en maths.",conseil:"La pratique quotidienne maintient le niveau."}, moyen:{app:"Le niveau en mathematiques necessite de la regularite.",conseil:"Verifiez que les exercices sont faits et corriges."}, faible:{app:"Difficultes serieuses en mathematiques.",conseil:"Un suivi quotidien est urgent."} },
+      "Sciences Physiques":  { haut:{app:"Les sciences physiques sont bien assimilees.",conseil:"Encouragez votre enfant a revoir ses formules."}, moyen:{app:"Des resultats acceptables en sciences.",conseil:"Verifiez que les formules sont memorisees."}, faible:{app:"Des difficultes en Sciences Physiques.",conseil:"Encouragez votre enfant a revoir ses cours."} },
+      "SVT":                 { haut:{app:"Bonne assimilation des Sciences de la Vie.",conseil:"Demandez a votre enfant de vous expliquer ses lecons."}, moyen:{app:"Des resultats moyens en SVT.",conseil:"Verifiez que les definitions sont apprises."}, faible:{app:"Votre enfant presente des lacunes en SVT.",conseil:"Controlez que les lecons sont lues et relues."} },
+    };
+    const tranche = note >= 14 ? "haut" : note >= 10 ? "moyen" : "faible";
+    const base = conseils[matiere] || { haut:{app:"Resultats satisfaisants.",conseil:"Continuez a suivre le travail de votre enfant."}, moyen:{app:"Resultats moyens.",conseil:"Verifiez que les lecons sont apprises chaque soir."}, faible:{app:"Des difficultes sont constatees.",conseil:"Un suivi regulier a la maison est necessaire."} };
+    return base[tranche];
+  }
+
+  function carteMatiere(matiere, noteVal, couleurGroupe) {
+    let v = null;
+    if (noteVal !== undefined && noteVal !== "" && noteVal !== null) {
+      const s = String(noteVal).replace(",",".");
+      const f = parseFloat(s);
+      if (!isNaN(f) && f !== 22) v = f;
+    }
+    if (v === null) return "<div style='display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #f0f0f0;background:#fafafa;'><div style='flex:1;font-size:0.84em;color:#999;'>" + matiere + "</div><div style='font-size:0.8em;color:#ccc;font-style:italic;'>Non evalue</div></div>";
+    const couleurNote = v >= 14 ? "#2E7D32" : v >= 10 ? "#B8860B" : "#C62828";
+    const bgNote      = v >= 14 ? "#E8F5E9" : v >= 10 ? "#FFFDE7" : "#FFEBEE";
+    const emoji       = v >= 14 ? "✅" : v >= 10 ? "⚠️" : "🔴";
+    const apprObj     = getAppreciation(matiere, v);
+    return "<div style='border-bottom:1px solid #f0f0f0;'><div style='display:flex;align-items:center;gap:10px;padding:11px 12px;'><div style='flex:1;'><div style='font-size:0.86em;font-weight:bold;color:#333;'>" + emoji + " " + matiere + "</div><div style='font-size:0.76em;color:#777;margin-top:2px;font-style:italic;'>" + apprObj.app + "</div></div><div style='text-align:center;min-width:54px;background:" + bgNote + ";border-radius:8px;padding:6px 8px;'><div style='font-size:1.1em;font-weight:bold;color:" + couleurNote + ";'>" + v.toFixed(2) + "</div><div style='font-size:0.65em;color:" + couleurNote + ";'>/20</div></div></div><div style='margin:0 12px 10px 12px;background:#F0F7FF;border-left:3px solid " + couleurGroupe + ";border-radius:0 6px 6px 0;padding:8px 10px;'><div style='font-size:0.72em;color:#1F4E79;font-weight:bold;margin-bottom:2px;'>💡 Conseil :</div><div style='font-size:0.76em;color:#444;line-height:1.5;'>" + apprObj.conseil + "</div></div></div>";
+  }
+
+  try {
+    const mat = eleve.matricule;
+    const trimestres = ['NOTES_T2','NOTES_T1','NOTES_T3'];
+    const trimNoms   = ['2eme Trimestre','1er Trimestre','3eme Trimestre'];
+    let rowTrouve = null, trimNom = "";
+    for (let t = 0; t < trimestres.length; t++) {
+      const range    = encodeURIComponent(trimestres[t] + "!A1:V2000");
+      const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
+      const url      = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+      try {
+        const res  = await fetch(url);
+        const data = await res.json();
+        if (!data.values) continue;
+        for (const row of data.values) {
+          if (String(row[1]||"").trim().toUpperCase() === mat.toUpperCase()) { rowTrouve = row; trimNom = trimNoms[t]; break; }
+        }
+        if (rowTrouve) break;
+      } catch(e) {}
+    }
+    if (!rowTrouve) { afficherNotesVides(div); return; }
+    const row      = rowTrouve;
+    const niveau   = (eleve.classe && eleve.classe !== "CLASSE" && eleve.classe.length > 2) ? eleve.classe : String(row[3]||"").trim();
+    const sheetsIdEleve  = eleve.sheetsId || "";
+    const isGuinglo      = sheetsIdEleve === "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA";
+    const isGnontinrou   = sheetsIdEleve === "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4";
+    let groupes;
+    if (isGnontinrou) {
+      groupes = [
+        { titre:"📖 FRANÇAIS",                    couleur:"#1565C0", matieres:[{nom:"Comp. Française",val:row[4]},{nom:"Orthographe",val:row[5]},{nom:"Oral Français",val:row[6]}]},
+        { titre:"🌍 LETTRES & SCIENCES HUMAINES", couleur:"#2E7D32", matieres:[{nom:"Anglais",val:row[7]},{nom:"Histoire-Géographie",val:row[11]}]},
+        { titre:"🔬 SCIENCES",                    couleur:"#C62828", matieres:[{nom:"Mathématiques",val:row[12]},{nom:"Sciences Physiques",val:row[13]},{nom:"SVT",val:row[14]}]},
+        { titre:"⭐ AUTRES",                       couleur:"#E65100", matieres:[{nom:"EPS",val:row[15]},{nom:"EDHC",val:row[16]},{nom:"Conduite",val:row[20]}]},
+      ];
+    } else if (isGuinglo) {
+      groupes = [
+        { titre:"📖 FRANÇAIS",                    couleur:"#1565C0", matieres:[{nom:"Comp. Française",val:row[5]},{nom:"Orthographe",val:row[6]},{nom:"Oral Français",val:row[7]}]},
+        { titre:"🌍 LETTRES & SCIENCES HUMAINES", couleur:"#2E7D32", matieres:[{nom:"Anglais",val:row[9]},{nom:"Histoire-Géographie",val:row[13]}]},
+        { titre:"🔬 SCIENCES",                    couleur:"#C62828", matieres:[{nom:"Mathématiques",val:row[10]},{nom:"Sciences Physiques",val:row[11]},{nom:"SVT",val:row[12]}]},
+        { titre:"⭐ AUTRES",                       couleur:"#E65100", matieres:[{nom:"EPS",val:row[19]},{nom:"EDHC",val:row[15]},{nom:"Conduite",val:row[18]}]},
+      ];
+    } else {
+      groupes = [
+        { titre:"📖 FRANÇAIS",                    couleur:"#1565C0", matieres:[{nom:"Comp. Française",val:row[5]},{nom:"Oral Français",val:row[6]},{nom:"Orthographe",val:row[7]}]},
+        { titre:"🌍 LETTRES & SCIENCES HUMAINES", couleur:"#2E7D32", matieres:[{nom:"Anglais",val:row[8]},{nom:"Histoire-Géographie",val:row[11]}]},
+        { titre:"🔬 SCIENCES",                    couleur:"#C62828", matieres:[{nom:"Mathématiques",val:row[12]},{nom:"Sciences Physiques",val:row[13]},{nom:"SVT",val:row[14]}]},
+        { titre:"⭐ AUTRES MATIERES",              couleur:"#E65100", matieres:[{nom:"EPS",val:row[15]},{nom:"EDHC",val:row[16]},{nom:"Conduite",val:row[17]}]},
+      ];
+    }
+    let html = "<div style='background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;border-left:4px solid #1F4E79;'><p style='font-size:0.82em;color:#1F4E79;font-weight:bold;margin-bottom:2px;'>📋 RELEVE DE NOTES — " + trimNom + " 2025-2026</p><p style='font-size:0.76em;color:#666;'>Classe : <strong>" + niveau + "</strong> — Matricule : <strong>" + mat + "</strong></p></div>";
+    html += "<div style='background:#FFF8E1;border:1px solid #FFD54F;border-radius:8px;padding:10px 12px;margin-bottom:14px;'><p style='font-size:0.76em;color:#6D4C10;line-height:1.6;'><strong>📣 Chers parents,</strong><br>Ce releve presente les resultats de votre enfant. Chaque note est accompagnee d'un conseil personnalise pour mieux suivre son travail a la maison.</p></div>";
+    groupes.forEach(g => {
+      const aDesNotes = g.matieres.some(m => { const f = parseFloat(String(m.val||"").replace(",",".")); return !isNaN(f) && f !== 22; });
+      if (!aDesNotes) return;
+      html += "<div style='margin-bottom:14px;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);'><div style='background:" + g.couleur + ";padding:9px 12px;'><span style='font-weight:bold;color:white;font-size:0.88em;'>" + g.titre + "</span></div>";
+      g.matieres.forEach(m => { html += carteMatiere(m.nom, m.val, g.couleur); });
+      html += "</div>";
+    });
+    html += "<div style='background:#E8F5E9;border-radius:8px;padding:12px;margin-top:4px;border-left:4px solid #2E7D32;text-align:center;'><p style='font-size:0.78em;color:#2E7D32;line-height:1.7;'><strong>🏫 Pour toute question,</strong><br>contactez l'ecole au<br><strong style='font-size:1.1em;'>07 08 11 12 69</strong></p></div>";
+    div.innerHTML = html;
+  } catch(e) { afficherNotesVides(div); }
+}
+
+function afficherNotesVides(div) {
+  div.innerHTML = "<div style='text-align:center;padding:30px 20px;'><div style='font-size:2.5em;margin-bottom:12px;'>📋</div><p style='font-size:0.86em;color:#666;margin-bottom:8px;font-weight:bold;'>Notes du 2eme Trimestre non encore disponibles.</p><p style='font-size:0.78em;color:#aaa;line-height:1.6;'>Les notes seront publiees des la fin des evaluations.<br>Contactez l'ecole au <strong>07 08 11 12 69</strong></p></div>";
+}
+
+// ════════════════════════════════════════════════════════════
+// CHARGER ABSENCES
+// ════════════════════════════════════════════════════════════
+async function chargerAbsences(eleve) {
+  const div = document.getElementById("absencesBody");
+  if (!div) return;
+  try {
+    const mat      = eleve.matricule;
+    const range    = encodeURIComponent("ABSENCES!B4:I200");
+    const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
+    const url      = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+    const res      = await fetch(url);
+    const data     = await res.json();
+    if (!data.values || data.values.length === 0) { div.innerHTML = "<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>Aucune absence enregistree</p>"; return; }
+    const absEleve = data.values.filter(row => String(row[1]||"").trim().toUpperCase() === mat.toUpperCase());
+    if (absEleve.length === 0) { div.innerHTML = "<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>✅ Aucune absence enregistree</p>"; return; }
+    let totalH = 0, justH = 0, nonJustH = 0;
+    absEleve.forEach(row => { const h = parseFloat(row[3])||0; totalH += h; if (String(row[4]||"").toUpperCase()==="OUI") justH+=h; else nonJustH+=h; });
+    const lignes = absEleve.map(row => { const just = String(row[4]||"").toUpperCase()==="OUI"; return "<tr style='border-bottom:1px solid #eee;'><td style='padding:8px 10px;font-size:0.82em;'>" + (row[0]||"-") + "</td><td style='text-align:center;padding:8px;font-size:0.82em;font-weight:bold;'>" + (row[3]||"-") + "h</td><td style='text-align:center;padding:8px;'><span style='background:" + (just?"#E8F5E9":"#FFEBEE") + ";color:" + (just?"#2E7D32":"#C62828") + ";padding:2px 8px;border-radius:10px;font-size:0.75em;font-weight:bold;'>" + (just?"✅ Justifiee":"❌ Non justifiee") + "</span></td><td style='padding:8px 10px;font-size:0.78em;color:#666;'>" + (row[5]||"") + "</td></tr>"; }).join("");
+    div.innerHTML = "<div style='display:flex;gap:8px;margin-bottom:14px;'><div style='flex:1;background:#FFEBEE;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#C62828;margin-bottom:2px;'>TOTAL</p><p style='font-size:1.6em;font-weight:bold;color:#C62828;'>" + totalH + "h</p></div><div style='flex:1;background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#2E7D32;margin-bottom:2px;'>JUSTIFIEES</p><p style='font-size:1.6em;font-weight:bold;color:#2E7D32;'>" + justH + "h</p></div><div style='flex:1;background:#FFF3E0;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#E65100;margin-bottom:2px;'>NON JUST.</p><p style='font-size:1.6em;font-weight:bold;color:#E65100;'>" + nonJustH + "h</p></div></div><table style='width:100%;border-collapse:collapse;'><tr style='background:#f5f5f5;'><th style='text-align:left;padding:6px 10px;font-size:0.78em;color:#666;'>DATE</th><th style='text-align:center;padding:6px;font-size:0.78em;color:#666;'>HEURES</th><th style='text-align:center;padding:6px;font-size:0.78em;color:#666;'>STATUT</th><th style='text-align:left;padding:6px 10px;font-size:0.78em;color:#666;'>MOTIF</th></tr>" + lignes + "</table>";
+  } catch(e) { const div2 = document.getElementById("absencesBody"); if(div2) div2.innerHTML = "<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>✅ Aucune absence enregistree</p>"; }
+}
+
+// ════════════════════════════════════════════════════════════
+// MONTANT ET PAIEMENT
+// ════════════════════════════════════════════════════════════
+function mettreAJourMontant(eleve) {
+  window._eleveActuel = eleve;
+  const solde = parseFloat(eleve.solde) || 0;
+  const el    = document.getElementById("montantText");
+  if (el) {
+    if (solde <= 0) { el.textContent = "0"; const parent = document.getElementById("montantDu"); if(parent) parent.style.background = "linear-gradient(135deg,#2E7D32,#388E3C)"; }
+    else { el.textContent = new Intl.NumberFormat("fr-FR").format(solde); }
+  }
+  const matWave   = document.getElementById("matRefWave");   if(matWave)   matWave.textContent   = eleve.matricule || "-";
+  const matOrange = document.getElementById("matRefOrange"); if(matOrange) matOrange.textContent = eleve.matricule || "-";
+  const nomOfficielOrange = {
+    "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI":"GROUPE SCOLAIRE LES PRINCES",
+    "1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M":"LES PRINCES ACADEMIE",
+    "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4":"LES PRINCES GUINGLO",
+    "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA":"LES PRINCES GUINGLO VILLE",
+    "167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg":"LES PRINCES KOUTOUAN",
+    "1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys":"LES PRINCES SOAKPE",
+    "1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE": "LES PRINCES AKEIKOI 1",
+    "11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog": "LES PRINCES AKEIKOI 2",
+    "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs": "COLLEGE PRIVE PROFESSIONNEL LES PRINCES",
+    "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc": "COLLEGE PRIVE TECHNIQUE LES PRINCES",
+    "1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s": "ETL LES PRINCES KOUIBLY",
+    "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0": "GROUPE SCOLAIRE RITA ROSANE",
+  };
+  const sheetsIdEleve  = eleve.sheetsId || "";
+  const nomOff         = nomOfficielOrange[sheetsIdEleve] || "GROUPE SCOLAIRE LES PRINCES";
+  const nomEcoleOrange = document.getElementById("nomEcoleOrange"); if(nomEcoleOrange) nomEcoleOrange.textContent = nomOff;
+  const nomEcoleWave2  = document.getElementById("nomEcoleWave2");  if(nomEcoleWave2)  nomEcoleWave2.textContent  = nomOff;
+  const sheetsToOrange = {
+    "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI":"#144*43*1721*1#",
+    "1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M":"#144*43*1728*1#",
+    "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4":"#144*43*1725*1#",
+    "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA":"#144*43*1729*1#",
+    "167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg":"#144*43*1726*1#",
+    "1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys":"#144*43*1727*1#",
+    "1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE": "#144*43*1723*1#",
+    "11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog": "#144*43*1724*1#",
+    "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs": "#144*43*1760*1#",
+    "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc": "#144*43*1756*1#",
+    "1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s": "#144*43*1758*1#",
+    "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0": "",
+  };
+  const codeOrange = document.getElementById("codeOrange"); if(codeOrange) codeOrange.textContent = sheetsToOrange[sheetsIdEleve] || "#144*43*1721*1#";
+  const sectionOM  = document.getElementById("sectionOrangeMoney");
+  if(sectionOM) { const isRita = sheetsIdEleve === "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0"; sectionOM.style.display = isRita ? "none" : "block"; }
+}
+
+// ════════════════════════════════════════════════════════════
+// CLUBS
+// ════════════════════════════════════════════════════════════
+const CLUBS_RESEAU = [
+  { id:"SANTE",        nom:"Club Sante",               icon:"H", couleur:"#E53935", desc:"Prevention, hygiene et sante des eleves" },
+  { id:"ROBOTIQUE",    nom:"Club Robotique",            icon:"R", couleur:"#1E88E5", desc:"Programmation, electronique et innovation" },
+  { id:"FOOTBALL",     nom:"Club Football Les Princes", icon:"F", couleur:"#43A047", desc:"Football, competitions inter-ecoles" },
+  { id:"LITTERAIRE",   nom:"Club Litteraire",           icon:"L", couleur:"#6D4C41", desc:"Lecture, ecriture, poesie et theatre" },
+  { id:"SCIENTIFIQUE", nom:"Club Scientifique",         icon:"S", couleur:"#00897B", desc:"Experiences, decouverte et sciences" },
+  { id:"CUISINE",      nom:"Club Cuisine",              icon:"C", couleur:"#F4511E", desc:"Gastronomie, nutrition et art culinaire" },
+  { id:"ARCHITECTURE", nom:"Club Architecture",         icon:"A", couleur:"#8E24AA", desc:"Dessin, construction et urbanisme" },
+];
+
+function afficherClubs(eleve) {
+  const divEleve = document.getElementById("clubsEleve");
+  const divListe = document.getElementById("listeTousClubs");
+  if (!divEleve || !divListe) return;
+  const clubsEleve = [];
+  if (eleve.club1 && eleve.club1.trim()) clubsEleve.push(eleve.club1.trim().toUpperCase());
+  if (eleve.club2 && eleve.club2.trim()) clubsEleve.push(eleve.club2.trim().toUpperCase());
+  let htmlEleve = "";
+  if (clubsEleve.length > 0) {
+    htmlEleve = "<div style='background:#E8F5E9;border:1px solid #43A047;border-radius:10px;padding:12px;margin-bottom:12px;'><p style='font-weight:bold;color:#2E7D32;margin:0 0 8px 0;'>🏆 Mes Clubs</p><div style='display:flex;gap:8px;flex-wrap:wrap;'>";
+    for (const clubId of clubsEleve) { for (const c of CLUBS_RESEAU) { if (c.id===clubId) { htmlEleve += "<span style='background:" + c.couleur + ";color:white;padding:6px 14px;border-radius:20px;font-size:0.85em;font-weight:bold;'>" + c.nom + "</span>"; break; } } }
+    htmlEleve += "</div></div>";
+  } else {
+    htmlEleve = "<div style='background:#FFF3E0;border:1px solid #FFB300;border-radius:8px;padding:10px;margin-bottom:10px;font-size:0.85em;color:#E65100;'>Aucun club pour le moment. Voir le directeur pour s'inscrire.</div>";
+  }
+  divEleve.innerHTML = htmlEleve;
+  let html2 = "<p style='font-weight:bold;color:#6A1B9A;margin:0 0 6px 0;'>Tous les clubs disponibles</p><p style='font-size:0.82em;color:#777;margin:0 0 10px 0;'>Maximum 2 clubs par eleve</p><div style='display:grid;grid-template-columns:1fr 1fr;gap:8px;'>";
+  for (const c of CLUBS_RESEAU) {
+    const estMembre = clubsEleve.includes(c.id);
+    const bg = estMembre ? c.couleur + "22" : "#F9F9F9";
+    const bd = estMembre ? c.couleur : "#E0E0E0";
+    html2 += "<div style='background:" + bg + ";border:2px solid " + bd + ";border-radius:10px;padding:10px;position:relative;'>";
+    if (estMembre) html2 += "<span style='position:absolute;top:5px;right:5px;background:" + c.couleur + ";color:white;border-radius:8px;padding:2px 6px;font-size:0.7em;font-weight:bold;'>MEMBRE</span>";
+    html2 += "<div style='width:32px;height:32px;border-radius:50%;background:" + c.couleur + ";color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1em;margin-bottom:6px;'>" + c.icon + "</div><div style='font-weight:bold;font-size:0.88em;color:" + c.couleur + ";'>" + c.nom + "</div><div style='font-size:0.76em;color:#777;margin-top:4px;'>" + c.desc + "</div></div>";
+  }
+  html2 += "</div>";
+  divListe.innerHTML = html2;
+}
+
+// ════════════════════════════════════════════════════════════
+// MESSAGERIE
+// ════════════════════════════════════════════════════════════
+const MESSAGES_SHEETS_ID = "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI";
+
+async function envoyerMessage() {
+  const eleve  = window._eleveActuel;
+  if (!eleve) return;
+  const type   = document.getElementById("msgType").value;
+  const sujet  = document.getElementById("msgSujet").value.trim();
+  const texte  = document.getElementById("msgTexte").value.trim();
+  const anon   = document.getElementById("msgAnonyme").checked;
+  const statut = document.getElementById("msgStatut");
+  if (!type)  { statut.style.color="#C62828"; statut.textContent="Choisir un type de message."; return; }
+  if (!sujet) { statut.style.color="#C62828"; statut.textContent="Entrer un sujet."; return; }
+  if (!texte) { statut.style.color="#C62828"; statut.textContent="Ecrire votre message."; return; }
+  document.getElementById("btnEnvoyerMsg").disabled = true;
+  document.getElementById("btnEnvoyerMsg").textContent = "Envoi en cours...";
+  statut.textContent = "";
+  try {
+    const now = new Date().toLocaleString("fr-FR",{timeZone:"Africa/Abidjan"});
+    const nom = anon ? "Anonyme" : eleve.nom;
+    const mat = anon ? "---" : eleve.matricule;
+    const row = [now,type,sujet,texte,nom,mat,eleve.classe||"",eleve.ecoleCode||"","Non lu",""];
+    await envoyerViaAppsScript(row,"MESSAGE");
+    statut.style.color="#2E7D32"; statut.textContent="✅ Message envoye ! La direction vous repondra bientot.";
+    document.getElementById("msgSujet").value=""; document.getElementById("msgTexte").value=""; document.getElementById("msgType").value="";
+  } catch(e) { statut.style.color="#C62828"; statut.textContent="❌ Erreur envoi. Contactez directement l'ecole."; }
+  document.getElementById("btnEnvoyerMsg").disabled=false; document.getElementById("btnEnvoyerMsg").textContent="📤 Envoyer le message";
+}
+
+async function envoyerSuggestion() {
+  const eleve  = window._eleveActuel;
+  const texte  = document.getElementById("suggTexte").value.trim();
+  const statut = document.getElementById("suggStatut");
+  if (!texte) { statut.style.color="#C62828"; statut.textContent="Ecrire votre suggestion."; return; }
+  try {
+    const now = new Date().toLocaleString("fr-FR",{timeZone:"Africa/Abidjan"});
+    const row = [now,"Suggestion","Boite a suggestions",texte,"Anonyme","---",eleve?(eleve.classe||""):"",eleve?(eleve.ecoleCode||""):"","Non lu",""];
+    await envoyerViaAppsScript(row,"SUGGESTION");
+    statut.style.color="#2E7D32"; statut.textContent="✅ Suggestion envoyee ! Merci pour votre contribution.";
+    document.getElementById("suggTexte").value="";
+  } catch(e) { statut.style.color="#C62828"; statut.textContent="❌ Erreur. Reessayer plus tard."; }
+}
+
+async function envoyerViaAppsScript(row, type) {
+  const WEBAPP_URLS = {
+    "CPP":        "https://script.google.com/macros/s/AKfycbwYWMhEitUVn3_bNqvp60nYqyBDaLlcpX2Is60cjd6u5-Gv-VsUdt8JgSR003vLWpg0mw/exec",
+    "AKEIKOI_1":  "https://script.google.com/macros/s/AKfycbzgmV4TS8Mzn6GDwhObXVSyARWd68_rL7-yuFaq13qg6FaJMwDokDnBDCsrX8FS2sCY/exec",
+    "GNONTINROU": "https://script.google.com/macros/s/AKfycbzzzLF_V2-2BgAHqyjzRLAcWJnq8BzKvcUzB2uG-JzkaiDCSOaCyySvxnmfyPxPwQPn/exec",
+    "GUINGLO_V":  "https://script.google.com/macros/s/AKfycbzUvysrHpmcWSPieSrY37r4iLtGP4RTQpbh5CJydTExB0A5c3q4TwvRJMXytVLzg2dk/exec",
+    "KOUTOUAN":   "https://script.google.com/macros/s/AKfycbwpJRfiiD5MosYKNICaOfF3At0BvjK7rkkeMJ-_dAOpZ0bjWfwR47xbTE7_T77P8NLrtw/exec",
+    "SOAKPE":     "https://script.google.com/macros/s/AKfycbyUxGKPqRAHMf9eCirQkj0CvudJmoj8dz3WoeTFsz1rcWVS8Lsy6aWQejYtg6uuRKa6/exec",
+    "AKEIKOI_2":  "https://script.google.com/macros/s/AKfycbyHlMbxguRQvwpJOk9p0yIHlwL84wa0Zmg0E1d-FWA_kuEiUNHjJcrwuh4hOTscpkBGlA/exec",
+    "CPP_PRO":    "https://script.google.com/macros/s/AKfycbz_zd5KMUCi7xiWa17Cq_t-QO3HBhbZEuob9YX7z880nNV1H6mxJlLC06_QsY_m2ylKYA/exec",
+    "ACADEMIE":   "https://script.google.com/macros/s/AKfycbyW4xc4SQsbMNrVVJsL9RwDuZJQ_EIYhFARY_IMeLXFRdzafp4Fpv2ZepTeudSPTjx9-g/exec",
+    "KOUIBLY_TEC":"https://script.google.com/macros/s/AKfycbzLXFpiUL5Hvji2G7ON79fAQoxZ_1h99zbwIikTASdbv3BHJ1yKwVGpZDskgwQp4Zmw/exec",
+    "CPP_TECH":   "https://script.google.com/macros/s/AKfycbzdkxrdrNzzBXkzLvkUMZdh3hhYOVSCeOxspdJnuyQtcXD7_j4wr3r0DNLYdua7Cfrm/exec",
+    "RITA":       "https://script.google.com/macros/s/AKfycbzlKa8MmuBmxPJ4xOFfHuOUl2aZ_AYHD8N_h-3euVEAk0kmd9VZ5XkNfoIXOmX3g2DS/exec",
+    "DEFAULT":    "https://script.google.com/macros/s/AKfycbwYWMhEitUVn3_bNqvp60nYqyBDaLlcpX2Is60cjd6u5-Gv-VsUdt8JgSR003vLWpg0mw/exec",
+  };
+  const eleveConnecte = JSON.parse(sessionStorage.getItem("eleveConnecte")||"{}");
+  const ecoleCode     = eleveConnecte.ecoleCode || "DEFAULT";
+  const WEB_APP_URL   = WEBAPP_URLS[ecoleCode] || WEBAPP_URLS["DEFAULT"];
+  return new Promise(function(resolve) {
+    try {
+      const cbName = "jsonp_" + Date.now();
+      const script = document.createElement("script");
+      window[cbName] = function(data) { delete window[cbName]; document.body.removeChild(script); resolve(data); };
+      script.onerror = function() { delete window[cbName]; try{document.body.removeChild(script);}catch(e){} resolve({ok:false}); };
+      script.src = WEB_APP_URL + "?callback=" + cbName + "&type=" + encodeURIComponent(type||"MESSAGE") + "&row=" + encodeURIComponent(JSON.stringify(row));
+      document.body.appendChild(script);
+      setTimeout(function() { if(window[cbName]){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:true});} }, 10000);
+    } catch(e) { resolve({ok:false}); }
+  });
+}
+
+async function chargerReponsesMessages(eleve) {
+  const div = document.getElementById("reponsesMessages");
+  if (!div || !eleve) return;
+  try {
+    const mat   = eleve.matricule;
+    const range = encodeURIComponent("MESSAGES!A2:J500");
+    const url   = "https://sheets.googleapis.com/v4/spreadsheets/" + MESSAGES_SHEETS_ID + "/values/" + range + "?key=" + CONFIG.API_KEY;
+    const res   = await fetch(url);
+    if (!res.ok) return;
+    const data  = await res.json();
+    if (!data.values) return;
+    const reponses = data.values.filter(r => String(r[5]||"").trim().toUpperCase()===mat.toUpperCase() && r[9] && r[9].trim());
+    if (reponses.length===0) { div.innerHTML="<p style='font-size:0.85em;color:#999;text-align:center;padding:8px 0;'>Aucune reponse recue pour le moment.</p>"; return; }
+    let html = "<p style='font-weight:bold;color:#1A5276;margin:0 0 8px 0;'>Reponses recues</p>";
+    reponses.forEach(r => { html += "<div style='background:#E8F4FD;border-left:4px solid #2874A6;border-radius:6px;padding:10px;margin-bottom:8px;'><div style='font-size:0.8em;color:#777;'>" + r[0] + " - " + r[1] + ": " + r[2] + "</div><div style='font-size:0.9em;color:#1A5276;margin-top:4px;font-weight:bold;'>Reponse : " + r[9] + "</div></div>"; });
+    div.innerHTML = html;
+  } catch(e) {}
+}
+
+async function chargerAnnonces(eleve) {
+  try {
+    const range    = encodeURIComponent("ANNONCES!A4:G60");
+    const sheetsId = eleve.sheetsId || CONFIG.SHEETS_ID;
+    const url      = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+    const res      = await fetch(url);
+    const data     = await res.json();
+    if (!data.values) return;
+    const annonces = data.values.filter(row => String(row[6]||"").toUpperCase()==="OUI");
+    if (annonces.length===0) return;
+    document.getElementById("sectionAnnonces").style.display = "block";
+    const html = annonces.map(row => {
+      const date = row[1]||""; const type = row[2]||"Info"; const msg = row[3]||"";
+      return "<div style='border-left:4px solid #1F4E79;background:#FAFAFA;padding:10px 14px;margin-bottom:10px;border-radius:0 8px 8px 0;'><div style='display:flex;justify-content:space-between;margin-bottom:4px;'><span style='font-weight:bold;color:#1F4E79;font-size:0.82em;'>" + type + "</span><span style='font-size:0.75em;color:#999;'>" + date + "</span></div><p style='font-size:0.85em;color:#333;line-height:1.5;'>" + msg + "</p></div>";
+    }).join("");
+    document.getElementById("annoncesBody").innerHTML = html;
+  } catch(e) {}
+}
+function afficherSectionBloquee(eleve, soldeParsed, verseParsed) {
+  const div = document.getElementById("bloqueBody");
+  const section = document.getElementById("sectionBloque");
+  if (!div || !section) return;
+
+  section.style.display = "block";
+
+  const info = window.SHEETS_IDS_COMPLET[eleve.sheetsId] || {};
+  const tel  = info.tel || "0708111269";
+
+  div.innerHTML =
+    "<div style='text-align:center;padding:20px 16px;'>" +
+
+    // Icône cadenas
+    "<div style='font-size:56px;margin-bottom:12px;'>🔒</div>" +
+
+    // Titre
+    "<p style='font-size:1em;font-weight:bold;color:#C62828;margin-bottom:8px;'>" +
+    "Accès bloqué — Solde impayé</p>" +
+
+    // Montant
+    "<div style='background:#FFEBEE;border:2px solid #C62828;border-radius:10px;padding:14px;margin-bottom:16px;'>" +
+    "<p style='font-size:0.85em;color:#555;margin-bottom:4px;'>Solde restant à payer</p>" +
+    "<p style='font-size:1.8em;font-weight:bold;color:#C62828;'>" +
+    soldeParsed.toLocaleString('fr-FR') + " F CFA</p>" +
+    (verseParsed > 0 ? "<p style='font-size:0.78em;color:#888;margin-top:4px;'>Déjà versé : " +
+    verseParsed.toLocaleString('fr-FR') + " F CFA</p>" : "") +
+    "</div>" +
+
+    // Message
+    "<div style='background:#FFF8E1;border:1px solid #FFD54F;border-radius:10px;padding:14px;margin-bottom:16px;text-align:left;'>" +
+    "<p style='font-size:0.85em;color:#6D4C10;line-height:1.7;'>" +
+    "⚠️ Les <strong>notes</strong>, <strong>bulletins</strong> et <strong>résultats</strong> " +
+    "de votre enfant sont accessibles uniquement lorsque la scolarité est entièrement réglée.<br><br>" +
+    "Régularisez votre situation pour débloquer l'accès complet." +
+    "</p></div>" +
+
+    // Contact
+    "<div style='background:#1A3A5C;border-radius:10px;padding:14px;text-align:center;'>" +
+    "<p style='color:#D4AF37;font-weight:bold;font-size:0.88em;margin-bottom:6px;'>" +
+    "📞 Contactez l'école pour un arrangement</p>" +
+    "<p style='color:#fff;font-size:1.1em;font-weight:bold;'>" + tel + "</p>" +
+    "<p style='color:rgba(255,255,255,0.65);font-size:0.75em;margin-top:4px;'>" +
+    "Lundi au Samedi — 7h30 à 17h30</p>" +
+    "</div>" +
+
+    "</div>";
+}
+// ════════════════════════════════════════════════════════════
+// UTILITAIRES
+// ════════════════════════════════════════════════════════════
+function afficherErreur(msg) { const el = document.getElementById("errorMsg"); el.textContent=msg; el.style.display="block"; }
+
+function toggleSec(header) {
+  const body  = header.nextElementSibling;
+  const arrow = header.querySelector("span");
+  body.classList.toggle("open");
+  arrow.textContent = body.classList.contains("open") ? "^" : "v";
+}
+
+function logout() {
+  sessionStorage.removeItem("eleveConnecte");
+  document.getElementById("parentSpace").style.display  = "none";
+  document.getElementById("loginWrapper").style.display = "block";
+  document.getElementById("mainHeader").style.background = "linear-gradient(135deg,#1F4E79,#1565C0)";
+  document.getElementById("headerTitle").textContent = "🏫 ECOLE LES PRINCES";
+  document.getElementById("headerSub").textContent   = "Espace Parents - Suivi Scolaire en Ligne";
+  document.getElementById("inputMat").value  = "";
+  document.getElementById("inputTel").value  = "";
+  document.getElementById("errorMsg").style.display = "none";
+  window.scrollTo(0,0);
+}
+
+function demarrerBlocage() {
+  document.getElementById("loginWrapper").style.display = "none";
+  document.getElementById("blockedMsg").style.display   = "block";
+  let sec = CONFIG.BLOCAGE_MIN * 60;
+  const timerEl = document.getElementById("blockedTimer");
+  blocageInterval = setInterval(() => {
+    sec--;
+    const m = Math.floor(sec/60), s = sec%60;
+    timerEl.textContent = m + ":" + s.toString().padStart(2,"0");
+    if (sec <= 0) { clearInterval(blocageInterval); tentatives=0; document.getElementById("blockedMsg").style.display="none"; document.getElementById("loginWrapper").style.display="block"; }
+  }, 1000);
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+window.addEventListener("load", () => {
+  const saved = sessionStorage.getItem("eleveConnecte");
+  if (saved) { try { afficherEspaceParent(JSON.parse(saved)); } catch(e) { sessionStorage.removeItem("eleveConnecte"); } }
+});
+
+document.addEventListener("keypress", e => { if (e.key==="Enter") login(); });
+
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault(); deferredPrompt = e;
+  document.getElementById("pwaBanner").style.display = "flex";
+});
+function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => { document.getElementById("pwaBanner").style.display="none"; deferredPrompt=null; });
+  }
+}
+</script>
+</body>
+</html>
