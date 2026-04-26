@@ -435,7 +435,11 @@ async function login() {
   tentatives = 0;
   const ecoleInfo = ECOLES.find(e => e.code === (eleve.ecoleCode || "CPP")) || ECOLES[2];
   if (eleve.nomEcole) ecoleInfo.nom = eleve.nomEcole;
-  const eleveComplet = { ...eleve, matricule: mat, ecole: ecoleInfo, ecoleCode: eleve.ecoleCode || "CPP" };
+  var eleveComplet = {};
+  for (var k in eleve) { if (eleve.hasOwnProperty(k)) eleveComplet[k] = eleve[k]; }
+  eleveComplet.matricule = mat;
+  eleveComplet.ecole     = ecoleInfo;
+  eleveComplet.ecoleCode = eleve.ecoleCode || "CPP";
   sessionStorage.setItem("eleveConnecte", JSON.stringify(eleveComplet));
   afficherEspaceParent(eleveComplet);
 }
@@ -475,8 +479,8 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
 
 function afficherEspaceParent(eleve) {
   const ecole = eleve.ecole;
-  const couleur = ecole?.couleur || "#1F4E79";
-  const nomEcole = ecole?.nom || "Reseau Les Princes";
+  const couleur = (ecole && ecole.couleur) ? ecole.couleur : "#1F4E79";
+  const nomEcole = (ecole && ecole.nom) ? ecole.nom : "Reseau Les Princes";
   const typeClasse = detecterTypeClasse(eleve.classe, eleve.ecoleCode);
   document.getElementById("mainHeader").style.background = "linear-gradient(135deg,#1F4E79,#1565C0)";
   document.getElementById("headerTitle").textContent = nomEcole;
@@ -621,7 +625,7 @@ function _cardRNO_Attente(prenom, moy, tel, typeExamen, nomEcole) {
   var examLabel = isBac ? "BAC" : "BEPC";
   var prochaineInfo = isBac
     ? "Vous serez informe(e) de votre orientation apres les resultats"
-    : "2NDE C - " + (nomEcole || "College Les Princes");
+    : "2ND - " + (nomEcole || "College Les Princes");
   return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#1565C0,#1976D2)" id="cardDecision"><span class="cpp-emoji-big cpp-float-soft">&#9203;</span><div class="cpp-titre">' + titre + '</div><div class="cpp-sous">' + prenom + ', vous avez termine ' + classeFinale + ' avec succes !<br>' + (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div><span class="cpp-emoji-row">&#128203; &#9999; &#127979; &#128218; &#127919;</span><div class="cpp-msg-box">Vos resultats du ' + examLabel + ' seront publies ici des qu\'ils seront disponibles.<br>Revenez apres la proclamation officielle des resultats.</div><div class="cpp-next-class" style="background:rgba(255,255,255,0.2)"><div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">' + (isBac ? 'APRES LES RESULTATS' : 'EN CAS D\'ORIENTATION') + '</div><div class="cpp-nc-value" style="color:#fff">' + prochaineInfo + '</div></div></div>' + _blocContact(tel);
 }
 
@@ -632,10 +636,10 @@ function _cardRNO_Admis_BEPC(prenom, moy, score, tel, typeExamen, nomEcole) {
   var scoreLabel = score !== null ? "Score " + examLabel + " : " + score + " points" : "ADMIS(E) AU " + examLabel;
   var orientMsg = isBac
     ? "Bravo ! Vous etes admis(e) au BAC. Toute l\'equipe du reseau Les Princes est fiere de vous !"
-    : "Bravo ! Toute l\'equipe du College Les Princes est fiere de vous.<br>&#128073; <strong>Inscrivez-vous en 2NDE au College Les Princes !</strong>";
+    : "Bravo ! Toute l\'equipe du College Les Princes est fiere de vous.<br>&#128073; <strong>Inscrivez-vous en 2ND au College Les Princes !</strong>";
   var prochaineClasse = isBac
     ? "Felicitations - Orientez-vous vers l\'enseignement superieur !"
-    : "2NDE C - " + (nomEcole || "College Les Princes");
+    : "2ND - " + (nomEcole || "College Les Princes");
   return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#2E7D32,#388E3C)" id="cardDecision"><span class="cpp-emoji-big cpp-bounce">&#127881;</span><div class="cpp-titre">' + titre + '</div><div style="display:inline-block;background:#D4AF37;color:#1A3A5C;font-weight:bold;font-size:1em;padding:6px 20px;border-radius:20px;margin-bottom:10px;">' + scoreLabel + '</div><div class="cpp-sous">' + prenom + ', vous avez reussi votre examen !<br>' + (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div><span class="cpp-emoji-row">&#127881; &#127942; &#11088; &#127882; &#129395;</span><div class="cpp-msg-box">' + orientMsg + '</div><div class="cpp-next-class" style="background:#D4AF37"><div class="cpp-nc-label" style="color:#5a3a00">' + (isBac ? 'ORIENTATION' : 'PROCHAINE CLASSE') + '</div><div class="cpp-nc-value" style="color:#1A3A5C">' + prochaineClasse + '</div></div></div><div class="cpp-insc-block"><p style="font-weight:bold;color:#2E7D32;font-size:0.9em;margin-bottom:8px;">&#128204; ' + (isBac ? 'Pensez a votre orientation superieure !' : 'Inscrivez-vous maintenant pour 2026-2027 :') + '</p><div style="font-size:0.83em;color:#444;line-height:2">&#10003; ' + (isBac ? 'Universites, BTS, Grandes Ecoles — renseignez-vous<br>&#10003; Demandez conseil a votre etablissement<br>&#10003; Felicitations encore pour ce beau succes !' : 'Places limitees - venez tot !<br>&#10003; Apportez votre releve de notes et votre carte d\'eleve<br>&#10003; Profitez du tarif preferentiel ancien eleve') + '</div></div>' + _blocContact(tel);
 }
 
