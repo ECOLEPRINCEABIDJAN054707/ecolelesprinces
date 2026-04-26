@@ -112,7 +112,7 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
   <button onclick="installPWA()">Installer</button>
 </div>
 <div class="header" id="mainHeader">
-  <h1 id="headerTitle">&#127979; ECOLE LES PRINCES</h1>
+  <h1 id="headerTitle">🏫 ECOLE LES PRINCES</h1>
   <p id="headerSub">Espace Parents - Suivi Scolaire en Ligne</p>
 </div>
 <div class="login-wrapper" id="loginWrapper">
@@ -1149,7 +1149,7 @@ function afficherSectionBloquee(eleve, soldeParsed, verseParsed) {
 
 function afficherErreur(msg) { const el=document.getElementById("errorMsg"); el.textContent=msg; el.style.display="block"; }
 function toggleSec(header) { const body=header.nextElementSibling; const arrow=header.querySelector("span"); body.classList.toggle("open"); arrow.textContent=body.classList.contains("open")?"^":"v"; }
-function logout() { sessionStorage.removeItem("eleveConnecte"); document.getElementById("parentSpace").style.display="none"; document.getElementById("loginWrapper").style.display="block"; document.getElementById("mainHeader").style.background="linear-gradient(135deg,#1F4E79,#1565C0)"; document.getElementById("headerTitle").textContent="&#127979; ECOLE LES PRINCES"; document.getElementById("headerSub").textContent="Espace Parents - Suivi Scolaire en Ligne"; document.getElementById("inputMat").value=""; document.getElementById("inputTel").value=""; document.getElementById("errorMsg").style.display="none"; window.scrollTo(0,0); }
+function logout() { sessionStorage.removeItem("eleveConnecte"); document.getElementById("parentSpace").style.display="none"; document.getElementById("loginWrapper").style.display="block"; document.getElementById("mainHeader").style.background="linear-gradient(135deg,#1F4E79,#1565C0)"; document.getElementById("headerTitle").textContent="🏫 ECOLE LES PRINCES"; document.getElementById("headerSub").textContent="Espace Parents - Suivi Scolaire en Ligne"; document.getElementById("inputMat").value=""; document.getElementById("inputTel").value=""; document.getElementById("errorMsg").style.display="none"; window.scrollTo(0,0); }
 function demarrerBlocage() { document.getElementById("loginWrapper").style.display="none"; document.getElementById("blockedMsg").style.display="block"; let sec=CONFIG.BLOCAGE_MIN*60; const timerEl=document.getElementById("blockedTimer"); blocageInterval=setInterval(()=>{sec--;const m=Math.floor(sec/60),s=sec%60;timerEl.textContent=m+":"+s.toString().padStart(2,"0");if(sec<=0){clearInterval(blocageInterval);tentatives=0;document.getElementById("blockedMsg").style.display="none";document.getElementById("loginWrapper").style.display="block";}},1000); }
 window.addEventListener("load",()=>{const saved=sessionStorage.getItem("eleveConnecte");if(saved){try{afficherEspaceParent(JSON.parse(saved));}catch(e){sessionStorage.removeItem("eleveConnecte");}}});
 document.addEventListener("keypress",e=>{if(e.key==="Enter")login();});
