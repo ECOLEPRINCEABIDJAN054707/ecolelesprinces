@@ -668,7 +668,7 @@ function _cardCEPE_Attente(prenom, moy, tel, nomEcole) {
     '<div class="cpp-msg-box">Les resultats du CEPE seront publies ici des leur proclamation officielle.<br>' +
     'Revenez apres la proclamation des resultats.</div>' +
     '<div class="cpp-next-class" style="background:rgba(255,255,255,0.2)">' +
-    '<div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">EN CAS D'ORIENTATION</div>' +
+    '<div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">EN CAS D\'ORIENTATION</div>' +
     '<div class="cpp-nc-value" style="color:#fff">6EME — ' + (nomEcole || "College Les Princes") + '</div>' +
     '</div></div>' + _blocContact(tel);
 }
@@ -683,7 +683,7 @@ function _cardCEPE_Admis(prenom, moy, score, tel, nomEcole) {
     '<div class="cpp-sous">' + prenom + ', vous etes oriente(e) en 6EME !<br>' +
     (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div>' +
     '<span class="cpp-emoji-row">&#127881; &#127942; &#11088; &#127882; &#129395;</span>' +
-    '<div class="cpp-msg-box">Bravo ! Toute l'equipe est fiere de vous.<br>' +
+    '<div class="cpp-msg-box">Bravo ! Toute l\'equipe est fiere de vous.<br>' +
     '&#128073; <strong>Inscrivez-vous en 6EME au ' + ecoleAff + ' !</strong></div>' +
     '<div class="cpp-next-class" style="background:#D4AF37">' +
     '<div class="cpp-nc-label" style="color:#5a3a00">PROCHAINE CLASSE</div>' +
@@ -693,7 +693,7 @@ function _cardCEPE_Admis(prenom, moy, score, tel, nomEcole) {
     '<p style="font-weight:bold;color:#2E7D32;font-size:0.9em;margin-bottom:8px;">&#128204; Inscrivez-vous maintenant pour 2026-2027 :</p>' +
     '<div style="font-size:0.83em;color:#444;line-height:2">' +
     '&#10003; Places limitees — venez tot !<br>' +
-    '&#10003; Apportez votre releve de notes et votre carte d'eleve<br>' +
+    '&#10003; Apportez votre releve de notes et votre carte d\'eleve<br>' +
     '&#10003; Profitez du tarif preferentiel ancien eleve</div></div>' +
     _blocContact(tel);
 }
@@ -705,11 +705,11 @@ function _cardCEPE_Refuse(prenom, moy, score, tel, nomEcole) {
     '<div class="cpp-titre">Courage ' + prenom + ' !</div>' +
     '<div style="display:inline-block;background:rgba(255,255,255,0.2);color:#fff;font-weight:bold;font-size:0.95em;padding:5px 16px;border-radius:20px;margin-bottom:10px;">' +
     (score !== null ? 'Score CEPE : ' + score + ' points' : 'Non oriente(e) cette annee') + '</div>' +
-    '<div class="cpp-sous">Ce resultat n'est pas une fin — c'est un nouveau depart !<br>' +
+    '<div class="cpp-sous">Ce resultat n\'est pas une fin — c\'est un nouveau depart !<br>' +
     (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div>' +
     '<span class="cpp-emoji-row">&#128170; &#128218; &#127807; &#128260; &#8987;</span>' +
     '<div class="cpp-msg-box">Le redoublement en CM2 est une nouvelle chance de bien preparer le CEPE.<br><br>' +
-    'Avec du travail regulier et un bon suivi, vous reussirez l'annee prochaine !</div>' +
+    'Avec du travail regulier et un bon suivi, vous reussirez l\'annee prochaine !</div>' +
     '<div class="cpp-next-class" style="background:rgba(255,255,255,0.2)">' +
     '<div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">CLASSE L'ANNEE PROCHAINE</div>' +
     '<div class="cpp-nc-value" style="color:#fff">CM2 — ' + ecoleAff + '</div>' +
@@ -720,7 +720,7 @@ function _cardCEPE_Refuse(prenom, moy, score, tel, nomEcole) {
     '&#10004; Reinscrivez-vous avant le 31 Aout 2026<br>' +
     '&#10004; Contactez la direction pour un bilan personnalise<br>' +
     '&#10004; Travaillez les matieres faibles pendant les vacances<br>' +
-    '&#10004; Demandez un programme de revision a l'ecole</div></div>' +
+    '&#10004; Demandez un programme de revision a l\'ecole</div></div>' +
     _blocContact(tel);
 }
 
