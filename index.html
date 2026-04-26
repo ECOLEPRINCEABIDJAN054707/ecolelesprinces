@@ -583,8 +583,12 @@ function estTerminale(classe) {
 }
 
 function estCM2(classe) {
-  var c = (classe || "").trim().toUpperCase();
-  return c === "CM2" || c === "CM 2";
+  var c = (classe || "").trim().toUpperCase()
+    .replace(/[ÈÉÊË]/g,"E").replace(/[ÀÂÄ]/g,"A")
+    .replace(/[ÎÏ]/g,"I").replace(/[ÔÖ]/g,"O")
+    .replace(/[ÛÙÜ]/g,"U").replace(/Ç/g,"C");
+  // Reconnaît : CM2, CM2A, CM2B, CM2 1, CM2 2, CM 2, CM 2A, etc.
+  return c === "CM2" || c === "CM 2" || /^CM2[A-Z0-9]/.test(c) || /^CM\s*2/.test(c);
 }
 
 async function chargerResultatExamen(eleve) {
@@ -662,11 +666,11 @@ function _cardRNO_Refuse_BEPC(prenom, moy, score, tel, typeExamen, nomEcole, cla
 // MODULE CEPE — RÉSULTATS CM2
 // ════════════════════════════════════════════════════════════
 
-function _cardCEPE_Attente(prenom, moy, tel, nomEcole) {
+function _cardCEPE_Attente(prenom, moy, tel, nomEcole, classe) {
   return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#4A148C,#6A1B9A)" id="cardDecision">' +
     '<span class="cpp-emoji-big cpp-float-soft">&#9203;</span>' +
     '<div class="cpp-titre">Resultats CEPE en attente</div>' +
-    '<div class="cpp-sous">' + prenom + ', vous avez termine votre CM2 !<br>' +
+    '<div class="cpp-sous">' + prenom + ', vous avez termine votre ' + (classe || 'CM2') + ' !<br>' +
     (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div>' +
     '<span class="cpp-emoji-row">&#128203; &#9999; &#127979; &#128218; &#127919;</span>' +
     '<div class="cpp-msg-box">Les resultats du CEPE seront publies ici des leur proclamation officielle.<br>' +
@@ -771,7 +775,7 @@ async function afficherSectionResultats(eleve) {
     if (typeExamen === "CEPE") {
       // ── Cartes CEPE ──
       if (!examen || examen.score === null) {
-        htmlAnim = _cardCEPE_Attente(prenom, moy, tel, nomEcoleEleve);
+        htmlAnim = _cardCEPE_Attente(prenom, moy, tel, nomEcoleEleve, classe);
       } else if (examen.statut === "ADMIS") {
         htmlAnim = _cardCEPE_Admis(prenom, moy, examen.score, tel, nomEcoleEleve);
         setTimeout(function(){ _lancerConfettis("cardDecision", ["&#127881;","&#127882;","&#11088;","&#11088;","&#129395;","&#127942;"]); }, 400);
