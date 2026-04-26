@@ -373,9 +373,9 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
 // CONFIGURATION GLOBALE
 // ════════════════════════════════════════════════════════════
 const ECOLES = [
-  { code:"CPP_PRO",     nom:"College Prive Professionnel Les Princes d'Abidjan", ville:"Abobo / Abidjan", couleur:"#1F4E79" },
-  { code:"CPP_TECH",    nom:"College Prive Technique Les Princes d'Abidjan",     ville:"Abobo / Abidjan", couleur:"#2E7D32" },
-  { code:"CPP",         nom:"College Prive Les Princes d'Abidjan",               ville:"Abobo / Abidjan", couleur:"#C62828" },
+  { code:"CPP_PRO",     nom:"College Prive Professionnel Les Princes d&#x27;Abidjan", ville:"Abobo / Abidjan", couleur:"#1F4E79" },
+  { code:"CPP_TECH",    nom:"College Prive Technique Les Princes d&#x27;Abidjan",     ville:"Abobo / Abidjan", couleur:"#2E7D32" },
+  { code:"CPP",         nom:"College Prive Les Princes d&#x27;Abidjan",               ville:"Abobo / Abidjan", couleur:"#C62828" },
   { code:"KOUTOUAN",    nom:"Groupe Scolaire Koutouan Abobo",                    ville:"Abobo",           couleur:"#4A148C" },
   { code:"GUINGLO_V",   nom:"College Prive Les Princes de Guinglo Ville",        ville:"Guinglo",         couleur:"#E65100" },
   { code:"SOAKPE",      nom:"College Prive Les Princes de Soakpe-Douedy",        ville:"Soakpe",          couleur:"#00695C" },
@@ -398,16 +398,16 @@ const CONFIG = {
 };
 
 const SHEETS_IDS_COMPLET = {
-  "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI": { nom:"CPP Les Princes d'Abidjan",             tel:"0708111269", wave:"0708111269" },
-  "1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M": { nom:"Academie Les Princes d'Abidjan",         tel:"0747477926", wave:"0747477926" },
+  "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI": { nom:"CPP Les Princes d&#x27;Abidjan",             tel:"0708111269", wave:"0708111269" },
+  "1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M": { nom:"Academie Les Princes d&#x27;Abidjan",         tel:"0747477926", wave:"0747477926" },
   "1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA": { nom:"CPP Les Princes de Guinglo Ville",       tel:"0555685704", wave:"0555685704" },
   "1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4": { nom:"CPP Gnontinrou Therese de Guinglo",      tel:"0778069066", wave:"0778069066" },
   "167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg": { nom:"CPP Les Princes de Koutouan",            tel:"0747330128", wave:"0747330128" },
   "1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys": { nom:"CPP Les Princes de Soakpe-Douedy",       tel:"0747477926", wave:"0747477926" },
   "1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE":  { nom:"EPV Les Princes 1 d'Abobo Akeikoi",      tel:"0747477926", wave:"0747477926" },
   "11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog":  { nom:"EPV Les Princes 2 d'Abobo Akeikoi",      tel:"0747477926", wave:"0747477926" },
-  "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs":  { nom:"CP Professionnel Les Princes d'Abidjan", tel:"0708111269", wave:"0708111269" },
-  "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc":  { nom:"CP Technique Les Princes d'Abidjan",     tel:"0708111269", wave:"0708111269" },
+  "1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs":  { nom:"CP Professionnel Les Princes d&#x27;Abidjan", tel:"0708111269", wave:"0708111269" },
+  "15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc":  { nom:"CP Technique Les Princes d&#x27;Abidjan",     tel:"0708111269", wave:"0708111269" },
   "1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s":  { nom:"ETL Les Princes de Kouibly",             tel:"0759937994", wave:"0759937994" },
   "1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0":  { nom:"Groupe Scolaire Rita Rosane Abobo",      tel:"0757227049", wave:"0757227049" },
 };
@@ -787,16 +787,16 @@ async function chargerFicheRenseignement(eleve) {
   const div = document.getElementById('ficheRenseignement');
   if (!div) return;
   const INFOS_ECOLES = {
-    "CPP":        { nom:"College Prive Les Princes d'Abidjan",               tel1:"0708111269", tel2:"0789771991", wave:"GROUPE SCOLAIRE LES PRINCES",           orange:"#144*43*1721*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"054707"  },
-    "ACADEMIE":   { nom:"Academie Les Princes d'Abidjan",                    tel1:"0747477926", tel2:"0708111269", wave:"LES PRINCES ACADEMIE",                  orange:"#144*43*1728*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:""       },
+    "CPP":        { nom:"College Prive Les Princes d&#x27;Abidjan",               tel1:"0708111269", tel2:"0789771991", wave:"GROUPE SCOLAIRE LES PRINCES",           orange:"#144*43*1721*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"054707"  },
+    "ACADEMIE":   { nom:"Academie Les Princes d&#x27;Abidjan",                    tel1:"0747477926", tel2:"0708111269", wave:"LES PRINCES ACADEMIE",                  orange:"#144*43*1728*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:""       },
     "GUINGLO_V":  { nom:"College Prive Les Princes de Guinglo-Ville",        tel1:"0749781842", tel2:"0555271184", wave:"LES PRINCES GUINGLO VILLE",             orange:"#144*43*1729*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"253854" },
     "GNONTINROU": { nom:"College Prive Gnontinrou Therese de Guinglo-Guezon",tel1:"0778976708", tel2:"0708991975", wave:"LES PRINCES GUINGLO",                   orange:"#144*43*1725*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"310538" },
     "KOUTOUAN":   { nom:"Groupe Scolaire Koutouan Nandjui Abobo",            tel1:"0708111269", tel2:"0747477926", wave:"LES PRINCES KOUTOUAN",                  orange:"#144*43*1726*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"000277" },
     "SOAKPE":     { nom:"College Prive Les Princes de Soakpe-Douedy",        tel1:"0787866177", tel2:"",           wave:"LES PRINCES SOAKPE",                    orange:"#144*43*1727*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"321130" },
     "AKEIKOI_1":  { nom:"EPV Les Princes Akeikoi 1",                         tel1:"0747477926", tel2:"0708111269", wave:"LES PRINCES AKEIKOI 1",                 orange:"#144*43*1723*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:""       },
     "AKEIKOI_2":  { nom:"EPV Les Princes Akeikoi 2",                         tel1:"0707777545", tel2:"0747477926", wave:"LES PRINCES AKEIKOI 2",                 orange:"#144*43*1724*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:""       },
-    "CPP_PRO":    { nom:"College Prive Professionnel Les Princes d'Abidjan", tel1:"0708111269", tel2:"0797649941", wave:"COLLEGE PRIVE PROFESSIONNEL LES PRINCES",orange:"#144*43*1760*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"790219" },
-    "CPP_TECH":   { nom:"College Prive Technique Les Princes d'Abidjan",     tel1:"0708111269", tel2:"0797649941", wave:"COLLEGE PRIVE TECHNIQUE LES PRINCES",   orange:"#144*43*1756*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"780202" },
+    "CPP_PRO":    { nom:"College Prive Professionnel Les Princes d&#x27;Abidjan", tel1:"0708111269", tel2:"0797649941", wave:"COLLEGE PRIVE PROFESSIONNEL LES PRINCES",orange:"#144*43*1760*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"790219" },
+    "CPP_TECH":   { nom:"College Prive Technique Les Princes d&#x27;Abidjan",     tel1:"0708111269", tel2:"0797649941", wave:"COLLEGE PRIVE TECHNIQUE LES PRINCES",   orange:"#144*43*1756*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"780202" },
     "KOUIBLY_TEC":{ nom:"College Prive Technique Les Princes Kouibly",       tel1:"0778976708", tel2:"0708991975", wave:"ETL LES PRINCES KOUIBLY",               orange:"#144*43*1758*1#", rentree:"Mardi 1er Septembre 2026 a 7h30", code:"782410" },
     "RITA":       { nom:"Groupe Scolaire Rita Rosane Abobo",                 tel1:"0757227049", tel2:"",           wave:"GROUPE SCOLAIRE RITA ROSANE",           orange:"",               rentree:"Mardi 1er Septembre 2026 a 7h30", code:"033258" },
   };
@@ -914,7 +914,7 @@ function _cardRNO_Attente(prenom, moy, tel) {
     '<span class="cpp-emoji-row">📋 ✏️ 🏫 📚 🎯</span>' +
     '<div class="cpp-msg-box">Vos resultats du BEPC seront publies ici des qu\u0027ils seront disponibles.<br>Revenez apres la proclamation officielle des resultats.</div>' +
     '<div class="cpp-next-class" style="background:rgba(255,255,255,0.2)">' +
-    '<div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">EN CAS D'ORIENTATION</div>' +
+    '<div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">EN CAS D&#x27;ORIENTATION</div>' +
     '<div class="cpp-nc-value" style="color:#fff">2NDE C — College Les Princes de Guinglo Ville</div>' +
     '</div></div>' + _blocContact(tel);
 }
@@ -955,7 +955,7 @@ function _cardRNO_Refuse_BEPC(prenom, moy, score, tel) {
     '<div class="cpp-msg-box">Le redoublement en 3EME est une nouvelle chance de maitriser les bases et de reussir le BEPC l\'annee prochaine.<br><br>' +
     'Beaucoup d\'eleves ont reussi apres un redoublement. Avec du travail regulier et un bon suivi, vous y arriverez !</div>' +
     '<div class="cpp-next-class" style="background:rgba(255,255,255,0.2)">' +
-    '<div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">CLASSE L'ANNEE PROCHAINE</div>' +
+    '<div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">CLASSE L&#x27;ANNEE PROCHAINE</div>' +
     '<div class="cpp-nc-value" style="color:#fff">3EME — College Les Princes de Guinglo Ville</div>' +
     '</div></div>' +
     '<div class="cpp-etapes-block">' +
