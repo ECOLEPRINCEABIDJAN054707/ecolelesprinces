@@ -273,9 +273,6 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
   <p style="opacity:0.5;margin-top:4px;">&#169; 2025-2026</p>
 </div>
 <script>
-// ════════════════════════════════════════════════════════════
-// CONFIGURATION GLOBALE
-// ════════════════════════════════════════════════════════════
 const ECOLES = [
   { code:"CPP_PRO",     nom:"College Prive Professionnel Les Princes d'Abidjan", ville:"Abobo / Abidjan", couleur:"#1F4E79" },
   { code:"CPP_TECH",    nom:"College Prive Technique Les Princes d'Abidjan",     ville:"Abobo / Abidjan", couleur:"#2E7D32" },
@@ -300,7 +297,6 @@ const CONFIG = {
   BLOCAGE_MIN:    30,
 };
 
-// ✅ CHANGEMENT 1 : tel Guinglo Ville mis a jour => 0555685704
 const SHEETS_IDS_COMPLET = {
   "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI": { nom:"CPP Les Princes d'Abidjan",             tel:"0708111269", wave:"0708111269" },
   "1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M": { nom:"Academie Les Princes d'Abidjan",         tel:"0747477926", wave:"0747477926" },
@@ -322,10 +318,13 @@ let tentatives = 0;
 let blocageInterval = null;
 const PHOTOS_CACHE = {};
 
+// ✅ CORRECTION : Excellence uniquement pour 6EME, 5EME, 4EME - pas pour 3EME EX
 function detecterTypeClasse(classe, ecoleCode) {
   if (ecoleCode !== 'CPP') return 'STANDARD';
   const c = (classe || '').toUpperCase().trim();
-  if (/\bEX\b/.test(c) || /EX\d/.test(c)) return 'EXCELLENCE';
+  // Excellence uniquement pour 6EME, 5EME, 4EME - les 3EME EX sont des classes d'examen BEPC
+  if (!c.startsWith('3') && (/\bEX\b/.test(c) || /EX\d/.test(c))) return 'EXCELLENCE';
+  // Privilege : classes se terminant par 3 ou 4
   if (/\s[34]$/.test(c)) return 'PRIVILEGE';
   return 'STANDARD';
 }
@@ -532,7 +531,6 @@ function afficherEspaceParent(eleve) {
   window.scrollTo(0, 0);
 }
 
-// ════ CARTES DECISIONS ════
 function _blocContact(tel) {
   return '<div class="cpp-contact-block"><p style="color:#D4AF37;font-weight:bold;font-size:0.88em;margin-bottom:6px;">&#128222; Contact - Inscription & Renseignements</p><p style="color:#fff;font-size:1em;font-weight:bold;">' + tel + '</p><p style="color:rgba(255,255,255,0.65);font-size:0.75em;margin-top:4px;">Lundi au Samedi - 7h30 a 17h30</p></div>';
 }
@@ -573,10 +571,6 @@ function _cardExclu(prenom, classe, tel) {
   return '<div class="cpp-decision-card cpp-slide" style="background:#C62828" id="cardDecision"><span class="cpp-emoji-big cpp-pulse">&#128222;</span><div class="cpp-titre">Contactez la direction</div><div class="cpp-sous">Cher(e) parent, nous vous invitons a prendre contact avec la direction concernant la situation de votre enfant</div><div class="cpp-msg-box">Des solutions existent. La direction est disponible pour vous accompagner vers la meilleure orientation pour votre enfant.</div></div>' + _blocContact(tel);
 }
 
-// ════════════════════════════════════════════════════════════
-// ✅ CHANGEMENT 2 : MODULE BEPC - RESULTATS 3EME (RNO)
-// ════════════════════════════════════════════════════════════
-// Détecte si la classe est Terminale (BAC) ou 3EME (BEPC)
 function estTerminale(classe) {
   var c = (classe || "").trim().toUpperCase();
   return /^TLE|^TLED|^TLEA|^TLE\s|TERMINALE/.test(c);
@@ -587,12 +581,10 @@ function estCM2(classe) {
     .replace(/[ÈÉÊË]/g,"E").replace(/[ÀÂÄ]/g,"A")
     .replace(/[ÎÏ]/g,"I").replace(/[ÔÖ]/g,"O")
     .replace(/[ÛÙÜ]/g,"U").replace(/Ç/g,"C");
-  // Reconnaît : CM2, CM2A, CM2B, CM2 1, CM2 2, CM 2, CM 2A, etc.
   return c === "CM2" || c === "CM 2" || /^CM2[A-Z0-9]/.test(c) || /^CM\s*2/.test(c);
 }
 
 async function chargerResultatExamen(eleve) {
-  // Choisit l'onglet selon la classe : CEPE_2026, BAC_2026 ou BEPC_2026
   var onglet = estCM2(eleve.classe) ? "CEPE_2026"
              : estTerminale(eleve.classe) ? "BAC_2026"
              : "BEPC_2026";
@@ -613,24 +605,24 @@ async function chargerResultatExamen(eleve) {
         score:  (row[3] !== undefined && row[3] !== "") ? parseFloat(row[3]) : null,
         statut: String(row[4]||"").trim().toUpperCase(),
         dec:    String(row[6]||"").trim().toUpperCase(),
-        type:   estCM2(eleve.classe) ? "CEPE"
-               : estTerminale(eleve.classe) ? "BAC"
-               : "BEPC",
+        type:   estCM2(eleve.classe) ? "CEPE" : estTerminale(eleve.classe) ? "BAC" : "BEPC",
       };
     }
   } catch(e) { console.warn("Examen:", e.message); }
   return null;
 }
 
-function _cardRNO_Attente(prenom, moy, tel, typeExamen, nomEcole) {
+// ✅ CORRECTION 1 : "avec succes" supprime + bonne chance ajoute
+// ✅ CORRECTION 2 : classeFinale utilise le vrai nom de classe (3EME EX1/EX2)
+function _cardRNO_Attente(prenom, moy, tel, typeExamen, nomEcole, classeReelle) {
   var isBac = typeExamen === "BAC";
   var titre = isBac ? "Resultats BAC en attente" : "Resultats BEPC en attente";
-  var classeFinale = isBac ? "votre Terminale" : "votre 3EME";
+  var classeFinale = isBac ? "votre Terminale" : "votre " + (classeReelle || "3EME");
   var examLabel = isBac ? "BAC" : "BEPC";
   var prochaineInfo = isBac
     ? "Vous serez informe(e) de votre orientation apres les resultats"
     : "2ND - " + (nomEcole || "College Les Princes");
-  return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#1565C0,#1976D2)" id="cardDecision"><span class="cpp-emoji-big cpp-float-soft">&#9203;</span><div class="cpp-titre">' + titre + '</div><div class="cpp-sous">' + prenom + ', vous avez termine ' + classeFinale + ' avec succes !<br>' + (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div><span class="cpp-emoji-row">&#128203; &#9999; &#127979; &#128218; &#127919;</span><div class="cpp-msg-box">Vos resultats du ' + examLabel + ' seront publies ici des qu\'ils seront disponibles.<br>Revenez apres la proclamation officielle des resultats.</div><div class="cpp-next-class" style="background:rgba(255,255,255,0.2)"><div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">' + (isBac ? 'APRES LES RESULTATS' : 'EN CAS D\'ORIENTATION') + '</div><div class="cpp-nc-value" style="color:#fff">' + prochaineInfo + '</div></div></div>' + _blocContact(tel);
+  return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#1565C0,#1976D2)" id="cardDecision"><span class="cpp-emoji-big cpp-float-soft">&#9203;</span><div class="cpp-titre">' + titre + '</div><div class="cpp-sous">' + prenom + ', vous avez termine ' + classeFinale + '.<br>' + (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div><span class="cpp-emoji-row">&#128203; &#9999; &#127979; &#128218; &#127919;</span><div class="cpp-msg-box">Vos resultats du ' + examLabel + ' seront publies ici des qu\'ils seront disponibles.<br><br>&#127919; Bon courage et bonne chance pour vos resultats !<br>Revenez apres la proclamation officielle des resultats.</div><div class="cpp-next-class" style="background:rgba(255,255,255,0.2)"><div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">' + (isBac ? 'APRES LES RESULTATS' : 'EN CAS D\'ORIENTATION') + '</div><div class="cpp-nc-value" style="color:#fff">' + prochaineInfo + '</div></div></div>' + _blocContact(tel);
 }
 
 function _cardRNO_Admis_BEPC(prenom, moy, score, tel, typeExamen, nomEcole) {
@@ -662,79 +654,20 @@ function _cardRNO_Refuse_BEPC(prenom, moy, score, tel, typeExamen, nomEcole, cla
   return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#E65100,#F57C00)" id="cardDecision"><span class="cpp-emoji-big cpp-pulse">&#128170;</span><div class="cpp-titre">Courage ' + prenom + ' !</div><div style="display:inline-block;background:rgba(255,255,255,0.2);color:#fff;font-weight:bold;font-size:0.95em;padding:5px 16px;border-radius:20px;margin-bottom:10px;">' + scoreLabel + '</div><div class="cpp-sous">Ce resultat n\'est pas une fin - c\'est un nouveau depart !<br>' + (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div><span class="cpp-emoji-row">&#128170; &#128218; &#127807; &#128260; &#8987;</span><div class="cpp-msg-box">' + msg + '</div><div class="cpp-next-class" style="background:rgba(255,255,255,0.2)"><div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">CLASSE L\'ANNEE PROCHAINE</div><div class="cpp-nc-value" style="color:#fff">' + classeRedouble + ' - ' + ecoleAffichee + '</div></div></div><div class="cpp-etapes-block"><p style="font-weight:bold;color:#E65100;font-size:0.88em;margin-bottom:8px;">&#128204; Etapes importantes :</p><div style="font-size:0.82em;color:#444;line-height:2">' + etapes + '</div></div>' + _blocContact(tel);
 }
 
-// ════════════════════════════════════════════════════════════
-// MODULE CEPE — RÉSULTATS CM2
-// ════════════════════════════════════════════════════════════
-
 function _cardCEPE_Attente(prenom, moy, tel, nomEcole, classe) {
-  return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#4A148C,#6A1B9A)" id="cardDecision">' +
-    '<span class="cpp-emoji-big cpp-float-soft">&#9203;</span>' +
-    '<div class="cpp-titre">Resultats CEPE en attente</div>' +
-    '<div class="cpp-sous">' + prenom + ', vous avez termine votre ' + (classe || 'CM2') + ' !<br>' +
-    (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div>' +
-    '<span class="cpp-emoji-row">&#128203; &#9999; &#127979; &#128218; &#127919;</span>' +
-    '<div class="cpp-msg-box">Les resultats du CEPE seront publies ici des leur proclamation officielle.<br>' +
-    'Revenez apres la proclamation des resultats.</div>' +
-    '<div class="cpp-next-class" style="background:rgba(255,255,255,0.2)">' +
-    '<div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">EN CAS D\'ORIENTATION</div>' +
-    '<div class="cpp-nc-value" style="color:#fff">6EME — ' + (nomEcole || "College Les Princes") + '</div>' +
-    '</div></div>' + _blocContact(tel);
+  return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#4A148C,#6A1B9A)" id="cardDecision"><span class="cpp-emoji-big cpp-float-soft">&#9203;</span><div class="cpp-titre">Resultats CEPE en attente</div><div class="cpp-sous">' + prenom + ', vous avez termine votre ' + (classe || 'CM2') + '.<br>' + (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div><span class="cpp-emoji-row">&#128203; &#9999; &#127979; &#128218; &#127919;</span><div class="cpp-msg-box">Les resultats du CEPE seront publies ici des leur proclamation officielle.<br><br>&#127919; Bon courage et bonne chance pour vos resultats !<br>Revenez apres la proclamation des resultats.</div><div class="cpp-next-class" style="background:rgba(255,255,255,0.2)"><div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">EN CAS D\'ORIENTATION</div><div class="cpp-nc-value" style="color:#fff">6EME — ' + (nomEcole || "College Les Princes") + '</div></div></div>' + _blocContact(tel);
 }
 
 function _cardCEPE_Admis(prenom, moy, score, tel, nomEcole) {
   var ecoleAff = nomEcole || "College Les Princes";
-  return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#4A148C,#6A1B9A)" id="cardDecision">' +
-    '<span class="cpp-emoji-big cpp-bounce">&#127881;</span>' +
-    '<div class="cpp-titre">Felicitations ! Admis(e) au CEPE !</div>' +
-    '<div style="display:inline-block;background:#D4AF37;color:#1A3A5C;font-weight:bold;font-size:1em;padding:6px 20px;border-radius:20px;margin-bottom:10px;">' +
-    (score !== null ? 'Score CEPE : ' + score + ' points' : 'ADMIS(E) AU CEPE') + '</div>' +
-    '<div class="cpp-sous">' + prenom + ', vous etes oriente(e) en 6EME !<br>' +
-    (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div>' +
-    '<span class="cpp-emoji-row">&#127881; &#127942; &#11088; &#127882; &#129395;</span>' +
-    '<div class="cpp-msg-box">Bravo ! Toute l\'equipe est fiere de vous.<br>' +
-    '&#128073; <strong>Inscrivez-vous en 6EME au ' + ecoleAff + ' !</strong></div>' +
-    '<div class="cpp-next-class" style="background:#D4AF37">' +
-    '<div class="cpp-nc-label" style="color:#5a3a00">PROCHAINE CLASSE</div>' +
-    '<div class="cpp-nc-value" style="color:#1A3A5C">6EME — ' + ecoleAff + '</div>' +
-    '</div></div>' +
-    '<div class="cpp-insc-block">' +
-    '<p style="font-weight:bold;color:#2E7D32;font-size:0.9em;margin-bottom:8px;">&#128204; Inscrivez-vous maintenant pour 2026-2027 :</p>' +
-    '<div style="font-size:0.83em;color:#444;line-height:2">' +
-    '&#10003; Places limitees — venez tot !<br>' +
-    '&#10003; Apportez votre releve de notes et votre carte d\'eleve<br>' +
-    '&#10003; Profitez du tarif preferentiel ancien eleve</div></div>' +
-    _blocContact(tel);
+  return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#4A148C,#6A1B9A)" id="cardDecision"><span class="cpp-emoji-big cpp-bounce">&#127881;</span><div class="cpp-titre">Felicitations ! Admis(e) au CEPE !</div><div style="display:inline-block;background:#D4AF37;color:#1A3A5C;font-weight:bold;font-size:1em;padding:6px 20px;border-radius:20px;margin-bottom:10px;">' + (score !== null ? 'Score CEPE : ' + score + ' points' : 'ADMIS(E) AU CEPE') + '</div><div class="cpp-sous">' + prenom + ', vous etes oriente(e) en 6EME !<br>' + (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div><span class="cpp-emoji-row">&#127881; &#127942; &#11088; &#127882; &#129395;</span><div class="cpp-msg-box">Bravo ! Toute l\'equipe est fiere de vous.<br>&#128073; <strong>Inscrivez-vous en 6EME au ' + ecoleAff + ' !</strong></div><div class="cpp-next-class" style="background:#D4AF37"><div class="cpp-nc-label" style="color:#5a3a00">PROCHAINE CLASSE</div><div class="cpp-nc-value" style="color:#1A3A5C">6EME — ' + ecoleAff + '</div></div></div><div class="cpp-insc-block"><p style="font-weight:bold;color:#2E7D32;font-size:0.9em;margin-bottom:8px;">&#128204; Inscrivez-vous maintenant pour 2026-2027 :</p><div style="font-size:0.83em;color:#444;line-height:2">&#10003; Places limitees — venez tot !<br>&#10003; Apportez votre releve de notes et votre carte d\'eleve<br>&#10003; Profitez du tarif preferentiel ancien eleve</div></div>' + _blocContact(tel);
 }
 
 function _cardCEPE_Refuse(prenom, moy, score, tel, nomEcole) {
   var ecoleAff = nomEcole || "votre ecole";
-  return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#E65100,#F57C00)" id="cardDecision">' +
-    '<span class="cpp-emoji-big cpp-pulse">&#128170;</span>' +
-    '<div class="cpp-titre">Courage ' + prenom + ' !</div>' +
-    '<div style="display:inline-block;background:rgba(255,255,255,0.2);color:#fff;font-weight:bold;font-size:0.95em;padding:5px 16px;border-radius:20px;margin-bottom:10px;">' +
-    (score !== null ? 'Score CEPE : ' + score + ' points' : 'Non oriente(e) cette annee') + '</div>' +
-    '<div class="cpp-sous">Ce resultat n\'est pas une fin — c\'est un nouveau depart !<br>' +
-    (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div>' +
-    '<span class="cpp-emoji-row">&#128170; &#128218; &#127807; &#128260; &#8987;</span>' +
-    '<div class="cpp-msg-box">Le redoublement en CM2 est une nouvelle chance de bien preparer le CEPE.<br><br>' +
-    'Avec du travail regulier et un bon suivi, vous reussirez l\'annee prochaine !</div>' +
-    '<div class="cpp-next-class" style="background:rgba(255,255,255,0.2)">' +
-    '<div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">CLASSE L\'ANNEE PROCHAINE</div>' +
-    '<div class="cpp-nc-value" style="color:#fff">CM2 — ' + ecoleAff + '</div>' +
-    '</div></div>' +
-    '<div class="cpp-etapes-block">' +
-    '<p style="font-weight:bold;color:#E65100;font-size:0.88em;margin-bottom:8px;">&#128204; Etapes importantes :</p>' +
-    '<div style="font-size:0.82em;color:#444;line-height:2">' +
-    '&#10004; Reinscrivez-vous avant le 31 Aout 2026<br>' +
-    '&#10004; Contactez la direction pour un bilan personnalise<br>' +
-    '&#10004; Travaillez les matieres faibles pendant les vacances<br>' +
-    '&#10004; Demandez un programme de revision a l\'ecole</div></div>' +
-    _blocContact(tel);
+  return '<div class="cpp-decision-card cpp-slide" style="background:linear-gradient(135deg,#E65100,#F57C00)" id="cardDecision"><span class="cpp-emoji-big cpp-pulse">&#128170;</span><div class="cpp-titre">Courage ' + prenom + ' !</div><div style="display:inline-block;background:rgba(255,255,255,0.2);color:#fff;font-weight:bold;font-size:0.95em;padding:5px 16px;border-radius:20px;margin-bottom:10px;">' + (score !== null ? 'Score CEPE : ' + score + ' points' : 'Non oriente(e) cette annee') + '</div><div class="cpp-sous">Ce resultat n\'est pas une fin — c\'est un nouveau depart !<br>' + (moy > 0 ? 'Moyenne annuelle : <strong>' + moy.toFixed(2) + '/20</strong>' : '') + '</div><span class="cpp-emoji-row">&#128170; &#128218; &#127807; &#128260; &#8987;</span><div class="cpp-msg-box">Le redoublement en CM2 est une nouvelle chance de bien preparer le CEPE.<br><br>Avec du travail regulier et un bon suivi, vous reussirez l\'annee prochaine !</div><div class="cpp-next-class" style="background:rgba(255,255,255,0.2)"><div class="cpp-nc-label" style="color:rgba(255,255,255,0.8)">CLASSE L\'ANNEE PROCHAINE</div><div class="cpp-nc-value" style="color:#fff">CM2 — ' + ecoleAff + '</div></div></div><div class="cpp-etapes-block"><p style="font-weight:bold;color:#E65100;font-size:0.88em;margin-bottom:8px;">&#128204; Etapes importantes :</p><div style="font-size:0.82em;color:#444;line-height:2">&#10004; Reinscrivez-vous avant le 31 Aout 2026<br>&#10004; Contactez la direction pour un bilan personnalise<br>&#10004; Travaillez les matieres faibles pendant les vacances<br>&#10004; Demandez un programme de revision a l\'ecole</div></div>' + _blocContact(tel);
 }
 
-// ════════════════════════════════════════════════════════════
-// ✅ CHANGEMENT 3 : SECTION RESULTATS UNIFIEE (cas RNO ajouté)
-// ════════════════════════════════════════════════════════════
 async function afficherSectionResultats(eleve) {
   var section = document.getElementById("sectionResultats");
   var div = document.getElementById("resultatsBody");
@@ -766,16 +699,12 @@ async function afficherSectionResultats(eleve) {
   } else if (decision === "REDOUBLANT") {
     htmlAnim = _cardRedoublant(prenom, classe, moy, tel);
   } else if (decision === "RNO") {
-    // ✅ Cas RNO universel : CEPE (CM2), BEPC (3EME) ou BAC (Terminale), toutes écoles
     var examen = await chargerResultatExamen(eleve);
-    var typeExamen = estCM2(classe) ? "CEPE"
-                  : estTerminale(classe) ? "BAC"
-                  : "BEPC";
+    var typeExamen = estCM2(classe) ? "CEPE" : estTerminale(classe) ? "BAC" : "BEPC";
     var nomEcoleEleve = (window.SHEETS_IDS_COMPLET[eleve.sheetsId] || {}).nom || info.nom || "College Les Princes";
     if (typeExamen === "CEPE") {
-      // ── Cartes CEPE ──
       if (!examen || examen.score === null) {
-        htmlAnim = _cardCEPE_Attente(prenom, moy, tel, nomEcoleEleve, classe);
+        htmlAnim = _cardCEPE_Attente(prenom, moy, tel, nomEcoleEleve, eleve.classe);
       } else if (examen.statut === "ADMIS") {
         htmlAnim = _cardCEPE_Admis(prenom, moy, examen.score, tel, nomEcoleEleve);
         setTimeout(function(){ _lancerConfettis("cardDecision", ["&#127881;","&#127882;","&#11088;","&#11088;","&#129395;","&#127942;"]); }, 400);
@@ -783,14 +712,14 @@ async function afficherSectionResultats(eleve) {
         htmlAnim = _cardCEPE_Refuse(prenom, moy, examen.score, tel, nomEcoleEleve);
       }
     } else {
-      // ── Cartes BEPC / BAC ──
+      // ✅ CORRECTION 3 : passer la vraie classe (3EME EX1/EX2) a _cardRNO_Attente
       if (!examen || examen.score === null) {
-        htmlAnim = _cardRNO_Attente(prenom, moy, tel, typeExamen, nomEcoleEleve);
+        htmlAnim = _cardRNO_Attente(prenom, moy, tel, typeExamen, nomEcoleEleve, eleve.classe);
       } else if (examen.statut === "ADMIS") {
         htmlAnim = _cardRNO_Admis_BEPC(prenom, moy, examen.score, tel, typeExamen, nomEcoleEleve);
         setTimeout(function(){ _lancerConfettis("cardDecision", ["&#127881;","&#127882;","&#11088;","&#11088;","&#129395;","&#127942;"]); }, 400);
       } else {
-        htmlAnim = _cardRNO_Refuse_BEPC(prenom, moy, examen.score, tel, typeExamen, nomEcoleEleve, classe);
+        htmlAnim = _cardRNO_Refuse_BEPC(prenom, moy, examen.score, tel, typeExamen, nomEcoleEleve, eleve.classe);
       }
     }
   } else if (decision === "EXCLU") {
