@@ -1127,13 +1127,21 @@ function seConnecter() {
   btn.disabled = true;
   btn.textContent = 'Vérification...';
 
-  fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type: 'VERIFIER_ENSEIGNANT', ecole, nom, code })
-  })
-  .then(r => r.json())
-  .then(data => {
+  // Utilise JSONP pour contourner CORS depuis GitHub Pages
+  const cbName = 'cpp_cb_' + Date.now();
+  const script = document.createElement('script');
+  const timeout = setTimeout(() => {
+    delete window[cbName];
+    try { document.body.removeChild(script); } catch(e) {}
+    btn.disabled = false;
+    btn.textContent = 'Se connecter →';
+    showToast('Erreur de connexion — vérifiez votre internet', 'error');
+  }, 10000);
+
+  window[cbName] = function(data) {
+    clearTimeout(timeout);
+    delete window[cbName];
+    try { document.body.removeChild(script); } catch(e) {}
     btn.disabled = false;
     btn.textContent = 'Se connecter →';
     if (data.ok) {
@@ -1143,12 +1151,22 @@ function seConnecter() {
     } else {
       showToast('Code incorrect ou enseignant non autorisé', 'error');
     }
-  })
-  .catch(() => {
+  };
+
+  script.onerror = function() {
+    clearTimeout(timeout);
+    delete window[cbName];
     btn.disabled = false;
     btn.textContent = 'Se connecter →';
     showToast('Erreur de connexion — vérifiez votre internet', 'error');
-  });
+  };
+
+  script.src = APPS_SCRIPT_URL + '?callback=' + cbName
+    + '&type=VERIFIER_ENSEIGNANT'
+    + '&ecole=' + encodeURIComponent(ecole)
+    + '&nom=' + encodeURIComponent(nom)
+    + '&code=' + encodeURIComponent(code);
+  document.body.appendChild(script);
 }
 
 function deconnecter() {
