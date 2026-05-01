@@ -927,15 +927,15 @@ function afficherNotesVides(div) {
 async function chargerAbsences(eleve) {
   const div=document.getElementById("absencesBody"); if (!div) return;
   try {
-    const mat=eleve.matricule; const range=encodeURIComponent("ABSENCES!B4:I200"); const sheetsId=eleve.sheetsId||CONFIG.SHEETS_ID;
+    const mat=eleve.matricule; const range=encodeURIComponent("ABSENCES!A2:K500"); const sheetsId=eleve.sheetsId||CONFIG.SHEETS_ID;
     const url="https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
     const res=await fetch(url); const data=await res.json();
     if (!data.values||data.values.length===0) { div.innerHTML="<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>Aucune absence enregistree</p>"; return; }
-    const absEleve=data.values.filter(row=>String(row[1]||"").trim().toUpperCase()===mat.toUpperCase());
+    const absEleve=data.values.filter(row=>String(row[2]||"").trim().toUpperCase()===mat.toUpperCase());
     if (absEleve.length===0) { div.innerHTML="<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>&#10003; Aucune absence enregistree</p>"; return; }
     let totalH=0,justH=0,nonJustH=0;
-    absEleve.forEach(row=>{const h=parseFloat(row[3])||0;totalH+=h;if(String(row[4]||"").toUpperCase()==="OUI")justH+=h;else nonJustH+=h;});
-    const lignes=absEleve.map(row=>{const just=String(row[4]||"").toUpperCase()==="OUI";return "<tr style='border-bottom:1px solid #eee;'><td style='padding:8px 10px;font-size:0.82em;'>"+(row[0]||"-")+"</td><td style='text-align:center;padding:8px;font-size:0.82em;font-weight:bold;'>"+(row[3]||"-")+"h</td><td style='text-align:center;padding:8px;'><span style='background:"+(just?"#E8F5E9":"#FFEBEE")+";color:"+(just?"#2E7D32":"#C62828")+";padding:2px 8px;border-radius:10px;font-size:0.75em;font-weight:bold;'>"+(just?"&#10003; Justifiee":"&#10060; Non justifiee")+"</span></td><td style='padding:8px 10px;font-size:0.78em;color:#666;'>"+(row[5]||"")+"</td></tr>";}).join("");
+    absEleve.forEach(row=>{const h=1;totalH+=h;if(String(row[8]||"").toUpperCase()==="OUI")justH+=h;else nonJustH+=h;});
+    const lignes=absEleve.map(row=>{const just=String(row[8]||"").toUpperCase()==="OUI";return "<tr style='border-bottom:1px solid #eee;'><td style='padding:8px 10px;font-size:0.82em;'>"+toDate(row[0])+"</td><td style='text-align:center;padding:8px;font-size:0.82em;font-weight:bold;'>"+String(row[1]||"-")+"</td><td style='text-align:center;padding:8px;'><span style='background:"+(just?"#E8F5E9":"#FFEBEE")+";color:"+(just?"#2E7D32":"#C62828")+";padding:2px 8px;border-radius:10px;font-size:0.75em;font-weight:bold;'>"+(just?"&#10003; Justifiee":"&#10060; Non justifiee")+"</span></td><td style='padding:8px 10px;font-size:0.78em;color:#666;'>"+(row[7]||"")+"</td></tr>";}).join("");
     div.innerHTML="<div style='display:flex;gap:8px;margin-bottom:14px;'><div style='flex:1;background:#FFEBEE;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#C62828;margin-bottom:2px;'>TOTAL</p><p style='font-size:1.6em;font-weight:bold;color:#C62828;'>"+totalH+"h</p></div><div style='flex:1;background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#2E7D32;margin-bottom:2px;'>JUSTIFIEES</p><p style='font-size:1.6em;font-weight:bold;color:#2E7D32;'>"+justH+"h</p></div><div style='flex:1;background:#FFF3E0;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#E65100;margin-bottom:2px;'>NON JUST.</p><p style='font-size:1.6em;font-weight:bold;color:#E65100;'>"+nonJustH+"h</p></div></div><table style='width:100%;border-collapse:collapse;'><tr style='background:#f5f5f5;'><th style='text-align:left;padding:6px 10px;font-size:0.78em;color:#666;'>DATE</th><th style='text-align:center;padding:6px;font-size:0.78em;color:#666;'>HEURES</th><th style='text-align:center;padding:6px;font-size:0.78em;color:#666;'>STATUT</th><th style='text-align:left;padding:6px 10px;font-size:0.78em;color:#666;'>MOTIF</th></tr>"+lignes+"</table>";
   } catch(e) { const d2=document.getElementById("absencesBody"); if(d2) d2.innerHTML="<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>&#10003; Aucune absence enregistree</p>"; }
 }
@@ -1135,7 +1135,7 @@ async function chargerCahierTextes(eleve) {
     cours.sort((a, b) => String(b[0] || "").localeCompare(String(a[0] || "")));
     let html = "";
     cours.slice(0, 20).forEach(function(row) {
-      const date = String(row[0] || "").trim();
+      const date = toDate(row[0]);
       const heure = String(row[1] || "").trim();
       const matiere = String(row[3] || "").trim();
       const enseignant = String(row[4] || "").trim();
