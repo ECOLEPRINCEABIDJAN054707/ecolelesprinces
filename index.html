@@ -169,6 +169,8 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
   <div class="section">
     <div class="sec-header rouge" onclick="toggleSec(this)">&#128176; SCOLARITE ET PAIEMENTS <span>v</span></div>
     <div class="sec-body">
+     <div id="historiqueSection" style="margin-bottom:16px;"></div>
+     <div id="historiqueSection" style="margin-bottom:16px;"></div>
       <div class="how-pay">
         <div id="montantDu" style="background:linear-gradient(135deg,#1F4E79,#2E86AB);border-radius:10px;padding:14px;text-align:center;color:white;margin-bottom:16px;">
           <p style="font-size:0.78em;opacity:0.85;margin-bottom:4px;">SOLDE A PAYER</p>
@@ -529,7 +531,7 @@ function afficherEspaceParent(eleve) {
   const pay = document.getElementById("statutPay");
   const _pm = v => parseFloat(String(v||"").replace(/\s/g,"").replace(",",".")) || 0;
   const soldeParsed = _pm(eleve.solde), verseParsed = _pm(eleve.verse), duParsed = _pm(eleve.du);
-  mettreAJourMontant(eleve); afficherClubs(eleve); chargerReponsesMessages(eleve);
+  mettreAJourMontant(eleve); afficherClubs(eleve); chargerReponsesMessages(eleve); chargerHistoriquePaiements(eleve);
   if (eleve.gratuit) {
     pay.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>&#127891;</div><div class='pay-text'><h4>Prise en charge etablissement</h4><p class='pay-montant c-vert'>Acces complet active</p></div></div>";
   } else if (soldeParsed === 0) {
@@ -1113,7 +1115,48 @@ window.addEventListener("load",()=>{const saved=sessionStorage.getItem("eleveCon
 document.addEventListener("keypress",e=>{if(e.key==="Enter")login();});
 let deferredPrompt;
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;document.getElementById("pwaBanner").style.display="flex";});
-function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{document.getElementById("pwaBanner").style.display="none";deferredPrompt=null;});}}
+async function chargerHistoriquePaiements(eleve) {
+  const div = document.getElementById("historiqueSection");
+  if (!div) return;
+  try {
+    const range = encodeURIComponent("HISTORIQUE_PAIEMENTS!A2:H200");
+    const sid = eleve.sheetsId || CONFIG.SHEETS_ID;
+    const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sid + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+    const res = await fetch(url);
+    if (!res.ok) { div.innerHTML = ""; return; }
+    const data = await res.json();
+    if (!data.values || data.values.length === 0) { div.innerHTML = ""; return; }
+    const mat = eleve.matricule.trim().toUpperCase();
+    const paiements = data.values.filter(row => String(row[1] || "").trim().toUpperCase() === mat);
+    if (paiements.length === 0) { div.innerHTML = ""; return; }
+    paiements.sort((a, b) => String(b[0] || "").localeCompare(String(a[0] || "")));
+    const totalPaye = paiements.reduce((s, r) => s + (parseFloat(r[4]) || 0), 0);
+    let html = "<div style='margin-bottom:14px;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);'>";
+    html += "<div style='background:linear-gradient(135deg,#2E7D32,#388E3C);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer' onclick=\"var b=document.getElementById('histBody');b.style.display=b.style.display==='none'?'block':'none'\">";
+    html += "<div><div style='color:white;font-weight:bold;font-size:0.92em;'>&#128179; HISTORIQUE DES PAIEMENTS</div>";
+    html += "<div style='color:rgba(255,255,255,0.85);font-size:0.75em;margin-top:2px;'>" + paiements.length + " paiement(s) — Total : " + totalPaye.toLocaleString('fr-FR') + " F CFA</div></div>";
+    html += "<div style='color:#D4AF37;font-size:11px;border:1px solid #D4AF37;padding:3px 10px;border-radius:20px;'>&#9660;</div></div>";
+    html += "<div id='histBody' style='background:white;'>";
+    html += "<div style='padding:12px 16px;background:#E8F5E9;border-bottom:1px solid #C8E6C9;display:flex;justify-content:space-between;'><div style='font-size:0.82em;color:#2E7D32;'><strong>Total verse :</strong></div><div style='font-size:1.1em;font-weight:bold;color:#2E7D32;'>" + totalPaye.toLocaleString('fr-FR') + " F CFA</div></div>";
+    paiements.forEach(function(row, i) {
+      const date = String(row[0] || "").trim();
+      const montant = parseFloat(row[4]) || 0;
+      const source = String(row[5] || "").trim();
+      const idTrans = String(row[6] || "").trim();
+      const bgS = source === "WAVE" ? "#E3F2FD" : "#FFF3E0";
+      const fgS = source === "WAVE" ? "#1565C0" : "#E65100";
+      const icon = source === "WAVE" ? "&#128153;" : "&#127820;";
+      const bg = i % 2 === 0 ? "#FFFFFF" : "#F9FBF9";
+      html += "<div style='padding:10px 16px;border-bottom:1px solid #F0F0F0;background:" + bg + ";display:flex;justify-content:space-between;align-items:center;'>";
+      html += "<div style='flex:1;'><div style='display:flex;align-items:center;gap:8px;margin-bottom:3px;'><span style='background:" + bgS + ";color:" + fgS + ";font-size:0.72em;font-weight:bold;padding:2px 8px;border-radius:10px;'>" + icon + " " + source + "</span><span style='font-size:0.8em;color:#555;'>" + date + "</span></div>";
+      html += "<div style='font-size:0.75em;color:#999;font-family:monospace;'>" + (idTrans.length > 20 ? idTrans.substring(0,20) + "..." : idTrans) + "</div></div>";
+      html += "<div style='font-size:1em;font-weight:bold;color:#2E7D32;'>+" + montant.toLocaleString('fr-FR') + " F</div></div>";
+    });
+    html += "</div></div>";
+    div.innerHTML = html;
+  } catch(e) { div.innerHTML = ""; }
+}
+  function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{document.getElementById("pwaBanner").style.display="none";deferredPrompt=null;});}}
 </script>
 </body>
 </html>
