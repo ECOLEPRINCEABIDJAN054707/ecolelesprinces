@@ -716,6 +716,9 @@ canvas#sigCanvas { display: block; width: 100%; height: 100px; touch-action: non
     <div class="nav-item" onclick="goTo('cahier')">
       <div class="nav-icon">📝</div><span>Cahier</span>
     </div>
+    <div class="nav-item" onclick="goTo('notes')">
+      <div class="nav-icon">🎯</div><span>Notes</span>
+    </div>
   </nav>
 </div>
 
@@ -819,6 +822,97 @@ canvas#sigCanvas { display: block; width: 100%; height: 100px; touch-action: non
     </div>
     <div class="nav-item active" onclick="goTo('cahier')">
       <div class="nav-icon">📝</div><span>Cahier</span>
+    </div>
+    <div class="nav-item" onclick="goTo('notes')">
+      <div class="nav-icon">🎯</div><span>Notes</span>
+    </div>
+  </nav>
+</div>
+
+
+<!-- ============================================ -->
+<!-- ÉCRAN 4 : NOTES DEVOIRS -->
+<!-- ============================================ -->
+<div class="screen" id="screen-notes">
+  <div class="header">
+    <div class="header-logo">🎯</div>
+    <div class="header-title">
+      <h1>Saisie des notes</h1>
+      <p id="notesInfos">Sélectionnez une classe</p>
+    </div>
+  </div>
+
+  <div style="padding:16px;display:flex;flex-direction:column;gap:12px" class="has-nav">
+
+    <!-- Sélection classe et devoir -->
+    <div class="field-group">
+      <div class="field-label required">📍 Classe</div>
+      <select class="field-input" id="notesClasse" onchange="chargerElevesNotes()" style="border:none;font-size:14px;padding:12px 14px;width:100%;outline:none;background:white">
+        <option value="">— Sélectionner une classe —</option>
+      </select>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label required">📋 Numéro du devoir</div>
+      <select class="field-input" id="notesNumero" style="border:none;font-size:14px;padding:12px 14px;width:100%;outline:none;background:white">
+        <option value="1">Devoir N°1</option>
+        <option value="2">Devoir N°2</option>
+        <option value="3">Devoir N°3</option>
+        <option value="4">Devoir N°4</option>
+        <option value="5">Devoir N°5</option>
+        <option value="6">Devoir N°6</option>
+      </select>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label required">📅 Date de remise des copies</div>
+      <input type="date" class="field-input" id="notesDateRemise" style="border:none;font-size:14px;padding:12px 14px;width:100%;outline:none;background:white">
+    </div>
+
+    <!-- Alerte délai -->
+    <div id="alerteDelai" style="display:none;background:#FFEBEE;border-radius:12px;padding:12px 14px;border-left:4px solid #C62828">
+      <p style="font-size:13px;color:#C62828;font-weight:700">⚠️ RETARD — Délai > 15 jours</p>
+      <p style="font-size:12px;color:#C62828;margin-top:4px" id="alerteDelaiTexte"></p>
+    </div>
+
+    <!-- Stats notes -->
+    <div id="notesStats" style="display:none;background:white;border-radius:12px;border:1.5px solid var(--border);padding:12px 14px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="text-align:center;flex:1">
+          <div style="font-size:11px;color:var(--text2);text-transform:uppercase">Moyenne</div>
+          <div style="font-size:22px;font-weight:700;color:var(--bleu)" id="notesMoyenne">—</div>
+        </div>
+        <div style="text-align:center;flex:1">
+          <div style="font-size:11px;color:var(--text2);text-transform:uppercase">Plus haute</div>
+          <div style="font-size:22px;font-weight:700;color:var(--vert)" id="notesMax">—</div>
+        </div>
+        <div style="text-align:center;flex:1">
+          <div style="font-size:11px;color:var(--text2);text-transform:uppercase">Plus basse</div>
+          <div style="font-size:22px;font-weight:700;color:var(--rouge)" id="notesMin">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste élèves avec notes -->
+    <div id="notesEleveList">
+      <p style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Sélectionnez une classe pour saisir les notes</p>
+    </div>
+
+    <button class="btn-green" onclick="publierNotes()" id="btnPublierNotes" style="display:none;margin-bottom:20px">📤 Publier les notes</button>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" onclick="goTo('accueil')">
+      <div class="nav-icon">🏠</div><span>Accueil</span>
+    </div>
+    <div class="nav-item" onclick="goTo('appel')">
+      <div class="nav-icon">✅</div><span>Appel</span>
+    </div>
+    <div class="nav-item" onclick="goTo('cahier')">
+      <div class="nav-icon">📝</div><span>Cahier</span>
+    </div>
+    <div class="nav-item active" onclick="goTo('notes')">
+      <div class="nav-icon">🎯</div><span>Notes</span>
     </div>
   </nav>
 </div>
@@ -1497,6 +1591,9 @@ function goToScreen(nom) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(`screen-${nom}`).classList.add('active');
 
+  // Initialiser l'écran notes
+  if (nom === 'notes') initNotes();
+
   // Sync hors ligne si en ligne
   if (navigator.onLine) syncHorsLigne();
 }
@@ -1526,6 +1623,206 @@ function formatDate(d) {
 }
 function formatHeure(d) {
   return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+
+
+// =============================================
+// NOTES DEVOIRS
+// =============================================
+let elevesNotes = [];
+
+function initNotes() {
+  // Remplir le sélecteur classes
+  const sel = document.getElementById('notesClasse');
+  if (sel.options.length <= 1) {
+    CLASSES_CPP.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    });
+  }
+
+  // Date remise par défaut = aujourd'hui
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const dd = String(today.getDate()).padStart(2,'0');
+  document.getElementById('notesDateRemise').value = `${yyyy}-${mm}-${dd}`;
+
+  // Si un cours est actuel, pré-sélectionner la classe
+  if (coursActuel) {
+    document.getElementById('notesClasse').value = coursActuel.classe;
+    chargerElevesNotes();
+  }
+}
+
+async function chargerElevesNotes() {
+  const classe = document.getElementById('notesClasse').value;
+  if (!classe) return;
+
+  document.getElementById('notesInfos').textContent = classe + ' · ' + user.matiere;
+  document.getElementById('notesEleveList').innerHTML =
+    '<p style="text-align:center;color:var(--text2);padding:20px">⏳ Chargement...</p>';
+  document.getElementById('notesStats').style.display = 'none';
+  document.getElementById('btnPublierNotes').style.display = 'none';
+
+  try {
+    showLoader('Chargement élèves...');
+    const range = encodeURIComponent(`${classe}!B4:C300`);
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    hideLoader();
+
+    if (!data.values || data.values.length === 0) {
+      document.getElementById('notesEleveList').innerHTML =
+        '<p style="text-align:center;color:var(--text2);padding:20px">Aucun élève trouvé</p>';
+      return;
+    }
+
+    elevesNotes = data.values
+      .filter(row => row[0] && row[0].toString().trim() !== '')
+      .map(row => ({
+        matricule: row[0] || '',
+        nom: row[1] || '',
+        note: ''
+      }));
+
+    afficherElevesNotes();
+    document.getElementById('btnPublierNotes').style.display = 'block';
+    verifierDelai();
+
+  } catch(e) {
+    hideLoader();
+    showToast('Erreur chargement élèves', 'error');
+  }
+}
+
+function afficherElevesNotes() {
+  const container = document.getElementById('notesEleveList');
+  container.innerHTML = elevesNotes.map((el, i) => `
+    <div style="background:white;border-radius:12px;margin-bottom:8px;border:1.5px solid var(--border);padding:10px 14px;display:flex;align-items:center;gap:12px">
+      <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--bleu),var(--bleu2));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:14px;flex-shrink:0">${el.nom.charAt(0)}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:600">${el.nom}</div>
+        <div style="font-size:11px;color:var(--text2)">${el.matricule}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="number" min="0" max="20" step="0.5"
+          placeholder="—"
+          value="${el.note}"
+          style="width:60px;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-weight:700;text-align:center;outline:none"
+          oninput="setNote(${i}, this.value)"
+          onfocus="this.style.borderColor='var(--bleu2)'"
+          onblur="this.style.borderColor='var(--border)'">
+        <span style="font-size:12px;color:var(--text2)">/20</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setNote(i, val) {
+  elevesNotes[i].note = val;
+  majStatsNotes();
+}
+
+function majStatsNotes() {
+  const notes = elevesNotes
+    .map(e => parseFloat(e.note))
+    .filter(n => !isNaN(n) && n >= 0 && n <= 20);
+
+  if (notes.length === 0) {
+    document.getElementById('notesStats').style.display = 'none';
+    return;
+  }
+
+  const moy = notes.reduce((a,b) => a+b, 0) / notes.length;
+  const max = Math.max(...notes);
+  const min = Math.min(...notes);
+
+  document.getElementById('notesMoyenne').textContent = moy.toFixed(2);
+  document.getElementById('notesMax').textContent = max.toFixed(1);
+  document.getElementById('notesMin').textContent = min.toFixed(1);
+  document.getElementById('notesStats').style.display = 'block';
+
+  // Couleur moyenne
+  const moyEl = document.getElementById('notesMoyenne');
+  if (moy >= 14) moyEl.style.color = 'var(--vert)';
+  else if (moy >= 10) moyEl.style.color = 'var(--bleu)';
+  else moyEl.style.color = 'var(--rouge)';
+}
+
+function verifierDelai() {
+  const dateStr = document.getElementById('notesDateRemise').value;
+  if (!dateStr) return;
+
+  const dateRemise = new Date(dateStr);
+  const today = new Date();
+  const diffJours = Math.floor((today - dateRemise) / (1000 * 60 * 60 * 24));
+
+  const alerteEl = document.getElementById('alerteDelai');
+  if (diffJours > 15) {
+    alerteEl.style.display = 'block';
+    document.getElementById('alerteDelaiTexte').textContent =
+      `Copies remises il y a ${diffJours} jours — délai réglementaire dépassé (max 15 jours)`;
+  } else if (diffJours > 0) {
+    alerteEl.style.display = 'none';
+  } else {
+    alerteEl.style.display = 'none';
+  }
+}
+
+async function publierNotes() {
+  const classe = document.getElementById('notesClasse').value;
+  const numero = document.getElementById('notesNumero').value;
+  const dateRemise = document.getElementById('notesDateRemise').value;
+
+  if (!classe || !dateRemise) {
+    showToast('Classe et date de remise requis', 'error');
+    return;
+  }
+
+  const notesRemplies = elevesNotes.filter(e => e.note !== '' && !isNaN(parseFloat(e.note)));
+  if (notesRemplies.length === 0) {
+    showToast('Saisissez au moins une note', 'error');
+    return;
+  }
+
+  const notes = elevesNotes.map(e => parseFloat(e.note));
+  const notesValides = notes.filter(n => !isNaN(n));
+  const moyenne = notesValides.length > 0
+    ? (notesValides.reduce((a,b) => a+b,0) / notesValides.length).toFixed(2)
+    : '—';
+
+  showLoader('Publication des notes...');
+
+  const data = {
+    date: formatDate(new Date()),
+    dateRemise: dateRemise,
+    classe,
+    matiere: user.matiere,
+    enseignant: user.nom,
+    ecole: user.ecole,
+    numeroDevoir: numero,
+    moyenne,
+    notes: elevesNotes.map(e => ({
+      matricule: e.matricule,
+      nom: e.nom,
+      note: e.note || 'ABS'
+    }))
+  };
+
+  try {
+    await envoyerDonnees('NOTES', data);
+    hideLoader();
+    showToast(`✅ Notes publiées — Moyenne: ${moyenne}/20`, 'success');
+    setTimeout(() => goTo('accueil'), 1500);
+  } catch(e) {
+    hideLoader();
+    sauvegarderHorsLigne('NOTES', data);
+    showToast(`📝 Notes sauvegardées localement — Moyenne: ${moyenne}/20`, 'success');
+    setTimeout(() => goTo('accueil'), 1500);
+  }
 }
 
 // Sync auto au retour en ligne
