@@ -669,7 +669,11 @@ canvas#sigCanvas { display: block; width: 100%; height: 100px; touch-action: non
           <option>Autre</option>
         </select>
       </div>
-      <button class="btn-primary" onclick="seConnecter()">Se connecter →</button>
+      <div class="form-group">
+        <label>Votre code d'accès</label>
+        <input type="text" id="loginCode" placeholder="Ex: KJ-4782" autocomplete="off" style="letter-spacing:2px;font-weight:700;text-transform:uppercase">
+      </div>
+      <button class="btn-primary" id="btnConnecter" onclick="seConnecter()">Se connecter →</button>
     </div>
   </div>
 </div>
@@ -1105,19 +1109,46 @@ function clearSig() {
 // CONNEXION
 // =============================================
 function seConnecter() {
-  // L'école est TOUJOURS celle du lien URL — l'enseignant ne peut pas la changer
   const ecole = ecoleURL;
   const nom = document.getElementById('loginNom').value.trim();
   const matiere = document.getElementById('loginMatiere').value;
+  const code = document.getElementById('loginCode').value.trim().toUpperCase();
 
   if (!nom || !matiere) {
     showToast('Veuillez remplir votre nom et votre matière', 'error');
     return;
   }
+  if (!code) {
+    showToast('Veuillez entrer votre code d\'accès', 'error');
+    return;
+  }
 
-  user = { ecole, nom, matiere, sheetsId: SHEETS_IDS[ecole] };
-  localStorage.setItem('cpp_user', JSON.stringify(user));
-  demarrerSession();
+  const btn = document.getElementById('btnConnecter');
+  btn.disabled = true;
+  btn.textContent = 'Vérification...';
+
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ type: 'VERIFIER_ENSEIGNANT', ecole, nom, code })
+  })
+  .then(r => r.json())
+  .then(data => {
+    btn.disabled = false;
+    btn.textContent = 'Se connecter →';
+    if (data.ok) {
+      user = { ecole, nom, matiere: data.matiere || matiere, code, sheetsId: SHEETS_IDS[ecole] };
+      localStorage.setItem('cpp_user', JSON.stringify(user));
+      demarrerSession();
+    } else {
+      showToast('Code incorrect ou enseignant non autorisé', 'error');
+    }
+  })
+  .catch(() => {
+    btn.disabled = false;
+    btn.textContent = 'Se connecter →';
+    showToast('Erreur de connexion — vérifiez votre internet', 'error');
+  });
 }
 
 function deconnecter() {
