@@ -854,7 +854,7 @@ canvas#sigCanvas { display: block; width: 100%; height: 100px; touch-action: non
 // =============================================
 // CONFIGURATION
 // =============================================
-const API_KEY = 'AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA'; // Remplacer par votre vraie clé API Google Sheets
+const API_KEY = 'AIzaSyClasse_Monde_CPP_2026'; // Remplacer par votre vraie clé API Google Sheets
 
 const SHEETS_IDS = {
   'CPP LES PRINCES':     '1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
@@ -872,7 +872,7 @@ const SHEETS_IDS = {
 };
 
 // URL Apps Script (à déployer — voir instructions)
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwp27cGwqXrYZXDjcpl-Io_gtNKcczIdxMJ974NUrDHxmR46JgY0F7FRXhsMtuatDhM/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/VOTRE_SCRIPT_ID/exec';
 
 // Classes CPP
 const CLASSES_CPP = [
@@ -1412,13 +1412,15 @@ async function publierCahier() {
 // =============================================
 async function envoyerDonnees(type, data) {
   const payload = { type, ...data };
-  const res = await fetch(APPS_SCRIPT_URL, {
+  // no-cors requis pour Apps Script depuis GitHub Pages
+  await fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload)
   });
-  if (!res.ok) throw new Error('Erreur serveur');
-  return res.json();
+  // no-cors ne retourne pas de réponse lisible — on considère OK
+  return { ok: true };
 }
 
 // =============================================
