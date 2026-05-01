@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>CPP Enseignant</title>
+<style>
+:root {
+  --bleu: #1F4E79;
+  --bleu2: #2E75B6;
+  --vert: #2E7D32;
+  --rouge: #C62828;
+  --or: #D4AF37;
+  --orange: #E65100;
+  --bg: #F5F7FA;
+  --card: #FFFFFF;
+  --text: #1A1A2E;
+  --text2: #555;
+  --border: #E0E4EF;
+  --radius: 14px;
+  --shadow: 0 2px 12px rgba(31,78,121,0.10);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* ===== HEADER ===== */
+.header {
+  background: linear-gradient(135deg, var(--bleu), var(--bleu2));
+  color: white;
+  padding: 16px 18px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(31,78,121,0.25);
+}
+.header-logo {
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.header-title { flex: 1; }
+.header-title h1 { font-size: 16px; font-weight: 700; }
+.header-title p { font-size: 11px; opacity: 0.75; margin-top: 1px; }
+.header-user {
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,0.22);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer;
+}
+
+/* ===== ÉCRANS ===== */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ===== CONNEXION ===== */
+.login-wrap {
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.login-logo {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, var(--bleu), var(--bleu2));
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 38px;
+  box-shadow: var(--shadow);
+}
+.login-title { font-size: 22px; font-weight: 700; color: var(--bleu); }
+.login-sub { font-size: 13px; color: var(--text2); text-align: center; }
+.form-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  width: 100%;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.form-group select,
+.form-group input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  background: #F8F9FC;
+  color: var(--text);
+  outline: none;
+  transition: border 0.2s;
+}
+.form-group select:focus,
+.form-group input:focus {
+  border-color: var(--bleu2);
+  background: white;
+}
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--bleu), var(--bleu2));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.btn-primary:active { opacity: 0.85; }
+
+/* ===== ACCUEIL ===== */
+.screen-pad { padding: 16px; }
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 10px;
+}
+.info-banner {
+  background: linear-gradient(135deg, var(--bleu), var(--bleu2));
+  border-radius: var(--radius);
+  padding: 16px;
+  color: white;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.info-banner .icon { font-size: 30px; }
+.info-banner h2 { font-size: 15px; font-weight: 700; }
+.info-banner p { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+
+.cours-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 10px;
+  border: 1.5px solid var(--border);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow);
+}
+.cours-card:active { border-color: var(--bleu2); }
+.cours-heure {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 8px 12px;
+  text-align: center;
+  min-width: 56px;
+}
+.cours-heure .h { font-size: 15px; font-weight: 700; color: var(--bleu); }
+.cours-heure .m { font-size: 10px; color: var(--text2); }
+.cours-info { flex: 1; }
+.cours-info .matiere { font-size: 14px; font-weight: 700; }
+.cours-info .classe { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.cours-badge {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.badge-appel { background: #FFF3E0; color: var(--orange); }
+.badge-fait { background: #E8F5E9; color: var(--vert); }
+.badge-urgent { background: #FFEBEE; color: var(--rouge); animation: pulse 1.5s infinite; }
+
+@keyframes pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.notif-card {
+  background: #FFF8E1;
+  border: 1.5px solid #FDD835;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.notif-card .icon { font-size: 20px; }
+.notif-card p { font-size: 13px; color: #5D4037; }
+
+/* ===== APPEL ===== */
+.appel-header {
+  background: var(--bleu);
+  color: white;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.appel-header h2 { font-size: 16px; font-weight: 700; }
+.appel-header p { font-size: 12px; opacity: 0.8; }
+.appel-stats {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  background: white;
+  border-bottom: 1px solid var(--border);
+}
+.stat-pill {
+  flex: 1;
+  text-align: center;
+  padding: 6px 4px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.stat-present { background: #E8F5E9; color: var(--vert); }
+.stat-retard { background: #FFF3E0; color: var(--orange); }
+.stat-absent { background: #FFEBEE; color: var(--rouge); }
+
+.search-bar {
+  padding: 10px 16px;
+  background: white;
+  border-bottom: 1px solid var(--border);
+}
+.search-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  background: var(--bg);
+}
+.search-input:focus { border-color: var(--bleu2); background: white; }
+
+.eleve-list { padding: 12px 16px; }
+.eleve-item {
+  background: white;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.eleve-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+.eleve-photo {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: linear-gradient(135deg, var(--bleu), var(--bleu2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: white; font-weight: 700;
+  flex-shrink: 0;
+}
+.eleve-info { flex: 1; }
+.eleve-nom { font-size: 14px; font-weight: 600; }
+.eleve-mat { font-size: 11px; color: var(--text2); }
+.eleve-status {
+  display: flex;
+  gap: 6px;
+}
+.status-btn {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s;
+}
+.status-btn:active { transform: scale(0.9); }
+.btn-p { background: #E8F5E9; }
+.btn-p.on { background: var(--vert); }
+.btn-r { background: #FFF3E0; }
+.btn-r.on { background: var(--orange); }
+.btn-a { background: #FFEBEE; }
+.btn-a.on { background: var(--rouge); }
+
+.eleve-detail {
+  display: none;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  gap: 8px;
+  flex-direction: column;
+}
+.eleve-detail.show { display: flex; }
+.detail-label { font-size: 11px; font-weight: 700; color: var(--text2); text-transform: uppercase; margin-bottom: 4px; }
+.motif-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.motif-btn {
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: white;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.motif-btn.on { border-color: var(--bleu2); background: #E3F2FD; color: var(--bleu); font-weight: 700; }
+.heure-input {
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  width: 120px;
+  background: white;
+}
+.obs-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  resize: none;
+  background: white;
+  height: 60px;
+}
+.historique-eleve {
+  font-size: 11px;
+  color: var(--rouge);
+  font-weight: 700;
+  padding: 4px 8px;
+  background: #FFEBEE;
+  border-radius: 6px;
+  display: none;
+}
+
+/* ===== SIGNATURE ===== */
+.signature-box {
+  margin: 12px 16px;
+  background: white;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.signature-label {
+  padding: 8px 14px;
+  font-size: 12px;
+  color: var(--text2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.sig-clear { font-size: 11px; color: var(--rouge); cursor: pointer; font-weight: 700; }
+canvas#sigCanvas { display: block; width: 100%; height: 100px; touch-action: none; }
+
+/* ===== ACTIONS BAS ===== */
+.bottom-actions {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: white;
+  border-top: 1px solid var(--border);
+  position: sticky;
+  bottom: 0;
+}
+.btn-green {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, var(--vert), #388E3C);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-outline {
+  width: 100%;
+  padding: 12px;
+  background: white;
+  color: var(--bleu);
+  border: 1.5px solid var(--bleu);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ===== CAHIER DE TEXTES ===== */
+.cahier-form {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.field-group {
+  background: white;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--border);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.field-label {
+  padding: 10px 14px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.field-label.required::after {
+  content: '●';
+  color: var(--rouge);
+  font-size: 8px;
+}
+.field-area {
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  font-size: 14px;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  background: white;
+  min-height: 70px;
+}
+.field-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+  background: white;
+}
+.avancement-grid {
+  padding: 10px 14px;
+  display: flex;
+  gap: 8px;
+}
+.av-btn {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: white;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.av-btn.on-ok { border-color: var(--vert); background: #E8F5E9; color: var(--vert); }
+.av-btn.on-retard { border-color: var(--rouge); background: #FFEBEE; color: var(--rouge); }
+.av-btn.on-avance { border-color: var(--bleu2); background: #E3F2FD; color: var(--bleu); }
+
+.obligatoire-msg {
+  font-size: 12px;
+  color: var(--rouge);
+  text-align: center;
+  padding: 8px;
+  display: none;
+}
+
+/* ===== LOADER ===== */
+.loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31,78,121,0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  backdrop-filter: blur(3px);
+}
+.loader-overlay.show { display: flex; }
+.loader-card {
+  background: white;
+  border-radius: 16px;
+  padding: 28px 32px;
+  text-align: center;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+}
+.loader-spinner {
+  width: 44px; height: 44px;
+  border: 4px solid var(--border);
+  border-top-color: var(--bleu2);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 14px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader-text { font-size: 14px; color: var(--text2); font-weight: 500; }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: #333;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 9998;
+  transition: transform 0.3s;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { background: var(--vert); }
+.toast.error { background: var(--rouge); }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: none;
+  align-items: flex-end;
+  z-index: 999;
+}
+.modal-overlay.show { display: flex; }
+.modal-card {
+  background: white;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  border-radius: 20px 20px 0 0;
+  padding: 20px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+.modal-handle {
+  width: 40px; height: 4px;
+  background: var(--border);
+  border-radius: 4px;
+  margin: 0 auto 16px;
+}
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 14px; }
+
+/* ===== NAV BAS ===== */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  background: white;
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 90;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+}
+.nav-item {
+  flex: 1;
+  padding: 10px 4px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 10px;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+.nav-item.active { color: var(--bleu); }
+.nav-icon { font-size: 22px; }
+
+/* padding pour nav bas */
+.has-nav { padding-bottom: 70px; }
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div class="loader-overlay" id="loader">
+  <div class="loader-card">
+    <div class="loader-spinner"></div>
+    <div class="loader-text" id="loaderText">Chargement...</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ============================================ -->
+<!-- ÉCRAN 0 : CONNEXION -->
+<!-- ============================================ -->
+<div class="screen active" id="screen-login">
+  <div class="login-wrap">
+    <div class="login-logo">📚</div>
+    <div class="login-title" id="loginTitre">CPP Enseignant</div>
+    <div class="login-sub" id="loginSoustitre">Groupe Scolaire Les Princes d'Abidjan</div>
+
+    <!-- Bandeau école détectée -->
+    <div id="ecoleDetectee" style="display:none;width:100%;background:linear-gradient(135deg,#1F4E79,#2E75B6);border-radius:12px;padding:14px 16px;color:white;display:flex;align-items:center;gap:12px">
+      <div style="font-size:28px">🏫</div>
+      <div>
+        <div style="font-size:11px;opacity:0.75;text-transform:uppercase;letter-spacing:0.5px">Votre école</div>
+        <div id="ecoleNomAffiche" style="font-size:16px;font-weight:700;margin-top:2px">—</div>
+      </div>
+    </div>
+
+    <!-- Erreur école non reconnue -->
+    <div id="ecoleErreur" style="display:none;width:100%;background:#FFEBEE;border-radius:12px;padding:14px 16px;border:1.5px solid #EF9A9A;text-align:center">
+      <div style="font-size:24px;margin-bottom:6px">⚠️</div>
+      <div style="font-size:13px;color:#C62828;font-weight:600">Lien non reconnu</div>
+      <div style="font-size:12px;color:#555;margin-top:4px">Contactez votre directeur pour obtenir le bon lien d'accès.</div>
+    </div>
+
+    <div class="form-card" id="loginForm">
+      <div class="form-group">
+        <label>Votre nom complet</label>
+        <input type="text" id="loginNom" placeholder="Ex: KOUASSI Jean-Marie" autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label>Matière principale</label>
+        <select id="loginMatiere">
+          <option value="">— Sélectionner —</option>
+          <option>Mathématiques</option>
+          <option>Physique-Chimie</option>
+          <option>SVT</option>
+          <option>Français</option>
+          <option>Anglais</option>
+          <option>Histoire-Géographie</option>
+          <option>Philosophie</option>
+          <option>Économie</option>
+          <option>Informatique</option>
+          <option>EPS</option>
+          <option>Arts</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="seConnecter()">Se connecter →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- ÉCRAN 1 : ACCUEIL -->
+<!-- ============================================ -->
+<div class="screen" id="screen-accueil">
+  <div class="header">
+    <div class="header-logo">📚</div>
+    <div class="header-title">
+      <h1>Bonjour, <span id="headerPrenom">Enseignant</span></h1>
+      <p id="headerDate">Aujourd'hui</p>
+    </div>
+    <div class="header-user" onclick="deconnecter()">🚪</div>
+  </div>
+
+  <div class="screen-pad has-nav">
+    <!-- Notification devoir direction -->
+    <div class="notif-card" id="notifDevoir" style="display:none">
+      <div class="icon">📋</div>
+      <p id="notifDevoirText">La direction vous a remis un devoir.</p>
+    </div>
+
+    <!-- Classes du jour -->
+    <div class="section-title">Vos cours aujourd'hui</div>
+    <div id="listeCours">
+      <!-- Cours chargés dynamiquement -->
+    </div>
+
+    <!-- Bouton ajouter cours manuellement -->
+    <button class="btn-outline" onclick="afficherModalCours()" style="margin-top:8px">
+      ＋ Saisir un cours manuellement
+    </button>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item active" onclick="goTo('accueil')">
+      <div class="nav-icon">🏠</div><span>Accueil</span>
+    </div>
+    <div class="nav-item" onclick="goTo('appel')">
+      <div class="nav-icon">✅</div><span>Appel</span>
+    </div>
+    <div class="nav-item" onclick="goTo('cahier')">
+      <div class="nav-icon">📝</div><span>Cahier</span>
+    </div>
+  </nav>
+</div>
+
+<!-- ============================================ -->
+<!-- ÉCRAN 2 : APPEL -->
+<!-- ============================================ -->
+<div class="screen" id="screen-appel">
+  <div class="appel-header">
+    <h2>📋 Appel — <span id="appelClasse">Classe</span></h2>
+    <p><span id="appelMatiere">Matière</span> · <span id="appelHeure">—</span></p>
+  </div>
+
+  <div class="appel-stats">
+    <div class="stat-pill stat-present">✅ <span id="countPresent">0</span> présents</div>
+    <div class="stat-pill stat-retard">⏰ <span id="countRetard">0</span> retards</div>
+    <div class="stat-pill stat-absent">❌ <span id="countAbsent">0</span> absents</div>
+  </div>
+
+  <div class="search-bar">
+    <input class="search-input" type="text" placeholder="🔍 Rechercher nom ou matricule..." id="searchEleve" oninput="filtrerEleves()">
+  </div>
+
+  <div class="eleve-list has-nav" id="eleveList">
+    <p style="text-align:center;color:var(--text2);padding:30px">Chargement des élèves...</p>
+  </div>
+
+  <!-- Signature -->
+  <div class="signature-box" style="margin-bottom:0">
+    <div class="signature-label">
+      <span>✍️ Signature enseignant</span>
+      <span class="sig-clear" onclick="clearSig()">Effacer</span>
+    </div>
+    <canvas id="sigCanvas"></canvas>
+  </div>
+
+  <div class="bottom-actions">
+    <button class="btn-green" onclick="validerAppel()">✅ Valider l'appel</button>
+    <button class="btn-outline" onclick="goTo('accueil')">← Retour</button>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- ÉCRAN 3 : CAHIER DE TEXTES -->
+<!-- ============================================ -->
+<div class="screen" id="screen-cahier">
+  <div class="header">
+    <div class="header-logo">📝</div>
+    <div class="header-title">
+      <h1>Cahier de textes</h1>
+      <p><span id="cahierClasse">Classe</span> · <span id="cahierMatiere">Matière</span></p>
+    </div>
+  </div>
+
+  <div class="cahier-form has-nav">
+
+    <div class="field-group">
+      <div class="field-label required">📖 Leçon du jour</div>
+      <textarea class="field-area" id="cahierLecon" placeholder="Titre de la leçon, chapitre..."></textarea>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label required">📚 Contenu détaillé</div>
+      <textarea class="field-area" id="cahierContenu" placeholder="Résumé du contenu enseigné, notions abordées..."></textarea>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">📐 Avancement du programme</div>
+      <div class="avancement-grid">
+        <button class="av-btn" onclick="setAvancement('dans les temps')" id="avOk">✅ Dans les temps</button>
+        <button class="av-btn" onclick="setAvancement('en retard')" id="avRetard">⚠️ En retard</button>
+        <button class="av-btn" onclick="setAvancement('en avance')" id="avAvance">🚀 En avance</button>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">📋 Devoir donné aux élèves</div>
+      <textarea class="field-area" id="cahierDevoir" placeholder="Énoncé du devoir, exercices à faire..." style="min-height:60px"></textarea>
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">📦 Documents à apporter</div>
+      <input class="field-input" id="cahierDocs" placeholder="Ex: Manuel page 45, règle graduée...">
+    </div>
+
+    <div class="field-group">
+      <div class="field-label">💬 Observation (optionnel)</div>
+      <textarea class="field-area" id="cahierObs" placeholder="Remarques sur le cours, comportement classe..." style="min-height:50px"></textarea>
+    </div>
+
+    <p class="obligatoire-msg" id="obligMsg">⚠️ Veuillez remplir la leçon et le contenu (obligatoires)</p>
+
+    <button class="btn-green" onclick="publierCahier()" style="margin-bottom:20px">📤 Publier et terminer</button>
+  </div>
+
+  <nav class="bottom-nav">
+    <div class="nav-item" onclick="goTo('accueil')">
+      <div class="nav-icon">🏠</div><span>Accueil</span>
+    </div>
+    <div class="nav-item" onclick="goTo('appel')">
+      <div class="nav-icon">✅</div><span>Appel</span>
+    </div>
+    <div class="nav-item active" onclick="goTo('cahier')">
+      <div class="nav-icon">📝</div><span>Cahier</span>
+    </div>
+  </nav>
+</div>
+
+<!-- ============================================ -->
+<!-- MODAL COURS MANUEL -->
+<!-- ============================================ -->
+<div class="modal-overlay" id="modalCours">
+  <div class="modal-card">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Saisir un cours</div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Classe</label>
+      <select id="modalClasse">
+        <option value="">— Sélectionner —</option>
+        <!-- Rempli dynamiquement -->
+      </select>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Matière</label>
+      <input type="text" id="modalMatiere" placeholder="Ex: Mathématiques">
+    </div>
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Heure de début</label>
+      <input type="time" id="modalHeure">
+    </div>
+    <button class="btn-primary" onclick="confirmerCours()">Confirmer →</button>
+    <button class="btn-outline" onclick="fermerModal()" style="margin-top:8px">Annuler</button>
+  </div>
+</div>
+
+<script>
+// =============================================
+// CONFIGURATION
+// =============================================
+const API_KEY = 'AIzaSyClasse_Monde_CPP_2026'; // Remplacer par votre vraie clé API Google Sheets
+
+const SHEETS_IDS = {
+  'CPP LES PRINCES':     '1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
+  'ACADEMIE':            '1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M',
+  'GUINGLO VILLE':       '1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA',
+  'GNONTINROU':          '1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4',
+  'KOUTOUAN':            '167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg',
+  'SOAKPE':              '1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys',
+  'AKEIKOI 1':           '1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE',
+  'AKEIKOI 2':           '11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog',
+  'CPP PRO':             '1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs',
+  'CPP TECH':            '15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc',
+  'ETL PRINCES KOUIBLY': '1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s',
+  'GS RITA ROSANE':      '1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0'
+};
+
+// URL Apps Script (à déployer — voir instructions)
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/VOTRE_SCRIPT_ID/exec';
+
+// Classes CPP
+const CLASSES_CPP = [
+  '6ÈME 3','6ÈME 4','6ÈME 5','6ÈME 6','6ÈME 7','6ÈME EX1','6ÈME EX2',
+  '5ÈME 3','5ÈME 4','5ÈME 5','5ÈME 6','5ÈME 7','5ÈME EX1','5ÈME EX2',
+  '4ÈME 3','4ÈME 4','4ÈME 5','4ÈME 6','4ÈME 7','4ÈME EX1','4ÈME EX2',
+  '3ÈME 3','3ÈME 4','3ÈME 5','3ÈME 6','3ÈME 7','3ÈME EX1','3ÈME EX2',
+  '2NDE A1','2NDE A2','2NDE C2','2NDE C3','2NDE C4','2NDE CEX',
+  '1ÈRE A2-2','1ÈRE A2-3','1ÈRE A2EX','1ÈRE CEX1','1ÈRE D1','1ÈRE D2',
+  'TLE A2-2','TLE A2-3','TLE A2EX','TLE D1','TLE D2','TLE D3','TLE D4'
+];
+
+// =============================================
+// CORRESPONDANCE CODE URL → ÉCOLE
+// Chaque école a son code unique dans l'URL
+// Ex: enseignant_cpp.html?e=cpp → CPP LES PRINCES
+// =============================================
+const ECOLE_CODES = {
+  'cpp':      'CPP LES PRINCES',
+  'academie': 'ACADEMIE',
+  'guinglo':  'GUINGLO VILLE',
+  'gnont':    'GNONTINROU',
+  'koutouan': 'KOUTOUAN',
+  'soakpe':   'SOAKPE',
+  'akeikoi1': 'AKEIKOI 1',
+  'akeikoi2': 'AKEIKOI 2',
+  'pro':      'CPP PRO',
+  'tech':     'CPP TECH',
+  'kouibly':  'ETL PRINCES KOUIBLY',
+  'rita':     'GS RITA ROSANE'
+};
+
+const ECOLE_NOMS_AFFICHAGE = {
+  'CPP LES PRINCES':     "CPP Les Princes d'Abidjan",
+  'ACADEMIE':            'Académie des Princes',
+  'GUINGLO VILLE':       'Collège Les Princes de Guinglo Ville',
+  'GNONTINROU':          'Collège Les Princes de Gnontinrou',
+  'KOUTOUAN':            'Groupe Scolaire Les Princes de Koutouan',
+  'SOAKPE':              'Collège Les Princes de Soakpé',
+  'AKEIKOI 1':           'Les Princes Akeïkoï 1',
+  'AKEIKOI 2':           'Les Princes Akeïkoï 2',
+  'CPP PRO':             'CPP Professionnel Abobo',
+  'CPP TECH':            'CPP Technique',
+  'ETL PRINCES KOUIBLY': 'ETL Princes de Kouibly',
+  'GS RITA ROSANE':      'GS Rita Rosane Abobo'
+};
+
+// École verrouillée pour cette session
+let ecoleURL = null;
+
+// =============================================
+// ÉTAT
+// =============================================
+let user = null;
+let coursActuel = null;
+let eleves = [];
+let elevesFiltres = [];
+let avancement = 'dans les temps';
+let sigCtx = null;
+let sigPainting = false;
+
+// =============================================
+// INITIALISATION
+// =============================================
+window.onload = function() {
+  // 1. Lire le code école dans l'URL
+  const params = new URLSearchParams(window.location.search);
+  const code = (params.get('e') || '').toLowerCase().trim();
+  ecoleURL = ECOLE_CODES[code] || null;
+
+  // 2. Afficher état écran connexion
+  if (ecoleURL) {
+    document.getElementById('ecoleDetectee').style.display = 'flex';
+    document.getElementById('ecoleNomAffiche').textContent = ECOLE_NOMS_AFFICHAGE[ecoleURL] || ecoleURL;
+    document.getElementById('loginTitre').textContent = 'Bienvenue';
+    document.getElementById('loginForm').style.display = 'flex';
+    document.getElementById('ecoleErreur').style.display = 'none';
+  } else {
+    // Pas de code valide — bloquer l'accès
+    document.getElementById('ecoleDetectee').style.display = 'none';
+    document.getElementById('ecoleErreur').style.display = 'block';
+    document.getElementById('loginForm').style.display = 'none';
+    return; // Arrêt — on n'initialise rien d'autre
+  }
+
+  // 3. Session existante ? Vérifier que c'est la même école
+  const saved = localStorage.getItem('cpp_user');
+  if (saved) {
+    const savedUser = JSON.parse(saved);
+    if (savedUser.ecole === ecoleURL) {
+      user = savedUser;
+      demarrerSession();
+      return;
+    } else {
+      // École différente — effacer l'ancienne session
+      localStorage.removeItem('cpp_user');
+    }
+  }
+
+  // 4. Remplir sélecteur classes modal
+  const sel = document.getElementById('modalClasse');
+  CLASSES_CPP.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    sel.appendChild(opt);
+  });
+
+  // 5. Signature
+  initSignature();
+};
+
+function initSignature() {
+  const canvas = document.getElementById('sigCanvas');
+  sigCtx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 300;
+  canvas.height = 100;
+  sigCtx.strokeStyle = '#1F4E79';
+  sigCtx.lineWidth = 2;
+  sigCtx.lineCap = 'round';
+
+  canvas.addEventListener('touchstart', e => { sigPainting = true; const t = e.touches[0]; const r = canvas.getBoundingClientRect(); sigCtx.beginPath(); sigCtx.moveTo(t.clientX - r.left, t.clientY - r.top); e.preventDefault(); });
+  canvas.addEventListener('touchmove', e => { if (!sigPainting) return; const t = e.touches[0]; const r = canvas.getBoundingClientRect(); sigCtx.lineTo(t.clientX - r.left, t.clientY - r.top); sigCtx.stroke(); e.preventDefault(); });
+  canvas.addEventListener('touchend', () => { sigPainting = false; });
+
+  canvas.addEventListener('mousedown', e => { sigPainting = true; const r = canvas.getBoundingClientRect(); sigCtx.beginPath(); sigCtx.moveTo(e.clientX - r.left, e.clientY - r.top); });
+  canvas.addEventListener('mousemove', e => { if (!sigPainting) return; const r = canvas.getBoundingClientRect(); sigCtx.lineTo(e.clientX - r.left, e.clientY - r.top); sigCtx.stroke(); });
+  canvas.addEventListener('mouseup', () => { sigPainting = false; });
+}
+
+function clearSig() {
+  const canvas = document.getElementById('sigCanvas');
+  sigCtx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+// =============================================
+// CONNEXION
+// =============================================
+function seConnecter() {
+  // L'école est TOUJOURS celle du lien URL — l'enseignant ne peut pas la changer
+  const ecole = ecoleURL;
+  const nom = document.getElementById('loginNom').value.trim();
+  const matiere = document.getElementById('loginMatiere').value;
+
+  if (!nom || !matiere) {
+    showToast('Veuillez remplir votre nom et votre matière', 'error');
+    return;
+  }
+
+  user = { ecole, nom, matiere, sheetsId: SHEETS_IDS[ecole] };
+  localStorage.setItem('cpp_user', JSON.stringify(user));
+  demarrerSession();
+}
+
+function deconnecter() {
+  if (!confirm('Se déconnecter ?')) return;
+  localStorage.removeItem('cpp_user');
+  user = null;
+  goToScreen('login');
+}
+
+function demarrerSession() {
+  const prenom = user.nom.split(' ')[0];
+  document.getElementById('headerPrenom').textContent = prenom;
+
+  const now = new Date();
+  const jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const mois = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  document.getElementById('headerDate').textContent =
+    `${jours[now.getDay()]} ${now.getDate()} ${mois[now.getMonth()]} ${now.getFullYear()}`;
+
+  chargerCours();
+  goToScreen('accueil');
+}
+
+// =============================================
+// COURS
+// =============================================
+function chargerCours() {
+  // En mode démo, créer des cours fictifs liés à l'heure actuelle
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+
+  const coursDemo = [
+    { heure: '07:00', classe: '3ÈME EX1', matiere: user.matiere, fait: false },
+    { heure: '08:00', classe: '4ÈME EX2', matiere: user.matiere, fait: false },
+    { heure: '10:00', classe: 'TLE D1', matiere: user.matiere, fait: true },
+    { heure: '14:00', classe: '1ÈRE D2', matiere: user.matiere, fait: false },
+  ];
+
+  afficherCours(coursDemo);
+}
+
+function afficherCours(cours) {
+  const container = document.getElementById('listeCours');
+  if (!cours.length) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px">Aucun cours aujourd\'hui</p>';
+    return;
+  }
+
+  const now = new Date();
+  const hNow = now.getHours() * 60 + now.getMinutes();
+
+  container.innerHTML = cours.map((c, i) => {
+    const [hh, mm] = c.heure.split(':').map(Number);
+    const hCours = hh * 60 + mm;
+    const diff = hCours - hNow;
+
+    let badgeClass = 'badge-appel', badgeText = '📋 Faire l\'appel';
+    if (c.fait) { badgeClass = 'badge-fait'; badgeText = '✅ Fait'; }
+    else if (diff < 0 && diff > -60) { badgeClass = 'badge-urgent'; badgeText = '🔴 URGENT'; }
+
+    return `
+      <div class="cours-card" onclick="ouvrirCours(${i}, '${c.heure}', '${c.classe}', '${c.matiere}')">
+        <div class="cours-heure">
+          <div class="h">${c.heure}</div>
+          <div class="m">Cours</div>
+        </div>
+        <div class="cours-info">
+          <div class="matiere">${c.matiere}</div>
+          <div class="classe">📍 ${c.classe}</div>
+        </div>
+        <div class="cours-badge ${badgeClass}">${badgeText}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function ouvrirCours(idx, heure, classe, matiere) {
+  coursActuel = { heure, classe, matiere };
+
+  // Mettre à jour données appel
+  document.getElementById('appelClasse').textContent = classe;
+  document.getElementById('appelMatiere').textContent = matiere;
+  document.getElementById('appelHeure').textContent = heure;
+
+  // Mettre à jour cahier
+  document.getElementById('cahierClasse').textContent = classe;
+  document.getElementById('cahierMatiere').textContent = matiere;
+
+  // Charger les élèves
+  chargerEleves(classe);
+  goToScreen('appel');
+}
+
+// =============================================
+// APPEL
+// =============================================
+async function chargerEleves(classe) {
+  document.getElementById('eleveList').innerHTML =
+    '<p style="text-align:center;color:var(--text2);padding:30px">⏳ Chargement des élèves...</p>';
+
+  try {
+    showLoader('Chargement élèves...');
+    const sheetsId = user.sheetsId;
+    const range = encodeURIComponent(`${classe}!A4:C200`);
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/${range}?key=${API_KEY}`;
+
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Erreur API');
+    const data = await res.json();
+
+    if (!data.values || data.values.length === 0) {
+      // Mode démo si pas d'accès
+      eleves = genererElevesDemo();
+    } else {
+      eleves = data.values.map(row => ({
+        classe: row[0] || classe,
+        matricule: row[1] || '',
+        nom: row[2] || '',
+        statut: 'present',
+        motif: '',
+        heure: '',
+        obs: ''
+      }));
+    }
+  } catch (e) {
+    // Mode démo
+    eleves = genererElevesDemo();
+    showToast('Mode démo — Connexion Google Sheets requise', 'error');
+  }
+
+  hideLoader();
+  elevesFiltres = [...eleves];
+  afficherEleves();
+  majStats();
+}
+
+function genererElevesDemo() {
+  const noms = [
+    'KONAN Aya Marguerite','KOUASSI Jean-Baptiste','BAMBA Moussa','DIALLO Fatoumata',
+    'ASSI Romuald','COULIBALY Aminata','GBAGBO Serge','KONE Aïcha',
+    'TANO Emmanuel','ADOU Marie-Louise','OUATTARA Ibrahim','DOSSO Clarisse',
+    'SORO Gustave','KOFFI Angèle','TRAORE Seydou','YAPI Dorothée'
+  ];
+  return noms.map((nom, i) => ({
+    classe: coursActuel?.classe || 'DEMO',
+    matricule: `MAT${String(i+1).padStart(3,'0')}`,
+    nom,
+    statut: 'present',
+    motif: '',
+    heure: '',
+    obs: ''
+  }));
+}
+
+function afficherEleves() {
+  const container = document.getElementById('eleveList');
+
+  if (!elevesFiltres.length) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px">Aucun élève trouvé</p>';
+    return;
+  }
+
+  container.innerHTML = elevesFiltres.map((el, idx) => {
+    const initiale = el.nom.charAt(0) || '?';
+    const i = eleves.indexOf(el);
+
+    return `
+      <div class="eleve-item" id="item-${i}">
+        <div class="eleve-main" onclick="toggleDetail(${i})">
+          <div class="eleve-photo" id="photo-${i}">${initiale}</div>
+          <div class="eleve-info">
+            <div class="eleve-nom">${el.nom}</div>
+            <div class="eleve-mat">${el.matricule}</div>
+          </div>
+          <div class="eleve-status">
+            <button class="status-btn btn-p ${el.statut==='present'?'on':''}" onclick="setStatut(event,${i},'present')" title="Présent">✅</button>
+            <button class="status-btn btn-r ${el.statut==='retard'?'on':''}" onclick="setStatut(event,${i},'retard')" title="Retard">⏰</button>
+            <button class="status-btn btn-a ${el.statut==='absent'?'on':''}" onclick="setStatut(event,${i},'absent')" title="Absent">❌</button>
+          </div>
+        </div>
+        <div class="eleve-detail ${el.statut!=='present'?'show':''}" id="detail-${i}">
+          ${el.statut === 'retard' ? `
+            <div>
+              <div class="detail-label">Heure d'arrivée</div>
+              <input type="time" class="heure-input" value="${el.heure}" onchange="eleves[${i}].heure=this.value">
+            </div>
+            <div>
+              <div class="detail-label">Motif du retard</div>
+              <div class="motif-grid">
+                ${['Transport','Famille','Inconnu','Autre'].map(m => `
+                  <button class="motif-btn ${el.motif===m?'on':''}" onclick="setMotif(${i},'${m}')">${m}</button>
+                `).join('')}
+              </div>
+            </div>
+          ` : el.statut === 'absent' ? `
+            <div>
+              <div class="detail-label">Motif de l'absence</div>
+              <div class="motif-grid">
+                ${['Maladie','Deuil','Suspendu','Inconnu'].map(m => `
+                  <button class="motif-btn ${el.motif===m?'on':''}" onclick="setMotif(${i},'${m}')">${m}</button>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+          <div>
+            <div class="detail-label">Observation</div>
+            <textarea class="obs-input" placeholder="Observation libre..." onchange="eleves[${i}].obs=this.value">${el.obs}</textarea>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleDetail(i) {
+  const d = document.getElementById(`detail-${i}`);
+  if (d) d.classList.toggle('show');
+}
+
+function setStatut(e, i, statut) {
+  e.stopPropagation();
+  eleves[i].statut = statut;
+  if (statut === 'present') { eleves[i].motif = ''; eleves[i].heure = ''; }
+  afficherEleves();
+  majStats();
+}
+
+function setMotif(i, motif) {
+  eleves[i].motif = motif;
+  // Refresh juste les boutons motif
+  const detail = document.getElementById(`detail-${i}`);
+  if (detail) {
+    detail.querySelectorAll('.motif-btn').forEach(btn => {
+      btn.classList.toggle('on', btn.textContent === motif);
+    });
+  }
+}
+
+function filtrerEleves() {
+  const q = document.getElementById('searchEleve').value.toLowerCase();
+  if (!q) { elevesFiltres = [...eleves]; }
+  else {
+    elevesFiltres = eleves.filter(el =>
+      el.nom.toLowerCase().includes(q) ||
+      el.matricule.toLowerCase().includes(q)
+    );
+  }
+  afficherEleves();
+}
+
+function majStats() {
+  document.getElementById('countPresent').textContent = eleves.filter(e => e.statut === 'present').length;
+  document.getElementById('countRetard').textContent = eleves.filter(e => e.statut === 'retard').length;
+  document.getElementById('countAbsent').textContent = eleves.filter(e => e.statut === 'absent').length;
+}
+
+async function validerAppel() {
+  showLoader('Enregistrement de l\'appel...');
+  const maintenant = new Date();
+  const dateStr = formatDate(maintenant);
+  const heureStr = formatHeure(maintenant);
+
+  // Préparer données à envoyer
+  const absences = eleves.filter(e => e.statut !== 'present').map(e => ({
+    date: dateStr,
+    heure: heureStr,
+    matricule: e.matricule,
+    nom: e.nom,
+    classe: coursActuel.classe,
+    statut: e.statut,
+    heureArrivee: e.heure || '',
+    motif: e.motif || '',
+    obs: e.obs || '',
+    enseignant: user.nom,
+    matiere: coursActuel.matiere
+  }));
+
+  const totalEleves = eleves.length;
+  const nbPresents = eleves.filter(e => e.statut === 'present').length;
+  const taux = Math.round(nbPresents / totalEleves * 100);
+
+  try {
+    // Envoyer à Apps Script
+    await envoyerDonnees('APPEL', {
+      date: dateStr,
+      heure: heureStr,
+      classe: coursActuel.classe,
+      matiere: coursActuel.matiere,
+      enseignant: user.nom,
+      ecole: user.ecole,
+      totalEleves,
+      nbPresents,
+      taux,
+      absences,
+      signature: document.getElementById('sigCanvas').toDataURL('image/png')
+    });
+
+    hideLoader();
+
+    // Alerte si taux < 90%
+    if (taux < 90) {
+      showToast(`⚠️ Alerte: taux présence ${taux}% — Direction notifiée`, 'error');
+    } else {
+      showToast(`✅ Appel validé — ${nbPresents}/${totalEleves} présents (${taux}%)`, 'success');
+    }
+
+    // Aller au cahier (obligatoire)
+    setTimeout(() => {
+      goToScreen('cahier');
+    }, 1200);
+
+  } catch (e) {
+    hideLoader();
+    // Sauvegarde locale si hors ligne
+    sauvegarderHorsLigne('APPEL', { date: dateStr, classe: coursActuel.classe, absences });
+    showToast('✅ Appel sauvegardé localement (hors ligne)', 'success');
+    setTimeout(() => goToScreen('cahier'), 1200);
+  }
+}
+
+// =============================================
+// CAHIER DE TEXTES
+// =============================================
+function setAvancement(val) {
+  avancement = val;
+  document.getElementById('avOk').className = `av-btn ${val==='dans les temps'?'on-ok':''}`;
+  document.getElementById('avRetard').className = `av-btn ${val==='en retard'?'on-retard':''}`;
+  document.getElementById('avAvance').className = `av-btn ${val==='en avance'?'on-avance':''}`;
+}
+
+async function publierCahier() {
+  const lecon = document.getElementById('cahierLecon').value.trim();
+  const contenu = document.getElementById('cahierContenu').value.trim();
+
+  if (!lecon || !contenu) {
+    document.getElementById('obligMsg').style.display = 'block';
+    setTimeout(() => document.getElementById('obligMsg').style.display = 'none', 3000);
+    return;
+  }
+
+  showLoader('Publication du cahier de textes...');
+  const maintenant = new Date();
+
+  const data = {
+    date: formatDate(maintenant),
+    heure: formatHeure(maintenant),
+    classe: coursActuel?.classe || '—',
+    matiere: coursActuel?.matiere || user.matiere,
+    enseignant: user.nom,
+    ecole: user.ecole,
+    lecon,
+    contenu,
+    avancement,
+    devoir: document.getElementById('cahierDevoir').value.trim(),
+    docs: document.getElementById('cahierDocs').value.trim(),
+    obs: document.getElementById('cahierObs').value.trim()
+  };
+
+  try {
+    await envoyerDonnees('CAHIER', data);
+    hideLoader();
+    showToast('📝 Cahier publié — Visible parents & direction', 'success');
+
+    // Réinitialiser le formulaire
+    document.getElementById('cahierLecon').value = '';
+    document.getElementById('cahierContenu').value = '';
+    document.getElementById('cahierDevoir').value = '';
+    document.getElementById('cahierDocs').value = '';
+    document.getElementById('cahierObs').value = '';
+    setAvancement('dans les temps');
+
+    setTimeout(() => goToScreen('accueil'), 1200);
+  } catch (e) {
+    hideLoader();
+    sauvegarderHorsLigne('CAHIER', data);
+    showToast('📝 Cahier sauvegardé localement (hors ligne)', 'success');
+    setTimeout(() => goToScreen('accueil'), 1200);
+  }
+}
+
+// =============================================
+// ENVOI DONNÉES (Apps Script)
+// =============================================
+async function envoyerDonnees(type, data) {
+  const payload = { type, ...data };
+  const res = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) throw new Error('Erreur serveur');
+  return res.json();
+}
+
+// =============================================
+// HORS LIGNE
+// =============================================
+function sauvegarderHorsLigne(type, data) {
+  const key = `cpp_offline_${Date.now()}`;
+  const queue = JSON.parse(localStorage.getItem('cpp_offline_queue') || '[]');
+  queue.push({ key, type, data, timestamp: new Date().toISOString() });
+  localStorage.setItem('cpp_offline_queue', JSON.stringify(queue));
+}
+
+async function syncHorsLigne() {
+  const queue = JSON.parse(localStorage.getItem('cpp_offline_queue') || '[]');
+  if (!queue.length) return;
+
+  let synced = 0;
+  const remaining = [];
+
+  for (const item of queue) {
+    try {
+      await envoyerDonnees(item.type, item.data);
+      synced++;
+    } catch {
+      remaining.push(item);
+    }
+  }
+
+  localStorage.setItem('cpp_offline_queue', JSON.stringify(remaining));
+  if (synced > 0) showToast(`✅ ${synced} élément(s) synchronisé(s)`, 'success');
+}
+
+// =============================================
+// COURS MANUEL
+// =============================================
+function afficherModalCours() {
+  const now = new Date();
+  document.getElementById('modalHeure').value = formatHeure(now);
+  document.getElementById('modalMatiere').value = user?.matiere || '';
+  document.getElementById('modalCours').classList.add('show');
+}
+
+function fermerModal() {
+  document.getElementById('modalCours').classList.remove('show');
+}
+
+function confirmerCours() {
+  const classe = document.getElementById('modalClasse').value;
+  const matiere = document.getElementById('modalMatiere').value.trim();
+  const heure = document.getElementById('modalHeure').value;
+
+  if (!classe || !matiere) { showToast('Classe et matière requis', 'error'); return; }
+
+  coursActuel = { heure, classe, matiere };
+  document.getElementById('appelClasse').textContent = classe;
+  document.getElementById('appelMatiere').textContent = matiere;
+  document.getElementById('appelHeure').textContent = heure;
+  document.getElementById('cahierClasse').textContent = classe;
+  document.getElementById('cahierMatiere').textContent = matiere;
+
+  fermerModal();
+  chargerEleves(classe);
+  goToScreen('appel');
+}
+
+// =============================================
+// NAVIGATION
+// =============================================
+function goTo(nom) {
+  goToScreen(nom);
+}
+
+function goToScreen(nom) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(`screen-${nom}`).classList.add('active');
+
+  // Sync hors ligne si en ligne
+  if (navigator.onLine) syncHorsLigne();
+}
+
+// =============================================
+// UTILITAIRES
+// =============================================
+function showLoader(text) {
+  document.getElementById('loaderText').textContent = text || 'Chargement...';
+  document.getElementById('loader').classList.add('show');
+}
+function hideLoader() {
+  document.getElementById('loader').classList.remove('show');
+}
+
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function formatDate(d) {
+  return `${d.getDate().toString().padStart(2,'0')}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getFullYear()}`;
+}
+function formatHeure(d) {
+  return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+
+// Sync auto au retour en ligne
+window.addEventListener('online', syncHorsLigne);
+</script>
+</body>
+</html>
