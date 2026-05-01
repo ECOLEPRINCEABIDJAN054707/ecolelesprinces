@@ -814,7 +814,7 @@ canvas#sigCanvas { display: block; width: 100%; height: 100px; touch-action: non
 
     <p class="obligatoire-msg" id="obligMsg">⚠️ Veuillez remplir la leçon et le contenu (obligatoires)</p>
 
-    <button class="btn-green" onclick="publierCahier()" style="margin-bottom:20px">📤 Publier et terminer</button>
+    <button class="btn-green" onclick="terminerCours()" style="margin-bottom:20px" id="btnTerminer">🏁 Terminer le cours</button>
   </div>
 
   <nav class="bottom-nav">
@@ -1238,9 +1238,70 @@ function ouvrirCours(idx, heure, classe, matiere) {
   document.getElementById('cahierClasse').textContent = classe;
   document.getElementById('cahierMatiere').textContent = matiere;
 
-  // Charger les élèves
-  chargerEleves(classe);
-  goToScreen('appel');
+  // Vérification GPS avant d'accéder à l'appel
+  verifierGPS(classe, function() {
+    chargerEleves(classe);
+    goToScreen('appel');
+  });
+}
+
+// =============================================
+// VÉRIFICATION GPS — Enseignant doit être en salle
+// =============================================
+function verifierGPS(classe, callback) {
+  if (!navigator.geolocation) {
+    showToast('GPS non disponible sur cet appareil', 'error');
+    return;
+  }
+
+  showToast('Vérification de votre position...', 'info');
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      // Récupérer les coordonnées de la salle depuis Apps Script
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'VERIFIER_GPS',
+          ecole: user.ecole,
+          classe: classe,
+          lat: lat,
+          lon: lon
+        })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok) {
+          callback(); // Position validée → on continue
+        } else if (data.salleInconnue) {
+          // Salle non configurée → on laisse passer avec avertissement
+          showToast('Position non configurée — accès autorisé', 'warning');
+          callback();
+        } else {
+          showToast('Vous n\'êtes pas dans la salle ' + classe + ' (' + data.distance + 'm)', 'error');
+        }
+      })
+      .catch(() => {
+        // Erreur réseau → on laisse passer avec avertissement
+        showToast('Vérification GPS impossible — accès autorisé', 'warning');
+        callback();
+      });
+    },
+    function(err) {
+      if (err.code === 1) {
+        showToast('Activez le GPS pour faire l\'appel', 'error');
+      } else {
+        // GPS lent ou indisponible → on laisse passer
+        showToast('GPS indisponible — accès autorisé', 'warning');
+        callback();
+      }
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+  );
 }
 
 // =============================================
@@ -1480,6 +1541,82 @@ function setAvancement(val) {
   document.getElementById('avOk').className = `av-btn ${val==='dans les temps'?'on-ok':''}`;
   document.getElementById('avRetard').className = `av-btn ${val==='en retard'?'on-retard':''}`;
   document.getElementById('avAvance').className = `av-btn ${val==='en avance'?'on-avance':''}`;
+}
+
+// =============================================
+// TERMINER LE COURS — Vérification GPS finale
+// =============================================
+function terminerCours() {
+  const btn = document.getElementById('btnTerminer');
+  btn.disabled = true;
+  btn.textContent = '📍 Vérification position...';
+
+  if (!navigator.geolocation) {
+    btn.disabled = false;
+    btn.textContent = '🏁 Terminer le cours';
+    publierCahier();
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'VERIFIER_GPS',
+          ecole: user.ecole,
+          classe: coursActuel.classe,
+          lat: lat,
+          lon: lon
+        })
+      })
+      .then(r => r.json())
+      .then(data => {
+        btn.disabled = false;
+        btn.textContent = '🏁 Terminer le cours';
+        if (data.ok) {
+          publierCahier(); // GPS OK → on publie
+        } else {
+          // GPS hors salle → alerte direction + blocage
+          signalerAbsenceEnseignant(lat, lon, data.distance);
+          showToast('⚠️ Vous n\'êtes pas en salle (' + data.distance + 'm) — Direction alertée', 'error');
+        }
+      })
+      .catch(() => {
+        btn.disabled = false;
+        btn.textContent = '🏁 Terminer le cours';
+        publierCahier(); // Erreur réseau → on laisse passer
+      });
+    },
+    function() {
+      btn.disabled = false;
+      btn.textContent = '🏁 Terminer le cours';
+      publierCahier(); // GPS indisponible → on laisse passer
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+  );
+}
+
+function signalerAbsenceEnseignant(lat, lon, distance) {
+  // Envoyer alerte à la direction
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'ALERTE_ABSENCE_ENSEIGNANT',
+      ecole: user.ecole,
+      classe: coursActuel.classe,
+      matiere: coursActuel.matiere,
+      enseignant: user.nom,
+      lat: lat,
+      lon: lon,
+      distance: distance
+    })
+  }).catch(() => {});
 }
 
 async function publierCahier() {
