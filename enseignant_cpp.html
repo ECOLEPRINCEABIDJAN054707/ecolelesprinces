@@ -1254,7 +1254,7 @@ function chargerCours() {
   const h = now.getHours();
   const m = now.getMinutes();
 
-  // Si enseignant primaire, utiliser sa classe
+  // Si enseignant primaire, afficher les cours de sa classe
   if (user.niveau === 'primaire' && user.classeDefaut) {
     const coursDemo = [
       { heure: '07:30', classe: user.classeDefaut, matiere: 'Lecture', fait: false },
@@ -1265,14 +1265,9 @@ function chargerCours() {
     afficherCours(coursDemo);
     return;
   }
-  const coursDemo = [
-    { heure: '07:00', classe: '3ÈME EX1', matiere: user.matiere, fait: false },
-    { heure: '08:00', classe: '4ÈME EX2', matiere: user.matiere, fait: false },
-    { heure: '10:00', classe: 'TLE D-1', matiere: user.matiere, fait: true },
-    { heure: '14:00', classe: '1ÈRE D-2', matiere: user.matiere, fait: false },
-  ];
 
-  afficherCours(coursDemo);
+  // Pour le collège/lycée — pas de cours démo, l'enseignant saisit manuellement
+  afficherCours([]);
 }
 
 function afficherCours(cours) {
