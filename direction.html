@@ -475,37 +475,59 @@ function fermerModalAttente() {
 
 async function traiterAttente(decision) {
   if (!coursCourant) return;
-  const raison = document.getElementById('modalRaison').value;
+  const raison = document.getElementById('modalRaison').value || '';
   const row = coursCourant;
-  // Calculer salaire selon décision
   const heureD = toHeure(row[1]);
   const heureF = toHeure(row[7]);
-  const duree  = heureD && heureF ? (parseHeureJS(heureF) - parseHeureJS(heureD)) / 60 : 0;
-  const tarif  = parseFloat(row[10]) || 0;
+  const duree  = (heureD && heureF) ? (parseHeureJS(heureF) - parseHeureJS(heureD)) / 60 : 0;
+  const tarif  = parseFloat(row[10]) || 1000;
   let salaire  = 0;
   if (decision === 'VALIDÉ')  salaire = Math.round(duree * tarif);
   if (decision === 'PARTIEL') salaire = Math.round(duree * tarif * 0.5);
 
-  // Envoyer au Apps Script pour mise à jour Sheets
-  const payload = {
+  const cbName = 'dir_' + Date.now();
+  const params = new URLSearchParams({
+    callback: cbName,
     type: 'TRAITER_ATTENTE',
-    ecole: ecoleConnectee,
-    enseignant: row[4],
-    classe: row[2],
+    ecole: ecoleConnectee || '',
+    enseignant: String(row[4] || ''),
+    classe: String(row[2] || ''),
     date: toDate(row[0]),
     decision: decision,
     raison: raison,
     salaire: salaire
-  };
+  });
 
-  try {
-    await envoyerDecision(payload);
-    showToast('✅ Décision enregistrée : ' + decision, 'success');
-    fermerModalAttente();
-    chargerPointage();
-  } catch(e) {
-    showToast('❌ Erreur : ' + e.message, 'error');
-  }
+  return new Promise(function(resolve) {
+    const script = document.createElement('script');
+    window[cbName] = function(res) {
+      delete window[cbName];
+      try { document.body.removeChild(script); } catch(e) {}
+      if (res && res.ok) {
+        showToast('✅ ' + decision + ' enregistré', 'success');
+        fermerModalAttente();
+        setTimeout(() => chargerPointage(), 1000);
+      } else {
+        showToast('❌ Erreur : ' + (res ? res.error : 'inconnue'), 'error');
+      }
+      resolve(res);
+    };
+    script.onerror = function() {
+      delete window[cbName];
+      try { document.body.removeChild(script); } catch(e) {}
+      showToast('❌ Erreur de connexion', 'error');
+      resolve({ ok: false });
+    };
+    script.src = APPS_SCRIPT_URL + '?' + params.toString();
+    document.body.appendChild(script);
+    setTimeout(function() {
+      if (window[cbName]) {
+        delete window[cbName];
+        showToast('⏱️ Délai dépassé — réessayez', 'error');
+        resolve({ ok: false });
+      }
+    }, 10000);
+  });
 }
 
 async function envoyerDecision(payload) {
