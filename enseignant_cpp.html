@@ -1108,10 +1108,7 @@ window.onload = function() {
     }
   }
 
-  // 4. Remplir sélecteur classes modal depuis Sheets
-  chargerClassesEcole();
-
-  // 5. Signature
+  // 4. Signature
   initSignature();
 };
 
@@ -1287,6 +1284,7 @@ function demarrerSession() {
     `${jours[now.getDay()]} ${now.getDate()} ${mois[now.getMonth()]} ${now.getFullYear()}`;
 
   chargerCours();
+  chargerClassesEcole();
   goToScreen('accueil');
 }
 
