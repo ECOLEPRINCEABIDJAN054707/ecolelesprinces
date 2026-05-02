@@ -1300,6 +1300,11 @@ function demarrerSession() {
 
   chargerCours();
   chargerClassesEcole();
+  // Pré-remplir la matière avec celle de l'enseignant
+  const champMatiere = document.getElementById('modalMatiere');
+  if (champMatiere && user.matiere) {
+    champMatiere.value = user.matiere;
+  }
   goToScreen('accueil');
 }
 
