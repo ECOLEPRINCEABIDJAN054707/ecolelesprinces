@@ -517,7 +517,7 @@ async function envoyerDecision(payload) {
       try { document.body.removeChild(script); } catch(e) {}
       resolve(res);
     };
-    script.src = `${APPS_SCRIPT_URL}?callback=${cbName}&type=TRAITER_ATTENTE&data=${encodeURIComponent(JSON.stringify(payload))}`;
+    script.src = `${APPS_SCRIPT_URL}?callback=${cbName}&type=TRAITER_ATTENTE&ecole=${encodeURIComponent(payload.ecole)}&enseignant=${encodeURIComponent(payload.enseignant)}&classe=${encodeURIComponent(payload.classe)}&date=${encodeURIComponent(payload.date)}&decision=${encodeURIComponent(payload.decision)}&raison=${encodeURIComponent(payload.raison||'')}&salaire=${payload.salaire||0}`;
     document.body.appendChild(script);
     setTimeout(() => { if(window[cbName]) { delete window[cbName]; resolve({ok:true}); }}, 8000);
   });
