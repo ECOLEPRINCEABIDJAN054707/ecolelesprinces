@@ -725,16 +725,25 @@ canvas#sigCanvas { display: block; width: 100%; height: 100px; touch-action: non
       <p id="notifDevoirText">La direction vous a remis un devoir.</p>
     </div>
 
-    <!-- Classes du jour -->
-    <div class="section-title">Vos cours aujourd'hui</div>
-    <div id="listeCours">
-      <!-- Cours chargés dynamiquement -->
+    <!-- Saisir un cours directement -->
+    <div class="section-title">Démarrer un cours</div>
+    <div class="form-card" style="margin-bottom:12px">
+      <div class="form-group">
+        <label>Classe</label>
+        <select id="modalClasse">
+          <option value="">— Sélectionner —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Matière</label>
+        <input type="text" id="modalMatiere" placeholder="Ex: Mathématiques">
+      </div>
+      <div class="form-group">
+        <label>Heure de début</label>
+        <input type="time" id="modalHeure">
+      </div>
+      <button class="btn-primary" onclick="confirmerCours()">▶ Démarrer le cours</button>
     </div>
-
-    <!-- Bouton ajouter cours manuellement -->
-    <button class="btn-outline" onclick="afficherModalCours()" style="margin-top:8px">
-      ＋ Saisir un cours manuellement
-    </button>
   </div>
 
   <nav class="bottom-nav">
@@ -1659,15 +1668,30 @@ async function publierCahier() {
 // =============================================
 async function envoyerDonnees(type, data) {
   const payload = { type, ...data };
-  // no-cors requis pour Apps Script depuis GitHub Pages
-  await fetch(APPS_SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify(payload)
+  return new Promise(function(resolve) {
+    const cbName = 'cpp_send_' + Date.now();
+    const script = document.createElement('script');
+    const params = encodeURIComponent(JSON.stringify(payload));
+    window[cbName] = function(res) {
+      delete window[cbName];
+      try { document.body.removeChild(script); } catch(e) {}
+      resolve(res || { ok: true });
+    };
+    script.onerror = function() {
+      delete window[cbName];
+      try { document.body.removeChild(script); } catch(e) {}
+      resolve({ ok: true });
+    };
+    script.src = APPS_SCRIPT_URL + '?callback=' + cbName + '&type=' + encodeURIComponent(type) + '&data=' + params;
+    document.body.appendChild(script);
+    setTimeout(function() {
+      if (window[cbName]) {
+        delete window[cbName];
+        try { document.body.removeChild(script); } catch(e) {}
+        resolve({ ok: true });
+      }
+    }, 8000);
   });
-  // no-cors ne retourne pas de réponse lisible — on considère OK
-  return { ok: true };
 }
 
 // =============================================
