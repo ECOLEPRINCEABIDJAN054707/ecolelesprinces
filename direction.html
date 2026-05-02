@@ -1,10 +1,178 @@
-// ============================================================
-// CALCULER_POINTAGE.gs
-// Lit APPELS et CAHIER_TEXTES pour calculer heures et salaires
-// À exécuter manuellement ou automatiquement chaque jour
-// ============================================================
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction — Princes Smart School</title>
+<style>
+:root {
+  --bleu:#1F4E79; --bleu2:#2E75B6; --vert:#2E7D32; --rouge:#C62828;
+  --or:#D4AF37; --orange:#E65100; --bg:#F5F7FA; --card:#fff;
+  --text:#1A1A2E; --text2:#555; --border:#E0E4EF; --radius:14px;
+  --shadow:0 2px 12px rgba(31,78,121,0.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:linear-gradient(135deg,var(--bleu),var(--bleu2));color:white;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(31,78,121,0.25);}
+.header h1{font-size:18px;font-weight:700;}
+.header p{font-size:12px;opacity:0.75;}
+.btn-logout{background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.4);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;}
 
-var SHEETS_IDS = {
+/* LOGIN */
+.login-wrap{max-width:420px;margin:60px auto;padding:0 20px;}
+.login-card{background:white;border-radius:20px;padding:32px;box-shadow:var(--shadow);}
+.login-card h2{font-size:20px;color:var(--bleu);margin-bottom:6px;text-align:center;}
+.login-card p{font-size:13px;color:var(--text2);text-align:center;margin-bottom:24px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;}
+.form-group select,.form-group input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:#F8F9FC;outline:none;}
+.form-group input:focus,.form-group select:focus{border-color:var(--bleu2);}
+.btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--bleu),var(--bleu2));color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;}
+
+/* DASHBOARD */
+.dashboard{display:none;padding:24px;max-width:1200px;margin:0 auto;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--bleu);}
+.stat-card.vert{border-color:var(--vert);}
+.stat-card.or{border-color:var(--or);}
+.stat-card.rouge{border-color:var(--rouge);}
+.stat-label{font-size:12px;color:var(--text2);text-transform:uppercase;font-weight:600;margin-bottom:8px;}
+.stat-value{font-size:28px;font-weight:700;color:var(--bleu);}
+.stat-card.vert .stat-value{color:var(--vert);}
+.stat-card.or .stat-value{color:var(--or);}
+.stat-card.rouge .stat-value{color:var(--rouge);}
+
+.section-title{font-size:16px;font-weight:700;color:var(--bleu);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border);}
+.table-wrap{background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:24px;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--bleu);color:white;}
+th{padding:12px 16px;text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;}
+td{padding:11px 16px;font-size:13px;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+tr:nth-child(even){background:#F8FAFD;}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-vacataire{background:#E3F2FD;color:var(--bleu2);}
+.badge-permanent{background:#E8F5E9;color:var(--vert);}
+.total-row td{font-weight:700;background:#EEF4FB;color:var(--bleu);}
+
+.filters{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+.filters select,.filters input{padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:white;outline:none;}
+.btn-refresh{padding:9px 18px;background:var(--bleu);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-export{padding:9px 18px;background:var(--vert);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;}
+
+.spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--bleu2);border-radius:50%;animation:spin 0.8s linear infinite;margin:40px auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{text-align:center;color:var(--text2);font-size:13px;margin-top:8px;}
+
+.toast{position:fixed;bottom:24px;right:24px;background:#333;color:white;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:500;z-index:9999;display:none;}
+.toast.show{display:block;}
+.toast.success{background:var(--vert);}
+.toast.error{background:var(--rouge);}
+</style>
+</head>
+<body>
+
+<div class="header" id="mainHeader" style="display:none">
+  <div>
+    <h1>📊 Tableau de Bord Direction</h1>
+    <p id="headerEcole">Princes Smart School</p>
+  </div>
+  <button class="btn-logout" onclick="logout()">Se déconnecter</button>
+</div>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <h2>🔐 Espace Direction</h2>
+    <p>Accès réservé aux directeurs d'établissement</p>
+    <div class="form-group">
+      <label>Votre école</label>
+      <select id="loginEcole">
+        <option value="">— Sélectionner —</option>
+        <option value="CPP LES PRINCES">CPP Les Princes d'Abidjan</option>
+        <option value="ACADEMIE">Académie Les Princes</option>
+        <option value="GUINGLO VILLE">CPP Les Princes de Guinglo Ville</option>
+        <option value="GNONTINROU">CPP Gnontinrou</option>
+        <option value="KOUTOUAN">CPP Les Princes de Koutouan</option>
+        <option value="SOAKPE">CPP Les Princes de Soakpé</option>
+        <option value="AKEIKOI 1">EPV Les Princes Akeïkoï 1</option>
+        <option value="AKEIKOI 2">EPV Les Princes Akeïkoï 2</option>
+        <option value="CPP PRO">CPP Professionnel</option>
+        <option value="CPP TECH">CPP Technique</option>
+        <option value="ETL PRINCES KOUIBLY">ETL Les Princes de Kouibly</option>
+        <option value="GS RITA ROSANE">GS Rita Rosane</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Code PIN (6 chiffres)</label>
+      <input type="password" id="loginPin" placeholder="••••••" maxlength="6" inputmode="numeric">
+    </div>
+    <button class="btn-primary" onclick="seConnecter()">Accéder au tableau de bord →</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="stat-label">Enseignants actifs</div><div class="stat-value" id="statEns">—</div></div>
+    <div class="stat-card vert"><div class="stat-label">Heures ce mois</div><div class="stat-value" id="statHeures">—</div></div>
+    <div class="stat-card or"><div class="stat-label">Masse salariale</div><div class="stat-value" id="statSalaire">—</div></div>
+    <div class="stat-card rouge"><div class="stat-label">Permanents</div><div class="stat-value" id="statPerm">—</div></div>
+  </div>
+
+  <div class="filters">
+    <select id="filtreMois" onchange="chargerPointage()">
+    </select>
+    <button class="btn-refresh" onclick="chargerPointage()">🔄 Actualiser</button>
+    <button class="btn-export" onclick="exporterCSV()">📥 Exporter CSV</button>
+  </div>
+
+  <div class="section-title">Récapitulatif des salaires</div>
+  <div class="table-wrap">
+    <div id="tableBody">
+      <div class="spinner"></div>
+      <div class="loading-text">Chargement...</div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TRAITEMENT EN ATTENTE -->
+<div id="modalAttente" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:16px;padding:28px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+    <h3 style="color:var(--bleu);margin-bottom:16px;font-size:17px;">⏱️ Cours en attente de validation</h3>
+    <div id="modalAttenteInfo" style="background:#F5F7FA;border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.8;"></div>
+    <div class="form-group">
+      <label>Raison (optionnel)</label>
+      <select id="modalRaison">
+        <option value="">— Sélectionner une raison —</option>
+        <option value="Grève">Grève</option>
+        <option value="Absence élèves">Absence élèves</option>
+        <option value="Coupure courant">Coupure courant</option>
+        <option value="Intempéries">Intempéries</option>
+        <option value="Réunion école">Réunion école</option>
+        <option value="Autre">Autre</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="traiterAttente('VALIDÉ')" style="flex:1;padding:12px;background:var(--vert);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;">✅ Valider</button>
+      <button onclick="traiterAttente('PARTIEL')" style="flex:1;padding:12px;background:var(--orange);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;">⚠️ 50%</button>
+      <button onclick="traiterAttente('REJETÉ')" style="flex:1;padding:12px;background:var(--rouge);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;">❌ Rejeter</button>
+      <button onclick="fermerModalAttente()" style="padding:12px 16px;background:#E0E4EF;border:none;border-radius:10px;cursor:pointer;">Annuler</button>
+    </div>
+  </div>
+</div>
+
+  <!-- Section EN ATTENTE -->
+  <div id="sectionAttente" style="display:none;margin-top:24px;">
+    <div class="section-title" style="color:var(--orange)">⏱️ Cours en attente de validation</div>
+    <div class="table-wrap" id="tableAttente"></div>
+  </div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUtV4u-nKFT1k5kJTG2NKPzvOs8Y5vsLBwxiyHiPRM-VuTR9tIrEQpGjGA8Jx-tT8Y/exec';
+const SHEETS_IDS = {
   'CPP LES PRINCES':     '1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
   'ACADEMIE':            '1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M',
   'GUINGLO VILLE':       '1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA',
@@ -19,312 +187,349 @@ var SHEETS_IDS = {
   'GS RITA ROSANE':      '1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0'
 };
 
-var TARIFS = {
-  'CPP LES PRINCES': { college: 1200, lycee: 1500 },
-  'ACADEMIE':        { college: 1000, lycee: 1200 },
-  'GUINGLO VILLE':   { college: 1000, lycee: 1200 },
-  'GNONTINROU':      { college: 1000, lycee: 1200 },
-  'KOUTOUAN':        { college: 1000, lycee: 1200 },
-  'SOAKPE':          { college: 1000, lycee: 1200 },
-  'AKEIKOI 1':       { college: 1000, lycee: 1200 },
-  'AKEIKOI 2':       { college: 1000, lycee: 1200 },
-  'CPP PRO':         { college: 1200, lycee: 1500 },
-  'CPP TECH':        { college: 1200, lycee: 1500 },
-  'ETL PRINCES KOUIBLY': { college: 1000, lycee: 1200 },
-  'GS RITA ROSANE':  { college: 1000, lycee: 1200 }
-};
+const API_KEY = 'AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA';
 
-function getNiveauClasse(classe) {
-  var c = (classe || '').toUpperCase().trim();
-  if (/^(2NDE|1[EÈ]RE|TLE|TERMINALE)/.test(c)) return 'lycee';
-  return 'college';
-}
+let ecoleConnectee = null;
+let pinConnecte = null;
+let donneesPointage = [];
 
-function getTarif(ecole, classe) {
-  var niveau = getNiveauClasse(classe);
-  var t = TARIFS[ecole] || { college: 1000, lycee: 1200 };
-  return t[niveau];
-}
-
-function parseHeure(h) {
-  if (!h) return null;
-  // Si c'est un objet Date (sériel Sheets)
-  if (h instanceof Date) {
-    return h.getHours() * 60 + h.getMinutes();
+// Remplir les mois
+function remplirMois() {
+  const sel = document.getElementById('filtreMois');
+  const now = new Date();
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const val = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    const label = d.toLocaleDateString('fr-FR', {month:'long', year:'numeric'});
+    const opt = document.createElement('option');
+    opt.value = val; opt.textContent = label;
+    if (i === 0) opt.selected = true;
+    sel.appendChild(opt);
   }
-  var s = h.toString().trim();
-  // Format "HH:MM"
-  var parts = s.split(':');
-  if (parts.length >= 2) {
-    return parseInt(parts[0]) * 60 + parseInt(parts[1]);
-  }
-  return null;
 }
 
-function formatHeure(h) {
-  if (!h) return '';
-  if (h instanceof Date) {
-    return Utilities.formatDate(h, 'Africa/Abidjan', 'HH:mm');
-  }
-  return h.toString().trim();
+function seConnecter() {
+  const ecole = document.getElementById('loginEcole').value;
+  const pin   = document.getElementById('loginPin').value.trim();
+  if (!ecole) { showToast('Sélectionnez votre école', 'error'); return; }
+  if (pin.length < 4) { showToast('Entrez votre code PIN', 'error'); return; }
+  ecoleConnectee = ecole;
+  pinConnecte    = pin;
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('mainHeader').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('headerEcole').textContent = ecole;
+  remplirMois();
+  chargerPointage();
 }
 
-function formatDate(d) {
-  if (!d) return '';
-  if (d instanceof Date) {
-    return Utilities.formatDate(d, 'Africa/Abidjan', 'dd/MM/yyyy');
-  }
-  return d.toString().trim();
-}
+async function chargerPointage() {
+  const mois = document.getElementById('filtreMois').value;
+  document.getElementById('tableBody').innerHTML =
+    '<div class="spinner"></div><div class="loading-text">Chargement...</div>';
 
-// ============================================================
-// FONCTION PRINCIPALE — à lancer manuellement ou par trigger
-// ============================================================
-function calculerPointageToutesEcoles() {
-  var resultats = [];
-  Object.keys(SHEETS_IDS).forEach(function(nomEcole) {
-    try {
-      var nb = calculerPointageEcole(nomEcole, SHEETS_IDS[nomEcole]);
-      resultats.push('✅ ' + nomEcole + ' — ' + nb + ' cours traités');
-    } catch(e) {
-      resultats.push('❌ ' + nomEcole + ' — ' + e.message);
-    }
-  });
-  Logger.log(resultats.join('\n'));
-  SpreadsheetApp.getUi().alert('POINTAGE CALCULÉ\n\n' + resultats.join('\n'));
-}
-
-// Calculer pour une seule école (utile pour tester)
-function calculerPointageEcoleActive() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var nomEcole = ss.getName();
-  // Trouver l'ID correspondant
-  var sheetsId = null;
-  Object.keys(SHEETS_IDS).forEach(function(k) {
-    if (ss.getId() === SHEETS_IDS[k]) sheetsId = SHEETS_IDS[k];
-  });
-  if (!sheetsId) {
-    SpreadsheetApp.getUi().alert('Cette base n\'est pas reconnue dans le système.');
-    return;
-  }
-  // Trouver le nom de l'école
-  var ecole = null;
-  Object.keys(SHEETS_IDS).forEach(function(k) {
-    if (SHEETS_IDS[k] === sheetsId) ecole = k;
-  });
-  var nb = calculerPointageEcole(ecole, sheetsId);
-  SpreadsheetApp.getUi().alert('✅ Pointage calculé\n' + nb + ' cours traités pour ' + ecole);
-}
-
-function calculerPointageEcole(ecole, sheetsId) {
-  var ss = SpreadsheetApp.openById(sheetsId);
-
-  // Lire APPELS — A=DATE, B=HEURE, C=CLASSE, D=MATIERE, E=ENSEIGNANT
-  var wsAppels = ss.getSheetByName('APPELS');
-  if (!wsAppels) return 0;
-  var appels = wsAppels.getDataRange().getValues();
-
-  // Lire CAHIER_TEXTES — A=DATE, B=HEURE, C=CLASSE, D=MATIERE, E=ENSEIGNANT
-  var wsCahier = ss.getSheetByName('CAHIER_TEXTES');
-  if (!wsCahier) return 0;
-  var cahiers = wsCahier.getDataRange().getValues();
-
-  // Créer ou vider POINTAGE_MENSUEL
-  var wsP = ss.getSheetByName('POINTAGE_MENSUEL');
-  if (!wsP) {
-    wsP = ss.insertSheet('POINTAGE_MENSUEL');
-  } else {
-    wsP.clearContents();
-  }
-
-  // En-têtes
-  var headers = ['DATE','HEURE_DEBUT','CLASSE','MATIERE','ENSEIGNANT',
-                 'ECOLE','MOIS','HEURE_FIN','HEURES','STATUT','TARIF','SALAIRE'];
-  wsP.getRange(1,1,1,headers.length).setValues([headers])
-    .setBackground('#1F4E79').setFontColor('#FFFFFF').setFontWeight('bold');
-
-  var nbTraites = 0;
-  var ligneP = 2;
-
-  // Pour chaque appel, chercher le cahier correspondant
-  for (var i = 1; i < appels.length; i++) {
-    var dateA = formatDate(appels[i][0]);
-    var heureA = formatHeure(appels[i][1]);
-    var classeA = appels[i][2] ? appels[i][2].toString().trim().toUpperCase() : '';
-    var matiereA = appels[i][3] ? appels[i][3].toString().trim() : '';
-    var ensA = appels[i][4] ? appels[i][4].toString().trim().toUpperCase() : '';
-
-    if (!dateA || !ensA || !classeA) continue;
-
-    // Chercher cahier correspondant (même date, même classe, même enseignant)
-    var heureFin = null;
-    for (var j = 1; j < cahiers.length; j++) {
-      var dateC = formatDate(cahiers[j][0]);
-      var heureC = formatHeure(cahiers[j][1]);
-      var classeC = cahiers[j][2] ? cahiers[j][2].toString().trim().toUpperCase() : '';
-      var ensC = cahiers[j][4] ? cahiers[j][4].toString().trim().toUpperCase() : '';
-
-      if (dateC === dateA && classeC === classeA && ensC === ensA) {
-        heureFin = heureC;
-        break;
-      }
-    }
-
-    // Calculer mois
-    var mois = '';
-    try {
-      var parts = dateA.split('/');
-      if (parts.length === 3) {
-        mois = parts[2] + '-' + parts[1].padStart(2,'0');
-      }
-    } catch(e) {}
-
-    var statut = 'EN COURS';
-    var duree = 0;
-    var salaire = 0;
-    var tarif = getTarif(ecole, classeA);
-
-    if (heureFin) {
-      var debut = parseHeure(heureA);
-      var fin   = parseHeure(heureFin);
-      if (debut !== null && fin !== null && fin > debut) {
-        var diffMin = fin - debut; // en minutes
-        duree = diffMin / 60;
-        if (diffMin >= 45) {
-          // Cours complet — VALIDÉ automatiquement
-          salaire = Math.round(duree * tarif);
-          statut  = 'VALIDÉ';
-        } else {
-          // Moins de 45 min — EN ATTENTE direction
-          salaire = 0;
-          statut  = 'EN ATTENTE';
-        }
-      }
-    }
-
-    var row = [
-      dateA, heureA, classeA, matiereA, appels[i][4] ? appels[i][4].toString().trim() : '',
-      ecole, mois, heureFin || '', duree > 0 ? duree.toFixed(2) : '',
-      statut, tarif, salaire > 0 ? salaire : ''
-    ];
-
-    wsP.getRange(ligneP, 1, 1, headers.length).setValues([row]);
-
-    // Colorer
-    if (statut === 'VALIDÉ') {
-      wsP.getRange(ligneP, 10).setBackground('#E8F5E9').setFontColor('#2E7D32').setFontWeight('bold');
-      wsP.getRange(ligneP, 12).setFontWeight('bold').setFontColor('#1A5276');
-    } else {
-      wsP.getRange(ligneP, 10).setBackground('#FFF3E0').setFontColor('#E65100');
-    }
-
-    // Alerte direction si EN ATTENTE
-    if (statut === 'EN ATTENTE') {
-      alerterCourtDuree(ecole, appels[i][4] ? appels[i][4].toString().trim() : '', classeA, matiereA, dateA, heureA, heureFin, Math.round((parseHeure(heureFin)-parseHeure(heureA))));
-    }
-
-    ligneP++;
-    nbTraites++;
-  }
-
-  wsP.setFrozenRows(1);
-  SpreadsheetApp.flush();
-  return nbTraites;
-}
-
-// ============================================================
-// TRIGGER AUTOMATIQUE — s'exécute chaque soir à 20h
-// ============================================================
-function traiterAttenteDirection(data) {
+  // Lire POINTAGE_MENSUEL depuis Sheets directement
   try {
-    var ecole    = data.ecole || 'CPP LES PRINCES';
-    var sheetsId = SHEETS_IDS[ecole];
-    if (!sheetsId) return { ok: false, error: 'École inconnue' };
-    var ss = SpreadsheetApp.openById(sheetsId);
-    var ws = ss.getSheetByName('POINTAGE_MENSUEL');
-    if (!ws) return { ok: false, error: 'POINTAGE_MENSUEL introuvable' };
+    const sheetsId = SHEETS_IDS[ecoleConnectee];
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/POINTAGE_MENSUEL!A2:L2000?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const res  = await fetch(url);
+    const data = await res.json();
 
-    var rows = ws.getDataRange().getValues();
-    var enseignant = (data.enseignant || '').toString().trim().toUpperCase();
-    var classe     = (data.classe || '').toString().trim().toUpperCase();
-    var dateRecue  = (data.date || '').toString().trim();
-
-    for (var i = 1; i < rows.length; i++) {
-      var nomEns = (rows[i][4] || '').toString().trim().toUpperCase();
-      var cls    = (rows[i][2] || '').toString().trim().toUpperCase();
-      var statut = (rows[i][9] || '').toString().trim();
-      var dateR  = formatDate(rows[i][0]);
-
-      if (nomEns === enseignant && cls === classe &&
-          statut === 'EN ATTENTE' && dateR === dateRecue) {
-
-        var decision = data.decision || 'REJETÉ';
-        var salaire  = parseFloat(data.salaire) || 0;
-        var raison   = data.raison || '';
-
-        ws.getRange(i+1, 10).setValue(decision);
-        ws.getRange(i+1, 12).setValue(salaire);
-
-        // Colorer selon décision
-        if (decision === 'VALIDÉ') {
-          ws.getRange(i+1, 10).setBackground('#E8F5E9').setFontColor('#2E7D32').setFontWeight('bold');
-        } else if (decision === 'PARTIEL') {
-          ws.getRange(i+1, 10).setBackground('#FFF3E0').setFontColor('#E65100').setFontWeight('bold');
-        } else {
-          ws.getRange(i+1, 10).setBackground('#FFEBEE').setFontColor('#C62828').setFontWeight('bold');
-          ws.getRange(i+1, 12).setValue(0);
-        }
-
-        // Ajouter raison dans colonne M si fournie
-        if (raison) ws.getRange(i+1, 13).setValue(raison);
-
-        SpreadsheetApp.flush();
-        return { ok: true, message: 'Décision enregistrée: ' + decision };
-      }
+    if (!data.values || data.values.length === 0) {
+      afficherTableauVide();
+      return;
     }
-    return { ok: false, error: 'Cours EN ATTENTE non trouvé' };
-  } catch(err) {
-    Logger.log('ERREUR traiterAttenteDirection: ' + err.message);
-    return { ok: false, error: err.message };
-  }
-}
 
-function alerterCourtDuree(ecole, enseignant, classe, matiere, date, heureDebut, heureFin, dureeMin) {
-  try {
-    MailApp.sendEmail({
-      to: 'manet.serge@yahoo.fr',
-      subject: '⏱️ COURS COURT — ' + enseignant + ' ' + classe + ' (' + dureeMin + 'min)',
-      body: 'COURS INFÉRIEUR À 45 MINUTES — EN ATTENTE DE VALIDATION\n\n' +
-        'École      : ' + ecole + '\n' +
-        'Enseignant : ' + enseignant + '\n' +
-        'Classe     : ' + classe + '\n' +
-        'Matière    : ' + matiere + '\n' +
-        'Date       : ' + date + '\n' +
-        'Heure début: ' + heureDebut + '\n' +
-        'Heure fin  : ' + heureFin + '\n' +
-        'Durée      : ' + dureeMin + ' minutes\n\n' +
-        'Action requise : connectez-vous sur direction.html pour valider, valider partiellement ou rejeter ce cours.\n' +
-        'Vous pouvez aussi ajouter une raison (grève, absence élèves, coupure courant...).'
+    // Convertir sériel Sheets en mois yyyy-MM
+    function serielVersMois(val) {
+      if (!val) return '';
+      const n = parseFloat(val);
+      if (!isNaN(n) && n > 40000) {
+        // Sériel Sheets : jours depuis 30/12/1899
+        const d = new Date(Math.round((n - 25569) * 86400 * 1000));
+        const y = d.getUTCFullYear();
+        const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+        return y + '-' + m;
+      }
+      return String(val).trim().substring(0, 7);
+    }
+
+    // Filtrer par mois
+    const lignes = data.values.filter(row => {
+      const statut = String(row[9]||'').trim();
+      const moisRow = serielVersMois(row[6]);
+      const estValide = statut === 'VALIDÉ' || statut === 'VALIDE' || statut === 'PARTIEL';
+      return estValide && moisRow === mois;
     });
+
+    // Grouper par enseignant
+    const recap = {};
+    lignes.forEach(row => {
+      const nom     = String(row[4]||'').trim();
+      const heures  = parseFloat(row[8]) || 0;
+      const salaire = parseFloat(row[11]) || 0;
+      const classe  = String(row[2]||'').trim();
+      if (!recap[nom]) recap[nom] = { nom, totalHeures:0, totalSalaire:0, nbCours:0, classes:[] };
+      recap[nom].totalHeures  += heures;
+      recap[nom].totalSalaire += salaire;
+      recap[nom].nbCours++;
+      if (!recap[nom].classes.includes(classe)) recap[nom].classes.push(classe);
+    });
+
+    donneesPointage = Object.values(recap);
+    afficherAttente(data.values);
+
+    // Ajouter permanents
+    await chargerPermanents(recap);
+
+    afficherTableau();
   } catch(e) {
-    Logger.log('Email court durée: ' + e.message);
+    document.getElementById('tableBody').innerHTML =
+      '<p style="text-align:center;padding:30px;color:var(--rouge)">Erreur chargement — ' + e.message + '</p>';
   }
 }
 
-function creerTriggerAuto() {
-  // Supprimer les anciens triggers
-  var triggers = ScriptApp.getProjectTriggers();
-  triggers.forEach(function(t) {
-    if (t.getHandlerFunction() === 'calculerPointageToutesEcoles') {
-      ScriptApp.deleteTrigger(t);
-    }
-  });
-  // Créer nouveau trigger quotidien à 20h
-  ScriptApp.newTrigger('calculerPointageToutesEcoles')
-    .timeBased()
-    .everyDays(1)
-    .atHour(20)
-    .create();
-  Logger.log('✅ Trigger automatique créé — calcul chaque soir à 20h');
-  SpreadsheetApp.getUi().alert('✅ Calcul automatique activé\nLe pointage sera calculé chaque soir à 20h');
+async function chargerPermanents(recap) {
+  try {
+    const sheetsId = SHEETS_IDS[ecoleConnectee];
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/ENSEIGNANTS!A2:F200?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (!data.values) return;
+    data.values.forEach(row => {
+      const nom   = String(row[0]||'').trim();
+      const actif = String(row[3]||'').trim().toUpperCase();
+      const type  = String(row[4]||'VACATAIRE').trim().toUpperCase();
+      const fixe  = parseFloat(row[5]) || 0;
+      if (actif !== 'OUI') return;
+      if (type === 'PERMANENT' && fixe > 0) {
+        if (!recap[nom]) {
+          recap[nom] = { nom, totalHeures:0, totalSalaire:0, nbCours:0, classes:[], type:'PERMANENT' };
+          donneesPointage.push(recap[nom]);
+        }
+        recap[nom].totalSalaire = fixe;
+        recap[nom].type = 'PERMANENT';
+      }
+    });
+  } catch(e) {}
 }
+
+function afficherTableau() {
+  if (donneesPointage.length === 0) { afficherTableauVide(); return; }
+
+  donneesPointage.sort((a,b) => b.totalSalaire - a.totalSalaire);
+
+  const totalSalaire = donneesPointage.reduce((s,e) => s + e.totalSalaire, 0);
+  const totalHeures  = donneesPointage.reduce((s,e) => s + e.totalHeures, 0);
+  const nbPerm       = donneesPointage.filter(e => e.type === 'PERMANENT').length;
+
+  document.getElementById('statEns').textContent = donneesPointage.length;
+  document.getElementById('statHeures').textContent = totalHeures.toFixed(1) + 'h';
+  document.getElementById('statSalaire').textContent = totalSalaire.toLocaleString('fr-FR') + ' F';
+  document.getElementById('statPerm').textContent = nbPerm;
+
+  let html = `<table>
+    <thead><tr>
+      <th>#</th><th>Enseignant</th><th>Type</th><th>Classes</th>
+      <th>Nb Cours</th><th>Heures</th><th>Salaire</th>
+    </tr></thead><tbody>`;
+
+  donneesPointage.forEach((e, i) => {
+    const isPerm = e.type === 'PERMANENT';
+    html += `<tr>
+      <td>${i+1}</td>
+      <td><strong>${e.nom}</strong></td>
+      <td><span class="badge ${isPerm?'badge-permanent':'badge-vacataire'}">${isPerm?'PERMANENT':'VACATAIRE'}</span></td>
+      <td style="font-size:11px;color:var(--text2)">${(e.classes||[]).join(', ') || '—'}</td>
+      <td style="text-align:center">${e.nbCours}</td>
+      <td style="text-align:center;font-weight:600">${isPerm ? '—' : e.totalHeures.toFixed(1)+'h'}</td>
+      <td style="text-align:right;font-weight:700;color:var(--bleu)">${e.totalSalaire.toLocaleString('fr-FR')} F</td>
+    </tr>`;
+  });
+
+  html += `</tbody><tfoot><tr class="total-row">
+    <td colspan="5" style="text-align:right">TOTAL MASSE SALARIALE</td>
+    <td style="text-align:center">${totalHeures.toFixed(1)}h</td>
+    <td style="text-align:right">${totalSalaire.toLocaleString('fr-FR')} F CFA</td>
+  </tr></tfoot></table>`;
+
+  document.getElementById('tableBody').innerHTML = html;
+}
+
+function afficherTableauVide() {
+  document.getElementById('statEns').textContent = '0';
+  document.getElementById('statHeures').textContent = '0h';
+  document.getElementById('statSalaire').textContent = '0 F';
+  document.getElementById('statPerm').textContent = '0';
+  document.getElementById('tableBody').innerHTML =
+    '<p style="text-align:center;padding:40px;color:var(--text2)">Aucun pointage validé ce mois</p>';
+}
+
+function exporterCSV() {
+  if (!donneesPointage.length) { showToast('Aucune donnée à exporter', 'error'); return; }
+  const mois = document.getElementById('filtreMois').value;
+  let csv = 'NOM,TYPE,NB COURS,HEURES,SALAIRE\n';
+  donneesPointage.forEach(e => {
+    csv += `"${e.nom}","${e.type||'VACATAIRE'}",${e.nbCours},${e.totalHeures.toFixed(2)},${e.totalSalaire}\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `Salaires_${ecoleConnectee}_${mois}.csv`;
+  a.click();
+  showToast('✅ Export réussi', 'success');
+}
+
+function logout() {
+  ecoleConnectee = null; pinConnecte = null; donneesPointage = [];
+  document.getElementById('loginWrap').style.display = 'block';
+  document.getElementById('mainHeader').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('loginPin').value = '';
+}
+
+let coursEnAttente = [];
+let coursCourant = null;
+
+function afficherAttente(lignes) {
+  coursEnAttente = lignes.filter(row => String(row[9]||'').trim() === 'EN ATTENTE');
+  const section = document.getElementById('sectionAttente');
+  const table   = document.getElementById('tableAttente');
+  if (coursEnAttente.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  let html = `<table><thead><tr>
+    <th>Date</th><th>Enseignant</th><th>Classe</th><th>Matière</th>
+    <th>Durée</th><th>Action</th>
+  </tr></thead><tbody>`;
+
+  coursEnAttente.forEach((row, idx) => {
+    const heureD = toHeure(row[1]);
+    const heureF = toHeure(row[7]);
+    const dureeMin = heureD && heureF ? Math.round((parseHeureJS(heureF) - parseHeureJS(heureD))) : '?';
+    html += `<tr>
+      <td>${toDate(row[0])}</td>
+      <td><strong>${row[4]||''}</strong></td>
+      <td>${row[2]||''}</td>
+      <td>${row[3]||''}</td>
+      <td style="color:var(--orange);font-weight:700">${dureeMin} min</td>
+      <td><button onclick="ouvrirModalAttente(${idx})" style="padding:6px 12px;background:var(--bleu);color:white;border:none;border-radius:8px;cursor:pointer;font-size:12px">Traiter</button></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  table.innerHTML = html;
+}
+
+function toDate(val) {
+  if (!val) return '';
+  const n = parseFloat(val);
+  if (!isNaN(n) && n > 40000) {
+    const d = new Date(Math.round((n - 25569) * 86400 * 1000));
+    return d.getUTCDate().toString().padStart(2,'0') + '/' +
+           (d.getUTCMonth()+1).toString().padStart(2,'0') + '/' + d.getUTCFullYear();
+  }
+  return String(val);
+}
+
+function toHeure(val) {
+  if (!val) return '';
+  const n = parseFloat(val);
+  if (!isNaN(n) && n < 1) {
+    const totalMin = Math.round(n * 24 * 60);
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return h.toString().padStart(2,'0') + ':' + m.toString().padStart(2,'0');
+  }
+  return String(val);
+}
+
+function parseHeureJS(h) {
+  if (!h) return 0;
+  const p = h.split(':').map(Number);
+  return p[0] * 60 + p[1];
+}
+
+function ouvrirModalAttente(idx) {
+  coursCourant = coursEnAttente[idx];
+  const row = coursCourant;
+  const heureD = toHeure(row[1]);
+  const heureF = toHeure(row[7]);
+  const dureeMin = heureD && heureF ? Math.round((parseHeureJS(heureF) - parseHeureJS(heureD))) : '?';
+  document.getElementById('modalAttenteInfo').innerHTML =
+    `<b>Enseignant :</b> ${row[4]||''}<br>
+     <b>Classe :</b> ${row[2]||''}<br>
+     <b>Matière :</b> ${row[3]||''}<br>
+     <b>Date :</b> ${toDate(row[0])}<br>
+     <b>Heure début :</b> ${heureD}<br>
+     <b>Heure fin :</b> ${heureF}<br>
+     <b>Durée :</b> <span style="color:var(--orange);font-weight:700">${dureeMin} minutes</span>`;
+  document.getElementById('modalRaison').value = '';
+  document.getElementById('modalAttente').style.display = 'flex';
+}
+
+function fermerModalAttente() {
+  document.getElementById('modalAttente').style.display = 'none';
+  coursCourant = null;
+}
+
+async function traiterAttente(decision) {
+  if (!coursCourant) return;
+  const raison = document.getElementById('modalRaison').value;
+  const row = coursCourant;
+  // Calculer salaire selon décision
+  const heureD = toHeure(row[1]);
+  const heureF = toHeure(row[7]);
+  const duree  = heureD && heureF ? (parseHeureJS(heureF) - parseHeureJS(heureD)) / 60 : 0;
+  const tarif  = parseFloat(row[10]) || 0;
+  let salaire  = 0;
+  if (decision === 'VALIDÉ')  salaire = Math.round(duree * tarif);
+  if (decision === 'PARTIEL') salaire = Math.round(duree * tarif * 0.5);
+
+  // Envoyer au Apps Script pour mise à jour Sheets
+  const payload = {
+    type: 'TRAITER_ATTENTE',
+    ecole: ecoleConnectee,
+    enseignant: row[4],
+    classe: row[2],
+    date: toDate(row[0]),
+    decision: decision,
+    raison: raison,
+    salaire: salaire
+  };
+
+  try {
+    await envoyerDecision(payload);
+    showToast('✅ Décision enregistrée : ' + decision, 'success');
+    fermerModalAttente();
+    chargerPointage();
+  } catch(e) {
+    showToast('❌ Erreur : ' + e.message, 'error');
+  }
+}
+
+async function envoyerDecision(payload) {
+  return new Promise(function(resolve) {
+    const cbName = 'dir_' + Date.now();
+    const script = document.createElement('script');
+    window[cbName] = function(res) {
+      delete window[cbName];
+      try { document.body.removeChild(script); } catch(e) {}
+      resolve(res);
+    };
+    script.src = `${APPS_SCRIPT_URL}?callback=${cbName}&type=TRAITER_ATTENTE&data=${encodeURIComponent(JSON.stringify(payload))}`;
+    document.body.appendChild(script);
+    setTimeout(() => { if(window[cbName]) { delete window[cbName]; resolve({ok:true}); }}, 8000);
+  });
+}
+
+let toastTimer;
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
