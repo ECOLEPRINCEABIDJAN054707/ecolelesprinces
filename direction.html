@@ -208,10 +208,16 @@ async function chargerPointage() {
       return;
     }
 
-    // Filtrer par mois
-    const lignes = data.values.filter(row =>
-      String(row[6]||'').trim() === mois && String(row[9]||'').trim() === 'VALIDÉ'
-    );
+    // Filtrer par mois — accepte plusieurs formats
+    const lignes = data.values.filter(row => {
+      const statut = String(row[9]||'').trim();
+      const moisRow = String(row[6]||'').trim();
+      // Accepter VALIDÉ avec ou sans accent
+      const estValide = statut === 'VALIDÉ' || statut === 'VALIDE' || statut === 'validé';
+      // Accepter le mois dans différents formats
+      const estMois = moisRow === mois || moisRow.startsWith(mois) || moisRow.includes(mois.substring(0,7));
+      return estValide && estMois;
+    });
 
     // Grouper par enseignant
     const recap = {};
