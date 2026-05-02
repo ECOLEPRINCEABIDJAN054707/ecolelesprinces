@@ -506,7 +506,9 @@ async function traiterAttente(decision) {
       if (res && res.ok) {
         showToast('✅ ' + decision + ' enregistré', 'success');
         fermerModalAttente();
-        setTimeout(() => chargerPointage(), 1000);
+        setTimeout(function() { 
+        chargerPointage(); 
+      }, 2000);
       } else {
         showToast('❌ Erreur : ' + (res ? res.error : 'inconnue'), 'error');
       }
