@@ -1788,7 +1788,6 @@ function initNotes() {
   // Remplir le sélecteur classes
   const sel = document.getElementById('notesClasse');
   if (sel.options.length <= 1) {
-    // Copier les classes du modal (déjà chargées depuis Sheets)
     const modalSel = document.getElementById('modalClasse');
     for (let i = 1; i < modalSel.options.length; i++) {
       const opt = document.createElement('option');
