@@ -651,7 +651,15 @@ canvas#sigCanvas { display: block; width: 100%; height: 100px; touch-action: non
         <label>Votre nom complet</label>
         <input type="text" id="loginNom" placeholder="Ex: KOUASSI Jean-Marie" autocomplete="name">
       </div>
-      <div class="form-group">
+      <div class="form-group" id="groupNiveau">
+        <label>Niveau d'enseignement</label>
+        <select id="loginNiveau" onchange="changerNiveau()">
+          <option value="">— Sélectionner —</option>
+          <option value="secondaire">Collège / Lycée</option>
+          <option value="primaire">Primaire / Maternelle</option>
+        </select>
+      </div>
+      <div class="form-group" id="groupMatiere" style="display:none">
         <label>Matière principale</label>
         <select id="loginMatiere">
           <option value="">— Sélectionner —</option>
@@ -667,6 +675,25 @@ canvas#sigCanvas { display: block; width: 100%; height: 100px; touch-action: non
           <option>EPS</option>
           <option>Arts</option>
           <option>Autre</option>
+        </select>
+      </div>
+      <div class="form-group" id="groupClasse" style="display:none">
+        <label>Votre classe</label>
+        <select id="loginClassePrimaire">
+          <option value="">— Sélectionner —</option>
+          <optgroup label="Maternelle">
+            <option>PSA</option>
+            <option>MSA</option>
+            <option>GSA</option>
+          </optgroup>
+          <optgroup label="Primaire">
+            <option>CP1</option><option>CP1 A</option><option>CP1 B</option><option>CP1 C</option>
+            <option>CP2</option><option>CP2 A</option><option>CP2 B</option><option>CP2 C</option>
+            <option>CE1</option><option>CE1 A</option><option>CE1 B</option><option>CE1 C</option>
+            <option>CE2</option><option>CE2 A</option><option>CE2 B</option><option>CE2 C</option>
+            <option>CM1</option><option>CM1 A</option><option>CM1 B</option><option>CM1 C</option>
+            <option>CM2</option><option>CM2 A</option><option>CM2 B</option><option>CM2 C</option>
+          </optgroup>
         </select>
       </div>
       <div class="form-group">
@@ -974,10 +1001,21 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUtV4u-nKFT1k5
 
 // Classes CPP
 const CLASSES_CPP = [
+  // ===== MATERNELLE =====
+  'PSA','MSA','GSA',
+  // ===== PRIMAIRE =====
+  'CP1','CP1 A','CP1 B','CP1 C',
+  'CP2','CP2 A','CP2 B','CP2 C',
+  'CE1','CE1 A','CE1 B','CE1 C',
+  'CE2','CE2 A','CE2 B','CE2 C',
+  'CM1','CM1 A','CM1 B','CM1 C',
+  'CM2','CM2 A','CM2 B','CM2 C',
+  // ===== COLLÈGE =====
   '6ÈME 3','6ÈME 4','6ÈME 5','6ÈME 6','6ÈME 7','6ÈME EX1','6ÈME EX2',
   '5ÈME 3','5ÈME 4','5ÈME 5','5ÈME 6','5ÈME 7','5ÈME EX1','5ÈME EX2',
   '4ÈME 3','4ÈME 4','4ÈME 5','4ÈME 6','4ÈME 7','4ÈME EX1','4ÈME EX2',
   '3ÈME 3','3ÈME 4','3ÈME 5','3ÈME 6','3ÈME 7','3ÈME EX1','3ÈME EX2',
+  // ===== LYCÉE =====
   '2NDE A1','2NDE A2','2NDE C2','2NDE C3','2NDE C4','2NDE CEX',
   '1ÈRE A2-2','1ÈRE A2-3','1ÈRE A2 EX','1ÈRE C EX1','1ÈRE D-1','1ÈRE D-2',
   'TLE A2-2','TLE A2-3','TLE A2 EX','TLE D-1','TLE D-2','TLE D-3','TLE D-4'
@@ -1108,14 +1146,30 @@ function clearSig() {
 // =============================================
 // CONNEXION
 // =============================================
+function changerNiveau() {
+  const niveau = document.getElementById('loginNiveau').value;
+  document.getElementById('groupMatiere').style.display = niveau === 'secondaire' ? 'block' : 'none';
+  document.getElementById('groupClasse').style.display = niveau === 'primaire' ? 'block' : 'none';
+}
+
 function seConnecter() {
   const ecole = ecoleURL;
   const nom = document.getElementById('loginNom').value.trim();
-  const matiere = document.getElementById('loginMatiere').value;
+  const niveau = document.getElementById('loginNiveau').value;
+  const matiere = niveau === 'primaire' ? 'Instituteur(trice)' : document.getElementById('loginMatiere').value;
+  const classePrimaire = niveau === 'primaire' ? document.getElementById('loginClassePrimaire').value : '';
   const code = document.getElementById('loginCode').value.trim().toUpperCase();
 
-  if (!nom || !matiere) {
-    showToast('Veuillez remplir votre nom et votre matière', 'error');
+  if (!nom || !niveau) {
+    showToast('Veuillez remplir votre nom et votre niveau', 'error');
+    return;
+  }
+  if (niveau === 'secondaire' && !matiere) {
+    showToast('Veuillez sélectionner votre matière', 'error');
+    return;
+  }
+  if (niveau === 'primaire' && !classePrimaire) {
+    showToast('Veuillez sélectionner votre classe', 'error');
     return;
   }
   if (!code) {
@@ -1145,7 +1199,8 @@ function seConnecter() {
     btn.disabled = false;
     btn.textContent = 'Se connecter →';
     if (data.ok) {
-      user = { ecole, nom, matiere: data.matiere || matiere, code, sheetsId: SHEETS_IDS[ecole] };
+      const classeDefaut = niveau === 'primaire' ? classePrimaire : '';
+      user = { ecole, nom, matiere: data.matiere || matiere, code, sheetsId: SHEETS_IDS[ecole], niveau, classeDefaut };
       localStorage.setItem('cpp_user', JSON.stringify(user));
       demarrerSession();
     } else {
@@ -1199,6 +1254,17 @@ function chargerCours() {
   const h = now.getHours();
   const m = now.getMinutes();
 
+  // Si enseignant primaire, utiliser sa classe
+  if (user.niveau === 'primaire' && user.classeDefaut) {
+    const coursDemo = [
+      { heure: '07:30', classe: user.classeDefaut, matiere: 'Lecture', fait: false },
+      { heure: '09:00', classe: user.classeDefaut, matiere: 'Mathématiques', fait: false },
+      { heure: '10:30', classe: user.classeDefaut, matiere: 'Écriture', fait: false },
+      { heure: '14:00', classe: user.classeDefaut, matiere: 'Sciences', fait: false },
+    ];
+    afficherCours(coursDemo);
+    return;
+  }
   const coursDemo = [
     { heure: '07:00', classe: '3ÈME EX1', matiere: user.matiere, fait: false },
     { heure: '08:00', classe: '4ÈME EX2', matiere: user.matiere, fait: false },
