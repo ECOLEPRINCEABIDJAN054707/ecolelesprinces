@@ -1108,13 +1108,8 @@ window.onload = function() {
     }
   }
 
-  // 4. Remplir sélecteur classes modal
-  const sel = document.getElementById('modalClasse');
-  CLASSES_CPP.forEach(c => {
-    const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
-    sel.appendChild(opt);
-  });
+  // 4. Remplir sélecteur classes modal depuis Sheets
+  chargerClassesEcole();
 
   // 5. Signature
   initSignature();
@@ -1229,6 +1224,56 @@ function deconnecter() {
   localStorage.removeItem('cpp_user');
   user = null;
   goToScreen('login');
+}
+
+async function chargerClassesEcole() {
+  const sel = document.getElementById('modalClasse');
+  const selNotes = document.getElementById('notesClasse');
+
+  // Vider les options existantes sauf la première
+  while (sel.options.length > 1) sel.remove(1);
+
+  try {
+    // Lire les noms des onglets via API Sheets
+    const sheetsId = SHEETS_IDS[ecoleURL];
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}?key=${API_KEY}&fields=sheets.properties.title`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.sheets) throw new Error('Pas de feuilles');
+
+    // Filtrer les onglets qui ressemblent à des classes
+    const exclus = ['SYNTHESE','ENSEIGNANTS','ABSENCES','APPELS','CAHIER_TEXTES',
+                    'NOTES_T1','NOTES_T2','NOTES_T3','SALLES','LIENS','PHOTOS',
+                    'ANNONCES','MESSAGES','HISTORIQUE_PAIEMENTS','CONFIGURATION_TARIF',
+                    'BULLETINS_T1','BULLETINS_T2','BULLETINS_T3','RESULTATS',
+                    'BEPC_2026','BAC_2026','CEPE_2026','SYNTHESE_BACKUP',
+                    'NOTES_DEVOIRS','EDT','EXAM_BLANC_3EME'];
+
+    const classes = data.sheets
+      .map(s => s.properties.title)
+      .filter(t => {
+        const tu = t.toUpperCase();
+        return !exclus.some(e => tu.includes(e)) &&
+               !tu.startsWith('EDT_') &&
+               t.length > 1;
+      });
+
+    classes.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    });
+
+    showToast(`✅ ${classes.length} classes chargées`, 'success');
+  } catch(e) {
+    // Fallback sur liste statique
+    CLASSES_CPP.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c; opt.textContent = c;
+      sel.appendChild(opt);
+    });
+  }
 }
 
 function demarrerSession() {
@@ -1745,11 +1790,14 @@ function initNotes() {
   // Remplir le sélecteur classes
   const sel = document.getElementById('notesClasse');
   if (sel.options.length <= 1) {
-    CLASSES_CPP.forEach(c => {
+    // Copier les classes du modal (déjà chargées depuis Sheets)
+    const modalSel = document.getElementById('modalClasse');
+    for (let i = 1; i < modalSel.options.length; i++) {
       const opt = document.createElement('option');
-      opt.value = c; opt.textContent = c;
+      opt.value = modalSel.options[i].value;
+      opt.textContent = modalSel.options[i].textContent;
       sel.appendChild(opt);
-    });
+    }
   }
 
   // Date remise par défaut = aujourd'hui
