@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Direction — Princes Smart School</title>
+<style>
+:root {
+  --bleu:#1F4E79; --bleu2:#2E75B6; --vert:#2E7D32; --rouge:#C62828;
+  --or:#D4AF37; --orange:#E65100; --bg:#F5F7FA; --card:#fff;
+  --text:#1A1A2E; --text2:#555; --border:#E0E4EF; --radius:14px;
+  --shadow:0 2px 12px rgba(31,78,121,0.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:linear-gradient(135deg,var(--bleu),var(--bleu2));color:white;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(31,78,121,0.25);}
+.header h1{font-size:18px;font-weight:700;}
+.header p{font-size:12px;opacity:0.75;}
+.btn-logout{background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.4);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;}
+
+/* LOGIN */
+.login-wrap{max-width:420px;margin:60px auto;padding:0 20px;}
+.login-card{background:white;border-radius:20px;padding:32px;box-shadow:var(--shadow);}
+.login-card h2{font-size:20px;color:var(--bleu);margin-bottom:6px;text-align:center;}
+.login-card p{font-size:13px;color:var(--text2);text-align:center;margin-bottom:24px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;}
+.form-group select,.form-group input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:#F8F9FC;outline:none;}
+.form-group input:focus,.form-group select:focus{border-color:var(--bleu2);}
+.btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--bleu),var(--bleu2));color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;}
+
+/* DASHBOARD */
+.dashboard{display:none;padding:24px;max-width:1200px;margin:0 auto;}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;}
+.stat-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--bleu);}
+.stat-card.vert{border-color:var(--vert);}
+.stat-card.or{border-color:var(--or);}
+.stat-card.rouge{border-color:var(--rouge);}
+.stat-label{font-size:12px;color:var(--text2);text-transform:uppercase;font-weight:600;margin-bottom:8px;}
+.stat-value{font-size:28px;font-weight:700;color:var(--bleu);}
+.stat-card.vert .stat-value{color:var(--vert);}
+.stat-card.or .stat-value{color:var(--or);}
+.stat-card.rouge .stat-value{color:var(--rouge);}
+
+.section-title{font-size:16px;font-weight:700;color:var(--bleu);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border);}
+.table-wrap{background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:24px;}
+table{width:100%;border-collapse:collapse;}
+thead tr{background:var(--bleu);color:white;}
+th{padding:12px 16px;text-align:left;font-size:12px;font-weight:700;text-transform:uppercase;}
+td{padding:11px 16px;font-size:13px;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+tr:nth-child(even){background:#F8FAFD;}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-vacataire{background:#E3F2FD;color:var(--bleu2);}
+.badge-permanent{background:#E8F5E9;color:var(--vert);}
+.total-row td{font-weight:700;background:#EEF4FB;color:var(--bleu);}
+
+.filters{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
+.filters select,.filters input{padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:white;outline:none;}
+.btn-refresh{padding:9px 18px;background:var(--bleu);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-export{padding:9px 18px;background:var(--vert);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;}
+
+.spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--bleu2);border-radius:50%;animation:spin 0.8s linear infinite;margin:40px auto;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{text-align:center;color:var(--text2);font-size:13px;margin-top:8px;}
+
+.toast{position:fixed;bottom:24px;right:24px;background:#333;color:white;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:500;z-index:9999;display:none;}
+.toast.show{display:block;}
+.toast.success{background:var(--vert);}
+.toast.error{background:var(--rouge);}
+</style>
+</head>
+<body>
+
+<div class="header" id="mainHeader" style="display:none">
+  <div>
+    <h1>📊 Tableau de Bord Direction</h1>
+    <p id="headerEcole">Princes Smart School</p>
+  </div>
+  <button class="btn-logout" onclick="logout()">Se déconnecter</button>
+</div>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <h2>🔐 Espace Direction</h2>
+    <p>Accès réservé aux directeurs d'établissement</p>
+    <div class="form-group">
+      <label>Votre école</label>
+      <select id="loginEcole">
+        <option value="">— Sélectionner —</option>
+        <option value="CPP LES PRINCES">CPP Les Princes d'Abidjan</option>
+        <option value="ACADEMIE">Académie Les Princes</option>
+        <option value="GUINGLO VILLE">CPP Les Princes de Guinglo Ville</option>
+        <option value="GNONTINROU">CPP Gnontinrou</option>
+        <option value="KOUTOUAN">CPP Les Princes de Koutouan</option>
+        <option value="SOAKPE">CPP Les Princes de Soakpé</option>
+        <option value="AKEIKOI 1">EPV Les Princes Akeïkoï 1</option>
+        <option value="AKEIKOI 2">EPV Les Princes Akeïkoï 2</option>
+        <option value="CPP PRO">CPP Professionnel</option>
+        <option value="CPP TECH">CPP Technique</option>
+        <option value="ETL PRINCES KOUIBLY">ETL Les Princes de Kouibly</option>
+        <option value="GS RITA ROSANE">GS Rita Rosane</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Code PIN (6 chiffres)</label>
+      <input type="password" id="loginPin" placeholder="••••••" maxlength="6" inputmode="numeric">
+    </div>
+    <button class="btn-primary" onclick="seConnecter()">Accéder au tableau de bord →</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card"><div class="stat-label">Enseignants actifs</div><div class="stat-value" id="statEns">—</div></div>
+    <div class="stat-card vert"><div class="stat-label">Heures ce mois</div><div class="stat-value" id="statHeures">—</div></div>
+    <div class="stat-card or"><div class="stat-label">Masse salariale</div><div class="stat-value" id="statSalaire">—</div></div>
+    <div class="stat-card rouge"><div class="stat-label">Permanents</div><div class="stat-value" id="statPerm">—</div></div>
+  </div>
+
+  <div class="filters">
+    <select id="filtreMois" onchange="chargerPointage()">
+    </select>
+    <button class="btn-refresh" onclick="chargerPointage()">🔄 Actualiser</button>
+    <button class="btn-export" onclick="exporterCSV()">📥 Exporter CSV</button>
+  </div>
+
+  <div class="section-title">Récapitulatif des salaires</div>
+  <div class="table-wrap">
+    <div id="tableBody">
+      <div class="spinner"></div>
+      <div class="loading-text">Chargement...</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUtV4u-nKFT1k5kJTG2NKPzvOs8Y5vsLBwxiyHiPRM-VuTR9tIrEQpGjGA8Jx-tT8Y/exec';
+const SHEETS_IDS = {
+  'CPP LES PRINCES':     '1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
+  'ACADEMIE':            '1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M',
+  'GUINGLO VILLE':       '1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA',
+  'GNONTINROU':          '1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4',
+  'KOUTOUAN':            '167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg',
+  'SOAKPE':              '1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys',
+  'AKEIKOI 1':           '1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE',
+  'AKEIKOI 2':           '11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog',
+  'CPP PRO':             '1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs',
+  'CPP TECH':            '15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc',
+  'ETL PRINCES KOUIBLY': '1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s',
+  'GS RITA ROSANE':      '1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0'
+};
+
+const API_KEY = 'AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA';
+
+let ecoleConnectee = null;
+let pinConnecte = null;
+let donneesPointage = [];
+
+// Remplir les mois
+function remplirMois() {
+  const sel = document.getElementById('filtreMois');
+  const now = new Date();
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const val = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+    const label = d.toLocaleDateString('fr-FR', {month:'long', year:'numeric'});
+    const opt = document.createElement('option');
+    opt.value = val; opt.textContent = label;
+    if (i === 0) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+function seConnecter() {
+  const ecole = document.getElementById('loginEcole').value;
+  const pin   = document.getElementById('loginPin').value.trim();
+  if (!ecole) { showToast('Sélectionnez votre école', 'error'); return; }
+  if (pin.length < 4) { showToast('Entrez votre code PIN', 'error'); return; }
+  ecoleConnectee = ecole;
+  pinConnecte    = pin;
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('mainHeader').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('headerEcole').textContent = ecole;
+  remplirMois();
+  chargerPointage();
+}
+
+async function chargerPointage() {
+  const mois = document.getElementById('filtreMois').value;
+  document.getElementById('tableBody').innerHTML =
+    '<div class="spinner"></div><div class="loading-text">Chargement...</div>';
+
+  // Lire POINTAGE_MENSUEL depuis Sheets directement
+  try {
+    const sheetsId = SHEETS_IDS[ecoleConnectee];
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/POINTAGE_MENSUEL!A2:L2000?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const res  = await fetch(url);
+    const data = await res.json();
+
+    if (!data.values || data.values.length === 0) {
+      afficherTableauVide();
+      return;
+    }
+
+    // Filtrer par mois
+    const lignes = data.values.filter(row =>
+      String(row[6]||'').trim() === mois && String(row[9]||'').trim() === 'VALIDÉ'
+    );
+
+    // Grouper par enseignant
+    const recap = {};
+    lignes.forEach(row => {
+      const nom     = String(row[4]||'').trim();
+      const heures  = parseFloat(row[8]) || 0;
+      const salaire = parseFloat(row[11]) || 0;
+      const classe  = String(row[2]||'').trim();
+      if (!recap[nom]) recap[nom] = { nom, totalHeures:0, totalSalaire:0, nbCours:0, classes:[] };
+      recap[nom].totalHeures  += heures;
+      recap[nom].totalSalaire += salaire;
+      recap[nom].nbCours++;
+      if (!recap[nom].classes.includes(classe)) recap[nom].classes.push(classe);
+    });
+
+    donneesPointage = Object.values(recap);
+
+    // Ajouter permanents
+    await chargerPermanents(recap);
+
+    afficherTableau();
+  } catch(e) {
+    document.getElementById('tableBody').innerHTML =
+      '<p style="text-align:center;padding:30px;color:var(--rouge)">Erreur chargement — ' + e.message + '</p>';
+  }
+}
+
+async function chargerPermanents(recap) {
+  try {
+    const sheetsId = SHEETS_IDS[ecoleConnectee];
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/ENSEIGNANTS!A2:F200?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const res  = await fetch(url);
+    const data = await res.json();
+    if (!data.values) return;
+    data.values.forEach(row => {
+      const nom   = String(row[0]||'').trim();
+      const actif = String(row[3]||'').trim().toUpperCase();
+      const type  = String(row[4]||'VACATAIRE').trim().toUpperCase();
+      const fixe  = parseFloat(row[5]) || 0;
+      if (actif !== 'OUI') return;
+      if (type === 'PERMANENT' && fixe > 0) {
+        if (!recap[nom]) {
+          recap[nom] = { nom, totalHeures:0, totalSalaire:0, nbCours:0, classes:[], type:'PERMANENT' };
+          donneesPointage.push(recap[nom]);
+        }
+        recap[nom].totalSalaire = fixe;
+        recap[nom].type = 'PERMANENT';
+      }
+    });
+  } catch(e) {}
+}
+
+function afficherTableau() {
+  if (donneesPointage.length === 0) { afficherTableauVide(); return; }
+
+  donneesPointage.sort((a,b) => b.totalSalaire - a.totalSalaire);
+
+  const totalSalaire = donneesPointage.reduce((s,e) => s + e.totalSalaire, 0);
+  const totalHeures  = donneesPointage.reduce((s,e) => s + e.totalHeures, 0);
+  const nbPerm       = donneesPointage.filter(e => e.type === 'PERMANENT').length;
+
+  document.getElementById('statEns').textContent = donneesPointage.length;
+  document.getElementById('statHeures').textContent = totalHeures.toFixed(1) + 'h';
+  document.getElementById('statSalaire').textContent = totalSalaire.toLocaleString('fr-FR') + ' F';
+  document.getElementById('statPerm').textContent = nbPerm;
+
+  let html = `<table>
+    <thead><tr>
+      <th>#</th><th>Enseignant</th><th>Type</th><th>Classes</th>
+      <th>Nb Cours</th><th>Heures</th><th>Salaire</th>
+    </tr></thead><tbody>`;
+
+  donneesPointage.forEach((e, i) => {
+    const isPerm = e.type === 'PERMANENT';
+    html += `<tr>
+      <td>${i+1}</td>
+      <td><strong>${e.nom}</strong></td>
+      <td><span class="badge ${isPerm?'badge-permanent':'badge-vacataire'}">${isPerm?'PERMANENT':'VACATAIRE'}</span></td>
+      <td style="font-size:11px;color:var(--text2)">${(e.classes||[]).join(', ') || '—'}</td>
+      <td style="text-align:center">${e.nbCours}</td>
+      <td style="text-align:center;font-weight:600">${isPerm ? '—' : e.totalHeures.toFixed(1)+'h'}</td>
+      <td style="text-align:right;font-weight:700;color:var(--bleu)">${e.totalSalaire.toLocaleString('fr-FR')} F</td>
+    </tr>`;
+  });
+
+  html += `</tbody><tfoot><tr class="total-row">
+    <td colspan="5" style="text-align:right">TOTAL MASSE SALARIALE</td>
+    <td style="text-align:center">${totalHeures.toFixed(1)}h</td>
+    <td style="text-align:right">${totalSalaire.toLocaleString('fr-FR')} F CFA</td>
+  </tr></tfoot></table>`;
+
+  document.getElementById('tableBody').innerHTML = html;
+}
+
+function afficherTableauVide() {
+  document.getElementById('statEns').textContent = '0';
+  document.getElementById('statHeures').textContent = '0h';
+  document.getElementById('statSalaire').textContent = '0 F';
+  document.getElementById('statPerm').textContent = '0';
+  document.getElementById('tableBody').innerHTML =
+    '<p style="text-align:center;padding:40px;color:var(--text2)">Aucun pointage validé ce mois</p>';
+}
+
+function exporterCSV() {
+  if (!donneesPointage.length) { showToast('Aucune donnée à exporter', 'error'); return; }
+  const mois = document.getElementById('filtreMois').value;
+  let csv = 'NOM,TYPE,NB COURS,HEURES,SALAIRE\n';
+  donneesPointage.forEach(e => {
+    csv += `"${e.nom}","${e.type||'VACATAIRE'}",${e.nbCours},${e.totalHeures.toFixed(2)},${e.totalSalaire}\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `Salaires_${ecoleConnectee}_${mois}.csv`;
+  a.click();
+  showToast('✅ Export réussi', 'success');
+}
+
+function logout() {
+  ecoleConnectee = null; pinConnecte = null; donneesPointage = [];
+  document.getElementById('loginWrap').style.display = 'block';
+  document.getElementById('mainHeader').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('loginPin').value = '';
+}
+
+let toastTimer;
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
