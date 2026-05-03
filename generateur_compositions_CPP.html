@@ -431,6 +431,17 @@ const CLASSES = {
   BAC_C:['2NDE C','1ERE C','1ERE C EX1','TLE C-1','TLE C-2','TLE C'],
   BAC_D:['2NDE D','1ERE D-1','1ERE D-2','1ERE D-3','TLE D-1','TLE D-2','TLE D-3','TLE D-4'],
   BAC_TECH:['2NDE F2','1ERE F2','TLE F2','2NDE G1','1ERE G1','TLE G1','2NDE G2','1ERE G2','TLE G2'],
+  BAC_TECH_F2:['2NDE F2','1ERE F2','TLE F2'],
+  BAC_TECH_G1:['2NDE G1','1ERE G1','TLE G1'],
+  BAC_TECH_G2:['2NDE G2','1ERE G2','TLE G2'],
+  BT_SECRETARIAT_BUREAUTIQUE:['1BT Secretariat','2BT Secretariat','3BT Secretariat'],
+  BT_COMPTABILITE_GESTION:['1BT Comptabilite','2BT Comptabilite','3BT Comptabilite'],
+  BT_TECHNIQUES_HOTELIERES:['1BT Hotellerie','2BT Hotellerie','3BT Hotellerie'],
+  BT_SCIENCES_MEDICO_SOCIALES:['1BT Medico-Social','2BT Medico-Social','3BT Medico-Social'],
+  BT_BATIMENT_GROS_OEUVRES:['1BT Batiment','2BT Batiment','3BT Batiment'],
+  BT_ELECTRICITE_BATIMENT:['1BT Electricite','2BT Electricite','3BT Electricite'],
+  BT_TOPOGRAPHIE:['1BT Topographie','2BT Topographie','3BT Topographie'],
+  BT_ELECTRONIQUE_ROBOTIQUE:['1BT Electronique','2BT Electronique','3BT Electronique'],
   BT:['1BT Secretariat','2BT Secretariat','3BT Secretariat','1BT Comptabilite','2BT Comptabilite','3BT Comptabilite','1BT Hotellerie','2BT Hotellerie','3BT Hotellerie','1BT Medico-Social','2BT Medico-Social','3BT Medico-Social','1BT Batiment','2BT Batiment','3BT Batiment','1BT Electricite','2BT Electricite','3BT Electricite','1BT Topographie','2BT Topographie','3BT Topographie','1BT Electronique','2BT Electronique','3BT Electronique']
 };
 
@@ -593,6 +604,17 @@ function changerFiliere() {
     document.getElementById('selFiliere').value = filiere;
   }
 
+  // Classes filtrées selon la filière choisie
+  if (isTech && filiere) {
+    var keyClasses = examen + '_' + filiere;
+    var classesFiltrees = CLASSES[keyClasses] || CLASSES[examen] || [];
+    var selClasse = document.getElementById('selClasse');
+    selClasse.innerHTML = classesFiltrees.map(function(cl) {
+      return '<option value="' + cl + '">' + cl + '</option>';
+    }).join('');
+  }
+
+  // Matières selon filière
   var key = filiere ? examen + '_' + filiere : examen;
   var matieres = MATIERES[key] || MATIERES[examen] || MATIERES['BEPC'];
   var selMat = document.getElementById('selMatiere');
@@ -602,6 +624,7 @@ function changerFiliere() {
 
   changerMatiere();
 }
+
 
 function changerMatiere() {
   var examen = document.getElementById('selExamen').value;
