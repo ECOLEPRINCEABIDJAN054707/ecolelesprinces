@@ -81,7 +81,6 @@ tr:hover td{background:var(--bleu-pale);}
 .fill-orange{background:var(--orange);}
 .fill-rouge{background:var(--rouge-clair);}
 .fill-or{background:var(--or);}
-/* Saisie */
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;}
 .form-group{display:flex;flex-direction:column;gap:5px;}
 .form-group label{font-size:.8rem;font-weight:600;color:var(--bleu);}
@@ -89,7 +88,6 @@ tr:hover td{background:var(--bleu-pale);}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--bleu);}
 .form-group textarea{resize:vertical;min-height:70px;}
 .form-actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
-/* Progressions */
 .prog-section{margin-bottom:20px;}
 .prog-matiere-btn{width:100%;display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bleu);color:var(--blanc);border:none;border-radius:var(--r-sm);font-weight:700;font-size:.9rem;cursor:pointer;text-align:left;margin-bottom:8px;}
 .prog-matiere-btn .arrow{margin-left:auto;transition:transform .2s;}
@@ -100,7 +98,6 @@ tr:hover td{background:var(--bleu-pale);}
 .prog-item{font-size:.77rem;color:var(--texte);padding:3px 0;display:flex;gap:6px;align-items:flex-start;}
 .prog-item::before{content:"›";color:var(--or);font-weight:bold;flex-shrink:0;}
 .prog-trim-label{font-size:.72rem;font-weight:700;color:var(--gris4);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 3px;}
-/* Alertes */
 .alerte-item{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-radius:var(--r-sm);margin-bottom:10px;border:1px solid;}
 .alerte-rouge{background:var(--rouge-pale);border-color:#ef9a9a;}
 .alerte-orange{background:var(--orange-pale);border-color:#ffcc80;}
@@ -108,24 +105,14 @@ tr:hover td{background:var(--bleu-pale);}
 .alerte-body{flex:1;}
 .alerte-titre{font-weight:700;font-size:.85rem;margin-bottom:3px;}
 .alerte-detail{font-size:.78rem;color:var(--gris4);}
-/* Toast */
 .toast{position:fixed;bottom:24px;right:24px;background:var(--bleu);color:var(--blanc);padding:12px 20px;border-radius:var(--r);box-shadow:var(--ombre-lg);font-size:.85rem;font-weight:600;z-index:9999;transform:translateY(80px);opacity:0;transition:all .3s;}
 .toast.show{transform:translateY(0);opacity:1;}
 .toast.success{background:var(--vert);}
 .toast.error{background:var(--rouge);}
-/* Loading */
 .loading{text-align:center;padding:40px;color:var(--gris4);}
 .spinner{display:inline-block;width:32px;height:32px;border:3px solid var(--gris2);border-top-color:var(--bleu);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px;}
 @keyframes spin{to{transform:rotate(360deg);}}
-/* Semaine badge */
 .sem-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:700;background:var(--bleu-pale);color:var(--bleu);}
-/* Écoles */
-.ecoles-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;}
-.ecole-card{background:var(--blanc);border-radius:var(--r);padding:14px 16px;box-shadow:var(--ombre);border-top:3px solid var(--bleu);cursor:pointer;transition:var(--tr);}
-.ecole-card:hover{transform:translateY(-2px);box-shadow:var(--ombre-lg);}
-.ecole-card h3{font-size:.85rem;font-weight:700;color:var(--bleu);margin-bottom:6px;}
-.ecole-stats{display:flex;gap:8px;flex-wrap:wrap;}
-.ecole-stat{font-size:.72rem;color:var(--gris4);}
 @media(max-width:600px){
   .header-title h1{font-size:.95rem;}
   .main{padding:14px 12px;}
@@ -137,7 +124,6 @@ tr:hover td{background:var(--bleu-pale);}
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <div class="header-inner">
     <div class="logo">GP</div>
@@ -152,52 +138,31 @@ tr:hover td{background:var(--bleu-pale);}
   </div>
 </div>
 
-<!-- NAV -->
 <div class="nav-tabs">
   <div class="nav-tabs-inner">
     <div class="tab active" onclick="showPage('dashboard',this)">📊 Dashboard</div>
-    <div class="tab" onclick="showPage('saisie',this)">✏️ Saisie Cahier de Textes</div>
+    <div class="tab" onclick="showPage('saisie',this)">✏️ Saisie Cahier</div>
     <div class="tab" onclick="showPage('suivi',this)">📈 Suivi Enseignants</div>
     <div class="tab" onclick="showPage('alertes',this)">🔔 Alertes</div>
-    <div class="tab" onclick="showPage('progressions',this)">📚 Progressions Officielles</div>
+    <div class="tab" onclick="showPage('progressions',this)">📚 Progressions CI</div>
   </div>
 </div>
 
-<!-- MAIN -->
 <div class="main">
 
-  <!-- PAGE DASHBOARD -->
+  <!-- DASHBOARD -->
   <div id="page-dashboard" class="page active">
     <div class="stats-grid">
-      <div class="stat-card vert">
-        <div class="stat-val" id="stat-ok">—</div>
-        <div class="stat-label">✅ Dans les temps</div>
-      </div>
-      <div class="stat-card orange">
-        <div class="stat-val" id="stat-att">—</div>
-        <div class="stat-label">⚠️ Attention (1-2 sem.)</div>
-      </div>
-      <div class="stat-card rouge">
-        <div class="stat-val" id="stat-ret">—</div>
-        <div class="stat-label">🔴 Retard (3+ sem.)</div>
-      </div>
-      <div class="stat-card or">
-        <div class="stat-val" id="stat-av">—</div>
-        <div class="stat-label">🚀 En avance</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val" id="stat-total">—</div>
-        <div class="stat-label">👨‍🏫 Enseignants suivis</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-val">12</div>
-        <div class="stat-label">🏫 Écoles du groupe</div>
-      </div>
+      <div class="stat-card vert"><div class="stat-val" id="stat-ok">—</div><div class="stat-label">✅ Dans les temps</div></div>
+      <div class="stat-card orange"><div class="stat-val" id="stat-att">—</div><div class="stat-label">⚠️ Attention</div></div>
+      <div class="stat-card rouge"><div class="stat-val" id="stat-ret">—</div><div class="stat-label">🔴 Retard</div></div>
+      <div class="stat-card or"><div class="stat-val" id="stat-av">—</div><div class="stat-label">🚀 En avance</div></div>
+      <div class="stat-card"><div class="stat-val" id="stat-total">—</div><div class="stat-label">👨‍🏫 Enseignants</div></div>
+      <div class="stat-card"><div class="stat-val">12</div><div class="stat-label">🏫 Écoles CPP</div></div>
     </div>
-
     <div class="card">
       <div class="card-header">
-        <h2>📊 Tableau de Bord — Vue par École</h2>
+        <h2>📊 Vue Générale — 12 Écoles CPP</h2>
         <div class="filters">
           <select class="filter-select" id="filtre-ecole-dash" onchange="filtrerDashboard()">
             <option value="">Toutes les écoles</option>
@@ -206,7 +171,7 @@ tr:hover td{background:var(--bleu-pale);}
             <option value="">Toutes les matières</option>
           </select>
           <select class="filter-select" id="filtre-statut-dash" onchange="filtrerDashboard()">
-            <option value="">Tous les statuts</option>
+            <option value="">Tous statuts</option>
             <option value="ok">✅ Dans les temps</option>
             <option value="attention">⚠️ Attention</option>
             <option value="retard">🔴 Retard</option>
@@ -216,213 +181,185 @@ tr:hover td{background:var(--bleu-pale);}
         </div>
       </div>
       <div class="card-body">
-        <div id="dashboard-content">
-          <div class="loading"><div class="spinner"></div><p>Chargement des données...</p></div>
-        </div>
+        <div id="dashboard-content"><div class="loading"><div class="spinner"></div><p>Chargement depuis Google Sheets...</p></div></div>
       </div>
     </div>
   </div>
 
-  <!-- PAGE SAISIE -->
+  <!-- SAISIE -->
   <div id="page-saisie" class="page">
     <div class="card">
       <div class="card-header">
         <h2>✏️ Saisie du Cahier de Textes</h2>
-        <span class="badge badge-bleu">Synchronisation Google Sheets</span>
+        <span class="badge badge-bleu">Synchronisation Google Sheets CPP</span>
       </div>
       <div class="card-body">
         <div class="form-grid">
-          <div class="form-group">
-            <label>📅 Date</label>
-            <input type="date" id="f-date">
-          </div>
-          <div class="form-group">
-            <label>⏰ Heure</label>
-            <input type="time" id="f-heure">
-          </div>
+          <div class="form-group"><label>📅 Date</label><input type="date" id="f-date"></div>
+          <div class="form-group"><label>⏰ Heure</label><input type="time" id="f-heure"></div>
           <div class="form-group">
             <label>🏫 École</label>
-            <select id="f-ecole">
-              <option value="">Sélectionner...</option>
-            </select>
+            <select id="f-ecole"><option value="">Sélectionner...</option></select>
           </div>
           <div class="form-group">
             <label>📚 Classe</label>
-            <select id="f-classe" onchange="updateMatieres()">
-              <option value="">Sélectionner...</option>
-              <option>6ème</option><option>5ème</option><option>4ème</option><option>3ème</option>
-              <option>2nde A</option><option>2nde C</option><option>2nde D</option>
-              <option>1ère A</option><option>1ère C</option><option>1ère D</option>
-              <option>Tle A</option><option>Tle C</option><option>Tle D</option>
-            </select>
+            <select id="f-classe"><option value="">Sélectionner...</option></select>
           </div>
           <div class="form-group">
             <label>📖 Matière</label>
-            <select id="f-matiere" onchange="updateLecons()">
-              <option value="">Sélectionner...</option>
-            </select>
+            <select id="f-matiere"><option value="">Sélectionner...</option></select>
           </div>
-          <div class="form-group">
-            <label>👨‍🏫 Enseignant</label>
-            <input type="text" id="f-enseignant" placeholder="Nom et prénom">
-          </div>
-          <div class="form-group">
-            <label>📝 Leçon / Titre</label>
-            <input type="text" id="f-lecon" placeholder="Titre de la leçon">
-          </div>
-          <div class="form-group">
-            <label>📊 Semaine théorique actuelle</label>
-            <input type="number" id="f-sem-theo" placeholder="N° semaine officielle" min="1" max="30">
-          </div>
-          <div class="form-group">
-            <label>📊 Semaine réelle enseignant</label>
-            <input type="number" id="f-sem-reel" placeholder="N° semaine réelle" min="1" max="30">
-          </div>
-          <div class="form-group">
-            <label>✅ Avancement (%)</label>
-            <input type="number" id="f-avancement" placeholder="0-100" min="0" max="100">
-          </div>
-          <div class="form-group">
-            <label>📋 Devoir donné</label>
-            <input type="text" id="f-devoir" placeholder="Description du devoir (optionnel)">
-          </div>
-          <div class="form-group">
-            <label>💬 Observations</label>
-            <textarea id="f-obs" placeholder="Observations particulières..."></textarea>
-          </div>
+          <div class="form-group"><label>👨‍🏫 Enseignant</label><input type="text" id="f-enseignant" placeholder="Nom et prénom"></div>
+          <div class="form-group"><label>📝 Leçon / Titre</label><input type="text" id="f-lecon" placeholder="Titre de la leçon"></div>
+          <div class="form-group"><label>📊 Semaine théorique</label><input type="number" id="f-sem-theo" min="1" max="30"></div>
+          <div class="form-group"><label>📊 Semaine réelle</label><input type="number" id="f-sem-reel" min="1" max="30"></div>
+          <div class="form-group"><label>✅ Avancement (%)</label><input type="number" id="f-avancement" min="0" max="100" placeholder="0-100"></div>
+          <div class="form-group"><label>📋 Devoir donné</label><input type="text" id="f-devoir" placeholder="Description du devoir"></div>
+          <div class="form-group"><label>💬 Observations</label><textarea id="f-obs" placeholder="Observations..."></textarea></div>
         </div>
         <div class="form-actions">
           <button class="btn btn-vert" onclick="sauvegarderEntree()">💾 Enregistrer dans Google Sheets</button>
-          <button class="btn btn-blanc" style="background:var(--gris2);color:var(--texte);" onclick="resetForm()">🗑️ Effacer</button>
+          <button class="btn" style="background:var(--gris2);color:var(--texte);" onclick="resetForm()">🗑️ Effacer</button>
         </div>
         <div id="saisie-feedback" style="margin-top:14px;"></div>
       </div>
     </div>
   </div>
 
-  <!-- PAGE SUIVI -->
+  <!-- SUIVI -->
   <div id="page-suivi" class="page">
     <div class="card">
       <div class="card-header">
-        <h2>📈 Suivi Détaillé par Enseignant</h2>
+        <h2>📈 Suivi Détaillé — Enseignants CPP</h2>
         <div class="filters">
-          <select class="filter-select" id="filtre-ecole-suivi" onchange="filtrerSuivi()">
-            <option value="">Toutes les écoles</option>
-          </select>
-          <select class="filter-select" id="filtre-matiere-suivi" onchange="filtrerSuivi()">
-            <option value="">Toutes les matières</option>
-          </select>
-          <select class="filter-select" id="filtre-classe-suivi" onchange="filtrerSuivi()">
-            <option value="">Toutes les classes</option>
-          </select>
+          <select class="filter-select" id="filtre-ecole-suivi" onchange="filtrerSuivi()"><option value="">Toutes les écoles</option></select>
+          <select class="filter-select" id="filtre-matiere-suivi" onchange="filtrerSuivi()"><option value="">Toutes les matières</option></select>
+          <select class="filter-select" id="filtre-classe-suivi" onchange="filtrerSuivi()"><option value="">Toutes les classes</option></select>
         </div>
       </div>
       <div class="card-body">
         <div class="table-wrap">
-          <table id="table-suivi">
+          <table>
             <thead>
               <tr>
-                <th>École</th>
-                <th>Enseignant</th>
-                <th>Classe</th>
-                <th>Matière</th>
-                <th>Leçon actuelle</th>
-                <th>Sem. théo.</th>
-                <th>Sem. réelle</th>
-                <th>Écart</th>
-                <th>Progression</th>
-                <th>Statut</th>
-                <th>Date</th>
+                <th>École</th><th>Enseignant</th><th>Classe</th><th>Matière</th>
+                <th>Leçon actuelle</th><th>Sem. théo.</th><th>Sem. réelle</th>
+                <th>Écart</th><th>Progression</th><th>Statut</th><th>Date</th>
               </tr>
             </thead>
-            <tbody id="tbody-suivi">
-              <tr><td colspan="11" class="loading">Chargement...</td></tr>
-            </tbody>
+            <tbody id="tbody-suivi"><tr><td colspan="11" class="loading">Chargement...</td></tr></tbody>
           </table>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- PAGE ALERTES -->
+  <!-- ALERTES -->
   <div id="page-alertes" class="page">
     <div class="card">
       <div class="card-header">
         <h2>🔔 Alertes Pédagogiques</h2>
-        <button class="btn btn-rouge" onclick="envoyerAlertesEmail()">📧 Envoyer rapport à la Direction</button>
+        <button class="btn btn-rouge" onclick="envoyerAlertesEmail()">📧 Envoyer rapport Direction</button>
       </div>
       <div class="card-body">
-        <div id="alertes-content">
-          <div class="loading"><div class="spinner"></div><p>Analyse en cours...</p></div>
-        </div>
+        <div id="alertes-content"><div class="loading"><div class="spinner"></div><p>Analyse...</p></div></div>
       </div>
     </div>
   </div>
 
-  <!-- PAGE PROGRESSIONS -->
+  <!-- PROGRESSIONS -->
   <div id="page-progressions" class="page">
     <div class="card">
       <div class="card-header">
         <h2>📚 Progressions Officielles CI 2025-2026</h2>
-        <span class="badge badge-or">DPFC / CNDF / IGENA</span>
+        <span class="badge badge-or">D.P.F.C. / C.N.D.</span>
       </div>
-      <div class="card-body">
-        <div id="progressions-content"></div>
-      </div>
+      <div class="card-body"><div id="progressions-content"></div></div>
     </div>
   </div>
 
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════
+// CONFIGURATION CPP
+// ═══════════════════════════════════
 const CONFIG = {
   appsScriptUrl: 'https://script.google.com/macros/s/AKfycbwp27cGwqXrYZXDjcpl-Io_gtNKcczIdxMJ974NUrDHxmR46JgY0F7FRXhsMtuatDhM/exec',
   apiKey: 'AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA',
-  sheetId: '1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
   emailDirection: 'manet.serge@yahoo.fr',
   semActuelle: getSemaineActuelle()
 };
 
-const ECOLES = [
-  'Les Princes Cocody','Les Princes Yopougon','Les Princes Abobo',
-  'Les Princes Marcory','Les Princes Koumassi','Les Princes Port-Bouët',
-  'Les Princes Adjamé','Les Princes Plateau','Les Princes Treichville',
-  'Les Princes Attécoubé','Les Princes Songon','Les Princes Bingerville'
+// IDs Google Sheets des 12 écoles CPP
+const SHEETS_IDS = {
+  'CPP Les Princes':        '1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
+  'Académie des Princes':   '1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M',
+  'Les Princes Guinglo':    '1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA',
+  'Les Princes Gnontinrou': '1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4',
+  'Les Princes Koutouan':   '167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg',
+  'Les Princes Soakpé':     '1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys',
+  'Les Princes Akeïkoï 1':  '1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE',
+  'Les Princes Akeïkoï 2':  '11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog',
+  'CPP Professionnel':      '1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs',
+  'CPP Technique':          '15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc',
+  'ETL Princes Kouibly':    '1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s',
+  'GS Rita Rosane':         '1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0'
+};
+
+const ECOLES = Object.keys(SHEETS_IDS);
+
+// 47 classes CPP
+const CLASSES_CPP = [
+  '6ÈME 3','6ÈME 4','6ÈME 5','6ÈME 6','6ÈME 7','6ÈME EX1','6ÈME EX2',
+  '5ÈME 3','5ÈME 4','5ÈME 5','5ÈME 6','5ÈME 7','5ÈME EX1','5ÈME EX2',
+  '4ÈME 3','4ÈME 4','4ÈME 5','4ÈME 6','4ÈME 7','4ÈME EX1','4ÈME EX2',
+  '3ÈME 3','3ÈME 4','3ÈME 5','3ÈME 6','3ÈME 7','3ÈME EX1','3ÈME EX2',
+  '2NDE A1','2NDE A2','2NDE C2','2NDE C3','2NDE C4','2NDE CEX',
+  '1ÈRE A2-2','1ÈRE A2-3','1ÈRE A2 EX','1ÈRE C EX1','1ÈRE D-1','1ÈRE D-2',
+  'TLE A2-2','TLE A2-3','TLE A2 EX','TLE D-1','TLE D-2','TLE D-3','TLE D-4'
 ];
 
-// ═══════════════════════════════════════════════════
-// PROGRESSIONS OFFICIELLES CI 2025-2026
-// ═══════════════════════════════════════════════════
-const PROGRESSIONS = {
+const MATIERES = [
+  'Mathématiques','Physique-Chimie','SVT','Français','Anglais',
+  'Histoire-Géographie','Philosophie','Économie','Informatique',
+  'EPS','Arts','Espagnol','Allemand','EDHC','Autre'
+];
 
+// ═══════════════════════════════════
+// PROGRESSIONS OFFICIELLES CI
+// ═══════════════════════════════════
+const PROGRESSIONS = {
+  ANGLAIS: {
+    label:'Anglais', icon:'🇬🇧',
+    niveaux:{
+      '6ème':{
+        T1:['Unit 1 - At School : Courtesies, In the classroom, Numbers',
+            'Unit 2 - At Home : My family, My house, In the kitchen',
+            'Unit 3 - Time & Date : The date, My birthday, What time is it?'],
+        T2:['Unit 4 - Jobs & Occupations : Job types, Work tools, Workplaces',
+            'Unit 5 - Clothes & Colours : Clothing items, Colours, At the merchant',
+            'Unit 6 - Foods & Drinks : What do you eat?, Healthy diet, My meals'],
+        T3:['Unit 7 - Animals, Environment & Health : Animals, Protect environment, Hygiene',
+            'Unit 8 - Sports & Games : Sports Day, Football, Games',
+            'Révisions & Évaluations']
+      }
+    }
+  },
   MATHS: {
     label:'Mathématiques', icon:'📐',
     niveaux:{
       '6ème':{
-        T1:['Entiers naturels','Droites et demi-droites','Décimaux','Segments et milieu','Cercles'],
-        T2:['Fractions','Angles','Triangles','Proportionnalité','Figures symétriques'],
+        T1:['Entiers naturels','Droites et demi-droites','Décimaux','Segments et milieu'],
+        T2:['Fractions','Angles','Triangles','Proportionnalité'],
         T3:['Parallélogramme','Statistique','Pavés droits']
       },
-      '5ème':{
-        T1:['Nombres premiers','Symétrie axiale','Angles','Décimaux relatifs'],
-        T2:['Segments','Fractions','Triangles','Cercles','Proportionnalité'],
-        T3:['Parallélogrammes','Statistique','Prismes droits']
-      },
-      '4ème':{
-        T1:['Décimaux relatifs','Angles','Rationnels','Distances','Perspective cavalière'],
-        T2:['Calcul littéral','Cercles et triangles','Équations','Vecteurs'],
-        T3:['Statistique','Symétries','Solides']
-      },
       '3ème':{
-        T1:['Calcul littéral','Théorème de Thalès','Racines carrées','Triangle rectangle','Calcul numérique'],
-        T2:['Angles inscrits','Vecteurs','Équations','Coordonnées','Équations de droites','Statistique'],
-        T3:['Équations dans ℝ²','Applications affines','Pyramides et cônes']
+        T1:['Calcul littéral','Théorème de Thalès','Racines carrées','Triangle rectangle'],
+        T2:['Angles inscrits','Vecteurs','Équations','Coordonnées','Statistique'],
+        T3:['Équations dans R²','Applications affines','Pyramides et cônes']
       },
       'Tle D':{
         T1:['Limites et continuité','Probabilité','Dérivabilité','Primitives','Logarithme'],
@@ -431,276 +368,73 @@ const PROGRESSIONS = {
       }
     }
   },
-
+  FRANCAIS: {
+    label:'Français', icon:'📖',
+    niveaux:{
+      '6ème':{T1:['Lettre personnelle','Phrase et GN'],T2:['Description','Portrait'],T3:['Récit']},
+      '3ème':{T1:['Texte argumentatif'],T2:['Résumé argumentatif'],T3:['Article de journal']},
+      '1ère A':{
+        T1:['Oeuvre poétique','Commentaire composé','Rythme dans le texte'],
+        T2:['GT Romanesque','Résumé argumentatif','Focalisation','Implicite'],
+        T3:['Pièce de théâtre','Dissertation littéraire','Oral BAC']
+      },
+      '1ère C-D':{
+        T1:['Oeuvre poétique','Commentaire composé','Rythme poétique et prose'],
+        T2:['Focalisation','Argumentation','Résumé'],
+        T3:['GT Romanesque','Dissertation littéraire','Oral BAC']
+      }
+    }
+  },
   SVT: {
     label:'SVT', icon:'🌿',
     niveaux:{
       '6ème':{
         T1:['Formation de la graine','Germination','Mammifères','Oiseaux'],
         T2:['Croissance des plantes','Alimentation des vertébrés'],
-        T3:['Actions néfastes sur l\'environnement','Lutte contre la dégradation']
-      },
-      '3ème':{
-        T1:['Grossesses précoces / VIH'],
-        T2:['Aliments et digestion','Sang et circulation'],
-        T3:['Sols et plantes','Dégradation des sols']
+        T3:['Actions néfastes environnement','Lutte contre dégradation']
       },
       'Tle D':{
-        T1:['Réflexe','Tissu nerveux','Muscle','Cœur'],
+        T1:['Réflexe','Tissu nerveux','Muscle','Coeur'],
         T2:['Reproduction','Hérédité'],
         T3:['Milieu intérieur','VIH','Mines CI','Sols']
       }
     }
   },
-
-  FRANCAIS: {
-    label:'Français', icon:'📖',
-    niveaux:{
-      '6ème':{
-        T1:['Lettre personnelle','Phrase et GN'],
-        T2:['Description','Portrait'],
-        T3:['Récit']
-      },
-      '3ème':{
-        T1:['Texte argumentatif'],
-        T2:['Résumé argumentatif'],
-        T3:['Article de journal']
-      },
-      '2nde A':{
-        T1:['Œuvre narrative - Culture littéraire','Résumé du texte argumentatif','Connecteurs logiques'],
-        T2:['GT Poétique - Lectures méthodiques','Commentaire composé - Organisation','Figures de style'],
-        T3:['Pièce de théâtre','Commentaire composé rédigé','Fonctions du langage','Versification']
-      },
-      '1ère A':{
-        T1:['Œuvre poétique - Culture littéraire','Commentaire composé - Centres d\'intérêt','Rythme dans le texte'],
-        T2:['GT Romanesque - Lectures méthodiques','Résumé du texte argumentatif','Focalisation','Implicite'],
-        T3:['Pièce de théâtre','Dissertation littéraire','Oral du Baccalauréat']
-      },
-      '1ère C-D':{
-        T1:['Œuvre poétique','Commentaire composé','Rythme poétique et prose'],
-        T2:['Focalisation','Argumentation','Résumé du texte argumentatif'],
-        T3:['GT Romanesque','Dissertation littéraire','Oral du BAC']
-      },
-      'Tle A':{
-        T1:['Œuvre narrative','Dissertation littéraire','Préparation oral BAC'],
-        T2:['GT Théâtraux','Commentaire composé','Résumé argumentatif - Questions'],
-        T3:['Œuvre poétique','Résumé - Production écrite','Préparation oral BAC']
-      },
-      'Tle C-D':{
-        T1:['Œuvre narrative','Dissertation littéraire','Commentaire composé'],
-        T2:['GT Théâtraux','Résumé du texte argumentatif','Commentaire composé rédigé'],
-        T3:['Résumé - Production écrite','Évaluations sommatives','Oral BAC']
-      }
-    }
-  },
-
   HISTOIRE: {
-    label:'Histoire', icon:'🏛️',
+    label:'Histoire-Géographie', icon:'🌍',
     niveaux:{
       '6ème':{
-        T1:['Initiation méthode travail','L\'Histoire : science utile à l\'Homme','Sources de reconstitution du passé'],
-        T2:['Grandes périodes de l\'Histoire','La Préhistoire dans le monde','Le Paléolithique en Côte d\'Ivoire'],
-        T3:['La révolution du néolithique en CI','La métallurgie du fer en CI','Révisions générales']
+        T1:["L Histoire : science utile","Sources de reconstitution du passé","Grandes périodes"],
+        T2:["La Préhistoire dans le monde","Le Paléolithique en CI","La révolution du néolithique"],
+        T3:["La métallurgie du fer en CI","Révisions générales"]
       }
     }
   },
-
-  GEOGRAPHIE: {
-    label:'Géographie', icon:'🌍',
-    niveaux:{
-      '6ème':{
-        T1:['Initiation méthode travail','L\'utilité de la géographie','La Terre, une planète en mouvement'],
-        T2:['Le milieu physique ivoirien','La ville et la campagne en Côte d\'Ivoire'],
-        T3:['Révisions','Évaluations']
-      }
-    }
-  },
-
-  ANGLAIS: {
-    label:'Anglais', icon:'🇬🇧',
-    niveaux:{
-      '6ème':{
-        T1:['Unit 1 - At School (Courtesies, Classroom, Numbers)','Unit 2 - At Home (Family, House, Kitchen)','Unit 3 - Time & Date (Date, Birthday, Time)'],
-        T2:['Unit 4 - Jobs & Occupations','Unit 5 - Clothes & Colours','Unit 6 - Foods & Drinks'],
-        T3:['Unit 7 - Animals, Environment & Health','Unit 8 - Sports & Games','Révisions & Évaluations']
-      },
-      '5ème':{
-        T1:['Unit 1 - A l\'école (Salutations, Classroom, Nombres)','Unit 2 - A la maison (Famille, Maison, Cuisine)','Unit 3 - L\'heure et la date'],
-        T2:['Unit 4 - Métiers et Professions','Unit 5 - Vêtements et Couleurs','Unit 6 - Nourriture et Boissons'],
-        T3:['Unit 7 - Environnement et Santé','Unit 8 - Jeux et Sports','Révisions & Évaluations']
-      },
-      '3ème':{
-        T1:['Unit 1 - Life at School','Unit 2 - Women at Work','Unit 3 - Travelling'],
-        T2:['Unit 4 - Fashion','Unit 5 - City or Village','Unit 6 - Human Rights'],
-        T3:['Unit 7 - Hygiene & Health','Unit 8 - ICTs','Révisions & Évaluations']
-      },
-      '1ère A':{
-        T1:['Unit 1 - Travel & World Tourism','Unit 2 - Natural Resources','Unit 3 - Deadly Viruses & Diseases'],
-        T2:['Unit 4 - Crime & Violence','Unit 5 - Human Rights','Unit 6 - Technology & Our Lives'],
-        T3:['Unit 7 - Political Change','Unit 8 - African Cultural Heritage','Unit 9 - Consumer Society','Unit 10 - Friends, Dating & Entertainment']
-      },
-      'Tle C-D':{
-        T1:['Unit 1 - Lifestyles: Moving with the Times','Unit 2 - Freedom & Civil Rights'],
-        T2:['Unit 3 - Development Issues','Unit 4 - What the Future Holds'],
-        T3:['Unit 5 - Managing Resources','Unit 6 - Contemporary Africa','Révisions & Évaluations']
-      }
-    }
-  },
-
-  ALLEMAND: {
-    label:'Allemand', icon:'🇩🇪',
-    niveaux:{
-      '4ème':{
-        T1:['Thème 1 - Leçon 1 (9 séances)','Thème 1 - Leçon 2 (9 séances)','Révisions (3 séances)'],
-        T2:['Thème 2 - Leçon 1 (9 séances)','Thème 2 - Leçon 2 (9 séances)','Révisions (3 séances)'],
-        T3:['Thème 3 - Leçon 1 (9 séances)','Thème 3 - Leçon 2 (9 séances)','Révision générale (6 séances)']
-      },
-      '3ème':{
-        T1:['Thème 1 - Leçon 1 (9 séances)','Thème 1 - Leçon 2 (9 séances)','Révisions (3 séances)'],
-        T2:['Thème 2 - Leçon 1 (9 séances)','Thème 2 - Leçon 2 (9 séances)','Révisions (3 séances)'],
-        T3:['Thème 3 - Leçon 1','Thème 3 - Leçon 2','Révision générale']
-      },
-      '2nde':{
-        T1:['Thème 1 - Einstiegsseite','Thème 1 - Leçon 1 (12 séances)','Thème 1 - Leçon 2 (12 séances)','Révisions'],
-        T2:['Thème 2 - Einstiegsseite','Thème 2 - Leçon 1','Thème 2 - Leçon 2','Révisions'],
-        T3:['Thème 3 - Einstiegsseite','Thème 3 - Leçon 1','Thème 3 - Leçon 2','Révision générale']
-      },
-      '1ère':{
-        T1:['Thème 1 - Einstiegsseite','Thème 1 - Leçon 1','Thème 1 - Leçon 2','Révisions'],
-        T2:['Thème 2 - Einstiegsseite','Thème 2 - Leçon 1','Thème 2 - Leçon 2','Révisions'],
-        T3:['Thème 3 - Einstiegsseite','Thème 3 - Leçon 1','Thème 3 - Leçon 2','Révision générale']
-      },
-      'Terminale':{
-        T1:['Thème 1 - Einstiegsseite','Thème 1 - Leçon 1','Thème 1 - Leçon 2','Révisions'],
-        T2:['Thème 2 - Einstiegsseite','Thème 2 - Leçon 1','Thème 2 - Leçon 2','Révisions'],
-        T3:['Thème 3 - Einstiegsseite','Thème 3 - Leçon 1','Thème 3 - Leçon 2','Révision générale']
-      }
-    }
-  },
-
-  EDHC: {
-    label:'EDHC', icon:'🏛️',
-    niveaux:{
-      '6ème':{
-        T1:['Droits à la survie et protection de l\'enfant','Les droits humains','Le Droit International Humanitaire (DIH)'],
-        T2:['La Constitution de la CI','Le Président de la République','Règles de vie en famille','Les principes de la démocratie'],
-        T3:['Règles de circulation routière','Le secteur primaire','La puberté','L\'abstinence sexuelle','Entretien du cadre de vie']
-      },
-      '5ème':{
-        T1:['Droits au développement et participation de l\'enfant','Principes des droits humains','Protection des victimes de conflits armés'],
-        T2:['Le Parlement de la CI','Droits et devoirs du citoyen','Démocratie dans les clubs','L\'entente entre les peuples'],
-        T3:['Engins à deux roues et automobiles','Activités génératrices de revenus (AGR)','Les IST et VIH/SIDA','Grossesses précoces','Alcool et drogue','Hygiène publique','Gestion des ordures ménagères']
-      },
-      '4ème':{
-        T1:['Promotion des droits de l\'enfant','Lutte contre le recrutement d\'enfants soldats','Instruments de protection contre les discriminations'],
-        T2:['CESEC, Médiateur, CNRCTCI','Le Paiement de l\'impôt','Les organisations de la société civile'],
-        T3:['Gestion des ressources familiales','L\'entrepreneuriat','Alliances interethniques (Kwa et Krou)','Comportements sexuels à risques','L\'adolescence','Protection de l\'environnement','Entretien des points d\'eau']
-      },
-      '3ème':{
-        T1:['Devoirs de parents','Les organisations humanitaires','Protection contre les violences aux personnes vulnérables'],
-        T2:['Les partis politiques','Les institutions juridictionnelles','Le scrutin électoral','Le civisme fiscal'],
-        T3:['Les biens publics','Le projet d\'entreprise','Alliances interethniques (Mandé et Gour)','Maladies endémiques et automédication','Test de dépistage du VIH','Parcs nationaux et réserves forestières','La gestion de l\'eau']
-      }
-    }
-  },
-
-  EPS: {
-    label:'EPS', icon:'🏃',
-    niveaux:{
-      '6ème':{
-        T1:['Course d\'endurance (sem. 1-4)','Gymnastique au sol (sem. 5-9)'],
-        T2:['Saut en longueur (sem. 10-14)','Course de vitesse (sem. 15-20)'],
-        T3:['Lancer de poids (sem. 21-25)','Basketball (sem. 26-30)']
-      },
-      '5ème':{
-        T1:['Course d\'endurance (sem. 1-4)','Gymnastique au sol (sem. 5-9)'],
-        T2:['Saut en longueur (sem. 10-14)','Course de vitesse (sem. 15-20)'],
-        T3:['Lancer de poids (sem. 21-25)','Basketball (sem. 26-30)']
-      },
-      '4ème':{
-        T1:['Lancer de poids (sem. 1-4)','Football (sem. 5-9)'],
-        T2:['Gymnastique au sol (sem. 10-14)','Course d\'endurance (sem. 15-20)'],
-        T3:['Course de vitesse (sem. 21-25)','Gymnastique au sol (sem. 26-30)']
-      },
-      '3ème':{
-        T1:['Lancer de poids (sem. 1-4)','Football (sem. 5-9)'],
-        T2:['Gymnastique au sol (sem. 10-14)','Course d\'endurance (sem. 15-20)'],
-        T3:['Course de vitesse (sem. 21-25)','Gym sol - préparation BEPC (sem. 26-30)']
-      },
-      '2nde':{
-        T1:['Course d\'endurance (sem. 1-4)','Gymnastique au sol (sem. 5-9)'],
-        T2:['Triple saut (sem. 10-14)','Course de vitesse (sem. 15-20)'],
-        T3:['Handball (sem. 21-25)','Saut en hauteur (sem. 26-30)']
-      },
-      '1ère':{
-        T1:['Lancer de poids (sem. 1-4)','Handball (sem. 5-9)'],
-        T2:['Saut en longueur (sem. 10-14)','Course de vitesse (sem. 15-20)'],
-        T3:['Gymnastique au sol (sem. 21-25)','Triple saut (sem. 26-30)']
-      },
-      'Terminale':{
-        T1:['Course de vitesse (sem. 1-4)','Gymnastique au sol (sem. 5-9)'],
-        T2:['Lancer de poids (sem. 10-14)','Saut en hauteur (sem. 15-20)'],
-        T3:['Gymnstique au sol - BAC (sem. 21-25)','Handball (sem. 26-30)']
-      }
-    }
-  },
-
-  ESPAGNOL: {
-    label:'Espagnol', icon:'🇪🇸',
-    niveaux:{
-      '4ème':{
-        T1:['Le monde hispanique','Les civilités et salutations','Échange d\'informations'],
-        T2:['Exprimer une opinion','Goûts et sentiments','Donner un ordre'],
-        T3:['Révisions et évaluations']
-      },
-      '3ème':{
-        T1:['Le monde hispanique','Les civilités','Échange d\'informations'],
-        T2:['Opinion','Goûts et sentiments','Ordre'],
-        T3:['Révisions et bilan']
-      },
-      '2nde':{
-        T1:['Monde hispanique - Approfondissement','Communication orale élaborée'],
-        T2:['Expression écrite - niveau élaboré','Compréhension orale'],
-        T3:['Technique d\'expression','Révisions']
-      },
-      '1ère':{
-        T1:['Monde hispanique - Niveau avancé','Technique d\'expression 1ère'],
-        T2:['Communication écrite avancée','Compréhension de textes'],
-        T3:['Technique d\'expression avancée','Préparation BAC']
-      },
-      'Tle':{
-        T1:['Révision générale monde hispanique','Technique d\'expression TLE'],
-        T2:['Maîtrise communication écrite et orale'],
-        T3:['Préparation épreuves BAC','Révisions finales']
-      }
-    }
-  },
-
   PHILO: {
     label:'Philosophie', icon:'💭',
     niveaux:{
       'Tle C-D-E':{
-        T1:['Sem. 1-4 : Méthodologie dissertation et commentaire','Sem. 5-11 : L\'Homme et la société'],
-        T2:['Sem. 12-21 : Les conditions du progrès'],
-        T3:['Sem. 22-30 : La connaissance']
+        T1:['Méthodologie dissertation et commentaire','L Homme et la société'],
+        T2:['Les conditions du progrès'],
+        T3:['La connaissance']
       }
     }
   }
 };
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════
 // UTILITAIRES
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════
 function getSemaineActuelle() {
-  const debut = new Date('2025-09-08');
-  const now = new Date();
-  const diff = Math.floor((now - debut) / (7 * 24 * 60 * 60 * 1000)) + 1;
+  var debut = new Date('2025-09-08');
+  var now = new Date();
+  var diff = Math.floor((now - debut) / (7 * 24 * 60 * 60 * 1000)) + 1;
   return Math.max(1, Math.min(30, diff));
 }
 
 function getStatut(ecart) {
   if (ecart > 0) return {code:'avance', label:'🚀 En avance', cls:'badge-or'};
-  if (ecart === 0 || ecart === -1) return {code:'ok', label:'✅ Dans les temps', cls:'badge-vert'};
+  if (ecart >= -1) return {code:'ok', label:'✅ Dans les temps', cls:'badge-vert'};
   if (ecart === -2) return {code:'attention', label:'⚠️ Attention', cls:'badge-orange'};
   return {code:'retard', label:'🔴 Retard', cls:'badge-rouge'};
 }
@@ -712,16 +446,16 @@ function getProgressColor(pct) {
   return 'fill-rouge';
 }
 
-function showToast(msg, type='') {
-  const t = document.getElementById('toast');
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast show ' + type;
-  setTimeout(() => t.className = 'toast', 3000);
+  t.className = 'toast show ' + (type||'');
+  setTimeout(function(){ t.className = 'toast'; }, 3000);
 }
 
 function showPage(id, el) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
   document.getElementById('page-'+id).classList.add('active');
   if (el) el.classList.add('active');
   if (id === 'progressions') renderProgressions();
@@ -730,117 +464,103 @@ function showPage(id, el) {
 
 function resetForm() {
   ['f-date','f-heure','f-ecole','f-classe','f-matiere','f-enseignant',
-   'f-lecon','f-sem-theo','f-sem-reel','f-avancement','f-devoir','f-obs']
-  .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-}
-
-// ═══════════════════════════════════════════════════
-// INIT ÉCOLES DANS SELECTS
-// ═══════════════════════════════════════════════════
-function initEcoles() {
-  const selects = ['f-ecole','filtre-ecole-dash','filtre-ecole-suivi'];
-  selects.forEach(sid => {
-    const sel = document.getElementById(sid);
-    if (!sel) return;
-    ECOLES.forEach(e => {
-      const opt = document.createElement('option');
-      opt.value = e; opt.textContent = e;
-      sel.appendChild(opt);
-    });
-  });
-  const matieres = Object.values(PROGRESSIONS).map(m => m.label);
-  ['filtre-matiere-dash','filtre-matiere-suivi'].forEach(sid => {
-    const sel = document.getElementById(sid);
-    if (!sel) return;
-    matieres.forEach(m => {
-      const opt = document.createElement('option');
-      opt.value = m; opt.textContent = m;
-      sel.appendChild(opt);
-    });
+   'f-lecon','f-sem-theo','f-sem-reel','f-avancement','f-devoir','f-obs'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.value = '';
   });
 }
 
-function updateMatieres() {
-  const classe = document.getElementById('f-classe').value;
-  const sel = document.getElementById('f-matiere');
-  sel.innerHTML = '<option value="">Sélectionner...</option>';
-  Object.entries(PROGRESSIONS).forEach(([key, mat]) => {
-    if (Object.keys(mat.niveaux).some(n => classe.includes(n.replace('ème','').replace('ère','').replace('nde','').replace('Tle','')))) {
-      const opt = document.createElement('option');
-      opt.value = mat.label; opt.textContent = mat.icon + ' ' + mat.label;
-      sel.appendChild(opt);
-    }
-  });
-  // Fallback: show all
-  if (sel.options.length === 1) {
-    Object.values(PROGRESSIONS).forEach(mat => {
-      const opt = document.createElement('option');
-      opt.value = mat.label; opt.textContent = mat.icon + ' ' + mat.label;
-      sel.appendChild(opt);
+// ═══════════════════════════════════
+// INIT SÉLECTEURS
+// ═══════════════════════════════════
+function initSelects() {
+  // Écoles
+  ['f-ecole','filtre-ecole-dash','filtre-ecole-suivi'].forEach(function(sid){
+    var sel = document.getElementById(sid); if(!sel) return;
+    ECOLES.forEach(function(e){
+      var opt = document.createElement('option'); opt.value = e; opt.textContent = e; sel.appendChild(opt);
     });
-  }
+  });
+
+  // Classes
+  var fclasse = document.getElementById('f-classe');
+  var fclassesuivi = document.getElementById('filtre-classe-suivi');
+  CLASSES_CPP.forEach(function(c){
+    if(fclasse){ var o = document.createElement('option'); o.value=c; o.textContent=c; fclasse.appendChild(o); }
+    if(fclassesuivi){ var o2 = document.createElement('option'); o2.value=c; o2.textContent=c; fclassesuivi.appendChild(o2); }
+  });
+
+  // Matières
+  ['f-matiere','filtre-matiere-dash','filtre-matiere-suivi'].forEach(function(sid){
+    var sel = document.getElementById(sid); if(!sel) return;
+    MATIERES.forEach(function(m){
+      var opt = document.createElement('option'); opt.value = m; opt.textContent = m; sel.appendChild(opt);
+    });
+  });
 }
 
-// ═══════════════════════════════════════════════════
-// LECTURE GOOGLE SHEETS
-// ═══════════════════════════════════════════════════
-let donneesSheet = [];
+// ═══════════════════════════════════
+// LECTURE GOOGLE SHEETS — TOUTES ÉCOLES
+// ═══════════════════════════════════
+var donneesSheet = [];
 
 async function chargerDonnees() {
-  try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.sheetId}/values/CAHIER_TEXTES?key=${CONFIG.apiKey}`;
-    const r = await fetch(url);
-    const data = await r.json();
-    if (!data.values || data.values.length < 2) {
-      donneesSheet = [];
-      renderDashboard([]);
-      return;
+  var toutes = [];
+  var ecoleNoms = Object.keys(SHEETS_IDS);
+  
+  for (var i = 0; i < ecoleNoms.length; i++) {
+    var nomEcole = ecoleNoms[i];
+    var sheetId = SHEETS_IDS[nomEcole];
+    try {
+      var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId + '/values/CAHIER_TEXTES?key=' + CONFIG.apiKey;
+      var r = await fetch(url);
+      var data = await r.json();
+      if (data.values && data.values.length > 1) {
+        var rows = data.values.slice(1);
+        rows.forEach(function(row){
+          toutes.push({
+            ecole: nomEcole,
+            date: row[0]||'', heure: row[1]||'', classe: row[2]||'',
+            matiere: row[3]||'', enseignant: row[4]||'', lecon: row[5]||'',
+            contenu: row[6]||'', avancement: parseInt(row[7])||50,
+            devoir: row[8]||'', obs: row[10]||'',
+            semTheo: parseInt(row[12])||CONFIG.semActuelle,
+            semReel: parseInt(row[13])||CONFIG.semActuelle
+          });
+        });
+      }
+    } catch(e) {
+      console.log('Erreur ' + nomEcole + ': ' + e.message);
     }
-    const rows = data.values.slice(1);
-    donneesSheet = rows.map(r => ({
-      date: r[0]||'', heure: r[1]||'', classe: r[2]||'', matiere: r[3]||'',
-      enseignant: r[4]||'', lecon: r[5]||'', contenu: r[6]||'',
-      avancement: parseInt(r[7])||0, devoir: r[8]||'', docs: r[9]||'',
-      obs: r[10]||'', ecole: r[11]||'',
-      semTheo: parseInt(r[12])||CONFIG.semActuelle,
-      semReel: parseInt(r[13])||1
-    }));
-    renderDashboard(donneesSheet);
-    renderSuivi(donneesSheet);
-  } catch(e) {
-    console.error(e);
-    donneesSheet = genererDonneesDemo();
-    renderDashboard(donneesSheet);
-    renderSuivi(donneesSheet);
-    showToast('⚠️ Mode démo — Connexion Sheets impossible', 'error');
   }
+
+  if (toutes.length === 0) {
+    toutes = genererDonneesDemo();
+    showToast('⚠️ Mode démo — Données réelles à saisir', 'error');
+  }
+
+  donneesSheet = toutes;
+  renderDashboard(donneesSheet);
+  renderSuivi(donneesSheet);
 }
 
 function genererDonneesDemo() {
-  const enseignants = [
-    {nom:'KOUASSI Ama', classe:'6ème', matiere:'Mathématiques', ecole:'Les Princes Cocody', semTheo:12, semReel:10, av:65},
-    {nom:'BAMBA Sékou', classe:'3ème', matiere:'SVT', ecole:'Les Princes Yopougon', semTheo:12, semReel:12, av:80},
-    {nom:'KONE Fatoumata', classe:'Tle D', matiere:'Mathématiques', ecole:'Les Princes Abobo', semTheo:12, semReel:8, av:45},
-    {nom:'DIALLO Ibrahim', classe:'5ème', matiere:'Anglais', ecole:'Les Princes Cocody', semTheo:12, semReel:13, av:90},
-    {nom:'TOURÉ Mariam', classe:'1ère C', matiere:'Français', ecole:'Les Princes Marcory', semTheo:12, semReel:11, av:72},
-    {nom:'YAO Kouamé', classe:'4ème', matiere:'EPS', ecole:'Les Princes Koumassi', semTheo:12, semReel:9, av:55},
-    {nom:'COULIBALY Aminata', classe:'3ème', matiere:'EDHC', ecole:'Les Princes Yopougon', semTheo:12, semReel:12, av:83},
-    {nom:'DROGBA Jean', classe:'2nde A', matiere:'Français', ecole:'Les Princes Plateau', semTheo:12, semReel:14, av:95},
-    {nom:'TRAORE Moussa', classe:'Tle C', matiere:'Philosophie', ecole:'Les Princes Adjamé', semTheo:12, semReel:7, av:40},
-    {nom:'N\'GORAN Estelle', classe:'6ème', matiere:'Histoire', ecole:'Les Princes Bingerville', semTheo:12, semReel:12, av:78},
+  return [
+    {ecole:'CPP Les Princes',enseignant:'KOUASSI Jean',classe:'TLE D-2',matiere:'Mathématiques',lecon:'Dérivation — fonctions composées',avancement:65,semTheo:CONFIG.semActuelle,semReel:CONFIG.semActuelle-1,date:new Date().toLocaleDateString('fr-FR')},
+    {ecole:'CPP Les Princes',enseignant:'BAMBA Marie',classe:'3ÈME EX1',matiere:'SVT',lecon:'Reproduction — Hérédité',avancement:80,semTheo:CONFIG.semActuelle,semReel:CONFIG.semActuelle,date:new Date().toLocaleDateString('fr-FR')},
+    {ecole:'Académie des Princes',enseignant:'KONE Fatoumata',classe:'TLE D-1',matiere:'Mathématiques',lecon:'Complexes — Module',avancement:45,semTheo:CONFIG.semActuelle,semReel:CONFIG.semActuelle-3,date:new Date().toLocaleDateString('fr-FR')},
+    {ecole:'Les Princes Guinglo',enseignant:'DIALLO Ibrahim',classe:'6ÈME EX1',matiere:'Anglais',lecon:'Unit 8 - Sports & Games',avancement:90,semTheo:CONFIG.semActuelle,semReel:CONFIG.semActuelle+1,date:new Date().toLocaleDateString('fr-FR')},
+    {ecole:'CPP Les Princes',enseignant:'TOURE Mariam',classe:'1ÈRE D-2',matiere:'Français',lecon:'Dissertation littéraire',avancement:72,semTheo:CONFIG.semActuelle,semReel:CONFIG.semActuelle-1,date:new Date().toLocaleDateString('fr-FR')},
+    {ecole:'Les Princes Koutouan',enseignant:'YAO Kouamé',classe:'4ÈME EX2',matiere:'EPS',lecon:'Lancer de poids',avancement:55,semTheo:CONFIG.semActuelle,semReel:CONFIG.semActuelle-2,date:new Date().toLocaleDateString('fr-FR')},
+    {ecole:'Les Princes Gnontinrou',enseignant:'COULIBALY Aya',classe:'3ÈME 5',matiere:'Histoire-Géographie',lecon:'La métallurgie en CI',avancement:83,semTheo:CONFIG.semActuelle,semReel:CONFIG.semActuelle,date:new Date().toLocaleDateString('fr-FR')},
+    {ecole:'GS Rita Rosane',enseignant:'TRAORE Moussa',classe:'TLE D-3',matiere:'Philosophie',lecon:'L Homme et la société',avancement:40,semTheo:CONFIG.semActuelle,semReel:CONFIG.semActuelle-4,date:new Date().toLocaleDateString('fr-FR')}
   ];
-  return enseignants.map((e,i) => ({
-    ...e, date: new Date().toLocaleDateString('fr-FR'),
-    lecon:'Leçon '+e.semReel, avancement:e.av,
-    semTheo:e.semTheo, semReel:e.semReel
-  }));
 }
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════
 // SAUVEGARDER DANS SHEETS
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════
 async function sauvegarderEntree() {
-  const vals = {
+  var vals = {
     date: document.getElementById('f-date').value,
     heure: document.getElementById('f-heure').value,
     classe: document.getElementById('f-classe').value,
@@ -857,30 +577,39 @@ async function sauvegarderEntree() {
   if (!vals.date||!vals.classe||!vals.matiere||!vals.enseignant) {
     showToast('⚠️ Remplissez les champs obligatoires', 'error'); return;
   }
-  const fb = document.getElementById('saisie-feedback');
+  var fb = document.getElementById('saisie-feedback');
   fb.innerHTML = '<div class="loading"><div class="spinner"></div><p>Enregistrement...</p></div>';
   try {
-    const row = [vals.date,vals.heure,vals.classe,vals.matiere,vals.enseignant,
-                 vals.lecon,'',vals.avancement,vals.devoir,'',vals.obs,vals.ecole,vals.semTheo,vals.semReel];
-    const body = {action:'append', sheetName:'CAHIER_TEXTES', data:[row]};
-    await fetch(CONFIG.appsScriptUrl, {method:'POST', body:JSON.stringify(body)});
+    await fetch(CONFIG.appsScriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify({
+        type: 'CAHIER',
+        date: vals.date, heure: vals.heure, classe: vals.classe,
+        matiere: vals.matiere, enseignant: vals.enseignant,
+        ecole: vals.ecole, lecon: vals.lecon,
+        contenu: '', avancement: vals.avancement,
+        devoir: vals.devoir, docs: '', obs: vals.obs
+      })
+    });
     fb.innerHTML = '<div style="padding:12px;background:var(--vert-pale);border-radius:var(--r-sm);color:var(--vert);font-weight:600;">✅ Enregistré avec succès !</div>';
     showToast('✅ Données enregistrées !', 'success');
     resetForm();
-    setTimeout(()=>{ fb.innerHTML=''; chargerDonnees(); },2000);
+    setTimeout(function(){ fb.innerHTML=''; chargerDonnees(); }, 2000);
   } catch(e) {
-    fb.innerHTML = '<div style="padding:12px;background:var(--rouge-pale);border-radius:var(--r-sm);color:var(--rouge);font-weight:600;">❌ Erreur de connexion. Vérifiez Apps Script.</div>';
+    fb.innerHTML = '<div style="padding:12px;background:var(--rouge-pale);border-radius:var(--r-sm);color:var(--rouge);font-weight:600;">❌ Erreur de connexion.</div>';
   }
 }
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════
 // RENDER DASHBOARD
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════
 function renderDashboard(data) {
-  let ok=0, att=0, ret=0, av=0;
-  data.forEach(d => {
-    const ecart = (d.semReel||1) - (d.semTheo||CONFIG.semActuelle);
-    const s = getStatut(ecart);
+  var ok=0, att=0, ret=0, av=0;
+  data.forEach(function(d){
+    var ecart = (d.semReel||1) - (d.semTheo||CONFIG.semActuelle);
+    var s = getStatut(ecart);
     if(s.code==='ok') ok++;
     else if(s.code==='attention') att++;
     else if(s.code==='retard') ret++;
@@ -892,146 +621,127 @@ function renderDashboard(data) {
   document.getElementById('stat-av').textContent = av;
   document.getElementById('stat-total').textContent = data.length;
 
-  const container = document.getElementById('dashboard-content');
+  var container = document.getElementById('dashboard-content');
   if (!data.length) {
-    container.innerHTML = '<p style="text-align:center;color:var(--gris4);padding:30px;">Aucune donnée disponible. Commencez par saisir des cahiers de textes.</p>';
+    container.innerHTML = '<p style="text-align:center;color:var(--gris4);padding:30px;">Aucune donnée. Commencez la saisie des cahiers de textes.</p>';
     return;
   }
-
-  let html = '<div class="table-wrap"><table><thead><tr><th>École</th><th>Enseignant</th><th>Classe</th><th>Matière</th><th>Leçon</th><th>Progression</th><th>Statut</th></tr></thead><tbody>';
-  data.forEach(d => {
-    const ecart = (d.semReel||1) - (d.semTheo||CONFIG.semActuelle);
-    const st = getStatut(ecart);
-    const av = Math.min(100, Math.max(0, d.avancement||0));
-    html += `<tr>
-      <td><strong>${d.ecole||'—'}</strong></td>
-      <td>${d.enseignant}</td>
-      <td><span class="sem-badge">${d.classe}</span></td>
-      <td>${d.matiere}</td>
-      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${d.lecon||'—'}</td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="progress-bar" style="width:90px;"><div class="progress-fill ${getProgressColor(av)}" style="width:${av}%"></div></div>
-          <span style="font-size:.75rem;font-weight:700;">${av}%</span>
-        </div>
-      </td>
-      <td><span class="badge ${st.cls}">${st.label}</span></td>
-    </tr>`;
+  var html = '<div class="table-wrap"><table><thead><tr><th>École</th><th>Enseignant</th><th>Classe</th><th>Matière</th><th>Leçon actuelle</th><th>Progression</th><th>Statut</th></tr></thead><tbody>';
+  data.forEach(function(d){
+    var ecart = (d.semReel||1) - (d.semTheo||CONFIG.semActuelle);
+    var st = getStatut(ecart);
+    var av2 = Math.min(100, Math.max(0, d.avancement||0));
+    html += '<tr><td><strong>' + (d.ecole||'—') + '</strong></td>' +
+      '<td>' + d.enseignant + '</td>' +
+      '<td><span class="sem-badge">' + d.classe + '</span></td>' +
+      '<td>' + d.matiere + '</td>' +
+      '<td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (d.lecon||'—') + '</td>' +
+      '<td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:90px;"><div class="progress-fill ' + getProgressColor(av2) + '" style="width:' + av2 + '%"></div></div><span style="font-size:.75rem;font-weight:700;">' + av2 + '%</span></div></td>' +
+      '<td><span class="badge ' + st.cls + '">' + st.label + '</span></td></tr>';
   });
   html += '</tbody></table></div>';
   container.innerHTML = html;
 }
 
 function filtrerDashboard() {
-  const ecole = document.getElementById('filtre-ecole-dash').value.toLowerCase();
-  const matiere = document.getElementById('filtre-matiere-dash').value.toLowerCase();
-  const statut = document.getElementById('filtre-statut-dash').value;
-  const search = document.getElementById('filtre-search-dash').value.toLowerCase();
-  const filtered = donneesSheet.filter(d => {
-    const ecart = (d.semReel||1) - (d.semTheo||CONFIG.semActuelle);
-    const st = getStatut(ecart);
-    return (!ecole || (d.ecole||'').toLowerCase().includes(ecole)) &&
-           (!matiere || (d.matiere||'').toLowerCase().includes(matiere)) &&
+  var ecole = document.getElementById('filtre-ecole-dash').value;
+  var matiere = document.getElementById('filtre-matiere-dash').value;
+  var statut = document.getElementById('filtre-statut-dash').value;
+  var search = document.getElementById('filtre-search-dash').value.toLowerCase();
+  var filtered = donneesSheet.filter(function(d){
+    var ecart = (d.semReel||1) - (d.semTheo||CONFIG.semActuelle);
+    var st = getStatut(ecart);
+    return (!ecole || d.ecole === ecole) &&
+           (!matiere || d.matiere === matiere) &&
            (!statut || st.code === statut) &&
            (!search || (d.enseignant||'').toLowerCase().includes(search));
   });
   renderDashboard(filtered);
 }
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════
 // RENDER SUIVI
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════
 function renderSuivi(data) {
-  const tbody = document.getElementById('tbody-suivi');
+  var tbody = document.getElementById('tbody-suivi');
   if (!data.length) {
     tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:var(--gris4);padding:30px;">Aucune donnée</td></tr>';
     return;
   }
-  tbody.innerHTML = data.map(d => {
-    const ecart = (d.semReel||1) - (d.semTheo||CONFIG.semActuelle);
-    const st = getStatut(ecart);
-    const av = Math.min(100,Math.max(0,d.avancement||0));
-    const ecartLabel = ecart > 0 ? `<span style="color:var(--vert)">+${ecart}</span>` :
-                       ecart === 0 ? '<span style="color:var(--gris4)">0</span>' :
-                       `<span style="color:${ecart<=-3?'var(--rouge)':'var(--orange)'}"><strong>${ecart}</strong></span>`;
-    return `<tr>
-      <td>${d.ecole||'—'}</td>
-      <td><strong>${d.enseignant}</strong></td>
-      <td><span class="sem-badge">${d.classe}</span></td>
-      <td>${d.matiere}</td>
-      <td style="max-width:180px;">${d.lecon||'—'}</td>
-      <td style="text-align:center;">${d.semTheo||'—'}</td>
-      <td style="text-align:center;">${d.semReel||'—'}</td>
-      <td style="text-align:center;">${ecartLabel}</td>
-      <td><div style="display:flex;align-items:center;gap:6px;"><div class="progress-bar" style="width:70px;"><div class="progress-fill ${getProgressColor(av)}" style="width:${av}%"></div></div><span style="font-size:.72rem;">${av}%</span></div></td>
-      <td><span class="badge ${st.cls}">${st.label}</span></td>
-      <td style="font-size:.75rem;color:var(--gris4);">${d.date||'—'}</td>
-    </tr>`;
+  tbody.innerHTML = data.map(function(d){
+    var ecart = (d.semReel||1) - (d.semTheo||CONFIG.semActuelle);
+    var st = getStatut(ecart);
+    var av2 = Math.min(100,Math.max(0,d.avancement||0));
+    var ecartLabel = ecart > 0 ? '<span style="color:var(--vert)">+'+ecart+'</span>' :
+                     ecart === 0 ? '<span style="color:var(--gris4)">0</span>' :
+                     '<span style="color:'+(ecart<=-3?'var(--rouge)':'var(--orange)')+'"><strong>'+ecart+'</strong></span>';
+    return '<tr><td>'+d.ecole+'</td><td><strong>'+d.enseignant+'</strong></td>' +
+      '<td><span class="sem-badge">'+d.classe+'</span></td><td>'+d.matiere+'</td>' +
+      '<td style="max-width:180px;">'+d.lecon+'</td>' +
+      '<td style="text-align:center;">'+(d.semTheo||'—')+'</td>' +
+      '<td style="text-align:center;">'+(d.semReel||'—')+'</td>' +
+      '<td style="text-align:center;">'+ecartLabel+'</td>' +
+      '<td><div style="display:flex;align-items:center;gap:6px;"><div class="progress-bar" style="width:70px;"><div class="progress-fill '+getProgressColor(av2)+'" style="width:'+av2+'%"></div></div><span style="font-size:.72rem;">'+av2+'%</span></div></td>' +
+      '<td><span class="badge '+st.cls+'">'+st.label+'</span></td>' +
+      '<td style="font-size:.75rem;color:var(--gris4);">'+(d.date||'—')+'</td></tr>';
   }).join('');
 }
 
 function filtrerSuivi() {
-  const ecole = document.getElementById('filtre-ecole-suivi').value;
-  const matiere = document.getElementById('filtre-matiere-suivi').value;
-  const classe = document.getElementById('filtre-classe-suivi').value;
-  const filtered = donneesSheet.filter(d =>
-    (!ecole || d.ecole === ecole) &&
-    (!matiere || d.matiere === matiere) &&
-    (!classe || d.classe === classe)
-  );
+  var ecole = document.getElementById('filtre-ecole-suivi').value;
+  var matiere = document.getElementById('filtre-matiere-suivi').value;
+  var classe = document.getElementById('filtre-classe-suivi').value;
+  var filtered = donneesSheet.filter(function(d){
+    return (!ecole || d.ecole === ecole) &&
+           (!matiere || d.matiere === matiere) &&
+           (!classe || d.classe === classe);
+  });
   renderSuivi(filtered);
 }
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════
 // ALERTES
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════
 function renderAlertes() {
-  const container = document.getElementById('alertes-content');
-  const alertes = donneesSheet.filter(d => {
-    const ecart = (d.semReel||1) - (d.semTheo||CONFIG.semActuelle);
-    return ecart <= -2;
-  }).sort((a,b) => {
-    const ea = (a.semReel||1)-(a.semTheo||CONFIG.semActuelle);
-    const eb = (b.semReel||1)-(b.semTheo||CONFIG.semActuelle);
-    return ea - eb;
+  var container = document.getElementById('alertes-content');
+  var alertes = donneesSheet.filter(function(d){
+    return ((d.semReel||1)-(d.semTheo||CONFIG.semActuelle)) <= -2;
+  }).sort(function(a,b){
+    return ((a.semReel||1)-(a.semTheo||CONFIG.semActuelle)) - ((b.semReel||1)-(b.semTheo||CONFIG.semActuelle));
   });
-
   if (!alertes.length) {
-    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--vert);"><div style="font-size:3rem;">✅</div><p style="font-weight:700;margin-top:10px;">Aucune alerte ! Tous les enseignants sont dans les temps.</p></div>';
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--vert);"><div style="font-size:3rem;">✅</div><p style="font-weight:700;margin-top:10px;">Aucune alerte — Tous les enseignants sont dans les temps !</p></div>';
     return;
   }
-
-  let html = `<p style="margin-bottom:16px;font-size:.85rem;color:var(--gris4);">${alertes.length} alerte(s) détectée(s) — Semaine actuelle : <strong>${CONFIG.semActuelle}</strong></p>`;
-  alertes.forEach(d => {
-    const ecart = (d.semReel||1)-(d.semTheo||CONFIG.semActuelle);
-    const grave = ecart <= -3;
-    html += `<div class="alerte-item ${grave?'alerte-rouge':'alerte-orange'}">
-      <div class="alerte-icon">${grave?'🔴':'⚠️'}</div>
-      <div class="alerte-body">
-        <div class="alerte-titre">${d.enseignant} — ${d.classe} / ${d.matiere} (${d.ecole||'École ?'})</div>
-        <div class="alerte-detail">
-          Retard de <strong>${Math.abs(ecart)} semaine(s)</strong> — 
-          Sem. théorique: ${d.semTheo} | Sem. réelle: ${d.semReel} | 
-          Avancement: ${d.avancement||0}% | Dernière leçon: ${d.lecon||'—'}
-        </div>
-      </div>
-    </div>`;
+  var html = '<p style="margin-bottom:16px;font-size:.85rem;color:var(--gris4);">'+alertes.length+' alerte(s) — Semaine actuelle : <strong>'+CONFIG.semActuelle+'</strong></p>';
+  alertes.forEach(function(d){
+    var ecart = (d.semReel||1)-(d.semTheo||CONFIG.semActuelle);
+    var grave = ecart <= -3;
+    html += '<div class="alerte-item '+(grave?'alerte-rouge':'alerte-orange')+'">' +
+      '<div class="alerte-icon">'+(grave?'🔴':'⚠️')+'</div>' +
+      '<div class="alerte-body">' +
+      '<div class="alerte-titre">'+d.enseignant+' — '+d.classe+' / '+d.matiere+' ('+d.ecole+')</div>' +
+      '<div class="alerte-detail">Retard de <strong>'+Math.abs(ecart)+' semaine(s)</strong> — Sem. théo: '+d.semTheo+' | Sem. réelle: '+d.semReel+' | Dernière leçon: '+(d.lecon||'—')+'</div>' +
+      '</div></div>';
   });
   container.innerHTML = html;
 }
 
 async function envoyerAlertesEmail() {
-  const alertes = donneesSheet.filter(d => ((d.semReel||1)-(d.semTheo||CONFIG.semActuelle)) <= -2);
+  var alertes = donneesSheet.filter(function(d){ return ((d.semReel||1)-(d.semTheo||CONFIG.semActuelle)) <= -2; });
   if (!alertes.length) { showToast('✅ Aucune alerte à envoyer !', 'success'); return; }
   try {
-    const body = {
-      action: 'sendEmail',
-      to: CONFIG.emailDirection,
-      subject: `[Les Princes] Alertes Pédagogiques — Semaine ${CONFIG.semActuelle}`,
-      message: alertes.map(d => `${d.enseignant} (${d.classe}/${d.matiere}/${d.ecole}) : retard ${Math.abs((d.semReel||1)-(d.semTheo||CONFIG.semActuelle))} sem.`).join('\n')
-    };
-    await fetch(CONFIG.appsScriptUrl, {method:'POST', body:JSON.stringify(body)});
-    showToast(`📧 Rapport envoyé à ${CONFIG.emailDirection}`, 'success');
+    await fetch(CONFIG.appsScriptUrl, {
+      method: 'POST', mode: 'no-cors',
+      headers: {'Content-Type':'text/plain'},
+      body: JSON.stringify({
+        type: 'EMAIL_ALERTES',
+        to: CONFIG.emailDirection,
+        subject: 'Alertes Pedagogiques - Semaine ' + CONFIG.semActuelle,
+        alertes: alertes.map(function(d){ return d.enseignant+' ('+d.classe+'/'+d.matiere+'/'+d.ecole+'): retard '+Math.abs((d.semReel||1)-(d.semTheo||CONFIG.semActuelle))+' sem.'; })
+      })
+    });
+    showToast('📧 Rapport envoyé à ' + CONFIG.emailDirection, 'success');
   } catch(e) {
     showToast('❌ Erreur envoi email', 'error');
   }
@@ -1039,40 +749,32 @@ async function envoyerAlertesEmail() {
 
 function exporterAlertes() {
   showPage('alertes', null);
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab')[3].classList.add('active');
 }
 
-// ═══════════════════════════════════════════════════
-// RENDER PROGRESSIONS
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════
+// PROGRESSIONS
+// ═══════════════════════════════════
 function renderProgressions() {
-  const container = document.getElementById('progressions-content');
+  var container = document.getElementById('progressions-content');
   if (container.dataset.rendered) return;
   container.dataset.rendered = '1';
-
-  let html = '';
-  Object.entries(PROGRESSIONS).forEach(([key, mat]) => {
-    html += `<div class="prog-section">
-      <button class="prog-matiere-btn" onclick="toggleProg(this)">
-        <span>${mat.icon}</span> <span>${mat.label}</span>
-        <span class="arrow">▼</span>
-      </button>
-      <div class="prog-niveaux" style="display:none;">`;
-    Object.entries(mat.niveaux).forEach(([niveau, data]) => {
-      html += `<div class="prog-niveau">
-        <div class="prog-niveau-title">📘 ${niveau}</div>`;
-      if (data.T1 || data.T2 || data.T3) {
-        ['T1','T2','T3'].forEach(t => {
-          if (data[t] && data[t].length) {
-            const labels = {T1:'1er Trimestre',T2:'2ème Trimestre',T3:'3ème Trimestre'};
-            html += `<div class="prog-trim-label">${labels[t]}</div>`;
-            data[t].forEach(l => { html += `<div class="prog-item">${l}</div>`; });
-          }
-        });
-      } else if (Array.isArray(data)) {
-        data.forEach(l => { html += `<div class="prog-item">${l}</div>`; });
-      }
+  var html = '';
+  Object.entries(PROGRESSIONS).forEach(function([key, mat]){
+    html += '<div class="prog-section">' +
+      '<button class="prog-matiere-btn" onclick="toggleProg(this)">' +
+      '<span>'+mat.icon+'</span> <span>'+mat.label+'</span>' +
+      '<span class="arrow">▼</span></button>' +
+      '<div class="prog-niveaux" style="display:none;">';
+    Object.entries(mat.niveaux).forEach(function([niveau, data]){
+      html += '<div class="prog-niveau"><div class="prog-niveau-title">📘 '+niveau+'</div>';
+      ['T1','T2','T3'].forEach(function(t){
+        if(data[t] && data[t].length){
+          var labels = {T1:'1er Trimestre',T2:'2ème Trimestre',T3:'3ème Trimestre'};
+          html += '<div class="prog-trim-label">'+labels[t]+'</div>';
+          data[t].forEach(function(l){ html += '<div class="prog-item">'+l+'</div>'; });
+        }
+      });
       html += '</div>';
     });
     html += '</div></div>';
@@ -1082,38 +784,25 @@ function renderProgressions() {
 
 function toggleProg(btn) {
   btn.classList.toggle('open');
-  const next = btn.nextElementSibling;
+  var next = btn.nextElementSibling;
   next.style.display = next.style.display === 'none' ? 'grid' : 'none';
 }
 
-// ═══════════════════════════════════════════════════
-// ACTUALISER
-// ═══════════════════════════════════════════════════
 function actualiser() {
   showToast('🔄 Actualisation en cours...', '');
   chargerDonnees();
 }
 
-// ═══════════════════════════════════════════════════
+// ═══════════════════════════════════
 // INIT
-// ═══════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  // Date et heure par défaut
-  const now = new Date();
-  const dateStr = now.toISOString().split('T')[0];
-  const heureStr = now.toTimeString().slice(0,5);
-  document.getElementById('f-date').value = dateStr;
-  document.getElementById('f-heure').value = heureStr;
+// ═══════════════════════════════════
+document.addEventListener('DOMContentLoaded', function(){
+  var now = new Date();
+  document.getElementById('f-date').value = now.toISOString().split('T')[0];
+  document.getElementById('f-heure').value = now.toTimeString().slice(0,5);
   document.getElementById('f-sem-theo').value = CONFIG.semActuelle;
-
-  initEcoles();
-
-  // Classes dans filtre suivi
-  const clsSel = document.getElementById('filtre-classe-suivi');
-  ['6ème','5ème','4ème','3ème','2nde A','2nde C','2nde D','1ère A','1ère C','1ère D','Tle A','Tle C','Tle D'].forEach(c => {
-    const o = document.createElement('option'); o.value=c; o.textContent=c; clsSel.appendChild(o);
-  });
-
+  document.getElementById('f-sem-reel').value = CONFIG.semActuelle;
+  initSelects();
   chargerDonnees();
 });
 </script>
