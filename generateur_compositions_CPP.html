@@ -720,7 +720,7 @@ function generer() {
     document.getElementById('btnGenerer').disabled = false;
     showToast('Delai depasse — mode demo', 'error');
     afficherDemo(examen, matiere, filiere, classe, trimestre, lecon);
-  }, 60000);
+  }, 35000);
 
   window[cbName] = function(data) {
     clearTimeout(timeout);
@@ -730,8 +730,9 @@ function generer() {
     hideLoader();
     document.getElementById('btnGenerer').disabled = false;
     if (data && data.composition) {
-      afficherComposition(data.composition, data.source === 'IA', examen, matiere, filiere, classe, trimestre);
-      showToast(data.source === 'IA' ? 'Composition generee par IA' : 'Mode demonstration', data.source === 'IA' ? 'success' : '');
+      var isIA = (data.source === 'IA' || data.source === 'IA_PARTIEL');
+      afficherComposition(data.composition, isIA, examen, matiere, filiere, classe, trimestre);
+      showToast(isIA ? 'Composition generee par IA' : 'Mode demonstration', isIA ? 'success' : '');
     } else {
       afficherDemo(examen, matiere, filiere, classe, trimestre, lecon);
     }
