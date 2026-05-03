@@ -712,7 +712,7 @@ body::after{
 // ══════════════════════════════════════
 // CONFIGURATION
 // ══════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCTcr4qls6r4WQgc9j8gEundCV6P62f_dzlNaaS4PI3rLBlRWo8MSXo7fV6U6SfnSn/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuwlcfk1gt1vignsoHuplRlEchnRS-Kh1lLROBDCSTYHu7zsa_KaNCUBVgQjlHD1Q/exec';
 
 const ECOLE_CODES = {
   'cpp':'CPP LES PRINCES','academie':'ACADEMIE','guinglo':'GUINGLO VILLE',
@@ -996,7 +996,7 @@ function generer() {
     document.getElementById('btnGenerer').disabled = false;
     showToast('Délai dépassé — mode démo activé', 'error');
     afficherDemo(examen, matiere, filiere, classe, trimestre, lecon);
-  }, 25000);
+  }, 60000);
 
   window[cbName] = function(data) {
     clearTimeout(timeout);
