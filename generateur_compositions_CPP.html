@@ -9,7 +9,7 @@
 :root {
   --bleu:#1F4E79; --bleu2:#2E75B6; --or:#D4AF37; --or2:#F0C040;
   --vert:#2E7D32; --rouge:#C62828; --orange:#E65100;
-  --bg:#0F2A45; --bg2:#132F4C; --bg3:#1A3A5C;
+  --bg:#1C3A5E; --bg2:#243F5F; --bg3:#2A4A6E;
   --card:rgba(255,255,255,0.07); --card2:rgba(255,255,255,0.10);
   --border:rgba(255,255,255,0.12); --border2:rgba(212,175,55,0.3);
   --text:#E8F4FD; --text2:rgba(232,244,253,0.65); --text3:rgba(232,244,253,0.35);
@@ -1147,13 +1147,19 @@ let toastTimer = null;
 // INIT
 // ══════════════════════════════════════
 window.onload = function() {
-  const params = new URLSearchParams(window.location.search);
-  const code = (params.get('e') || 'cpp').toLowerCase();
-  ecoleCode = ECOLE_CODES[code] || 'CPP LES PRINCES';
-  ecoleNom = ECOLE_NOMS[ecoleCode] || ecoleCode;
-  document.getElementById('ecoleChip').textContent = code.toUpperCase();
-
-  changerExamen();
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const code = (params.get('e') || 'cpp').toLowerCase();
+    ecoleCode = ECOLE_CODES[code] || 'CPP LES PRINCES';
+    ecoleNom = ECOLE_NOMS[ecoleCode] || ecoleCode;
+    const chip = document.getElementById('ecoleChip');
+    if (chip) chip.textContent = code.toUpperCase();
+    changerExamen();
+  } catch(e) {
+    console.error('onload error:', e);
+    // Fallback minimal
+    try { changerMatiere(); } catch(e2) {}
+  }
 };
 
 // ══════════════════════════════════════
@@ -1216,23 +1222,30 @@ function changerFiliere() {
 // CHANGEMENT MATIÈRE — Thèmes
 // ══════════════════════════════════════
 function changerMatiere() {
-  const examen = document.getElementById('selExamen').value;
-  const matiere = document.getElementById('selMatiere').value;
-  const key = examen + '_' + matiere;
-  const themes = THEMES[key] || THEMES['DEFAULT'];
+  try {
+    const examen = document.getElementById('selExamen').value;
+    const matiere = document.getElementById('selMatiere').value;
+    const key = examen + '_' + matiere;
+    const themes = THEMES[key] || THEMES['DEFAULT'] || [
+      {id:'lecon',nom:'Basé sur la leçon',freq:'Auto',cls:'freq-certain'},
+      {id:'programme',nom:'Programme officiel CI',freq:'DPFC',cls:'freq-probable'}
+    ];
 
-  const grid = document.getElementById('themesGrid');
-  grid.innerHTML = themes.map((t,i) => `
-    <div class="theme-item${i===0?' sel':''}" onclick="selTheme(this,'${t.id}')">
-      <div class="theme-nom">${t.nom}</div>
-      <div class="theme-freq ${t.cls}">${t.freq}</div>
-    </div>
-  `).join('');
-  themeSelectionne = themes[0]?.id || 'lecon';
+    const grid = document.getElementById('themesGrid');
+    if (!grid) return;
+    grid.innerHTML = themes.map((t,i) => `
+      <div class="theme-item${i===0?' sel':''}" onclick="selTheme(this,'${t.id}')">
+        <div class="theme-nom">${t.nom}</div>
+        <div class="theme-freq ${t.cls}">${t.freq}</div>
+      </div>
+    `).join('');
+    themeSelectionne = (themes[0] && themes[0].id) ? themes[0].id : 'lecon';
 
-  // Placeholder leçon
-  const lecon = document.getElementById('inputLecon');
-  lecon.placeholder = `Ex: chapitre en cours — ${NOMS_MATIERES[matiere]||matiere}`;
+    const lecon = document.getElementById('inputLecon');
+    if (lecon) lecon.placeholder = 'Ex: chapitre en cours — ' + (NOMS_MATIERES[matiere]||matiere);
+  } catch(e) {
+    console.error('changerMatiere error:', e);
+  }
 }
 
 function selTheme(el, id) {
