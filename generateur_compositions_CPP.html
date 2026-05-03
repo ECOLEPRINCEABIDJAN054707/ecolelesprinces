@@ -607,11 +607,15 @@ function changerMatiere() {
   var themes = THEMES[key] || THEMES['DEFAULT'];
   var grid = document.getElementById('themesGrid');
   if (!grid) return;
-  grid.innerHTML = themes.map(function(t, i) {
-    return '<div class="theme-item' + (i===0?' sel':'') + '" onclick="selTheme(this,'' + t.id + '')">' +
-      '<div class="theme-nom">' + t.nom + '</div>' +
-      '<div class="theme-freq ' + t.cls + '">' + t.freq + '</div></div>';
-  }).join('');
+  var html = '';
+  for (var i = 0; i < themes.length; i++) {
+    var t = themes[i];
+    var sel = (i === 0) ? ' sel' : '';
+    html += '<div class="theme-item' + sel + '" onclick="selTheme(this,\'' + t.id + '\')">';
+    html += '<div class="theme-nom">' + t.nom + '</div>';
+    html += '<div class="theme-freq ' + t.cls + '">' + t.freq + '</div></div>';
+  }
+  grid.innerHTML = html;
   themeSelectionne = themes[0] ? themes[0].id : 'lecon';
   var lecon = document.getElementById('inputLecon');
   if (lecon) lecon.placeholder = 'Ex: ' + (NOMS_MATIERES[matiere] || matiere);
