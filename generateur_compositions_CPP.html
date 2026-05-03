@@ -9,13 +9,13 @@
 :root {
   --bleu:#1F4E79; --bleu2:#2E75B6; --or:#D4AF37; --or2:#F0C040;
   --vert:#2E7D32; --rouge:#C62828; --orange:#E65100;
-  --bg:#F0F4F8; --bg2:#FFFFFF; --bg3:#E8EDF4;
-  --card:rgba(255,255,255,0.98); --card2:rgba(255,255,255,1);
-  --border:rgba(31,78,121,0.15); --border2:rgba(212,175,55,0.5);
-  --text:#1A2733; --text2:rgba(26,39,51,0.65); --text3:rgba(26,39,51,0.35);
+  --bg:#0F2A45; --bg2:#132F4C; --bg3:#1A3A5C;
+  --card:rgba(255,255,255,0.07); --card2:rgba(255,255,255,0.10);
+  --border:rgba(255,255,255,0.12); --border2:rgba(212,175,55,0.3);
+  --text:#E8F4FD; --text2:rgba(232,244,253,0.65); --text3:rgba(232,244,253,0.35);
   --r:14px; --r2:20px;
-  --shadow:0 4px 20px rgba(31,78,121,0.12);
-  --glow:0 0 20px rgba(212,175,55,0.1);
+  --shadow:0 8px 32px rgba(0,0,0,0.35);
+  --glow:0 0 40px rgba(212,175,55,0.15);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 body{
@@ -33,7 +33,7 @@ body::before{
   position:fixed;
   top:-200px; left:-200px;
   width:600px; height:600px;
-  background:radial-gradient(circle,rgba(212,175,55,0.04) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(212,175,55,0.06) 0%,transparent 70%);
   pointer-events:none;
 }
 body::after{
@@ -41,7 +41,7 @@ body::after{
   position:fixed;
   bottom:-200px; right:-200px;
   width:500px; height:500px;
-  background:radial-gradient(circle,rgba(46,117,182,0.04) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(46,117,182,0.08) 0%,transparent 70%);
   pointer-events:none;
 }
 
@@ -92,7 +92,7 @@ body::after{
 .section-label{
   font-size:10px;
   font-weight:600;
-  color:#1F4E79;
+  color:var(--or);
   text-transform:uppercase;
   letter-spacing:1.5px;
   margin-bottom:10px;
@@ -109,7 +109,7 @@ body::after{
 
 /* ── CARDS ── */
 .card{
-  background:#FFFFFF;
+  background:var(--card);
   border:1px solid var(--border);
   border-radius:var(--r);
   overflow:hidden;
@@ -123,18 +123,18 @@ body::after{
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:1px;
-  background:#DDE5EE;
+  background:var(--border);
   border-radius:var(--r);
   overflow:hidden;
   margin-bottom:14px;
 }
 .stat-item{
-  background:#F8FAFC;
+  background:var(--bg2);
   padding:10px 8px;
   text-align:center;
 }
-.stat-n{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:#1F4E79;}
-.stat-l{font-size:9px;color:#555;margin-top:2px;line-height:1.3;}
+.stat-n{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--or);}
+.stat-l{font-size:9px;color:var(--text2);margin-top:2px;line-height:1.3;}
 
 /* ── SELECTS & INPUTS ── */
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
@@ -142,19 +142,19 @@ body::after{
 .form-group label{
   font-size:10px;
   font-weight:600;
-  color:#444;
+  color:var(--text2);
   text-transform:uppercase;
   letter-spacing:0.8px;
 }
 .form-group select,
 .form-group input{
-  background:#F0F4F8;
+  background:var(--bg3);
   border:1px solid var(--border);
   border-radius:10px;
   padding:11px 14px;
   font-size:13px;
   font-family:'DM Sans',sans-serif;
-  color:#111;
+  color:var(--text);
   outline:none;
   transition:border-color 0.2s, box-shadow 0.2s;
   -webkit-appearance:none;
@@ -186,7 +186,7 @@ body::after{
   padding:14px;
 }
 .theme-item{
-  background:#F0F4F8;
+  background:var(--bg3);
   border:1.5px solid var(--border);
   border-radius:10px;
   padding:10px;
@@ -198,7 +198,7 @@ body::after{
   background:rgba(212,175,55,0.12);
   border-color:var(--or);
 }
-.theme-nom{font-size:12px;font-weight:600;color:#1A2733;line-height:1.3;}
+.theme-nom{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;}
 .theme-freq{
   font-size:10px;
   margin-top:4px;
@@ -223,9 +223,9 @@ body::after{
   font-weight:700;
   border:1px solid transparent;
 }
-.pill-a{background:rgba(46,117,182,0.15);color:#1565C0;border-color:rgba(46,117,182,0.3);}
-.pill-b{background:rgba(46,125,50,0.15);color:#2E7D32;border-color:rgba(46,125,50,0.3);}
-.pill-c{background:rgba(198,40,40,0.15);color:#C62828;border-color:rgba(198,40,40,0.3);}
+.pill-a{background:rgba(46,117,182,0.15);color:#64B5F6;border-color:rgba(46,117,182,0.3);}
+.pill-b{background:rgba(46,125,50,0.15);color:#81C784;border-color:rgba(46,125,50,0.3);}
+.pill-c{background:rgba(198,40,40,0.15);color:#EF9A9A;border-color:rgba(198,40,40,0.3);}
 
 /* ── BTN GENERER ── */
 .btn-generer{
@@ -259,7 +259,7 @@ body::after{
 }
 .loader-overlay.show{display:flex;}
 .loader-card{
-  background:#FFFFFF;
+  background:var(--bg2);
   border:1px solid var(--border2);
   border-radius:var(--r2);
   padding:32px;
@@ -282,7 +282,7 @@ body::after{
 /* ── COMPOSITION RESULT ── */
 .result-zone{display:none;}
 .result-header{
-  background:linear-gradient(135deg,#1F4E79,#2E75B6);
+  background:linear-gradient(135deg,var(--bg2),var(--bg3));
   border:1px solid var(--border2);
   border-radius:var(--r2) var(--r2) 0 0;
   padding:18px 20px;
@@ -309,7 +309,7 @@ body::after{
 
 /* ── PARTIES ── */
 .result-body{
-  background:#FFFFFF;
+  background:var(--bg2);
   border:1px solid var(--border);
   border-top:none;
   border-radius:0 0 var(--r2) var(--r2);
@@ -327,7 +327,6 @@ body::after{
   gap:10px;
   cursor:pointer;
   transition:background 0.15s;
-  background:#F8FAFC;
 }
 .partie-header:hover{background:rgba(255,255,255,0.03);}
 .partie-dot{
@@ -340,7 +339,7 @@ body::after{
 .pC .partie-dot{background:#EF9A9A;}
 .corrige-block .partie-dot{background:#81C784;}
 .partie-info{flex:1;}
-.partie-titre{font-size:13px;font-weight:600;color:#1A2733;}
+.partie-titre{font-size:13px;font-weight:600;color:var(--text);}
 .partie-sous{font-size:11px;color:var(--text2);margin-top:2px;}
 .partie-pts{
   font-size:12px;
@@ -368,7 +367,6 @@ body::after{
   color:var(--text2);
   line-height:1.6;
   font-style:italic;
-  color:#333 !important;
 }
 .pA .contexte-box{border-color:#64B5F6;}
 .pB .contexte-box{border-color:var(--or);}
@@ -378,7 +376,7 @@ body::after{
   font-size:13px;
   line-height:1.7;
   padding:5px 0;
-  color:#1A2733;
+  color:var(--text);
   border-bottom:1px solid rgba(255,255,255,0.04);
 }
 .question:last-child{border-bottom:none;}
@@ -397,7 +395,7 @@ body::after{
   font-family:'Playfair Display',serif;
   font-size:28px;
   font-weight:700;
-  color:#D4AF37;
+  color:var(--or);
   flex-shrink:0;
 }
 .proba-info{flex:1;}
@@ -463,275 +461,37 @@ body::after{
 .toast.success{border-color:rgba(46,125,50,0.4);color:#81C784;}
 .toast.error{border-color:rgba(198,40,40,0.4);color:#EF9A9A;}
 
-/* ── PRINT — STYLE BAC CI OFFICIEL ── */
-
-/* Styles print-header visibles UNIQUEMENT à l'impression */
-.print-header { display: none; }
-.print-pied { display: none; }
-
-@media print {
-  * { -webkit-print-color-adjust: exact !important; box-sizing: border-box; }
-
-  body {
-    background: white !important;
-    color: #000 !important;
-    max-width: 100% !important;
-    font-family: 'Times New Roman', Times, serif !important;
-    font-size: 12.5px !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* Masquer tout l'écran */
-  .header, .config-zone, .loader-overlay, .result-actions,
-  .toast, .result-source, .proba-bar, .conseil-box,
-  .section-label, .result-header { display: none !important; }
-
-  .result-zone { display: block !important; }
-  .section { padding: 0 !important; margin: 0 !important; }
-
-  /* Afficher l'en-tête print */
-  .print-header {
-    display: block !important;
-    width: 100% !important;
-    font-family: 'Times New Roman', Times, serif !important;
-    margin-bottom: 8px !important;
-  }
-
-  .print-entete {
-    display: flex !important;
-    align-items: center !important;
-    gap: 12px !important;
-    border-bottom: 2px solid #000 !important;
-    padding-bottom: 7px !important;
-    margin-bottom: 8px !important;
-  }
-
-  .print-logo { width: 52px !important; height: auto !important; flex-shrink: 0 !important; }
-
-  .print-ecole-info { flex: 1 !important; text-align: center !important; }
-  .print-ecole-nom { font-size: 13px !important; font-weight: bold !important; text-transform: uppercase !important; letter-spacing: 0.4px !important; display: block !important; }
-  .print-ecole-ville { font-size: 10.5px !important; color: #222 !important; display: block !important; margin-top: 2px !important; }
-  .print-annee { font-size: 10.5px !important; color: #222 !important; display: block !important; }
-
-  .print-right { text-align: right !important; flex-shrink: 0 !important; }
-  .print-coef { font-size: 13.5px !important; font-weight: bold !important; line-height: 1.7 !important; display: block !important; }
-
-  .print-titre-matiere {
-    border: 2px solid #000 !important;
-    text-align: center !important;
-    padding: 5px 10px !important;
-    font-size: 17px !important;
-    font-weight: bold !important;
-    text-transform: uppercase !important;
-    letter-spacing: 2px !important;
-    margin-bottom: 5px !important;
-    display: block !important;
-  }
-
-  .print-serie {
-    text-align: center !important;
-    font-size: 13px !important;
-    font-weight: bold !important;
-    margin-bottom: 5px !important;
-    display: block !important;
-  }
-
-  .print-identite {
-    display: flex !important;
-    gap: 20px !important;
-    margin-bottom: 5px !important;
-  }
-
-  .print-id-ligne {
-    display: flex !important;
-    align-items: baseline !important;
-    gap: 5px !important;
-    border-bottom: 0.5px solid #666 !important;
-    padding-bottom: 3px !important;
-    flex: 1 !important;
-    font-size: 12px !important;
-  }
-
-  .print-id-label { font-weight: bold !important; font-size: 11px !important; text-transform: uppercase !important; white-space: nowrap !important; }
-
-  .print-consignes {
-    font-style: italic !important;
-    font-size: 11.5px !important;
-    text-align: center !important;
-    margin-bottom: 10px !important;
-    line-height: 1.65 !important;
-    display: block !important;
-  }
-
-  /* Corps résultat */
-  .result-body {
-    background: white !important;
-    border: none !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* Parties → exercices */
-  .partie { margin-bottom: 10px !important; border-bottom: none !important; }
-
-  .partie-header {
-    cursor: default !important;
-    background: white !important;
-    padding: 0 !important;
-    border-radius: 0 !important;
-    display: block !important;
-  }
-
-  .partie-arrow, .partie-dot { display: none !important; }
-  .partie-body { display: block !important; padding: 0 !important; }
-
-  .partie-titre {
-    display: inline-block !important;
-    border: 1.5px solid #000 !important;
-    padding: 2px 10px !important;
-    font-size: 12.5px !important;
-    font-weight: bold !important;
-    color: #000 !important;
-    text-transform: uppercase !important;
-    margin-bottom: 4px !important;
-    background: white !important;
-    font-size: 0 !important;
-  }
-  .partie-titre::before {
-    content: attr(data-print) !important;
-    font-size: 12.5px !important;
-    font-weight: bold !important;
-  }
-
-  .partie-sous {
-    font-size: 11.5px !important;
-    font-style: italic !important;
-    color: #333 !important;
-    display: block !important;
-    margin-bottom: 4px !important;
-    background: none !important;
-    border: none !important;
-    padding: 0 !important;
-  }
-
-  .partie-pts { display: none !important; }
-
-  .contexte-box {
-    background: white !important;
-    border: none !important;
-    border-left: none !important;
-    font-style: italic !important;
-    font-size: 12.5px !important;
-    color: #000 !important;
-    padding: 3px 0 !important;
-    margin-bottom: 4px !important;
-    text-align: justify !important;
-    line-height: 1.6 !important;
-  }
-
-  .question {
-    font-size: 12.5px !important;
-    color: #000 !important;
-    line-height: 1.75 !important;
-    text-align: justify !important;
-    font-weight: normal !important;
-    padding: 1px 0 !important;
-    border: none !important;
-  }
-
-  /* Masquer le corrigé */
-  .corrige-block { display: none !important; }
-
-  /* Pied de page */
-  .print-pied {
-    display: flex !important;
-    justify-content: space-between !important;
-    font-size: 10px !important;
-    color: #333 !important;
-    border-top: 0.5px solid #999 !important;
-    padding-top: 3px !important;
-    margin-top: 10px !important;
-  }
-}
-
-
-/* ═══════════════════════════════════════
-   ZONE IMPRESSION BAC CI — SÉPARÉE
-   ═══════════════════════════════════════ */
-#printZone { display: none; }
-
-@media print {
-  /* Tout masquer */
-  body > *:not(#printZone) { display: none !important; }
-  #printZone {
-    display: block !important;
-    font-family: 'Times New Roman', Times, serif !important;
-    font-size: 13px !important;
-    color: #000 !important;
-    background: white !important;
-    padding: 12mm 15mm !important;
-    margin: 0 !important;
-    width: 100% !important;
-    line-height: 1.65 !important;
-  }
-  /* En-tête */
-  .pz-entete {
-    display: flex !important;
-    align-items: center !important;
-    gap: 14px !important;
-    border-bottom: 2px solid #000 !important;
-    padding-bottom: 8px !important;
-    margin-bottom: 8px !important;
-  }
-  .pz-logo { width: 52px !important; height: auto !important; }
-  .pz-ecole-centre { flex: 1 !important; text-align: center !important; }
-  .pz-ecole-nom { font-size: 13.5px !important; font-weight: bold !important; text-transform: uppercase !important; display: block !important; }
-  .pz-ecole-sous { font-size: 11px !important; display: block !important; margin-top: 2px !important; }
-  .pz-droite { text-align: right !important; }
-  .pz-coef { font-size: 13.5px !important; font-weight: bold !important; line-height: 1.7 !important; }
-  /* Titre matière */
-  .pz-titre-mat {
-    border: 2px solid #000 !important;
-    text-align: center !important;
-    padding: 5px !important;
-    font-size: 18px !important;
-    font-weight: bold !important;
-    text-transform: uppercase !important;
-    letter-spacing: 2px !important;
-    margin-bottom: 5px !important;
-  }
-  .pz-serie { text-align: center !important; font-size: 13px !important; font-weight: bold !important; margin-bottom: 6px !important; }
-  /* Identité */
-  .pz-identite { display: flex !important; gap: 20px !important; margin-bottom: 5px !important; }
-  .pz-id-ligne { display: flex !important; align-items: baseline !important; gap: 5px !important; border-bottom: 0.5px solid #666 !important; padding-bottom: 3px !important; flex: 1 !important; font-size: 12.5px !important; }
-  .pz-id-label { font-weight: bold !important; font-size: 11.5px !important; text-transform: uppercase !important; white-space: nowrap !important; }
-  /* Consignes */
-  .pz-consignes { font-style: italic !important; font-size: 12px !important; text-align: center !important; margin-bottom: 10px !important; line-height: 1.65 !important; }
-  /* Exercices */
-  .pz-exercice { margin-bottom: 12px !important; }
-  .pz-ex-titre {
-    display: inline-block !important;
-    border: 1.5px solid #000 !important;
-    padding: 2px 10px !important;
-    font-size: 13px !important;
-    font-weight: bold !important;
-    text-transform: uppercase !important;
-    margin-bottom: 5px !important;
-  }
-  .pz-intro { font-style: italic !important; font-size: 13px !important; text-align: justify !important; margin-bottom: 5px !important; line-height: 1.65 !important; }
-  .pz-q { font-size: 13px !important; line-height: 1.8 !important; text-align: justify !important; }
-  .pz-sq { font-size: 13px !important; line-height: 1.8 !important; text-align: justify !important; padding-left: 18px !important; }
-  /* Pied */
-  .pz-pied {
-    margin-top: 12px !important;
-    border-top: 0.5px solid #999 !important;
-    padding-top: 4px !important;
-    display: flex !important;
-    justify-content: space-between !important;
-    font-size: 10px !important;
-    color: #444 !important;
-  }
+/* ── PRINT ── */
+@media print{
+  body{background:white!important;color:#000!important;max-width:100%!important;font-family:'Times New Roman',Times,serif!important;margin:0!important;padding:0!important;}
+  .header,.config-zone,.loader-overlay,.result-actions,.toast,.result-source,.proba-bar,.conseil-box,.section-label,.result-header{display:none!important;}
+  .result-zone{display:block!important;}
+  .section{padding:0!important;}
+  .print-header{display:block!important;}
+  .print-entete{display:flex!important;align-items:center!important;gap:12px!important;border-bottom:2px solid #000!important;padding-bottom:7px!important;margin-bottom:8px!important;}
+  .print-logo{width:50px!important;height:auto!important;flex-shrink:0!important;}
+  .print-ecole-info{flex:1!important;text-align:center!important;}
+  .print-ecole-nom{font-size:13px!important;font-weight:bold!important;text-transform:uppercase!important;display:block!important;color:#000!important;}
+  .print-ecole-ville{font-size:10px!important;color:#333!important;display:block!important;margin-top:2px!important;}
+  .print-right{text-align:right!important;flex-shrink:0!important;}
+  .print-coef{font-size:13px!important;font-weight:bold!important;line-height:1.7!important;display:block!important;color:#000!important;}
+  .print-titre-matiere{border:2px solid #000!important;text-align:center!important;padding:5px!important;font-size:17px!important;font-weight:bold!important;text-transform:uppercase!important;letter-spacing:2px!important;margin-bottom:5px!important;display:block!important;color:#000!important;}
+  .print-serie{text-align:center!important;font-size:13px!important;font-weight:bold!important;margin-bottom:5px!important;display:block!important;color:#000!important;}
+  .print-identite{display:flex!important;gap:16px!important;margin-bottom:5px!important;}
+  .print-id-ligne{display:flex!important;align-items:baseline!important;gap:5px!important;border-bottom:0.5px solid #666!important;padding-bottom:3px!important;flex:1!important;font-size:12px!important;color:#000!important;}
+  .print-id-label{font-weight:bold!important;font-size:11px!important;text-transform:uppercase!important;white-space:nowrap!important;color:#000!important;}
+  .print-consignes{font-style:italic!important;font-size:11.5px!important;text-align:center!important;margin-bottom:10px!important;line-height:1.65!important;display:block!important;color:#000!important;}
+  .result-body{background:white!important;border:none!important;border-radius:0!important;padding:0!important;}
+  .partie{margin-bottom:10px!important;border-bottom:none!important;}
+  .partie-header{cursor:default!important;background:white!important;padding:0 0 4px!important;display:block!important;border-radius:0!important;}
+  .partie-arrow,.partie-dot{display:none!important;}
+  .partie-body{display:block!important;padding:0!important;}
+  .partie-titre{display:inline-block!important;border:1.5px solid #000!important;padding:2px 10px!important;font-size:12.5px!important;font-weight:bold!important;color:#000!important;text-transform:uppercase!important;margin-bottom:4px!important;background:white!important;}
+  .partie-sous{font-size:11px!important;font-style:italic!important;color:#444!important;display:block!important;margin-bottom:4px!important;padding:0!important;background:none!important;border:none!important;}
+  .partie-pts{display:none!important;}
+  .contexte-box{background:white!important;border:none!important;border-left:none!important;font-style:italic!important;font-size:12.5px!important;color:#000!important;padding:3px 0!important;margin-bottom:5px!important;text-align:justify!important;line-height:1.6!important;}
+  .question{font-size:12.5px!important;color:#000!important;line-height:1.75!important;text-align:justify!important;padding:1px 0!important;border:none!important;}
+  .corrige-block{display:none!important;}
 }
 </style>
 </head>
@@ -858,7 +618,14 @@ body::after{
       <div class="themes-grid" id="themesGrid"></div>
     </div>
 
-    
+    <!-- NIVEAUX PILLS -->
+    <div class="card" style="margin-bottom:14px;padding:0">
+      <div class="niveaux-pills">
+        <span class="niveau-pill pill-a">Partie A — Standard (5 pts)</span>
+        <span class="niveau-pill pill-b">Partie B — Excellence (8 pts)</span>
+        <span class="niveau-pill pill-c">Partie C — MIT/NASA (7 pts)</span>
+      </div>
+    </div>
 
     <button class="btn-generer" id="btnGenerer" onclick="generer()">
       ✦ Générer — Standard + Excellence + MIT/NASA
@@ -871,39 +638,7 @@ body::after{
   <div class="section">
     <div class="section-label">Composition générée</div>
 
-
-    <!-- EN-TÊTE IMPRESSION STYLE BAC CI -->
-    <div class="print-header" id="printHeader">
-      <div class="print-entete">
-        <img src="data:image/jpeg;base64,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" class="print-logo" alt="Logo Les Princes">
-        <div class="print-ecole-info">
-          <div class="print-ecole-nom" id="printEcoleNom">COLLÈGE PRIVÉ LES PRINCES D'ABIDJAN</div>
-          <div class="print-ecole-ville">Abidjan — Côte d'Ivoire</div>
-          <div class="print-annee">Année scolaire 2025-2026</div>
-        </div>
-        <div class="print-right">
-          <div class="print-coef">Coefficient : <span id="printCoef">4</span><br>Durée : <span id="printDuree">4h</span></div>
-        </div>
-      </div>
-      <div class="print-titre-matiere" id="printMatiere">MATHÉMATIQUES</div>
-      <div class="print-serie" id="printSerie">SÉRIE D — TLE D-2 — Devoir du 2ème Trimestre — Juin 2026</div>
-      <div class="print-identite">
-        <div class="print-id-ligne"><span class="print-id-label">Nom & Prénom :</span><span style="flex:1">____________________________________________</span></div>
-        <div class="print-id-ligne"><span class="print-id-label">Matricule :</span><span style="flex:1">______________</span></div>
-      </div>
-      <div class="print-consignes">
-        Cette épreuve comporte deux (02) pages numérotées 1/2 et 2/2.<br>
-        Toute calculatrice scientifique non programmable est autorisée.<br>
-        Les exercices sont indépendants et peuvent être traités dans n'importe quel ordre.<br>
-        <strong>Tout résultat admis sans justification sera sanctionné.</strong>
-      </div>
-      <div class="print-pied" id="printPied">
-        <span id="printEcoleNom2">Collège Privé Les Princes d'Abidjan — 2025-2026</span>
-        <span id="printMatiereInfo">Mathématiques Série D</span>
-        <span>Princes Smart School V2</span>
-      </div>
-    </div>
-        <div class="result-header" id="resultHeader">
+    <div class="result-header" id="resultHeader">
       <div class="result-ecole" id="resultEcole">CPP LES PRINCES D'ABIDJAN</div>
       <div class="result-titre" id="resultTitre">COMPOSITION T2 — TLE D-2 — MATHÉMATIQUES</div>
       <div class="result-meta" id="resultMeta">Durée : 4h · Coefficient 4 · 20 points</div>
@@ -1149,19 +884,13 @@ let toastTimer = null;
 // INIT
 // ══════════════════════════════════════
 window.onload = function() {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const code = (params.get('e') || 'cpp').toLowerCase();
-    ecoleCode = ECOLE_CODES[code] || 'CPP LES PRINCES';
-    ecoleNom = ECOLE_NOMS[ecoleCode] || ecoleCode;
-    const chip = document.getElementById('ecoleChip');
-    if (chip) chip.textContent = code.toUpperCase();
-    changerExamen();
-  } catch(e) {
-    console.error('onload error:', e);
-    // Fallback minimal
-    try { changerMatiere(); } catch(e2) {}
-  }
+  const params = new URLSearchParams(window.location.search);
+  const code = (params.get('e') || 'cpp').toLowerCase();
+  ecoleCode = ECOLE_CODES[code] || 'CPP LES PRINCES';
+  ecoleNom = ECOLE_NOMS[ecoleCode] || ecoleCode;
+  document.getElementById('ecoleChip').textContent = code.toUpperCase();
+
+  changerExamen();
 };
 
 // ══════════════════════════════════════
@@ -1224,30 +953,23 @@ function changerFiliere() {
 // CHANGEMENT MATIÈRE — Thèmes
 // ══════════════════════════════════════
 function changerMatiere() {
-  try {
-    const examen = document.getElementById('selExamen').value;
-    const matiere = document.getElementById('selMatiere').value;
-    const key = examen + '_' + matiere;
-    const themes = THEMES[key] || THEMES['DEFAULT'] || [
-      {id:'lecon',nom:'Basé sur la leçon',freq:'Auto',cls:'freq-certain'},
-      {id:'programme',nom:'Programme officiel CI',freq:'DPFC',cls:'freq-probable'}
-    ];
+  const examen = document.getElementById('selExamen').value;
+  const matiere = document.getElementById('selMatiere').value;
+  const key = examen + '_' + matiere;
+  const themes = THEMES[key] || THEMES['DEFAULT'];
 
-    const grid = document.getElementById('themesGrid');
-    if (!grid) return;
-    grid.innerHTML = themes.map((t,i) => `
-      <div class="theme-item${i===0?' sel':''}" onclick="selTheme(this,'${t.id}')">
-        <div class="theme-nom">${t.nom}</div>
-        <div class="theme-freq ${t.cls}">${t.freq}</div>
-      </div>
-    `).join('');
-    themeSelectionne = (themes[0] && themes[0].id) ? themes[0].id : 'lecon';
+  const grid = document.getElementById('themesGrid');
+  grid.innerHTML = themes.map((t,i) => `
+    <div class="theme-item${i===0?' sel':''}" onclick="selTheme(this,'${t.id}')">
+      <div class="theme-nom">${t.nom}</div>
+      <div class="theme-freq ${t.cls}">${t.freq}</div>
+    </div>
+  `).join('');
+  themeSelectionne = themes[0]?.id || 'lecon';
 
-    const lecon = document.getElementById('inputLecon');
-    if (lecon) lecon.placeholder = 'Ex: chapitre en cours — ' + (NOMS_MATIERES[matiere]||matiere);
-  } catch(e) {
-    console.error('changerMatiere error:', e);
-  }
+  // Placeholder leçon
+  const lecon = document.getElementById('inputLecon');
+  lecon.placeholder = `Ex: chapitre en cours — ${NOMS_MATIERES[matiere]||matiere}`;
 }
 
 function selTheme(el, id) {
@@ -1341,50 +1063,18 @@ function generer() {
 function afficherComposition(d, isIA, examen, matiere, filiere, classe) {
   // Header
   document.getElementById('resultEcole').textContent = (ECOLE_NOMS[ecoleCode] || ecoleCode).toUpperCase();
-  // Mise à jour en-tête impression style BAC CI
-  var nomEcoleMap = {
-    'CPP LES PRINCES': "COLLÈGE PRIVÉ LES PRINCES D'ABIDJAN",
-    'CPP PRO': "COLLÈGE PRIVÉ PROFESSIONNEL LES PRINCES",
-    'CPP TECH': "COLLÈGE PRIVÉ TECHNIQUE LES PRINCES",
-    'ETL PRINCES KOUIBLY': "ETL PRINCES KOUIBLY",
-    'ACADEMIE': "ACADÉMIE LES PRINCES",
-    'GUINGLO VILLE': "CPP LES PRINCES GUINGLO VILLE",
-    'GNONTINROU': "CPP LES PRINCES GNONTINROU",
-    'KOUTOUAN': "CPP LES PRINCES KOUTOUAN",
-    'SOAKPE': "CPP LES PRINCES SOAKPÉ",
-    'AKEIKOI 1': "LES PRINCES AKEÏKOÏ 1",
-    'AKEIKOI 2': "LES PRINCES AKEÏKOÏ 2",
-    'GS RITA ROSANE': "GROUPE SCOLAIRE RITA ROSANE — LES PRINCES"
-  };
-  var nomEcoleComplet = nomEcoleMap[ecoleCode] || "GROUPE SCOLAIRE LES PRINCES D'ABIDJAN";
-  var nomMatiere = (NOMS_MATIERES[matiere] || matiere).toUpperCase();
-  var dateStr = new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
-  var dureeDevoir = d.duree || '2h';
-  var coefDevoir = d.coefficient || '—';
-
-  // Remplir les champs print
-  if(document.getElementById('printEcoleNom')) document.getElementById('printEcoleNom').textContent = nomEcoleComplet;
-  if(document.getElementById('printEcoleNom2')) document.getElementById('printEcoleNom2').textContent = nomEcoleComplet.replace('COLLÈGE PRIVÉ ','').replace('GROUPE SCOLAIRE ','') + ' — 2025-2026';
-  if(document.getElementById('printMatiere')) document.getElementById('printMatiere').textContent = nomMatiere;
-  if(document.getElementById('printMatiereInfo')) document.getElementById('printMatiereInfo').textContent = nomMatiere;
-  if(document.getElementById('printSerie')) document.getElementById('printSerie').textContent = (d.serie || 'Série D') + ' — ' + classe + ' — Devoir du ' + (examen==='T1'?'1er':'2ème') + ' Trimestre — ' + dateStr;
-  // Coefficients officiels CI par matière
-  var coeffMap = {
-    'MATHEMATIQUES':4,'SVT':4,'PHYSIQUE_CHIMIE':3,'PHILOSOPHIE':2,'FRANCAIS':2,
-    'ANGLAIS':2,'HISTOIRE_GEO':2,'EDHC':1,'COMPTABILITE':5,'CAGE':3,
-    'EOE_GESTION':3,'DROIT':2,'BUREAU_SECRETARIAT':6,'STENOGRAPHIE':3,
-    'ELECTRONIQUE_ANALOGIQUE':4,'ELECTRONIQUE_NUMERIQUE':4
-  };
-  var coefReel = coeffMap[matiere] || coefDevoir || '—';
-  if(document.getElementById('printCoef')) document.getElementById('printCoef').textContent = coefReel;
-  var dureeMap = {
-    'BAC_D':'4h','BAC_C':'4h','BAC_A':'4h','BAC_TECH':'4h',
-    'BEPC':'2h','CEPE':'2h','BT':'3h'
-  };
-  var dureeReelle = dureeMap[examen] || dureeDevoir || '2h';
-  if(document.getElementById('printDuree')) document.getElementById('printDuree').textContent = dureeReelle;
+  var _nm={'CPP LES PRINCES':"COLLÈGE PRIVÉ LES PRINCES D'ABIDJAN",'CPP PRO':"CPP PROFESSIONNEL LES PRINCES",'CPP TECH':"CPP TECHNIQUE LES PRINCES",'ETL PRINCES KOUIBLY':"ETL PRINCES KOUIBLY",'ACADEMIE':"ACADÉMIE LES PRINCES",'GUINGLO VILLE':"CPP LES PRINCES GUINGLO",'GNONTINROU':"CPP LES PRINCES GNONTINROU",'KOUTOUAN':"CPP LES PRINCES KOUTOUAN",'SOAKPE':"CPP LES PRINCES SOAKPÉ",'AKEIKOI 1':"LES PRINCES AKEÏKOÏ 1",'AKEIKOI 2':"LES PRINCES AKEÏKOÏ 2",'GS RITA ROSANE':"GS RITA ROSANE — LES PRINCES"};
+  var _cm={'MATHEMATIQUES':4,'SVT':4,'PHYSIQUE_CHIMIE':3,'PHILOSOPHIE':2,'FRANCAIS':2,'ANGLAIS':2,'COMPTABILITE':5,'BUREAU_SECRETARIAT':6,'STENOGRAPHIE':3};
+  var _dm={'BAC_D':'4h','BAC_C':'4h','BAC_A':'4h','BAC_TECH':'4h','BEPC':'2h','CEPE':'2h','BT':'3h'};
+  var _mo=['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
+  var _d=new Date();
+  if(document.getElementById('printEcoleNom')) document.getElementById('printEcoleNom').textContent=_nm[ecoleCode]||"GROUPE SCOLAIRE LES PRINCES D'ABIDJAN";
+  if(document.getElementById('printMatiere')) document.getElementById('printMatiere').textContent=(NOMS_MATIERES[matiere]||matiere).toUpperCase();
+  if(document.getElementById('printSerie')) document.getElementById('printSerie').textContent='Série D — '+classe+' — Devoir T2 — '+_mo[_d.getMonth()]+' '+_d.getFullYear();
+  if(document.getElementById('printCoef')) document.getElementById('printCoef').textContent=_cm[matiere]||d.coefficient||'—';
+  if(document.getElementById('printDuree')) document.getElementById('printDuree').textContent=_dm[examen]||d.duree||'2h';
   document.getElementById('resultTitre').textContent = d.titre || `COMPOSITION — ${classe} — ${NOMS_MATIERES[matiere]||matiere}`;
-  document.getElementById('resultMeta').textContent = `Durée : ${d.duree||'4h'} · Examen : ${d.examen||examen} · 20 points`;
+  document.getElementById('resultMeta').textContent = `Durée : ${d.duree||'2h'} · Examen : ${d.examen||examen} · 20 points`;
   const src = document.getElementById('resultSource');
   if (isIA) {
     src.textContent = '✦ Généré par Claude IA — ' + new Date().toLocaleTimeString('fr-FR');
@@ -1410,101 +1100,11 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe) {
   // Afficher
   document.getElementById('resultZone').style.display = 'block';
   document.getElementById('resultZone').scrollIntoView({ behavior:'smooth' });
-
-  // ── Remplir la zone impression style BAC CI ──
-  construirePrintZone(d, isIA, examen, matiere, filiere, classe);
-}
-
-function construirePrintZone(d, isIA, examen, matiere, filiere, classe) {
-  var nomMat = (NOMS_MATIERES[matiere] || matiere).toUpperCase();
-  var nomEcoleMap = {
-    'CPP LES PRINCES':"COLLÈGE PRIVÉ LES PRINCES D'ABIDJAN",
-    'CPP PRO':"COLLÈGE PRIVÉ PROFESSIONNEL LES PRINCES",
-    'CPP TECH':"COLLÈGE PRIVÉ TECHNIQUE LES PRINCES",
-    'ETL PRINCES KOUIBLY':"ETL PRINCES KOUIBLY",
-    'ACADEMIE':"ACADÉMIE LES PRINCES",
-    'GUINGLO VILLE':"CPP LES PRINCES GUINGLO VILLE",
-    'GNONTINROU':"CPP LES PRINCES GNONTINROU",
-    'KOUTOUAN':"CPP LES PRINCES KOUTOUAN",
-    'SOAKPE':"CPP LES PRINCES SOAKPÉ",
-    'AKEIKOI 1':"LES PRINCES AKEÏKOÏ 1",
-    'AKEIKOI 2':"LES PRINCES AKEÏKOÏ 2",
-    'GS RITA ROSANE':"GROUPE SCOLAIRE RITA ROSANE"
-  };
-  var nomEcole = nomEcoleMap[ecoleCode] || "GROUPE SCOLAIRE LES PRINCES D'ABIDJAN";
-  var dateStr = new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
-  var duree = d.duree || '2h';
-  var coef = d.coefficient || '4';
-  var serie = d.serie || 'D';
-  var trimestre = document.getElementById('selTrimestre').value;
-  var nomTrim = trimestre==='T1'?'1er':trimestre==='T2'?'2ème':'3ème';
-
-  function renderPartie(p, num) {
-    if (!p) return '';
-    var pts = num===1?5:num===2?8:7;
-    var html = '<div class="pz-exercice">';
-    html += '<div class="pz-ex-titre">EXERCICE ' + num + ' &nbsp;(' + pts + ' points)</div>';
-    if (p.sous_titre) html += '<div class="pz-intro">' + p.sous_titre + '</div>';
-    if (p.contexte) html += '<div class="pz-intro">' + p.contexte + '</div>';
-    (p.questions || []).forEach(function(q, i) {
-      var qs = q.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/
-/g,'<br>');
-      var isSub = q.trim().startsWith('b)') || q.trim().startsWith('c)') || q.trim().startsWith('d)') || q.trim().startsWith('   ');
-      html += '<div class="' + (isSub?'pz-sq':'pz-q') + '">' + qs + '</div>';
-    });
-    html += '</div>';
-    return html;
-  }
-
-  var html = '';
-
-  // EN-TÊTE
-  html += '<div class="pz-entete">';
-  html += '<img src="data:image/jpeg;base64,''' + logo_b64 + '''" class="pz-logo" alt="Logo">';
-  html += '<div class="pz-ecole-centre">';
-  html += '<span class="pz-ecole-nom">' + nomEcole + '</span>';
-  html += '<span class="pz-ecole-sous">Abidjan — Côte d\'Ivoire &nbsp;·&nbsp; Année scolaire 2025-2026</span>';
-  html += '</div>';
-  html += '<div class="pz-droite"><div class="pz-coef">Coefficient : ' + coef + '<br>Durée : ' + duree + '</div></div>';
-  html += '</div>';
-
-  // TITRE MATIÈRE
-  html += '<div class="pz-titre-mat">' + nomMat + '</div>';
-  html += '<div class="pz-serie">SÉRIE ' + serie + ' — ' + classe + ' — Devoir du ' + nomTrim + ' Trimestre — ' + dateStr + '</div>';
-
-  // IDENTITÉ
-  html += '<div class="pz-identite">';
-  html += '<div class="pz-id-ligne"><span class="pz-id-label">Nom & Prénom :</span><span style="flex:1">____________________________________________</span></div>';
-  html += '<div class="pz-id-ligne"><span class="pz-id-label">Matricule :</span><span style="flex:1">______________</span></div>';
-  html += '</div>';
-
-  // CONSIGNES
-  html += '<div class="pz-consignes">Cette épreuve comporte deux (02) pages numérotées 1/2 et 2/2.<br>';
-  html += 'Toute calculatrice scientifique non programmable est autorisée.<br>';
-  html += 'Les exercices sont indépendants. <strong>Tout résultat non justifié sera sanctionné.</strong></div>';
-
-  // EXERCICES
-  html += renderPartie(d.partie_A, 1);
-  html += renderPartie(d.partie_B, 2);
-  html += renderPartie(d.partie_C, 3);
-
-  // PIED
-  html += '<div class="pz-pied">';
-  html += '<span>' + nomEcole + ' — 2025-2026</span>';
-  html += '<span>' + nomMat + ' — Devoir ' + nomTrim + ' Trimestre</span>';
-  html += '<span>Princes Smart School V2</span>';
-  html += '</div>';
-
-  document.getElementById('printZone').innerHTML = html;
 }
 
 function afficherPartie(lettre, p) {
   if (!p) return;
-  // Sur écran : titre complet — à l'impression : EXERCICE X
-  var numEx = {'A':'1','B':'2','C':'3'}[lettre] || lettre;
-  var pts = {'A':'5','B':'8','C':'7'}[lettre] || '';
   document.getElementById('titre'+lettre).textContent = p.titre || `PARTIE ${lettre}`;
-  document.getElementById('titre'+lettre).setAttribute('data-print', `EXERCICE ${numEx}  (${pts} points)`);
   document.getElementById('sous'+lettre).textContent = p.sous_titre || '';
 
   let html = '';
@@ -1549,32 +1149,32 @@ function afficherDemo(examen, matiere, filiere, classe, trimestre, lecon) {
   const demo = {
     titre:`COMPOSITION ${trimestre} — ${classe} — ${nomMat}`,
     examen: examen.replace('_',' '),
-    duree: '4h',
+    duree: '2h',
     lecon: lecon || `Chapitre en cours — ${nomMat}`,
     probabilite_examen: '78%',
     justification: `Thème récurrent dans les anciens sujets CI — Mode démonstration`,
     partie_A: {
       titre:`EXERCICE 1 (5 points)`,
       sous_titre:'Programme officiel CI',
-      contexte:`On considère la fonction f définie sur ℝ par : f(x) = (2x + 1)e⁻ˣ`,
+      contexte:`Soit f la fonction définie sur ℝ par : f(x) = (2x + 1)e⁻ˣ`,
       questions:[
         `1. a) Calculer f'(x) pour tout x ∈ ℝ. Donner la forme factorisée. (1 pt)`,
-        `   b) Dresser le tableau de signe de f'(x). En déduire le tableau de variation complet de f. (1 pt)`,
+        `   b) Dresser le tableau de variation complet de f. Préciser le maximum. (1 pt)`,
         `2. a) Déterminer les limites de f en −∞ et en +∞. Interpréter graphiquement. (1 pt)`,
-        `   b) Déterminer l'équation de la tangente à la courbe de f au point d'abscisse 0. (1 pt)`,
-        `3. Calculer ∫₀¹ f(x) dx par intégration par parties. (1 pt)`
+        `   b) Montrer que la droite y = x + 1 est tangente à la courbe de f au point d'abscisse 0. (1 pt)`,
+        `3. Calculer ∫₀¹ f(x) dx par intégration par parties. Interpréter. (1 pt)`
       ]
     },
     partie_B: {
       titre:`EXERCICE 2 (8 points)`,
-      sous_titre:'Étude de fonction — Démonstrations rigoureuses',
+      sous_titre:'Étude de fonction',
       contexte:`On considère la fonction g définie sur ℝ par : g(x) = x·e^(1−x) − x + 1`,
       questions:[
-        `1. a) Calculer lim g(x) quand x→+∞ et quand x→−∞. Interpréter graphiquement. (1 pt)`,
-        `   b) Démontrer que g'(x) = (1 − x)e^(1−x) − 1 pour tout x ∈ ℝ. (2 pts)`,
+        `1. a) Calculer lim g(x) en +∞ et en −∞. Interpréter graphiquement. (1 pt)`,
+        `   b) Démontrer que g'(x) = (1−x)e^(1−x) − 1 pour tout x ∈ ℝ. (2 pts)`,
         `2. a) Étudier le signe de g'(x). Dresser le tableau de variation complet de g. (2 pts)`,
         `   b) En déduire que g admet un minimum global. Calculer ce minimum. (1 pt)`,
-        `3. a) Démontrer que l'équation g(x) = 0 admet une unique solution α dans ℝ. (1 pt)`,
+        `3. a) Démontrer que g(x) = 0 admet une unique solution α. (1 pt)`,
         `   b) Justifier par encadrement que 0,4 < α < 0,5. (1 pt)`
       ]
     },
@@ -1584,10 +1184,10 @@ function afficherDemo(examen, matiere, filiere, classe, trimestre, lecon) {
       contexte: ctx,
       questions:[
         `1. a) Calculer P'(t). Dresser le tableau de variation. Déterminer l'année de production maximale. (2 pts)`,
-        `   b) Étudier les limites de P en 0⁺ et en +∞. Interpréter dans le contexte. (1 pt)`,
-        `2. Démontrer que la droite y = −e^(1−t) est tangente à la courbe de P au point d'abscisse t = 1. (2 pts)`,
-        `3. a) Calculer I(L) = ∫₀ᴸ t·e^(1−t) dt par intégration par parties. (1 pt)`,
-        `   b) Calculer lim I(L) quand L→+∞. Interpréter ce résultat dans le contexte. (1 pt)`
+        `   b) Calculer lim P(t) en 0⁺ et en +∞. Interpréter dans le contexte. (1 pt)`,
+        `2. Démontrer que la droite y = −e^(1−t) est tangente à la courbe de P en t = 1. (2 pts)`,
+        `3. a) Calculer I = ∫₀ᴸ t·e^(1−t) dt par intégration par parties. (1 pt)`,
+        `   b) Calculer lim I(L) quand L→+∞. Interpréter pour Ivoirbois. (1 pt)`
       ]
     },
     corrige:{
@@ -1635,4 +1235,1279 @@ function copierTexte() {
 }
 </script>
 </body>
-</html>
+</html>.print-header{display:none;font-family:'Times New Roman',Times,serif;}
+.print-entete{display:flex;align-items:center;gap:12px;}
+.print-logo{width:50px;height:auto;flex-shrink:0;}
+.print-ecole-info{flex:1;text-align:center;}
+.print-ecole-nom{font-size:13px;font-weight:bold;text-transform:uppercase;display:block;}
+.print-ecole-ville{font-size:10px;color:#333;display:block;margin-top:1px;}
+.print-right{text-align:right;flex-shrink:0;}
+.print-coef{font-size:13px;font-weight:bold;line-height:1.7;display:block;}
+.print-titre-matiere{border:2px solid #000;text-align:center;padding:5px;font-size:17px;font-weight:bold;text-transform:uppercase;letter-spacing:2px;margin-bottom:5px;display:block;}
+.print-serie{text-align:center;font-size:13px;font-weight:bold;margin-bottom:5px;display:block;}
+.print-identite{display:flex;gap:16px;margin-bottom:5px;}
+.print-id-ligne{display:flex;align-items:baseline;gap:5px;border-bottom:0.5px solid #666;padding-bottom:3px;flex:1;font-size:12px;}
+.print-id-label{font-weight:bold;font-size:11px;text-transform:uppercase;white-space:nowrap;}
+.print-consignes{font-style:italic;font-size:11.5px;text-align:center;margin-bottom:10px;line-height:1.65;display:block;}
+.ligne-decoupe{display:none;}<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Générateur de Compositions — Les Princes</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bleu:#1F4E79; --bleu2:#2E75B6; --or:#D4AF37; --or2:#F0C040;
+  --vert:#2E7D32; --rouge:#C62828; --orange:#E65100;
+  --bg:#0F2A45; --bg2:#132F4C; --bg3:#1A3A5C;
+  --card:rgba(255,255,255,0.07); --card2:rgba(255,255,255,0.10);
+  --border:rgba(255,255,255,0.12); --border2:rgba(212,175,55,0.3);
+  --text:#E8F4FD; --text2:rgba(232,244,253,0.65); --text3:rgba(232,244,253,0.35);
+  --r:14px; --r2:20px;
+  --shadow:0 8px 32px rgba(0,0,0,0.35);
+  --glow:0 0 40px rgba(212,175,55,0.15);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{
+  font-family:'DM Sans',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  max-width:560px;
+  margin:0 auto;
+  position:relative;
+  overflow-x:hidden;
+}
+body::before{
+  content:'';
+  position:fixed;
+  top:-200px; left:-200px;
+  width:600px; height:600px;
+  background:radial-gradient(circle,rgba(212,175,55,0.06) 0%,transparent 70%);
+  pointer-events:none;
+}
+body::after{
+  content:'';
+  position:fixed;
+  bottom:-200px; right:-200px;
+  width:500px; height:500px;
+  background:radial-gradient(circle,rgba(46,117,182,0.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+/* ── HEADER ── */
+.header{
+  background:linear-gradient(135deg,var(--bg2) 0%,var(--bg3) 100%);
+  border-bottom:1px solid var(--border2);
+  padding:18px 20px 16px;
+  position:sticky; top:0; z-index:100;
+  box-shadow:0 4px 24px rgba(0,0,0,0.5);
+}
+.header-inner{display:flex;align-items:center;gap:14px;}
+.header-badge{
+  width:44px; height:44px;
+  background:linear-gradient(135deg,var(--or),var(--or2));
+  border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px;
+  box-shadow:0 4px 16px rgba(212,175,55,0.3);
+  flex-shrink:0;
+}
+.header-text h1{
+  font-family:'Playfair Display',serif;
+  font-size:15px;
+  font-weight:700;
+  color:var(--or);
+  letter-spacing:0.3px;
+}
+.header-text p{font-size:11px;color:var(--text2);margin-top:2px;}
+.ecole-chip{
+  margin-left:auto;
+  background:rgba(212,175,55,0.15);
+  border:1px solid var(--border2);
+  border-radius:20px;
+  padding:4px 12px;
+  font-size:10px;
+  color:var(--or);
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+  flex-shrink:0;
+}
+
+/* ── SECTIONS ── */
+.section{padding:16px 18px;}
+.section+.section{padding-top:0;}
+
+.section-label{
+  font-size:10px;
+  font-weight:600;
+  color:var(--or);
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  margin-bottom:10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.section-label::after{
+  content:'';
+  flex:1;
+  height:1px;
+  background:linear-gradient(90deg,var(--border2),transparent);
+}
+
+/* ── CARDS ── */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  margin-bottom:12px;
+  transition:border-color 0.2s;
+}
+.card:hover{border-color:rgba(212,175,55,0.2);}
+
+/* ── STATS BAR ── */
+.stats-bar{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1px;
+  background:var(--border);
+  border-radius:var(--r);
+  overflow:hidden;
+  margin-bottom:14px;
+}
+.stat-item{
+  background:var(--bg2);
+  padding:10px 8px;
+  text-align:center;
+}
+.stat-n{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--or);}
+.stat-l{font-size:9px;color:var(--text2);margin-top:2px;line-height:1.3;}
+
+/* ── SELECTS & INPUTS ── */
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group label{
+  font-size:10px;
+  font-weight:600;
+  color:var(--text2);
+  text-transform:uppercase;
+  letter-spacing:0.8px;
+}
+.form-group select,
+.form-group input{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:11px 14px;
+  font-size:13px;
+  font-family:'DM Sans',sans-serif;
+  color:var(--text);
+  outline:none;
+  transition:border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance:none;
+  appearance:none;
+  width:100%;
+}
+.form-group select:focus,
+.form-group input:focus{
+  border-color:var(--or);
+  box-shadow:0 0 0 3px rgba(212,175,55,0.1);
+}
+.form-group select option{background:var(--bg2);color:var(--text);}
+.select-wrap{position:relative;}
+.select-wrap::after{
+  content:'▾';
+  position:absolute;
+  right:12px; top:50%;
+  transform:translateY(-50%);
+  color:var(--text2);
+  pointer-events:none;
+  font-size:12px;
+}
+
+/* ── THEMES GRID ── */
+.themes-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+  padding:14px;
+}
+.theme-item{
+  background:var(--bg3);
+  border:1.5px solid var(--border);
+  border-radius:10px;
+  padding:10px;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.theme-item:active{transform:scale(0.97);}
+.theme-item.sel{
+  background:rgba(212,175,55,0.12);
+  border-color:var(--or);
+}
+.theme-nom{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;}
+.theme-freq{
+  font-size:10px;
+  margin-top:4px;
+  font-weight:600;
+}
+.freq-certain{color:#4CAF50;}
+.freq-probable{color:var(--or);}
+.freq-possible{color:var(--text2);}
+
+/* ── NIVEAUX PILLS ── */
+.niveaux-pills{
+  display:flex;
+  gap:6px;
+  padding:10px 14px;
+  border-bottom:1px solid var(--border);
+  flex-wrap:wrap;
+}
+.niveau-pill{
+  padding:4px 12px;
+  border-radius:20px;
+  font-size:10px;
+  font-weight:700;
+  border:1px solid transparent;
+}
+.pill-a{background:rgba(46,117,182,0.15);color:#64B5F6;border-color:rgba(46,117,182,0.3);}
+.pill-b{background:rgba(46,125,50,0.15);color:#81C784;border-color:rgba(46,125,50,0.3);}
+.pill-c{background:rgba(198,40,40,0.15);color:#EF9A9A;border-color:rgba(198,40,40,0.3);}
+
+/* ── BTN GENERER ── */
+.btn-generer{
+  width:100%;
+  padding:16px;
+  background:linear-gradient(135deg,var(--or),var(--or2));
+  color:var(--bg);
+  border:none;
+  border-radius:var(--r);
+  font-size:14px;
+  font-weight:700;
+  font-family:'DM Sans',sans-serif;
+  cursor:pointer;
+  transition:all 0.2s;
+  letter-spacing:0.3px;
+  box-shadow:0 4px 20px rgba(212,175,55,0.3);
+}
+.btn-generer:hover{box-shadow:0 6px 28px rgba(212,175,55,0.45);transform:translateY(-1px);}
+.btn-generer:active{transform:translateY(0);opacity:0.9;}
+.btn-generer:disabled{background:rgba(255,255,255,0.1);color:var(--text3);cursor:not-allowed;box-shadow:none;transform:none;}
+
+/* ── LOADER ── */
+.loader-overlay{
+  position:fixed; inset:0;
+  background:rgba(13,27,46,0.85);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  backdrop-filter:blur(8px);
+}
+.loader-overlay.show{display:flex;}
+.loader-card{
+  background:var(--bg2);
+  border:1px solid var(--border2);
+  border-radius:var(--r2);
+  padding:32px;
+  text-align:center;
+  box-shadow:var(--shadow),var(--glow);
+  max-width:280px; width:90%;
+}
+.loader-ring{
+  width:56px; height:56px;
+  border:3px solid var(--border);
+  border-top-color:var(--or);
+  border-radius:50%;
+  animation:spin 0.9s linear infinite;
+  margin:0 auto 16px;
+}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loader-title{font-family:'Playfair Display',serif;font-size:16px;color:var(--or);margin-bottom:6px;}
+.loader-sub{font-size:12px;color:var(--text2);}
+
+/* ── COMPOSITION RESULT ── */
+.result-zone{display:none;}
+.result-header{
+  background:linear-gradient(135deg,var(--bg2),var(--bg3));
+  border:1px solid var(--border2);
+  border-radius:var(--r2) var(--r2) 0 0;
+  padding:18px 20px;
+}
+.result-ecole{font-size:10px;color:var(--or);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.result-titre{font-family:'Playfair Display',serif;font-size:17px;color:var(--text);font-weight:700;line-height:1.3;}
+.result-meta{font-size:11px;color:var(--text2);margin-top:8px;}
+.result-source{
+  display:inline-block;
+  background:rgba(46,125,50,0.2);
+  border:1px solid rgba(46,125,50,0.4);
+  color:#81C784;
+  border-radius:20px;
+  padding:3px 10px;
+  font-size:10px;
+  font-weight:700;
+  margin-top:8px;
+}
+.result-source.demo{
+  background:rgba(230,81,0,0.2);
+  border-color:rgba(230,81,0,0.4);
+  color:#FFCC80;
+}
+
+/* ── PARTIES ── */
+.result-body{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-top:none;
+  border-radius:0 0 var(--r2) var(--r2);
+  overflow:hidden;
+}
+.partie{
+  border-bottom:1px solid var(--border);
+  overflow:hidden;
+}
+.partie:last-of-type{border-bottom:none;}
+.partie-header{
+  padding:14px 18px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  cursor:pointer;
+  transition:background 0.15s;
+}
+.partie-header:hover{background:rgba(255,255,255,0.03);}
+.partie-dot{
+  width:10px; height:10px;
+  border-radius:50%;
+  flex-shrink:0;
+}
+.pA .partie-dot{background:#64B5F6;}
+.pB .partie-dot{background:var(--or);}
+.pC .partie-dot{background:#EF9A9A;}
+.corrige-block .partie-dot{background:#81C784;}
+.partie-info{flex:1;}
+.partie-titre{font-size:13px;font-weight:600;color:var(--text);}
+.partie-sous{font-size:11px;color:var(--text2);margin-top:2px;}
+.partie-pts{
+  font-size:12px;
+  font-weight:700;
+  padding:3px 10px;
+  border-radius:20px;
+  flex-shrink:0;
+}
+.pA .partie-pts{background:rgba(100,181,246,0.15);color:#64B5F6;}
+.pB .partie-pts{background:rgba(212,175,55,0.15);color:var(--or);}
+.pC .partie-pts{background:rgba(239,154,154,0.15);color:#EF9A9A;}
+.corrige-block .partie-pts{background:rgba(129,199,132,0.15);color:#81C784;}
+.partie-arrow{font-size:12px;color:var(--text3);transition:transform 0.2s;}
+.partie-arrow.open{transform:rotate(180deg);}
+
+.partie-body{display:none;padding:0 18px 16px;}
+.partie-body.open{display:block;}
+.contexte-box{
+  background:rgba(255,255,255,0.03);
+  border-left:3px solid;
+  border-radius:0 8px 8px 0;
+  padding:10px 14px;
+  margin-bottom:12px;
+  font-size:12px;
+  color:var(--text2);
+  line-height:1.6;
+  font-style:italic;
+}
+.pA .contexte-box{border-color:#64B5F6;}
+.pB .contexte-box{border-color:var(--or);}
+.pC .contexte-box{border-color:#EF9A9A;}
+.corrige-block .contexte-box{border-color:#81C784;}
+.question{
+  font-size:13px;
+  line-height:1.7;
+  padding:5px 0;
+  color:var(--text);
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.question:last-child{border-bottom:none;}
+.question b,.question strong{color:var(--or);}
+
+/* ── PROBA BAC ── */
+.proba-bar{
+  padding:14px 18px;
+  background:rgba(212,175,55,0.05);
+  border-top:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.proba-pct{
+  font-family:'Playfair Display',serif;
+  font-size:28px;
+  font-weight:700;
+  color:var(--or);
+  flex-shrink:0;
+}
+.proba-info{flex:1;}
+.proba-label{font-size:11px;color:var(--text2);}
+.proba-just{font-size:12px;color:var(--text);margin-top:3px;line-height:1.4;}
+
+/* ── CONSEIL ── */
+.conseil-box{
+  margin:14px 18px;
+  background:rgba(46,125,50,0.08);
+  border:1px solid rgba(46,125,50,0.2);
+  border-radius:10px;
+  padding:12px 14px;
+  font-size:12px;
+  color:#A5D6A7;
+  line-height:1.6;
+}
+.conseil-label{font-size:10px;font-weight:700;color:#81C784;letter-spacing:0.5px;margin-bottom:4px;}
+
+/* ── ACTIONS ── */
+.result-actions{
+  display:flex;
+  gap:8px;
+  padding:14px 18px;
+  border-top:1px solid var(--border);
+}
+.btn-action{
+  flex:1;
+  padding:11px 8px;
+  border:none;
+  border-radius:10px;
+  font-size:12px;
+  font-weight:700;
+  font-family:'DM Sans',sans-serif;
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.btn-print{background:rgba(46,125,50,0.2);color:#81C784;border:1px solid rgba(46,125,50,0.3);}
+.btn-print:hover{background:rgba(46,125,50,0.3);}
+.btn-regen{background:rgba(212,175,55,0.15);color:var(--or);border:1px solid var(--border2);}
+.btn-regen:hover{background:rgba(212,175,55,0.25);}
+.btn-copy{background:rgba(198,40,40,0.15);color:#EF9A9A;border:1px solid rgba(198,40,40,0.25);}
+.btn-copy:hover{background:rgba(198,40,40,0.25);}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;
+  bottom:20px; left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--bg3);
+  border:1px solid var(--border2);
+  color:var(--text);
+  padding:12px 20px;
+  border-radius:24px;
+  font-size:12px;
+  font-weight:500;
+  z-index:9998;
+  transition:transform 0.3s;
+  white-space:nowrap;
+  box-shadow:var(--shadow);
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.toast.success{border-color:rgba(46,125,50,0.4);color:#81C784;}
+.toast.error{border-color:rgba(198,40,40,0.4);color:#EF9A9A;}
+
+/* ── PRINT ── */
+@media print{
+  body{background:white!important;color:#000!important;max-width:100%!important;font-family:'Times New Roman',Times,serif!important;margin:0!important;padding:0!important;}
+  .header,.config-zone,.loader-overlay,.result-actions,.toast,.result-source,.proba-bar,.conseil-box,.section-label,.result-header{display:none!important;}
+  .result-zone{display:block!important;}
+  .section{padding:0!important;}
+  .print-header{display:block!important;}
+  .print-entete{display:flex!important;align-items:center!important;gap:12px!important;border-bottom:2px solid #000!important;padding-bottom:7px!important;margin-bottom:8px!important;}
+  .print-logo{width:50px!important;height:auto!important;flex-shrink:0!important;}
+  .print-ecole-info{flex:1!important;text-align:center!important;}
+  .print-ecole-nom{font-size:13px!important;font-weight:bold!important;text-transform:uppercase!important;display:block!important;color:#000!important;}
+  .print-ecole-ville{font-size:10px!important;color:#333!important;display:block!important;margin-top:2px!important;}
+  .print-right{text-align:right!important;flex-shrink:0!important;}
+  .print-coef{font-size:13px!important;font-weight:bold!important;line-height:1.7!important;display:block!important;color:#000!important;}
+  .print-titre-matiere{border:2px solid #000!important;text-align:center!important;padding:5px!important;font-size:17px!important;font-weight:bold!important;text-transform:uppercase!important;letter-spacing:2px!important;margin-bottom:5px!important;display:block!important;color:#000!important;}
+  .print-serie{text-align:center!important;font-size:13px!important;font-weight:bold!important;margin-bottom:5px!important;display:block!important;color:#000!important;}
+  .print-identite{display:flex!important;gap:16px!important;margin-bottom:5px!important;}
+  .print-id-ligne{display:flex!important;align-items:baseline!important;gap:5px!important;border-bottom:0.5px solid #666!important;padding-bottom:3px!important;flex:1!important;font-size:12px!important;color:#000!important;}
+  .print-id-label{font-weight:bold!important;font-size:11px!important;text-transform:uppercase!important;white-space:nowrap!important;color:#000!important;}
+  .print-consignes{font-style:italic!important;font-size:11.5px!important;text-align:center!important;margin-bottom:10px!important;line-height:1.65!important;display:block!important;color:#000!important;}
+  .result-body{background:white!important;border:none!important;border-radius:0!important;padding:0!important;}
+  .partie{margin-bottom:10px!important;border-bottom:none!important;}
+  .partie-header{cursor:default!important;background:white!important;padding:0 0 4px!important;display:block!important;border-radius:0!important;}
+  .partie-arrow,.partie-dot{display:none!important;}
+  .partie-body{display:block!important;padding:0!important;}
+  .partie-titre{display:inline-block!important;border:1.5px solid #000!important;padding:2px 10px!important;font-size:12.5px!important;font-weight:bold!important;color:#000!important;text-transform:uppercase!important;margin-bottom:4px!important;background:white!important;}
+  .partie-sous{font-size:11px!important;font-style:italic!important;color:#444!important;display:block!important;margin-bottom:4px!important;padding:0!important;background:none!important;border:none!important;}
+  .partie-pts{display:none!important;}
+  .contexte-box{background:white!important;border:none!important;border-left:none!important;font-style:italic!important;font-size:12.5px!important;color:#000!important;padding:3px 0!important;margin-bottom:5px!important;text-align:justify!important;line-height:1.6!important;}
+  .question{font-size:12.5px!important;color:#000!important;line-height:1.75!important;text-align:justify!important;padding:1px 0!important;border:none!important;}
+  .corrige-block{display:none!important;}
+}
+</style>
+</head>
+<body>
+
+<div class="loader-overlay" id="loader">
+  <div class="loader-card">
+    <div class="loader-ring"></div>
+    <div class="loader-title">Génération en cours</div>
+    <div class="loader-sub" id="loaderSub">L'IA analyse les anciens sujets CI...</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-badge">📚</div>
+    <div class="header-text">
+      <h1>Générateur de Compositions</h1>
+      <p>Standard + Excellence + MIT/NASA — Princes Smart School V2</p>
+    </div>
+    <div class="ecole-chip" id="ecoleChip">CPP</div>
+  </div>
+</div>
+
+<!-- CONFIGURATION -->
+<div class="config-zone">
+  <div class="section">
+    <div class="section-label">Statistiques anciens sujets</div>
+    <div class="stats-bar" id="statsBar">
+      <div class="stat-item"><div class="stat-n">7</div><div class="stat-l">Sujets BAC D analysés</div></div>
+      <div class="stat-item"><div class="stat-n" style="color:#4CAF50">100%</div><div class="stat-l">Fonctions + Intégration</div></div>
+      <div class="stat-item"><div class="stat-n" style="color:var(--or)">71%</div><div class="stat-l">Complexes + Stats</div></div>
+      <div class="stat-item"><div class="stat-n" style="color:var(--rouge)">Coef 4</div><div class="stat-l">Durée 4h — 20 pts</div></div>
+    </div>
+  </div>
+
+  <div class="section" style="padding-top:0">
+    <div class="section-label">Configuration</div>
+
+    <div class="card" style="padding:14px">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Examen officiel</label>
+          <div class="select-wrap">
+            <select id="selExamen" onchange="changerExamen()">
+              <option value="BEPC">BEPC — 3ème</option>
+              <option value="CEPE">CEPE — CM2</option>
+              <option value="BAC_A">BAC A — Tle A</option>
+              <option value="BAC_C">BAC C — Tle C</option>
+              <option value="BAC_D" selected>BAC D — Tle D</option>
+              <option value="BAC_TECH">BAC Technique — F2/G1/G2</option>
+              <option value="BT">BT — CPP Pro (3 ans)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Trimestre</label>
+          <div class="select-wrap">
+            <select id="selTrimestre">
+              <option value="T1">1er Trimestre</option>
+              <option value="T2" selected>2ème Trimestre</option>
+              <option value="T3">3ème Trimestre</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filière (Tech/BT) -->
+      <div class="form-group" id="groupFiliere" style="display:none;margin-bottom:10px;">
+        <label>Filière</label>
+        <div class="select-wrap">
+          <select id="selFiliere" onchange="changerFiliere()">
+            <option value="">— Sélectionner —</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Année BT -->
+      <div class="form-group" id="groupAnneeBT" style="display:none;margin-bottom:10px;">
+        <label>Année</label>
+        <div class="select-wrap">
+          <select id="selAnneeBT">
+            <option value="1">1ère année (NA)</option>
+            <option value="2" selected>2ème année (NA)</option>
+            <option value="3">3ème année — Examen BT</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Classe</label>
+          <div class="select-wrap">
+            <select id="selClasse">
+              <option value="TLE D-1">TLE D-1</option>
+              <option value="TLE D-2" selected>TLE D-2</option>
+              <option value="TLE D-3">TLE D-3</option>
+              <option value="TLE D-4">TLE D-4</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Matière</label>
+          <div class="select-wrap">
+            <select id="selMatiere" onchange="changerMatiere()">
+              <option value="MATHEMATIQUES" selected>Mathématiques</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:0">
+        <label>Leçon / Chapitre du cours</label>
+        <input type="text" id="inputLecon" placeholder="Ex: Dérivation — fonctions composées" value="Dérivation — Fonctions composées">
+      </div>
+    </div>
+
+    <!-- THEMES -->
+    <div class="section-label" style="margin-top:4px">Thème du devoir — Fréquence CI</div>
+    <div class="card" style="padding:0">
+      <div class="themes-grid" id="themesGrid"></div>
+    </div>
+
+    <!-- NIVEAUX PILLS -->
+    <div class="card" style="margin-bottom:14px;padding:0">
+      <div class="niveaux-pills">
+        <span class="niveau-pill pill-a">Partie A — Standard (5 pts)</span>
+        <span class="niveau-pill pill-b">Partie B — Excellence (8 pts)</span>
+        <span class="niveau-pill pill-c">Partie C — MIT/NASA (7 pts)</span>
+      </div>
+    </div>
+
+    <button class="btn-generer" id="btnGenerer" onclick="generer()">
+      ✦ Générer — Standard + Excellence + MIT/NASA
+    </button>
+  </div>
+</div>
+
+<!-- RÉSULTAT -->
+<div class="result-zone" id="resultZone">
+  <div class="section">
+    <div class="section-label">Composition générée</div>
+
+    <div class="result-header" id="resultHeader">
+      <div class="result-ecole" id="resultEcole">CPP LES PRINCES D'ABIDJAN</div>
+      <div class="result-titre" id="resultTitre">COMPOSITION T2 — TLE D-2 — MATHÉMATIQUES</div>
+      <div class="result-meta" id="resultMeta">Durée : 4h · Coefficient 4 · 20 points</div>
+      <div class="result-source" id="resultSource">Généré par Claude IA</div>
+    </div>
+
+    <div class="result-body" id="resultBody">
+
+      <!-- PARTIE A -->
+      <div class="partie pA">
+        <div class="partie-header" onclick="togglePartie(this)">
+          <div class="partie-dot"></div>
+          <div class="partie-info">
+            <div class="partie-titre" id="titreA">PARTIE A — STANDARD</div>
+            <div class="partie-sous" id="sousA">Programme officiel CI</div>
+          </div>
+          <div class="partie-pts">5 pts</div>
+          <div class="partie-arrow open">▾</div>
+        </div>
+        <div class="partie-body open" id="bodyA"></div>
+      </div>
+
+      <!-- PARTIE B -->
+      <div class="partie pB">
+        <div class="partie-header" onclick="togglePartie(this)">
+          <div class="partie-dot"></div>
+          <div class="partie-info">
+            <div class="partie-titre" id="titreB">PARTIE B — EXCELLENCE</div>
+            <div class="partie-sous" id="sousB">Niveau meilleur lycée France</div>
+          </div>
+          <div class="partie-pts">8 pts</div>
+          <div class="partie-arrow">▾</div>
+        </div>
+        <div class="partie-body" id="bodyB"></div>
+      </div>
+
+      <!-- PARTIE C -->
+      <div class="partie pC">
+        <div class="partie-header" onclick="togglePartie(this)">
+          <div class="partie-dot"></div>
+          <div class="partie-info">
+            <div class="partie-titre" id="titreC">PARTIE C — MIT/NASA</div>
+            <div class="partie-sous" id="sousC">Niveau mondial — Contexte africain</div>
+          </div>
+          <div class="partie-pts">7 pts</div>
+          <div class="partie-arrow">▾</div>
+        </div>
+        <div class="partie-body" id="bodyC"></div>
+      </div>
+
+      <!-- CORRIGÉ -->
+      <div class="partie corrige-block">
+        <div class="partie-header" onclick="togglePartie(this)">
+          <div class="partie-dot"></div>
+          <div class="partie-info">
+            <div class="partie-titre">CORRIGÉ COMPLET</div>
+            <div class="partie-sous">Barème détaillé — Usage enseignant uniquement</div>
+          </div>
+          <div class="partie-pts">Corrigé</div>
+          <div class="partie-arrow">▾</div>
+        </div>
+        <div class="partie-body" id="bodyCorrige"></div>
+      </div>
+
+      <!-- PROBA -->
+      <div class="proba-bar" id="probaBar">
+        <div class="proba-pct" id="probaPct">75%</div>
+        <div class="proba-info">
+          <div class="proba-label">PROBABILITÉ EXAMEN 2026</div>
+          <div class="proba-just" id="probaJust">Thème récurrent dans les anciens sujets CI</div>
+        </div>
+      </div>
+
+      <!-- CONSEIL -->
+      <div class="conseil-box">
+        <div class="conseil-label">CONSEIL PÉDAGOGIQUE</div>
+        <div id="conseilText">Conseil disponible après génération.</div>
+      </div>
+
+    </div>
+
+    <div class="result-actions">
+      <button class="btn-action btn-print" onclick="window.print()">🖨 Imprimer</button>
+      <button class="btn-action btn-regen" onclick="generer()">↻ Régénérer</button>
+      <button class="btn-action btn-copy" onclick="copierTexte()">📋 Copier</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// CONFIGURATION
+// ══════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuwlcfk1gt1vignsoHuplRlEchnRS-Kh1lLROBDCSTYHu7zsa_KaNCUBVgQjlHD1Q/exec';
+
+const ECOLE_CODES = {
+  'cpp':'CPP LES PRINCES','academie':'ACADEMIE','guinglo':'GUINGLO VILLE',
+  'gnont':'GNONTINROU','koutouan':'KOUTOUAN','soakpe':'SOAKPE',
+  'akeikoi1':'AKEIKOI 1','akeikoi2':'AKEIKOI 2','pro':'CPP PRO',
+  'tech':'CPP TECH','kouibly':'ETL PRINCES KOUIBLY','rita':'GS RITA ROSANE'
+};
+const ECOLE_NOMS = {
+  'CPP LES PRINCES':"CPP Les Princes d'Abidjan",'ACADEMIE':'Académie Les Princes',
+  'GUINGLO VILLE':'CPP Les Princes Guinglo','GNONTINROU':'CPP Gnontinrou',
+  'KOUTOUAN':'CPP Les Princes Koutouan','SOAKPE':'CPP Les Princes Soakpé',
+  'AKEIKOI 1':'Les Princes Akeïkoï 1','AKEIKOI 2':'Les Princes Akeïkoï 2',
+  'CPP PRO':'CPP Professionnel Abobo','CPP TECH':'CPP Technique',
+  'ETL PRINCES KOUIBLY':'ETL Princes Kouibly','GS RITA ROSANE':'GS Rita Rosane'
+};
+
+// Thèmes par examen/matière
+const THEMES = {
+  BAC_D_MATHEMATIQUES:[
+    {id:'fonctions',nom:'Fonctions + Dérivées',freq:'7/7 — CERTAIN',cls:'freq-certain'},
+    {id:'integration',nom:'Intégration',freq:'7/7 — CERTAIN',cls:'freq-certain'},
+    {id:'complexes',nom:'Nombres complexes',freq:'5/7 — PROBABLE',cls:'freq-probable'},
+    {id:'similitudes',nom:'Similitudes',freq:'5/7 — PROBABLE',cls:'freq-probable'},
+    {id:'statistiques',nom:'Statistiques',freq:'4/7 — PROBABLE',cls:'freq-probable'},
+    {id:'suites',nom:'Suites numériques',freq:'4/7 — PROBABLE',cls:'freq-probable'},
+    {id:'probabilites',nom:'Probabilités',freq:'2/7 — POSSIBLE',cls:'freq-possible'},
+    {id:'lecon',nom:'Basé sur leçon',freq:'Auto',cls:'freq-possible'}
+  ],
+  BAC_D_SVT:[
+    {id:'genetique',nom:'Génétique + Hérédité',freq:'7/7 — CERTAIN',cls:'freq-certain'},
+    {id:'nerveux',nom:'Système nerveux',freq:'6/7 — CERTAIN',cls:'freq-certain'},
+    {id:'immunologie',nom:'Immunologie / VIH',freq:'5/7 — PROBABLE',cls:'freq-probable'},
+    {id:'reproduction',nom:'Reproduction',freq:'4/7 — PROBABLE',cls:'freq-probable'},
+    {id:'milieu_int',nom:'Milieu intérieur',freq:'4/7 — PROBABLE',cls:'freq-probable'},
+    {id:'ressources_ci',nom:'Ressources CI',freq:'3/7 — POSSIBLE',cls:'freq-possible'}
+  ],
+  BEPC_MATHEMATIQUES:[
+    {id:'thales',nom:'Théorème de Thalès',freq:'7/7 — CERTAIN',cls:'freq-certain'},
+    {id:'pythagore',nom:'Théorème de Pythagore',freq:'7/7 — CERTAIN',cls:'freq-certain'},
+    {id:'fonctions_affines',nom:'Fonctions affines',freq:'6/7 — CERTAIN',cls:'freq-certain'},
+    {id:'equations',nom:'Équations 1er/2nd degré',freq:'6/7 — CERTAIN',cls:'freq-certain'},
+    {id:'statistiques',nom:'Statistiques',freq:'5/7 — PROBABLE',cls:'freq-probable'},
+    {id:'probabilites',nom:'Probabilités',freq:'4/7 — PROBABLE',cls:'freq-probable'}
+  ],
+  BAC_C_MATHEMATIQUES:[
+    {id:'fonctions',nom:'Fonctions dérivées',freq:'7/7 — CERTAIN',cls:'freq-certain'},
+    {id:'complexes',nom:'Nombres complexes',freq:'6/7 — CERTAIN',cls:'freq-certain'},
+    {id:'integration',nom:'Intégration',freq:'7/7 — CERTAIN',cls:'freq-certain'},
+    {id:'probabilites',nom:'Probabilités loi binomiale',freq:'5/7 — PROBABLE',cls:'freq-probable'},
+    {id:'suites',nom:'Suites numériques',freq:'4/7 — PROBABLE',cls:'freq-probable'},
+    {id:'geometrie',nom:'Géométrie analytique',freq:'3/7 — POSSIBLE',cls:'freq-possible'}
+  ],
+  DEFAULT:[
+    {id:'lecon',nom:'Basé sur la leçon',freq:'Auto',cls:'freq-certain'},
+    {id:'programme',nom:'Programme officiel CI',freq:'DPFC/IGENA',cls:'freq-probable'},
+    {id:'examen',nom:'Style examen officiel',freq:'Anciens sujets',cls:'freq-probable'}
+  ]
+};
+
+// Classes par examen
+const CLASSES = {
+  CEPE:['CP1','CP2','CE1','CE1 A','CE1 B','CE2','CE2 A','CE2 B','CM1','CM1 A','CM1 B','CM2','CM2 A','CM2 B','CM2 C'],
+  BEPC:['3ÈME 3','3ÈME 4','3ÈME 5','3ÈME 6','3ÈME 7','3ÈME EX1','3ÈME EX2'],
+  BAC_A:['TLE A2-2','TLE A2-3','TLE A2 EX'],
+  BAC_C:['1ÈRE C EX1','TLE C'],
+  BAC_D:['TLE D-1','TLE D-2','TLE D-3','TLE D-4'],
+  BAC_TECH:['2NDE F2','1ÈRE F2','TLE F2','2NDE G1','1ÈRE G1','TLE G1','2NDE G2','1ÈRE G2','TLE G2'],
+  BT:['BT 1ère année','BT 2ème année','BT 3ème année']
+};
+
+// Matières par examen (+ filière)
+const MATIERES = {
+  CEPE:['MATHEMATIQUES','FRANCAIS','EVEIL'],
+  BEPC:['MATHEMATIQUES','PHYSIQUE_CHIMIE','SVT','FRANCAIS','ANGLAIS','HISTOIRE_GEO','EDHC'],
+  BAC_A:['FRANCAIS','PHILOSOPHIE','ANGLAIS','HISTOIRE_GEO','MATHEMATIQUES'],
+  BAC_C:['MATHEMATIQUES','PHYSIQUE_CHIMIE','SVT','PHILOSOPHIE','FRANCAIS'],
+  BAC_D:['MATHEMATIQUES','SVT','PHYSIQUE_CHIMIE','PHILOSOPHIE','FRANCAIS'],
+  BAC_TECH_F2:['MATHS_TECH','PHYSIQUE_TECH','TECHNO_INDUS','FRANCAIS','ANGLAIS'],
+  BAC_TECH_G1:['COMPTABILITE','ECONOMIE_DROIT','MATHS_GESTION','FRANCAIS_PRO','ANGLAIS_COM'],
+  BAC_TECH_G2:['SECRETARIAT','COMPTABILITE','ECONOMIE','FRANCAIS_PRO','ANGLAIS_COM'],
+  BT_SECRETARIAT_BUREAUTIQUE:['SECRETARIAT','COMPTABILITE','FRANCAIS_PRO','ANGLAIS_COM','ECONOMIE'],
+  BT_COMPTABILITE_GESTION:['COMPTABILITE','GESTION','DROIT_COMMERCIAL','MATHS_GESTION','FRANCAIS_PRO'],
+  BT_TECHNIQUES_HOTELIERES:['TECHNO_HOTELLERIE','GESTION_HOTEL','SCIENCES_ALIM','FRANCAIS_PRO','ANGLAIS_COM'],
+  BT_SCIENCES_MEDICO_SOCIALES:['BIOLOGIE_HUMAINE','SCIENCES_SOCIALES','CHIMIE_BIO','NUTRITION','FRANCAIS_PRO'],
+  BT_BATIMENT_GROS_OEUVRES:['TECHNOLOGIE_BATIMENT','DESSIN_TECHNIQUE','MATHS_TECH','PHYSIQUE_CHIMIE','FRANCAIS_PRO'],
+  BT_ELECTRICITE_BATIMENT:['ELECTRICITE_TECH','ELECTRONIQUE','MATHS_ELEC','PHYSIQUE','FRANCAIS_PRO'],
+  BT_TOPOGRAPHIE:['TOPOGRAPHIE','DESSIN_TOPO','MATHS_TOPO','PHYSIQUE','FRANCAIS_PRO'],
+  BT_ELECTRONIQUE_ROBOTIQUE:['ELECTRONIQUE','AUTOMATISMES','MATHS_ELEC','INFORMATIQUE','FRANCAIS_PRO']
+};
+
+const FILIERES_TECH = {
+  BAC_TECH:[
+    {id:'F2',nom:'F2 — Industrielle (Électronique/Mécanique)'},
+    {id:'G1',nom:'G1 — Gestion commerciale'},
+    {id:'G2',nom:'G2 — Secrétariat bureautique'}
+  ],
+  BT:[
+    {id:'SECRETARIAT_BUREAUTIQUE',nom:'BT Secrétariat Bureautique'},
+    {id:'COMPTABILITE_GESTION',nom:'BT Comptabilité Gestion'},
+    {id:'TECHNIQUES_HOTELIERES',nom:'BT Techniques Hôtelières'},
+    {id:'SCIENCES_MEDICO_SOCIALES',nom:'BT Sciences Médico-Sociales'},
+    {id:'BATIMENT_GROS_OEUVRES',nom:'BT Bâtiment Gros Œuvres'},
+    {id:'ELECTRICITE_BATIMENT',nom:'BT Électricité Bâtiment'},
+    {id:'TOPOGRAPHIE',nom:'BT Topographie'},
+    {id:'ELECTRONIQUE_ROBOTIQUE',nom:'BT Électronique Robotique'}
+  ]
+};
+
+const STATS_EXAMEN = {
+  CEPE:   [{n:'4',l:'Matières CEPE'},{n:'20',l:'Total points'},{n:'2009',l:'Depuis'},{n:'CI',l:'Officiel MENA'}],
+  BEPC:   [{n:'7',l:'Sujets analysés'},{n:'3',l:'Zones CI'},{n:'2015',l:'Depuis'},{n:'Coef 4',l:'Maths & FR'}],
+  BAC_A:  [{n:'5',l:'Matières BAC A'},{n:'Coef 5',l:'Français'},{n:'Coef 4',l:'Philosophie'},{n:'Littéraire',l:'Série'}],
+  BAC_C:  [{n:'5',l:'Matières BAC C'},{n:'Coef 7',l:'Maths'},{n:'Coef 6',l:'PC'},{n:'Sciences',l:'Exactes'}],
+  BAC_D:  [{n:'7',l:'Sujets analysés'},{n:'100%',l:'Fonctions+Int.'},{n:'71%',l:'Complexes+Stats'},{n:'Coef 4',l:'4h — 20 pts'}],
+  BAC_TECH:[{n:'3',l:'Filières F2/G1/G2'},{n:'BAC',l:'Examen final'},{n:'CPP',l:'Tech + ETL'},{n:'3 ans',l:'Formation'}],
+  BT:     [{n:'8',l:'Filières BT'},{n:'3 ans',l:'Formation'},{n:'BT',l:'Examen final'},{n:'CPP Pro',l:'Établissement'}]
+};
+
+const NOMS_MATIERES = {
+  MATHEMATIQUES:'Mathématiques',PHYSIQUE_CHIMIE:'Physique-Chimie',SVT:'SVT',
+  FRANCAIS:'Français',ANGLAIS:'Anglais',HISTOIRE_GEO:'Histoire-Géographie',
+  EDHC:'EDHC',PHILOSOPHIE:'Philosophie',EVEIL:'Éveil scientifique',
+  MATHS_TECH:'Maths Techniques',PHYSIQUE_TECH:'Physique Technique',
+  TECHNO_INDUS:'Technologie Industrielle',COMPTABILITE:'Comptabilité',
+  ECONOMIE_DROIT:'Économie & Droit',MATHS_GESTION:'Maths de Gestion',
+  FRANCAIS_PRO:'Français Professionnel',ANGLAIS_COM:'Anglais Commercial',
+  SECRETARIAT:'Secrétariat Bureautique',GESTION:'Gestion',
+  DROIT_COMMERCIAL:'Droit Commercial',TECHNO_HOTELLERIE:'Technologie Hôtelière',
+  GESTION_HOTEL:'Gestion Restauration',SCIENCES_ALIM:'Sciences Alimentaires',
+  BIOLOGIE_HUMAINE:'Biologie Humaine',SCIENCES_SOCIALES:'Sciences Sociales',
+  CHIMIE_BIO:'Chimie Biologie',NUTRITION:'Nutrition & Diététique',
+  TECHNOLOGIE_BATIMENT:'Technologie Bâtiment',DESSIN_TECHNIQUE:'Dessin Technique',
+  MATHS_ELEC:'Maths Électrotechnique',ELECTRICITE_TECH:'Électricité Technique',
+  ELECTRONIQUE:'Électronique',AUTOMATISMES:'Automatismes',INFORMATIQUE:'Informatique',
+  TOPOGRAPHIE:'Topographie',DESSIN_TOPO:'Dessin Topographique',MATHS_TOPO:'Maths Topographie',
+  GESTION_HOTEL:'Gestion Hôtelière',PHYSIQUE:'Physique'
+};
+
+// ══════════════════════════════════════
+// ÉTAT
+// ══════════════════════════════════════
+let ecoleCode = null;
+let ecoleNom = 'CPP LES PRINCES';
+let themeSelectionne = 'fonctions';
+let toastTimer = null;
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+window.onload = function() {
+  const params = new URLSearchParams(window.location.search);
+  const code = (params.get('e') || 'cpp').toLowerCase();
+  ecoleCode = ECOLE_CODES[code] || 'CPP LES PRINCES';
+  ecoleNom = ECOLE_NOMS[ecoleCode] || ecoleCode;
+  document.getElementById('ecoleChip').textContent = code.toUpperCase();
+
+  changerExamen();
+};
+
+// ══════════════════════════════════════
+// CHANGEMENT EXAMEN
+// ══════════════════════════════════════
+function changerExamen() {
+  const examen = document.getElementById('selExamen').value;
+
+  // Stats
+  const stats = STATS_EXAMEN[examen] || STATS_EXAMEN['BEPC'];
+  document.getElementById('statsBar').innerHTML = stats.map(s =>
+    `<div class="stat-item"><div class="stat-n">${s.n}</div><div class="stat-l">${s.l}</div></div>`
+  ).join('');
+
+  // Filières
+  const hasFiliere = ['BAC_TECH','BT'].includes(examen);
+  document.getElementById('groupFiliere').style.display = hasFiliere ? 'block' : 'none';
+  document.getElementById('groupAnneeBT').style.display = examen === 'BT' ? 'block' : 'none';
+
+  if (hasFiliere) {
+    const sel = document.getElementById('selFiliere');
+    sel.innerHTML = '<option value="">— Sélectionner filière —</option>';
+    (FILIERES_TECH[examen] || []).forEach(f => {
+      sel.innerHTML += `<option value="${f.id}">${f.nom}</option>`;
+    });
+    if (FILIERES_TECH[examen]?.length) {
+      sel.value = FILIERES_TECH[examen][0].id;
+    }
+  }
+
+  // Classes
+  const selClasse = document.getElementById('selClasse');
+  const classes = CLASSES[examen] || CLASSES['BEPC'];
+  selClasse.innerHTML = classes.map(c => `<option value="${c}">${c}</option>`).join('');
+
+  changerFiliere();
+}
+
+// ══════════════════════════════════════
+// CHANGEMENT FILIÈRE
+// ══════════════════════════════════════
+function changerFiliere() {
+  const examen = document.getElementById('selExamen').value;
+  const filiere = document.getElementById('selFiliere').value;
+
+  // Matières
+  let keyMatieres = examen;
+  if (filiere) keyMatieres = examen + '_' + filiere;
+  const matieres = MATIERES[keyMatieres] || MATIERES[examen] || MATIERES['BEPC'];
+
+  const selMat = document.getElementById('selMatiere');
+  selMat.innerHTML = matieres.map(m =>
+    `<option value="${m}">${NOMS_MATIERES[m] || m}</option>`
+  ).join('');
+
+  changerMatiere();
+}
+
+// ══════════════════════════════════════
+// CHANGEMENT MATIÈRE — Thèmes
+// ══════════════════════════════════════
+function changerMatiere() {
+  const examen = document.getElementById('selExamen').value;
+  const matiere = document.getElementById('selMatiere').value;
+  const key = examen + '_' + matiere;
+  const themes = THEMES[key] || THEMES['DEFAULT'];
+
+  const grid = document.getElementById('themesGrid');
+  grid.innerHTML = themes.map((t,i) => `
+    <div class="theme-item${i===0?' sel':''}" onclick="selTheme(this,'${t.id}')">
+      <div class="theme-nom">${t.nom}</div>
+      <div class="theme-freq ${t.cls}">${t.freq}</div>
+    </div>
+  `).join('');
+  themeSelectionne = themes[0]?.id || 'lecon';
+
+  // Placeholder leçon
+  const lecon = document.getElementById('inputLecon');
+  lecon.placeholder = `Ex: chapitre en cours — ${NOMS_MATIERES[matiere]||matiere}`;
+}
+
+function selTheme(el, id) {
+  document.querySelectorAll('.theme-item').forEach(x => x.classList.remove('sel'));
+  el.classList.add('sel');
+  themeSelectionne = id;
+}
+
+// ══════════════════════════════════════
+// GÉNÉRATION — JSONP
+// ══════════════════════════════════════
+function generer() {
+  const examen   = document.getElementById('selExamen').value;
+  const matiere  = document.getElementById('selMatiere').value;
+  const filiere  = document.getElementById('selFiliere').value || '';
+  const classe   = document.getElementById('selClasse').value;
+  const trimestre= document.getElementById('selTrimestre').value;
+  const lecon    = document.getElementById('inputLecon').value.trim();
+  const annee_bt = document.getElementById('selAnneeBT').value;
+
+  document.getElementById('btnGenerer').disabled = true;
+  document.getElementById('resultZone').style.display = 'none';
+  showLoader('L\'IA analyse les anciens sujets CI...');
+
+  const msgs = [
+    'Analyse des programmes DPFC/IGENA...',
+    'Construction du prompt Standard + Excellence + MIT/NASA...',
+    'Génération en cours avec Claude IA...',
+    'Intégration des contextes ivoiriens...'
+  ];
+  let msgIdx = 0;
+  const msgInterval = setInterval(() => {
+    msgIdx = (msgIdx+1) % msgs.length;
+    document.getElementById('loaderSub').textContent = msgs[msgIdx];
+  }, 2000);
+
+  const cbName = 'gen_' + Date.now();
+  const script = document.createElement('script');
+
+  const timeout = setTimeout(() => {
+    clearInterval(msgInterval);
+    delete window[cbName];
+    try { document.body.removeChild(script); } catch(e) {}
+    hideLoader();
+    document.getElementById('btnGenerer').disabled = false;
+    showToast('Délai dépassé — mode démo activé', 'error');
+    afficherDemo(examen, matiere, filiere, classe, trimestre, lecon);
+  }, 60000);
+
+  window[cbName] = function(data) {
+    clearTimeout(timeout);
+    clearInterval(msgInterval);
+    delete window[cbName];
+    try { document.body.removeChild(script); } catch(e) {}
+    hideLoader();
+    document.getElementById('btnGenerer').disabled = false;
+
+    if (data && data.composition) {
+      afficherComposition(data.composition, data.source === 'IA', examen, matiere, filiere, classe);
+      showToast(data.source === 'IA' ? '✦ Composition générée par IA' : '⚡ Mode démonstration', data.source === 'IA' ? 'success' : '');
+    } else {
+      showToast('Erreur — mode démo activé', 'error');
+      afficherDemo(examen, matiere, filiere, classe, trimestre, lecon);
+    }
+  };
+
+  script.onerror = function() {
+    clearTimeout(timeout);
+    clearInterval(msgInterval);
+    delete window[cbName];
+    hideLoader();
+    document.getElementById('btnGenerer').disabled = false;
+    showToast('Connexion impossible — mode démo', 'error');
+    afficherDemo(examen, matiere, filiere, classe, trimestre, lecon);
+  };
+
+  const params = new URLSearchParams({
+    callback: cbName,
+    type:     'GENERER_COMPOSITION',
+    examen, matiere, filiere, classe, trimestre, lecon,
+    annee_bt, ecole: ecoleCode
+  });
+
+  script.src = APPS_SCRIPT_URL + '?' + params.toString();
+  document.body.appendChild(script);
+}
+
+// ══════════════════════════════════════
+// AFFICHER COMPOSITION
+// ══════════════════════════════════════
+function afficherComposition(d, isIA, examen, matiere, filiere, classe) {
+  // Header
+  document.getElementById('resultEcole').textContent = (ECOLE_NOMS[ecoleCode] || ecoleCode).toUpperCase();
+  var _nm={'CPP LES PRINCES':"COLLÈGE PRIVÉ LES PRINCES D'ABIDJAN",'CPP PRO':"CPP PROFESSIONNEL LES PRINCES",'CPP TECH':"CPP TECHNIQUE LES PRINCES",'ETL PRINCES KOUIBLY':"ETL PRINCES KOUIBLY",'ACADEMIE':"ACADÉMIE LES PRINCES",'GUINGLO VILLE':"CPP LES PRINCES GUINGLO",'GNONTINROU':"CPP LES PRINCES GNONTINROU",'KOUTOUAN':"CPP LES PRINCES KOUTOUAN",'SOAKPE':"CPP LES PRINCES SOAKPÉ",'AKEIKOI 1':"LES PRINCES AKEÏKOÏ 1",'AKEIKOI 2':"LES PRINCES AKEÏKOÏ 2",'GS RITA ROSANE':"GS RITA ROSANE — LES PRINCES"};
+  var _cm={'MATHEMATIQUES':4,'SVT':4,'PHYSIQUE_CHIMIE':3,'PHILOSOPHIE':2,'FRANCAIS':2,'ANGLAIS':2,'COMPTABILITE':5,'BUREAU_SECRETARIAT':6,'STENOGRAPHIE':3};
+  var _dm={'BAC_D':'4h','BAC_C':'4h','BAC_A':'4h','BAC_TECH':'4h','BEPC':'2h','CEPE':'2h','BT':'3h'};
+  var _mo=['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
+  var _d=new Date();
+  if(document.getElementById('printEcoleNom')) document.getElementById('printEcoleNom').textContent=_nm[ecoleCode]||"GROUPE SCOLAIRE LES PRINCES D'ABIDJAN";
+  if(document.getElementById('printMatiere')) document.getElementById('printMatiere').textContent=(NOMS_MATIERES[matiere]||matiere).toUpperCase();
+  if(document.getElementById('printSerie')) document.getElementById('printSerie').textContent='Série D — '+classe+' — Devoir T2 — '+_mo[_d.getMonth()]+' '+_d.getFullYear();
+  if(document.getElementById('printCoef')) document.getElementById('printCoef').textContent=_cm[matiere]||d.coefficient||'—';
+  if(document.getElementById('printDuree')) document.getElementById('printDuree').textContent=_dm[examen]||d.duree||'2h';
+  document.getElementById('resultTitre').textContent = d.titre || `COMPOSITION — ${classe} — ${NOMS_MATIERES[matiere]||matiere}`;
+  document.getElementById('resultMeta').textContent = `Durée : ${d.duree||'2h'} · Examen : ${d.examen||examen} · 20 points`;
+  const src = document.getElementById('resultSource');
+  if (isIA) {
+    src.textContent = '✦ Généré par Claude IA — ' + new Date().toLocaleTimeString('fr-FR');
+    src.className = 'result-source';
+  } else {
+    src.textContent = '⚡ Mode démonstration — Connectez la clé Anthropic';
+    src.className = 'result-source demo';
+  }
+
+  // Parties
+  afficherPartie('A', d.partie_A);
+  afficherPartie('B', d.partie_B);
+  afficherPartie('C', d.partie_C);
+  afficherCorrige(d.corrige);
+
+  // Proba
+  document.getElementById('probaPct').textContent = d.probabilite_examen || '75%';
+  document.getElementById('probaJust').textContent = d.justification || 'Thème récurrent dans les anciens sujets CI';
+
+  // Conseil
+  document.getElementById('conseilText').textContent = d.conseil_enseignant || d.conseil || 'Aucun conseil disponible.';
+
+  // Afficher
+  document.getElementById('resultZone').style.display = 'block';
+  document.getElementById('resultZone').scrollIntoView({ behavior:'smooth' });
+}
+
+function afficherPartie(lettre, p) {
+  if (!p) return;
+  document.getElementById('titre'+lettre).textContent = p.titre || `PARTIE ${lettre}`;
+  document.getElementById('sous'+lettre).textContent = p.sous_titre || '';
+
+  let html = '';
+  if (p.contexte) {
+    html += `<div class="contexte-box">${p.contexte}</div>`;
+  }
+  (p.questions || []).forEach(q => {
+    html += `<div class="question">${q.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>')}</div>`;
+  });
+  document.getElementById('body'+lettre).innerHTML = html;
+}
+
+function afficherCorrige(corrige) {
+  if (!corrige) { document.getElementById('bodyCorrige').innerHTML = '<div class="question">Corrigé disponible après génération IA complète.</div>'; return; }
+  let html = '';
+  ['partie_A','partie_B','partie_C'].forEach((k,i) => {
+    if (!corrige[k]) return;
+    const labels = ['PARTIE A — STANDARD','PARTIE B — EXCELLENCE','PARTIE C — MIT/NASA'];
+    html += `<div class="contexte-box" style="margin-top:${i?'10px':'0'};font-style:normal;font-size:11px;font-weight:700;color:var(--or)">${labels[i]}</div>`;
+    (corrige[k] || []).forEach(ligne => {
+      html += `<div class="question" style="font-size:12px">${ligne}</div>`;
+    });
+  });
+  document.getElementById('bodyCorrige').innerHTML = html || '<div class="question">Corrigé non disponible.</div>';
+}
+
+// ══════════════════════════════════════
+// MODE DÉMO
+// ══════════════════════════════════════
+function afficherDemo(examen, matiere, filiere, classe, trimestre, lecon) {
+  const nomMat = NOMS_MATIERES[matiere] || matiere;
+  const ctx = {
+    CEPE:'Un planteur de cacao de Divo vend sa récolte au marché d\'Adjamé.',
+    BEPC:'La coopérative d\'hévéa de Man produit des tonnes de latex par semaine.',
+    BAC_A:'La littérature ivoirienne et l\'identité culturelle africaine.',
+    BAC_C:'La centrale solaire de Touba alimente 50 000 foyers ivoiriens.',
+    BAC_D:'Ivoirbois, société forestière de Man, optimise sa production.',
+    BAC_TECH:'L\'usine SIVOA d\'Abidjan automatise sa chaîne de production.',
+    BT:'Une PME ivoirienne exporte du cacao vers l\'Europe.'
+  }[examen] || 'Application en contexte ivoirien.';
+
+  const demo = {
+    titre:`COMPOSITION ${trimestre} — ${classe} — ${nomMat}`,
+    examen: examen.replace('_',' '),
+    duree: '2h',
+    lecon: lecon || `Chapitre en cours — ${nomMat}`,
+    probabilite_examen: '78%',
+    justification: `Thème récurrent dans les anciens sujets CI — Mode démonstration`,
+    partie_A: {
+      titre:`EXERCICE 1 (5 points)`,
+      sous_titre:'Programme officiel CI',
+      contexte:`Soit f la fonction définie sur ℝ par : f(x) = (2x + 1)e⁻ˣ`,
+      questions:[
+        `1. a) Calculer f'(x) pour tout x ∈ ℝ. Donner la forme factorisée. (1 pt)`,
+        `   b) Dresser le tableau de variation complet de f. Préciser le maximum. (1 pt)`,
+        `2. a) Déterminer les limites de f en −∞ et en +∞. Interpréter graphiquement. (1 pt)`,
+        `   b) Montrer que la droite y = x + 1 est tangente à la courbe de f au point d'abscisse 0. (1 pt)`,
+        `3. Calculer ∫₀¹ f(x) dx par intégration par parties. Interpréter. (1 pt)`
+      ]
+    },
+    partie_B: {
+      titre:`EXERCICE 2 (8 points)`,
+      sous_titre:'Étude de fonction',
+      contexte:`On considère la fonction g définie sur ℝ par : g(x) = x·e^(1−x) − x + 1`,
+      questions:[
+        `1. a) Calculer lim g(x) en +∞ et en −∞. Interpréter graphiquement. (1 pt)`,
+        `   b) Démontrer que g'(x) = (1−x)e^(1−x) − 1 pour tout x ∈ ℝ. (2 pts)`,
+        `2. a) Étudier le signe de g'(x). Dresser le tableau de variation complet de g. (2 pts)`,
+        `   b) En déduire que g admet un minimum global. Calculer ce minimum. (1 pt)`,
+        `3. a) Démontrer que g(x) = 0 admet une unique solution α. (1 pt)`,
+        `   b) Justifier par encadrement que 0,4 < α < 0,5. (1 pt)`
+      ]
+    },
+    partie_C: {
+      titre:`EXERCICE 3 (7 points)`,
+      sous_titre:`Situation-problème — Contexte ivoirien`,
+      contexte: ctx,
+      questions:[
+        `1. a) Calculer P'(t). Dresser le tableau de variation. Déterminer l'année de production maximale. (2 pts)`,
+        `   b) Calculer lim P(t) en 0⁺ et en +∞. Interpréter dans le contexte. (1 pt)`,
+        `2. Démontrer que la droite y = −e^(1−t) est tangente à la courbe de P en t = 1. (2 pts)`,
+        `3. a) Calculer I = ∫₀ᴸ t·e^(1−t) dt par intégration par parties. (1 pt)`,
+        `   b) Calculer lim I(L) quand L→+∞. Interpréter pour Ivoirbois. (1 pt)`
+      ]
+    },
+    corrige:{
+      partie_A:[`1. Réponse détaillée — voir cours ${lecon||nomMat}`,`2. Calcul numérique complet avec unités`,`3. Synthèse justifiée`],
+      partie_B:[`1. a) Démonstration formelle étape par étape`,`   b) Conséquence et interprétation graphique`,`2. Tableau de variation complet`],
+      partie_C:[`1. Modèle mathématique avec variables définies`,`2. Résolution complète avec interprétation`,`3. Généralisation et optimisation`]
+    },
+    conseil_enseignant:`MODE DÉMONSTRATION — Connectez la clé Anthropic dans PropertiesService pour générer des compositions complètes adaptées aux anciens sujets CI officiels.`,
+    mode_demo: true
+  };
+  afficherComposition(demo, false, examen, matiere, filiere, classe);
+}
+
+// ══════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════
+function togglePartie(header) {
+  const body = header.nextElementSibling;
+  const arrow = header.querySelector('.partie-arrow');
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  arrow.classList.toggle('open', !isOpen);
+}
+
+function showLoader(msg) {
+  document.getElementById('loaderSub').textContent = msg;
+  document.getElementById('loader').classList.add('show');
+}
+function hideLoader() {
+  document.getElementById('loader').classList.remove('show');
+}
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function copierTexte() {
+  const zone = document.getElementById('resultBody');
+  const txt = zone ? zone.innerText : '';
+  navigator.clipboard.writeText(txt).then(() => showToast('Composition copiée !','success')).catch(() => showToast('Sélectionnez manuellement','error'));
+}
+</script>
+</body>
+</html>    <!-- EN-TÊTE IMPRESSION BAC CI -->
+    <div class="print-header" id="printHeader">
+      <div class="print-entete">
+        <img src="data:image/jpeg;base64,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" class="print-logo" alt="Logo">
+        <div class="print-ecole-info">
+          <div class="print-ecole-nom" id="printEcoleNom">COLLÈGE PRIVÉ LES PRINCES D'ABIDJAN</div>
+          <div class="print-ecole-ville">Abidjan — Côte d'Ivoire &nbsp;·&nbsp; Année scolaire 2025-2026</div>
+        </div>
+        <div class="print-right">
+          <div class="print-coef">Coefficient : <span id="printCoef">4</span><br>Durée : <span id="printDuree">4h</span></div>
+        </div>
+      </div>
+      <div class="print-titre-matiere" id="printMatiere">MATHÉMATIQUES</div>
+      <div class="print-serie" id="printSerie">Série D — TLE D-2 — Devoir T2 — Juin 2026</div>
+      <div class="print-identite">
+        <div class="print-id-ligne"><span class="print-id-label">Nom & Prénom :</span><span style="flex:1">_____________________________________________</span></div>
+        <div class="print-id-ligne"><span class="print-id-label">Matricule :</span><span style="flex:1">______________</span></div>
+      </div>
+      <div class="print-consignes">
+        Cette épreuve comporte deux (02) pages numérotées 1/2 et 2/2.<br>
+        Toute calculatrice scientifique non programmable est autorisée.<br>
+        Les exercices sont indépendants. Tout résultat non justifié sera sanctionné.
+      </div>
+    </div>
+    
