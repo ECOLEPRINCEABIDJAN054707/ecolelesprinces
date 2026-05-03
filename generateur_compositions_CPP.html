@@ -557,7 +557,7 @@ body::after{
           </div>
         </div>
         <div class="form-group">
-          <label>Trimestre</label>
+          <label id="labelPeriode">Trimestre</label>
           <div class="select-wrap">
             <select id="selTrimestre">
               <option value="T1">1er Trimestre</option>
@@ -643,6 +643,30 @@ body::after{
 <div class="result-zone" id="resultZone">
   <div class="section">
     <div class="section-label">Composition générée</div>
+
+    <!-- EN-TETE IMPRESSION BAC CI -->
+    <div class="print-header" id="printHeader">
+      <div class="print-entete">
+        <img src="data:image/jpeg;base64,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" class="print-logo" alt="Logo">
+        <div class="print-ecole-info">
+          <div class="print-ecole-nom" id="printEcoleNom">COLLEGE PRIVE LES PRINCES D ABIDJAN</div>
+          <div class="print-ecole-ville">Abidjan - Cote d Ivoire &nbsp;·&nbsp; Annee scolaire 2025-2026</div>
+        </div>
+        <div class="print-right">
+          <div class="print-coef">Coefficient : <span id="printCoef">4</span><br>Duree : <span id="printDuree">4h</span></div>
+        </div>
+      </div>
+      <div class="print-titre-matiere" id="printMatiere">MATHEMATIQUES</div>
+      <div class="print-serie" id="printSerie">Serie D - TLE D-2 - Devoir T2</div>
+      <div class="print-identite">
+        <div class="print-id-ligne"><span class="print-id-label">Nom &amp; Prenom :</span><span style="flex:1">____________________________________________</span></div>
+        <div class="print-id-ligne"><span class="print-id-label">Matricule :</span><span style="flex:1">______________</span></div>
+      </div>
+      <div class="print-consignes">
+        Toute calculatrice scientifique non programmable est autorisee.<br>
+        Les exercices sont independants. Tout resultat non justifie sera sanctionne.
+      </div>
+    </div>
 
     <div class="result-header" id="resultHeader">
       <div class="result-ecole" id="resultEcole">CPP LES PRINCES D'ABIDJAN</div>
@@ -945,7 +969,13 @@ function changerExamen() {
 // ══════════════════════════════════════
 function changerFiliere() {
   const examen = document.getElementById('selExamen').value;
-  const filiere = document.getElementById('selFiliere').value;
+  let filiere = document.getElementById('selFiliere').value;
+
+  // Si filière vide mais examen technique, prendre la première filière
+  if (!filiere && ['BAC_TECH','BT'].includes(examen) && FILIERES_TECH[examen] && FILIERES_TECH[examen].length) {
+    filiere = FILIERES_TECH[examen][0].id;
+    document.getElementById('selFiliere').value = filiere;
+  }
 
   // Matières
   let keyMatieres = examen;
@@ -1147,69 +1177,67 @@ function afficherCorrige(corrige) {
 // MODE DÉMO
 // ══════════════════════════════════════
 function afficherDemo(examen, matiere, filiere, classe, trimestre, lecon) {
-  const nomMat = NOMS_MATIERES[matiere] || matiere;
-  const ctx = {
-    CEPE:'Un planteur de cacao de Divo vend sa récolte au marché d\'Adjamé.',
-    BEPC:'La coopérative d\'hévéa de Man produit des tonnes de latex par semaine.',
-    BAC_A:'La littérature ivoirienne et l\'identité culturelle africaine.',
-    BAC_C:'La centrale solaire de Touba alimente 50 000 foyers ivoiriens.',
-    BAC_D:'Ivoirbois, société forestière de Man, optimise sa production.',
-    BAC_TECH:'L\'usine SIVOA d\'Abidjan automatise sa chaîne de production.',
-    BT:'Une PME ivoirienne exporte du cacao vers l\'Europe.'
+  var nomMat = NOMS_MATIERES[matiere] || matiere;
+  var isTech = ['BAC_TECH','BT'].includes(examen);
+  var periode = isTech ? 'S2' : 'T2';
+  var periodeLabel = isTech ? '2eme Semestre' : '2eme Trimestre';
+  var ctx = {
+    BAC_D:'La societe Ivoirbois de Man modelise sa production par P(t) = t.e^(1-t) pour t >= 0.',
+    BEPC:'La cooperative heveicole de Man produit du latex chaque semaine.',
+    CEPE:'Un planteur de cacao de Divo vend sa recolte au marche.',
+    MATERNELLE:'Les fruits du marche de Cocody.'
   }[examen] || 'Application en contexte ivoirien.';
 
-  const demo = {
-    titre:`COMPOSITION ${trimestre} — ${classe} — ${nomMat}`,
-    examen: examen.replace('_',' '),
-    duree: '2h',
-    lecon: lecon || `Chapitre en cours — ${nomMat}`,
-    probabilite_examen: '78%',
-    justification: `Thème récurrent dans les anciens sujets CI — Mode démonstration`,
+  var demo = {
+    titre: 'DEVOIR ' + periodeLabel + ' - ' + classe + ' - ' + nomMat.toUpperCase(),
+    examen: examen,
+    duree: {BAC_D:'4h',BAC_C:'4h',BAC_A:'4h',BAC_TECH:'4h',BEPC:'2h',CEPE:'2h',BT:'3h',MATERNELLE:'30 min'}[examen] || '2h',
+    coefficient: {MATHEMATIQUES:4,SVT:4,PHYSIQUE_CHIMIE:3,PHILOSOPHIE:2,FRANCAIS:2,COMPTABILITE:5,BUREAU_SECRETARIAT:6,NUMERATIE:1,LANGAGE_ORAL:1}[matiere] || 2,
+    serie: isTech ? 'Serie Technique' : 'Serie D',
+    probabilite_examen: '85%',
+    justification: 'Themes recurrents - Mode demonstration',
     partie_A: {
-      titre:`PARTIE A — STANDARD (5 points)`,
-      sous_titre:'Programme officiel CI — Accessible à tous',
-      contexte:`Application directe du cours : ${lecon || nomMat}`,
-      questions:[
-        `1. Question de cours directe sur ${lecon || nomMat}. **(2 pts)**`,
-        `2. Application numérique simple avec calcul détaillé. **(2 pts)**`,
-        `3. Question de synthèse courte avec justification. **(1 pt)**`
+      titre: 'EXERCICE 1 (2 points)',
+      sous_titre: '',
+      contexte: 'Pour chacune des affirmations suivantes, ecrire VRAI ou FAUX.',
+      questions: [
+        '1. La fonction x -> e^x - x - 1 est positive ou nulle sur R.',
+        '2. Si lim f = +inf et lim g = +inf alors lim(f-g) = 0.',
+        '3. Pour tout x > 0 : x^(ln x) = e^(ln x)^2.',
+        '4. Si f''(x0) = 0 et f'' change de signe en x0 alors (x0 ; f(x0)) est un point d inflexion.'
       ]
     },
     partie_B: {
-      titre:`PARTIE B — EXCELLENCE (8 points)`,
-      sous_titre:'Niveau meilleur lycée France — Démonstrations rigoureuses',
-      contexte:`Raisonnement élaboré et démonstration formelle.`,
-      questions:[
-        `1. a) Démontrer rigoureusement la propriété principale. **(2 pts)**`,
-        `   b) En déduire une conséquence et interpréter graphiquement. **(2 pts)**`,
-        `2. a) Étudier les variations complètes avec tableau. **(2 pts)**`,
-        `   b) Tracer la courbe et déterminer les asymptotes. **(2 pts)**`
+      titre: 'EXERCICE 2 a 4 (8 points)',
+      sous_titre: '',
+      contexte: 'Exercices 2, 3 et 4.',
+      questions: [
+        'EXERCICE 2 (2 pts) - QCM : 1. P(rouge|bleue)=? A.2/9 B.4/9 C.4/10 D.2/5 | 2. Forme exp. de (1+iV3)^4 : A.16e^(ip/3) B.16e^(4ip/3) C.8e^(4ip/3) D.16e^(-4ip/3) | 3. I=integ(0,1)(3t^2+2e^t)dt : A.2e+1 B.2e-1 C.e+2 D.2e | 4. f(x)=(x-1)e^(-x) donc f est : A.croissante sur R B.decroissante sur ]-inf;1] C.croissante sur [1;+inf[ D.decroissante sur R',
+        'EXERCICE 3 (3 pts) - Suites : Suite (Un) : U1=2, Un+1=Un.e^(1/n) - 1/n. 1. Calculer U2 et U3. 2. Montrer Un>0 par recurrence. 3. Etudier la monotonie. 4. Montrer (Un) majoree par 3 puis convergente.',
+        'EXERCICE 4 (3 pts) - Complexes : P(z)=z^4-2(1+i)z^3+(3i-1)z^2+2(1-i)z-4. 1. Verifier z=1+i racine. 2. Factoriser P(z). 3. Resoudre P(z)=0. 4. ABCD rectangle ? Cercle circonscrit.'
       ]
     },
     partie_C: {
-      titre:`PARTIE C — MIT/NASA (7 points)`,
-      sous_titre:`Niveau mondial — ${ctx.split('.')[0]}`,
-      contexte: ctx,
-      questions:[
-        `1. Modéliser mathématiquement la situation décrite. **(2 pts)**`,
-        `2. Résoudre et interpréter les résultats dans le contexte. **(3 pts)**`,
-        `3. Optimiser et généraliser à d'autres situations africaines. **(2 pts)**`
+      titre: 'EXERCICE 5 et 6 (10 points)',
+      sous_titre: '',
+      contexte: 'Exercices 5 et 6.',
+      questions: [
+        'EXERCICE 5 Partie A (4 pts) - f(x)=(x-1)e^(-x)+1 : 1. Limites en +-inf. 2. f'(x), variations. 3. f''(x), point d inflexion, tangente. 4. Positions relatives avec y=1. Construire (C).',
+        'EXERCICE 5 Partie B (2 pts) - Fn(x)=integ(0,x)t^(2n).e^(-t)dt, In=Fn(1) : 1. Derivabilite. 2. In>=0, (In) decroissante, convergente. 3. Par IPP : In=-e^(-1)+2n.In-1. Calculer I1 et I2.',
+        'EXERCICE 6 (4 pts) - ' + ctx + ' f'(t)=-2t^2+6t+20, f(0)=5. 1. Calculer f(t). 2. Variations, maximum. 3. Rentabilite si max>50000. 4. Ventes totales 5 mois. 5. Conclusion argumentee.'
       ]
     },
-    corrige:{
-      partie_A:[`1. Réponse détaillée — voir cours ${lecon||nomMat}`,`2. Calcul numérique complet avec unités`,`3. Synthèse justifiée`],
-      partie_B:[`1. a) Démonstration formelle étape par étape`,`   b) Conséquence et interprétation graphique`,`2. Tableau de variation complet`],
-      partie_C:[`1. Modèle mathématique avec variables définies`,`2. Résolution complète avec interprétation`,`3. Généralisation et optimisation`]
+    corrige: {
+      partie_A: ['1. VRAI', '2. FAUX', '3. VRAI', '4. VRAI'],
+      partie_B: ['Ex2 : 1.A 2.B 3.A 4.C', 'Ex3 : U2=2e-0.5, monotone croissante, l=e environ', 'Ex4 : z=1+i racine, ABCD rectangle'],
+      partie_C: ['Ex5A : f min en 0, inflexion en 2', 'Ex5B : I1=2e-1-1/e, I2=...', 'Ex6 : f(t)=-2t^3/3+3t^2+20t+5, max en t=5']
     },
-    conseil_enseignant:`MODE DÉMONSTRATION — Connectez la clé Anthropic dans PropertiesService pour générer des compositions complètes adaptées aux anciens sujets CI officiels.`,
-    mode_demo: true
+    conseil_enseignant: 'MODE DEMONSTRATION - Connectez la cle Anthropic pour generer des compositions completes.'
   };
   afficherComposition(demo, false, examen, matiere, filiere, classe);
 }
 
-// ══════════════════════════════════════
-// UI HELPERS
-// ══════════════════════════════════════
+
 function togglePartie(header) {
   const body = header.nextElementSibling;
   const arrow = header.querySelector('.partie-arrow');
