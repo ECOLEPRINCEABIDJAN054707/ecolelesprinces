@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Princes Smart School — Portail</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bleu: #1F4E79;
+  --bleu2: #2E75B6;
+  --or: #D4AF37;
+  --or2: #F0D060;
+  --blanc: #FFFFFF;
+  --gris: #F5F7FA;
+  --texte: #1A2733;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--gris);
+  color: var(--texte);
+  min-height: 100vh;
+}
+
+/* ===== HERO ===== */
+.hero {
+  background: linear-gradient(135deg, #0D2D4F 0%, #1F4E79 50%, #2E75B6 100%);
+  padding: 48px 24px 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 240px; height: 240px;
+  border-radius: 50%;
+  background: rgba(212,175,55,0.12);
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: -40px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: rgba(212,175,55,0.08);
+}
+.hero-logo {
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, var(--or), var(--or2));
+  border-radius: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 900;
+  color: var(--bleu);
+  margin: 0 auto 20px;
+  box-shadow: 0 8px 24px rgba(212,175,55,0.35);
+  position: relative; z-index: 1;
+}
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px; font-weight: 900;
+  color: var(--blanc);
+  line-height: 1.2;
+  margin-bottom: 8px;
+  position: relative; z-index: 1;
+}
+.hero h1 span { color: var(--or2); }
+.hero p {
+  font-size: 14px;
+  color: rgba(255,255,255,0.72);
+  position: relative; z-index: 1;
+  margin-bottom: 4px;
+}
+.hero-sem {
+  display: inline-block;
+  background: rgba(212,175,55,0.2);
+  border: 1px solid rgba(212,175,55,0.4);
+  color: var(--or2);
+  font-size: 12px; font-weight: 600;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-top: 12px;
+  position: relative; z-index: 1;
+}
+
+/* ===== LIENS RAPIDES ===== */
+.section { padding: 24px 18px; }
+.section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #8DA3B5;
+  margin-bottom: 14px;
+}
+
+.lien-card {
+  background: var(--blanc);
+  border-radius: 16px;
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 2px 12px rgba(31,78,121,0.08);
+  border: 1.5px solid transparent;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.lien-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: var(--card-color, var(--bleu));
+  border-radius: 4px 0 0 4px;
+}
+.lien-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 1px 6px rgba(31,78,121,0.12);
+}
+
+.lien-icon {
+  width: 48px; height: 48px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.lien-body { flex: 1; }
+.lien-titre {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--texte);
+  margin-bottom: 3px;
+}
+.lien-desc {
+  font-size: 12px;
+  color: #7A8FA0;
+  line-height: 1.4;
+}
+.lien-arrow {
+  font-size: 18px;
+  color: #B0C0CF;
+  flex-shrink: 0;
+}
+
+/* Couleurs par type */
+.c-bleu { --card-color: #1F4E79; }
+.c-bleu .lien-icon { background: #E3F0FB; }
+
+.c-vert { --card-color: #2E7D32; }
+.c-vert .lien-icon { background: #E8F5E9; }
+
+.c-or { --card-color: #D4AF37; }
+.c-or .lien-icon { background: #FFF8E1; }
+
+.c-rouge { --card-color: #C62828; }
+.c-rouge .lien-icon { background: #FFEBEE; }
+
+.c-violet { --card-color: #6A1B9A; }
+.c-violet .lien-icon { background: #F3E5F5; }
+
+.c-orange { --card-color: #E65100; }
+.c-orange .lien-icon { background: #FFF3E0; }
+
+/* ===== SECTION ÉCOLES ===== */
+.ecoles-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.ecole-btn {
+  background: var(--blanc);
+  border: 1.5px solid #E0E8F0;
+  border-radius: 12px;
+  padding: 12px 10px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--bleu);
+  text-decoration: none;
+  display: block;
+  transition: all 0.18s;
+  box-shadow: 0 1px 6px rgba(31,78,121,0.06);
+}
+.ecole-btn:active { background: #EEF4FB; transform: scale(0.97); }
+.ecole-btn .eco-icon { font-size: 20px; margin-bottom: 5px; display: block; }
+.ecole-btn span { display: block; font-size: 11px; color: #7A8FA0; margin-top: 2px; font-weight: 400; }
+
+/* ===== FOOTER ===== */
+.footer {
+  text-align: center;
+  padding: 24px 18px 32px;
+  font-size: 12px;
+  color: #8DA3B5;
+}
+.footer strong { color: var(--bleu); }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  bottom: 20px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--bleu);
+  color: white;
+  padding: 11px 20px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 999;
+  transition: transform 0.3s;
+  white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+
+/* ===== DIVIDER ===== */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #D8E4EF, transparent);
+  margin: 0 18px;
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-logo">GP</div>
+  <h1>Groupe Scolaire<br><span>Les Princes d'Abidjan</span></h1>
+  <p>Princes Smart School System V2.0</p>
+  <p>12 écoles · 47 classes · Abidjan, Côte d'Ivoire</p>
+  <div class="hero-sem" id="semBadge">📅 Chargement...</div>
+</div>
+
+<!-- SECTION PRINCIPALE -->
+<div class="section">
+  <div class="section-label">Accès rapide</div>
+
+  <a href="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/" class="lien-card c-bleu">
+    <div class="lien-icon">👨‍👩‍👧</div>
+    <div class="lien-body">
+      <div class="lien-titre">Espace Parents</div>
+      <div class="lien-desc">Paiements, absences, notes, cahier de textes</div>
+    </div>
+    <div class="lien-arrow">›</div>
+  </a>
+
+  <a href="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/enseignant_cpp.html?e=cpp" class="lien-card c-vert">
+    <div class="lien-icon">📋</div>
+    <div class="lien-body">
+      <div class="lien-titre">App Enseignant — CPP</div>
+      <div class="lien-desc">Appel, cahier de textes, notes</div>
+    </div>
+    <div class="lien-arrow">›</div>
+  </a>
+
+  <a href="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/systeme_pedagogique_V3.html" class="lien-card c-or">
+    <div class="lien-icon">📊</div>
+    <div class="lien-body">
+      <div class="lien-titre">Système Pédagogique</div>
+      <div class="lien-desc">Suivi progression, alertes, progressions CI</div>
+    </div>
+    <div class="lien-arrow">›</div>
+  </a>
+
+  <a href="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/direction.html" class="lien-card c-rouge">
+    <div class="lien-icon">💰</div>
+    <div class="lien-body">
+      <div class="lien-titre">Tableau de Bord Direction</div>
+      <div class="lien-desc">Salaires, pointage, masse salariale</div>
+    </div>
+    <div class="lien-arrow">›</div>
+  </a>
+
+  <a href="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/generateur_devoir_BAC_D_CPP.html" class="lien-card c-violet">
+    <div class="lien-icon">🎓</div>
+    <div class="lien-body">
+      <div class="lien-titre">Générateur Devoirs BAC D</div>
+      <div class="lien-desc">IA · 3 niveaux · Contexte ivoirien</div>
+    </div>
+    <div class="lien-arrow">›</div>
+  </a>
+
+</div>
+
+<div class="divider"></div>
+
+<!-- SECTION ENSEIGNANTS PAR ÉCOLE -->
+<div class="section">
+  <div class="section-label">App enseignant — Choisir une école</div>
+  <div class="ecoles-grid">
+    <a href="enseignant_cpp.html?e=cpp" class="ecole-btn">
+      <em class="eco-icon">🏫</em>CPP Les Princes<span>Cocody</span>
+    </a>
+    <a href="enseignant_cpp.html?e=academie" class="ecole-btn">
+      <em class="eco-icon">🏫</em>Académie<span>Les Princes</span>
+    </a>
+    <a href="enseignant_cpp.html?e=guinglo" class="ecole-btn">
+      <em class="eco-icon">🏫</em>Guinglo Ville<span></span>
+    </a>
+    <a href="enseignant_cpp.html?e=gnont" class="ecole-btn">
+      <em class="eco-icon">🏫</em>Gnontinrou<span></span>
+    </a>
+    <a href="enseignant_cpp.html?e=koutouan" class="ecole-btn">
+      <em class="eco-icon">🏫</em>Koutouan<span></span>
+    </a>
+    <a href="enseignant_cpp.html?e=soakpe" class="ecole-btn">
+      <em class="eco-icon">🏫</em>Soakpé<span></span>
+    </a>
+    <a href="enseignant_cpp.html?e=akeikoi1" class="ecole-btn">
+      <em class="eco-icon">🏫</em>Akeïkoï 1<span></span>
+    </a>
+    <a href="enseignant_cpp.html?e=akeikoi2" class="ecole-btn">
+      <em class="eco-icon">🏫</em>Akeïkoï 2<span></span>
+    </a>
+    <a href="enseignant_cpp.html?e=pro" class="ecole-btn">
+      <em class="eco-icon">🏫</em>CPP Pro<span>Abobo</span>
+    </a>
+    <a href="enseignant_cpp.html?e=tech" class="ecole-btn">
+      <em class="eco-icon">🏫</em>CPP Tech<span></span>
+    </a>
+    <a href="enseignant_cpp.html?e=kouibly" class="ecole-btn">
+      <em class="eco-icon">🏫</em>ETL Kouibly<span></span>
+    </a>
+    <a href="enseignant_cpp.html?e=rita" class="ecole-btn">
+      <em class="eco-icon">🏫</em>Rita Rosane<span>Abobo</span>
+    </a>
+  </div>
+</div>
+
+<div class="footer">
+  <strong>Princes Smart School System V2.0</strong><br>
+  Groupe Scolaire Les Princes d'Abidjan · 2025-2026<br>
+  manet.serge@yahoo.fr
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// Afficher semaine actuelle
+(function() {
+  var debut = new Date('2025-09-08');
+  var now = new Date();
+  var sem = Math.max(1, Math.min(30, Math.floor((now - debut) / (7*24*60*60*1000)) + 1));
+  var jours = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
+  var mois = ['jan','fev','mars','avr','mai','juin','juil','aout','sept','oct','nov','dec'];
+  var j = jours[now.getDay()];
+  var d = now.getDate();
+  var m = mois[now.getMonth()];
+  var a = now.getFullYear();
+  document.getElementById('semBadge').textContent =
+    j + ' ' + d + ' ' + m + ' ' + a + ' · Semaine ' + sem + '/30';
+})();
+</script>
+
+</body>
+</html>
