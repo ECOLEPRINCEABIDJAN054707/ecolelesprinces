@@ -485,7 +485,8 @@ body::after{
   .partie{margin-bottom:10px!important;border-bottom:none!important;}
   .partie-header{cursor:default!important;background:white!important;padding:0 0 4px!important;display:block!important;border-radius:0!important;}
   .partie-arrow,.partie-dot{display:none!important;}
-  .partie-body{display:block!important;padding:0!important;}
+  .partie-body{display:block!important;padding:0 0 8px!important;}
+  .partie-body.open{display:block!important;}
   .partie-titre{display:inline-block!important;border:1.5px solid #000!important;padding:2px 10px!important;font-size:12.5px!important;font-weight:bold!important;color:#000!important;text-transform:uppercase!important;margin-bottom:4px!important;background:white!important;}
   .partie-sous{font-size:11px!important;font-style:italic!important;color:#444!important;display:block!important;margin-bottom:4px!important;padding:0!important;background:none!important;border:none!important;}
   .partie-pts{display:none!important;}
@@ -1100,11 +1101,20 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe) {
   // Afficher
   document.getElementById('resultZone').style.display = 'block';
   document.getElementById('resultZone').scrollIntoView({ behavior:'smooth' });
+  // Ouvrir toutes les parties (pour impression)
+  ['A','B','C'].forEach(function(l){
+    var body = document.getElementById('body'+l);
+    if(body){ body.classList.add('open'); body.style.display='block'; }
+  });
 }
 
 function afficherPartie(lettre, p) {
   if (!p) return;
-  document.getElementById('titre'+lettre).textContent = p.titre || `PARTIE ${lettre}`;
+  var numEx = {'A':'1','B':'2','C':'3'}[lettre] || lettre;
+  var ptsEx = {'A':'5','B':'8','C':'7'}[lettre] || '';
+  var titreEcran = p.titre || 'PARTIE ' + lettre;
+  document.getElementById('titre'+lettre).textContent = titreEcran;
+  document.getElementById('titre'+lettre).setAttribute('data-print-titre', 'EXERCICE ' + numEx + '  (' + ptsEx + ' points)');
   document.getElementById('sous'+lettre).textContent = p.sous_titre || '';
 
   let html = '';
@@ -1149,7 +1159,7 @@ function afficherDemo(examen, matiere, filiere, classe, trimestre, lecon) {
   const demo = {
     titre:`COMPOSITION ${trimestre} — ${classe} — ${nomMat}`,
     examen: examen.replace('_',' '),
-    duree: '2h',
+    duree: '4h',
     lecon: lecon || `Chapitre en cours — ${nomMat}`,
     probabilite_examen: '78%',
     justification: `Thème récurrent dans les anciens sujets CI — Mode démonstration`,
@@ -1868,11 +1878,20 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe) {
   // Afficher
   document.getElementById('resultZone').style.display = 'block';
   document.getElementById('resultZone').scrollIntoView({ behavior:'smooth' });
+  // Ouvrir toutes les parties (pour impression)
+  ['A','B','C'].forEach(function(l){
+    var body = document.getElementById('body'+l);
+    if(body){ body.classList.add('open'); body.style.display='block'; }
+  });
 }
 
 function afficherPartie(lettre, p) {
   if (!p) return;
-  document.getElementById('titre'+lettre).textContent = p.titre || `PARTIE ${lettre}`;
+  var numEx = {'A':'1','B':'2','C':'3'}[lettre] || lettre;
+  var ptsEx = {'A':'5','B':'8','C':'7'}[lettre] || '';
+  var titreEcran = p.titre || 'PARTIE ' + lettre;
+  document.getElementById('titre'+lettre).textContent = titreEcran;
+  document.getElementById('titre'+lettre).setAttribute('data-print-titre', 'EXERCICE ' + numEx + '  (' + ptsEx + ' points)');
   document.getElementById('sous'+lettre).textContent = p.sous_titre || '';
 
   let html = '';
@@ -1917,7 +1936,7 @@ function afficherDemo(examen, matiere, filiere, classe, trimestre, lecon) {
   const demo = {
     titre:`COMPOSITION ${trimestre} — ${classe} — ${nomMat}`,
     examen: examen.replace('_',' '),
-    duree: '2h',
+    duree: '4h',
     lecon: lecon || `Chapitre en cours — ${nomMat}`,
     probabilite_examen: '78%',
     justification: `Thème récurrent dans les anciens sujets CI — Mode démonstration`,
