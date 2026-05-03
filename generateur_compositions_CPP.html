@@ -594,6 +594,12 @@ body::after{
     text-transform: uppercase !important;
     margin-bottom: 4px !important;
     background: white !important;
+    font-size: 0 !important;
+  }
+  .partie-titre::before {
+    content: attr(data-print) !important;
+    font-size: 12.5px !important;
+    font-weight: bold !important;
   }
 
   .partie-sous {
@@ -647,6 +653,84 @@ body::after{
   }
 }
 
+
+/* ═══════════════════════════════════════
+   ZONE IMPRESSION BAC CI — SÉPARÉE
+   ═══════════════════════════════════════ */
+#printZone { display: none; }
+
+@media print {
+  /* Tout masquer */
+  body > *:not(#printZone) { display: none !important; }
+  #printZone {
+    display: block !important;
+    font-family: 'Times New Roman', Times, serif !important;
+    font-size: 13px !important;
+    color: #000 !important;
+    background: white !important;
+    padding: 12mm 15mm !important;
+    margin: 0 !important;
+    width: 100% !important;
+    line-height: 1.65 !important;
+  }
+  /* En-tête */
+  .pz-entete {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    border-bottom: 2px solid #000 !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 8px !important;
+  }
+  .pz-logo { width: 52px !important; height: auto !important; }
+  .pz-ecole-centre { flex: 1 !important; text-align: center !important; }
+  .pz-ecole-nom { font-size: 13.5px !important; font-weight: bold !important; text-transform: uppercase !important; display: block !important; }
+  .pz-ecole-sous { font-size: 11px !important; display: block !important; margin-top: 2px !important; }
+  .pz-droite { text-align: right !important; }
+  .pz-coef { font-size: 13.5px !important; font-weight: bold !important; line-height: 1.7 !important; }
+  /* Titre matière */
+  .pz-titre-mat {
+    border: 2px solid #000 !important;
+    text-align: center !important;
+    padding: 5px !important;
+    font-size: 18px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    letter-spacing: 2px !important;
+    margin-bottom: 5px !important;
+  }
+  .pz-serie { text-align: center !important; font-size: 13px !important; font-weight: bold !important; margin-bottom: 6px !important; }
+  /* Identité */
+  .pz-identite { display: flex !important; gap: 20px !important; margin-bottom: 5px !important; }
+  .pz-id-ligne { display: flex !important; align-items: baseline !important; gap: 5px !important; border-bottom: 0.5px solid #666 !important; padding-bottom: 3px !important; flex: 1 !important; font-size: 12.5px !important; }
+  .pz-id-label { font-weight: bold !important; font-size: 11.5px !important; text-transform: uppercase !important; white-space: nowrap !important; }
+  /* Consignes */
+  .pz-consignes { font-style: italic !important; font-size: 12px !important; text-align: center !important; margin-bottom: 10px !important; line-height: 1.65 !important; }
+  /* Exercices */
+  .pz-exercice { margin-bottom: 12px !important; }
+  .pz-ex-titre {
+    display: inline-block !important;
+    border: 1.5px solid #000 !important;
+    padding: 2px 10px !important;
+    font-size: 13px !important;
+    font-weight: bold !important;
+    text-transform: uppercase !important;
+    margin-bottom: 5px !important;
+  }
+  .pz-intro { font-style: italic !important; font-size: 13px !important; text-align: justify !important; margin-bottom: 5px !important; line-height: 1.65 !important; }
+  .pz-q { font-size: 13px !important; line-height: 1.8 !important; text-align: justify !important; }
+  .pz-sq { font-size: 13px !important; line-height: 1.8 !important; text-align: justify !important; padding-left: 18px !important; }
+  /* Pied */
+  .pz-pied {
+    margin-top: 12px !important;
+    border-top: 0.5px solid #999 !important;
+    padding-top: 4px !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    font-size: 10px !important;
+    color: #444 !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -1269,10 +1353,23 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe) {
   if(document.getElementById('printMatiere')) document.getElementById('printMatiere').textContent = nomMatiere;
   if(document.getElementById('printMatiereInfo')) document.getElementById('printMatiereInfo').textContent = nomMatiere;
   if(document.getElementById('printSerie')) document.getElementById('printSerie').textContent = (d.serie || 'Série D') + ' — ' + classe + ' — Devoir du ' + (examen==='T1'?'1er':'2ème') + ' Trimestre — ' + dateStr;
-  if(document.getElementById('printCoef')) document.getElementById('printCoef').textContent = coefDevoir;
-  if(document.getElementById('printDuree')) document.getElementById('printDuree').textContent = dureeDevoir;
+  // Coefficients officiels CI par matière
+  var coeffMap = {
+    'MATHEMATIQUES':4,'SVT':4,'PHYSIQUE_CHIMIE':3,'PHILOSOPHIE':2,'FRANCAIS':2,
+    'ANGLAIS':2,'HISTOIRE_GEO':2,'EDHC':1,'COMPTABILITE':5,'CAGE':3,
+    'EOE_GESTION':3,'DROIT':2,'BUREAU_SECRETARIAT':6,'STENOGRAPHIE':3,
+    'ELECTRONIQUE_ANALOGIQUE':4,'ELECTRONIQUE_NUMERIQUE':4
+  };
+  var coefReel = coeffMap[matiere] || coefDevoir || '—';
+  if(document.getElementById('printCoef')) document.getElementById('printCoef').textContent = coefReel;
+  var dureeMap = {
+    'BAC_D':'4h','BAC_C':'4h','BAC_A':'4h','BAC_TECH':'4h',
+    'BEPC':'2h','CEPE':'2h','BT':'3h'
+  };
+  var dureeReelle = dureeMap[examen] || dureeDevoir || '2h';
+  if(document.getElementById('printDuree')) document.getElementById('printDuree').textContent = dureeReelle;
   document.getElementById('resultTitre').textContent = d.titre || `COMPOSITION — ${classe} — ${NOMS_MATIERES[matiere]||matiere}`;
-  document.getElementById('resultMeta').textContent = `Durée : ${d.duree||'2h'} · Examen : ${d.examen||examen} · 20 points`;
+  document.getElementById('resultMeta').textContent = `Durée : ${d.duree||'4h'} · Examen : ${d.examen||examen} · 20 points`;
   const src = document.getElementById('resultSource');
   if (isIA) {
     src.textContent = '✦ Généré par Claude IA — ' + new Date().toLocaleTimeString('fr-FR');
@@ -1298,11 +1395,101 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe) {
   // Afficher
   document.getElementById('resultZone').style.display = 'block';
   document.getElementById('resultZone').scrollIntoView({ behavior:'smooth' });
+
+  // ── Remplir la zone impression style BAC CI ──
+  construirePrintZone(d, isIA, examen, matiere, filiere, classe);
+}
+
+function construirePrintZone(d, isIA, examen, matiere, filiere, classe) {
+  var nomMat = (NOMS_MATIERES[matiere] || matiere).toUpperCase();
+  var nomEcoleMap = {
+    'CPP LES PRINCES':"COLLÈGE PRIVÉ LES PRINCES D'ABIDJAN",
+    'CPP PRO':"COLLÈGE PRIVÉ PROFESSIONNEL LES PRINCES",
+    'CPP TECH':"COLLÈGE PRIVÉ TECHNIQUE LES PRINCES",
+    'ETL PRINCES KOUIBLY':"ETL PRINCES KOUIBLY",
+    'ACADEMIE':"ACADÉMIE LES PRINCES",
+    'GUINGLO VILLE':"CPP LES PRINCES GUINGLO VILLE",
+    'GNONTINROU':"CPP LES PRINCES GNONTINROU",
+    'KOUTOUAN':"CPP LES PRINCES KOUTOUAN",
+    'SOAKPE':"CPP LES PRINCES SOAKPÉ",
+    'AKEIKOI 1':"LES PRINCES AKEÏKOÏ 1",
+    'AKEIKOI 2':"LES PRINCES AKEÏKOÏ 2",
+    'GS RITA ROSANE':"GROUPE SCOLAIRE RITA ROSANE"
+  };
+  var nomEcole = nomEcoleMap[ecoleCode] || "GROUPE SCOLAIRE LES PRINCES D'ABIDJAN";
+  var dateStr = new Date().toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+  var duree = d.duree || '2h';
+  var coef = d.coefficient || '4';
+  var serie = d.serie || 'D';
+  var trimestre = document.getElementById('selTrimestre').value;
+  var nomTrim = trimestre==='T1'?'1er':trimestre==='T2'?'2ème':'3ème';
+
+  function renderPartie(p, num) {
+    if (!p) return '';
+    var pts = num===1?5:num===2?8:7;
+    var html = '<div class="pz-exercice">';
+    html += '<div class="pz-ex-titre">EXERCICE ' + num + ' &nbsp;(' + pts + ' points)</div>';
+    if (p.sous_titre) html += '<div class="pz-intro">' + p.sous_titre + '</div>';
+    if (p.contexte) html += '<div class="pz-intro">' + p.contexte + '</div>';
+    (p.questions || []).forEach(function(q, i) {
+      var qs = q.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/
+/g,'<br>');
+      var isSub = q.trim().startsWith('b)') || q.trim().startsWith('c)') || q.trim().startsWith('d)') || q.trim().startsWith('   ');
+      html += '<div class="' + (isSub?'pz-sq':'pz-q') + '">' + qs + '</div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  var html = '';
+
+  // EN-TÊTE
+  html += '<div class="pz-entete">';
+  html += '<img src="data:image/jpeg;base64,''' + logo_b64 + '''" class="pz-logo" alt="Logo">';
+  html += '<div class="pz-ecole-centre">';
+  html += '<span class="pz-ecole-nom">' + nomEcole + '</span>';
+  html += '<span class="pz-ecole-sous">Abidjan — Côte d\'Ivoire &nbsp;·&nbsp; Année scolaire 2025-2026</span>';
+  html += '</div>';
+  html += '<div class="pz-droite"><div class="pz-coef">Coefficient : ' + coef + '<br>Durée : ' + duree + '</div></div>';
+  html += '</div>';
+
+  // TITRE MATIÈRE
+  html += '<div class="pz-titre-mat">' + nomMat + '</div>';
+  html += '<div class="pz-serie">SÉRIE ' + serie + ' — ' + classe + ' — Devoir du ' + nomTrim + ' Trimestre — ' + dateStr + '</div>';
+
+  // IDENTITÉ
+  html += '<div class="pz-identite">';
+  html += '<div class="pz-id-ligne"><span class="pz-id-label">Nom & Prénom :</span><span style="flex:1">____________________________________________</span></div>';
+  html += '<div class="pz-id-ligne"><span class="pz-id-label">Matricule :</span><span style="flex:1">______________</span></div>';
+  html += '</div>';
+
+  // CONSIGNES
+  html += '<div class="pz-consignes">Cette épreuve comporte deux (02) pages numérotées 1/2 et 2/2.<br>';
+  html += 'Toute calculatrice scientifique non programmable est autorisée.<br>';
+  html += 'Les exercices sont indépendants. <strong>Tout résultat non justifié sera sanctionné.</strong></div>';
+
+  // EXERCICES
+  html += renderPartie(d.partie_A, 1);
+  html += renderPartie(d.partie_B, 2);
+  html += renderPartie(d.partie_C, 3);
+
+  // PIED
+  html += '<div class="pz-pied">';
+  html += '<span>' + nomEcole + ' — 2025-2026</span>';
+  html += '<span>' + nomMat + ' — Devoir ' + nomTrim + ' Trimestre</span>';
+  html += '<span>Princes Smart School V2</span>';
+  html += '</div>';
+
+  document.getElementById('printZone').innerHTML = html;
 }
 
 function afficherPartie(lettre, p) {
   if (!p) return;
+  // Sur écran : titre complet — à l'impression : EXERCICE X
+  var numEx = {'A':'1','B':'2','C':'3'}[lettre] || lettre;
+  var pts = {'A':'5','B':'8','C':'7'}[lettre] || '';
   document.getElementById('titre'+lettre).textContent = p.titre || `PARTIE ${lettre}`;
+  document.getElementById('titre'+lettre).setAttribute('data-print', `EXERCICE ${numEx}  (${pts} points)`);
   document.getElementById('sous'+lettre).textContent = p.sous_titre || '';
 
   let html = '';
@@ -1347,39 +1534,45 @@ function afficherDemo(examen, matiere, filiere, classe, trimestre, lecon) {
   const demo = {
     titre:`COMPOSITION ${trimestre} — ${classe} — ${nomMat}`,
     examen: examen.replace('_',' '),
-    duree: '2h',
+    duree: '4h',
     lecon: lecon || `Chapitre en cours — ${nomMat}`,
     probabilite_examen: '78%',
     justification: `Thème récurrent dans les anciens sujets CI — Mode démonstration`,
     partie_A: {
-      titre:`PARTIE A — STANDARD (5 points)`,
-      sous_titre:'Programme officiel CI — Accessible à tous',
-      contexte:`Application directe du cours : ${lecon || nomMat}`,
+      titre:`EXERCICE 1 (5 points)`,
+      sous_titre:'Programme officiel CI',
+      contexte:`On considère la fonction f définie sur ℝ par : f(x) = (2x + 1)e⁻ˣ`,
       questions:[
-        `1. Question de cours directe sur ${lecon || nomMat}. **(2 pts)**`,
-        `2. Application numérique simple avec calcul détaillé. **(2 pts)**`,
-        `3. Question de synthèse courte avec justification. **(1 pt)**`
+        `1. a) Calculer f'(x) pour tout x ∈ ℝ. Donner la forme factorisée. (1 pt)`,
+        `   b) Dresser le tableau de signe de f'(x). En déduire le tableau de variation complet de f. (1 pt)`,
+        `2. a) Déterminer les limites de f en −∞ et en +∞. Interpréter graphiquement. (1 pt)`,
+        `   b) Déterminer l'équation de la tangente à la courbe de f au point d'abscisse 0. (1 pt)`,
+        `3. Calculer ∫₀¹ f(x) dx par intégration par parties. (1 pt)`
       ]
     },
     partie_B: {
-      titre:`PARTIE B — EXCELLENCE (8 points)`,
-      sous_titre:'Niveau meilleur lycée France — Démonstrations rigoureuses',
-      contexte:`Raisonnement élaboré et démonstration formelle.`,
+      titre:`EXERCICE 2 (8 points)`,
+      sous_titre:'Étude de fonction — Démonstrations rigoureuses',
+      contexte:`On considère la fonction g définie sur ℝ par : g(x) = x·e^(1−x) − x + 1`,
       questions:[
-        `1. a) Démontrer rigoureusement la propriété principale. **(2 pts)**`,
-        `   b) En déduire une conséquence et interpréter graphiquement. **(2 pts)**`,
-        `2. a) Étudier les variations complètes avec tableau. **(2 pts)**`,
-        `   b) Tracer la courbe et déterminer les asymptotes. **(2 pts)**`
+        `1. a) Calculer lim g(x) quand x→+∞ et quand x→−∞. Interpréter graphiquement. (1 pt)`,
+        `   b) Démontrer que g'(x) = (1 − x)e^(1−x) − 1 pour tout x ∈ ℝ. (2 pts)`,
+        `2. a) Étudier le signe de g'(x). Dresser le tableau de variation complet de g. (2 pts)`,
+        `   b) En déduire que g admet un minimum global. Calculer ce minimum. (1 pt)`,
+        `3. a) Démontrer que l'équation g(x) = 0 admet une unique solution α dans ℝ. (1 pt)`,
+        `   b) Justifier par encadrement que 0,4 < α < 0,5. (1 pt)`
       ]
     },
     partie_C: {
-      titre:`PARTIE C — MIT/NASA (7 points)`,
-      sous_titre:`Niveau mondial — ${ctx.split('.')[0]}`,
+      titre:`EXERCICE 3 (7 points)`,
+      sous_titre:`Situation-problème — Contexte ivoirien`,
       contexte: ctx,
       questions:[
-        `1. Modéliser mathématiquement la situation décrite. **(2 pts)**`,
-        `2. Résoudre et interpréter les résultats dans le contexte. **(3 pts)**`,
-        `3. Optimiser et généraliser à d'autres situations africaines. **(2 pts)**`
+        `1. a) Calculer P'(t). Dresser le tableau de variation. Déterminer l'année de production maximale. (2 pts)`,
+        `   b) Étudier les limites de P en 0⁺ et en +∞. Interpréter dans le contexte. (1 pt)`,
+        `2. Démontrer que la droite y = −e^(1−t) est tangente à la courbe de P au point d'abscisse t = 1. (2 pts)`,
+        `3. a) Calculer I(L) = ∫₀ᴸ t·e^(1−t) dt par intégration par parties. (1 pt)`,
+        `   b) Calculer lim I(L) quand L→+∞. Interpréter ce résultat dans le contexte. (1 pt)`
       ]
     },
     corrige:{
