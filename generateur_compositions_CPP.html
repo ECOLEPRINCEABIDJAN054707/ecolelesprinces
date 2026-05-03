@@ -762,43 +762,73 @@ function afficherCorrige(corrige) {
 function afficherDemo(examen, matiere, filiere, classe, trimestre, lecon) {
   var nomMat = NOMS_MATIERES[matiere] || matiere;
   var isTech = ['BAC_TECH','BT'].includes(examen);
-  var periode = isTech ? 'S2' : 'T2';
-  var ctx = {
-    BAC_D:'Ivoirbois de Man : P(t)=t.e^(1-t) pour t>=0.',
-    BEPC:'Cooperative heveicole de Man.',
-    CEPE:'Planteur de cacao de Divo.',
-    MATERNELLE:'Fruits du marche de Cocody.'
-  }[examen] || 'Application ivoirienne.';
+  var periodeLabel = isTech ? '2eme Semestre' : '2eme Trimestre';
+  var dureeMap = {BAC_D:'4h',BAC_C:'4h',BAC_A:'4h',BAC_TECH:'4h',BEPC:'2h',CEPE:'2h',BT:'3h',MATERNELLE:'30min'};
+  var coefMap = {MATHEMATIQUES:4,SVT:4,PHYSIQUE_CHIMIE:3,PHILOSOPHIE:2,FRANCAIS:2,COMPTABILITE:5,LANGAGE_ORAL:1,NUMERATIE:1};
+  var ctx = ({BAC_D:'La societe Ivoirbois de Man : P(t)=t.e^(1-t) pour t>=0. f prime(t)=-2t^2+6t+20, f(0)=5.',BEPC:'La cooperative heveicole de Man produit du latex.',CEPE:'Un planteur de cacao de Divo.',MATERNELLE:'Les fruits du marche de Cocody.'})[examen] || 'Application ivoirienne.';
+
   var demo = {
-    titre:'DEVOIR ' + periode + ' - ' + classe + ' - ' + nomMat.toUpperCase(),
-    examen:examen, duree:{BAC_D:'4h',BAC_C:'4h',BAC_A:'4h',BAC_TECH:'4h',BEPC:'2h',CEPE:'2h',BT:'3h',MATERNELLE:'30min'}[examen]||'2h',
-    coefficient:{MATHEMATIQUES:4,SVT:4,PHYSIQUE_CHIMIE:3,PHILOSOPHIE:2,FRANCAIS:2,COMPTABILITE:5}[matiere]||2,
-    serie:isTech?'Serie Technique':'Serie D',
-    probabilite_examen:'85%', justification:'Themes recurrents — Mode demonstration',
-    partie_A:{
-      titre:'EXERCICE 1 (2 points)', sous_titre:'',
-      contexte:'Pour chacune des affirmations suivantes, ecrire VRAI ou FAUX.',
-      questions:['1. La fonction x -> e^x - x - 1 est positive ou nulle sur R.','2. Si lim f=+inf et lim g=+inf alors lim(f-g)=0.','3. Pour tout x>0 : x^(ln x) = e^(ln x)^2.','4. Si f""(x0)=0 et f"" change de signe en x0 alors (x0;f(x0)) est un point d inflexion.']
+    titre: 'DEVOIR ' + periodeLabel + ' - ' + classe + ' - ' + nomMat.toUpperCase(),
+    duree: dureeMap[examen] || '2h',
+    coefficient: coefMap[matiere] || 2,
+    serie: isTech ? 'Serie Technique' : 'Serie D',
+    probabilite_examen: '85%',
+    justification: 'Themes recurrents CI - Mode demonstration',
+    partie_A: {
+      titre: 'EXERCICE 1 (2 points)',
+      sous_titre: '',
+      contexte: 'Pour chacune des affirmations, ecrire VRAI ou FAUX avec justification.',
+      questions: [
+        '1. La fonction x -> e^x - x - 1 est positive ou nulle sur R.',
+        '2. Si lim f = +inf et lim g = +inf alors lim(f-g) = 0.',
+        '3. Pour tout x > 0 : x^(ln x) = e^((ln x)^2).',
+        '4. Si f seconde(x0)=0 et f seconde change de signe en x0 alors (x0;f(x0)) est un point d inflexion.'
+      ]
     },
-    partie_B:{
-      titre:'EXERCICES 2 a 4 (8 points)', sous_titre:'',
-      contexte:'Exercices independants.',
-      questions:['EXERCICE 2 (2 pts) — QCM : 1.P(rouge|bleue)=? A.2/9 B.4/9 C.4/10 D.2/5 | 2.(1+iV3)^4 : A.16e^(ip/3) B.16e^(4ip/3) C.8e^(4ip/3) D.16e^(-4ip/3) | 3.I=integ(0,1)(3t^2+2e^t)dt : A.2e+1 B.2e-1 C.e+2 D.2e | 4.f prime(x)=(x-1)e^(-x) : A.croiss.R B.decr.]-inf;1] C.croiss.[1;+inf[ D.decr.R','EXERCICE 3 (3 pts) — Suites : (Un) avec U1=2, Un+1=Un.e^(1/n)-1/n. 1.Calculer U2,U3. 2.Montrer Un>0 par recurrence. 3.Monotonie. 4.Majoree par 3, convergente, valeur de l.','EXERCICE 4 (3 pts) — Complexes : P(z)=z^4-2(1+i)z^3+(3i-1)z^2+2(1-i)z-4. 1.Verifier z=1+i racine. 2.Factoriser. 3.Resoudre P(z)=0. 4.ABCD rectangle, cercle circonscrit.']
+    partie_B: {
+      titre: 'EXERCICES 2 a 4 (8 points)',
+      sous_titre: '',
+      contexte: 'Exercices independants — 3 exercices distincts.',
+      questions: [
+        'EXERCICE 2 (2 pts) — QCM : 1. P(rouge|bleue)=? A.2/9 B.4/9 C.4/10 D.2/5  |  2. (1+i.racine(3))^4 forme exponentielle : A.16e^(ip/3) B.16e^(4ip/3) C.8e^(4ip/3) D.16e^(-4ip/3)  |  3. I=integral(0,1)(3t^2+2e^t)dt : A.2e+1 B.2e-1 C.e+2 D.2e  |  4. f derive=(x-1)e^(-x) donc f : A.croiss.R B.decr.]-inf;1] C.croiss.[1;+inf[ D.decr.R',
+        'EXERCICE 3 (3 pts) — Suites : (Un) avec U1=2 et Un+1=Un.e^(1/n) - 1/n. 1. Calculer U2 et U3. 2. Montrer Un>0 par recurrence. 3. Etudier la monotonie. 4. Montrer (Un) majoree par 3 puis donner sa limite.',
+        'EXERCICE 4 (3 pts) — Complexes : P(z)=z^4-2(1+i)z^3+(3i-1)z^2+2(1-i)z-4. 1. Verifier z=1+i racine. 2. Factoriser P(z)=(z^2-2iz)(z^2+az+b). 3. Resoudre P(z)=0. 4. ABCD rectangle ? Cercle circonscrit ?'
+      ]
     },
-    partie_C:{
-      titre:'EXERCICES 5 et 6 (10 points)', sous_titre:'',
-      contexte:'Probleme de synthese.',
-      questions:['EXERCICE 5 Partie A (4 pts) — f(x)=(x-1)e^(-x)+1 : 1.Limites en +-inf. 2.f prime(x), variations, asymptote. 3.f"(x), inflexion, tangente. 4.Positions relatives avec y=1. Tracer.','EXERCICE 5 Partie B (2 pts) — Fn(x)=integ(0,x)t^(2n).e^(-t)dt, In=Fn(1) : Derivabilite, In>=0, decroissante, convergente. Par IPP : In=-e^(-1)+2n.In-1. Calculer I1, I2.','EXERCICE 6 (4 pts) — ' + ctx + ' f prime(t)=-2t^2+6t+20, f(0)=5. Calculer f(t), variations, maximum, rentabilite si max>50000. Ventes sur 5 mois. Conclusion argumentee.']
+    partie_C: {
+      titre: 'EXERCICES 5 et 6 (10 points)',
+      sous_titre: '',
+      contexte: 'Etude de fonction et situation-probleme ivoirien.',
+      questions: [
+        'EXERCICE 5 Partie A (4 pts) — f(x)=(x-1)e^(-x)+1 : 1. Limites en -inf et +inf. 2. f derive(x), tableau de variations. 3. f seconde(x), point d inflexion, tangente. 4. Positions relatives avec y=1. Tracer (C).',
+        'EXERCICE 5 Partie B (2 pts) — Fn(x)=integral(0,x) t^(2n).e^(-t)dt, In=Fn(1) : 1. Derivabilite de Fn. 2. In>=0, (In) decroissante et convergente. 3. Par IPP : In = -e^(-1) + 2n.I(n-1). Calculer I1 et I2.',
+        'EXERCICE 6 (4 pts) — ' + ctx + ' 1. Calculer f(t). 2. Tableau de variations, maximum. 3. Rentabilite si max > 50 000 litres ? 4. Ventes totales sur 5 mois. 5. Conclusion argumentee pour la direction.'
+      ]
     },
-    corrige:{
-      partie_A:['1.VRAI','2.FAUX','3.VRAI','4.VRAI'],
-      partie_B:['Ex2: 1.A 2.B 3.A 4.C','Ex3: U2=2e-0.5, croissante, l≈e','Ex4: z=1+i racine, ABCD rectangle'],
-      partie_C:['Ex5A: min en 0, inflexion en 2','Ex5B: I1=2e^(-1)-1/e','Ex6: f(t)=-2t^3/3+3t^2+20t+5, max en t=5']
+    corrige: {
+      partie_A: [
+        '1. VRAI — e^x >= 1+x >= x+1 donc e^x-x-1 >= 0',
+        '2. FAUX — exemple : f(x)=x+1, g(x)=x => f-g=1 -> 1, pas 0',
+        '3. VRAI — x^(ln x) = e^(ln x . ln x) = e^((ln x)^2)',
+        '4. VRAI — definition du point d inflexion'
+      ],
+      partie_B: [
+        'Ex2 : 1.A  2.B  3.A  4.C',
+        'Ex3 : U2 = 2e - 1/2 ≈ 4.94 | U3 ≈ ... | (Un) croissante | majoree par 3 | convergente',
+        'Ex4 : P(1+i) = 0 verifie | a=-2i, b=4 | solutions : 0, 2i, 1+i, 1-i | ABCD rectangle de cote 2 et 2'
+      ],
+      partie_C: [
+        'Ex5A : lim en -inf = -inf, lim en +inf = 1 (asymptote y=1) | f derive = -x.e^(-x) | min en x=0 f(0)=0 | inflexion en x=1',
+        'Ex5B : Fn derivable, F prime n(x) = x^(2n).e^(-x) >= 0 | I1 = 1-3/e | I2 = 5-17/e',
+        'Ex6 : f(t) = -2t^3/3 + 3t^2 + 20t + 5 | max en t=5 : f(5)=255/3+5 > 50 => rentable | integral(0,5)f = ...'
+      ]
     },
-    conseil_enseignant:'MODE DEMONSTRATION — Connectez la cle Anthropic dans Apps Script pour generer des compositions completes adaptees aux sujets CI officiels.'
+    conseil_enseignant: 'MODE DEMONSTRATION — Connectez la cle Anthropic dans Apps Script > Proprietes du script > ANTHROPIC_API_KEY pour generer des compositions completes adaptees aux anciens sujets BAC CI.'
   };
+
   afficherComposition(demo, false, examen, matiere, filiere, classe, trimestre);
 }
+
 
 function togglePartie(header) {
   var body = header.nextElementSibling;
