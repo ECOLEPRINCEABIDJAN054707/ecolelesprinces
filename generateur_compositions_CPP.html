@@ -541,13 +541,14 @@ body::after{
           <label>Examen officiel</label>
           <div class="select-wrap">
             <select id="selExamen" onchange="changerExamen()">
-              <option value="BEPC">BEPC — 3ème</option>
-              <option value="CEPE">CEPE — CM2</option>
-              <option value="BAC_A">BAC A — Tle A</option>
-              <option value="BAC_C">BAC C — Tle C</option>
-              <option value="BAC_D" selected>BAC D — Tle D</option>
+              <option value="MATERNELLE">Maternelle — PSA/MSA/GSA</option>
+              <option value="CEPE">Primaire — CP1 à CM2</option>
+              <option value="BEPC">Collège — 6ème à 3ème</option>
+              <option value="BAC_A">Lycée A — 2nde à TLE A</option>
+              <option value="BAC_C">Lycée C — 2nde à TLE C</option>
+              <option value="BAC_D" selected>Lycée D — 2nde à TLE D</option>
               <option value="BAC_TECH">BAC Technique — F2/G1/G2</option>
-              <option value="BT">BT — CPP Pro (3 ans)</option>
+              <option value="BT">BT — 8 filières (3 ans)</option>
             </select>
           </div>
         </div>
@@ -787,6 +788,24 @@ const THEMES = {
     {id:'suites',nom:'Suites numériques',freq:'4/7 — PROBABLE',cls:'freq-probable'},
     {id:'geometrie',nom:'Géométrie analytique',freq:'3/7 — POSSIBLE',cls:'freq-possible'}
   ],
+  MATERNELLE_LANGAGE_ORAL:[
+    {id:'lecon',nom:'Basé sur la leçon',freq:'Auto',cls:'freq-certain'},
+    {id:'programme',nom:'Programme DPFC CI',freq:'Officiel',cls:'freq-probable'}
+  ],
+  BAC_D_MATHEMATIQUES_2NDE:[
+    {id:'fonctions_affines',nom:'Fonctions affines',freq:'CERTAIN',cls:'freq-certain'},
+    {id:'equations',nom:'Équations & Inéquations',freq:'CERTAIN',cls:'freq-certain'},
+    {id:'vecteurs',nom:'Vecteurs & Géométrie',freq:'PROBABLE',cls:'freq-probable'},
+    {id:'statistiques',nom:'Statistiques',freq:'PROBABLE',cls:'freq-probable'},
+    {id:'lecon',nom:'Basé sur la leçon',freq:'Auto',cls:'freq-possible'}
+  ],
+  BAC_D_MATHEMATIQUES_1ERE:[
+    {id:'suites',nom:'Suites numériques',freq:'CERTAIN',cls:'freq-certain'},
+    {id:'fonctions',nom:'Fonctions & Dérivées',freq:'CERTAIN',cls:'freq-certain'},
+    {id:'complexes',nom:'Nombres complexes',freq:'PROBABLE',cls:'freq-probable'},
+    {id:'probabilites',nom:'Probabilités',freq:'PROBABLE',cls:'freq-probable'},
+    {id:'lecon',nom:'Basé sur la leçon',freq:'Auto',cls:'freq-possible'}
+  ],
   DEFAULT:[
     {id:'lecon',nom:'Basé sur la leçon',freq:'Auto',cls:'freq-certain'},
     {id:'programme',nom:'Programme officiel CI',freq:'DPFC/IGENA',cls:'freq-probable'},
@@ -796,17 +815,50 @@ const THEMES = {
 
 // Classes par examen
 const CLASSES = {
-  CEPE:['CP1','CP2','CE1','CE1 A','CE1 B','CE2','CE2 A','CE2 B','CM1','CM1 A','CM1 B','CM2','CM2 A','CM2 B','CM2 C'],
-  BEPC:['3ÈME 3','3ÈME 4','3ÈME 5','3ÈME 6','3ÈME 7','3ÈME EX1','3ÈME EX2'],
-  BAC_A:['TLE A2-2','TLE A2-3','TLE A2 EX'],
-  BAC_C:['1ÈRE C EX1','TLE C'],
-  BAC_D:['TLE D-1','TLE D-2','TLE D-3','TLE D-4'],
-  BAC_TECH:['2NDE F2','1ÈRE F2','TLE F2','2NDE G1','1ÈRE G1','TLE G1','2NDE G2','1ÈRE G2','TLE G2'],
-  BT:['BT 1ère année','BT 2ème année','BT 3ème année']
+  // Maternelle
+  MATERNELLE:['PSA — Petite Section','MSA — Moyenne Section','GSA — Grande Section'],
+  // Primaire
+  CEPE:['CP1 A','CP1 B','CP1','CP2 A','CP2 B','CP2','CE1 A','CE1 B','CE1','CE2 A','CE2 B','CE2','CM1 A','CM1 B','CM1','CM2 A','CM2 B','CM2 C','CM2'],
+  // Collège — toutes classes
+  BEPC:[
+    '6ÈME 1','6ÈME 2','6ÈME 3','6ÈME 4','6ÈME 5','6ÈME 6',
+    '5ÈME 1','5ÈME 2','5ÈME 3','5ÈME 4','5ÈME 5',
+    '4ÈME 1','4ÈME 2','4ÈME 3','4ÈME 4','4ÈME 5',
+    '3ÈME 1','3ÈME 2','3ÈME 3','3ÈME 4','3ÈME 5','3ÈME 6','3ÈME 7','3ÈME EX1','3ÈME EX2'
+  ],
+  // Lycée général — toutes classes
+  BAC_A:[
+    '2NDE A','1ÈRE A','1ÈRE A2','TLE A2-1','TLE A2-2','TLE A2-3','TLE A2 EX'
+  ],
+  BAC_C:[
+    '2NDE C','1ÈRE C','1ÈRE C EX1','TLE C-1','TLE C-2','TLE C'
+  ],
+  BAC_D:[
+    '2NDE D','1ÈRE D-1','1ÈRE D-2','1ÈRE D-3',
+    'TLE D-1','TLE D-2','TLE D-3','TLE D-4'
+  ],
+  // BAC Technique — toutes classes
+  BAC_TECH:[
+    '2NDE F2','1ÈRE F2','TLE F2',
+    '2NDE G1','1ÈRE G1','TLE G1',
+    '2NDE G2','1ÈRE G2','TLE G2'
+  ],
+  // BT — toutes années et filières
+  BT:[
+    '1BT Secrétariat','2BT Secrétariat','3BT Secrétariat',
+    '1BT Comptabilité','2BT Comptabilité','3BT Comptabilité',
+    '1BT Techniques Hôtelières','2BT Techniques Hôtelières','3BT Techniques Hôtelières',
+    '1BT Sciences Médico-Sociales','2BT Sciences Médico-Sociales','3BT Sciences Médico-Sociales',
+    '1BT Bâtiment','2BT Bâtiment','3BT Bâtiment',
+    '1BT Électricité','2BT Électricité','3BT Électricité',
+    '1BT Topographie','2BT Topographie','3BT Topographie',
+    '1BT Électronique Robotique','2BT Électronique Robotique','3BT Électronique Robotique'
+  ]
 };
 
 // Matières par examen (+ filière)
 const MATIERES = {
+  MATERNELLE:['LANGAGE_ORAL','GRAPHISME_ECRITURE','NUMERATIE','EVEIL_DECOUVERTE','PRE_LECTURE'],
   CEPE:['MATHEMATIQUES','FRANCAIS','EVEIL'],
   BEPC:['MATHEMATIQUES','PHYSIQUE_CHIMIE','SVT','FRANCAIS','ANGLAIS','HISTOIRE_GEO','EDHC'],
   BAC_A:['FRANCAIS','PHILOSOPHIE','ANGLAIS','HISTOIRE_GEO','MATHEMATIQUES'],
@@ -844,7 +896,8 @@ const FILIERES_TECH = {
 };
 
 const STATS_EXAMEN = {
-  CEPE:   [{n:'4',l:'Matières CEPE'},{n:'20',l:'Total points'},{n:'2009',l:'Depuis'},{n:'CI',l:'Officiel MENA'}],
+  MATERNELLE:[{n:'3',l:'Niveaux PSA/MSA/GSA'},{n:'APC',l:'Méthode CI'},{n:'DPFC',l:'Programme officiel'},{n:'5-6 ans',l:'Tranche d'âge'}],
+  CEPE:   [{n:'6',l:'Niveaux CP1→CM2'},{n:'APC',l:'Méthode CI'},{n:'DPFC',l:'Programme officiel'},{n:'CI',l:'Officiel MENA'}],
   BEPC:   [{n:'7',l:'Sujets analysés'},{n:'3',l:'Zones CI'},{n:'2015',l:'Depuis'},{n:'Coef 4',l:'Maths & FR'}],
   BAC_A:  [{n:'5',l:'Matières BAC A'},{n:'Coef 5',l:'Français'},{n:'Coef 4',l:'Philosophie'},{n:'Littéraire',l:'Série'}],
   BAC_C:  [{n:'5',l:'Matières BAC C'},{n:'Coef 7',l:'Maths'},{n:'Coef 6',l:'PC'},{n:'Sciences',l:'Exactes'}],
@@ -854,6 +907,9 @@ const STATS_EXAMEN = {
 };
 
 const NOMS_MATIERES = {
+  LANGAGE_ORAL:'Langage Oral',GRAPHISME_ECRITURE:'Graphisme & Écriture',
+  NUMERATIE:'Numération & Calcul',EVEIL_DECOUVERTE:'Éveil & Découverte',
+  PRE_LECTURE:'Pré-lecture',
   MATHEMATIQUES:'Mathématiques',PHYSIQUE_CHIMIE:'Physique-Chimie',SVT:'SVT',
   FRANCAIS:'Français',ANGLAIS:'Anglais',HISTOIRE_GEO:'Histoire-Géographie',
   EDHC:'EDHC',PHILOSOPHIE:'Philosophie',EVEIL:'Éveil scientifique',
@@ -917,15 +973,15 @@ function changerExamen() {
     (FILIERES_TECH[examen] || []).forEach(f => {
       sel.innerHTML += `<option value="${f.id}">${f.nom}</option>`;
     });
-    if (FILIERES_TECH[examen]?.length) {
+    if (FILIERES_TECH[examen] && FILIERES_TECH[examen].length) {
       sel.value = FILIERES_TECH[examen][0].id;
     }
   }
 
-  // Classes
+  // Classes — toutes classes selon le niveau
   const selClasse = document.getElementById('selClasse');
   const classes = CLASSES[examen] || CLASSES['BEPC'];
-  selClasse.innerHTML = classes.map(c => `<option value="${c}">${c}</option>`).join('');
+  selClasse.innerHTML = classes.map(cl => `<option value="${cl}">${cl}</option>`).join('');
 
   changerFiliere();
 }
@@ -1145,75 +1201,68 @@ function afficherCorrige(corrige) {
 // MODE DÉMO
 // ══════════════════════════════════════
 function afficherDemo(examen, matiere, filiere, classe, trimestre, lecon) {
-  const nomMat = NOMS_MATIERES[matiere] || matiere;
-  const ctx = {
-    CEPE:'Un planteur de cacao de Divo vend sa récolte au marché d\'Adjamé.',
-    BEPC:'La coopérative d\'hévéa de Man produit des tonnes de latex par semaine.',
-    BAC_A:'La littérature ivoirienne et l\'identité culturelle africaine.',
-    BAC_C:'La centrale solaire de Touba alimente 50 000 foyers ivoiriens.',
-    BAC_D:'Ivoirbois, société forestière de Man, optimise sa production.',
-    BAC_TECH:'L\'usine SIVOA d\'Abidjan automatise sa chaîne de production.',
-    BT:'Une PME ivoirienne exporte du cacao vers l\'Europe.'
-  }[examen] || 'Application en contexte ivoirien.';
+  var nomMat = NOMS_MATIERES[matiere] || matiere;
+  var mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  var dateStr = mois[new Date().getMonth()] + ' ' + new Date().getFullYear();
 
-  const demo = {
-    titre:`COMPOSITION ${trimestre} — ${classe} — ${nomMat}`,
-    examen: examen.replace('_',' '),
-    duree: '4h',
-    lecon: lecon || `Chapitre en cours — ${nomMat}`,
-    probabilite_examen: '78%',
-    justification: `Thème récurrent dans les anciens sujets CI — Mode démonstration`,
+  var demo = {
+    titre: 'DEVOIR ' + trimestre + ' — ' + classe + ' — ' + nomMat.toUpperCase(),
+    examen: examen.replace(/_/g,' '),
+    duree: {'BAC_D':'4h','BAC_C':'4h','BAC_A':'4h','BAC_TECH':'4h','BEPC':'2h','CEPE':'2h','BT':'3h'}[examen] || '2h',
+    coefficient: {'MATHEMATIQUES':4,'SVT':4,'PHYSIQUE_CHIMIE':3,'PHILOSOPHIE':2,'FRANCAIS':2,'ANGLAIS':2,'COMPTABILITE':5,'BUREAU_SECRETARIAT':6}[matiere] || 2,
+    serie: 'Série D',
+    probabilite_examen: '89%',
+    justification: 'Thème récurrent dans les anciens sujets CI — Mode démonstration',
     partie_A: {
-      titre:`EXERCICE 1 (5 points)`,
-      sous_titre:'Programme officiel CI',
-      contexte:`Soit f la fonction définie sur ℝ par : f(x) = (2x + 1)e⁻ˣ`,
-      questions:[
-        `1. a) Calculer f'(x) pour tout x ∈ ℝ. Donner la forme factorisée. (1 pt)`,
-        `   b) Dresser le tableau de variation complet de f. Préciser le maximum. (1 pt)`,
-        `2. a) Déterminer les limites de f en −∞ et en +∞. Interpréter graphiquement. (1 pt)`,
-        `   b) Montrer que la droite y = x + 1 est tangente à la courbe de f au point d'abscisse 0. (1 pt)`,
-        `3. Calculer ∫₀¹ f(x) dx par intégration par parties. Interpréter. (1 pt)`
+      titre: 'EXERCICE 1 (2 points)',
+      sous_titre: '',
+      contexte: 'Pour chacune des affirmations suivantes, écrire le numéro suivi de VRAI ou FAUX.',
+      questions: [
+        '1. La fonction x ⟼ eˣ − x − 1 est positive ou nulle sur ℝ.',
+        '2. Si lim f(x) = +∞ et lim g(x) = +∞ alors lim[f(x) − g(x)] = 0.',
+        '3. Pour tout x > 0, x^(ln x) = e^(ln x)².',
+        '4. Si f''(x₀) = 0 et f'' change de signe en x₀ alors (x₀ ; f(x₀)) est un point d'inflexion.'
       ]
     },
     partie_B: {
-      titre:`EXERCICE 2 (8 points)`,
-      sous_titre:'Étude de fonction',
-      contexte:`On considère la fonction g définie sur ℝ par : g(x) = x·e^(1−x) − x + 1`,
-      questions:[
-        `1. a) Calculer lim g(x) en +∞ et en −∞. Interpréter graphiquement. (1 pt)`,
-        `   b) Démontrer que g'(x) = (1−x)e^(1−x) − 1 pour tout x ∈ ℝ. (2 pts)`,
-        `2. a) Étudier le signe de g'(x). Dresser le tableau de variation complet de g. (2 pts)`,
-        `   b) En déduire que g admet un minimum global. Calculer ce minimum. (1 pt)`,
-        `3. a) Démontrer que g(x) = 0 admet une unique solution α. (1 pt)`,
-        `   b) Justifier par encadrement que 0,4 < α < 0,5. (1 pt)`
+      titre: 'EXERCICE 2 (3 points)',
+      sous_titre: '',
+      contexte: 'On considère la suite (Uₙ) définie par U₁ = 2 et pour tout n ≥ 1 : Uₙ₊₁ = Uₙ · e^(1/n) − 1/n.',
+      questions: [
+        '1. Calculer U₂ et U₃.',
+        '2. Démontrer par récurrence que Uₙ > 0 pour tout n ≥ 1.',
+        '3. Étudier la monotonie de (Uₙ) en calculant Uₙ₊₁ − Uₙ.',
+        '4. a) Démontrer que (Uₙ) est majorée par 3.',
+        '   b) En déduire que (Uₙ) converge. Donner ℓ à 10⁻¹ près.'
       ]
     },
     partie_C: {
-      titre:`EXERCICE 3 (7 points)`,
-      sous_titre:`Situation-problème — Contexte ivoirien`,
-      contexte: ctx,
-      questions:[
-        `1. a) Calculer P'(t). Dresser le tableau de variation. Déterminer l'année de production maximale. (2 pts)`,
-        `   b) Calculer lim P(t) en 0⁺ et en +∞. Interpréter dans le contexte. (1 pt)`,
-        `2. Démontrer que la droite y = −e^(1−t) est tangente à la courbe de P en t = 1. (2 pts)`,
-        `3. a) Calculer I = ∫₀ᴸ t·e^(1−t) dt par intégration par parties. (1 pt)`,
-        `   b) Calculer lim I(L) quand L→+∞. Interpréter pour Ivoirbois. (1 pt)`
+      titre: 'EXERCICE 3 (5 points)',
+      sous_titre: '',
+      contexte: 'Le plan est muni d'un repère orthonormé (O, I, J). On considère f définie sur ℝ par : f(x) = (x − 1)e⁻ˣ + 1. On note (C) sa courbe représentative.',
+      questions: [
+        '1. Calculer les limites de f en −∞ et en +∞. Interpréter graphiquement.',
+        '2. a) Calculer f'(x). Dresser le tableau de variation complet de f.',
+        '   b) Montrer que y = 1 est asymptote horizontale à (C) en +∞.',
+        '3. a) Calculer f''(x). Déterminer le point d'inflexion de (C).',
+        '   b) Écrire l'équation de la tangente (T) au point d'inflexion.',
+        '4. a) Étudier les positions relatives de (C) et y = 1. b) Construire (C) et (T).',
+        '5. Calculer ∫₀² f(x) dx par intégration par parties. Interpréter.'
       ]
     },
-    corrige:{
-      partie_A:[`1. Réponse détaillée — voir cours ${lecon||nomMat}`,`2. Calcul numérique complet avec unités`,`3. Synthèse justifiée`],
-      partie_B:[`1. a) Démonstration formelle étape par étape`,`   b) Conséquence et interprétation graphique`,`2. Tableau de variation complet`],
-      partie_C:[`1. Modèle mathématique avec variables définies`,`2. Résolution complète avec interprétation`,`3. Généralisation et optimisation`]
+    corrige: {
+      partie_A: ['1. VRAI — eˣ − x − 1 ≥ 0 pour tout x (convexité de eˣ)', '2. FAUX — exemple f(x)=x, g(x)=x+1', '3. VRAI', '4. VRAI — définition du point d'inflexion'],
+      partie_B: ['1. U₂ = 2e − 1/2 ≈ 4,94 ; U₃ ≈ ...', '2. Récurrence : U₁=2>0, si Uₙ>0 alors Uₙ₊₁=Uₙe^(1/n)−1/n>0 pour n assez grand', '3. Uₙ₊₁−Uₙ = Uₙ(e^(1/n)−1)−1/n > 0 car e^(1/n)>1+1/n', '4. Majorée par 3 + convergence + ℓ ≈ valeur approchée'],
+      partie_C: ['1. lim en −∞ = −∞, lim en +∞ = 1 (asymptote y=1)', '2. f'(x) = −xe⁻ˣ ; min en x=0, f(0)=0', '3. f''(x) = (x−1)e⁻ˣ ; inflexion en x=1', '4. C sous y=1 pour x>0', '5. ∫₀² f(x)dx = résultat par IPP']
     },
-    conseil_enseignant:`MODE DÉMONSTRATION — Connectez la clé Anthropic dans PropertiesService pour générer des compositions complètes adaptées aux anciens sujets CI officiels.`,
+    conseil_enseignant: 'MODE DEMONSTRATION — Connectez la clé Anthropic dans PropertiesService pour générer des compositions complètes adaptées aux anciens sujets CI officiels.',
     mode_demo: true
   };
+
   afficherComposition(demo, false, examen, matiere, filiere, classe);
 }
 
-// ══════════════════════════════════════
-// UI HELPERS
-// ══════════════════════════════════════
+
 function togglePartie(header) {
   const body = header.nextElementSibling;
   const arrow = header.querySelector('.partie-arrow');
