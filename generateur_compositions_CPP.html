@@ -462,31 +462,35 @@ body::after{
 .toast.error{border-color:rgba(198,40,40,0.4);color:#EF9A9A;}
 
 /* ── PRINT ── */
+/* Print styles */
+.print-header{display:none;font-family:'Times New Roman',Times,serif;}
+.print-entete{display:flex;align-items:center;gap:12px;}
+.print-logo{width:50px;height:auto;flex-shrink:0;}
+.print-ecole-info{flex:1;text-align:center;}
+.print-ecole-nom{font-size:13px;font-weight:bold;text-transform:uppercase;display:block;}
+.print-ecole-ville{font-size:10px;color:#333;display:block;margin-top:1px;}
+.print-right{text-align:right;flex-shrink:0;}
+.print-coef{font-size:13px;font-weight:bold;line-height:1.7;display:block;}
+.print-titre-matiere{border:2px solid #000;text-align:center;padding:5px;font-size:17px;font-weight:bold;text-transform:uppercase;letter-spacing:2px;margin-bottom:5px;display:block;}
+.print-serie{text-align:center;font-size:13px;font-weight:bold;margin-bottom:5px;display:block;}
+.print-identite{display:flex;gap:16px;margin-bottom:5px;}
+.print-id-ligne{display:flex;align-items:baseline;gap:5px;border-bottom:0.5px solid #666;padding-bottom:3px;flex:1;font-size:12px;}
+.print-id-label{font-weight:bold;font-size:11px;text-transform:uppercase;white-space:nowrap;}
+.print-consignes{font-style:italic;font-size:11.5px;text-align:center;margin-bottom:10px;line-height:1.65;display:block;}
 @media print{
   body{background:white!important;color:#000!important;max-width:100%!important;font-family:'Times New Roman',Times,serif!important;margin:0!important;padding:0!important;}
-  .header,.config-zone,.loader-overlay,.result-actions,.toast,.result-source,.proba-bar,.conseil-box,.section-label,.result-header{display:none!important;}
+  .header,.config-zone,.loader-overlay,.result-actions,.toast,.result-source,.proba-bar,.conseil-box,.section-label{display:none!important;}
   .result-zone{display:block!important;}
   .section{padding:0!important;}
   .print-header{display:block!important;}
-  .print-entete{display:flex!important;align-items:center!important;gap:12px!important;border-bottom:2px solid #000!important;padding-bottom:7px!important;margin-bottom:8px!important;}
-  .print-logo{width:50px!important;height:auto!important;flex-shrink:0!important;}
-  .print-ecole-info{flex:1!important;text-align:center!important;}
-  .print-ecole-nom{font-size:13px!important;font-weight:bold!important;text-transform:uppercase!important;display:block!important;color:#000!important;}
-  .print-ecole-ville{font-size:10px!important;color:#333!important;display:block!important;margin-top:2px!important;}
-  .print-right{text-align:right!important;flex-shrink:0!important;}
-  .print-coef{font-size:13px!important;font-weight:bold!important;line-height:1.7!important;display:block!important;color:#000!important;}
-  .print-titre-matiere{border:2px solid #000!important;text-align:center!important;padding:5px!important;font-size:17px!important;font-weight:bold!important;text-transform:uppercase!important;letter-spacing:2px!important;margin-bottom:5px!important;display:block!important;color:#000!important;}
-  .print-serie{text-align:center!important;font-size:13px!important;font-weight:bold!important;margin-bottom:5px!important;display:block!important;color:#000!important;}
-  .print-identite{display:flex!important;gap:16px!important;margin-bottom:5px!important;}
-  .print-id-ligne{display:flex!important;align-items:baseline!important;gap:5px!important;border-bottom:0.5px solid #666!important;padding-bottom:3px!important;flex:1!important;font-size:12px!important;color:#000!important;}
-  .print-id-label{font-weight:bold!important;font-size:11px!important;text-transform:uppercase!important;white-space:nowrap!important;color:#000!important;}
-  .print-consignes{font-style:italic!important;font-size:11.5px!important;text-align:center!important;margin-bottom:10px!important;line-height:1.65!important;display:block!important;color:#000!important;}
+  .print-entete{display:flex!important;}
+  .print-identite{display:flex!important;}
+  .result-header{display:none!important;}
   .result-body{background:white!important;border:none!important;border-radius:0!important;padding:0!important;}
   .partie{margin-bottom:10px!important;border-bottom:none!important;}
   .partie-header{cursor:default!important;background:white!important;padding:0 0 4px!important;display:block!important;border-radius:0!important;}
   .partie-arrow,.partie-dot{display:none!important;}
-  .partie-body{display:block!important;padding:0 0 8px!important;}
-  .partie-body.open{display:block!important;}
+  .partie-body{display:block!important;padding:0!important;}
   .partie-titre{display:inline-block!important;border:1.5px solid #000!important;padding:2px 10px!important;font-size:12.5px!important;font-weight:bold!important;color:#000!important;text-transform:uppercase!important;margin-bottom:4px!important;background:white!important;}
   .partie-sous{font-size:11px!important;font-style:italic!important;color:#444!important;display:block!important;margin-bottom:4px!important;padding:0!important;background:none!important;border:none!important;}
   .partie-pts{display:none!important;}
@@ -788,24 +792,6 @@ const THEMES = {
     {id:'suites',nom:'Suites numériques',freq:'4/7 — PROBABLE',cls:'freq-probable'},
     {id:'geometrie',nom:'Géométrie analytique',freq:'3/7 — POSSIBLE',cls:'freq-possible'}
   ],
-  MATERNELLE_LANGAGE_ORAL:[
-    {id:'lecon',nom:'Basé sur la leçon',freq:'Auto',cls:'freq-certain'},
-    {id:'programme',nom:'Programme DPFC CI',freq:'Officiel',cls:'freq-probable'}
-  ],
-  BAC_D_MATHEMATIQUES_2NDE:[
-    {id:'fonctions_affines',nom:'Fonctions affines',freq:'CERTAIN',cls:'freq-certain'},
-    {id:'equations',nom:'Équations & Inéquations',freq:'CERTAIN',cls:'freq-certain'},
-    {id:'vecteurs',nom:'Vecteurs & Géométrie',freq:'PROBABLE',cls:'freq-probable'},
-    {id:'statistiques',nom:'Statistiques',freq:'PROBABLE',cls:'freq-probable'},
-    {id:'lecon',nom:'Basé sur la leçon',freq:'Auto',cls:'freq-possible'}
-  ],
-  BAC_D_MATHEMATIQUES_1ERE:[
-    {id:'suites',nom:'Suites numériques',freq:'CERTAIN',cls:'freq-certain'},
-    {id:'fonctions',nom:'Fonctions & Dérivées',freq:'CERTAIN',cls:'freq-certain'},
-    {id:'complexes',nom:'Nombres complexes',freq:'PROBABLE',cls:'freq-probable'},
-    {id:'probabilites',nom:'Probabilités',freq:'PROBABLE',cls:'freq-probable'},
-    {id:'lecon',nom:'Basé sur la leçon',freq:'Auto',cls:'freq-possible'}
-  ],
   DEFAULT:[
     {id:'lecon',nom:'Basé sur la leçon',freq:'Auto',cls:'freq-certain'},
     {id:'programme',nom:'Programme officiel CI',freq:'DPFC/IGENA',cls:'freq-probable'},
@@ -815,50 +801,19 @@ const THEMES = {
 
 // Classes par examen
 const CLASSES = {
-  // Maternelle
-  MATERNELLE:['PSA — Petite Section','MSA — Moyenne Section','GSA — Grande Section'],
-  // Primaire
+  MATERNELLE:['PSA - Petite Section','MSA - Moyenne Section','GSA - Grande Section'],
   CEPE:['CP1 A','CP1 B','CP1','CP2 A','CP2 B','CP2','CE1 A','CE1 B','CE1','CE2 A','CE2 B','CE2','CM1 A','CM1 B','CM1','CM2 A','CM2 B','CM2 C','CM2'],
-  // Collège — toutes classes
-  BEPC:[
-    '6ÈME 1','6ÈME 2','6ÈME 3','6ÈME 4','6ÈME 5','6ÈME 6',
-    '5ÈME 1','5ÈME 2','5ÈME 3','5ÈME 4','5ÈME 5',
-    '4ÈME 1','4ÈME 2','4ÈME 3','4ÈME 4','4ÈME 5',
-    '3ÈME 1','3ÈME 2','3ÈME 3','3ÈME 4','3ÈME 5','3ÈME 6','3ÈME 7','3ÈME EX1','3ÈME EX2'
-  ],
-  // Lycée général — toutes classes
-  BAC_A:[
-    '2NDE A','1ÈRE A','1ÈRE A2','TLE A2-1','TLE A2-2','TLE A2-3','TLE A2 EX'
-  ],
-  BAC_C:[
-    '2NDE C','1ÈRE C','1ÈRE C EX1','TLE C-1','TLE C-2','TLE C'
-  ],
-  BAC_D:[
-    '2NDE D','1ÈRE D-1','1ÈRE D-2','1ÈRE D-3',
-    'TLE D-1','TLE D-2','TLE D-3','TLE D-4'
-  ],
-  // BAC Technique — toutes classes
-  BAC_TECH:[
-    '2NDE F2','1ÈRE F2','TLE F2',
-    '2NDE G1','1ÈRE G1','TLE G1',
-    '2NDE G2','1ÈRE G2','TLE G2'
-  ],
-  // BT — toutes années et filières
-  BT:[
-    '1BT Secrétariat','2BT Secrétariat','3BT Secrétariat',
-    '1BT Comptabilité','2BT Comptabilité','3BT Comptabilité',
-    '1BT Techniques Hôtelières','2BT Techniques Hôtelières','3BT Techniques Hôtelières',
-    '1BT Sciences Médico-Sociales','2BT Sciences Médico-Sociales','3BT Sciences Médico-Sociales',
-    '1BT Bâtiment','2BT Bâtiment','3BT Bâtiment',
-    '1BT Électricité','2BT Électricité','3BT Électricité',
-    '1BT Topographie','2BT Topographie','3BT Topographie',
-    '1BT Électronique Robotique','2BT Électronique Robotique','3BT Électronique Robotique'
-  ]
+  BEPC:['6EME 1','6EME 2','6EME 3','6EME 4','6EME 5','5EME 1','5EME 2','5EME 3','5EME 4','4EME 1','4EME 2','4EME 3','4EME 4','3EME 1','3EME 2','3EME 3','3EME 4','3EME 5','3EME 6','3EME 7','3EME EX1','3EME EX2'],
+  BAC_A:['2NDE A','1ERE A','1ERE A2','TLE A2-1','TLE A2-2','TLE A2-3','TLE A2 EX'],
+  BAC_C:['2NDE C','1ERE C','1ERE C EX1','TLE C-1','TLE C-2','TLE C'],
+  BAC_D:['2NDE D','1ERE D-1','1ERE D-2','1ERE D-3','TLE D-1','TLE D-2','TLE D-3','TLE D-4'],
+  BAC_TECH:['2NDE F2','1ERE F2','TLE F2','2NDE G1','1ERE G1','TLE G1','2NDE G2','1ERE G2','TLE G2'],
+  BT:['1BT Secretariat','2BT Secretariat','3BT Secretariat','1BT Comptabilite','2BT Comptabilite','3BT Comptabilite','1BT Hotellerie','2BT Hotellerie','3BT Hotellerie','1BT Medico-Social','2BT Medico-Social','3BT Medico-Social','1BT Batiment','2BT Batiment','3BT Batiment','1BT Electricite','2BT Electricite','3BT Electricite','1BT Topographie','2BT Topographie','3BT Topographie','1BT Electronique','2BT Electronique','3BT Electronique']
 };
 
 // Matières par examen (+ filière)
 const MATIERES = {
-  MATERNELLE:['LANGAGE_ORAL','GRAPHISME_ECRITURE','NUMERATIE','EVEIL_DECOUVERTE','PRE_LECTURE'],
+  MATERNELLE:['LANGAGE_ORAL','GRAPHISME_ECRITURE','NUMERATIE','EVEIL_DECOUVERTE'],
   CEPE:['MATHEMATIQUES','FRANCAIS','EVEIL'],
   BEPC:['MATHEMATIQUES','PHYSIQUE_CHIMIE','SVT','FRANCAIS','ANGLAIS','HISTOIRE_GEO','EDHC'],
   BAC_A:['FRANCAIS','PHILOSOPHIE','ANGLAIS','HISTOIRE_GEO','MATHEMATIQUES'],
@@ -896,8 +851,8 @@ const FILIERES_TECH = {
 };
 
 const STATS_EXAMEN = {
-  MATERNELLE:[{n:'3',l:'Niveaux PSA/MSA/GSA'},{n:'APC',l:'Méthode CI'},{n:'DPFC',l:'Programme officiel'},{n:'5-6 ans',l:'Tranche d'âge'}],
-  CEPE:   [{n:'6',l:'Niveaux CP1→CM2'},{n:'APC',l:'Méthode CI'},{n:'DPFC',l:'Programme officiel'},{n:'CI',l:'Officiel MENA'}],
+  MATERNELLE:[{n:'3',l:'Niveaux PSA/MSA/GSA'},{n:'APC',l:'Methode CI'},{n:'DPFC',l:'Programme officiel'},{n:'3-5 ans',l:'Age'}],
+  CEPE:   [{n:'6',l:'Niveaux CP1 a CM2'},{n:'APC',l:'Methode CI'},{n:'DPFC',l:'Programme officiel'},{n:'CI',l:'Officiel MENA'}],
   BEPC:   [{n:'7',l:'Sujets analysés'},{n:'3',l:'Zones CI'},{n:'2015',l:'Depuis'},{n:'Coef 4',l:'Maths & FR'}],
   BAC_A:  [{n:'5',l:'Matières BAC A'},{n:'Coef 5',l:'Français'},{n:'Coef 4',l:'Philosophie'},{n:'Littéraire',l:'Série'}],
   BAC_C:  [{n:'5',l:'Matières BAC C'},{n:'Coef 7',l:'Maths'},{n:'Coef 6',l:'PC'},{n:'Sciences',l:'Exactes'}],
@@ -907,9 +862,8 @@ const STATS_EXAMEN = {
 };
 
 const NOMS_MATIERES = {
-  LANGAGE_ORAL:'Langage Oral',GRAPHISME_ECRITURE:'Graphisme & Écriture',
-  NUMERATIE:'Numération & Calcul',EVEIL_DECOUVERTE:'Éveil & Découverte',
-  PRE_LECTURE:'Pré-lecture',
+  LANGAGE_ORAL:'Langage Oral',GRAPHISME_ECRITURE:'Graphisme & Ecriture',
+  NUMERATIE:'Numeration',EVEIL_DECOUVERTE:'Eveil & Decouverte',
   MATHEMATIQUES:'Mathématiques',PHYSIQUE_CHIMIE:'Physique-Chimie',SVT:'SVT',
   FRANCAIS:'Français',ANGLAIS:'Anglais',HISTOIRE_GEO:'Histoire-Géographie',
   EDHC:'EDHC',PHILOSOPHIE:'Philosophie',EVEIL:'Éveil scientifique',
@@ -973,15 +927,15 @@ function changerExamen() {
     (FILIERES_TECH[examen] || []).forEach(f => {
       sel.innerHTML += `<option value="${f.id}">${f.nom}</option>`;
     });
-    if (FILIERES_TECH[examen] && FILIERES_TECH[examen].length) {
+    if (FILIERES_TECH[examen]?.length) {
       sel.value = FILIERES_TECH[examen][0].id;
     }
   }
 
-  // Classes — toutes classes selon le niveau
+  // Classes
   const selClasse = document.getElementById('selClasse');
   const classes = CLASSES[examen] || CLASSES['BEPC'];
-  selClasse.innerHTML = classes.map(cl => `<option value="${cl}">${cl}</option>`).join('');
+  selClasse.innerHTML = classes.map(c => `<option value="${c}">${c}</option>`).join('');
 
   changerFiliere();
 }
@@ -1120,16 +1074,16 @@ function generer() {
 function afficherComposition(d, isIA, examen, matiere, filiere, classe) {
   // Header
   document.getElementById('resultEcole').textContent = (ECOLE_NOMS[ecoleCode] || ecoleCode).toUpperCase();
-  var _nm={'CPP LES PRINCES':"COLLEGE PRIVE LES PRINCES D ABIDJAN",'CPP PRO':"CPP PROFESSIONNEL LES PRINCES",'CPP TECH':"CPP TECHNIQUE LES PRINCES",'ETL PRINCES KOUIBLY':"ETL PRINCES KOUIBLY",'ACADEMIE':"ACADÉMIE LES PRINCES",'GUINGLO VILLE':"CPP LES PRINCES GUINGLO",'GNONTINROU':"CPP LES PRINCES GNONTINROU",'KOUTOUAN':"CPP LES PRINCES KOUTOUAN",'SOAKPE':"CPP LES PRINCES SOAKPÉ",'AKEIKOI 1':"LES PRINCES AKEÏKOÏ 1",'AKEIKOI 2':"LES PRINCES AKEÏKOÏ 2",'GS RITA ROSANE':"GS RITA ROSANE — LES PRINCES"};
-  var _cm={'MATHEMATIQUES':4,'SVT':4,'PHYSIQUE_CHIMIE':3,'PHILOSOPHIE':2,'FRANCAIS':2,'ANGLAIS':2,'COMPTABILITE':5,'BUREAU_SECRETARIAT':6,'STENOGRAPHIE':3};
-  var _dm={'BAC_D':'4h','BAC_C':'4h','BAC_A':'4h','BAC_TECH':'4h','BEPC':'2h','CEPE':'2h','BT':'3h'};
-  var _mo=['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
+  var _nm={'CPP LES PRINCES':'COLLEGE PRIVE LES PRINCES D ABIDJAN','CPP PRO':'CPP PROFESSIONNEL LES PRINCES','CPP TECH':'CPP TECHNIQUE LES PRINCES','ETL PRINCES KOUIBLY':'ETL PRINCES KOUIBLY','ACADEMIE':'ACADEMIE LES PRINCES','GUINGLO VILLE':'CPP LES PRINCES GUINGLO','GNONTINROU':'CPP LES PRINCES GNONTINROU','KOUTOUAN':'CPP LES PRINCES KOUTOUAN','SOAKPE':'CPP LES PRINCES SOAKPE','AKEIKOI 1':'LES PRINCES AKEIKOI 1','AKEIKOI 2':'LES PRINCES AKEIKOI 2','GS RITA ROSANE':'GS RITA ROSANE LES PRINCES'};
+  var _cm={'MATHEMATIQUES':4,'SVT':4,'PHYSIQUE_CHIMIE':3,'PHILOSOPHIE':2,'FRANCAIS':2,'ANGLAIS':2,'COMPTABILITE':5,'BUREAU_SECRETARIAT':6,'STENOGRAPHIE':3,'NUMERATIE':1,'LANGAGE_ORAL':1};
+  var _dm={'BAC_D':'4h','BAC_C':'4h','BAC_A':'4h','BAC_TECH':'4h','BEPC':'2h','CEPE':'2h','BT':'3h','MATERNELLE':'30 min'};
+  var _mo=['janv','fevr','mars','avr','mai','juin','juil','aout','sept','oct','nov','dec'];
   var _d=new Date();
-  if(document.getElementById('printEcoleNom')) document.getElementById('printEcoleNom').textContent=_nm[ecoleCode]||"GROUPE SCOLAIRE LES PRINCES D ABIDJAN";
+  if(document.getElementById('printEcoleNom')) document.getElementById('printEcoleNom').textContent=(_nm[ecoleCode]||'GROUPE SCOLAIRE LES PRINCES');
   if(document.getElementById('printMatiere')) document.getElementById('printMatiere').textContent=(NOMS_MATIERES[matiere]||matiere).toUpperCase();
-  if(document.getElementById('printSerie')) document.getElementById('printSerie').textContent='Série D — '+classe+' — Devoir T2 — '+_mo[_d.getMonth()]+' '+_d.getFullYear();
-  if(document.getElementById('printCoef')) document.getElementById('printCoef').textContent=_cm[matiere]||d.coefficient||'—';
-  if(document.getElementById('printDuree')) document.getElementById('printDuree').textContent=_dm[examen]||d.duree||'2h';
+  if(document.getElementById('printSerie')) document.getElementById('printSerie').textContent=classe+' - Devoir T'+((trimestre||'T2').replace('T',''))+' - '+_mo[_d.getMonth()]+' '+_d.getFullYear();
+  if(document.getElementById('printCoef')) document.getElementById('printCoef').textContent=(_cm[matiere]||d.coefficient||'');
+  if(document.getElementById('printDuree')) document.getElementById('printDuree').textContent=(_dm[examen]||d.duree||'2h');
   document.getElementById('resultTitre').textContent = d.titre || `COMPOSITION — ${classe} — ${NOMS_MATIERES[matiere]||matiere}`;
   document.getElementById('resultMeta').textContent = `Durée : ${d.duree||'2h'} · Examen : ${d.examen||examen} · 20 points`;
   const src = document.getElementById('resultSource');
@@ -1157,20 +1111,12 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe) {
   // Afficher
   document.getElementById('resultZone').style.display = 'block';
   document.getElementById('resultZone').scrollIntoView({ behavior:'smooth' });
-  // Ouvrir toutes les parties (pour impression)
-  ['A','B','C'].forEach(function(l){
-    var body = document.getElementById('body'+l);
-    if(body){ body.classList.add('open'); body.style.display='block'; }
-  });
+  ['A','B','C'].forEach(function(l){var b=document.getElementById('body'+l);if(b){b.classList.add('open');b.style.display='block';}});
 }
 
 function afficherPartie(lettre, p) {
   if (!p) return;
-  var numEx = {'A':'1','B':'2','C':'3'}[lettre] || lettre;
-  var ptsEx = {'A':'5','B':'8','C':'7'}[lettre] || '';
-  var titreEcran = p.titre || 'PARTIE ' + lettre;
-  document.getElementById('titre'+lettre).textContent = titreEcran;
-  document.getElementById('titre'+lettre).setAttribute('data-print-titre', 'EXERCICE ' + numEx + '  (' + ptsEx + ' points)');
+  document.getElementById('titre'+lettre).textContent = p.titre || `PARTIE ${lettre}`;
   document.getElementById('sous'+lettre).textContent = p.sous_titre || '';
 
   let html = '';
@@ -1201,68 +1147,69 @@ function afficherCorrige(corrige) {
 // MODE DÉMO
 // ══════════════════════════════════════
 function afficherDemo(examen, matiere, filiere, classe, trimestre, lecon) {
-  var nomMat = NOMS_MATIERES[matiere] || matiere;
-  var mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-  var dateStr = mois[new Date().getMonth()] + ' ' + new Date().getFullYear();
+  const nomMat = NOMS_MATIERES[matiere] || matiere;
+  const ctx = {
+    CEPE:'Un planteur de cacao de Divo vend sa récolte au marché d\'Adjamé.',
+    BEPC:'La coopérative d\'hévéa de Man produit des tonnes de latex par semaine.',
+    BAC_A:'La littérature ivoirienne et l\'identité culturelle africaine.',
+    BAC_C:'La centrale solaire de Touba alimente 50 000 foyers ivoiriens.',
+    BAC_D:'Ivoirbois, société forestière de Man, optimise sa production.',
+    BAC_TECH:'L\'usine SIVOA d\'Abidjan automatise sa chaîne de production.',
+    BT:'Une PME ivoirienne exporte du cacao vers l\'Europe.'
+  }[examen] || 'Application en contexte ivoirien.';
 
-  var demo = {
-    titre: 'DEVOIR ' + trimestre + ' — ' + classe + ' — ' + nomMat.toUpperCase(),
-    examen: examen.replace(/_/g,' '),
-    duree: {'BAC_D':'4h','BAC_C':'4h','BAC_A':'4h','BAC_TECH':'4h','BEPC':'2h','CEPE':'2h','BT':'3h'}[examen] || '2h',
-    coefficient: {'MATHEMATIQUES':4,'SVT':4,'PHYSIQUE_CHIMIE':3,'PHILOSOPHIE':2,'FRANCAIS':2,'ANGLAIS':2,'COMPTABILITE':5,'BUREAU_SECRETARIAT':6}[matiere] || 2,
-    serie: 'Série D',
-    probabilite_examen: '89%',
-    justification: 'Thème récurrent dans les anciens sujets CI — Mode démonstration',
+  const demo = {
+    titre:`COMPOSITION ${trimestre} — ${classe} — ${nomMat}`,
+    examen: examen.replace('_',' '),
+    duree: '2h',
+    lecon: lecon || `Chapitre en cours — ${nomMat}`,
+    probabilite_examen: '78%',
+    justification: `Thème récurrent dans les anciens sujets CI — Mode démonstration`,
     partie_A: {
-      titre: 'EXERCICE 1 (2 points)',
-      sous_titre: '',
-      contexte: 'Pour chacune des affirmations suivantes, écrire le numéro suivi de VRAI ou FAUX.',
-      questions: [
-        '1. La fonction x ⟼ eˣ − x − 1 est positive ou nulle sur ℝ.',
-        '2. Si lim f(x) = +∞ et lim g(x) = +∞ alors lim[f(x) − g(x)] = 0.',
-        '3. Pour tout x > 0, x^(ln x) = e^(ln x)².',
-        '4. Si f''(x₀) = 0 et f'' change de signe en x₀ alors (x₀ ; f(x₀)) est un point d'inflexion.'
+      titre:`PARTIE A — STANDARD (5 points)`,
+      sous_titre:'Programme officiel CI — Accessible à tous',
+      contexte:`Application directe du cours : ${lecon || nomMat}`,
+      questions:[
+        `1. Question de cours directe sur ${lecon || nomMat}. **(2 pts)**`,
+        `2. Application numérique simple avec calcul détaillé. **(2 pts)**`,
+        `3. Question de synthèse courte avec justification. **(1 pt)**`
       ]
     },
     partie_B: {
-      titre: 'EXERCICE 2 (3 points)',
-      sous_titre: '',
-      contexte: 'On considère la suite (Uₙ) définie par U₁ = 2 et pour tout n ≥ 1 : Uₙ₊₁ = Uₙ · e^(1/n) − 1/n.',
-      questions: [
-        '1. Calculer U₂ et U₃.',
-        '2. Démontrer par récurrence que Uₙ > 0 pour tout n ≥ 1.',
-        '3. Étudier la monotonie de (Uₙ) en calculant Uₙ₊₁ − Uₙ.',
-        '4. a) Démontrer que (Uₙ) est majorée par 3.',
-        '   b) En déduire que (Uₙ) converge. Donner ℓ à 10⁻¹ près.'
+      titre:`PARTIE B — EXCELLENCE (8 points)`,
+      sous_titre:'Niveau meilleur lycée France — Démonstrations rigoureuses',
+      contexte:`Raisonnement élaboré et démonstration formelle.`,
+      questions:[
+        `1. a) Démontrer rigoureusement la propriété principale. **(2 pts)**`,
+        `   b) En déduire une conséquence et interpréter graphiquement. **(2 pts)**`,
+        `2. a) Étudier les variations complètes avec tableau. **(2 pts)**`,
+        `   b) Tracer la courbe et déterminer les asymptotes. **(2 pts)**`
       ]
     },
     partie_C: {
-      titre: 'EXERCICE 3 (5 points)',
-      sous_titre: '',
-      contexte: 'Le plan est muni d'un repère orthonormé (O, I, J). On considère f définie sur ℝ par : f(x) = (x − 1)e⁻ˣ + 1. On note (C) sa courbe représentative.',
-      questions: [
-        '1. Calculer les limites de f en −∞ et en +∞. Interpréter graphiquement.',
-        '2. a) Calculer f'(x). Dresser le tableau de variation complet de f.',
-        '   b) Montrer que y = 1 est asymptote horizontale à (C) en +∞.',
-        '3. a) Calculer f''(x). Déterminer le point d'inflexion de (C).',
-        '   b) Écrire l'équation de la tangente (T) au point d'inflexion.',
-        '4. a) Étudier les positions relatives de (C) et y = 1. b) Construire (C) et (T).',
-        '5. Calculer ∫₀² f(x) dx par intégration par parties. Interpréter.'
+      titre:`PARTIE C — MIT/NASA (7 points)`,
+      sous_titre:`Niveau mondial — ${ctx.split('.')[0]}`,
+      contexte: ctx,
+      questions:[
+        `1. Modéliser mathématiquement la situation décrite. **(2 pts)**`,
+        `2. Résoudre et interpréter les résultats dans le contexte. **(3 pts)**`,
+        `3. Optimiser et généraliser à d'autres situations africaines. **(2 pts)**`
       ]
     },
-    corrige: {
-      partie_A: ['1. VRAI — eˣ − x − 1 ≥ 0 pour tout x (convexité de eˣ)', '2. FAUX — exemple f(x)=x, g(x)=x+1', '3. VRAI', '4. VRAI — définition du point d'inflexion'],
-      partie_B: ['1. U₂ = 2e − 1/2 ≈ 4,94 ; U₃ ≈ ...', '2. Récurrence : U₁=2>0, si Uₙ>0 alors Uₙ₊₁=Uₙe^(1/n)−1/n>0 pour n assez grand', '3. Uₙ₊₁−Uₙ = Uₙ(e^(1/n)−1)−1/n > 0 car e^(1/n)>1+1/n', '4. Majorée par 3 + convergence + ℓ ≈ valeur approchée'],
-      partie_C: ['1. lim en −∞ = −∞, lim en +∞ = 1 (asymptote y=1)', '2. f'(x) = −xe⁻ˣ ; min en x=0, f(0)=0', '3. f''(x) = (x−1)e⁻ˣ ; inflexion en x=1', '4. C sous y=1 pour x>0', '5. ∫₀² f(x)dx = résultat par IPP']
+    corrige:{
+      partie_A:[`1. Réponse détaillée — voir cours ${lecon||nomMat}`,`2. Calcul numérique complet avec unités`,`3. Synthèse justifiée`],
+      partie_B:[`1. a) Démonstration formelle étape par étape`,`   b) Conséquence et interprétation graphique`,`2. Tableau de variation complet`],
+      partie_C:[`1. Modèle mathématique avec variables définies`,`2. Résolution complète avec interprétation`,`3. Généralisation et optimisation`]
     },
-    conseil_enseignant: 'MODE DEMONSTRATION — Connectez la clé Anthropic dans PropertiesService pour générer des compositions complètes adaptées aux anciens sujets CI officiels.',
+    conseil_enseignant:`MODE DÉMONSTRATION — Connectez la clé Anthropic dans PropertiesService pour générer des compositions complètes adaptées aux anciens sujets CI officiels.`,
     mode_demo: true
   };
-
   afficherComposition(demo, false, examen, matiere, filiere, classe);
 }
 
-
+// ══════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════
 function togglePartie(header) {
   const body = header.nextElementSibling;
   const arrow = header.querySelector('.partie-arrow');
