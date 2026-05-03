@@ -205,7 +205,8 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--gris);color:var(
   /* CORPS */
   .result-header{display:none!important;}
   .result-body{background:white!important;border:none!important;border-radius:0!important;padding:0!important;}
-  .partie{margin-bottom:8px!important;border-bottom:none!important;page-break-inside:avoid!important;}
+  .partie{margin-bottom:10px!important;border-bottom:none!important;page-break-inside:avoid!important;}
+  .partie-body .question:first-child{margin-top:3px!important;}
   .partie-header{background:white!important;padding:0 0 3px!important;display:block!important;border-radius:0!important;}
   .partie-arrow,.partie-dot{display:none!important;}
   .partie-body{display:block!important;padding:0!important;}
@@ -220,10 +221,11 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--gris);color:var(
 
   /* Texte exercices */
   .contexte-box{background:white!important;border:none!important;border-left:none!important;
-    font-style:italic!important;font-size:11.5px!important;color:#000!important;
-    padding:1px 0!important;margin-bottom:3px!important;text-align:justify!important;line-height:1.5!important;}
-  .question{font-size:11.5px!important;color:#000!important;line-height:1.6!important;
-    text-align:justify!important;padding:1px 0!important;border:none!important;}
+    font-style:italic!important;font-size:11px!important;color:#000!important;
+    padding:1px 0 3px 0!important;margin-bottom:4px!important;text-align:justify!important;line-height:1.5!important;}
+  .question{font-size:11.5px!important;color:#000!important;line-height:1.8!important;
+    text-align:justify!important;padding:2px 0 2px 8px!important;border:none!important;
+    display:block!important;margin-bottom:2px!important;}
 
   /* Forcer saut de page entre Ex 1-4 et Ex 5-6 */
   .pC{page-break-before:always!important;}
