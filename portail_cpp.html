@@ -16,15 +16,8 @@
   --texte: #1A2733;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--gris); color: var(--texte); min-height: 100vh; }
 
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--gris);
-  color: var(--texte);
-  min-height: 100vh;
-}
-
-/* ===== HERO ===== */
 .hero {
   background: linear-gradient(135deg, #0D2D4F 0%, #1F4E79 50%, #2E75B6 100%);
   padding: 48px 24px 40px;
@@ -69,12 +62,7 @@ body {
   position: relative; z-index: 1;
 }
 .hero h1 span { color: var(--or2); }
-.hero p {
-  font-size: 14px;
-  color: rgba(255,255,255,0.72);
-  position: relative; z-index: 1;
-  margin-bottom: 4px;
-}
+.hero p { font-size: 14px; color: rgba(255,255,255,0.72); position: relative; z-index: 1; margin-bottom: 4px; }
 .hero-sem {
   display: inline-block;
   background: rgba(212,175,55,0.2);
@@ -87,7 +75,6 @@ body {
   position: relative; z-index: 1;
 }
 
-/* ===== LIENS RAPIDES ===== */
 .section { padding: 24px 18px; }
 .section-label {
   font-size: 11px;
@@ -122,9 +109,19 @@ body {
   background: var(--card-color, var(--bleu));
   border-radius: 4px 0 0 4px;
 }
-.lien-card:active {
-  transform: scale(0.98);
-  box-shadow: 0 1px 6px rgba(31,78,121,0.12);
+.lien-card:active { transform: scale(0.98); box-shadow: 0 1px 6px rgba(31,78,121,0.12); }
+
+.lien-card .badge-new {
+  position: absolute;
+  top: 10px; right: 40px;
+  background: linear-gradient(135deg, #D4AF37, #F0D060);
+  color: #1F4E79;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .lien-icon {
@@ -134,50 +131,27 @@ body {
   font-size: 22px;
   flex-shrink: 0;
 }
-
 .lien-body { flex: 1; }
-.lien-titre {
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--texte);
-  margin-bottom: 3px;
-}
-.lien-desc {
-  font-size: 12px;
-  color: #7A8FA0;
-  line-height: 1.4;
-}
-.lien-arrow {
-  font-size: 18px;
-  color: #B0C0CF;
-  flex-shrink: 0;
-}
+.lien-titre { font-size: 15px; font-weight: 700; color: var(--texte); margin-bottom: 3px; }
+.lien-desc { font-size: 12px; color: #7A8FA0; line-height: 1.4; }
+.lien-arrow { font-size: 18px; color: #B0C0CF; flex-shrink: 0; }
 
-/* Couleurs par type */
 .c-bleu { --card-color: #1F4E79; }
 .c-bleu .lien-icon { background: #E3F0FB; }
-
 .c-vert { --card-color: #2E7D32; }
 .c-vert .lien-icon { background: #E8F5E9; }
-
 .c-or { --card-color: #D4AF37; }
 .c-or .lien-icon { background: #FFF8E1; }
-
 .c-rouge { --card-color: #C62828; }
 .c-rouge .lien-icon { background: #FFEBEE; }
-
 .c-violet { --card-color: #6A1B9A; }
 .c-violet .lien-icon { background: #F3E5F5; }
-
 .c-orange { --card-color: #E65100; }
 .c-orange .lien-icon { background: #FFF3E0; }
+.c-teal { --card-color: #00695C; }
+.c-teal .lien-icon { background: #E0F2F1; }
 
-/* ===== SECTION ÉCOLES ===== */
-.ecoles-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
+.ecoles-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ecole-btn {
   background: var(--blanc);
   border: 1.5px solid #E0E8F0;
@@ -197,16 +171,9 @@ body {
 .ecole-btn .eco-icon { font-size: 20px; margin-bottom: 5px; display: block; }
 .ecole-btn span { display: block; font-size: 11px; color: #7A8FA0; margin-top: 2px; font-weight: 400; }
 
-/* ===== FOOTER ===== */
-.footer {
-  text-align: center;
-  padding: 24px 18px 32px;
-  font-size: 12px;
-  color: #8DA3B5;
-}
+.footer { text-align: center; padding: 24px 18px 32px; font-size: 12px; color: #8DA3B5; }
 .footer strong { color: var(--bleu); }
 
-/* ===== TOAST ===== */
 .toast {
   position: fixed;
   bottom: 20px; left: 50%;
@@ -223,12 +190,7 @@ body {
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 
-/* ===== DIVIDER ===== */
-.divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #D8E4EF, transparent);
-  margin: 0 18px;
-}
+.divider { height: 1px; background: linear-gradient(90deg, transparent, #D8E4EF, transparent); margin: 0 18px; }
 </style>
 </head>
 <body>
@@ -282,11 +244,12 @@ body {
     <div class="lien-arrow">›</div>
   </a>
 
-  <a href="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/generateur_devoir_BAC_D_CPP.html" class="lien-card c-violet">
+  <a href="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/generateur_compositions_CPP.html?e=cpp" class="lien-card c-violet">
+    <span class="badge-new">✦ Nouveau</span>
     <div class="lien-icon">🎓</div>
     <div class="lien-body">
-      <div class="lien-titre">Générateur Devoirs BAC D</div>
-      <div class="lien-desc">IA · 3 niveaux · Contexte ivoirien</div>
+      <div class="lien-titre">Générateur de Compositions IA</div>
+      <div class="lien-desc">CEPE · BEPC · BAC A/C/D · BAC Tech · BT — Standard + Excellence + MIT/NASA</div>
     </div>
     <div class="lien-arrow">›</div>
   </a>
@@ -347,13 +310,12 @@ body {
 <div class="toast" id="toast"></div>
 
 <script>
-// Afficher semaine actuelle
 (function() {
   var debut = new Date('2025-09-08');
   var now = new Date();
   var sem = Math.max(1, Math.min(30, Math.floor((now - debut) / (7*24*60*60*1000)) + 1));
   var jours = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
-  var mois = ['jan','fev','mars','avr','mai','juin','juil','aout','sept','oct','nov','dec'];
+  var mois = ['jan','fév','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
   var j = jours[now.getDay()];
   var d = now.getDate();
   var m = mois[now.getMonth()];
@@ -362,6 +324,5 @@ body {
     j + ' ' + d + ' ' + m + ' ' + a + ' · Semaine ' + sem + '/30';
 })();
 </script>
-
 </body>
 </html>
