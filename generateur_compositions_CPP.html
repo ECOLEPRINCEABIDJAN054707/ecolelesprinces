@@ -908,13 +908,23 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe, trimestr
       html += '<div class="contexte-box">' + exData.contexte + '</div>';
     }
     (exData && exData.questions ? exData.questions : []).forEach(function(q) {
-      // Séparer les sous-questions numérotées sur des lignes distinctes
-      var qf = (q||'')
-        .replace(/\|/g,'<br>')
-        .replace(/\n/g,'<br>')
-        .replace(/ (\d+\)) /g,'<br><b>$1</b> ')
-        .replace(/^(\d+\)) /, '<b>$1</b> ');
-      html += '<div class="question">' + qf + '</div>';
+      var qStr = (q||'').toString();
+      // Séparer sur ||| = sous-questions distinctes
+      if (qStr.indexOf('|||') >= 0) {
+        qStr.split('|||').forEach(function(part) {
+          var p = part.trim();
+          if (!p) return;
+          p = p.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<b>$1</b>');
+          html += '<div class="question">' + p + '</div>';
+        });
+      } else {
+        var qf = qStr
+          .replace(/\n/g,'<br>')
+          .replace(/\*\*(.*?)\*\*/g,'<b>$1</b>')
+          .replace(/([0-9]+[\)\.]\s)/g,'<br><b>$1</b>')
+          .replace(/^<br>/,'');
+        html += '<div class="question">' + qf + '</div>';
+      }
     });
     bodyEl.innerHTML = html;
   }
