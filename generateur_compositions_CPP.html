@@ -230,7 +230,8 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--gris);color:var(
   .question br{display:block!important;margin-top:2px!important;}
 
   /* Forcer saut de page entre Ex 1-4 et Ex 5-6 */
-  .pC{page-break-before:always!important;}
+  .pC:first-of-type{page-break-before:always!important;}
+  #partieEx5{page-break-before:always!important;}
 
   /* Masquer corrigé */
   .corrige-block{display:none!important;}
@@ -394,29 +395,53 @@ body{font-family:'Nunito',system-ui,sans-serif;background:var(--gris);color:var(
     </div>
 
     <div class="result-body" id="resultBody">
-      <div class="partie pA">
+      <div class="partie pA" id="partieEx1">
         <div class="partie-header" onclick="togglePartie(this)">
           <div class="partie-dot"></div>
-          <div class="partie-info"><div class="partie-titre" id="titreA">EXERCICE 1</div><div class="partie-sous" id="sousA"></div></div>
-          <div class="partie-pts">2 pts</div><div class="partie-arrow open">▾</div>
+          <div class="partie-info"><div class="partie-titre" id="titreEx1">EXERCICE 1</div><div class="partie-sous" id="sousEx1">Vrai ou Faux</div></div>
+          <div class="partie-pts" id="ptsEx1">2 pts</div><div class="partie-arrow open">▾</div>
         </div>
-        <div class="partie-body open" id="bodyA"></div>
+        <div class="partie-body open" id="bodyEx1"></div>
       </div>
-      <div class="partie pB">
+      <div class="partie pA" id="partieEx2">
         <div class="partie-header" onclick="togglePartie(this)">
           <div class="partie-dot"></div>
-          <div class="partie-info"><div class="partie-titre" id="titreB">EXERCICES 2-4</div><div class="partie-sous" id="sousB"></div></div>
-          <div class="partie-pts">8 pts</div><div class="partie-arrow open">▾</div>
+          <div class="partie-info"><div class="partie-titre" id="titreEx2">EXERCICE 2</div><div class="partie-sous" id="sousEx2">QCM</div></div>
+          <div class="partie-pts" id="ptsEx2">2 pts</div><div class="partie-arrow open">▾</div>
         </div>
-        <div class="partie-body open" id="bodyB"></div>
+        <div class="partie-body open" id="bodyEx2"></div>
       </div>
-      <div class="partie pC">
+      <div class="partie pB" id="partieEx3">
         <div class="partie-header" onclick="togglePartie(this)">
           <div class="partie-dot"></div>
-          <div class="partie-info"><div class="partie-titre" id="titreC">EXERCICES 5-6</div><div class="partie-sous" id="sousC"></div></div>
-          <div class="partie-pts">10 pts</div><div class="partie-arrow open">▾</div>
+          <div class="partie-info"><div class="partie-titre" id="titreEx3">EXERCICE 3</div><div class="partie-sous" id="sousEx3">Suites</div></div>
+          <div class="partie-pts" id="ptsEx3">3 pts</div><div class="partie-arrow open">▾</div>
         </div>
-        <div class="partie-body open" id="bodyC"></div>
+        <div class="partie-body open" id="bodyEx3"></div>
+      </div>
+      <div class="partie pB" id="partieEx4">
+        <div class="partie-header" onclick="togglePartie(this)">
+          <div class="partie-dot"></div>
+          <div class="partie-info"><div class="partie-titre" id="titreEx4">EXERCICE 4</div><div class="partie-sous" id="sousEx4">Complexes</div></div>
+          <div class="partie-pts" id="ptsEx4">3 pts</div><div class="partie-arrow open">▾</div>
+        </div>
+        <div class="partie-body open" id="bodyEx4"></div>
+      </div>
+      <div class="partie pC" id="partieEx5">
+        <div class="partie-header" onclick="togglePartie(this)">
+          <div class="partie-dot"></div>
+          <div class="partie-info"><div class="partie-titre" id="titreEx5">EXERCICE 5</div><div class="partie-sous" id="sousEx5">Etude de fonction</div></div>
+          <div class="partie-pts" id="ptsEx5">6 pts</div><div class="partie-arrow open">▾</div>
+        </div>
+        <div class="partie-body open" id="bodyEx5"></div>
+      </div>
+      <div class="partie pC" id="partieEx6">
+        <div class="partie-header" onclick="togglePartie(this)">
+          <div class="partie-dot"></div>
+          <div class="partie-info"><div class="partie-titre" id="titreEx6">EXERCICE 6</div><div class="partie-sous" id="sousEx6">Situation-probleme</div></div>
+          <div class="partie-pts" id="ptsEx6">4 pts</div><div class="partie-arrow open">▾</div>
+        </div>
+        <div class="partie-body open" id="bodyEx6"></div>
       </div>
       <div class="partie corrige-block">
         <div class="partie-header" onclick="togglePartie(this)">
@@ -783,51 +808,58 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe, trimestr
   if (document.getElementById('printCoef')) document.getElementById('printCoef').textContent = _cm[matiere] || d.coefficient || '';
   if (document.getElementById('printDuree')) document.getElementById('printDuree').textContent = _dm[examen] || d.duree || '2h';
 
+  // Remplir les 6 cases distinctes
+  function fillEx(bodyId, titreId, sousId, ptsId, exData, defaultTitre, defaultPts) {
+    var bodyEl = document.getElementById(bodyId);
+    var titreEl = document.getElementById(titreId);
+    var sousEl = document.getElementById(sousId);
+    var ptsEl = document.getElementById(ptsId);
+    if (!bodyEl) return;
+    if (titreEl && exData && exData.titre) titreEl.textContent = exData.titre;
+    else if (titreEl) titreEl.textContent = defaultTitre;
+    if (sousEl && exData && exData.sous_titre) sousEl.textContent = exData.sous_titre;
+    if (ptsEl) ptsEl.textContent = defaultPts;
+    var html = '';
+    if (exData && exData.contexte) {
+      html += '<div class="contexte-box">' + exData.contexte + '</div>';
+    }
+    (exData && exData.questions ? exData.questions : []).forEach(function(q) {
+      var qf = (q||'').replace(/\|/g,'<br>').replace(/\n/g,'<br>');
+      html += '<div class="question">' + qf + '</div>';
+    });
+    bodyEl.innerHTML = html;
+  }
+
   // Support 6 exercices OU ancien format partie_A/B/C
   if (d.exercice1) {
-    // Nouveau format 6 exercices
-    afficherPartie('A', {
-      titre: d.exercice1.titre || 'EXERCICE 1 (2 points)',
-      sous_titre: d.exercice1.type || '',
-      contexte: d.exercice1.contexte || '',
-      questions: d.exercice1.questions || []
-    });
-    afficherPartie('B', {
-      titre: 'EXERCICES 2 A 4 (8 points)',
-      sous_titre: '',
-      contexte: 'Exercices independants.',
-      questions: [].concat(
-        [d.exercice2 ? d.exercice2.titre + ' - ' + (d.exercice2.contexte||'') : ''],
-        (d.exercice2 && d.exercice2.questions ? d.exercice2.questions.map(function(q){return 'Ex2 - '+q;}) : []),
-        [d.exercice3 ? d.exercice3.titre + ' - ' + (d.exercice3.contexte||'') : ''],
-        (d.exercice3 && d.exercice3.questions ? d.exercice3.questions.map(function(q){return 'Ex3 - '+q;}) : []),
-        [d.exercice4 ? d.exercice4.titre + ' - ' + (d.exercice4.contexte||'') : ''],
-        (d.exercice4 && d.exercice4.questions ? d.exercice4.questions.map(function(q){return 'Ex4 - '+q;}) : [])
-      ).filter(function(q){return q && q.trim();})
-    });
-    afficherPartie('C', {
-      titre: 'EXERCICES 5 ET 6 (10 points)',
-      sous_titre: '',
-      contexte: 'Etude de fonction et situation-probleme.',
-      questions: [].concat(
-        [d.exercice5 ? d.exercice5.titre + ' - ' + (d.exercice5.contexte||'') : ''],
-        (d.exercice5 && d.exercice5.questions ? d.exercice5.questions : []),
-        [d.exercice6 ? d.exercice6.titre + ' - ' + (d.exercice6.contexte||'') : ''],
-        (d.exercice6 && d.exercice6.questions ? d.exercice6.questions : [])
-      ).filter(function(q){return q && q.trim();})
-    });
-    // Corrigé 6 exercices
-    var cor6 = d.corrige || {};
-    afficherCorrige({
-      partie_A: cor6.exercice1 || [],
-      partie_B: [].concat(cor6.exercice2||[], cor6.exercice3||[], cor6.exercice4||[]),
-      partie_C: [].concat(cor6.exercice5||[], cor6.exercice6||[])
-    });
+    fillEx('bodyEx1','titreEx1','sousEx1','ptsEx1',d.exercice1,'EXERCICE 1','2 pts');
+    fillEx('bodyEx2','titreEx2','sousEx2','ptsEx2',d.exercice2,'EXERCICE 2','2 pts');
+    fillEx('bodyEx3','titreEx3','sousEx3','ptsEx3',d.exercice3,'EXERCICE 3','3 pts');
+    fillEx('bodyEx4','titreEx4','sousEx4','ptsEx4',d.exercice4,'EXERCICE 4','3 pts');
+    fillEx('bodyEx5','titreEx5','sousEx5','ptsEx5',d.exercice5,'EXERCICE 5','6 pts');
+    fillEx('bodyEx6','titreEx6','sousEx6','ptsEx6',d.exercice6,'EXERCICE 6','4 pts');
+    afficherCorrige(d.corrige);
   } else {
-    // Ancien format partie_A/B/C
-    afficherPartie('A', d.partie_A);
-    afficherPartie('B', d.partie_B);
-    afficherPartie('C', d.partie_C);
+    // Format partie_A/B/C -> remplir les 6 cases
+    // Ex1 = partie_A
+    fillEx('bodyEx1','titreEx1','sousEx1','ptsEx1', d.partie_A ? {titre:'EXERCICE 1 (2 points)',contexte:d.partie_A.contexte,questions:[d.partie_A.questions ? d.partie_A.questions[0] : '']} : null,'EXERCICE 1','2 pts');
+    // Ex1 questions completes
+    if (d.partie_A) {
+      var h1='';
+      if(d.partie_A.contexte) h1+='<div class="contexte-box">'+d.partie_A.contexte+'</div>';
+      (d.partie_A.questions||[]).forEach(function(q){h1+='<div class="question">'+q+'</div>';});
+      document.getElementById('bodyEx1').innerHTML=h1;
+      document.getElementById('titreEx1').textContent='EXERCICE 1 (2 points)';
+    }
+    // Ex2-4 = partie_B (3 questions)
+    var qB = d.partie_B && d.partie_B.questions ? d.partie_B.questions : [];
+    fillEx('bodyEx2','titreEx2','sousEx2','ptsEx2',{titre:'EXERCICE 2 (2 points)',contexte:'QCM',questions:[qB[0]||'']},'EXERCICE 2','2 pts');
+    fillEx('bodyEx3','titreEx3','sousEx3','ptsEx3',{titre:'EXERCICE 3 (3 points)',contexte:'Suites',questions:[qB[1]||'']},'EXERCICE 3','3 pts');
+    fillEx('bodyEx4','titreEx4','sousEx4','ptsEx4',{titre:'EXERCICE 4 (3 points)',contexte:'Complexes',questions:[qB[2]||'']},'EXERCICE 4','3 pts');
+    // Ex5-6 = partie_C (3 questions)
+    var qC = d.partie_C && d.partie_C.questions ? d.partie_C.questions : [];
+    fillEx('bodyEx5','titreEx5','sousEx5','ptsEx5',{titre:'EXERCICE 5 (6 points)',contexte:d.partie_C ? d.partie_C.contexte : '',questions:[qC[0]||'',qC[1]||'']},'EXERCICE 5','6 pts');
+    fillEx('bodyEx6','titreEx6','sousEx6','ptsEx6',{titre:'EXERCICE 6 (4 points)',contexte:'Situation-probleme ivoirien',questions:[qC[2]||'']},'EXERCICE 6','4 pts');
     afficherCorrige(d.corrige);
   }
 
