@@ -878,8 +878,16 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe, trimestr
   document.getElementById('resultTitre').textContent = d.titre || ('DEVOIR ' + classe + ' — ' + nomMat);
   document.getElementById('resultMeta').textContent = 'Duree : ' + (d.duree||'2h') + ' · 20 points';
   var src = document.getElementById('resultSource');
-  if (isIA) { src.textContent = 'Genere par Claude IA'; src.className = 'result-source'; }
-  else { src.textContent = 'Mode demonstration'; src.className = 'result-source demo'; }
+  if (src) {
+    if (isIA) { src.textContent = 'Genere par Claude IA'; src.className = 'result-source'; }
+    else { src.textContent = 'Mode demonstration'; src.className = 'result-source demo'; }
+  }
+  // Mettre à jour le badge
+  var badge = document.getElementById('resultBadge');
+  if (badge) {
+    badge.textContent = isIA ? 'Composition IA' : 'Mode démonstration';
+    badge.className = isIA ? 'result-badge ia' : 'result-badge';
+  }
 
   // Print header
   var _cm = {MATHEMATIQUES:4,SVT:4,PHYSIQUE_CHIMIE:3,PHILOSOPHIE:2,FRANCAIS:2,ANGLAIS:2,COMPTABILITE:5,BUREAU_SECRETARIAT:6,STENOGRAPHIE:3,NUMERATIE:1,LANGAGE_ORAL:1};
@@ -929,8 +937,12 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe, trimestr
     bodyEl.innerHTML = html;
   }
 
-  // Support 6 exercices OU ancien format partie_A/B/C
+  // Support 3 formats : exercice1, ex1, partie_A/B/C
+  var exKeys = ['ex1','ex2','ex3','ex4','ex5','ex6'];
+  var hasEx = exKeys.some(function(k){ return d[k]; });
+
   if (d.exercice1) {
+    // Format exercice1..6
     fillEx('bodyEx1','titreEx1','sousEx1','ptsEx1',d.exercice1,'EXERCICE 1','2 pts');
     fillEx('bodyEx2','titreEx2','sousEx2','ptsEx2',d.exercice2,'EXERCICE 2','2 pts');
     fillEx('bodyEx3','titreEx3','sousEx3','ptsEx3',d.exercice3,'EXERCICE 3','3 pts');
@@ -938,24 +950,39 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe, trimestr
     fillEx('bodyEx5','titreEx5','sousEx5','ptsEx5',d.exercice5,'EXERCICE 5','6 pts');
     fillEx('bodyEx6','titreEx6','sousEx6','ptsEx6',d.exercice6,'EXERCICE 6','4 pts');
     afficherCorrige(d.corrige);
+
+  } else if (hasEx) {
+    // Format ex1..ex6 (nouveau format GS)
+    var ids = [
+      ['bodyEx1','titreEx1','sousEx1','ptsEx1','EXERCICE 1','2 pts'],
+      ['bodyEx2','titreEx2','sousEx2','ptsEx2','EXERCICE 2','2 pts'],
+      ['bodyEx3','titreEx3','sousEx3','ptsEx3','EXERCICE 3','3 pts'],
+      ['bodyEx4','titreEx4','sousEx4','ptsEx4','EXERCICE 4','3 pts'],
+      ['bodyEx5','titreEx5','sousEx5','ptsEx5','EXERCICE 5','6 pts'],
+      ['bodyEx6','titreEx6','sousEx6','ptsEx6','EXERCICE 6','4 pts']
+    ];
+    exKeys.forEach(function(k, i) {
+      if (d[k]) fillEx(ids[i][0],ids[i][1],ids[i][2],ids[i][3],d[k],ids[i][4],ids[i][5]);
+    });
+    afficherCorrige(d.corrige);
+
   } else {
-    // Format partie_A/B/C -> remplir les 6 cases
-    // Ex1 = partie_A
-    fillEx('bodyEx1','titreEx1','sousEx1','ptsEx1', d.partie_A ? {titre:'EXERCICE 1 (2 points)',contexte:d.partie_A.contexte,questions:[d.partie_A.questions ? d.partie_A.questions[0] : '']} : null,'EXERCICE 1','2 pts');
-    // Ex1 questions completes
+    // Format partie_A/B/C (ancien format)
     if (d.partie_A) {
       var h1='';
       if(d.partie_A.contexte) h1+='<div class="contexte-box">'+d.partie_A.contexte+'</div>';
-      (d.partie_A.questions||[]).forEach(function(q){h1+='<div class="question">'+q+'</div>';});
+      (d.partie_A.questions||[]).forEach(function(q){
+        var qStr=(q||'').toString();
+        if(qStr.indexOf('|||')>=0){qStr.split('|||').forEach(function(p){var pt=p.trim();if(pt)h1+='<div class="question">'+pt+'</div>';});}
+        else{h1+='<div class="question">'+qStr+'</div>';}
+      });
       document.getElementById('bodyEx1').innerHTML=h1;
       document.getElementById('titreEx1').textContent='EXERCICE 1 (2 points)';
     }
-    // Ex2-4 = partie_B (3 questions)
     var qB = d.partie_B && d.partie_B.questions ? d.partie_B.questions : [];
     fillEx('bodyEx2','titreEx2','sousEx2','ptsEx2',{titre:'EXERCICE 2 (2 points)',contexte:'QCM',questions:[qB[0]||'']},'EXERCICE 2','2 pts');
     fillEx('bodyEx3','titreEx3','sousEx3','ptsEx3',{titre:'EXERCICE 3 (3 points)',contexte:'Suites',questions:[qB[1]||'']},'EXERCICE 3','3 pts');
     fillEx('bodyEx4','titreEx4','sousEx4','ptsEx4',{titre:'EXERCICE 4 (3 points)',contexte:'Complexes',questions:[qB[2]||'']},'EXERCICE 4','3 pts');
-    // Ex5-6 = partie_C (3 questions)
     var qC = d.partie_C && d.partie_C.questions ? d.partie_C.questions : [];
     fillEx('bodyEx5','titreEx5','sousEx5','ptsEx5',{titre:'EXERCICE 5 (6 points)',contexte:d.partie_C ? d.partie_C.contexte : '',questions:[qC[0]||'',qC[1]||'']},'EXERCICE 5','6 pts');
     fillEx('bodyEx6','titreEx6','sousEx6','ptsEx6',{titre:'EXERCICE 6 (4 points)',contexte:'Situation-probleme ivoirien',questions:[qC[2]||'']},'EXERCICE 6','4 pts');
@@ -973,9 +1000,11 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe, trimestr
   conseilEl.textContent = conseilTxt || 'Conseil pedagogique disponible.';
 
   document.getElementById('resultZone').style.display = 'block';
+  document.getElementById('configZone').style.display = 'none';
   document.getElementById('resultZone').scrollIntoView({behavior:'smooth'});
-  ['A','B','C'].forEach(function(l) {
-    var b = document.getElementById('body'+l);
+  // Ouvrir tous les exercices
+  ['Ex1','Ex2','Ex3','Ex4','Ex5','Ex6'].forEach(function(s) {
+    var b = document.getElementById('body'+s);
     if (b) { b.classList.add('open'); b.style.display = 'block'; }
   });
 }
@@ -993,17 +1022,28 @@ function afficherPartie(lettre, p) {
 }
 
 function afficherCorrige(corrige) {
-  if (!corrige) { document.getElementById('bodyCorrige').innerHTML = '<div class="question">Connectez la cle Anthropic.</div>'; return; }
+  var div = document.getElementById('bodyCorrige');
+  if (!corrige) { div.innerHTML = '<div class="question">Connectez la cle Anthropic pour le corrige.</div>'; return; }
   var html = '';
-  ['partie_A','partie_B','partie_C'].forEach(function(k,i) {
-    if (!corrige[k]) return;
-    var labels = ['EXERCICE 1','EXERCICES 2-4','EXERCICES 5-6'];
-    html += '<div class="contexte-box" style="font-style:normal;font-weight:700;color:var(--or)">' + labels[i] + '</div>';
-    (corrige[k]||[]).forEach(function(ligne) {
-      html += '<div class="question" style="font-size:12px">' + ligne + '</div>';
+  // Support tous les formats de clés
+  Object.keys(corrige).forEach(function(k) {
+    var val = corrige[k];
+    if (!val) return;
+    html += '<div class="contexte-box" style="font-style:normal;font-weight:700;color:var(--or)">' + k.toUpperCase() + '</div>';
+    var lines = Array.isArray(val) ? val : [val];
+    lines.forEach(function(ligne) {
+      var ligneStr = (ligne||'').toString();
+      if (ligneStr.indexOf('|||') >= 0) {
+        ligneStr.split('|||').forEach(function(p) {
+          var pt = p.trim();
+          if (pt) html += '<div class="question" style="font-size:12px">' + pt + '</div>';
+        });
+      } else {
+        html += '<div class="question" style="font-size:12px">' + ligneStr + '</div>';
+      }
     });
   });
-  document.getElementById('bodyCorrige').innerHTML = html || '<div class="question">Corrige non disponible.</div>';
+  div.innerHTML = html || '<div class="question">Corrige non disponible.</div>';
 }
 
 function afficherDemo(examen, matiere, filiere, classe, trimestre, lecon) {
