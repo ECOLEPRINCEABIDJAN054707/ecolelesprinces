@@ -831,7 +831,13 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe, trimestr
 
   document.getElementById('probaPct').textContent = d.probabilite_examen || '75%';
   document.getElementById('probaJust').textContent = d.justification || 'Theme recurrent CI';
-  document.getElementById('conseilText').textContent = d.conseil_enseignant || d.conseil || 'Aucun conseil.';
+  var conseilEl = document.getElementById('conseilText');
+  var conseilTxt = d.conseil_enseignant || d.conseil || '';
+  // Si generé par IA, ne pas afficher le message MODE DEMONSTRATION
+  if (isIA && conseilTxt.indexOf('MODE DEMONSTRATION') >= 0) {
+    conseilTxt = 'Composition generee par Claude IA — Princes Smart School V2';
+  }
+  conseilEl.textContent = conseilTxt || 'Conseil pedagogique disponible.';
 
   document.getElementById('resultZone').style.display = 'block';
   document.getElementById('resultZone').scrollIntoView({behavior:'smooth'});
