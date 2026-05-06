@@ -6,7 +6,14 @@
 <meta name="theme-color" content="#1F4E79">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<title>Ecole Les Princes - Espace Parents</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="ecole.jpg">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+  }
+</script>
+  <title>Ecole Les Princes - Espace Parents</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:100vh; }
