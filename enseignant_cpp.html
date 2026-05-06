@@ -5,7 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>CPP Enseignant</title>
 <style>
-:root {
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="ecole.jpg">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js');
+  }
+</script>
+  :root {
   --bleu: #1F4E79;
   --bleu2: #2E75B6;
   --vert: #2E7D32;
