@@ -548,6 +548,8 @@ function afficherEspaceParent(eleve) {
   const _pm = v => parseFloat(String(v||"").replace(/\s/g,"").replace(",",".")) || 0;
   const soldeParsed = _pm(eleve.solde), verseParsed = _pm(eleve.verse), duParsed = _pm(eleve.du);
   mettreAJourMontant(eleve); afficherClubs(eleve); chargerReponsesMessages(eleve); chargerHistoriquePaiements(eleve);
+  // ✅ SESSION 6 : Tracking des connexions parents
+  enregistrerVisite(eleve);
   if (eleve.gratuit) {
     pay.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>&#127891;</div><div class='pay-text'><h4>Prise en charge etablissement</h4><p class='pay-montant c-vert'>Acces complet active</p></div></div>";
   } else if (soldeParsed === 0) {
@@ -1178,7 +1180,8 @@ async function chargerHistoriquePaiements(eleve) {
   const div = document.getElementById("historiqueSection");
   if (!div) return;
   try {
-    const range = encodeURIComponent("HISTORIQUE_PAIEMENTS!A2:H200");
+    // ✅ SESSION 6 : Lire jusqu'à colonne I pour récupérer N° Reçu (col H) et Lien PDF (col I)
+    const range = encodeURIComponent("HISTORIQUE_PAIEMENTS!A2:I200");
     const sid = eleve.sheetsId || CONFIG.SHEETS_ID;
     const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sid + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
     const res = await fetch(url);
@@ -1199,23 +1202,86 @@ async function chargerHistoriquePaiements(eleve) {
     html += "<div style='padding:12px 16px;background:#E8F5E9;border-bottom:1px solid #C8E6C9;display:flex;justify-content:space-between;'><div style='font-size:0.82em;color:#2E7D32;'><strong>Total verse :</strong></div><div style='font-size:1.1em;font-weight:bold;color:#2E7D32;'>" + totalPaye.toLocaleString('fr-FR') + " F CFA</div></div>";
     paiements.forEach(function(row, i) {
       // ✅ CORRECTIF SESSION 6 : Conversion date sériel Excel robuste
-      // Gère à la fois les nombres (46149) ET les strings ("46149.07") retournés par Sheets
-      const date = serialToDate(row[0]);
+      const date    = serialToDate(row[0]);
       const montant = parseFloat(row[4]) || 0;
-      const source = String(row[5] || "").trim();
+      const source  = String(row[5] || "").trim();
       const idTrans = String(row[6] || "").trim();
-      const bgS = source === "WAVE" ? "#E3F2FD" : "#FFF3E0";
-      const fgS = source === "WAVE" ? "#1565C0" : "#E65100";
+      // ✅ SESSION 6 : N° Reçu (col H = index 7) et Lien PDF (col I = index 8)
+      const numRecu = String(row[7] || "").trim();
+      const lienPDF = String(row[8] || "").trim();
+      const bgS  = source === "WAVE" ? "#E3F2FD" : "#FFF3E0";
+      const fgS  = source === "WAVE" ? "#1565C0" : "#E65100";
       const icon = source === "WAVE" ? "&#128153;" : "&#127820;";
-      const bg = i % 2 === 0 ? "#FFFFFF" : "#F9FBF9";
-      html += "<div style='padding:10px 16px;border-bottom:1px solid #F0F0F0;background:" + bg + ";display:flex;justify-content:space-between;align-items:center;'>";
-      html += "<div style='flex:1;'><div style='display:flex;align-items:center;gap:8px;margin-bottom:3px;'><span style='background:" + bgS + ";color:" + fgS + ";font-size:0.72em;font-weight:bold;padding:2px 8px;border-radius:10px;'>" + icon + " " + source + "</span><span style='font-size:0.8em;color:#555;'>" + date + "</span></div>";
+      const bg   = i % 2 === 0 ? "#FFFFFF" : "#F9FBF9";
+      html += "<div style='padding:10px 16px;border-bottom:1px solid #F0F0F0;background:" + bg + ";'>";
+      html += "<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;'>";
+      html += "<div style='flex:1;'>";
+      html += "<div style='display:flex;align-items:center;gap:8px;margin-bottom:3px;'>";
+      html += "<span style='background:" + bgS + ";color:" + fgS + ";font-size:0.72em;font-weight:bold;padding:2px 8px;border-radius:10px;'>" + icon + " " + source + "</span>";
+      html += "<span style='font-size:0.8em;color:#555;'>" + date + "</span></div>";
+      if (numRecu) html += "<div style='font-size:0.73em;color:#888;margin-bottom:2px;'>N&#176; " + numRecu + "</div>";
       html += "<div style='font-size:0.75em;color:#999;font-family:monospace;'>" + (idTrans.length > 20 ? idTrans.substring(0,20) + "..." : idTrans) + "</div></div>";
       html += "<div style='font-size:1em;font-weight:bold;color:#2E7D32;'>+" + montant.toLocaleString('fr-FR') + " F</div></div>";
+      // ✅ SESSION 6 : Bouton Télécharger reçu PDF
+      if (lienPDF && lienPDF.indexOf("http") === 0) {
+        html += "<div style='margin-top:4px;'>";
+        html += "<button onclick='window.open(\"" + lienPDF + "\",\"_blank\")' style='width:100%;padding:8px 12px;background:linear-gradient(135deg,#1F4E79,#1565C0);color:white;border:none;border-radius:8px;font-size:0.78em;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;'>";
+        html += "&#128196; Telecharger mon recu PDF officiel</button>";
+        html += "</div>";
+      }
+      html += "</div>";
     });
     html += "</div></div>";
     div.innerHTML = html;
   } catch(e) { div.innerHTML = ""; }
+}
+
+// ✅ SESSION 6 — Tracking des connexions parents
+// Envoie discrètement une visite au Apps Script pour statistiques
+function enregistrerVisite(eleve) {
+  try {
+    var URLS_TRACKING = {
+      "CPP":         "https://script.google.com/macros/s/AKfycbwYWMhEitUVn3_bNqvp60nYqyBDaLlcpX2Is60cjd6u5-Gv-VsUdt8JgSR003vLWpg0mw/exec",
+      "AKEIKOI_1":   "https://script.google.com/macros/s/AKfycbzgmV4TS8Mzn6GDwhObXVSyARWd68_rL7-yuFaq13qg6FaJMwDokDnBDCsrX8FS2sCY/exec",
+      "GNONTINROU":  "https://script.google.com/macros/s/AKfycbzzzLF_V2-2BgAHqyjzRLAcWJnq8BzKvcUzB2uG-JzkaiDCSOaCyySvxnmfyPxPwQPn/exec",
+      "GUINGLO_V":   "https://script.google.com/macros/s/AKfycbzUvysrHpmcWSPieSrY37r4iLtGP4RTQpbh5CJydTExB0A5c3q4TwvRJMXytVLzg2dk/exec",
+      "KOUTOUAN":    "https://script.google.com/macros/s/AKfycbwpJRfiiD5MosYKNICaOfF3At0BvjK7rkkeMJ-_dAOpZ0bjWfwR47xbTE7_T77P8NLrtw/exec",
+      "SOAKPE":      "https://script.google.com/macros/s/AKfycbyUxGKPqRAHMf9eCirQkj0CvudJmoj8dz3WoeTFsz1rcWVS8Lsy6aWQejYtg6uuRKa6/exec",
+      "AKEIKOI_2":   "https://script.google.com/macros/s/AKfycbyHlMbxguRQvwpJOk9p0yIHlwL84wa0Zmg0E1d-FWA_kuEiUNHjJcrwuh4hOTscpkBGlA/exec",
+      "CPP_PRO":     "https://script.google.com/macros/s/AKfycbz_zd5KMUCi7xiWa17Cq_t-QO3HBhbZEuob9YX7z880nNV1H6mxJlLC06_QsY_m2ylKYA/exec",
+      "ACADEMIE":    "https://script.google.com/macros/s/AKfycbyW4xc4SQsbMNrVVJsL9RwDuZJQ_EIYhFARY_IMeLXFRdzafp4Fpv2ZepTeudSPTjx9-g/exec",
+      "KOUIBLY_TEC": "https://script.google.com/macros/s/AKfycbzLXFpiUL5Hvji2G7ON79fAQoxZ_1h99zbwIikTASdbv3BHJ1yKwVGpZDskgwQp4Zmw/exec",
+      "CPP_TECH":    "https://script.google.com/macros/s/AKfycbzdkxrdrNzzBXkzLvkUMZdh3hhYOVSCeOxspdJnuyQtcXD7_j4wr3r0DNLYdua7Cfrm/exec",
+      "RITA":        "https://script.google.com/macros/s/AKfycbzlKa8MmuBmxPJ4xOFfHuOUl2aZ_AYHD8N_h-3euVEAk0kmd9VZ5XkNfoIXOmX3g2DS/exec",
+    };
+    var ec  = eleve.ecoleCode || "CPP";
+    var url = URLS_TRACKING[ec] || URLS_TRACKING["CPP"];
+    // Détecter type d'appareil
+    var ua      = navigator.userAgent || "";
+    var appareil = /Mobile|Android|iPhone|iPad/.test(ua) ? "Mobile" : "Desktop";
+    var now     = new Date();
+    var heure   = now.getHours() + "h" + String(now.getMinutes()).padStart(2,"0");
+    var row = [
+      new Date().toLocaleDateString("fr-FR"),
+      heure,
+      eleve.matricule || "",
+      eleve.ecoleCode || "",
+      eleve.classe    || "",
+      appareil,
+      "CONNEXION"
+    ];
+    // Envoi JSONP silencieux — ne bloque pas l'interface
+    var cbName = "track_" + Date.now();
+    var script = document.createElement("script");
+    window[cbName] = function() { delete window[cbName]; try { document.body.removeChild(script); } catch(e) {} };
+    script.onerror = function() { delete window[cbName]; try { document.body.removeChild(script); } catch(e) {} };
+    script.src = url + "?callback=" + cbName + "&type=VISITE&row=" + encodeURIComponent(JSON.stringify(row));
+    document.body.appendChild(script);
+    // Timeout silencieux — pas d'erreur visible si ça échoue
+    setTimeout(function() { if (window[cbName]) { delete window[cbName]; try { document.body.removeChild(script); } catch(e) {} } }, 8000);
+  } catch(e) {
+    // Silencieux — le tracking ne doit jamais bloquer l'espace parent
+  }
 }
 
 function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{document.getElementById("pwaBanner").style.display="none";deferredPrompt=null;});}}
