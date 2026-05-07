@@ -352,6 +352,16 @@ const PHOTOS_CACHE = {};
 // ✅ Fonction utilitaire de conversion date sériel Excel → JJ/MM/AAAA
 // Robuste : gère les nombres ET les strings sériels (ex: "46149.07")
 function serialToDate(v) {
+  // Format texte long GMT : "Thu Apr 16 2026 19:19:00 GMT+0000..."
+  if (typeof v === 'string' && (v.indexOf('GMT') >= 0 || v.indexOf('UTC') >= 0)) {
+    var dGMT = new Date(v);
+    if (!isNaN(dGMT.getTime())) {
+      return dGMT.getDate().toString().padStart(2,'0') + '/' +
+             (dGMT.getMonth()+1).toString().padStart(2,'0') + '/' +
+             dGMT.getFullYear();
+    }
+  }
+  // Nombre sériel Excel OU string sériel ex: "46149.07"
   var n = typeof v === 'number' ? v : parseFloat(String(v || ''));
   if (!isNaN(n) && n > 40000) {
     var d = new Date(Math.round((n - 25569) * 86400 * 1000));
@@ -359,6 +369,7 @@ function serialToDate(v) {
            (d.getMonth()+1).toString().padStart(2,'0') + '/' +
            d.getFullYear();
   }
+  // Format texte déjà lisible JJ/MM/AAAA ou autre
   return String(v || '');
 }
 
@@ -1151,7 +1162,19 @@ async function chargerCahierTextes(eleve) {
     let html = "";
     cours.slice(0, 20).forEach(function(row) {
       const date = serialToDate(row[0]);
-      const heure = String(row[1] || "").trim();
+      // ✅ Conversion heure décimale (ex: 0.3472 = 08h20) en HH:MM
+      const heureRaw = row[1];
+      var heure = "";
+      if (typeof heureRaw === 'number' && heureRaw > 0 && heureRaw < 1) {
+        var totalMin = Math.round(heureRaw * 24 * 60);
+        var hh = Math.floor(totalMin / 60);
+        var mm = totalMin % 60;
+        heure = hh.toString().padStart(2,'0') + 'h' + mm.toString().padStart(2,'0');
+      } else if (heureRaw instanceof Date) {
+        heure = heureRaw.getHours().toString().padStart(2,'0') + 'h' + heureRaw.getMinutes().toString().padStart(2,'0');
+      } else {
+        heure = String(heureRaw || "").trim();
+      }
       const matiere = String(row[3] || "").trim();
       const enseignant = String(row[4] || "").trim();
       const lecon = String(row[5] || "").trim();
