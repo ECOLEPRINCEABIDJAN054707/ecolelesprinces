@@ -324,7 +324,6 @@ const SHEETS_IDS_COMPLET = {
 window.SHEETS_IDS_COMPLET = SHEETS_IDS_COMPLET;
 window.ECOLES_LIST = ECOLES;
 
-// ✅ DESTINATIONS PERSONNALISEES PAR ECOLE
 const DESTINATIONS_CEPE = {
   "AKEIKOI_1":   "College Prive Les Princes d'Abidjan",
   "AKEIKOI_2":   "College Prive Les Princes d'Abidjan",
@@ -350,13 +349,23 @@ let tentatives = 0;
 let blocageInterval = null;
 const PHOTOS_CACHE = {};
 
-// ✅ CORRECTION : Excellence uniquement pour 6EME, 5EME, 4EME - pas pour 3EME EX
+// ✅ Fonction utilitaire de conversion date sériel Excel → JJ/MM/AAAA
+// Robuste : gère les nombres ET les strings sériels (ex: "46149.07")
+function serialToDate(v) {
+  var n = typeof v === 'number' ? v : parseFloat(String(v || ''));
+  if (!isNaN(n) && n > 40000) {
+    var d = new Date(Math.round((n - 25569) * 86400 * 1000));
+    return d.getDate().toString().padStart(2,'0') + '/' +
+           (d.getMonth()+1).toString().padStart(2,'0') + '/' +
+           d.getFullYear();
+  }
+  return String(v || '');
+}
+
 function detecterTypeClasse(classe, ecoleCode) {
   if (ecoleCode !== 'CPP') return 'STANDARD';
   const c = (classe || '').toUpperCase().trim();
-  // Excellence uniquement pour 6EME, 5EME, 4EME - les 3EME EX sont des classes d'examen BEPC
   if (!c.startsWith('3') && (/\bEX\b/.test(c) || /EX\d/.test(c))) return 'EXCELLENCE';
-  // Privilege : classes se terminant par 3 ou 4
   if (/\s[34]$/.test(c)) return 'PRIVILEGE';
   return 'STANDARD';
 }
@@ -491,7 +500,7 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
       const row = data.values[i];
       const mat = String(row[1]||"").trim().toUpperCase();
       if (mat !== matricule) continue;
-      const col0 = (function(v){ if(typeof v === 'number'){ var d=new Date(Math.round((v-25569)*86400*1000)); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear(); } return String(v||''); })(row[0]).trim();
+      const col0 = serialToDate(row[0]).trim();
       if (col0.toUpperCase() === "CLASSE" || col0 === "") continue;
       const classeDetectee = col0.replace(/[\u{1F3EB}\u{1F393}\u{1F4DA}]\s*/gu,"").trim();
       return {
@@ -644,8 +653,6 @@ async function chargerResultatExamen(eleve) {
   return null;
 }
 
-// ✅ CORRECTION 1 : "avec succes" supprime + bonne chance ajoute
-// ✅ CORRECTION 2 : classeFinale utilise le vrai nom de classe (3EME EX1/EX2)
 function _cardRNO_Attente(prenom, moy, tel, typeExamen, ecoleCode, classeReelle) {
   var isBac = typeExamen === "BAC";
   var titre = isBac ? "Resultats BAC en attente" : "Resultats BEPC en attente";
@@ -746,7 +753,6 @@ async function afficherSectionResultats(eleve) {
         htmlAnim = _cardCEPE_Refuse(prenom, moy, examen.score, tel, eleve.ecoleCode);
       }
     } else {
-      // ✅ CORRECTION 3 : passer la vraie classe (3EME EX1/EX2) a _cardRNO_Attente
       if (!examen || examen.score === null) {
         htmlAnim = _cardRNO_Attente(prenom, moy, tel, typeExamen, eleve.ecoleCode, eleve.classe);
       } else if (examen.statut === "ADMIS") {
@@ -803,7 +809,7 @@ async function dlBulletin(onglet, btn) {
     var lien = null;
     for (var i = 0; i < data.values.length; i++) {
       var row = data.values[i];
-      var m = (function(v){ if(typeof v === 'number'){ var d=new Date(Math.round((v-25569)*86400*1000)); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear(); } return String(v||''); })(row[0]).toUpperCase().replace(/[^A-Z0-9]/g,"");
+      var m = serialToDate(row[0]).toUpperCase().replace(/[^A-Z0-9]/g,"");
       if (m !== matClean) continue;
       for (var c = 0; c < row.length; c++) { var v = String(row[c]||"").trim(); if (v.indexOf("https://drive.google.com")===0||v.indexOf("http")===0) { lien=v; break; } }
       if (!lien) { for (var c=0; c<row.length; c++) { var v=String(row[c]||"").trim(); if (v.length>=25 && v.indexOf("http")<0 && v.indexOf(" ")<0 && v.indexOf("@")<0) { lien="https://drive.google.com/file/d/"+v+"/view"; break; } } }
@@ -941,7 +947,7 @@ async function chargerAbsences(eleve) {
     if (absEleve.length===0) { div.innerHTML="<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>&#10003; Aucune absence enregistree</p>"; return; }
     let totalH=0,justH=0,nonJustH=0;
     absEleve.forEach(row=>{const h=1;totalH+=h;if(String(row[8]||"").toUpperCase()==="OUI")justH+=h;else nonJustH+=h;});
-    const lignes=absEleve.map(row=>{const just=String(row[8]||"").toUpperCase()==="OUI";return "<tr style='border-bottom:1px solid #eee;'><td style='padding:8px 10px;font-size:0.82em;'>"+(function(v){ if(typeof v === 'number'){ var d=new Date(Math.round((v-25569)*86400*1000)); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear(); } return String(v||''); })(row[0])+"</td><td style='text-align:center;padding:8px;font-size:0.82em;font-weight:bold;'>"+(function(v){ if(typeof v === 'number'){ var h=Math.floor(v*24),m=Math.floor((v*24-h)*60); return h.toString().padStart(2,'0')+':'+m.toString().padStart(2,'0'); } return String(v||'-'); })(row[1])+"</td><td style='text-align:center;padding:8px;'><span style='background:"+(just?"#E8F5E9":"#FFEBEE")+";color:"+(just?"#2E7D32":"#C62828")+";padding:2px 8px;border-radius:10px;font-size:0.75em;font-weight:bold;'>"+(just?"&#10003; Justifiee":"&#10060; Non justifiee")+"</span></td><td style='padding:8px 10px;font-size:0.78em;color:#666;'>"+(row[7]||"")+"</td></tr>";}).join("");
+    const lignes=absEleve.map(row=>{const just=String(row[8]||"").toUpperCase()==="OUI";return "<tr style='border-bottom:1px solid #eee;'><td style='padding:8px 10px;font-size:0.82em;'>"+serialToDate(row[0])+"</td><td style='text-align:center;padding:8px;font-size:0.82em;font-weight:bold;'>"+(function(v){ if(typeof v === 'number'){ var h=Math.floor(v*24),m=Math.floor((v*24-h)*60); return h.toString().padStart(2,'0')+':'+m.toString().padStart(2,'0'); } return String(v||'-'); })(row[1])+"</td><td style='text-align:center;padding:8px;'><span style='background:"+(just?"#E8F5E9":"#FFEBEE")+";color:"+(just?"#2E7D32":"#C62828")+";padding:2px 8px;border-radius:10px;font-size:0.75em;font-weight:bold;'>"+(just?"&#10003; Justifiee":"&#10060; Non justifiee")+"</span></td><td style='padding:8px 10px;font-size:0.78em;color:#666;'>"+(row[7]||"")+"</td></tr>";}).join("");
     div.innerHTML="<div style='display:flex;gap:8px;margin-bottom:14px;'><div style='flex:1;background:#FFEBEE;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#C62828;margin-bottom:2px;'>TOTAL</p><p style='font-size:1.6em;font-weight:bold;color:#C62828;'>"+totalH+"h</p></div><div style='flex:1;background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#2E7D32;margin-bottom:2px;'>JUSTIFIEES</p><p style='font-size:1.6em;font-weight:bold;color:#2E7D32;'>"+justH+"h</p></div><div style='flex:1;background:#FFF3E0;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#E65100;margin-bottom:2px;'>NON JUST.</p><p style='font-size:1.6em;font-weight:bold;color:#E65100;'>"+nonJustH+"h</p></div></div><table style='width:100%;border-collapse:collapse;'><tr style='background:#f5f5f5;'><th style='text-align:left;padding:6px 10px;font-size:0.78em;color:#666;'>DATE</th><th style='text-align:center;padding:6px;font-size:0.78em;color:#666;'>HEURES</th><th style='text-align:center;padding:6px;font-size:0.78em;color:#666;'>STATUT</th><th style='text-align:left;padding:6px 10px;font-size:0.78em;color:#666;'>MOTIF</th></tr>"+lignes+"</table>";
   } catch(e) { const d2=document.getElementById("absencesBody"); if(d2) d2.innerHTML="<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>&#10003; Aucune absence enregistree</p>"; }
 }
@@ -1124,6 +1130,7 @@ window.addEventListener("load",()=>{const saved=sessionStorage.getItem("eleveCon
 document.addEventListener("keypress",e=>{if(e.key==="Enter")login();});
 let deferredPrompt;
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;document.getElementById("pwaBanner").style.display="flex";});
+
 async function chargerCahierTextes(eleve) {
   const div = document.getElementById("cahierBody");
   if (!div) return;
@@ -1141,7 +1148,7 @@ async function chargerCahierTextes(eleve) {
     cours.sort((a, b) => String(b[0] || "").localeCompare(String(a[0] || "")));
     let html = "";
     cours.slice(0, 20).forEach(function(row) {
-      const date = (function(v){ if(typeof v === 'number'){ var d=new Date(Math.round((v-25569)*86400*1000)); return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear(); } return String(v||''); })(row[0]);
+      const date = serialToDate(row[0]);
       const heure = String(row[1] || "").trim();
       const matiere = String(row[3] || "").trim();
       const enseignant = String(row[4] || "").trim();
@@ -1191,7 +1198,9 @@ async function chargerHistoriquePaiements(eleve) {
     html += "<div id='histBody' style='background:white;'>";
     html += "<div style='padding:12px 16px;background:#E8F5E9;border-bottom:1px solid #C8E6C9;display:flex;justify-content:space-between;'><div style='font-size:0.82em;color:#2E7D32;'><strong>Total verse :</strong></div><div style='font-size:1.1em;font-weight:bold;color:#2E7D32;'>" + totalPaye.toLocaleString('fr-FR') + " F CFA</div></div>";
     paiements.forEach(function(row, i) {
-      const date = (function(v){ if(typeof v==='number'){var d=new Date(Math.round((v-25569)*86400*1000));return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();}return String(v||'');  })(row[0]);
+      // ✅ CORRECTIF SESSION 6 : Conversion date sériel Excel robuste
+      // Gère à la fois les nombres (46149) ET les strings ("46149.07") retournés par Sheets
+      const date = serialToDate(row[0]);
       const montant = parseFloat(row[4]) || 0;
       const source = String(row[5] || "").trim();
       const idTrans = String(row[6] || "").trim();
@@ -1208,7 +1217,8 @@ async function chargerHistoriquePaiements(eleve) {
     div.innerHTML = html;
   } catch(e) { div.innerHTML = ""; }
 }
-  function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{document.getElementById("pwaBanner").style.display="none";deferredPrompt=null;});}}
+
+function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{document.getElementById("pwaBanner").style.display="none";deferredPrompt=null;});}}
 </script>
 </body>
 </html>
