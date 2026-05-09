@@ -822,7 +822,7 @@ async function dlBulletin(onglet, btn) {
     var lien = null;
     for (var i = 0; i < data.values.length; i++) {
       var row = data.values[i];
-      var m = String(row[0]||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+      var m = serialToDate(row[0]).toUpperCase().replace(/[^A-Z0-9]/g,"");
       if (m !== matClean) continue;
       for (var c = 0; c < row.length; c++) { var v = String(row[c]||"").trim(); if (v.indexOf("https://drive.google.com")===0||v.indexOf("http")===0) { lien=v; break; } }
       if (!lien) { for (var c=0; c<row.length; c++) { var v=String(row[c]||"").trim(); if (v.length>=25 && v.indexOf("http")<0 && v.indexOf(" ")<0 && v.indexOf("@")<0) { lien="https://drive.google.com/file/d/"+v+"/view"; break; } } }
