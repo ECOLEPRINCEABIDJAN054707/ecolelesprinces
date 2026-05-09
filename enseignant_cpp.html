@@ -1017,9 +1017,8 @@ async function publierCahier() {
   const maintenant    = new Date();
   const horodatagePubli = formatHeure(maintenant);
 
-  showLoader('Localisation GPS en cours...');
-
   function finaliserPublication(lat, lon, acc, gpsStatut, gpsDistM) {
+    showLoader('Publication en cours...');
     // ── CALCUL SALAIRE ──
     const calcul = calculerSalaire(
       coursActuel?.horodatageAppel,
