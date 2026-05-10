@@ -786,7 +786,7 @@ function changerMatiere() {
   for (var i = 0; i < themes.length; i++) {
     var t = themes[i];
     var sel = (i === 0) ? ' sel' : '';
-    html += '<div class="theme-item' + sel + '" onclick="selTheme(this,\'' + t.id + '\')">';
+    html += '<div class="theme-card' + sel + '" onclick="selTheme(this,\'' + t.id + '\')">';
     html += '<div class="theme-nom">' + t.nom + '</div>';
     html += '<div class="theme-freq ' + t.cls + '">' + t.freq + '</div></div>';
   }
@@ -797,7 +797,7 @@ function changerMatiere() {
 }
 
 function selTheme(el, id) {
-  document.querySelectorAll('.theme-item').forEach(function(x) { x.classList.remove('sel'); });
+  document.querySelectorAll('.theme-card').forEach(function(x) { x.classList.remove('sel'); });
   el.classList.add('sel');
   themeSelectionne = id;
 }
