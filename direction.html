@@ -208,21 +208,62 @@ function remplirMois() {
   }
 }
 
+const PINS_DIRECTION = {
+  'CPP LES PRINCES':      'CPP2026',
+  'ACADEMIE':             'CPP2026',
+  'GUINGLO VILLE':        'CPP2026',
+  'GNONTINROU':           'CPP2026',
+  'KOUTOUAN':             'CPP2026',
+  'SOAKPE':               'CPP2026',
+  'AKEIKOI 1':            'CPP2026',
+  'AKEIKOI 2':            'CPP2026',
+  'CPP PRO':              'CPP2026',
+  'CPP TECH':             'CPP2026',
+  'ETL PRINCES KOUIBLY':  'CPP2026',
+  'GS RITA ROSANE':       'CPP2026',
+};
+
+var tentativesPin = 0;
+
 function seConnecter() {
   const ecole = document.getElementById('loginEcole').value;
   const pin   = document.getElementById('loginPin').value.trim();
-  if (!ecole) { showToast('Sélectionnez votre école', 'error'); return; }
-  if (pin.length < 4) { showToast('Entrez votre code PIN', 'error'); return; }
+
+  if (!ecole) {
+    showToast('Sélectionnez votre école', 'error');
+    return;
+  }
+  if (pin.length < 4) {
+    showToast('Entrez votre code PIN', 'error');
+    return;
+  }
+
+  // Vérification PIN
+  const pinAttendu = PINS_DIRECTION[ecole];
+  if (!pinAttendu || pin !== pinAttendu) {
+    tentativesPin++;
+    if (tentativesPin >= 3) {
+      document.getElementById('btnConnecter') &&
+        (document.getElementById('btnConnecter').disabled = true);
+      showToast('Accès bloqué — Contactez le fondateur', 'error');
+      return;
+    }
+    showToast('PIN incorrect (' + tentativesPin + '/3)', 'error');
+    document.getElementById('loginPin').value = '';
+    return;
+  }
+
+  // PIN correct
+  tentativesPin  = 0;
   ecoleConnectee = ecole;
   pinConnecte    = pin;
-  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('loginWrap').style.display  = 'none';
   document.getElementById('mainHeader').style.display = 'flex';
-  document.getElementById('dashboard').style.display = 'block';
-  document.getElementById('headerEcole').textContent = ecole;
+  document.getElementById('dashboard').style.display  = 'block';
+  document.getElementById('headerEcole').textContent  = ecole;
   remplirMois();
   chargerPointage();
 }
-
 async function chargerPointage() {
   const mois = document.getElementById('filtreMois').value;
   document.getElementById('tableBody').innerHTML =
