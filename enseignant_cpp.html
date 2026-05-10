@@ -1105,10 +1105,7 @@ async function publierCahier() {
     },
     function() {
       // GPS indisponible — béton ou signal faible
-      const box = document.getElementById('gpsBox');
-      box.className = 'gps-box attente';
-      document.getElementById('gpsText').textContent   = '📍 GPS indisponible';
-      document.getElementById('gpsDetail').textContent = 'Validation par horodatage uniquement';
+
       finaliserPublication(0, 0, 0, 'GPS_INDISPONIBLE', null);
     },
     { enableHighAccuracy:true, timeout:8000, maximumAge:0 }
