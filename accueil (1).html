@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Groupe Scolaire Les Princes d'Abidjan</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bleu:#1F4E79; --bleu2:#2E75B6; --or2:#F0C040;
+  --bg:#F7F8FA; --blanc:#FFFFFF; --texte:#1A1A2E; --texte2:#4A5568;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:"DM Sans",sans-serif; background:var(--bg); color:var(--texte); min-height:100vh; overflow-x:hidden; }
+
+.hero {
+  background:linear-gradient(135deg,#0D2B4E 0%,#1F4E79 50%,#2E75B6 100%);
+  padding:60px 20px 100px; text-align:center; position:relative; overflow:hidden;
+}
+.hero::before {
+  content:""; position:absolute; top:-40%; left:-20%;
+  width:600px; height:600px;
+  background:radial-gradient(circle,rgba(212,175,55,0.10) 0%,transparent 70%);
+  pointer-events:none;
+}
+.logo-wrap {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:100px; height:100px;
+  background:rgba(255,255,255,0.95);
+  border:3px solid rgba(212,175,55,0.5);
+  border-radius:50%; margin-bottom:24px;
+  animation:fadeDown 0.8s ease both;
+  box-shadow:0 4px 24px rgba(0,0,0,0.2);
+}
+.logo-wrap img { width:70px; height:70px; object-fit:contain; }
+.hero-titre {
+  font-family:"Playfair Display",serif;
+  font-size:clamp(24px,6vw,44px); font-weight:900; color:#FFF;
+  line-height:1.15; margin-bottom:12px;
+  animation:fadeDown 0.9s ease 0.1s both;
+}
+.hero-titre span { color:var(--or2); }
+.hero-sous {
+  font-size:clamp(13px,3vw,15px); color:rgba(255,255,255,0.70);
+  font-weight:300; margin-bottom:18px;
+  animation:fadeDown 1s ease 0.2s both;
+}
+.hero-badge {
+  display:inline-flex; align-items:center; gap:8px;
+  background:rgba(212,175,55,0.15); border:1px solid rgba(212,175,55,0.4);
+  border-radius:20px; padding:7px 18px;
+  font-size:12px; color:var(--or2); font-weight:500;
+  animation:fadeDown 1.1s ease 0.3s both;
+}
+.portail { max-width:560px; margin:-55px auto 0; padding:0 16px 60px; position:relative; z-index:10; }
+.portail-titre {
+  text-align:center; font-size:11px; font-weight:600; color:var(--texte2);
+  text-transform:uppercase; letter-spacing:2.5px; margin-bottom:20px;
+  animation:fadeUp 0.8s ease 0.4s both;
+}
+.card-parents {
+  background:var(--blanc); border-radius:24px; padding:30px 26px;
+  display:flex; align-items:flex-start; gap:18px;
+  text-decoration:none; color:inherit;
+  box-shadow:0 8px 40px rgba(31,78,121,0.14);
+  border:1.5px solid rgba(31,78,121,0.08);
+  transition:all 0.28s cubic-bezier(0.4,0,0.2,1);
+  position:relative; overflow:hidden;
+  animation:fadeUp 0.7s ease 0.5s both;
+}
+.card-parents::before {
+  content:""; position:absolute; left:0; top:0; bottom:0;
+  width:6px; background:linear-gradient(180deg,var(--bleu),var(--bleu2));
+  transition:width 0.25s ease;
+}
+.card-parents:hover { transform:translateY(-5px); box-shadow:0 20px 60px rgba(31,78,121,0.20); }
+.card-parents:hover::before { width:8px; }
+.card-icon {
+  width:64px; height:64px; border-radius:18px;
+  background:linear-gradient(135deg,#E8F0F9,#D6E4F0);
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px; flex-shrink:0; transition:transform 0.28s ease; margin-top:2px;
+}
+.card-parents:hover .card-icon { transform:scale(1.08); }
+.card-info { flex:1; }
+.card-titre { font-size:19px; font-weight:700; color:var(--texte); margin-bottom:5px; }
+.card-sous { font-size:13px; color:var(--texte2); margin-bottom:14px; }
+.card-features { display:flex; flex-direction:column; gap:8px; }
+.feature { display:flex; align-items:center; gap:10px; font-size:13px; color:var(--texte2); }
+.feature-dot { width:6px; height:6px; border-radius:50%; background:var(--bleu2); flex-shrink:0; }
+.card-arrow { font-size:26px; color:#CBD5E0; transition:all 0.25s ease; flex-shrink:0; margin-top:18px; }
+.card-parents:hover .card-arrow { color:var(--bleu); transform:translateX(5px); }
+.divider { display:flex; align-items:center; gap:12px; margin:28px 0 14px; animation:fadeUp 0.7s ease 0.7s both; }
+.divider-line { flex:1; height:1px; background:rgba(31,78,121,0.10); }
+.divider-text { font-size:11px; color:var(--texte2); font-weight:500; white-space:nowrap; }
+.contact-box {
+  background:var(--blanc); border-radius:18px; padding:22px 24px; text-align:center;
+  box-shadow:0 2px 16px rgba(31,78,121,0.07); border:1.5px solid rgba(31,78,121,0.07);
+  animation:fadeUp 0.7s ease 0.8s both;
+}
+.contact-label { font-size:11px; color:var(--texte2); text-transform:uppercase; letter-spacing:1px; font-weight:600; margin-bottom:8px; }
+.contact-tel { font-size:17px; font-weight:700; color:var(--bleu); margin-bottom:4px; }
+.contact-tel a { color:inherit; text-decoration:none; }
+.contact-whatsapp {
+  display:inline-flex; align-items:center; gap:8px; margin-top:12px;
+  background:#25D366; color:white; padding:10px 24px; border-radius:14px;
+  font-size:14px; font-weight:600; text-decoration:none;
+  transition:opacity 0.2s,transform 0.2s;
+}
+.contact-whatsapp:hover { opacity:0.88; transform:scale(1.03); }
+.footer { text-align:center; padding:24px 20px 36px; border-top:1px solid rgba(31,78,121,0.07); }
+.footer-ecole { font-family:"Playfair Display",serif; font-size:14px; font-weight:700; color:var(--bleu); margin-bottom:5px; }
+.footer-info { font-size:11px; color:var(--texte2); margin-bottom:10px; }
+.footer-domaine { display:inline-block; background:var(--bleu); color:white; padding:5px 16px; border-radius:20px; font-size:12px; font-weight:600; }
+@keyframes fadeDown { from{opacity:0;transform:translateY(-18px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+@media(max-width:480px){ .card-parents{padding:22px 16px;gap:14px} .card-icon{width:54px;height:54px;font-size:26px} .card-titre{font-size:17px} }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="logo-wrap">
+    <img src="data:image/png;base64,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" alt="Logo CPP Les Princes d'Abidjan">
+  </div>
+  <h1 class="hero-titre">Groupe Scolaire<br><span>Les Princes d'Abidjan</span></h1>
+  <p class="hero-sous">Réseau scolaire &mdash; Abidjan, Côte d'Ivoire</p>
+  <div class="hero-badge">&#127894; Année scolaire 2025-2026</div>
+</div>
+
+<div class="portail">
+  <p class="portail-titre">Portail des familles</p>
+
+  <a class="card-parents" href="https://ecolelesprinces.netlify.app/index.html">
+    <div class="card-icon">&#128106;</div>
+    <div class="card-info">
+      <div class="card-titre">Espace Parents</div>
+      <div class="card-sous">Suivez la scolarité de votre enfant</div>
+      <div class="card-features">
+        <div class="feature"><div class="feature-dot"></div>Bulletins scolaires</div>
+        <div class="feature"><div class="feature-dot"></div>Paiements Wave &amp; Orange Money</div>
+        <div class="feature"><div class="feature-dot"></div>Notes de classe (travail quotidien)</div>
+        <div class="feature"><div class="feature-dot"></div>Résultats d'examens</div>
+        <div class="feature"><div class="feature-dot"></div>Absences de votre enfant</div>
+        <div class="feature"><div class="feature-dot"></div>Emploi du temps</div>
+        <div class="feature"><div class="feature-dot"></div>Messagerie &amp; Cellule d'écoute</div>
+      </div>
+    </div>
+    <div class="card-arrow">&#8250;</div>
+  </a>
+
+  <div class="divider">
+    <div class="divider-line"></div>
+    <div class="divider-text">Nous contacter</div>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="contact-box">
+    <div class="contact-label">Direction &mdash; CPP Les Princes d'Abidjan</div>
+    <div class="contact-tel">
+      <a href="tel:+2250708111269">07 08 11 12 69</a>
+      &nbsp;/&nbsp;
+      <a href="tel:+2250789771991">07 89 77 19 91</a>
+    </div>
+    <a class="contact-whatsapp" href="https://wa.me/2250708111269">&#128172; WhatsApp</a>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="footer-ecole">Groupe Scolaire Les Princes d'Abidjan</div>
+  <div class="footer-info">OID Erasmus+ : E10433084 &mdash; Code établissement : 054707</div>
+  <div class="footer-domaine">lesprincesabidjan.com</div>
+</div>
+
+</body>
+</html>
