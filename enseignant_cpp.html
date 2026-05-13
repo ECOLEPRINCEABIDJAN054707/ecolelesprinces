@@ -1414,40 +1414,36 @@ async function publierCahier() {
 
   // ── GPS OBLIGATOIRE ─────────────────────────────────
   if (!navigator.geolocation) {
-    // Téléphone sans GPS → WhatsApp direction
     afficherEcranGPSProbleme('GPS_NON_DISPONIBLE');
     return;
   }
 
-  showLoader('📍 Vérification GPS...');
-
+  // D'abord demander la permission sans loader
+  // Le navigateur pose sa propre question d'abord
   navigator.geolocation.getCurrentPosition(
     function(pos) {
-      hideLoader();
+      // Permission accordée → afficher loader et publier
+      showLoader('📍 Position confirmée — Publication...');
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
       const acc = Math.round(pos.coords.accuracy);
-
-      // GPS trop imprécis (>150m) → EN ATTENTE direction
       if (acc > 150) {
         finaliser(lat, lon, acc, 'GPS_IMPRECIS', acc);
-        return;
+      } else {
+        finaliser(lat, lon, acc, 'GPS_OK', acc);
       }
-
-      finaliser(lat, lon, acc, 'GPS_OK', acc);
     },
     function(erreur) {
       hideLoader();
-      // erreur.code : 1=PERMISSION_DENIED, 2=UNAVAILABLE, 3=TIMEOUT
       if (erreur.code === 1) {
-        // Refus volontaire → bloquer
+        // Refus volontaire → écran bloquant
         afficherEcranGPSObligatoire();
       } else {
-        // GPS indisponible (signal faible, béton) → WhatsApp direction
+        // Signal faible ou timeout → WhatsApp
         afficherEcranGPSProbleme('GPS_INDISPONIBLE');
       }
     },
-    {enableHighAccuracy:true, timeout:10000, maximumAge:0}
+    {enableHighAccuracy:true, timeout:12000, maximumAge:0}
   );
 }
 
