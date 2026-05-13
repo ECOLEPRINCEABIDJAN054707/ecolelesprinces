@@ -17,8 +17,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .header h1{font-size:18px;font-weight:700;}
 .header p{font-size:12px;opacity:0.75;}
 .btn-logout{background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.4);padding:6px 14px;border-radius:8px;cursor:pointer;font-size:12px;}
-
-/* LOGIN */
 .login-wrap{max-width:420px;margin:60px auto;padding:0 20px;}
 .login-card{background:white;border-radius:20px;padding:32px;box-shadow:var(--shadow);}
 .login-card h2{font-size:20px;color:var(--bleu);margin-bottom:6px;text-align:center;}
@@ -28,8 +26,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .form-group select,.form-group input{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;background:#F8F9FC;outline:none;}
 .form-group input:focus,.form-group select:focus{border-color:var(--bleu2);}
 .btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--bleu),var(--bleu2));color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;}
-
-/* DASHBOARD */
 .dashboard{display:none;padding:24px;max-width:1200px;margin:0 auto;}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px;}
 .stat-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--bleu);}
@@ -41,7 +37,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .stat-card.vert .stat-value{color:var(--vert);}
 .stat-card.or .stat-value{color:var(--or);}
 .stat-card.rouge .stat-value{color:var(--rouge);}
-
 .section-title{font-size:16px;font-weight:700;color:var(--bleu);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border);}
 .table-wrap{background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:24px;}
 table{width:100%;border-collapse:collapse;}
@@ -54,20 +49,32 @@ tr:nth-child(even){background:#F8FAFD;}
 .badge-vacataire{background:#E3F2FD;color:var(--bleu2);}
 .badge-permanent{background:#E8F5E9;color:var(--vert);}
 .total-row td{font-weight:700;background:#EEF4FB;color:var(--bleu);}
-
 .filters{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
 .filters select,.filters input{padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:white;outline:none;}
 .btn-refresh{padding:9px 18px;background:var(--bleu);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;}
 .btn-export{padding:9px 18px;background:var(--vert);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;}
-
 .spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--bleu2);border-radius:50%;animation:spin 0.8s linear infinite;margin:40px auto;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .loading-text{text-align:center;color:var(--text2);font-size:13px;margin-top:8px;}
-
 .toast{position:fixed;bottom:24px;right:24px;background:#333;color:white;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:500;z-index:9999;display:none;}
 .toast.show{display:block;}
 .toast.success{background:var(--vert);}
 .toast.error{background:var(--rouge);}
+/* MODAL ENRICHI */
+.calcul-bloc{background:#F0F7FF;border-radius:10px;padding:12px 14px;margin:10px 0;border-left:3px solid var(--bleu2);}
+.calcul-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+.calcul-row span:first-child{color:var(--text2);}
+.calcul-row span:last-child{font-weight:700;}
+.salaire-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;}
+.sal-box{border-radius:10px;padding:10px;text-align:center;border:1.5px solid;}
+.sal-box.vert{background:#E8F5E9;border-color:#A5D6A7;}
+.sal-box.orange{background:#FFF3E0;border-color:#FFB74D;}
+.sal-box-label{font-size:11px;font-weight:600;margin-bottom:4px;}
+.sal-box-val{font-size:16px;font-weight:800;}
+.sal-box.vert .sal-box-label{color:var(--vert);}
+.sal-box.vert .sal-box-val{color:var(--vert);}
+.sal-box.orange .sal-box-label{color:var(--orange);}
+.sal-box.orange .sal-box-val{color:var(--orange);}
 </style>
 </head>
 <body>
@@ -113,35 +120,29 @@ tr:nth-child(even){background:#F8FAFD;}
 
 <!-- DASHBOARD -->
 <div class="dashboard" id="dashboard">
-  <div class="stats-grid" id="statsGrid">
+  <div class="stats-grid">
     <div class="stat-card"><div class="stat-label">Enseignants actifs</div><div class="stat-value" id="statEns">—</div></div>
     <div class="stat-card vert"><div class="stat-label">Heures ce mois</div><div class="stat-value" id="statHeures">—</div></div>
     <div class="stat-card or"><div class="stat-label">Masse salariale</div><div class="stat-value" id="statSalaire">—</div></div>
     <div class="stat-card rouge"><div class="stat-label">Permanents</div><div class="stat-value" id="statPerm">—</div></div>
   </div>
-
   <div class="filters">
-    <select id="filtreMois" onchange="chargerPointage()">
-    </select>
+    <select id="filtreMois" onchange="chargerPointage()"></select>
     <button class="btn-refresh" onclick="chargerPointage()">🔄 Actualiser</button>
     <button class="btn-export" onclick="exporterCSV()">📥 Exporter CSV</button>
   </div>
-
   <div class="section-title">Récapitulatif des salaires</div>
   <div class="table-wrap">
-    <div id="tableBody">
-      <div class="spinner"></div>
-      <div class="loading-text">Chargement...</div>
-    </div>
+    <div id="tableBody"><div class="spinner"></div><div class="loading-text">Chargement...</div></div>
   </div>
 </div>
 
 <!-- MODAL TRAITEMENT EN ATTENTE -->
-<div id="modalAttente" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:white;border-radius:16px;padding:28px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+<div id="modalAttente" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;overflow-y:auto;">
+  <div style="background:white;border-radius:16px;padding:28px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);margin:20px auto;">
     <h3 style="color:var(--bleu);margin-bottom:16px;font-size:17px;">⏱️ Cours en attente de validation</h3>
-    <div id="modalAttenteInfo" style="background:#F5F7FA;border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.8;"></div>
-    <div class="form-group">
+    <div id="modalAttenteInfo"></div>
+    <div class="form-group" style="margin-top:12px;">
       <label>Raison (optionnel)</label>
       <select id="modalRaison">
         <option value="">— Sélectionner une raison —</option>
@@ -153,25 +154,29 @@ tr:nth-child(even){background:#F8FAFD;}
         <option value="Autre">Autre</option>
       </select>
     </div>
-    <div style="display:flex;gap:10px;margin-top:16px;">
-      <button onclick="traiterAttente('VALIDÉ')" style="flex:1;padding:12px;background:var(--vert);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;">✅ Valider</button>
-      <button onclick="traiterAttente('PARTIEL')" style="flex:1;padding:12px;background:var(--orange);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;">⚠️ 50%</button>
-      <button onclick="traiterAttente('REJETÉ')" style="flex:1;padding:12px;background:var(--rouge);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;">❌ Rejeter</button>
+    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;">
+      <button onclick="traiterAttente('VALIDÉ')" style="flex:1;padding:12px;background:var(--vert);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;min-width:80px;">✅ Valider</button>
+      <button onclick="traiterAttente('PARTIEL')" style="flex:1;padding:12px;background:var(--orange);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;min-width:80px;">⚠️ 50%</button>
+      <button onclick="traiterAttente('REJETÉ')" style="flex:1;padding:12px;background:var(--rouge);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;min-width:80px;">❌ Rejeter</button>
       <button onclick="fermerModalAttente()" style="padding:12px 16px;background:#E0E4EF;border:none;border-radius:10px;cursor:pointer;">Annuler</button>
     </div>
   </div>
 </div>
 
-  <!-- Section EN ATTENTE -->
-  <div id="sectionAttente" style="display:none;margin-top:24px;">
-    <div class="section-title" style="color:var(--orange)">⏱️ Cours en attente de validation</div>
-    <div class="table-wrap" id="tableAttente"></div>
-  </div>
+<!-- Section EN ATTENTE -->
+<div id="sectionAttente" style="display:none;padding:0 24px;max-width:1200px;margin:0 auto;">
+  <div class="section-title" style="color:var(--orange)">⏱️ Cours en attente de validation</div>
+  <div class="table-wrap" id="tableAttente"></div>
+</div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz3cmL0izSiTC9qddXal3RHXpiG8RIvdsk37YMTZWu8mAEpGvw3rohq71VUDbcnnrX9/exec';
+// ═══════════════════════════════════════════════════════
+// ✅ ÉTAPE 1 — URL Apps Script V2 (synchronisée avec enseignant_cpp.html)
+// ═══════════════════════════════════════════════════════
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFVBYUZz4kv0Jzew9dbboqO0IEJg1q6FGxkfWwWA3r3wC2BjxVPdp05q1YeY00s_6f/exec';
+
 const SHEETS_IDS = {
   'CPP LES PRINCES':     '1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
   'ACADEMIE':            '1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M',
@@ -187,13 +192,24 @@ const SHEETS_IDS = {
   'GS RITA ROSANE':      '1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0'
 };
 
+// Tarifs identiques à enseignant_cpp.html V2
+const TARIFS = {
+  'CPP LES PRINCES': {college:1200, lycee:1500},
+  'CPP PRO':         {college:1200, lycee:1500},
+  'CPP TECH':        {college:1200, lycee:1500},
+};
+const TARIF_DEFAUT = {college:1000, lycee:1200};
+
+function getTarif(ecole, classe) {
+  const t = TARIFS[ecole] || TARIF_DEFAUT;
+  return /^(2NDE|1[EÈ]RE|TLE|TERMINALE)/i.test(classe||'') ? t.lycee : t.college;
+}
+
 const API_KEY = 'AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA';
 
 let ecoleConnectee = null;
-let pinConnecte = null;
 let donneesPointage = [];
 
-// Remplir les mois
 function remplirMois() {
   const sel = document.getElementById('filtreMois');
   const now = new Date();
@@ -209,18 +225,10 @@ function remplirMois() {
 }
 
 const PINS_DIRECTION = {
-  'CPP LES PRINCES':      '111269',
-  'ACADEMIE':             '111269',
-  'GUINGLO VILLE':        '111269',
-  'GNONTINROU':           '111269',
-  'KOUTOUAN':             '111269',
-  'SOAKPE':               '111269',
-  'AKEIKOI 1':            '111269',
-  'AKEIKOI 2':            '111269',
-  'CPP PRO':              '111269',
-  'CPP TECH':             '111269',
-  'ETL PRINCES KOUIBLY':  '111269',
-  'GS RITA ROSANE':       '111269',
+  'CPP LES PRINCES':'111269','ACADEMIE':'111269','GUINGLO VILLE':'111269',
+  'GNONTINROU':'111269','KOUTOUAN':'111269','SOAKPE':'111269',
+  'AKEIKOI 1':'111269','AKEIKOI 2':'111269','CPP PRO':'111269',
+  'CPP TECH':'111269','ETL PRINCES KOUIBLY':'111269','GS RITA ROSANE':'111269'
 };
 
 var tentativesPin = 0;
@@ -228,35 +236,18 @@ var tentativesPin = 0;
 function seConnecter() {
   const ecole = document.getElementById('loginEcole').value;
   const pin   = document.getElementById('loginPin').value.trim();
-
-  if (!ecole) {
-    showToast('Sélectionnez votre école', 'error');
-    return;
-  }
-  if (pin.length < 4) {
-    showToast('Entrez votre code PIN', 'error');
-    return;
-  }
-
-  // Vérification PIN
+  if (!ecole) { showToast('Sélectionnez votre école', 'error'); return; }
+  if (pin.length < 4) { showToast('Entrez votre code PIN', 'error'); return; }
   const pinAttendu = PINS_DIRECTION[ecole];
   if (!pinAttendu || pin !== pinAttendu) {
     tentativesPin++;
-    if (tentativesPin >= 3) {
-      document.getElementById('btnConnecter') &&
-        (document.getElementById('btnConnecter').disabled = true);
-      showToast('Accès bloqué — Contactez le fondateur', 'error');
-      return;
-    }
+    if (tentativesPin >= 3) { showToast('Accès bloqué — Contactez le fondateur', 'error'); return; }
     showToast('PIN incorrect (' + tentativesPin + '/3)', 'error');
     document.getElementById('loginPin').value = '';
     return;
   }
-
-  // PIN correct
-  tentativesPin  = 0;
+  tentativesPin = 0;
   ecoleConnectee = ecole;
-  pinConnecte    = pin;
   document.getElementById('loginWrap').style.display  = 'none';
   document.getElementById('mainHeader').style.display = 'flex';
   document.getElementById('dashboard').style.display  = 'block';
@@ -264,46 +255,35 @@ function seConnecter() {
   remplirMois();
   chargerPointage();
 }
+
 async function chargerPointage() {
   const mois = document.getElementById('filtreMois').value;
   document.getElementById('tableBody').innerHTML =
     '<div class="spinner"></div><div class="loading-text">Chargement...</div>';
-
-  // Lire POINTAGE_MENSUEL depuis Sheets directement
   try {
     const sheetsId = SHEETS_IDS[ecoleConnectee];
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/POINTAGE_MENSUEL!A2:L2000?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
     const res  = await fetch(url);
     const data = await res.json();
+    if (!data.values || data.values.length === 0) { afficherTableauVide(); return; }
 
-    if (!data.values || data.values.length === 0) {
-      afficherTableauVide();
-      return;
-    }
-
-    // Convertir sériel Sheets en mois yyyy-MM
     function serielVersMois(val) {
       if (!val) return '';
       const n = parseFloat(val);
       if (!isNaN(n) && n > 40000) {
-        // Sériel Sheets : jours depuis 30/12/1899
         const d = new Date(Math.round((n - 25569) * 86400 * 1000));
-        const y = d.getUTCFullYear();
-        const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-        return y + '-' + m;
+        return d.getUTCFullYear() + '-' + String(d.getUTCMonth()+1).padStart(2,'0');
       }
       return String(val).trim().substring(0, 7);
     }
 
-    // Filtrer par mois
     const lignes = data.values.filter(row => {
-      const statut = String(row[9]||'').trim();
+      const statut  = String(row[9]||'').trim();
       const moisRow = serielVersMois(row[6]);
       const estValide = statut === 'VALIDÉ' || statut === 'VALIDE' || statut === 'PARTIEL';
       return estValide && moisRow === mois;
     });
 
-    // Grouper par enseignant
     const recap = {};
     lignes.forEach(row => {
       const nom     = String(row[4]||'').trim();
@@ -319,10 +299,7 @@ async function chargerPointage() {
 
     donneesPointage = Object.values(recap);
     afficherAttente(data.values);
-
-    // Ajouter permanents
     await chargerPermanents(recap);
-
     afficherTableau();
   } catch(e) {
     document.getElementById('tableBody').innerHTML =
@@ -357,9 +334,7 @@ async function chargerPermanents(recap) {
 
 function afficherTableau() {
   if (donneesPointage.length === 0) { afficherTableauVide(); return; }
-
   donneesPointage.sort((a,b) => b.totalSalaire - a.totalSalaire);
-
   const totalSalaire = donneesPointage.reduce((s,e) => s + e.totalSalaire, 0);
   const totalHeures  = donneesPointage.reduce((s,e) => s + e.totalHeures, 0);
   const nbPerm       = donneesPointage.filter(e => e.type === 'PERMANENT').length;
@@ -369,11 +344,10 @@ function afficherTableau() {
   document.getElementById('statSalaire').textContent = totalSalaire.toLocaleString('fr-FR') + ' F';
   document.getElementById('statPerm').textContent = nbPerm;
 
-  let html = `<table>
-    <thead><tr>
-      <th>#</th><th>Enseignant</th><th>Type</th><th>Classes</th>
-      <th>Nb Cours</th><th>Heures</th><th>Salaire</th>
-    </tr></thead><tbody>`;
+  let html = `<table><thead><tr>
+    <th>#</th><th>Enseignant</th><th>Type</th><th>Classes</th>
+    <th>Nb Cours</th><th>Heures</th><th>Salaire</th>
+  </tr></thead><tbody>`;
 
   donneesPointage.forEach((e, i) => {
     const isPerm = e.type === 'PERMANENT';
@@ -381,9 +355,9 @@ function afficherTableau() {
       <td>${i+1}</td>
       <td><strong>${e.nom}</strong></td>
       <td><span class="badge ${isPerm?'badge-permanent':'badge-vacataire'}">${isPerm?'PERMANENT':'VACATAIRE'}</span></td>
-      <td style="font-size:11px;color:var(--text2)">${(e.classes||[]).join(', ') || '—'}</td>
+      <td style="font-size:11px;color:var(--text2)">${(e.classes||[]).join(', ')||'—'}</td>
       <td style="text-align:center">${e.nbCours}</td>
-      <td style="text-align:center;font-weight:600">${isPerm ? '—' : e.totalHeures.toFixed(1)+'h'}</td>
+      <td style="text-align:center;font-weight:600">${isPerm?'—':e.totalHeures.toFixed(1)+'h'}</td>
       <td style="text-align:right;font-weight:700;color:var(--bleu)">${e.totalSalaire.toLocaleString('fr-FR')} F</td>
     </tr>`;
   });
@@ -422,7 +396,7 @@ function exporterCSV() {
 }
 
 function logout() {
-  ecoleConnectee = null; pinConnecte = null; donneesPointage = [];
+  ecoleConnectee = null; donneesPointage = [];
   document.getElementById('loginWrap').style.display = 'block';
   document.getElementById('mainHeader').style.display = 'none';
   document.getElementById('dashboard').style.display = 'none';
@@ -441,20 +415,30 @@ function afficherAttente(lignes) {
 
   let html = `<table><thead><tr>
     <th>Date</th><th>Enseignant</th><th>Classe</th><th>Matière</th>
-    <th>Durée</th><th>Action</th>
+    <th>Début EDT</th><th>Fin EDT</th><th>Durée</th><th>Action</th>
   </tr></thead><tbody>`;
 
   coursEnAttente.forEach((row, idx) => {
-    const heureD = toHeure(row[1]);
-    const heureF = toHeure(row[7]);
-    const dureeMin = heureD && heureF ? Math.round((parseHeureJS(heureF) - parseHeureJS(heureD))) : '?';
+    const heureD   = toHeure(row[1]);
+    const heureF   = toHeure(row[7]);
+    const dureeMin = heureD && heureF ? Math.round(parseHeureJS(heureF) - parseHeureJS(heureD)) : '?';
+    const tarif    = getTarif(ecoleConnectee, String(row[2]||''));
+    const dureeH   = typeof dureeMin === 'number' ? dureeMin / 60 : 0;
+    const salValide = Math.round(dureeH * tarif);
     html += `<tr>
       <td>${toDate(row[0])}</td>
       <td><strong>${row[4]||''}</strong></td>
       <td>${row[2]||''}</td>
       <td>${row[3]||''}</td>
+      <td>${heureD||'—'}</td>
+      <td>${heureF||'—'}</td>
       <td style="color:var(--orange);font-weight:700">${dureeMin} min</td>
-      <td><button onclick="ouvrirModalAttente(${idx})" style="padding:6px 12px;background:var(--bleu);color:white;border:none;border-radius:8px;cursor:pointer;font-size:12px">Traiter</button></td>
+      <td>
+        <button onclick="ouvrirModalAttente(${idx})"
+          style="padding:6px 14px;background:var(--bleu);color:white;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">
+          Traiter →
+        </button>
+      </td>
     </tr>`;
   });
 
@@ -493,18 +477,38 @@ function parseHeureJS(h) {
 
 function ouvrirModalAttente(idx) {
   coursCourant = coursEnAttente[idx];
-  const row = coursCourant;
+  const row    = coursCourant;
   const heureD = toHeure(row[1]);
   const heureF = toHeure(row[7]);
-  const dureeMin = heureD && heureF ? Math.round((parseHeureJS(heureF) - parseHeureJS(heureD))) : '?';
-  document.getElementById('modalAttenteInfo').innerHTML =
-    `<b>Enseignant :</b> ${row[4]||''}<br>
-     <b>Classe :</b> ${row[2]||''}<br>
-     <b>Matière :</b> ${row[3]||''}<br>
-     <b>Date :</b> ${toDate(row[0])}<br>
-     <b>Heure début :</b> ${heureD}<br>
-     <b>Heure fin :</b> ${heureF}<br>
-     <b>Durée :</b> <span style="color:var(--orange);font-weight:700">${dureeMin} minutes</span>`;
+  const dureeMin = heureD && heureF ? Math.round(parseHeureJS(heureF) - parseHeureJS(heureD)) : 0;
+  const tarif    = getTarif(ecoleConnectee, String(row[2]||''));
+  const dureeH   = dureeMin / 60;
+  const salValide  = Math.round(dureeH * tarif);
+  const salPartiel = Math.round(dureeH * tarif * 0.5);
+
+  document.getElementById('modalAttenteInfo').innerHTML = `
+    <div style="background:#F5F7FA;border-radius:10px;padding:14px;font-size:13px;line-height:1.9;">
+      <b>Enseignant :</b> ${row[4]||'—'}<br>
+      <b>Classe :</b> ${row[2]||'—'} &nbsp;|&nbsp; <b>Matière :</b> ${row[3]||'—'}<br>
+      <b>Date :</b> ${toDate(row[0])}
+    </div>
+    <div class="calcul-bloc">
+      <div class="calcul-row"><span>Heure début EDT</span><span>${heureD||'—'}</span></div>
+      <div class="calcul-row"><span>Heure fin EDT</span><span>${heureF||'—'}</span></div>
+      <div class="calcul-row"><span>Durée</span><span style="color:var(--orange)">${dureeMin} minutes</span></div>
+      <div class="calcul-row"><span>Tarif horaire</span><span>${tarif.toLocaleString('fr-FR')} F/h</span></div>
+    </div>
+    <div class="salaire-options">
+      <div class="sal-box vert">
+        <div class="sal-box-label">✅ Si VALIDÉ (100%)</div>
+        <div class="sal-box-val">${salValide.toLocaleString('fr-FR')} F</div>
+      </div>
+      <div class="sal-box orange">
+        <div class="sal-box-label">⚠️ Si 50%</div>
+        <div class="sal-box-val">${salPartiel.toLocaleString('fr-FR')} F</div>
+      </div>
+    </div>`;
+
   document.getElementById('modalRaison').value = '';
   document.getElementById('modalAttente').style.display = 'flex';
 }
@@ -517,26 +521,23 @@ function fermerModalAttente() {
 async function traiterAttente(decision) {
   if (!coursCourant) return;
   const raison = document.getElementById('modalRaison').value || '';
-  const row = coursCourant;
+  const row    = coursCourant;
   const heureD = toHeure(row[1]);
   const heureF = toHeure(row[7]);
   const duree  = (heureD && heureF) ? (parseHeureJS(heureF) - parseHeureJS(heureD)) / 60 : 0;
-  const tarif  = parseFloat(row[10]) || 1000;
+  const tarif  = getTarif(ecoleConnectee, String(row[2]||''));
   let salaire  = 0;
   if (decision === 'VALIDÉ')  salaire = Math.round(duree * tarif);
   if (decision === 'PARTIEL') salaire = Math.round(duree * tarif * 0.5);
 
   const cbName = 'dir_' + Date.now();
   const params = new URLSearchParams({
-    callback: cbName,
-    type: 'TRAITER_ATTENTE',
+    callback: cbName, type: 'TRAITER_ATTENTE',
     ecole: ecoleConnectee || '',
-    enseignant: String(row[4] || ''),
-    classe: String(row[2] || ''),
+    enseignant: String(row[4]||''),
+    classe: String(row[2]||''),
     date: toDate(row[0]),
-    decision: decision,
-    raison: raison,
-    salaire: salaire
+    decision, raison, salaire
   });
 
   return new Promise(function(resolve) {
@@ -547,9 +548,7 @@ async function traiterAttente(decision) {
       if (res && res.ok) {
         showToast('✅ ' + decision + ' enregistré', 'success');
         fermerModalAttente();
-        setTimeout(function() { 
-        chargerPointage(); 
-      }, 2000);
+        setTimeout(function() { chargerPointage(); }, 2000);
       } else {
         showToast('❌ Erreur : ' + (res ? res.error : 'inconnue'), 'error');
       }
@@ -570,21 +569,6 @@ async function traiterAttente(decision) {
         resolve({ ok: false });
       }
     }, 10000);
-  });
-}
-
-async function envoyerDecision(payload) {
-  return new Promise(function(resolve) {
-    const cbName = 'dir_' + Date.now();
-    const script = document.createElement('script');
-    window[cbName] = function(res) {
-      delete window[cbName];
-      try { document.body.removeChild(script); } catch(e) {}
-      resolve(res);
-    };
-    script.src = `${APPS_SCRIPT_URL}?callback=${cbName}&type=TRAITER_ATTENTE&ecole=${encodeURIComponent(payload.ecole)}&enseignant=${encodeURIComponent(payload.enseignant)}&classe=${encodeURIComponent(payload.classe)}&date=${encodeURIComponent(payload.date)}&decision=${encodeURIComponent(payload.decision)}&raison=${encodeURIComponent(payload.raison||'')}&salaire=${payload.salaire||0}`;
-    document.body.appendChild(script);
-    setTimeout(() => { if(window[cbName]) { delete window[cbName]; resolve({ok:true}); }}, 8000);
   });
 }
 
