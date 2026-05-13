@@ -75,6 +75,18 @@ tr:nth-child(even){background:#F8FAFD;}
 .sal-box.vert .sal-box-val{color:var(--vert);}
 .sal-box.orange .sal-box-label{color:var(--orange);}
 .sal-box.orange .sal-box-val{color:var(--orange);}
+/* COMPTEUR ATTENTE */
+.attente-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border);}
+.attente-badge{background:#FFF3E0;border:1.5px solid #FFB74D;color:var(--orange);padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;}
+/* DETAIL CALCUL V2 */
+.detail-v2{background:#F8FFF8;border:1.5px solid #A5D6A7;border-radius:10px;padding:10px 14px;margin:8px 0;font-size:12px;}
+.detail-v2-titre{font-size:11px;font-weight:700;color:var(--vert);text-transform:uppercase;margin-bottom:6px;}
+/* SYNC ENSEIGNANTS */
+.btn-sync{padding:9px 18px;background:#7B1FA2;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;}
+.sync-result{background:#F3E5F5;border:1.5px solid #CE93D8;border-radius:10px;padding:10px 14px;font-size:12px;color:#6A1B9A;margin-top:12px;display:none;}
+/* DETAIL TABLEAU — colonne detail */
+.detail-btn{background:none;border:none;color:var(--bleu2);font-size:11px;cursor:pointer;text-decoration:underline;padding:0;}
+.detail-popup{display:none;background:#F0F7FF;border-radius:8px;padding:8px 12px;font-size:11px;margin-top:4px;border-left:3px solid var(--bleu2);}
 </style>
 </head>
 <body>
@@ -130,7 +142,9 @@ tr:nth-child(even){background:#F8FAFD;}
     <select id="filtreMois" onchange="chargerPointage()"></select>
     <button class="btn-refresh" onclick="chargerPointage()">🔄 Actualiser</button>
     <button class="btn-export" onclick="exporterCSV()">📥 Exporter CSV</button>
+    <button class="btn-sync" onclick="syncEnseignants()">👥 Sync Enseignants</button>
   </div>
+  <div class="sync-result" id="syncResult"></div>
   <div class="section-title">Récapitulatif des salaires</div>
   <div class="table-wrap">
     <div id="tableBody"><div class="spinner"></div><div class="loading-text">Chargement...</div></div>
@@ -165,7 +179,10 @@ tr:nth-child(even){background:#F8FAFD;}
 
 <!-- Section EN ATTENTE -->
 <div id="sectionAttente" style="display:none;padding:0 24px;max-width:1200px;margin:0 auto;">
-  <div class="section-title" style="color:var(--orange)">⏱️ Cours en attente de validation</div>
+  <div class="attente-header">
+    <div class="section-title" style="color:var(--orange);margin:0;border:none;">⏱️ Cours en attente de validation</div>
+    <span class="attente-badge" id="attenteCompteur">0 cours</span>
+  </div>
   <div class="table-wrap" id="tableAttente"></div>
 </div>
 
@@ -410,20 +427,24 @@ function afficherAttente(lignes) {
   coursEnAttente = lignes.filter(row => String(row[9]||'').trim() === 'EN ATTENTE');
   const section = document.getElementById('sectionAttente');
   const table   = document.getElementById('tableAttente');
+
+  // ✅ ÉTAPE 2 — Compteur
+  document.getElementById('attenteCompteur').textContent = coursEnAttente.length + ' cours';
+
   if (coursEnAttente.length === 0) { section.style.display = 'none'; return; }
   section.style.display = 'block';
 
   let html = `<table><thead><tr>
     <th>Date</th><th>Enseignant</th><th>Classe</th><th>Matière</th>
-    <th>Début EDT</th><th>Fin EDT</th><th>Durée</th><th>Action</th>
+    <th>Début EDT</th><th>Fin EDT</th><th>Durée</th><th>Salaire estimé</th><th>Action</th>
   </tr></thead><tbody>`;
 
   coursEnAttente.forEach((row, idx) => {
     const heureD   = toHeure(row[1]);
     const heureF   = toHeure(row[7]);
-    const dureeMin = heureD && heureF ? Math.round(parseHeureJS(heureF) - parseHeureJS(heureD)) : '?';
+    const dureeMin = heureD && heureF ? Math.round(parseHeureJS(heureF) - parseHeureJS(heureD)) : 0;
     const tarif    = getTarif(ecoleConnectee, String(row[2]||''));
-    const dureeH   = typeof dureeMin === 'number' ? dureeMin / 60 : 0;
+    const dureeH   = dureeMin / 60;
     const salValide = Math.round(dureeH * tarif);
     html += `<tr>
       <td>${toDate(row[0])}</td>
@@ -433,6 +454,7 @@ function afficherAttente(lignes) {
       <td>${heureD||'—'}</td>
       <td>${heureF||'—'}</td>
       <td style="color:var(--orange);font-weight:700">${dureeMin} min</td>
+      <td style="font-weight:700;color:var(--vert)">${salValide.toLocaleString('fr-FR')} F</td>
       <td>
         <button onclick="ouvrirModalAttente(${idx})"
           style="padding:6px 14px;background:var(--bleu);color:white;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;">
@@ -483,8 +505,24 @@ function ouvrirModalAttente(idx) {
   const dureeMin = heureD && heureF ? Math.round(parseHeureJS(heureF) - parseHeureJS(heureD)) : 0;
   const tarif    = getTarif(ecoleConnectee, String(row[2]||''));
   const dureeH   = dureeMin / 60;
-  const salValide  = Math.round(dureeH * tarif);
-  const salPartiel = Math.round(dureeH * tarif * 0.5);
+
+  // ✅ ÉTAPE 3 — Calcul V2 robuste (identique à enseignant_cpp.html)
+  const heuresCompletes = Math.floor(dureeMin / 60);
+  const resteMin        = dureeMin % 60;
+  let heuresValidees    = heuresCompletes;
+  if (resteMin >= 50) heuresValidees += 1;
+  const salValide  = heuresValidees * tarif;
+  const salPartiel = Math.round(salValide * 0.5);
+
+  // Détail calcul V2
+  let detailV2 = '';
+  if (resteMin >= 50) {
+    detailV2 = `${heuresCompletes}h + ${resteMin}min ≥ 50min → <b style="color:var(--vert)">${heuresValidees}h validées ✅</b>`;
+  } else if (resteMin > 0) {
+    detailV2 = `${heuresCompletes}h + ${resteMin}min &lt; 50min → <b style="color:var(--orange)">${heuresCompletes}h validées + ${resteMin}min soumis direction ⏰</b>`;
+  } else {
+    detailV2 = `${heuresCompletes}h complètes → <b style="color:var(--vert)">${heuresCompletes}h validées ✅</b>`;
+  }
 
   document.getElementById('modalAttenteInfo').innerHTML = `
     <div style="background:#F5F7FA;border-radius:10px;padding:14px;font-size:13px;line-height:1.9;">
@@ -495,8 +533,12 @@ function ouvrirModalAttente(idx) {
     <div class="calcul-bloc">
       <div class="calcul-row"><span>Heure début EDT</span><span>${heureD||'—'}</span></div>
       <div class="calcul-row"><span>Heure fin EDT</span><span>${heureF||'—'}</span></div>
-      <div class="calcul-row"><span>Durée</span><span style="color:var(--orange)">${dureeMin} minutes</span></div>
+      <div class="calcul-row"><span>Durée totale</span><span style="color:var(--orange)">${dureeMin} min (${heuresCompletes}h ${resteMin}min)</span></div>
       <div class="calcul-row"><span>Tarif horaire</span><span>${tarif.toLocaleString('fr-FR')} F/h</span></div>
+    </div>
+    <div class="detail-v2">
+      <div class="detail-v2-titre">🧮 Règle calcul V2</div>
+      ${detailV2}
     </div>
     <div class="salaire-options">
       <div class="sal-box vert">
@@ -570,6 +612,43 @@ async function traiterAttente(decision) {
       }
     }, 10000);
   });
+}
+
+// ✅ ÉTAPE 4 — Synchronisation enseignants
+async function syncEnseignants() {
+  const btn = document.querySelector('.btn-sync');
+  const res = document.getElementById('syncResult');
+  btn.textContent = '⏳ Sync...';
+  btn.disabled = true;
+  res.style.display = 'none';
+  try {
+    const sheetsId = SHEETS_IDS[ecoleConnectee];
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/ENSEIGNANTS!A2:F200?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const r    = await fetch(url);
+    const data = await r.json();
+    if (!data.values) { res.textContent = '⚠️ Aucune donnée dans ENSEIGNANTS'; res.style.display='block'; return; }
+
+    let nbActifs=0, nbPerm=0, nbVaca=0;
+    data.values.forEach(row => {
+      const actif = String(row[3]||'').trim().toUpperCase();
+      const type  = String(row[4]||'VACATAIRE').trim().toUpperCase();
+      if (actif !== 'OUI') return;
+      nbActifs++;
+      if (type === 'PERMANENT') nbPerm++; else nbVaca++;
+    });
+
+    res.innerHTML = `✅ Sync réussie — <b>${nbActifs} enseignants actifs</b> : ${nbPerm} permanent(s) · ${nbVaca} vacataire(s)`;
+    res.style.display = 'block';
+    showToast(`✅ ${nbActifs} enseignants synchronisés`, 'success');
+    chargerPointage();
+  } catch(e) {
+    res.textContent = '❌ Erreur sync : ' + e.message;
+    res.style.display = 'block';
+    showToast('❌ Erreur synchronisation', 'error');
+  } finally {
+    btn.textContent = '👥 Sync Enseignants';
+    btn.disabled = false;
+  }
 }
 
 let toastTimer;
