@@ -154,7 +154,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .loader-text{font-size:14px;color:var(--text2);font-weight:500;}
 
 /* TOAST */
-.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-80px);background:#333;color:white;padding:12px 20px;border-radius:24px;font-size:13px;font-weight:500;z-index:9998;transition:transform 0.3s;white-space:nowrap;max-width:90vw;text-align:center;opacity:0;}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-100px);background:#333;color:white;padding:12px 20px;border-radius:24px;font-size:13px;font-weight:500;z-index:9999;transition:transform 0.3s ease,opacity 0.3s ease;white-space:nowrap;max-width:90vw;text-align:center;opacity:0;pointer-events:none;}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 .toast.success{background:var(--vert);}
 .toast.error{background:var(--rouge);}
@@ -1106,7 +1106,8 @@ function calculerEstim() {
   else { document.getElementById('estimVal').style.color = 'var(--vert)'; }
 
   document.getElementById('estimVal').textContent = txt;
-  estimLigne.style.display = 'flex';
+  // Estimation disponible mais CACHÉE — bouton pour voir
+  estimLigne.style.display = 'block';
   btn.disabled = false;
 }
 
@@ -1411,15 +1412,129 @@ async function publierCahier() {
     });
   }
 
-  if (!navigator.geolocation) { finaliser(0,0,0,'GPS_NON_DISPONIBLE',null); return; }
+  // ── GPS OBLIGATOIRE ─────────────────────────────────
+  if (!navigator.geolocation) {
+    // Téléphone sans GPS → WhatsApp direction
+    afficherEcranGPSProbleme('GPS_NON_DISPONIBLE');
+    return;
+  }
+
+  showLoader('📍 Vérification GPS...');
+
   navigator.geolocation.getCurrentPosition(
-    pos => {
-      const lat=pos.coords.latitude, lon=pos.coords.longitude, acc=Math.round(pos.coords.accuracy);
-      finaliser(lat, lon, acc, 'GPS_OK', null);
+    function(pos) {
+      hideLoader();
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const acc = Math.round(pos.coords.accuracy);
+
+      // GPS trop imprécis (>150m) → EN ATTENTE direction
+      if (acc > 150) {
+        finaliser(lat, lon, acc, 'GPS_IMPRECIS', acc);
+        return;
+      }
+
+      finaliser(lat, lon, acc, 'GPS_OK', acc);
     },
-    () => finaliser(0,0,0,'GPS_INDISPONIBLE',null),
-    {enableHighAccuracy:true, timeout:8000, maximumAge:0}
+    function(erreur) {
+      hideLoader();
+      // erreur.code : 1=PERMISSION_DENIED, 2=UNAVAILABLE, 3=TIMEOUT
+      if (erreur.code === 1) {
+        // Refus volontaire → bloquer
+        afficherEcranGPSObligatoire();
+      } else {
+        // GPS indisponible (signal faible, béton) → WhatsApp direction
+        afficherEcranGPSProbleme('GPS_INDISPONIBLE');
+      }
+    },
+    {enableHighAccuracy:true, timeout:10000, maximumAge:0}
   );
+}
+
+// ── ÉCRAN GPS REFUSÉ — Bloquant ──────────────────────
+function afficherEcranGPSObligatoire() {
+  // Créer un overlay bloquant
+  var overlay = document.getElementById('gpsOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'gpsOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `
+    <div style="background:white;border-radius:16px;padding:24px;max-width:340px;width:100%;text-align:center;">
+      <div style="font-size:48px;margin-bottom:12px;">📍</div>
+      <div style="font-size:16px;font-weight:700;color:#C62828;margin-bottom:8px;">GPS Obligatoire</div>
+      <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:16px;">
+        Le GPS est <strong>obligatoire</strong> pour valider votre cours.<br><br>
+        Activez la localisation dans les paramètres de votre téléphone et réessayez.
+      </div>
+      <div style="background:#FFF3E0;border-radius:10px;padding:12px;margin-bottom:16px;text-align:left;font-size:12px;color:#E65100;">
+        📱 <strong>Android :</strong> Paramètres → Localisation → Activer<br>
+        🍎 <strong>iPhone :</strong> Réglages → Confidentialité → Service de localisation
+      </div>
+      <button onclick="reessayerGPS()" style="width:100%;padding:12px;background:#2E7D32;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">
+        🔄 Réessayer avec GPS
+      </button>
+      <button onclick="contacterDirectionGPS()" style="width:100%;padding:10px;background:#1F4E79;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px;">
+        📲 Contacter la direction
+      </button>
+      <button onclick="fermerGPSOverlay()" style="width:100%;padding:10px;background:#F5F5F5;color:#555;border:none;border-radius:10px;font-size:13px;cursor:pointer;">
+        ← Retour au cahier
+      </button>
+    </div>`;
+  overlay.style.display = 'flex';
+}
+
+// ── ÉCRAN GPS INDISPONIBLE — WhatsApp direction ───────
+function afficherEcranGPSProbleme(raison) {
+  var overlay = document.getElementById('gpsOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'gpsOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `
+    <div style="background:white;border-radius:16px;padding:24px;max-width:340px;width:100%;text-align:center;">
+      <div style="font-size:48px;margin-bottom:12px;">⚠️</div>
+      <div style="font-size:16px;font-weight:700;color:#E65100;margin-bottom:8px;">GPS Indisponible</div>
+      <div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:16px;">
+        Votre GPS ne fonctionne pas (signal faible ou salle en béton).<br><br>
+        Contactez la direction pour valider votre cours manuellement.
+      </div>
+      <button onclick="reessayerGPS()" style="width:100%;padding:12px;background:#2E7D32;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">
+        🔄 Réessayer
+      </button>
+      <button onclick="contacterDirectionGPS()" style="width:100%;padding:12px;background:#25D366;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">
+        📲 WhatsApp Direction
+      </button>
+      <button onclick="fermerGPSOverlay()" style="width:100%;padding:10px;background:#F5F5F5;color:#555;border:none;border-radius:10px;font-size:13px;cursor:pointer;">
+        ← Retour au cahier
+      </button>
+    </div>`;
+  overlay.style.display = 'flex';
+}
+
+function fermerGPSOverlay() {
+  var o = document.getElementById('gpsOverlay');
+  if (o) o.style.display = 'none';
+}
+
+function reessayerGPS() {
+  fermerGPSOverlay();
+  publierCahier();
+}
+
+function contacterDirectionGPS() {
+  var msg = 'Bonjour, je ne peux pas activer mon GPS.\n';
+  msg += 'Cours : ' + (coursActuel?.classe||'') + ' · ' + (coursActuel?.matiere||user?.matiere||'') + '\n';
+  msg += 'Heure : ' + (coursActuel?.heureDebutEDT||'') + ' → ' + (coursActuel?.heureFinEDT||'') + '\n';
+  msg += 'Date : ' + formatDate(new Date()) + '\n';
+  msg += 'Enseignant : ' + (user?.nom||'') + '\n';
+  msg += 'Merci de valider manuellement.';
+  var url = 'https://wa.me/2250708111269?text=' + encodeURIComponent(msg);
+  window.open(url, '_blank');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1577,7 +1692,7 @@ function showToast(msg, type='') {
   const t=document.getElementById('toast');
   t.textContent=msg; t.className=`toast ${type} show`;
   clearTimeout(toastTimer);
-  toastTimer=setTimeout(()=>t.classList.remove('show'),4500);
+  toastTimer=setTimeout(()=>{t.classList.remove('show');}, 4000);
 }
 
 window.addEventListener('online', syncHorsLigne);
