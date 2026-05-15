@@ -849,7 +849,11 @@ async function chargerNotes(eleve) {
         if (rowTrouve) {
           toutesLesRows = data.values;
           const cls4 = [...new Set(toutesLesRows.map(r => String(r[4]||"").trim()))].slice(0,15);
-          console.log('[DEBUG] Trimestre trouvé:', trimestres[t], '| Lignes:', toutesLesRows.length, '| Classes col4:', JSON.stringify(cls4));
+          const cls4norm = cls4.map(c => normaliserClasse(c));
+          console.log('[DEBUG] Trimestre:', trimestres[t], '| Lignes:', toutesLesRows.length);
+          console.log('[DEBUG] Classes col4 brutes:', JSON.stringify(cls4));
+          console.log('[DEBUG] Classes col4 normalisees:', JSON.stringify(cls4norm));
+          console.log('[DEBUG] classe eleve normalisee:', JSON.stringify(normaliserClasse(eleve.classe)));
           break;
         }
       } catch(e) {}
@@ -887,7 +891,15 @@ async function chargerNotes(eleve) {
       ];
     }
 
-    let html = "<div style='background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;border-left:4px solid #1F4E79;'>";
+    // ✅ DEBUG VISIBLE sur mobile
+    const cls4 = [...new Set(toutesLesRows.map(r => String(r[4]||"").trim()))].slice(0,8);
+    const cls4norm = cls4.map(c => normaliserClasse(c));
+    const debugInfo = "classe="+JSON.stringify(classe)+" | col4_brut="+JSON.stringify(cls4.slice(0,3))+" | col4_norm="+JSON.stringify(cls4norm.slice(0,3));
+
+    let html = "<div style='background:#FFF3E0;border-radius:8px;padding:8px 12px;margin-bottom:10px;border-left:4px solid #E65100;font-size:0.65em;color:#444;word-break:break-all;'>";
+    html += "<strong style='color:#E65100;'>DEBUG:</strong> " + debugInfo + "</div>";
+
+    html += "<div style='background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;border-left:4px solid #1F4E79;'>";
     html += "<p style='font-size:0.82em;color:#1F4E79;font-weight:bold;margin-bottom:2px;'>&#128203; RELEVE DE NOTES - "+trimNom+" 2025-2026</p>";
     html += "<p style='font-size:0.76em;color:#666;'>Classe : <strong>"+niveau+"</strong> - Matricule : <strong>"+mat+"</strong></p>";
     html += "<p style='font-size:0.7em;color:#999;margin-top:3px;'>&#128200; Rang, max et min calcules parmi les eleves de la meme classe</p></div>";
@@ -902,7 +914,10 @@ async function chargerNotes(eleve) {
       html += "<div style='background:"+g.couleur+";padding:9px 12px;'><span style='font-weight:bold;color:white;font-size:0.88em;'>"+g.titre+"</span></div>";
       g.matieres.forEach(m => {
         const stats = toutesLesRows ? calcStatsColonne(toutesLesRows, classe, m.col) : {notes:[]};
-        if (m.col === 12) console.log('[STATS] classe="'+classe+'" col='+m.col+' nb_eleves='+stats.notes.length+' notes='+JSON.stringify(stats.notes.slice(0,5)));
+        if (m.col === 12) {
+        const dbgNotes = toutesLesRows ? toutesLesRows.slice(0,3).map(r => ({mat:r[1], col4:String(r[4]||""), col4norm:normaliserClasse(String(r[4]||"")), note:r[12]})) : [];
+        console.log('[STATS] classe_norm="'+classe+'" | nb='+stats.notes.length+' | echantillon col4:', JSON.stringify(dbgNotes));
+      }
         html += carteMatiere(m.nom, m.val, g.couleur, stats);
       });
       html += "</div>";
