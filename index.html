@@ -771,10 +771,18 @@ async function chargerNotes(eleve) {
   // ✅ Calcul stats (max, min, rang) pour tous les élèves de la même classe
   function calcStatsColonne(toutes, classeRef, colIndex) {
     const notes = [];
+    // Normaliser la classe de référence
+    const classeNorm = (classeRef || "").replace(/\s+/g, " ").trim().toUpperCase();
     for (const r of toutes) {
-      const cls = String(r[4]||"").trim().toUpperCase();
-      if (classeRef && cls !== classeRef) continue;
-      const v = parseFloat(String(r[colIndex]||"").replace(",","."));
+      // Ignorer la ligne d'en-tête (col 1 = matricule ne doit pas être "MATRICULE")
+      const mat = String(r[1] || "").trim().toUpperCase();
+      if (mat === "MATRICULE" || mat === "N°" || mat === "" || mat === "N") continue;
+      // Filtrer par classe (col 4 = CLASSE)
+      if (classeNorm) {
+        const cls = String(r[4] || "").replace(/\s+/g, " ").trim().toUpperCase();
+        if (cls !== classeNorm) continue;
+      }
+      const v = parseFloat(String(r[colIndex] || "").replace(",", "."));
       if (!isNaN(v) && v !== 22 && v >= 0 && v <= 20) notes.push(v);
     }
     return { notes };
@@ -807,7 +815,8 @@ async function chargerNotes(eleve) {
 
   try {
     const mat = eleve.matricule;
-    const classe = (eleve.classe || "").trim().toUpperCase();
+    const classe = (eleve.classe || "").replace(/\s+/g," ").trim().toUpperCase();
+    console.log('[NOTES DEBUG] classe eleve =', JSON.stringify(classe));
 
     // ✅ CORRECTION 1 : T3 → T2 → T1
     const trimestres = ['NOTES_T3','NOTES_T2','NOTES_T1'];
@@ -829,7 +838,12 @@ async function chargerNotes(eleve) {
             break;
           }
         }
-        if (rowTrouve) { toutesLesRows = data.values; break; }
+        if (rowTrouve) {
+          toutesLesRows = data.values;
+          const cls4 = [...new Set(toutesLesRows.map(r => String(r[4]||"").trim()))].slice(0,15);
+          console.log('[DEBUG] Trimestre trouvé:', trimestres[t], '| Lignes:', toutesLesRows.length, '| Classes col4:', JSON.stringify(cls4));
+          break;
+        }
       } catch(e) {}
     }
 
@@ -880,6 +894,7 @@ async function chargerNotes(eleve) {
       html += "<div style='background:"+g.couleur+";padding:9px 12px;'><span style='font-weight:bold;color:white;font-size:0.88em;'>"+g.titre+"</span></div>";
       g.matieres.forEach(m => {
         const stats = toutesLesRows ? calcStatsColonne(toutesLesRows, classe, m.col) : {notes:[]};
+        if (m.col === 12) console.log('[STATS] classe="'+classe+'" col='+m.col+' nb_eleves='+stats.notes.length+' notes='+JSON.stringify(stats.notes.slice(0,5)));
         html += carteMatiere(m.nom, m.val, g.couleur, stats);
       });
       html += "</div>";
