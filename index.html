@@ -792,9 +792,11 @@ async function chargerNotes(eleve) {
     for (const r of toutes) {
       const mat = String(r[1] || "").trim().toUpperCase();
       if (mat === "MATRICULE" || mat === "N°" || mat === "" || mat === "N") continue;
+      // ✅ Filtrer par classe si possible, sinon prendre toutes les lignes
       if (classeNorm) {
         const cls = normaliserClasse(String(r[4] || ""));
-        if (cls !== classeNorm) continue;
+        // Accepter si même classe OU si col4 est vide (données sans classe)
+        if (cls && cls !== classeNorm && cls !== "CLASSE") continue;
       }
       const v = parseFloat(String(r[colIndex] || "").replace(",", "."));
       if (!isNaN(v) && v !== 22 && v >= 0 && v <= 20) notes.push(v);
@@ -830,7 +832,6 @@ async function chargerNotes(eleve) {
   try {
     const mat = eleve.matricule;
     const classe = normaliserClasse(eleve.classe);
-    console.log('[NOTES DEBUG] classe eleve =', JSON.stringify(classe));
 
     // ✅ CORRECTION 1 : T3 → T2 → T1
     const trimestres = ['NOTES_T3','NOTES_T2','NOTES_T1'];
@@ -856,10 +857,9 @@ async function chargerNotes(eleve) {
           toutesLesRows = data.values;
           const cls4 = [...new Set(toutesLesRows.map(r => String(r[4]||"").trim()))].slice(0,15);
           const cls4norm = cls4.map(c => normaliserClasse(c));
-          console.log('[DEBUG] Trimestre:', trimestres[t], '| Lignes:', toutesLesRows.length);
-          console.log('[DEBUG] Classes col4 brutes:', JSON.stringify(cls4));
-          console.log('[DEBUG] Classes col4 normalisees:', JSON.stringify(cls4norm));
-          console.log('[DEBUG] classe eleve normalisee:', JSON.stringify(normaliserClasse(eleve.classe)));
+
+
+
           break;
         }
       } catch(e) {}
@@ -897,15 +897,7 @@ async function chargerNotes(eleve) {
       ];
     }
 
-    // ✅ DEBUG VISIBLE sur mobile
-    const cls4 = [...new Set(toutesLesRows.map(r => String(r[4]||"").trim()))].slice(0,8);
-    const cls4norm = cls4.map(c => normaliserClasse(c));
-    const debugInfo = "classe="+JSON.stringify(classe)+" | col4_brut="+JSON.stringify(cls4.slice(0,3))+" | col4_norm="+JSON.stringify(cls4norm.slice(0,3));
-
-    let html = "<div style='background:#FFF3E0;border-radius:8px;padding:8px 12px;margin-bottom:10px;border-left:4px solid #E65100;font-size:0.65em;color:#444;word-break:break-all;'>";
-    html += "<strong style='color:#E65100;'>DEBUG:</strong> " + debugInfo + "</div>";
-
-    html += "<div style='background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;border-left:4px solid #1F4E79;'>";
+    let html = "<div style='background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;border-left:4px solid #1F4E79;'>";
     html += "<p style='font-size:0.82em;color:#1F4E79;font-weight:bold;margin-bottom:2px;'>&#128203; RELEVE DE NOTES - "+trimNom+" 2025-2026</p>";
     html += "<p style='font-size:0.76em;color:#666;'>Classe : <strong>"+niveau+"</strong> - Matricule : <strong>"+mat+"</strong></p>";
     html += "<p style='font-size:0.7em;color:#999;margin-top:3px;'>&#128200; Rang, max et min calcules parmi les eleves de la meme classe</p></div>";
@@ -922,7 +914,6 @@ async function chargerNotes(eleve) {
         const stats = toutesLesRows ? calcStatsColonne(toutesLesRows, classe, m.col) : {notes:[]};
         if (m.col === 12) {
         const dbgNotes = toutesLesRows ? toutesLesRows.slice(0,3).map(r => ({mat:r[1], col4:String(r[4]||""), col4norm:normaliserClasse(String(r[4]||"")), note:r[12]})) : [];
-        console.log('[STATS] classe_norm="'+classe+'" | nb='+stats.notes.length+' | echantillon col4:', JSON.stringify(dbgNotes));
       }
         html += carteMatiere(m.nom, m.val, g.couleur, stats);
       });
