@@ -11,8 +11,14 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="ecole.jpg">
 <script>
+  // ✅ Désactiver et supprimer l'ancien Service Worker (qui causait du cache)
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('service-worker.js');
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+      for (let registration of registrations) {
+        registration.unregister();
+        console.log('Service Worker désinstallé');
+      }
+    });
   }
 </script>
   <title>Ecole Les Princes - Espace Parents</title>
