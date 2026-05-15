@@ -769,17 +769,25 @@ async function chargerNotes(eleve) {
   }
 
   // ✅ Calcul stats (max, min, rang) pour tous les élèves de la même classe
+  // ✅ Supprimer les accents pour comparaison robuste
+  function normaliserClasse(s) {
+    return (s || "")
+      .replace(/[ÈÉÊË]/g,"E").replace(/[ÀÂÄ]/g,"A")
+      .replace(/[ÎÏ]/g,"I").replace(/[ÔÖ]/g,"O")
+      .replace(/[ÛÙÜ]/g,"U").replace(/Ç/g,"C")
+      .replace(/[èéêë]/g,"E").replace(/[àâä]/g,"A")
+      .replace(/[îï]/g,"I").replace(/[ôö]/g,"O")
+      .replace(/[ûùü]/g,"U").replace(/ç/g,"C")
+      .replace(/\s+/g," ").trim().toUpperCase();
+  }
   function calcStatsColonne(toutes, classeRef, colIndex) {
     const notes = [];
-    // Normaliser la classe de référence
-    const classeNorm = (classeRef || "").replace(/\s+/g, " ").trim().toUpperCase();
+    const classeNorm = normaliserClasse(classeRef);
     for (const r of toutes) {
-      // Ignorer la ligne d'en-tête (col 1 = matricule ne doit pas être "MATRICULE")
       const mat = String(r[1] || "").trim().toUpperCase();
       if (mat === "MATRICULE" || mat === "N°" || mat === "" || mat === "N") continue;
-      // Filtrer par classe (col 4 = CLASSE)
       if (classeNorm) {
-        const cls = String(r[4] || "").replace(/\s+/g, " ").trim().toUpperCase();
+        const cls = normaliserClasse(String(r[4] || ""));
         if (cls !== classeNorm) continue;
       }
       const v = parseFloat(String(r[colIndex] || "").replace(",", "."));
@@ -815,7 +823,7 @@ async function chargerNotes(eleve) {
 
   try {
     const mat = eleve.matricule;
-    const classe = (eleve.classe || "").replace(/\s+/g," ").trim().toUpperCase();
+    const classe = normaliserClasse(eleve.classe);
     console.log('[NOTES DEBUG] classe eleve =', JSON.stringify(classe));
 
     // ✅ CORRECTION 1 : T3 → T2 → T1
