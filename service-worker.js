@@ -1,4 +1,4 @@
-const CACHE_NAME = 'les-princes-v1';
+const CACHE_NAME = 'les-princes-v2';
 const URLS_A_CACHER = [
   '/ecolelesprinces/',
   '/ecolelesprinces/index.html',
@@ -7,7 +7,7 @@ const URLS_A_CACHER = [
   '/ecolelesprinces/ecole.jpg'
 ];
 
-// Installation — mettre en cache
+// Installation — mettre en cache la nouvelle version
 self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function(cache) {
@@ -17,7 +17,7 @@ self.addEventListener('install', function(event) {
   self.skipWaiting();
 });
 
-// Activation — supprimer ancien cache
+// Activation — supprimer l'ancien cache v1
 self.addEventListener('activate', function(event) {
   event.waitUntil(
     caches.keys().then(function(keys) {
@@ -30,13 +30,20 @@ self.addEventListener('activate', function(event) {
   self.clients.claim();
 });
 
-// Fetch — servir depuis cache si disponible
+// Fetch — RESEAU EN PRIORITE, cache seulement si hors ligne
 self.addEventListener('fetch', function(event) {
   event.respondWith(
-    caches.match(event.request).then(function(response) {
-      if (response) return response;
-      return fetch(event.request).catch(function() {
-        return caches.match('/ecolelesprinces/index.html');
+    fetch(event.request).then(function(response) {
+      if (response && response.status === 200) {
+        var responseClone = response.clone();
+        caches.open(CACHE_NAME).then(function(cache) {
+          cache.put(event.request, responseClone);
+        });
+      }
+      return response;
+    }).catch(function() {
+      return caches.match(event.request).then(function(cached) {
+        return cached || caches.match('/ecolelesprinces/index.html');
       });
     })
   );
