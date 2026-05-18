@@ -67,8 +67,6 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .eleve-info{flex:1;}
 .eleve-nom{font-size:13px;font-weight:600;}
 .eleve-mat{font-size:10px;color:var(--text2);}
-.note-input{width:56px;padding:7px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;text-align:center;background:#F8F9FC;font-family:inherit;}
-.note-abs{width:56px;padding:7px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-weight:700;text-align:center;background:#F5F5F5;color:var(--text2);}
 .legende{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
 .leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text2);}
 .leg-dot{width:10px;height:10px;border-radius:2px;}
@@ -133,6 +131,21 @@ canvas#sigCanvas{display:block;width:100%;height:100px;touch-action:none;}
 .sec-label{padding:8px 14px;font-size:12px;color:var(--text2);display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);}
 .sig-clear{font-size:11px;color:var(--rouge);cursor:pointer;font-weight:700;}
 .section-titre{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;margin:16px 16px 8px;}
+/* ── BULLETIN PRIMAIRE ── */
+#navBulletin{display:none;}
+.bul-mois-btn{padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text2);transition:all .15s;margin-bottom:4px;}
+.bul-mois-btn.actif{background:var(--bleu);color:#fff;border-color:var(--bleu);}
+.bul-legende-box{background:#E3F2FD;border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:11px;color:var(--bleu);line-height:1.8;}
+.bul-eleve-card{background:var(--card);border:1.5px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+.bul-eleve-head{background:var(--bleu);color:#fff;padding:8px 12px;display:flex;align-items:center;gap:8px;}
+.bul-eleve-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.bul-notes-grid{padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.bul-note-item{display:flex;flex-direction:column;gap:3px;}
+.bul-note-label{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;}
+.bul-note-input{padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;text-align:center;background:var(--bg);font-family:inherit;width:100%;}
+.bul-note-input.ok{border-color:#A5D6A7;background:#F1F8E9;}
+.bul-conduite-row{grid-column:1/-1;}
+.bul-conduite-input{border-color:#FFB74D !important;background:#FFF3E0 !important;}
 </style>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="ecole.png">
@@ -235,6 +248,7 @@ canvas#sigCanvas{display:block;width:100%;height:100px;touch-action:none;}
     <div class="nav-item" onclick="goTo('appel')"><div class="nav-icon">✅</div><span>Appel</span></div>
     <div class="nav-item" onclick="goTo('cahier')"><div class="nav-icon">📝</div><span>Cahier</span></div>
     <div class="nav-item" onclick="goTo('notes')"><div class="nav-icon">🎯</div><span>Notes</span></div>
+    <div class="nav-item" id="navBulletin" onclick="goTo('bulletin')"><div class="nav-icon">📋</div><span>Bulletin</span></div>
   </nav>
 </div>
 
@@ -371,6 +385,7 @@ canvas#sigCanvas{display:block;width:100%;height:100px;touch-action:none;}
     <div class="nav-item" onclick="goTo('appel')"><div class="nav-icon">✅</div><span>Appel</span></div>
     <div class="nav-item active" onclick="goTo('cahier')"><div class="nav-icon">📝</div><span>Cahier</span></div>
     <div class="nav-item" onclick="goTo('notes')"><div class="nav-icon">🎯</div><span>Notes</span></div>
+    <div class="nav-item" id="navBulletin" onclick="goTo('bulletin')"><div class="nav-icon">📋</div><span>Bulletin</span></div>
   </nav>
 </div>
 
@@ -400,18 +415,51 @@ canvas#sigCanvas{display:block;width:100%;height:100px;touch-action:none;}
     <div class="nav-item" onclick="goTo('appel')"><div class="nav-icon">✅</div><span>Appel</span></div>
     <div class="nav-item" onclick="goTo('cahier')"><div class="nav-icon">📝</div><span>Cahier</span></div>
     <div class="nav-item active" onclick="goTo('notes')"><div class="nav-icon">🎯</div><span>Notes</span></div>
+    <div class="nav-item" id="navBulletin" onclick="goTo('bulletin')"><div class="nav-icon">📋</div><span>Bulletin</span></div>
+  </nav>
+</div>
+
+<!-- ══ ÉCRAN BULLETIN PRIMAIRE ══ -->
+<div class="screen" id="screen-bulletin">
+  <div class="header">
+    <div class="header-logo">📋</div>
+    <div class="header-title"><h1>Bulletin mensuel</h1><p id="bulletinSousTitre">Saisie des notes par mois</p></div>
+  </div>
+  <div style="padding:16px;" class="has-nav">
+    <div class="section-titre">Mois de la composition</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="moisGrid"></div>
+    <div id="bulletinInfo" style="display:none;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Classe détectée</div>
+      <div style="font-size:15px;font-weight:700;color:var(--bleu);" id="bulletinClasseLabel">—</div>
+      <div style="font-size:11px;color:var(--text2);margin-top:3px;" id="bulletinNiveauLabel">—</div>
+    </div>
+    <div id="bulletinSaisieZone" style="display:none;">
+      <div class="section-titre">Notes des élèves</div>
+      <div class="bul-legende-box" id="bulletinLegende"></div>
+      <div id="bulletinListe"></div>
+      <div id="bulletinResume" style="display:none;background:#E8F5E9;border:1.5px solid #A5D6A7;border-radius:10px;padding:12px 14px;margin-bottom:12px;">
+        <div style="font-size:13px;font-weight:700;color:var(--vert);margin-bottom:6px;">Résumé avant envoi</div>
+        <div id="bulletinResumeTexte" style="font-size:12px;color:var(--text2);line-height:1.8;"></div>
+      </div>
+      <button class="btn btn-vert" id="btnSoumettreBulletin" onclick="soumettreNotesBulletin()">📤 Soumettre — en attente validation</button>
+    </div>
+    <div id="bulletinVide" style="text-align:center;padding:40px 20px;color:var(--text2);">
+      <div style="font-size:48px;margin-bottom:12px;">📅</div>
+      <p style="font-size:14px;font-weight:700;color:var(--bleu);">Choisissez un mois</p>
+      <p style="font-size:12px;margin-top:6px;">Sélectionnez le mois ci-dessus</p>
+    </div>
+  </div>
+  <nav class="bottom-nav">
+    <div class="nav-item" onclick="goTo('accueil')"><div class="nav-icon">🏠</div><span>Accueil</span></div>
+    <div class="nav-item" onclick="goTo('appel')"><div class="nav-icon">✅</div><span>Appel</span></div>
+    <div class="nav-item" onclick="goTo('cahier')"><div class="nav-icon">📝</div><span>Cahier</span></div>
+    <div class="nav-item active" onclick="goTo('bulletin')"><div class="nav-icon">📋</div><span>Bulletin</span></div>
   </nav>
 </div>
 
 <script>
-// ═══════════════════════════════════════════════════════
-// CONFIGURATION — V2.1 SECURISE
-// ═══════════════════════════════════════════════════════
 const API_KEY = 'AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA';
-
-// ✅ CORRECTION 1 — Nouvelle URL Apps Script V2.1
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVQeq9xAHyEdDYSNDO11hlfobZsHvHiRQ8fvyuiOq05Mr2XFWNTxClvYaYBazoV-d3/exec';
-
 const SHEETS_IDS = {
   'CPP LES PRINCES':'1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
   'ACADEMIE':'1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M',
@@ -441,549 +489,152 @@ const ECOLE_NOMS = {
   'ETL PRINCES KOUIBLY':'ETL Princes de Kouibly','GS RITA ROSANE':'GS Rita Rosane'
 };
 const ECOLES_TECH = ['CPP PRO','CPP TECH','ETL PRINCES KOUIBLY'];
-const TARIFS = {
-  'CPP LES PRINCES':{college:1200,lycee:1500},
-  'CPP PRO':{college:1200,lycee:1500},
-  'CPP TECH':{college:1200,lycee:1500},
-};
+const TARIFS = {'CPP LES PRINCES':{college:1200,lycee:1500},'CPP PRO':{college:1200,lycee:1500},'CPP TECH':{college:1200,lycee:1500}};
 const TARIF_DEFAUT = {college:1000,lycee:1200};
 
-let user = null, coursActuel = null, eleves = [], elevesFiltres = [];
-let avancement = 'dans les temps', sigCtx = null, sigPainting = false;
-let ecoleURL = null, elevesNotes = [], moyennesData = {}, trimestreActif = '';
+let user=null,coursActuel=null,eleves=[],elevesFiltres=[];
+let avancement='dans les temps',sigCtx=null,sigPainting=false;
+let ecoleURL=null,elevesNotes=[],moyennesData={},trimestreActif='';
 
-function parseMin(h) {
-  if (!h) return null;
-  const p = h.toString().replace('h',':').split(':');
-  if (p.length < 2) return null;
-  return parseInt(p[0]) * 60 + parseInt(p[1]);
-}
-function minStr(m) {
-  if (m === null || m === undefined) return '--:--';
-  return Math.floor(m/60) + 'h' + String(m%60).padStart(2,'0');
-}
-function getTarif(ecole, classe) {
-  const t = TARIFS[ecole] || TARIF_DEFAUT;
-  return /^(2NDE|1[EÈ]RE|TLE|TERMINALE)/i.test(classe||'') ? t.lycee : t.college;
-}
-function getMoisCode() { const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); }
-function getMoisLabel() { const n=new Date(); const mois=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']; return mois[n.getMonth()]+' '+n.getFullYear(); }
-function formatDate(d) { return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear(); }
-function formatHeure(d) { return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0'); }
+function parseMin(h){if(!h)return null;const p=h.toString().replace('h',':').split(':');if(p.length<2)return null;return parseInt(p[0])*60+parseInt(p[1]);}
+function minStr(m){if(m===null||m===undefined)return'--:--';return Math.floor(m/60)+'h'+String(m%60).padStart(2,'0');}
+function getTarif(ecole,classe){const t=TARIFS[ecole]||TARIF_DEFAUT;return/^(2NDE|1[EÈ]RE|TLE|TERMINALE)/i.test(classe||'')?t.lycee:t.college;}
+function getMoisCode(){const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0');}
+function getMoisLabel(){const n=new Date();const mois=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];return mois[n.getMonth()]+' '+n.getFullYear();}
+function formatDate(d){return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();}
+function formatHeure(d){return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');}
+function getOnglets(ecole){if(ECOLES_TECH.includes(ecole))return[{id:'NOTES_S1',label:'Sem 1'},{id:'NOTES_S2',label:'Sem 2'},{id:'NOTES_EB1',label:'EB 1'},{id:'NOTES_EB2',label:'EB 2'},{id:'NOTES_EB3',label:'EB 3'},{id:'NOTES_EB4',label:'EB 4'}];return[{id:'NOTES_T1',label:'T1'},{id:'NOTES_T2',label:'T2'},{id:'NOTES_T3',label:'T3'},{id:'NOTES_EB1',label:'EB 1'},{id:'NOTES_EB2',label:'EB 2'},{id:'NOTES_EB3',label:'EB 3'},{id:'NOTES_EB4',label:'EB 4'}];}
 
-function getOnglets(ecole) {
-  if (ECOLES_TECH.includes(ecole)) return [{id:'NOTES_S1',label:'Sem 1'},{id:'NOTES_S2',label:'Sem 2'},{id:'NOTES_EB1',label:'EB 1'},{id:'NOTES_EB2',label:'EB 2'},{id:'NOTES_EB3',label:'EB 3'},{id:'NOTES_EB4',label:'EB 4'}];
-  return [{id:'NOTES_T1',label:'T1'},{id:'NOTES_T2',label:'T2'},{id:'NOTES_T3',label:'T3'},{id:'NOTES_EB1',label:'EB 1'},{id:'NOTES_EB2',label:'EB 2'},{id:'NOTES_EB3',label:'EB 3'},{id:'NOTES_EB4',label:'EB 4'}];
-}
-
-// ═══════════════════════════════════════════════════════
-// INIT — ✅ CORRECTION 4 : vérifier su.code avant auto-connexion
-// ═══════════════════════════════════════════════════════
-window.onload = function() {
-  const params = new URLSearchParams(window.location.search);
-  const code = (params.get('e') || '').toLowerCase().trim();
-  ecoleURL = ECOLE_CODES[code] || null;
-  if (ecoleURL) {
-    document.getElementById('ecoleDetectee').style.display = 'flex';
-    document.getElementById('ecoleNomAffiche').textContent = ECOLE_NOMS[ecoleURL] || ecoleURL;
-    document.getElementById('loginTitre').textContent = 'Bienvenue';
-    document.getElementById('loginForm').style.display = 'block';
-    document.getElementById('ecoleErreur').style.display = 'none';
-  } else {
-    document.getElementById('ecoleDetectee').style.display = 'none';
-    document.getElementById('ecoleErreur').style.display = 'block';
-    document.getElementById('loginForm').style.display = 'none';
-    return;
-  }
-  const saved = localStorage.getItem('cpp_user_v2');
-  if (saved) {
-    try {
-      const su = JSON.parse(saved);
-      // ✅ CORRECTION 4 — vérifier que le code existe et est valide avant auto-connexion
-      if (su.ecole === ecoleURL && su.code && su.code.length >= 4) {
-        user = su; demarrerSession(); return;
-      }
-    } catch(e) {}
-    localStorage.removeItem('cpp_user_v2');
-  }
+window.onload=function(){
+  const params=new URLSearchParams(window.location.search);
+  const code=(params.get('e')||'').toLowerCase().trim();
+  ecoleURL=ECOLE_CODES[code]||null;
+  if(ecoleURL){document.getElementById('ecoleDetectee').style.display='flex';document.getElementById('ecoleNomAffiche').textContent=ECOLE_NOMS[ecoleURL]||ecoleURL;document.getElementById('loginTitre').textContent='Bienvenue';document.getElementById('loginForm').style.display='block';document.getElementById('ecoleErreur').style.display='none';}
+  else{document.getElementById('ecoleDetectee').style.display='none';document.getElementById('ecoleErreur').style.display='block';document.getElementById('loginForm').style.display='none';return;}
+  const saved=localStorage.getItem('cpp_user_v2');
+  if(saved){try{const su=JSON.parse(saved);if(su.ecole===ecoleURL&&su.code&&su.code.length>=4){user=su;demarrerSession();return;}}catch(e){}localStorage.removeItem('cpp_user_v2');}
   initSignature();
 };
 
-function changerNiveau() {
-  const n = document.getElementById('loginNiveau').value;
-  document.getElementById('groupMatiere').style.display = n === 'secondaire' ? 'block' : 'none';
-  document.getElementById('groupClasse').style.display  = n === 'primaire'   ? 'block' : 'none';
-}
+function changerNiveau(){const n=document.getElementById('loginNiveau').value;document.getElementById('groupMatiere').style.display=n==='secondaire'?'block':'none';document.getElementById('groupClasse').style.display=n==='primaire'?'block':'none';}
 
-// ═══════════════════════════════════════════════════════
-// CONNEXION — ✅ CORRECTIONS 2 ET 3
-// ═══════════════════════════════════════════════════════
-function seConnecter() {
-  const nom    = document.getElementById('loginNom').value.trim();
-  const niveau = document.getElementById('loginNiveau').value;
-  const matiere = niveau === 'primaire' ? 'Instituteur(trice)' : document.getElementById('loginMatiere').value;
-  const classePrimaire = niveau === 'primaire' ? document.getElementById('loginClassePrimaire').value : '';
-  const code   = document.getElementById('loginCode').value.trim().toUpperCase();
-
-  if (!nom || !niveau) { showToast('Remplissez votre nom et votre niveau', 'error'); return; }
-  if (niveau === 'secondaire' && !matiere) { showToast('Sélectionnez votre matière', 'error'); return; }
-  if (niveau === 'primaire' && !classePrimaire) { showToast('Sélectionnez votre classe', 'error'); return; }
-  if (!code) { showToast("Entrez votre code d'accès", 'error'); return; }
-
-  const btn = document.getElementById('btnConnecter');
-  btn.disabled = true; btn.textContent = 'Vérification...';
-
-  const cbName = 'cb_' + Date.now();
-  const script = document.createElement('script');
-  let reponseRecue = false;
-
-  // ✅ CORRECTION 3 — Timeout vide localStorage
-  const timeout = setTimeout(() => {
-    if (reponseRecue) return;
-    delete window[cbName];
-    try { document.body.removeChild(script); } catch(e) {}
-    btn.disabled = false; btn.textContent = 'Se connecter →';
-    localStorage.removeItem('cpp_user_v2');
-    showToast('Serveur inaccessible — vérifiez votre connexion', 'error');
-  }, 10000);
-
-  window[cbName] = function(data) {
-    reponseRecue = true;
-    clearTimeout(timeout); delete window[cbName];
-    try { document.body.removeChild(script); } catch(e) {}
-    btn.disabled = false; btn.textContent = 'Se connecter →';
-    if (data && data.ok) {
-      user = {
-        ecole: ecoleURL, nom, matiere: data.matiere || matiere,
-        code, sheetsId: SHEETS_IDS[ecoleURL], niveau,
-        classeDefaut: classePrimaire, type: data.type || 'VACATAIRE'
-      };
-      localStorage.setItem('cpp_user_v2', JSON.stringify(user));
-      demarrerSession();
-    } else {
-      // ✅ Refus → vider localStorage
-      localStorage.removeItem('cpp_user_v2');
-      showToast('Code incorrect ou enseignant non autorisé', 'error');
-    }
-  };
-
-  // ✅ CORRECTION 2 — Erreur réseau vide localStorage
-  script.onerror = function() {
-    reponseRecue = true;
-    clearTimeout(timeout); delete window[cbName];
-    try { document.body.removeChild(script); } catch(e) {}
-    btn.disabled = false; btn.textContent = 'Se connecter →';
-    localStorage.removeItem('cpp_user_v2');
-    showToast('Erreur de connexion au serveur', 'error');
-  };
-
-  script.src = APPS_SCRIPT_URL + '?callback=' + cbName + '&type=VERIFIER_ENSEIGNANT&ecole=' + encodeURIComponent(ecoleURL) + '&nom=' + encodeURIComponent(nom) + '&code=' + encodeURIComponent(code);
+function seConnecter(){
+  const nom=document.getElementById('loginNom').value.trim();
+  const niveau=document.getElementById('loginNiveau').value;
+  const matiere=niveau==='primaire'?'Instituteur(trice)':document.getElementById('loginMatiere').value;
+  const classePrimaire=niveau==='primaire'?document.getElementById('loginClassePrimaire').value:'';
+  const code=document.getElementById('loginCode').value.trim().toUpperCase();
+  if(!nom||!niveau){showToast('Remplissez votre nom et votre niveau','error');return;}
+  if(niveau==='secondaire'&&!matiere){showToast('Sélectionnez votre matière','error');return;}
+  if(niveau==='primaire'&&!classePrimaire){showToast('Sélectionnez votre classe','error');return;}
+  if(!code){showToast("Entrez votre code d'accès",'error');return;}
+  const btn=document.getElementById('btnConnecter');
+  btn.disabled=true;btn.textContent='Vérification...';
+  const cbName='cb_'+Date.now();const script=document.createElement('script');let reponseRecue=false;
+  const timeout=setTimeout(()=>{if(reponseRecue)return;delete window[cbName];try{document.body.removeChild(script);}catch(e){}btn.disabled=false;btn.textContent='Se connecter →';localStorage.removeItem('cpp_user_v2');showToast('Serveur inaccessible — vérifiez votre connexion','error');},10000);
+  window[cbName]=function(data){reponseRecue=true;clearTimeout(timeout);delete window[cbName];try{document.body.removeChild(script);}catch(e){}btn.disabled=false;btn.textContent='Se connecter →';
+    if(data&&data.ok){user={ecole:ecoleURL,nom,matiere:data.matiere||matiere,code,sheetsId:SHEETS_IDS[ecoleURL],niveau,classeDefaut:classePrimaire,type:data.type||'VACATAIRE'};localStorage.setItem('cpp_user_v2',JSON.stringify(user));demarrerSession();}
+    else{localStorage.removeItem('cpp_user_v2');showToast('Code incorrect ou enseignant non autorisé','error');}};
+  script.onerror=function(){reponseRecue=true;clearTimeout(timeout);delete window[cbName];try{document.body.removeChild(script);}catch(e){}btn.disabled=false;btn.textContent='Se connecter →';localStorage.removeItem('cpp_user_v2');showToast('Erreur de connexion au serveur','error');};
+  script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type=VERIFIER_ENSEIGNANT&ecole='+encodeURIComponent(ecoleURL)+'&nom='+encodeURIComponent(nom)+'&code='+encodeURIComponent(code);
   document.body.appendChild(script);
 }
 
-function deconnecter() {
-  if (!confirm('Se déconnecter ?')) return;
-  localStorage.removeItem('cpp_user_v2');
-  user = null; coursActuel = null;
-  goToScreen('login');
-}
+function deconnecter(){if(!confirm('Se déconnecter ?'))return;localStorage.removeItem('cpp_user_v2');user=null;coursActuel=null;goToScreen('login');}
 
-function demarrerSession() {
-  const now = new Date();
-  const jours = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-  const moisC = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
-  document.getElementById('headerPrenom').textContent = user.nom.split(' ')[0];
-  document.getElementById('headerDate').textContent = jours[now.getDay()]+' '+now.getDate()+' '+moisC[now.getMonth()]+' '+now.getFullYear();
-  document.getElementById('bilanMoisLabel').textContent = getMoisLabel();
-  document.getElementById('moyennesSubLabel').textContent = ECOLES_TECH.includes(user.ecole) ? 'Sem1 · Sem2 · EB1-4' : 'T1 · T2 · T3 · EB1-4';
-  chargerClasses(); chargerBilan(); initOngletsTrimestre();
-  if (user.matiere) document.getElementById('modalMatiere').value = user.matiere;
-  document.getElementById('modalHeureDebut').value = formatHeure(now);
+function demarrerSession(){
+  const now=new Date();
+  const jours=['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const moisC=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+  document.getElementById('headerPrenom').textContent=user.nom.split(' ')[0];
+  document.getElementById('headerDate').textContent=jours[now.getDay()]+' '+now.getDate()+' '+moisC[now.getMonth()]+' '+now.getFullYear();
+  document.getElementById('bilanMoisLabel').textContent=getMoisLabel();
+  document.getElementById('moyennesSubLabel').textContent=ECOLES_TECH.includes(user.ecole)?'Sem1 · Sem2 · EB1-4':'T1 · T2 · T3 · EB1-4';
+  chargerClasses();chargerBilan();initOngletsTrimestre();
+  if(user.matiere)document.getElementById('modalMatiere').value=user.matiere;
+  document.getElementById('modalHeureDebut').value=formatHeure(now);
+  // Afficher le bouton Bulletin pour les enseignants primaires
+  if(user.niveau==='primaire'){
+    document.querySelectorAll('#navBulletin').forEach(function(el){el.style.display='flex';});
+  }
   goToScreen('accueil');
 }
 
-async function chargerClasses() {
-  const sel = document.getElementById('modalClasse');
-  const selN = document.getElementById('notesClasse');
-  const selM = document.getElementById('moyennesClasse');
-  try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS[user.ecole]}?key=${API_KEY}&fields=sheets.properties.title`;
-    const res = await fetch(url); const data = await res.json();
-    if (!data.sheets) return;
-    const exclus = ['SYNTHESE','ENSEIGNANTS','ABSENCES','APPELS','CAHIER_TEXTES','NOTES_T1','NOTES_T2','NOTES_T3','NOTES_S1','NOTES_S2','NOTES_EB1','NOTES_EB2','NOTES_EB3','NOTES_EB4','POINTAGE_MENSUEL','GPS_CLASSES','CONFIGURATION_TARIF','EDT','HISTORIQUE_PAIEMENTS','SALLES'];
-    const classes = data.sheets.map(s => s.properties.title).filter(t => !exclus.some(e => t.toUpperCase().includes(e)) && !t.toUpperCase().startsWith('EDT_') && t.length > 1);
-    [sel,selN,selM].forEach(s => { while(s.options.length>1) s.remove(1); classes.forEach(c => { const opt=document.createElement('option'); opt.value=c; opt.textContent=c; s.appendChild(opt); }); });
-  } catch(e) {}
+async function chargerClasses(){
+  const sel=document.getElementById('modalClasse');const selN=document.getElementById('notesClasse');const selM=document.getElementById('moyennesClasse');
+  try{const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS[user.ecole]}?key=${API_KEY}&fields=sheets.properties.title`;const res=await fetch(url);const data=await res.json();
+    if(!data.sheets)return;
+    const exclus=['SYNTHESE','ENSEIGNANTS','ABSENCES','APPELS','CAHIER_TEXTES','NOTES_T1','NOTES_T2','NOTES_T3','NOTES_S1','NOTES_S2','NOTES_EB1','NOTES_EB2','NOTES_EB3','NOTES_EB4','POINTAGE_MENSUEL','GPS_CLASSES','CONFIGURATION_TARIF','EDT','HISTORIQUE_PAIEMENTS','SALLES'];
+    const classes=data.sheets.map(s=>s.properties.title).filter(t=>!exclus.some(e=>t.toUpperCase().includes(e))&&!t.toUpperCase().startsWith('EDT_')&&t.length>1);
+    [sel,selN,selM].forEach(s=>{while(s.options.length>1)s.remove(1);classes.forEach(c=>{const opt=document.createElement('option');opt.value=c;opt.textContent=c;s.appendChild(opt);});});}catch(e){}
 }
 
-async function chargerBilan() {
-  const moisCode = getMoisCode();
-  try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS[user.ecole]}/values/POINTAGE_MENSUEL!A2:L2000?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
-    const res = await fetch(url); const data = await res.json();
-    let totalH=0, totalS=0, nbCours=0, nbAttente=0;
-    const nomEns = user.nom.toUpperCase();
-    if (data.values) {
-      data.values.forEach(row => {
-        const ens=(row[4]||'').toString().trim().toUpperCase();
-        if (ens!==nomEns) return;
-        const moisRow=serielVersMois(row[6]);
-        if (moisRow!==moisCode) return;
-        const statut=(row[9]||'').toString().trim();
-        if (statut==='VALIDÉ'||statut==='VALIDE') { totalH+=parseFloat(row[8])||0; totalS+=parseFloat(row[11])||0; nbCours++; }
-        else if (statut==='EN ATTENTE') nbAttente++;
-      });
-    }
-    afficherBilan(nbCours, totalH, totalS, nbAttente);
-  } catch(e) { afficherBilan(0,0,0,0); }
+async function chargerBilan(){
+  const moisCode=getMoisCode();
+  try{const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS[user.ecole]}/values/POINTAGE_MENSUEL!A2:L2000?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;const res=await fetch(url);const data=await res.json();
+    let totalH=0,totalS=0,nbCours=0,nbAttente=0;const nomEns=user.nom.toUpperCase();
+    if(data.values){data.values.forEach(row=>{const ens=(row[4]||'').toString().trim().toUpperCase();if(ens!==nomEns)return;const moisRow=serielVersMois(row[6]);if(moisRow!==moisCode)return;const statut=(row[9]||'').toString().trim();if(statut==='VALIDÉ'||statut==='VALIDE'){totalH+=parseFloat(row[8])||0;totalS+=parseFloat(row[11])||0;nbCours++;}else if(statut==='EN ATTENTE')nbAttente++;});}
+    afficherBilan(nbCours,totalH,totalS,nbAttente);}catch(e){afficherBilan(0,0,0,0);}
 }
 
-function serielVersMois(val) {
-  if (!val) return '';
-  const n = parseFloat(val);
-  if (!isNaN(n) && n > 40000) { const d=new Date(Math.round((n-25569)*86400*1000)); return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0'); }
-  return String(val).trim().substring(0,7);
-}
+function serielVersMois(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>40000){const d=new Date(Math.round((n-25569)*86400*1000));return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');}return String(val).trim().substring(0,7);}
 
-function afficherBilan(nbCours, totalH, totalS, nbAttente) {
-  const h=Math.floor(totalH), m=Math.round((totalH-h)*60);
-  document.getElementById('bilanMoisTitre').textContent = getMoisLabel();
-  document.getElementById('bilanNbCours').textContent = nbCours;
-  document.getElementById('bilanHeures').textContent = h+'h'+String(m).padStart(2,'0');
-  document.getElementById('bilanSalaire').textContent = totalS.toLocaleString('fr-FR')+' F CFA';
-  document.getElementById('bilanAttenteZone').innerHTML = nbAttente>0 ? `<span class="badge-attente">⏰ ${nbAttente} cours en attente de validation</span>` : `<span class="badge-ok">✅ Aucun cours en attente</span>`;
-}
+function afficherBilan(nbCours,totalH,totalS,nbAttente){const h=Math.floor(totalH),m=Math.round((totalH-h)*60);document.getElementById('bilanMoisTitre').textContent=getMoisLabel();document.getElementById('bilanNbCours').textContent=nbCours;document.getElementById('bilanHeures').textContent=h+'h'+String(m).padStart(2,'0');document.getElementById('bilanSalaire').textContent=totalS.toLocaleString('fr-FR')+' F CFA';document.getElementById('bilanAttenteZone').innerHTML=nbAttente>0?`<span class="badge-attente">⏰ ${nbAttente} cours en attente de validation</span>`:`<span class="badge-ok">✅ Aucun cours en attente</span>`;}
 
-function initOngletsTrimestre() {
-  const onglets = getOnglets(user.ecole);
-  trimestreActif = onglets[0].id;
-  const tabsDiv = document.getElementById('moyennesTabs');
-  tabsDiv.innerHTML = '';
-  onglets.forEach((o,i) => {
-    const btn = document.createElement('button');
-    btn.className = 'tab-btn'+(i===0?' active':'');
-    btn.textContent = o.label; btn.dataset.id = o.id;
-    btn.onclick = function() { document.querySelectorAll('#moyennesTabs .tab-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); trimestreActif=o.id; chargerMoyennes(); };
-    tabsDiv.appendChild(btn);
-  });
-  const selT = document.getElementById('notesTrimestre');
-  selT.innerHTML = '';
-  onglets.forEach(o => { const opt=document.createElement('option'); opt.value=o.id; opt.textContent=o.label; selT.appendChild(opt); });
-}
+function initOngletsTrimestre(){const onglets=getOnglets(user.ecole);trimestreActif=onglets[0].id;const tabsDiv=document.getElementById('moyennesTabs');tabsDiv.innerHTML='';onglets.forEach((o,i)=>{const btn=document.createElement('button');btn.className='tab-btn'+(i===0?' active':'');btn.textContent=o.label;btn.dataset.id=o.id;btn.onclick=function(){document.querySelectorAll('#moyennesTabs .tab-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');trimestreActif=o.id;chargerMoyennes();};tabsDiv.appendChild(btn);});const selT=document.getElementById('notesTrimestre');selT.innerHTML='';onglets.forEach(o=>{const opt=document.createElement('option');opt.value=o.id;opt.textContent=o.label;selT.appendChild(opt);});}
 
-async function chargerMoyennes() {
-  const classe = document.getElementById('moyennesClasse').value;
-  if (!classe) return;
-  document.getElementById('moyennesSousTitre').textContent = classe+' · '+user.matiere;
-  document.getElementById('btnPublierMoyennes').style.display = 'none';
-  document.getElementById('resumeClasse').style.display = 'none';
-  document.getElementById('moyennesListe').innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px;font-size:13px;">⏳ Chargement...</p>';
-  try {
-    showLoader('Chargement des élèves...');
-    const rangeEl=encodeURIComponent(`${classe}!B4:C300`);
-    const urlEl=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${rangeEl}?key=${API_KEY}`;
-    const resEl=await fetch(urlEl); const dataEl=await resEl.json();
-    let elevesListe=[];
-    if (dataEl.values) elevesListe=dataEl.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({matricule:r[0]||'',nom:r[1]||'',moyenne:''}));
-    const rangeN=encodeURIComponent(`${trimestreActif}!A2:F2000`);
-    const urlN=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${rangeN}?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
-    const resN=await fetch(urlN); const dataN=await resN.json();
-    if (dataN.values) {
-      dataN.values.forEach(row => {
-        const mat=(row[0]||'').toString().trim().toUpperCase(), cls=(row[2]||'').toString().trim().toUpperCase(), ens=(row[4]||'').toString().trim().toUpperCase(), moy=row[3];
-        if (cls!==classe.toUpperCase()||ens!==user.nom.toUpperCase()) return;
-        const eleve=elevesListe.find(e=>e.matricule.toUpperCase()===mat);
-        if (eleve&&moy!==''&&moy!==null&&moy!==undefined) eleve.moyenne=parseFloat(moy)||'';
-      });
-    }
-    hideLoader(); moyennesData[classe]=elevesListe; afficherMoyennes(elevesListe,classe);
-  } catch(e) { hideLoader(); showToast('Erreur chargement','error'); }
-}
+async function chargerMoyennes(){const classe=document.getElementById('moyennesClasse').value;if(!classe)return;document.getElementById('moyennesSousTitre').textContent=classe+' · '+user.matiere;document.getElementById('btnPublierMoyennes').style.display='none';document.getElementById('resumeClasse').style.display='none';document.getElementById('moyennesListe').innerHTML='<p style="text-align:center;color:var(--text2);padding:20px;font-size:13px;">⏳ Chargement...</p>';try{showLoader('Chargement des élèves...');const rangeEl=encodeURIComponent(`${classe}!B4:C300`);const urlEl=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${rangeEl}?key=${API_KEY}`;const resEl=await fetch(urlEl);const dataEl=await resEl.json();let elevesListe=[];if(dataEl.values)elevesListe=dataEl.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({matricule:r[0]||'',nom:r[1]||'',moyenne:''}));const rangeN=encodeURIComponent(`${trimestreActif}!A2:F2000`);const urlN=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${rangeN}?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;const resN=await fetch(urlN);const dataN=await resN.json();if(dataN.values){dataN.values.forEach(row=>{const mat=(row[0]||'').toString().trim().toUpperCase(),cls=(row[2]||'').toString().trim().toUpperCase(),ens=(row[4]||'').toString().trim().toUpperCase(),moy=row[3];if(cls!==classe.toUpperCase()||ens!==user.nom.toUpperCase())return;const eleve=elevesListe.find(e=>e.matricule.toUpperCase()===mat);if(eleve&&moy!==''&&moy!==null&&moy!==undefined)eleve.moyenne=parseFloat(moy)||'';});}hideLoader();moyennesData[classe]=elevesListe;afficherMoyennes(elevesListe,classe);}catch(e){hideLoader();showToast('Erreur chargement','error');}}
 
-function afficherMoyennes(elevesListe, classe) {
-  if (!elevesListe.length) { document.getElementById('moyennesListe').innerHTML='<p style="text-align:center;color:var(--text2);padding:20px;">Aucun élève trouvé</p>'; return; }
-  const notees=elevesListe.filter(e=>e.moyenne!==''&&e.moyenne!==null&&!isNaN(parseFloat(e.moyenne)));
-  const somme=notees.reduce((s,e)=>s+parseFloat(e.moyenne),0);
-  const moyGene=notees.length?(somme/notees.length).toFixed(2):'—';
-  const manquants=elevesListe.length-notees.length;
-  document.getElementById('resumeClasse').style.display='flex';
-  document.getElementById('resumeDetail').textContent=elevesListe.length+' élèves · '+notees.length+' renseignés · '+manquants+' manquants';
-  const moyEl=document.getElementById('resumeMoy'); moyEl.textContent=moyGene;
-  if (moyGene!=='—') moyEl.style.color=parseFloat(moyGene)>=10?'var(--vert)':'var(--rouge)';
-  let html='';
-  elevesListe.forEach((el,i)=>{
-    const v=el.moyenne!==''?parseFloat(el.moyenne):null;
-    let borderColor='var(--border)',bgInput='#F8F9FC',textColor='var(--text)';
-    if (v!==null) { if(v>=10){borderColor='#2E7D32';bgInput='#F1F8E9';textColor='#2E7D32';}else{borderColor='#C62828';bgInput='#FFEBEE';textColor='#C62828';} }
-    else{borderColor='#FFB74D';bgInput='#FFF3E0';textColor='#E65100';}
-    html+=`<div class="eleve-row" style="border-color:${borderColor};"><div class="eleve-avatar">${el.nom.charAt(0)}</div><div class="eleve-info"><div class="eleve-nom">${el.nom}</div><div class="eleve-mat">${el.matricule}</div></div><div style="display:flex;align-items:center;gap:4px;"><input type="number" min="0" max="20" step="0.5" value="${v!==null?v:''}" placeholder="—" data-idx="${i}" onchange="majMoyenne(${i},this.value)" style="width:56px;padding:7px 8px;border:1.5px solid ${borderColor};border-radius:8px;font-size:13px;font-weight:700;text-align:center;background:${bgInput};color:${textColor};font-family:inherit;"><span style="font-size:11px;color:var(--text2);">/20</span></div></div>`;
-  });
-  document.getElementById('moyennesListe').innerHTML=html;
-  document.getElementById('btnPublierMoyennes').style.display='block';
-}
+function afficherMoyennes(elevesListe,classe){if(!elevesListe.length){document.getElementById('moyennesListe').innerHTML='<p style="text-align:center;color:var(--text2);padding:20px;">Aucun élève trouvé</p>';return;}const notees=elevesListe.filter(e=>e.moyenne!==''&&e.moyenne!==null&&!isNaN(parseFloat(e.moyenne)));const somme=notees.reduce((s,e)=>s+parseFloat(e.moyenne),0);const moyGene=notees.length?(somme/notees.length).toFixed(2):'—';const manquants=elevesListe.length-notees.length;document.getElementById('resumeClasse').style.display='flex';document.getElementById('resumeDetail').textContent=elevesListe.length+' élèves · '+notees.length+' renseignés · '+manquants+' manquants';const moyEl=document.getElementById('resumeMoy');moyEl.textContent=moyGene;if(moyGene!=='—')moyEl.style.color=parseFloat(moyGene)>=10?'var(--vert)':'var(--rouge)';let html='';elevesListe.forEach((el,i)=>{const v=el.moyenne!==''?parseFloat(el.moyenne):null;let borderColor='var(--border)',bgInput='#F8F9FC',textColor='var(--text)';if(v!==null){if(v>=10){borderColor='#2E7D32';bgInput='#F1F8E9';textColor='#2E7D32';}else{borderColor='#C62828';bgInput='#FFEBEE';textColor='#C62828';}}else{borderColor='#FFB74D';bgInput='#FFF3E0';textColor='#E65100';}html+=`<div class="eleve-row" style="border-color:${borderColor};"><div class="eleve-avatar">${el.nom.charAt(0)}</div><div class="eleve-info"><div class="eleve-nom">${el.nom}</div><div class="eleve-mat">${el.matricule}</div></div><div style="display:flex;align-items:center;gap:4px;"><input type="number" min="0" max="20" step="0.5" value="${v!==null?v:''}" placeholder="—" data-idx="${i}" onchange="majMoyenne(${i},this.value)" style="width:56px;padding:7px 8px;border:1.5px solid ${borderColor};border-radius:8px;font-size:13px;font-weight:700;text-align:center;background:${bgInput};color:${textColor};font-family:inherit;"><span style="font-size:11px;color:var(--text2);">/20</span></div></div>`;});document.getElementById('moyennesListe').innerHTML=html;document.getElementById('btnPublierMoyennes').style.display='block';}
 
-function majMoyenne(idx, val) {
-  const classe=document.getElementById('moyennesClasse').value;
-  if (!moyennesData[classe]) return;
-  const v=parseFloat(val); moyennesData[classe][idx].moyenne=isNaN(v)?'':v;
-  const input=document.querySelector(`input[data-idx="${idx}"]`);
-  if (input&&!isNaN(v)){const ok=v>=10;input.style.borderColor=ok?'#2E7D32':'#C62828';input.style.background=ok?'#F1F8E9':'#FFEBEE';input.style.color=ok?'#2E7D32':'#C62828';}
-  const liste=moyennesData[classe]; const notees=liste.filter(e=>e.moyenne!==''&&!isNaN(parseFloat(e.moyenne)));
-  const somme=notees.reduce((s,e)=>s+parseFloat(e.moyenne),0); const moyGene=notees.length?(somme/notees.length).toFixed(2):'—';
-  document.getElementById('resumeMoy').textContent=moyGene;
-  if (moyGene!=='—') document.getElementById('resumeMoy').style.color=parseFloat(moyGene)>=10?'var(--vert)':'var(--rouge)';
-  document.getElementById('resumeDetail').textContent=liste.length+' élèves · '+notees.length+' renseignés · '+(liste.length-notees.length)+' manquants';
-}
+function majMoyenne(idx,val){const classe=document.getElementById('moyennesClasse').value;if(!moyennesData[classe])return;const v=parseFloat(val);moyennesData[classe][idx].moyenne=isNaN(v)?'':v;const input=document.querySelector(`input[data-idx="${idx}"]`);if(input&&!isNaN(v)){const ok=v>=10;input.style.borderColor=ok?'#2E7D32':'#C62828';input.style.background=ok?'#F1F8E9':'#FFEBEE';input.style.color=ok?'#2E7D32':'#C62828';}const liste=moyennesData[classe];const notees=liste.filter(e=>e.moyenne!==''&&!isNaN(parseFloat(e.moyenne)));const somme=notees.reduce((s,e)=>s+parseFloat(e.moyenne),0);const moyGene=notees.length?(somme/notees.length).toFixed(2):'—';document.getElementById('resumeMoy').textContent=moyGene;if(moyGene!=='—')document.getElementById('resumeMoy').style.color=parseFloat(moyGene)>=10?'var(--vert)':'var(--rouge)';document.getElementById('resumeDetail').textContent=liste.length+' élèves · '+notees.length+' renseignés · '+(liste.length-notees.length)+' manquants';}
 
-async function publierMoyennes() {
-  const classe=document.getElementById('moyennesClasse').value;
-  if (!classe||!moyennesData[classe]) return;
-  const liste=moyennesData[classe].filter(e=>e.moyenne!==''&&!isNaN(parseFloat(e.moyenne)));
-  if (!liste.length){showToast('Aucune moyenne à publier','error');return;}
-  showLoader('Publication des moyennes...');
-  try {
-    await envoyerDonnees('MOYENNES',{date:formatDate(new Date()),classe,matiere:user.matiere,enseignant:user.nom,ecole:user.ecole,trimestre:trimestreActif,moyennes:moyennesData[classe].map(e=>({matricule:e.matricule,nom:e.nom,moyenne:e.moyenne||'ABS'}))});
-    hideLoader(); showToast('✅ Moyennes publiées','success');
-  } catch(e) { hideLoader(); sauvegarderHorsLigne('MOYENNES',{classe,trimestre:trimestreActif,data:moyennesData[classe]}); showToast('✅ Moyennes sauvegardées localement','success'); }
-}
+async function publierMoyennes(){const classe=document.getElementById('moyennesClasse').value;if(!classe||!moyennesData[classe])return;const liste=moyennesData[classe].filter(e=>e.moyenne!==''&&!isNaN(parseFloat(e.moyenne)));if(!liste.length){showToast('Aucune moyenne à publier','error');return;}showLoader('Publication des moyennes...');try{await envoyerDonnees('MOYENNES',{date:formatDate(new Date()),classe,matiere:user.matiere,enseignant:user.nom,ecole:user.ecole,trimestre:trimestreActif,moyennes:moyennesData[classe].map(e=>({matricule:e.matricule,nom:e.nom,moyenne:e.moyenne||'ABS'}))});hideLoader();showToast('✅ Moyennes publiées','success');}catch(e){hideLoader();sauvegarderHorsLigne('MOYENNES',{classe,trimestre:trimestreActif,data:moyennesData[classe]});showToast('✅ Moyennes sauvegardées localement','success');}}
 
-function calculerSalaireRobuste(heureAppel, heurePublication, heureDebutEDT, heureFinEDT, ecole, classe) {
-  const TOLERANCE_DEBUT=5, TOLERANCE_FIN=10, SEUIL_ATTENTE=50;
-  const minAppel=parseMin(heureAppel), minPubli=parseMin(heurePublication);
-  const minDebutEDT=parseMin(heureDebutEDT), minFinEDT=parseMin(heureFinEDT);
-  if (!minAppel||!minDebutEDT||!minFinEDT) return {heuresValidees:0,heuresAttente:0,salaire:0,statut:'ERREUR',detail:'Données manquantes'};
-  const debutRetenu=Math.max(minAppel,minDebutEDT-TOLERANCE_DEBUT);
-  const finRetenueMax=minFinEDT+TOLERANCE_FIN;
-  const finRetenue=minPubli?Math.min(minPubli,finRetenueMax):minFinEDT;
-  const dureeEDT=minFinEDT-minDebutEDT, dureeReelle=Math.max(0,finRetenue-debutRetenu), duree=Math.min(dureeReelle,dureeEDT);
-  if (duree<=0) return {heuresValidees:0,heuresAttente:0,salaire:0,statut:'VOIR DIRECTION',detail:'Durée nulle ou négative',debutRetenu:minStr(debutRetenu),finRetenue:minStr(finRetenue)};
-  const tarif=getTarif(ecole,classe), heuresCompletes=Math.floor(duree/60), resteMin=duree%60;
-  let heuresValidees=heuresCompletes, heuresAttente=0;
-  if (resteMin>=SEUIL_ATTENTE) heuresValidees+=1;
-  else if (resteMin>0) heuresAttente=1;
-  const salaire=heuresValidees*tarif;
-  return {heuresValidees,heuresAttente,salaire,tarif,dureeMin:duree,debutRetenu:minStr(debutRetenu),finRetenue:minStr(finRetenue),resteMin,statut:heuresAttente>0?'EN ATTENTE':'VALIDE',detail:`${minStr(duree)} · ${heuresValidees}h × ${tarif}F = ${salaire}F CFA`};
-}
+function calculerSalaireRobuste(heureAppel,heurePublication,heureDebutEDT,heureFinEDT,ecole,classe){const TOLERANCE_DEBUT=5,TOLERANCE_FIN=10,SEUIL_ATTENTE=50;const minAppel=parseMin(heureAppel),minPubli=parseMin(heurePublication);const minDebutEDT=parseMin(heureDebutEDT),minFinEDT=parseMin(heureFinEDT);if(!minAppel||!minDebutEDT||!minFinEDT)return{heuresValidees:0,heuresAttente:0,salaire:0,statut:'ERREUR',detail:'Données manquantes'};const debutRetenu=Math.max(minAppel,minDebutEDT-TOLERANCE_DEBUT);const finRetenueMax=minFinEDT+TOLERANCE_FIN;const finRetenue=minPubli?Math.min(minPubli,finRetenueMax):minFinEDT;const dureeEDT=minFinEDT-minDebutEDT,dureeReelle=Math.max(0,finRetenue-debutRetenu),duree=Math.min(dureeReelle,dureeEDT);if(duree<=0)return{heuresValidees:0,heuresAttente:0,salaire:0,statut:'VOIR DIRECTION',detail:'Durée nulle ou négative',debutRetenu:minStr(debutRetenu),finRetenue:minStr(finRetenue)};const tarif=getTarif(ecole,classe),heuresCompletes=Math.floor(duree/60),resteMin=duree%60;let heuresValidees=heuresCompletes,heuresAttente=0;if(resteMin>=SEUIL_ATTENTE)heuresValidees+=1;else if(resteMin>0)heuresAttente=1;const salaire=heuresValidees*tarif;return{heuresValidees,heuresAttente,salaire,tarif,dureeMin:duree,debutRetenu:minStr(debutRetenu),finRetenue:minStr(finRetenue),resteMin,statut:heuresAttente>0?'EN ATTENTE':'VALIDE',detail:`${minStr(duree)} · ${heuresValidees}h × ${tarif}F = ${salaire}F CFA`};}
 
-function calculerEstim() {
-  const classe=document.getElementById('modalClasse').value, matiere=document.getElementById('modalMatiere').value.trim();
-  const hD=document.getElementById('modalHeureDebut').value, hF=document.getElementById('modalHeureFin').value;
-  const btn=document.getElementById('btnDemarrer'), estimLigne=document.getElementById('estimLigne');
-  if (!classe||!matiere||!hD||!hF){btn.disabled=true;estimLigne.style.display='none';return;}
-  const dMin=parseMin(hD), fMin=parseMin(hF);
-  if (!dMin||!fMin||fMin<=dMin){btn.disabled=true;estimLigne.style.display='none';if(fMin&&dMin&&fMin<=dMin)showToast('Heure de fin doit être après le début','error');return;}
-  const tarif=getTarif(user?user.ecole:'CPP LES PRINCES',classe), duree=fMin-dMin, hC=Math.floor(duree/60), reste=duree%60;
-  let salaire=hC*tarif, txt='';
-  if (reste>=50){salaire+=tarif;txt=salaire.toLocaleString('fr-FR')+' F · '+(hC+1)+'h ✅';}
-  else if (reste>0){txt=salaire.toLocaleString('fr-FR')+' F · '+hC+'h ✅ + '+reste+'min ⏰';}
-  else{txt=salaire.toLocaleString('fr-FR')+' F · '+hC+'h ✅';}
-  document.getElementById('estimVal').style.color=salaire===0?'var(--orange)':'var(--vert)';
-  document.getElementById('estimVal').textContent=txt;
-  estimLigne.style.display='block'; btn.disabled=false;
-}
+function calculerEstim(){const classe=document.getElementById('modalClasse').value,matiere=document.getElementById('modalMatiere').value.trim();const hD=document.getElementById('modalHeureDebut').value,hF=document.getElementById('modalHeureFin').value;const btn=document.getElementById('btnDemarrer'),estimLigne=document.getElementById('estimLigne');if(!classe||!matiere||!hD||!hF){btn.disabled=true;estimLigne.style.display='none';return;}const dMin=parseMin(hD),fMin=parseMin(hF);if(!dMin||!fMin||fMin<=dMin){btn.disabled=true;estimLigne.style.display='none';if(fMin&&dMin&&fMin<=dMin)showToast('Heure de fin doit être après le début','error');return;}const tarif=getTarif(user?user.ecole:'CPP LES PRINCES',classe),duree=fMin-dMin,hC=Math.floor(duree/60),reste=duree%60;let salaire=hC*tarif,txt='';if(reste>=50){salaire+=tarif;txt=salaire.toLocaleString('fr-FR')+' F · '+(hC+1)+'h ✅';}else if(reste>0){txt=salaire.toLocaleString('fr-FR')+' F · '+hC+'h ✅ + '+reste+'min ⏰';}else{txt=salaire.toLocaleString('fr-FR')+' F · '+hC+'h ✅';}document.getElementById('estimVal').style.color=salaire===0?'var(--orange)':'var(--vert)';document.getElementById('estimVal').textContent=txt;estimLigne.style.display='block';btn.disabled=false;}
 
-function confirmerCours() {
-  const classe=document.getElementById('modalClasse').value, matiere=document.getElementById('modalMatiere').value.trim();
-  const hD=document.getElementById('modalHeureDebut').value, hF=document.getElementById('modalHeureFin').value;
-  if (!classe||!matiere||!hD||!hF){showToast('Remplissez tous les champs','error');return;}
-  const dMin=parseMin(hD), fMin=parseMin(hF);
-  if (!dMin||!fMin||fMin<=dMin){showToast('Heures EDT incorrectes','error');return;}
-  coursActuel={classe,matiere,heureDebutEDT:hD,heureFinEDT:hF,horodatageAppel:null,dateAppel:null};
-  document.getElementById('appelClasse').textContent=classe; document.getElementById('appelMatiere').textContent=matiere;
-  document.getElementById('appelDebut').textContent=hD; document.getElementById('appelFin').textContent=hF;
-  document.getElementById('cahierClasse').textContent=classe; document.getElementById('cahierMatiere').textContent=matiere;
-  document.getElementById('notesSousTitre').textContent=user.matiere+' · '+classe;
-  chargerEleves(classe); goToScreen('appel');
-}
+function confirmerCours(){const classe=document.getElementById('modalClasse').value,matiere=document.getElementById('modalMatiere').value.trim();const hD=document.getElementById('modalHeureDebut').value,hF=document.getElementById('modalHeureFin').value;if(!classe||!matiere||!hD||!hF){showToast('Remplissez tous les champs','error');return;}const dMin=parseMin(hD),fMin=parseMin(hF);if(!dMin||!fMin||fMin<=dMin){showToast('Heures EDT incorrectes','error');return;}coursActuel={classe,matiere,heureDebutEDT:hD,heureFinEDT:hF,horodatageAppel:null,dateAppel:null};document.getElementById('appelClasse').textContent=classe;document.getElementById('appelMatiere').textContent=matiere;document.getElementById('appelDebut').textContent=hD;document.getElementById('appelFin').textContent=hF;document.getElementById('cahierClasse').textContent=classe;document.getElementById('cahierMatiere').textContent=matiere;document.getElementById('notesSousTitre').textContent=user.matiere+' · '+classe;chargerEleves(classe);goToScreen('appel');}
 
-async function chargerEleves(classe) {
-  document.getElementById('eleveList').innerHTML='<p style="text-align:center;color:var(--text2);padding:30px;">⏳ Chargement...</p>';
-  try {
-    showLoader('Chargement des élèves...');
-    const range=encodeURIComponent(`${classe}!B4:C300`);
-    const url=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}`;
-    const res=await fetch(url); const data=await res.json();
-    if (!data.values||!data.values.length){eleves=genDemo();}
-    else { eleves=data.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({classe,matricule:r[0]||'',nom:r[1]||'',statut:'present',motif:'',heure:'',obs:''})); if(!eleves.length)eleves=genDemo(); }
-  } catch(e){eleves=genDemo();}
-  hideLoader(); elevesFiltres=[...eleves]; afficherEleves(); majStats();
-}
+async function chargerEleves(classe){document.getElementById('eleveList').innerHTML='<p style="text-align:center;color:var(--text2);padding:30px;">⏳ Chargement...</p>';try{showLoader('Chargement des élèves...');const range=encodeURIComponent(`${classe}!B4:C300`);const url=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}`;const res=await fetch(url);const data=await res.json();if(!data.values||!data.values.length){eleves=genDemo();}else{eleves=data.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({classe,matricule:r[0]||'',nom:r[1]||'',statut:'present',motif:'',heure:'',obs:''}));if(!eleves.length)eleves=genDemo();}}catch(e){eleves=genDemo();}hideLoader();elevesFiltres=[...eleves];afficherEleves();majStats();}
 
 function genDemo(){return['KOUASSI Aya','BAMBA Moussa','DIALLO Fatoumata','TRAORE Ibrahim','KONE Mariam'].map((nom,i)=>({classe:coursActuel?.classe||'DEMO',matricule:`MAT${String(i+1).padStart(3,'0')}`,nom,statut:'present',motif:'',heure:'',obs:''}));}
 
-function afficherEleves(){
-  const container=document.getElementById('eleveList');
-  if (!elevesFiltres.length){container.innerHTML='<p style="text-align:center;color:var(--text2);padding:20px;">Aucun élève</p>';return;}
-  container.innerHTML=elevesFiltres.map(el=>{
-    const i=eleves.indexOf(el);
-    let panneauRetard='';
-    if(el.statut==='retard'){panneauRetard=`<div style="padding:10px 14px;border-top:1px solid var(--border);background:#FFF8F0;"><div style="font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase;margin-bottom:8px;">⏰ Détails retard</div><div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;"><label style="font-size:12px;color:var(--text2);white-space:nowrap;">Heure arrivée :</label><input type="time" value="${el.heure||''}" onchange="eleves[${i}].heure=this.value" style="padding:6px 10px;border:1.5px solid var(--orange);border-radius:8px;font-size:13px;font-weight:600;background:white;font-family:inherit;flex:1;"></div><div style="font-size:11px;color:var(--text2);margin-bottom:4px;font-weight:600;">Motif :</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${['Transport','Famille','Inconnu','Autre'].map(m=>`<button onclick="setMotif(${i},'${m}')" style="padding:5px 10px;border-radius:8px;border:1.5px solid ${el.motif===m?'var(--bleu2)':'var(--border)'};background:${el.motif===m?'#E3F2FD':'white'};color:${el.motif===m?'var(--bleu)':'var(--text)'};font-size:12px;font-weight:${el.motif===m?'700':'400'};cursor:pointer;">${m}</button>`).join('')}</div></div>`;}
-    let panneauAbsent='';
-    if(el.statut==='absent'){panneauAbsent=`<div style="padding:10px 14px;border-top:1px solid var(--border);background:#FFF5F5;"><div style="font-size:11px;font-weight:700;color:var(--rouge);text-transform:uppercase;margin-bottom:8px;">❌ Motif absence</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${['Maladie','Deuil','Suspendu','Inconnu'].map(m=>`<button onclick="setMotif(${i},'${m}')" style="padding:5px 10px;border-radius:8px;border:1.5px solid ${el.motif===m?'var(--rouge)':'var(--border)'};background:${el.motif===m?'#FFEBEE':'white'};color:${el.motif===m?'var(--rouge)':'var(--text)'};font-size:12px;font-weight:${el.motif===m?'700':'400'};cursor:pointer;">${m}</button>`).join('')}</div></div>`;}
-    return `<div class="eleve-item" id="item-${i}"><div class="eleve-main"><div class="eleve-avatar" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--bleu),var(--bleu2));display:flex;align-items:center;justify-content:center;font-size:18px;color:white;font-weight:700;flex-shrink:0;">${el.nom.charAt(0)}</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">${el.nom}</div><div style="font-size:11px;color:var(--text2);">${el.matricule}</div></div><div style="display:flex;gap:6px;"><button class="status-btn btn-p ${el.statut==='present'?'on':''}" onclick="setStatut(event,${i},'present')">✅</button><button class="status-btn btn-r ${el.statut==='retard'?'on':''}" onclick="setStatut(event,${i},'retard')">⏰</button><button class="status-btn btn-a ${el.statut==='absent'?'on':''}" onclick="setStatut(event,${i},'absent')">❌</button></div></div>${panneauRetard}${panneauAbsent}</div>`;
-  }).join('');
-}
+function afficherEleves(){const container=document.getElementById('eleveList');if(!elevesFiltres.length){container.innerHTML='<p style="text-align:center;color:var(--text2);padding:20px;">Aucun élève</p>';return;}container.innerHTML=elevesFiltres.map(el=>{const i=eleves.indexOf(el);let panneauRetard='';if(el.statut==='retard'){panneauRetard=`<div style="padding:10px 14px;border-top:1px solid var(--border);background:#FFF8F0;"><div style="font-size:11px;font-weight:700;color:var(--orange);text-transform:uppercase;margin-bottom:8px;">⏰ Détails retard</div><div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;"><label style="font-size:12px;color:var(--text2);white-space:nowrap;">Heure arrivée :</label><input type="time" value="${el.heure||''}" onchange="eleves[${i}].heure=this.value" style="padding:6px 10px;border:1.5px solid var(--orange);border-radius:8px;font-size:13px;font-weight:600;background:white;font-family:inherit;flex:1;"></div><div style="font-size:11px;color:var(--text2);margin-bottom:4px;font-weight:600;">Motif :</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${['Transport','Famille','Inconnu','Autre'].map(m=>`<button onclick="setMotif(${i},'${m}')" style="padding:5px 10px;border-radius:8px;border:1.5px solid ${el.motif===m?'var(--bleu2)':'var(--border)'};background:${el.motif===m?'#E3F2FD':'white'};color:${el.motif===m?'var(--bleu)':'var(--text)'};font-size:12px;font-weight:${el.motif===m?'700':'400'};cursor:pointer;">${m}</button>`).join('')}</div></div>`;}let panneauAbsent='';if(el.statut==='absent'){panneauAbsent=`<div style="padding:10px 14px;border-top:1px solid var(--border);background:#FFF5F5;"><div style="font-size:11px;font-weight:700;color:var(--rouge);text-transform:uppercase;margin-bottom:8px;">❌ Motif absence</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${['Maladie','Deuil','Suspendu','Inconnu'].map(m=>`<button onclick="setMotif(${i},'${m}')" style="padding:5px 10px;border-radius:8px;border:1.5px solid ${el.motif===m?'var(--rouge)':'var(--border)'};background:${el.motif===m?'#FFEBEE':'white'};color:${el.motif===m?'var(--rouge)':'var(--text)'};font-size:12px;font-weight:${el.motif===m?'700':'400'};cursor:pointer;">${m}</button>`).join('')}</div></div>`;}return`<div class="eleve-item" id="item-${i}"><div class="eleve-main"><div class="eleve-avatar" style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--bleu),var(--bleu2));display:flex;align-items:center;justify-content:center;font-size:18px;color:white;font-weight:700;flex-shrink:0;">${el.nom.charAt(0)}</div><div style="flex:1;"><div style="font-size:14px;font-weight:600;">${el.nom}</div><div style="font-size:11px;color:var(--text2);">${el.matricule}</div></div><div style="display:flex;gap:6px;"><button class="status-btn btn-p ${el.statut==='present'?'on':''}" onclick="setStatut(event,${i},'present')">✅</button><button class="status-btn btn-r ${el.statut==='retard'?'on':''}" onclick="setStatut(event,${i},'retard')">⏰</button><button class="status-btn btn-a ${el.statut==='absent'?'on':''}" onclick="setStatut(event,${i},'absent')">❌</button></div></div>${panneauRetard}${panneauAbsent}</div>`;}).join('');}
 
 function setMotif(i,m){eleves[i].motif=m;afficherEleves();}
 function setStatut(e,i,s){e.stopPropagation();eleves[i].statut=s;if(s==='present'){eleves[i].motif='';eleves[i].heure='';}afficherEleves();majStats();}
 function filtrerEleves(){const q=document.getElementById('searchEleve').value.toLowerCase();elevesFiltres=q?eleves.filter(el=>el.nom.toLowerCase().includes(q)||el.matricule.toLowerCase().includes(q)):[...eleves];afficherEleves();}
 function majStats(){document.getElementById('cntP').textContent=eleves.filter(e=>e.statut==='present').length;document.getElementById('cntR').textContent=eleves.filter(e=>e.statut==='retard').length;document.getElementById('cntA').textContent=eleves.filter(e=>e.statut==='absent').length;}
 
-async function validerAppel() {
-  const maintenant=new Date(), horodatage=formatHeure(maintenant);
-  if(coursActuel){coursActuel.horodatageAppel=horodatage;coursActuel.dateAppel=formatDate(maintenant);}
-  document.getElementById('heureAppelAffiche').textContent=horodatage;
-  const nbP=eleves.filter(e=>e.statut==='present').length, nbR=eleves.filter(e=>e.statut==='retard').length, nbA=eleves.filter(e=>e.statut==='absent').length;
-  document.getElementById('resumeAppel').textContent=`${eleves.length} élèves · ${nbP} présents · ${nbR} retards · ${nbA} absents`;
-  const calcul=calculerSalaireRobuste(horodatage,null,coursActuel?.heureDebutEDT,coursActuel?.heureFinEDT,user.ecole,coursActuel?.classe||'');
-  afficherEstimAppel(calcul,horodatage); afficherEstimCahier();
-  document.getElementById('carteValidation').style.display='block';
-  document.getElementById('btnValiderAppel').style.display='none';
-  document.getElementById('btnCahierAppel').style.display='block';
-  showLoader("Enregistrement de l'appel...");
-  const absences=eleves.filter(e=>e.statut!=='present').map(e=>({date:formatDate(maintenant),heure:horodatage,matricule:e.matricule,nom:e.nom,classe:coursActuel.classe,statut:e.statut,heureArrivee:e.heure||'',motif:e.motif||'',obs:e.obs||'',enseignant:user.nom,matiere:coursActuel.matiere}));
-  const taux=Math.round(nbP/eleves.length*100);
-  try {
-    await envoyerDonnees('APPEL',{date:formatDate(maintenant),heure:horodatage,classe:coursActuel.classe,matiere:coursActuel.matiere,enseignant:user.nom,ecole:user.ecole,heureDebutEDT:coursActuel.heureDebutEDT,heureFinEDT:coursActuel.heureFinEDT,totalEleves:eleves.length,nbPresents:nbP,taux,absences,signature:document.getElementById('sigCanvas').toDataURL('image/png')});
-    hideLoader();
-    if(taux<90)showToast(`⚠️ Taux présence ${taux}% — Direction notifiée`,'error');
-    else showToast(`✅ Appel validé — ${nbP}/${eleves.length} présents (${taux}%)`,'success');
-  } catch(e){hideLoader();sauvegarderHorsLigne('APPEL',{date:formatDate(maintenant),classe:coursActuel.classe,absences});showToast('✅ Appel sauvegardé localement','success');}
-}
+async function validerAppel(){const maintenant=new Date(),horodatage=formatHeure(maintenant);if(coursActuel){coursActuel.horodatageAppel=horodatage;coursActuel.dateAppel=formatDate(maintenant);}document.getElementById('heureAppelAffiche').textContent=horodatage;const nbP=eleves.filter(e=>e.statut==='present').length,nbR=eleves.filter(e=>e.statut==='retard').length,nbA=eleves.filter(e=>e.statut==='absent').length;document.getElementById('resumeAppel').textContent=`${eleves.length} élèves · ${nbP} présents · ${nbR} retards · ${nbA} absents`;const calcul=calculerSalaireRobuste(horodatage,null,coursActuel?.heureDebutEDT,coursActuel?.heureFinEDT,user.ecole,coursActuel?.classe||'');afficherEstimAppel(calcul,horodatage);afficherEstimCahier();document.getElementById('carteValidation').style.display='block';document.getElementById('btnValiderAppel').style.display='none';document.getElementById('btnCahierAppel').style.display='block';showLoader("Enregistrement de l'appel...");const absences=eleves.filter(e=>e.statut!=='present').map(e=>({date:formatDate(maintenant),heure:horodatage,matricule:e.matricule,nom:e.nom,classe:coursActuel.classe,statut:e.statut,heureArrivee:e.heure||'',motif:e.motif||'',obs:e.obs||'',enseignant:user.nom,matiere:coursActuel.matiere}));const taux=Math.round(nbP/eleves.length*100);try{await envoyerDonnees('APPEL',{date:formatDate(maintenant),heure:horodatage,classe:coursActuel.classe,matiere:coursActuel.matiere,enseignant:user.nom,ecole:user.ecole,heureDebutEDT:coursActuel.heureDebutEDT,heureFinEDT:coursActuel.heureFinEDT,totalEleves:eleves.length,nbPresents:nbP,taux,absences,signature:document.getElementById('sigCanvas').toDataURL('image/png')});hideLoader();if(taux<90)showToast(`⚠️ Taux présence ${taux}% — Direction notifiée`,'error');else showToast(`✅ Appel validé — ${nbP}/${eleves.length} présents (${taux}%)`,'success');}catch(e){hideLoader();sauvegarderHorsLigne('APPEL',{date:formatDate(maintenant),classe:coursActuel.classe,absences});showToast('✅ Appel sauvegardé localement','success');}}
 
-function afficherEstimAppel(calcul,horodatage){
-  document.getElementById('ca_heureAppel').textContent=horodatage;
-  document.getElementById('ca_heureEDT').textContent=coursActuel?.heureDebutEDT||'—';
-  document.getElementById('ca_debutRetenu').textContent=calcul.debutRetenu||'—';
-  document.getElementById('ca_finEDT').textContent=coursActuel?.heureFinEDT||'—';
-  document.getElementById('ca_duree').textContent=calcul.dureeMin?minStr(calcul.dureeMin):'—';
-  document.getElementById('ca_hC').textContent=(calcul.heuresValidees||0)+'h validée(s) ✅';
-  document.getElementById('ca_total').textContent=(calcul.salaire||0).toLocaleString('fr-FR')+' F CFA';
-  const atRow=document.getElementById('ca_attenteRow');
-  if(calcul.heuresAttente>0&&calcul.resteMin>0){atRow.style.display='block';atRow.textContent=`⏰ ${calcul.resteMin} min restantes < 50 min → soumis à la direction`;}
-  else atRow.style.display='none';
-}
+function afficherEstimAppel(calcul,horodatage){document.getElementById('ca_heureAppel').textContent=horodatage;document.getElementById('ca_heureEDT').textContent=coursActuel?.heureDebutEDT||'—';document.getElementById('ca_debutRetenu').textContent=calcul.debutRetenu||'—';document.getElementById('ca_finEDT').textContent=coursActuel?.heureFinEDT||'—';document.getElementById('ca_duree').textContent=calcul.dureeMin?minStr(calcul.dureeMin):'—';document.getElementById('ca_hC').textContent=(calcul.heuresValidees||0)+'h validée(s) ✅';document.getElementById('ca_total').textContent=(calcul.salaire||0).toLocaleString('fr-FR')+' F CFA';const atRow=document.getElementById('ca_attenteRow');if(calcul.heuresAttente>0&&calcul.resteMin>0){atRow.style.display='block';atRow.textContent=`⏰ ${calcul.resteMin} min restantes < 50 min → soumis à la direction`;}else atRow.style.display='none';}
 
-function afficherEstimCahier(){
-  if(!coursActuel?.horodatageAppel)return;
-  const maintenant=formatHeure(new Date());
-  const calcul=calculerSalaireRobuste(coursActuel.horodatageAppel,maintenant,coursActuel.heureDebutEDT,coursActuel.heureFinEDT,user.ecole,coursActuel.classe||'');
-  document.getElementById('cc_debut').textContent=calcul.debutRetenu||'—';
-  document.getElementById('cc_fin').textContent=calcul.finRetenue||'—';
-  document.getElementById('cc_duree').textContent=calcul.dureeMin?minStr(calcul.dureeMin):'—';
-  document.getElementById('cc_hC').textContent=(calcul.heuresValidees||0)+'h validée(s) ✅';
-  document.getElementById('cc_total').textContent=(calcul.salaire||0).toLocaleString('fr-FR')+' F CFA';
-  const att=document.getElementById('cc_attente');
-  if(calcul.heuresAttente>0&&calcul.resteMin>0){att.style.display='block';att.textContent=`⏰ ${calcul.resteMin} min restantes < 50 min → soumis à la direction`;}
-  else att.style.display='none';
-}
+function afficherEstimCahier(){if(!coursActuel?.horodatageAppel)return;const maintenant=formatHeure(new Date());const calcul=calculerSalaireRobuste(coursActuel.horodatageAppel,maintenant,coursActuel.heureDebutEDT,coursActuel.heureFinEDT,user.ecole,coursActuel.classe||'');document.getElementById('cc_debut').textContent=calcul.debutRetenu||'—';document.getElementById('cc_fin').textContent=calcul.finRetenue||'—';document.getElementById('cc_duree').textContent=calcul.dureeMin?minStr(calcul.dureeMin):'—';document.getElementById('cc_hC').textContent=(calcul.heuresValidees||0)+'h validée(s) ✅';document.getElementById('cc_total').textContent=(calcul.salaire||0).toLocaleString('fr-FR')+' F CFA';const att=document.getElementById('cc_attente');if(calcul.heuresAttente>0&&calcul.resteMin>0){att.style.display='block';att.textContent=`⏰ ${calcul.resteMin} min restantes < 50 min → soumis à la direction`;}else att.style.display='none';}
 
-function setAv(val){
-  avancement=val;
-  document.getElementById('avOk').className='av-btn'+(val==='dans les temps'?' on-ok':'');
-  document.getElementById('avRet').className='av-btn'+(val==='en retard'?' on-ret':'');
-  document.getElementById('avAv').className='av-btn'+(val==='en avance'?' on-av':'');
-}
+function setAv(val){avancement=val;document.getElementById('avOk').className='av-btn'+(val==='dans les temps'?' on-ok':'');document.getElementById('avRet').className='av-btn'+(val==='en retard'?' on-ret':'');document.getElementById('avAv').className='av-btn'+(val==='en avance'?' on-av':'');}
 
-async function publierCahier(){
-  const lecon=document.getElementById('cahierLecon').value.trim(), contenu=document.getElementById('cahierContenu').value.trim();
-  if(!lecon||!contenu){document.getElementById('obligMsg').style.display='block';setTimeout(()=>document.getElementById('obligMsg').style.display='none',3000);return;}
-  const maintenant=new Date(), horodatagePubli=formatHeure(maintenant);
-  function finaliser(lat,lon,acc,gpsStatut,gpsDist){
-    showLoader('Publication en cours...');
-    const calcul=calculerSalaireRobuste(coursActuel?.horodatageAppel,horodatagePubli,coursActuel?.heureDebutEDT,coursActuel?.heureFinEDT,user.ecole,coursActuel?.classe||'');
-    const data={date:formatDate(maintenant),heure:horodatagePubli,classe:coursActuel?.classe||'—',matiere:coursActuel?.matiere||user.matiere,enseignant:user.nom,ecole:user.ecole,lecon,contenu,avancement,devoir:document.getElementById('cahierDevoir').value.trim(),docs:document.getElementById('cahierDocs').value.trim(),obs:document.getElementById('cahierObs').value.trim(),horodatageAppel:coursActuel?.horodatageAppel||'',horodatagePubli,heureDebutEDT:coursActuel?.heureDebutEDT||'',heureFinEDT:coursActuel?.heureFinEDT||'',debutRetenu:calcul.debutRetenu,finRetenu:calcul.finRetenue,dureeMin:calcul.dureeMin,heuresValidees:calcul.heuresValidees,heuresAttente:calcul.heuresAttente,salaire:calcul.salaire,tarif:calcul.tarif,statutSalaire:calcul.statut,detailSalaire:calcul.detail,gps_lat:lat,gps_lon:lon,gps_prec:acc,gps_statut:gpsStatut,gps_dist_m:gpsDist};
-    envoyerDonnees('CAHIER',data).then(()=>{
-      hideLoader();
-      let msg=`📝 Cours publié — ${calcul.heuresValidees}h validées — ${calcul.salaire.toLocaleString('fr-FR')} F CFA`;
-      if(calcul.heuresAttente>0)msg+=` | ${calcul.resteMin}min → VOIR DIRECTION`;
-      showToast(msg,calcul.heuresAttente>0?'error':'success');
-      ['cahierLecon','cahierContenu','cahierDevoir','cahierDocs','cahierObs'].forEach(id=>document.getElementById(id).value='');
-      setAv('dans les temps'); coursActuel=null; chargerBilan();
-      setTimeout(()=>goToScreen('accueil'),1800);
-    }).catch(()=>{hideLoader();sauvegarderHorsLigne('CAHIER',data);showToast('📝 Cahier sauvegardé localement','success');coursActuel=null;setTimeout(()=>goToScreen('accueil'),1800);});
-  }
-  if(!navigator.geolocation){afficherEcranGPSProbleme('GPS_NON_DISPONIBLE');return;}
-  navigator.geolocation.getCurrentPosition(
-    function(pos){showLoader('📍 Position confirmée — Publication...');const lat=pos.coords.latitude,lon=pos.coords.longitude,acc=Math.round(pos.coords.accuracy);if(acc>150)finaliser(lat,lon,acc,'GPS_IMPRECIS',acc);else finaliser(lat,lon,acc,'GPS_OK',acc);},
-    function(erreur){hideLoader();if(erreur.code===1)afficherEcranGPSObligatoire();else afficherEcranGPSProbleme('GPS_INDISPONIBLE');},
-    {enableHighAccuracy:true,timeout:12000,maximumAge:0}
-  );
-}
+async function publierCahier(){const lecon=document.getElementById('cahierLecon').value.trim(),contenu=document.getElementById('cahierContenu').value.trim();if(!lecon||!contenu){document.getElementById('obligMsg').style.display='block';setTimeout(()=>document.getElementById('obligMsg').style.display='none',3000);return;}const maintenant=new Date(),horodatagePubli=formatHeure(maintenant);function finaliser(lat,lon,acc,gpsStatut,gpsDist){showLoader('Publication en cours...');const calcul=calculerSalaireRobuste(coursActuel?.horodatageAppel,horodatagePubli,coursActuel?.heureDebutEDT,coursActuel?.heureFinEDT,user.ecole,coursActuel?.classe||'');const data={date:formatDate(maintenant),heure:horodatagePubli,classe:coursActuel?.classe||'—',matiere:coursActuel?.matiere||user.matiere,enseignant:user.nom,ecole:user.ecole,lecon,contenu,avancement,devoir:document.getElementById('cahierDevoir').value.trim(),docs:document.getElementById('cahierDocs').value.trim(),obs:document.getElementById('cahierObs').value.trim(),horodatageAppel:coursActuel?.horodatageAppel||'',horodatagePubli,heureDebutEDT:coursActuel?.heureDebutEDT||'',heureFinEDT:coursActuel?.heureFinEDT||'',debutRetenu:calcul.debutRetenu,finRetenu:calcul.finRetenue,dureeMin:calcul.dureeMin,heuresValidees:calcul.heuresValidees,heuresAttente:calcul.heuresAttente,salaire:calcul.salaire,tarif:calcul.tarif,statutSalaire:calcul.statut,detailSalaire:calcul.detail,gps_lat:lat,gps_lon:lon,gps_prec:acc,gps_statut:gpsStatut,gps_dist_m:gpsDist};envoyerDonnees('CAHIER',data).then(()=>{hideLoader();let msg=`📝 Cours publié — ${calcul.heuresValidees}h validées — ${calcul.salaire.toLocaleString('fr-FR')} F CFA`;if(calcul.heuresAttente>0)msg+=` | ${calcul.resteMin}min → VOIR DIRECTION`;showToast(msg,calcul.heuresAttente>0?'error':'success');['cahierLecon','cahierContenu','cahierDevoir','cahierDocs','cahierObs'].forEach(id=>document.getElementById(id).value='');setAv('dans les temps');coursActuel=null;chargerBilan();setTimeout(()=>goToScreen('accueil'),1800);}).catch(()=>{hideLoader();sauvegarderHorsLigne('CAHIER',data);showToast('📝 Cahier sauvegardé localement','success');coursActuel=null;setTimeout(()=>goToScreen('accueil'),1800);});}
+if(!navigator.geolocation){afficherEcranGPSProbleme('GPS_NON_DISPONIBLE');return;}navigator.geolocation.getCurrentPosition(function(pos){showLoader('📍 Position confirmée — Publication...');const lat=pos.coords.latitude,lon=pos.coords.longitude,acc=Math.round(pos.coords.accuracy);if(acc>150)finaliser(lat,lon,acc,'GPS_IMPRECIS',acc);else finaliser(lat,lon,acc,'GPS_OK',acc);},function(erreur){hideLoader();if(erreur.code===1)afficherEcranGPSObligatoire();else afficherEcranGPSProbleme('GPS_INDISPONIBLE');},{enableHighAccuracy:true,timeout:12000,maximumAge:0});}
 
-function afficherEcranGPSObligatoire(){
-  var overlay=document.getElementById('gpsOverlay');
-  if(!overlay){overlay=document.createElement('div');overlay.id='gpsOverlay';overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';document.body.appendChild(overlay);}
-  overlay.innerHTML=`<div style="background:white;border-radius:16px;padding:24px;max-width:340px;width:100%;text-align:center;"><div style="font-size:48px;margin-bottom:12px;">📍</div><div style="font-size:16px;font-weight:700;color:#C62828;margin-bottom:8px;">GPS Obligatoire</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:16px;">Le GPS est <strong>obligatoire</strong> pour valider votre cours.<br><br>Activez la localisation dans les paramètres de votre téléphone et réessayez.</div><div style="background:#FFF3E0;border-radius:10px;padding:12px;margin-bottom:16px;text-align:left;font-size:12px;color:#E65100;">📱 <strong>Android :</strong> Paramètres → Localisation → Activer<br>🍎 <strong>iPhone :</strong> Réglages → Confidentialité → Service de localisation</div><button onclick="reessayerGPS()" style="width:100%;padding:12px;background:#2E7D32;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">🔄 Réessayer avec GPS</button><button onclick="contacterDirectionGPS()" style="width:100%;padding:10px;background:#1F4E79;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px;">📲 Contacter la direction</button><button onclick="fermerGPSOverlay()" style="width:100%;padding:10px;background:#F5F5F5;color:#555;border:none;border-radius:10px;font-size:13px;cursor:pointer;">← Retour au cahier</button></div>`;
-  overlay.style.display='flex';
-}
-
-function afficherEcranGPSProbleme(raison){
-  var overlay=document.getElementById('gpsOverlay');
-  if(!overlay){overlay=document.createElement('div');overlay.id='gpsOverlay';overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';document.body.appendChild(overlay);}
-  overlay.innerHTML=`<div style="background:white;border-radius:16px;padding:24px;max-width:340px;width:100%;text-align:center;"><div style="font-size:48px;margin-bottom:12px;">⚠️</div><div style="font-size:16px;font-weight:700;color:#E65100;margin-bottom:8px;">GPS Indisponible</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:16px;">Votre GPS ne fonctionne pas (signal faible ou salle en béton).<br><br>Contactez la direction pour valider votre cours manuellement.</div><button onclick="reessayerGPS()" style="width:100%;padding:12px;background:#2E7D32;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">🔄 Réessayer</button><button onclick="contacterDirectionGPS()" style="width:100%;padding:12px;background:#25D366;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">📲 WhatsApp Direction</button><button onclick="fermerGPSOverlay()" style="width:100%;padding:10px;background:#F5F5F5;color:#555;border:none;border-radius:10px;font-size:13px;cursor:pointer;">← Retour au cahier</button></div>`;
-  overlay.style.display='flex';
-}
-
+function afficherEcranGPSObligatoire(){var overlay=document.getElementById('gpsOverlay');if(!overlay){overlay=document.createElement('div');overlay.id='gpsOverlay';overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';document.body.appendChild(overlay);}overlay.innerHTML=`<div style="background:white;border-radius:16px;padding:24px;max-width:340px;width:100%;text-align:center;"><div style="font-size:48px;margin-bottom:12px;">📍</div><div style="font-size:16px;font-weight:700;color:#C62828;margin-bottom:8px;">GPS Obligatoire</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:16px;">Le GPS est <strong>obligatoire</strong> pour valider votre cours.<br><br>Activez la localisation dans les paramètres de votre téléphone et réessayez.</div><div style="background:#FFF3E0;border-radius:10px;padding:12px;margin-bottom:16px;text-align:left;font-size:12px;color:#E65100;">📱 <strong>Android :</strong> Paramètres → Localisation → Activer<br>🍎 <strong>iPhone :</strong> Réglages → Confidentialité → Service de localisation</div><button onclick="reessayerGPS()" style="width:100%;padding:12px;background:#2E7D32;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">🔄 Réessayer avec GPS</button><button onclick="contacterDirectionGPS()" style="width:100%;padding:10px;background:#1F4E79;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px;">📲 Contacter la direction</button><button onclick="fermerGPSOverlay()" style="width:100%;padding:10px;background:#F5F5F5;color:#555;border:none;border-radius:10px;font-size:13px;cursor:pointer;">← Retour au cahier</button></div>`;overlay.style.display='flex';}
+function afficherEcranGPSProbleme(raison){var overlay=document.getElementById('gpsOverlay');if(!overlay){overlay=document.createElement('div');overlay.id='gpsOverlay';overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';document.body.appendChild(overlay);}overlay.innerHTML=`<div style="background:white;border-radius:16px;padding:24px;max-width:340px;width:100%;text-align:center;"><div style="font-size:48px;margin-bottom:12px;">⚠️</div><div style="font-size:16px;font-weight:700;color:#E65100;margin-bottom:8px;">GPS Indisponible</div><div style="font-size:13px;color:#555;line-height:1.6;margin-bottom:16px;">Votre GPS ne fonctionne pas (signal faible ou salle en béton).<br><br>Contactez la direction pour valider votre cours manuellement.</div><button onclick="reessayerGPS()" style="width:100%;padding:12px;background:#2E7D32;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">🔄 Réessayer</button><button onclick="contacterDirectionGPS()" style="width:100%;padding:12px;background:#25D366;color:white;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;">📲 WhatsApp Direction</button><button onclick="fermerGPSOverlay()" style="width:100%;padding:10px;background:#F5F5F5;color:#555;border:none;border-radius:10px;font-size:13px;cursor:pointer;">← Retour au cahier</button></div>`;overlay.style.display='flex';}
 function fermerGPSOverlay(){var o=document.getElementById('gpsOverlay');if(o)o.style.display='none';}
 function reessayerGPS(){fermerGPSOverlay();publierCahier();}
 function contacterDirectionGPS(){var msg='Bonjour, je ne peux pas activer mon GPS.\nCours : '+(coursActuel?.classe||'')+' · '+(coursActuel?.matiere||user?.matiere||'')+'\nHeure : '+(coursActuel?.heureDebutEDT||'')+' → '+(coursActuel?.heureFinEDT||'')+'\nDate : '+formatDate(new Date())+'\nEnseignant : '+(user?.nom||'')+'\nMerci de valider manuellement.';window.open('https://wa.me/2250708111269?text='+encodeURIComponent(msg),'_blank');}
 
-async function chargerElevesNotes(){
-  const classe=document.getElementById('notesClasse').value;
-  if(!classe)return;
-  document.getElementById('notesSousTitre').textContent=user.matiere+' · '+classe;
-  document.getElementById('btnPublierNotes').style.display='none';
-  document.getElementById('notesListe').innerHTML='<p style="text-align:center;color:var(--text2);padding:20px;">⏳ Chargement...</p>';
-  try{
-    showLoader('Chargement des élèves...');
-    const range=encodeURIComponent(`${classe}!B4:C300`);
-    const url=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}`;
-    const res=await fetch(url);const data=await res.json();hideLoader();
-    if(!data.values||!data.values.length){document.getElementById('notesListe').innerHTML='<p style="text-align:center;color:var(--text2);padding:20px;">Aucun élève</p>';return;}
-    elevesNotes=data.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({matricule:r[0]||'',nom:r[1]||'',note:''}));
-    afficherElevesNotes(); document.getElementById('btnPublierNotes').style.display='block';
-  }catch(e){hideLoader();showToast('Erreur chargement','error');}
-}
+async function chargerElevesNotes(){const classe=document.getElementById('notesClasse').value;if(!classe)return;document.getElementById('notesSousTitre').textContent=user.matiere+' · '+classe;document.getElementById('btnPublierNotes').style.display='none';document.getElementById('notesListe').innerHTML='<p style="text-align:center;color:var(--text2);padding:20px;">⏳ Chargement...</p>';try{showLoader('Chargement des élèves...');const range=encodeURIComponent(`${classe}!B4:C300`);const url=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}`;const res=await fetch(url);const data=await res.json();hideLoader();if(!data.values||!data.values.length){document.getElementById('notesListe').innerHTML='<p style="text-align:center;color:var(--text2);padding:20px;">Aucun élève</p>';return;}elevesNotes=data.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({matricule:r[0]||'',nom:r[1]||'',note:''}));afficherElevesNotes();document.getElementById('btnPublierNotes').style.display='block';}catch(e){hideLoader();showToast('Erreur chargement','error');}}
 
-function afficherElevesNotes(){
-  document.getElementById('notesListe').innerHTML=elevesNotes.map((el,i)=>`<div style="background:white;border-radius:10px;margin-bottom:6px;border:1.5px solid var(--border);padding:9px 12px;display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--bleu),var(--bleu2));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;flex-shrink:0;">${el.nom.charAt(0)}</div><div style="flex:1;"><div style="font-size:13px;font-weight:600;">${el.nom}</div><div style="font-size:11px;color:var(--text2);">${el.matricule}</div></div><div style="display:flex;align-items:center;gap:4px;"><input type="number" min="0" max="20" step="0.5" placeholder="—" value="${el.note}" style="width:54px;padding:7px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;text-align:center;font-family:inherit;" oninput="elevesNotes[${i}].note=this.value"><span style="font-size:11px;color:var(--text2);">/20</span></div></div>`).join('');
-}
+function afficherElevesNotes(){document.getElementById('notesListe').innerHTML=elevesNotes.map((el,i)=>`<div style="background:white;border-radius:10px;margin-bottom:6px;border:1.5px solid var(--border);padding:9px 12px;display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--bleu),var(--bleu2));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;flex-shrink:0;">${el.nom.charAt(0)}</div><div style="flex:1;"><div style="font-size:13px;font-weight:600;">${el.nom}</div><div style="font-size:11px;color:var(--text2);">${el.matricule}</div></div><div style="display:flex;align-items:center;gap:4px;"><input type="number" min="0" max="20" step="0.5" placeholder="—" value="${el.note}" style="width:54px;padding:7px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-weight:700;text-align:center;font-family:inherit;" oninput="elevesNotes[${i}].note=this.value"><span style="font-size:11px;color:var(--text2);">/20</span></div></div>`).join('');}
 
-async function publierNotes(){
-  const classe=document.getElementById('notesClasse').value, numero=document.getElementById('notesNumero').value;
-  const trimestre=document.getElementById('notesTrimestre').value, dateRemise=document.getElementById('notesDate').value;
-  if(!classe||!dateRemise){showToast('Classe et date requis','error');return;}
-  const vals=elevesNotes.map(e=>parseFloat(e.note)).filter(n=>!isNaN(n));
-  if(!vals.length){showToast('Saisissez au moins une note','error');return;}
-  const moyenne=(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2);
-  showLoader('Publication des notes...');
-  const data={date:formatDate(new Date()),dateRemise,classe,matiere:user.matiere,enseignant:user.nom,ecole:user.ecole,numeroDevoir:numero,trimestre,moyenne,notes:elevesNotes.map(e=>({matricule:e.matricule,nom:e.nom,note:e.note||'ABS'}))};
-  try{await envoyerDonnees('NOTES',data);hideLoader();showToast(`✅ Notes publiées — Moyenne: ${moyenne}/20`,'success');setTimeout(()=>goTo('accueil'),1500);}
-  catch(e){hideLoader();sauvegarderHorsLigne('NOTES',data);showToast(`📝 Notes sauvegardées — Moy: ${moyenne}/20`,'success');setTimeout(()=>goTo('accueil'),1500);}
-}
+async function publierNotes(){const classe=document.getElementById('notesClasse').value,numero=document.getElementById('notesNumero').value;const trimestre=document.getElementById('notesTrimestre').value,dateRemise=document.getElementById('notesDate').value;if(!classe||!dateRemise){showToast('Classe et date requis','error');return;}const vals=elevesNotes.map(e=>parseFloat(e.note)).filter(n=>!isNaN(n));if(!vals.length){showToast('Saisissez au moins une note','error');return;}const moyenne=(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2);showLoader('Publication des notes...');const data={date:formatDate(new Date()),dateRemise,classe,matiere:user.matiere,enseignant:user.nom,ecole:user.ecole,numeroDevoir:numero,trimestre,moyenne,notes:elevesNotes.map(e=>({matricule:e.matricule,nom:e.nom,note:e.note||'ABS'}))};try{await envoyerDonnees('NOTES',data);hideLoader();showToast(`✅ Notes publiées — Moyenne: ${moyenne}/20`,'success');setTimeout(()=>goTo('accueil'),1500);}catch(e){hideLoader();sauvegarderHorsLigne('NOTES',data);showToast(`📝 Notes sauvegardées — Moy: ${moyenne}/20`,'success');setTimeout(()=>goTo('accueil'),1500);}}
 
-async function envoyerDonnees(type,data){
-  const payload={type,...data};
-  return new Promise(resolve=>{
-    const cbName='cpp_'+Date.now(), script=document.createElement('script'), params=encodeURIComponent(JSON.stringify(payload));
-    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res||{ok:true});};
-    script.onerror=()=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:true});};
-    script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type='+encodeURIComponent(type)+'&data='+params;
-    document.body.appendChild(script);
-    setTimeout(()=>{if(window[cbName]){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:true});}},8000);
-  });
-}
+async function envoyerDonnees(type,data){const payload={type,...data};return new Promise(resolve=>{const cbName='cpp_'+Date.now(),script=document.createElement('script'),params=encodeURIComponent(JSON.stringify(payload));window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res||{ok:true});};script.onerror=()=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:true});};script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type='+encodeURIComponent(type)+'&data='+params;document.body.appendChild(script);setTimeout(()=>{if(window[cbName]){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:true});}},8000);});}
 
 function sauvegarderHorsLigne(type,data){const q=JSON.parse(localStorage.getItem('cpp_offline')||'[]');q.push({type,data,ts:new Date().toISOString()});localStorage.setItem('cpp_offline',JSON.stringify(q));}
-
-async function syncHorsLigne(){
-  const q=JSON.parse(localStorage.getItem('cpp_offline')||'[]');
-  if(!q.length)return;
-  const remaining=[];
-  for(const item of q){try{await envoyerDonnees(item.type,item.data);}catch{remaining.push(item);}}
-  localStorage.setItem('cpp_offline',JSON.stringify(remaining));
-}
+async function syncHorsLigne(){const q=JSON.parse(localStorage.getItem('cpp_offline')||'[]');if(!q.length)return;const remaining=[];for(const item of q){try{await envoyerDonnees(item.type,item.data);}catch{remaining.push(item);}}localStorage.setItem('cpp_offline',JSON.stringify(remaining));}
 
 function goTo(nom){goToScreen(nom);}
 function goToScreen(nom){
@@ -992,42 +643,89 @@ function goToScreen(nom){
   if(sc)sc.classList.add('active');
   if(nom==='notes')initNotes();
   if(nom==='cahier')afficherEstimCahier();
+  if(nom==='bulletin')initBulletin();
   if(navigator.onLine)syncHorsLigne();
 }
 
-function initNotes(){
-  const today=new Date();
-  document.getElementById('notesDate').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
-  if(coursActuel){document.getElementById('notesClasse').value=coursActuel.classe;chargerElevesNotes();}
-}
+function initNotes(){const today=new Date();document.getElementById('notesDate').value=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');if(coursActuel){document.getElementById('notesClasse').value=coursActuel.classe;chargerElevesNotes();}}
+function togglePanel(panelId,arrowId){const panel=document.getElementById(panelId),arrow=document.getElementById(arrowId);const open=panel.classList.contains('open');panel.classList.toggle('open',!open);if(arrow)arrow.textContent=open?'▼ Voir':'▲ Cacher';}
 
-function togglePanel(panelId,arrowId){
-  const panel=document.getElementById(panelId), arrow=document.getElementById(arrowId);
-  const open=panel.classList.contains('open'); panel.classList.toggle('open',!open);
-  if(arrow)arrow.textContent=open?'▼ Voir':'▲ Cacher';
-}
-
-function initSignature(){
-  const canvas=document.getElementById('sigCanvas');
-  if(!canvas)return;
-  sigCtx=canvas.getContext('2d'); canvas.width=canvas.offsetWidth||300; canvas.height=100;
-  sigCtx.strokeStyle='#1F4E79';sigCtx.lineWidth=2;sigCtx.lineCap='round';
-  canvas.addEventListener('touchstart',e=>{sigPainting=true;const t=e.touches[0],r=canvas.getBoundingClientRect();sigCtx.beginPath();sigCtx.moveTo(t.clientX-r.left,t.clientY-r.top);e.preventDefault();});
-  canvas.addEventListener('touchmove',e=>{if(!sigPainting)return;const t=e.touches[0],r=canvas.getBoundingClientRect();sigCtx.lineTo(t.clientX-r.left,t.clientY-r.top);sigCtx.stroke();e.preventDefault();});
-  canvas.addEventListener('touchend',()=>sigPainting=false);
-  canvas.addEventListener('mousedown',e=>{sigPainting=true;const r=canvas.getBoundingClientRect();sigCtx.beginPath();sigCtx.moveTo(e.clientX-r.left,e.clientY-r.top);});
-  canvas.addEventListener('mousemove',e=>{if(!sigPainting)return;const r=canvas.getBoundingClientRect();sigCtx.lineTo(e.clientX-r.left,e.clientY-r.top);sigCtx.stroke();});
-  canvas.addEventListener('mouseup',()=>sigPainting=false);
-}
+function initSignature(){const canvas=document.getElementById('sigCanvas');if(!canvas)return;sigCtx=canvas.getContext('2d');canvas.width=canvas.offsetWidth||300;canvas.height=100;sigCtx.strokeStyle='#1F4E79';sigCtx.lineWidth=2;sigCtx.lineCap='round';canvas.addEventListener('touchstart',e=>{sigPainting=true;const t=e.touches[0],r=canvas.getBoundingClientRect();sigCtx.beginPath();sigCtx.moveTo(t.clientX-r.left,t.clientY-r.top);e.preventDefault();});canvas.addEventListener('touchmove',e=>{if(!sigPainting)return;const t=e.touches[0],r=canvas.getBoundingClientRect();sigCtx.lineTo(t.clientX-r.left,t.clientY-r.top);sigCtx.stroke();e.preventDefault();});canvas.addEventListener('touchend',()=>sigPainting=false);canvas.addEventListener('mousedown',e=>{sigPainting=true;const r=canvas.getBoundingClientRect();sigCtx.beginPath();sigCtx.moveTo(e.clientX-r.left,e.clientY-r.top);});canvas.addEventListener('mousemove',e=>{if(!sigPainting)return;const r=canvas.getBoundingClientRect();sigCtx.lineTo(e.clientX-r.left,e.clientY-r.top);sigCtx.stroke();});canvas.addEventListener('mouseup',()=>sigPainting=false);}
 function clearSig(){if(sigCtx)sigCtx.clearRect(0,0,document.getElementById('sigCanvas').width,100);}
-
 function showLoader(t){document.getElementById('loaderText').textContent=t||'Chargement...';document.getElementById('loader').classList.add('show');}
 function hideLoader(){document.getElementById('loader').classList.remove('show');}
 let toastTimer;
-function showToast(msg,type=''){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.className=`toast ${type} show`;
-  clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.classList.remove('show');},4000);
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.classList.remove('show');},4000);}
+
+// ══════════════════════════════════════════════════════
+// BULLETINS PRIMAIRE
+// ══════════════════════════════════════════════════════
+var MOIS_BULLETIN=['OCT','NOV','DEC','JAN','FEV','MAR','AVR','MAI'];
+var MOIS_LABELS={OCT:'Octobre',NOV:'Novembre',DEC:'Décembre',JAN:'Janvier',FEV:'Février',MAR:'Mars',AVR:'Avril',MAI:'Mai'};
+var CONFIG_BULLETIN={
+  MAT:{matieres:['GRAPHISME','EDHC','AEM','MATHEMATIQUE','LECTURE','AEC'],labels:['Graphisme','EDHC','AEM','Mathématique','Lecture','AEC'],bareme:[10,10,10,10,10,10],sur:10},
+  CP1:{matieres:['ECRITURE','COPIE','EXPRESSION_ECRITE','ORTHOGRAPHE','LECTURE','POESIE','AEC','EDHC','MATHEMATIQUE','DICTEE','ANGLAIS','INFORMATIQUE'],labels:['Écriture','Copie','Expression écrite','Orthographe','Lecture','Poésie','AEC','EDHC','Mathématique','Dictée','Anglais','Informatique'],bareme:[10,10,10,10,10,10,10,10,10,10,10,10],sur:10},
+  CP2:{matieres:['ECRITURE','COPIE','EXPRESSION_ECRITE','ORTHOGRAPHE','DICTEE','POESIE','LECTURE','EDHC','MATHEMATIQUE','AEC','ANGLAIS','INFORMATIQUE'],labels:['Écriture','Copie','Expression écrite','Orthographe','Dictée','Poésie','Lecture','EDHC','Mathématique','AEC','Anglais','Informatique'],bareme:[10,10,10,10,10,10,10,10,10,10,10,10],sur:10},
+  CE1:{matieres:['EXPLOITATION_TEXTE','DICTEE','AEM','MATHEMATIQUE','LECTURE','POESIE','ANGLAIS','INFORMATIQUE'],labels:['Exploitation de texte','Dictée','AEM','Mathématique','Lecture','Poésie','Anglais','Informatique'],bareme:[50,20,50,50,10,10,10,10],sur:20},
+  CE2:{matieres:['EXPLOITATION_TEXTE','DICTEE','AEM','MATHEMATIQUE','LECTURE','POESIE','ANGLAIS','INFORMATIQUE'],labels:['Exploitation de texte','Dictée','AEM','Mathématique','Lecture','Poésie','Anglais','Informatique'],bareme:[50,20,50,50,10,10,10,10],sur:20},
+  CM1:{matieres:['EXPLOITATION_TEXTE','DICTEE','AEM','MATHEMATIQUE','LECTURE','ANGLAIS','INFORMATIQUE'],labels:['Exploitation de texte','Dictée','AEM','Mathématique','Lecture','Anglais','Informatique'],bareme:[50,20,50,50,10,10,10],sur:20},
+  CM2:{matieres:['EXPLOITATION_TEXTE','DICTEE','AEM','MATHEMATIQUE','LECTURE','ANGLAIS','INFORMATIQUE'],labels:['Exploitation de texte','Dictée','AEM','Mathématique','Lecture','Anglais','Informatique'],bareme:[50,20,50,50,10,10,10],sur:20}
+};
+var bulletinMoisActuel='',bulletinElevesData=[],bulletinNiveauActuel='';
+
+function getBulletinNiveau(classe){var c=(classe||'').trim().toUpperCase();if(c.indexOf('MAT')>=0||c==='PSA'||c==='MSA'||c==='GSA')return'MAT';if(c.indexOf('CP1')>=0)return'CP1';if(c.indexOf('CP2')>=0)return'CP2';if(c.indexOf('CE1')>=0)return'CE1';if(c.indexOf('CE2')>=0)return'CE2';if(c.indexOf('CM1')>=0)return'CM1';if(c.indexOf('CM2')>=0)return'CM2';return'';}
+
+function initBulletin(){
+  if(!user||user.niveau!=='primaire')return;
+  var classe=user.classeDefaut||'';var niveau=getBulletinNiveau(classe);bulletinNiveauActuel=niveau;
+  document.getElementById('bulletinSousTitre').textContent=classe+' — Saisie mensuelle';
+  if(niveau&&CONFIG_BULLETIN[niveau]){document.getElementById('bulletinInfo').style.display='block';document.getElementById('bulletinClasseLabel').textContent=classe;var cfg=CONFIG_BULLETIN[niveau];document.getElementById('bulletinNiveauLabel').textContent=cfg.matieres.length+' matières — sur '+cfg.sur;}
+  var grid=document.getElementById('moisGrid');grid.innerHTML='';
+  MOIS_BULLETIN.forEach(function(m){var btn=document.createElement('button');btn.className='bul-mois-btn';btn.textContent=MOIS_LABELS[m];btn.dataset.mois=m;btn.onclick=function(){document.querySelectorAll('.bul-mois-btn').forEach(function(b){b.classList.remove('actif');});btn.classList.add('actif');selectionnerMoisBulletin(m,classe,niveau);};grid.appendChild(btn);});
+  document.getElementById('bulletinSaisieZone').style.display='none';document.getElementById('bulletinVide').style.display='block';document.getElementById('bulletinResume').style.display='none';
+}
+
+async function selectionnerMoisBulletin(mois,classe,niveau){
+  bulletinMoisActuel=mois;document.getElementById('bulletinVide').style.display='none';document.getElementById('bulletinSaisieZone').style.display='block';
+  document.getElementById('bulletinListe').innerHTML='<p style="text-align:center;padding:20px;color:var(--text2);">⏳ Chargement des élèves...</p>';
+  var cfg=CONFIG_BULLETIN[niveau];if(!cfg){document.getElementById('bulletinListe').innerHTML='<p style="color:var(--rouge);padding:12px;">Niveau non reconnu : '+niveau+'</p>';return;}
+  var legendeHtml='<strong>Barèmes :</strong> ';cfg.matieres.forEach(function(m,i){legendeHtml+=cfg.labels[i]+' <strong>/'+cfg.bareme[i]+'</strong>';if(i<cfg.matieres.length-1)legendeHtml+=' &nbsp;·&nbsp; ';});legendeHtml+=' &nbsp;+&nbsp; <strong>Conduite /10</strong> (hors moyenne)';
+  document.getElementById('bulletinLegende').innerHTML=legendeHtml;
+  try{showLoader('Chargement des élèves...');var range=encodeURIComponent(classe+'!B4:C300');var url='https://sheets.googleapis.com/v4/spreadsheets/'+user.sheetsId+'/values/'+range+'?key='+API_KEY;var res=await fetch(url);var data=await res.json();hideLoader();
+    if(!data.values||!data.values.length){bulletinElevesData=[{matricule:'MAT001',nom:'KOUASSI Aya'},{matricule:'MAT002',nom:'BAMBA Moussa'}];showToast('Mode démo — aucun élève trouvé','error');}
+    else{bulletinElevesData=data.values.filter(function(r){return r[0]&&r[0].toString().trim();}).map(function(r){return{matricule:r[0]||'',nom:r[1]||''};});}
+    afficherTableauBulletin(cfg);}
+  catch(e){hideLoader();bulletinElevesData=[{matricule:'MAT001',nom:'KOUASSI Aya'},{matricule:'MAT002',nom:'BAMBA Moussa'}];afficherTableauBulletin(cfg);showToast('Mode démo — erreur réseau','error');}
+}
+
+function afficherTableauBulletin(cfg){
+  var container=document.getElementById('bulletinListe');if(!bulletinElevesData.length){container.innerHTML='<p style="text-align:center;color:var(--text2);padding:20px;">Aucun élève</p>';return;}
+  var html='';
+  bulletinElevesData.forEach(function(el,idx){
+    html+='<div class="bul-eleve-card"><div class="bul-eleve-head"><div class="bul-eleve-avatar">'+el.nom.charAt(0)+'</div><div style="flex:1;"><div style="font-size:13px;font-weight:700;">'+el.nom+'</div><div style="font-size:10px;opacity:0.8;">'+el.matricule+'</div></div></div>';
+    html+='<div class="bul-notes-grid">';
+    cfg.matieres.forEach(function(m,i){html+='<div class="bul-note-item"><label class="bul-note-label">'+cfg.labels[i]+' <span style="color:var(--bleu)">/'+cfg.bareme[i]+'</span></label><input type="number" min="0" max="'+cfg.bareme[i]+'" step="0.25" placeholder="—" data-idx="'+idx+'" data-mat="'+m+'" data-max="'+cfg.bareme[i]+'" oninput="validerNoteBulletin(this)" class="bul-note-input"></div>';});
+    html+='<div class="bul-note-item bul-conduite-row"><label class="bul-note-label" style="color:var(--orange);">Conduite /10 <span style="font-weight:400;font-style:italic;">(hors moyenne)</span></label><input type="number" min="0" max="10" step="1" placeholder="—" data-idx="'+idx+'" data-mat="CONDUITE" data-max="10" oninput="validerNoteBulletin(this)" class="bul-note-input bul-conduite-input"></div>';
+    html+='</div></div>';
+  });
+  container.innerHTML=html;
+}
+
+function validerNoteBulletin(input){var max=parseFloat(input.dataset.max)||10;var val=parseFloat(input.value);if(!isNaN(val)){if(val>max)input.value=max;if(val<0)input.value=0;input.classList.add('ok');}else{input.classList.remove('ok');}mettreAJourResumeBulletin();}
+
+function mettreAJourResumeBulletin(){var cfg=CONFIG_BULLETIN[bulletinNiveauActuel];if(!cfg)return;var completParEleve={};document.querySelectorAll('#bulletinListe input[data-mat]').forEach(function(inp){var idx=inp.dataset.idx,mat=inp.dataset.mat;if(inp.value.trim()!==''&&!isNaN(parseFloat(inp.value))&&mat!=='CONDUITE'){if(!completParEleve[idx])completParEleve[idx]=0;completParEleve[idx]++;}});var nbSaisis=Object.values(completParEleve).filter(function(nb){return nb===cfg.matieres.length;}).length;if(nbSaisis>0){document.getElementById('bulletinResume').style.display='block';document.getElementById('bulletinResumeTexte').innerHTML='<strong>'+nbSaisis+' / '+bulletinElevesData.length+' élèves</strong> avec toutes les notes<br>Mois : <strong>'+MOIS_LABELS[bulletinMoisActuel]+'</strong> · Classe : <strong>'+(user.classeDefaut||'—')+'</strong>';}}
+
+async function soumettreNotesBulletin(){
+  var cfg=CONFIG_BULLETIN[bulletinNiveauActuel];if(!cfg||!bulletinMoisActuel){showToast('Choisissez un mois','error');return;}
+  var elevesNotesBul=bulletinElevesData.map(function(el,idx){var noteEleve={matricule:el.matricule,nom:el.nom,prenoms:''};cfg.matieres.forEach(function(m){var inp=document.querySelector('input[data-idx="'+idx+'"][data-mat="'+m+'"]');noteEleve[m]=inp?(parseFloat(inp.value)||0):0;});var condInp=document.querySelector('input[data-idx="'+idx+'"][data-mat="CONDUITE"]');noteEleve.CONDUITE=condInp?(parseFloat(condInp.value)||0):0;return noteEleve;});
+  var avecNotes=elevesNotesBul.filter(function(el){return cfg.matieres.some(function(m){return el[m]>0;});});if(!avecNotes.length){showToast('Saisissez au moins une note','error');return;}
+  document.getElementById('btnSoumettreBulletin').disabled=true;showLoader('Envoi des notes...');
+  try{var cbName='bul_'+Date.now();var result=await new Promise(function(resolve){var script=document.createElement('script');window[cbName]=function(data){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(data);};script.onerror=function(){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:false,error:'Erreur réseau'});};script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type=SAISIR_NOTES_PRIMAIRE&ecole='+encodeURIComponent(user.ecole)+'&classe='+encodeURIComponent(user.classeDefaut||'')+'&mois='+encodeURIComponent(bulletinMoisActuel)+'&annee=2025-2026&eleves='+encodeURIComponent(JSON.stringify(elevesNotesBul));document.body.appendChild(script);setTimeout(function(){if(window[cbName]){delete window[cbName];resolve({ok:false,error:'Délai'});}},15000);});
+    hideLoader();
+    if(result&&result.ok){showToast('✅ Notes envoyées — en attente validation directrice','success');document.getElementById('bulletinSaisieZone').style.display='none';document.getElementById('bulletinVide').style.display='block';document.getElementById('bulletinResume').style.display='none';document.querySelectorAll('.bul-mois-btn').forEach(function(b){b.classList.remove('actif');});bulletinMoisActuel='';}
+    else{showToast('❌ Erreur : '+(result?result.error:'inconnue'),'error');}
+  }catch(e){hideLoader();showToast('❌ Erreur réseau','error');}
+  document.getElementById('btnSoumettreBulletin').disabled=false;
 }
 
 window.addEventListener('online',syncHorsLigne);
