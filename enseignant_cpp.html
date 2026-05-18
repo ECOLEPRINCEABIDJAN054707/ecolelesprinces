@@ -785,9 +785,27 @@ function mettreAJourResumeBulletin(){var cfg=CONFIG_BULLETIN[bulletinNiveauActue
 async function soumettreNotesBulletin(){
   var cfg=CONFIG_BULLETIN[bulletinNiveauActuel];if(!cfg||!bulletinMoisActuel){showToast('Choisissez un mois','error');return;}
   var elevesNotesBul=bulletinElevesData.map(function(el,idx){var noteEleve={matricule:el.matricule,nom:el.nom,prenoms:''};cfg.matieres.forEach(function(m){var inp=document.querySelector('input[data-idx="'+idx+'"][data-mat="'+m+'"]');noteEleve[m]=inp?(parseFloat(inp.value)||0):0;});var condInp=document.querySelector('input[data-idx="'+idx+'"][data-mat="CONDUITE"]');noteEleve.CONDUITE=condInp?(parseFloat(condInp.value)||0):0;return noteEleve;});
-  var avecNotes=elevesNotesBul.filter(function(el){return cfg.matieres.some(function(m){return el[m]>0;});});if(!avecNotes.length){showToast('Saisissez au moins une note','error');return;}
+  var avecNotes=elevesNotesBul.filter(function(el){return cfg.matieres.every(function(m){return el[m]>0;});});if(!avecNotes.length){showToast('Saisissez au moins une note','error');return;}
   document.getElementById('btnSoumettreBulletin').disabled=true;showLoader('Envoi des notes...');
-  try{var cbName='bul_'+Date.now();var result=await new Promise(function(resolve){var script=document.createElement('script');window[cbName]=function(data){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(data);};script.onerror=function(){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:false,error:'Erreur réseau'});};script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type=SAISIR_NOTES_PRIMAIRE&ecole='+encodeURIComponent(user.ecole)+'&classe='+encodeURIComponent(user.classeDefaut||'')+'&mois='+encodeURIComponent(bulletinMoisActuel)+'&annee=2025-2026&eleves='+encodeURIComponent(JSON.stringify(elevesNotesBul));document.body.appendChild(script);setTimeout(function(){if(window[cbName]){delete window[cbName];resolve({ok:false,error:'Délai'});}},15000);});
+  try{
+  // Envoi par lots de 10 élèves
+  var classeEnvoi=(function(){var s=document.getElementById('bulletinClasseSelect');return s?s.value:user.classeDefaut||'';})();
+  var TAILLE_LOT=10;
+  var result={ok:true};
+  for(var lotIdx=0;lotIdx<avecNotes.length;lotIdx+=TAILLE_LOT){
+    var lot=avecNotes.slice(lotIdx,lotIdx+TAILLE_LOT);
+    showLoader('Envoi '+(lotIdx+1)+'-'+Math.min(lotIdx+TAILLE_LOT,avecNotes.length)+' / '+avecNotes.length+' élèves...');
+    var cbName='bul_'+Date.now()+'_'+lotIdx;
+    result=await new Promise(function(resolve){
+      var script=document.createElement('script');
+      window[cbName]=function(data){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(data);};
+      script.onerror=function(){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:false,error:'Erreur réseau lot '+(lotIdx+1)});};
+      script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type=SAISIR_NOTES_PRIMAIRE&ecole='+encodeURIComponent(user.ecole)+'&classe='+encodeURIComponent(classeEnvoi)+'&mois='+encodeURIComponent(bulletinMoisActuel)+'&annee=2025-2026&eleves='+encodeURIComponent(JSON.stringify(lot));
+      document.body.appendChild(script);
+      setTimeout(function(){if(window[cbName]){delete window[cbName];resolve({ok:false,error:'Délai lot '+(lotIdx+1)});}},15000);
+    });
+    if(!result||!result.ok){break;}
+  }
     hideLoader();
     if(result&&result.ok){showToast('✅ Notes envoyées — en attente validation directrice','success');document.getElementById('bulletinSaisieZone').style.display='none';document.getElementById('bulletinVide').style.display='block';document.getElementById('bulletinResume').style.display='none';var bz=document.getElementById('btnSoumettreZone');if(bz)bz.style.display='none';document.querySelectorAll('.bul-mois-btn').forEach(function(b){b.classList.remove('actif');});bulletinMoisActuel='';}
     else{showToast('❌ Erreur : '+(result?result.error:'inconnue'),'error');}
