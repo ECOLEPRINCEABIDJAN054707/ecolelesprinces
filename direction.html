@@ -27,21 +27,21 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .form-group input:focus,.form-group select:focus{border-color:var(--bleu2);}
 .btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--bleu),var(--bleu2));color:white;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;}
 .dashboard{display:none;padding:24px;max-width:1200px;margin:0 auto;}
-/* ── STATS ── */
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px;}
 .stat-card{background:white;border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);border-left:4px solid var(--bleu);}
 .stat-card.vert{border-color:var(--vert);}
 .stat-card.or{border-color:var(--or);}
 .stat-card.rouge{border-color:var(--rouge);}
 .stat-card.orange{border-color:var(--orange);}
+.stat-card.emeraude{border-color:#00897B;}
 .stat-label{font-size:12px;color:var(--text2);text-transform:uppercase;font-weight:600;margin-bottom:8px;}
 .stat-value{font-size:28px;font-weight:700;color:var(--bleu);}
 .stat-card.vert .stat-value{color:var(--vert);}
 .stat-card.or .stat-value{color:var(--or);}
 .stat-card.rouge .stat-value{color:var(--rouge);}
 .stat-card.orange .stat-value{color:var(--orange);}
+.stat-card.emeraude .stat-value{color:#00897B;}
 .stat-sub{font-size:11px;color:var(--text2);margin-top:4px;}
-/* ── TABLES ── */
 .section-title{font-size:16px;font-weight:700;color:var(--bleu);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border);}
 .table-wrap{background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;margin-bottom:24px;overflow-x:auto;}
 table{width:100%;border-collapse:collapse;min-width:600px;}
@@ -54,22 +54,19 @@ tr:nth-child(even){background:#F8FAFD;}
 .badge-vacataire{background:#E3F2FD;color:var(--bleu2);}
 .badge-permanent{background:#E8F5E9;color:var(--vert);}
 .total-row td{font-weight:700;background:#EEF4FB;color:var(--bleu);}
-/* ── FILTERS ── */
 .filters{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center;}
 .filters select{padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;background:white;outline:none;}
 .btn-refresh{padding:9px 18px;background:var(--bleu);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;}
 .btn-export{padding:9px 18px;background:var(--vert);color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;}
 .btn-sync{padding:9px 18px;background:#7B1FA2;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;}
-/* ── SPINNER ── */
+.btn-bulletin{padding:9px 18px;background:#00897B;color:white;border:none;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;}
 .spinner{width:40px;height:40px;border:4px solid var(--border);border-top-color:var(--bleu2);border-radius:50%;animation:spin 0.8s linear infinite;margin:40px auto;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .loading-text{text-align:center;color:var(--text2);font-size:13px;margin-top:8px;}
-/* ── TOAST ── */
 .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:#333;color:white;padding:12px 20px;border-radius:24px;font-size:13px;font-weight:500;z-index:9999;transition:transform 0.3s;white-space:nowrap;max-width:90vw;text-align:center;opacity:0;pointer-events:none;}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;}
 .toast.success{background:var(--vert);}
 .toast.error{background:var(--rouge);}
-/* ── MODAL ── */
 .calcul-bloc{background:#F0F7FF;border-radius:10px;padding:12px 14px;margin:10px 0;border-left:3px solid var(--bleu2);}
 .calcul-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
 .calcul-row span:first-child{color:var(--text2);}
@@ -84,12 +81,23 @@ tr:nth-child(even){background:#F8FAFD;}
 .sal-box.vert .sal-box-val{color:var(--vert);}
 .sal-box.orange .sal-box-label{color:var(--orange);}
 .sal-box.orange .sal-box-val{color:var(--orange);}
-/* ── ATTENTE ── */
 .attente-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border);}
 .attente-badge{background:#FFF3E0;border:1.5px solid #FFB74D;color:var(--orange);padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;}
 .detail-v2{background:#F8FFF8;border:1.5px solid #A5D6A7;border-radius:10px;padding:10px 14px;margin:8px 0;font-size:12px;}
 .detail-v2-titre{font-size:11px;font-weight:700;color:var(--vert);text-transform:uppercase;margin-bottom:6px;}
 .sync-result{background:#F3E5F5;border:1.5px solid #CE93D8;border-radius:10px;padding:10px 14px;font-size:12px;color:#6A1B9A;margin-bottom:16px;display:none;}
+/* Bulletins primaire */
+.bul-card{background:white;border-radius:12px;border:1.5px solid var(--border);padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
+.bul-info{flex:1;}
+.bul-classe{font-size:15px;font-weight:700;color:var(--bleu);}
+.bul-meta{font-size:12px;color:var(--text2);margin-top:3px;}
+.bul-nb{background:#E3F2FD;color:var(--bleu);font-size:13px;font-weight:700;padding:4px 12px;border-radius:20px;}
+.btn-valider-bul{padding:9px 18px;background:var(--vert);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.btn-valider-bul:hover{background:#1b5e20;}
+.bul-detail-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;}
+.bul-detail-table th{background:var(--bleu);color:white;padding:7px 10px;text-align:left;font-weight:600;}
+.bul-detail-table td{padding:7px 10px;border-bottom:1px solid var(--border);}
+.bul-detail-table tr:nth-child(even) td{background:#F8FAFD;}
 </style>
 </head>
 <body>
@@ -102,7 +110,6 @@ tr:nth-child(even){background:#F8FAFD;}
   <button class="btn-logout" onclick="logout()">Se déconnecter</button>
 </div>
 
-<!-- LOGIN -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-card">
     <h2>🔐 Espace Direction</h2>
@@ -134,10 +141,7 @@ tr:nth-child(even){background:#F8FAFD;}
   </div>
 </div>
 
-<!-- DASHBOARD -->
 <div class="dashboard" id="dashboard">
-
-  <!-- ✅ CORRECTION 1 — 5 stat cards dont EN ATTENTE en orange -->
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-label">Enseignants actifs</div>
@@ -161,6 +165,11 @@ tr:nth-child(even){background:#F8FAFD;}
       <div class="stat-value" id="statAttente">—</div>
       <div class="stat-sub" id="statAttenteSub"></div>
     </div>
+    <div class="stat-card emeraude">
+      <div class="stat-label">📋 Bulletins primaire</div>
+      <div class="stat-value" id="statBulletins">—</div>
+      <div class="stat-sub">En attente validation</div>
+    </div>
   </div>
 
   <div class="filters">
@@ -168,11 +177,11 @@ tr:nth-child(even){background:#F8FAFD;}
     <button class="btn-refresh" onclick="chargerPointage()">🔄 Actualiser</button>
     <button class="btn-export" onclick="exporterCSV()">📥 Exporter CSV</button>
     <button class="btn-sync" onclick="syncEnseignants()">👥 Sync Enseignants</button>
+    <button class="btn-bulletin" onclick="chargerBulletinsPrimaire()">📋 Bulletins primaire</button>
   </div>
 
   <div class="sync-result" id="syncResult"></div>
 
-  <!-- ✅ CORRECTION 3 — Section EN ATTENTE DANS le dashboard -->
   <div id="sectionAttente" style="display:none;">
     <div class="attente-header">
       <div class="section-title" style="color:var(--orange);margin:0;border:none;padding:0;">
@@ -183,6 +192,17 @@ tr:nth-child(even){background:#F8FAFD;}
     <div class="table-wrap" id="tableAttente"></div>
   </div>
 
+  <!-- SECTION BULLETINS PRIMAIRE -->
+  <div id="sectionBulletinPrimaire" style="display:none;margin-bottom:24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--border);">
+      <div class="section-title" style="color:#00897B;margin:0;border:none;padding:0;">
+        📋 Bulletins primaire — en attente de validation
+      </div>
+      <span style="background:#E0F2F1;border:1.5px solid #80CBC4;color:#00897B;padding:4px 14px;border-radius:20px;font-size:13px;font-weight:700;" id="bulletinCompteur">0 bulletin(s)</span>
+    </div>
+    <div id="bulletinListeAttente"></div>
+  </div>
+
   <div class="section-title">Récapitulatif des salaires</div>
   <div class="table-wrap">
     <div id="tableBody">
@@ -190,10 +210,9 @@ tr:nth-child(even){background:#F8FAFD;}
       <div class="loading-text">Chargement...</div>
     </div>
   </div>
-
 </div>
 
-<!-- MODAL TRAITEMENT EN ATTENTE -->
+<!-- MODAL ATTENTE ENSEIGNANTS -->
 <div id="modalAttente" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;overflow-y:auto;">
   <div style="background:white;border-radius:16px;padding:28px;max-width:500px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);margin:20px auto;">
     <h3 style="color:var(--bleu);margin-bottom:16px;font-size:17px;">⏱️ Cours en attente de validation</h3>
@@ -219,37 +238,42 @@ tr:nth-child(even){background:#F8FAFD;}
   </div>
 </div>
 
+<!-- MODAL BULLETIN PRIMAIRE -->
+<div id="modalBulletin" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;overflow-y:auto;">
+  <div style="background:white;border-radius:16px;padding:28px;max-width:600px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);margin:20px auto;">
+    <h3 style="color:var(--bleu);margin-bottom:6px;font-size:17px;">📋 Valider le bulletin</h3>
+    <div id="modalBulletinInfo" style="font-size:13px;color:var(--text2);margin-bottom:16px;"></div>
+    <div id="modalBulletinNotes" style="max-height:350px;overflow-y:auto;"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button onclick="confirmerValidationBulletin()" style="flex:1;padding:13px;background:var(--vert);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-size:14px;">✅ Valider et publier</button>
+      <button onclick="document.getElementById('modalBulletin').style.display='none'" style="padding:13px 18px;background:#E0E4EF;border:none;border-radius:10px;cursor:pointer;font-weight:600;">Annuler</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════════════════
-// CONFIGURATION
-// ═══════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFVBYUZz4kv0Jzew9dbboqO0IEJg1q6FGxkfWwWA3r3wC2BjxVPdp05q1YeY00s_6f/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVQeq9xAHyEdDYSNDO11hlfobZsHvHiRQ8fvyuiOq05Mr2XFWNTxClvYaYBazoV-d3/exec';
 
 const SHEETS_IDS = {
-  'CPP LES PRINCES':     '1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
-  'ACADEMIE':            '1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M',
-  'GUINGLO VILLE':       '1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA',
-  'GNONTINROU':          '1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4',
-  'KOUTOUAN':            '167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg',
-  'SOAKPE':              '1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys',
-  'AKEIKOI 1':           '1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE',
-  'AKEIKOI 2':           '11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog',
-  'CPP PRO':             '1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs',
-  'CPP TECH':            '15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc',
-  'ETL PRINCES KOUIBLY': '1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s',
-  'GS RITA ROSANE':      '1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0'
+  'CPP LES PRINCES':'1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
+  'ACADEMIE':'1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M',
+  'GUINGLO VILLE':'1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA',
+  'GNONTINROU':'1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4',
+  'KOUTOUAN':'167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg',
+  'SOAKPE':'1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys',
+  'AKEIKOI 1':'1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE',
+  'AKEIKOI 2':'11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog',
+  'CPP PRO':'1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs',
+  'CPP TECH':'15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc',
+  'ETL PRINCES KOUIBLY':'1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s',
+  'GS RITA ROSANE':'1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0'
 };
 
-const TARIFS = {
-  'CPP LES PRINCES': {college:1200, lycee:1500},
-  'CPP PRO':         {college:1200, lycee:1500},
-  'CPP TECH':        {college:1200, lycee:1500},
-};
-const TARIF_DEFAUT = {college:1000, lycee:1200};
+const TARIFS = {'CPP LES PRINCES':{college:1200,lycee:1500},'CPP PRO':{college:1200,lycee:1500},'CPP TECH':{college:1200,lycee:1500}};
+const TARIF_DEFAUT = {college:1000,lycee:1200};
 const API_KEY = 'AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA';
-
 const PINS_DIRECTION = {
   'CPP LES PRINCES':'111269','ACADEMIE':'111269','GUINGLO VILLE':'111269',
   'GNONTINROU':'111269','KOUTOUAN':'111269','SOAKPE':'111269',
@@ -257,518 +281,145 @@ const PINS_DIRECTION = {
   'CPP TECH':'111269','ETL PRINCES KOUIBLY':'111269','GS RITA ROSANE':'111269'
 };
 
-// ═══════════════════════════════════════════════════════
-// UTILITAIRES
-// ═══════════════════════════════════════════════════════
-function getTarif(ecole, classe) {
-  const t = TARIFS[ecole] || TARIF_DEFAUT;
-  return /^(2NDE|1[EÈ]RE|TLE|TERMINALE)/i.test(classe||'') ? t.lycee : t.college;
-}
+function getTarif(ecole,classe){const t=TARIFS[ecole]||TARIF_DEFAUT;return /^(2NDE|1[EÈ]RE|TLE|TERMINALE)/i.test(classe||'')?t.lycee:t.college;}
+function calculerSalaireV2(dureeMin,tarif){const SEUIL_50=50;const heuresCompletes=Math.floor(dureeMin/60);const resteMin=dureeMin%60;let heuresValidees=heuresCompletes;if(resteMin>=SEUIL_50)heuresValidees+=1;return{heuresValidees,heuresAttente:resteMin>0&&resteMin<SEUIL_50?1:0,resteMin,salaire:heuresValidees*tarif,salPartiel:Math.round(heuresValidees*tarif*0.5)};}
+function toDate(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>40000){const d=new Date(Math.round((n-25569)*86400*1000));return d.getUTCDate().toString().padStart(2,'0')+'/'+( d.getUTCMonth()+1).toString().padStart(2,'0')+'/'+d.getUTCFullYear();}return String(val);}
+function toHeure(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>0&&n<1){const totalMin=Math.round(n*24*60);return Math.floor(totalMin/60).toString().padStart(2,'0')+':'+(totalMin%60).toString().padStart(2,'0');}return String(val).trim();}
+function parseHeureJS(h){if(!h)return 0;const s=h.toString().replace('h',':');const p=s.split(':').map(Number);return(p[0]||0)*60+(p[1]||0);}
+function serielVersMois(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>40000){const d=new Date(Math.round((n-25569)*86400*1000));return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');}return String(val).trim().substring(0,7);}
 
-// ✅ CORRECTION 4 — Calcul salaire V2 identique à enseignant_cpp.html
-function calculerSalaireV2(dureeMin, tarif) {
-  const SEUIL_50 = 50;
-  const heuresCompletes = Math.floor(dureeMin / 60);
-  const resteMin        = dureeMin % 60;
-  let heuresValidees    = heuresCompletes;
-  if (resteMin >= SEUIL_50) heuresValidees += 1;
-  return {
-    heuresValidees,
-    heuresAttente: resteMin > 0 && resteMin < SEUIL_50 ? 1 : 0,
-    resteMin,
-    salaire: heuresValidees * tarif,
-    salPartiel: Math.round(heuresValidees * tarif * 0.5)
+let ecoleConnectee=null,donneesPointage=[],coursEnAttente=[],coursCourant=null,tentativesPin=0;
+let bulletinEnCours=null;
+
+function remplirMois(){const sel=document.getElementById('filtreMois');const now=new Date();for(let i=0;i<6;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);const val=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const opt=document.createElement('option');opt.value=val;opt.textContent=d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});if(i===0)opt.selected=true;sel.appendChild(opt);}}
+
+function seConnecter(){const ecole=document.getElementById('loginEcole').value;const pin=document.getElementById('loginPin').value.trim();if(!ecole){showToast('Sélectionnez votre école','error');return;}if(pin.length<4){showToast('Entrez votre code PIN','error');return;}const pinAttendu=PINS_DIRECTION[ecole];if(!pinAttendu||pin!==pinAttendu){tentativesPin++;if(tentativesPin>=3){showToast('Accès bloqué — Contactez le fondateur','error');return;}showToast('PIN incorrect ('+tentativesPin+'/3)','error');document.getElementById('loginPin').value='';return;}tentativesPin=0;ecoleConnectee=ecole;document.getElementById('loginWrap').style.display='none';document.getElementById('mainHeader').style.display='flex';document.getElementById('dashboard').style.display='block';document.getElementById('headerEcole').textContent=ecole;remplirMois();chargerPointage();chargerBulletinsPrimaire();}
+
+function logout(){ecoleConnectee=null;donneesPointage=[];coursEnAttente=[];document.getElementById('loginWrap').style.display='block';document.getElementById('mainHeader').style.display='none';document.getElementById('dashboard').style.display='none';document.getElementById('loginPin').value='';document.getElementById('sectionAttente').style.display='none';document.getElementById('sectionBulletinPrimaire').style.display='none';}
+
+async function chargerPointage(){const mois=document.getElementById('filtreMois').value;document.getElementById('tableBody').innerHTML='<div class="spinner"></div><div class="loading-text">Chargement...</div>';try{const sheetsId=SHEETS_IDS[ecoleConnectee];const url=`https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/POINTAGE_MENSUEL!A2:P2000?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;const res=await fetch(url);const data=await res.json();if(!data.values||data.values.length===0){afficherTableauVide();return;}const lignesValides=data.values.filter(row=>{const statut=String(row[9]||'').trim().toUpperCase();const moisRow=serielVersMois(row[6]);return(statut==='VALIDÉ'||statut==='VALIDE'||statut==='PARTIEL')&&moisRow===mois;});const recap={};lignesValides.forEach(row=>{const nom=String(row[4]||'').trim();const heures=parseFloat(row[8])||0;const salaire=parseFloat(row[11])||0;const classe=String(row[2]||'').trim();if(!recap[nom])recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[]};recap[nom].totalHeures+=heures;recap[nom].totalSalaire+=salaire;recap[nom].nbCours++;if(!recap[nom].classes.includes(classe))recap[nom].classes.push(classe);});donneesPointage=Object.values(recap);afficherAttente(data.values,mois);await chargerPermanents(recap);afficherTableau();}catch(e){document.getElementById('tableBody').innerHTML=`<p style="text-align:center;padding:30px;color:var(--rouge)">Erreur chargement — ${e.message}</p>`;}}
+
+async function chargerPermanents(recap){try{const sheetsId=SHEETS_IDS[ecoleConnectee];const url=`https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/ENSEIGNANTS!A2:F200?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;const res=await fetch(url);const data=await res.json();if(!data.values)return;data.values.forEach(row=>{const nom=String(row[0]||'').trim();const actif=String(row[3]||'').trim().toUpperCase();const type=String(row[4]||'VACATAIRE').trim().toUpperCase();const fixe=parseFloat(row[5])||0;if(actif!=='OUI'||type!=='PERMANENT'||fixe<=0)return;if(!recap[nom]){recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],type:'PERMANENT'};donneesPointage.push(recap[nom]);}recap[nom].totalSalaire=fixe;recap[nom].type='PERMANENT';});}catch(e){}}
+
+function afficherTableau(){if(donneesPointage.length===0){afficherTableauVide();return;}donneesPointage.sort((a,b)=>b.totalSalaire-a.totalSalaire);const totalSalaire=donneesPointage.reduce((s,e)=>s+e.totalSalaire,0);const totalHeures=donneesPointage.reduce((s,e)=>s+e.totalHeures,0);const nbPerm=donneesPointage.filter(e=>e.type==='PERMANENT').length;document.getElementById('statEns').textContent=donneesPointage.length;document.getElementById('statHeures').textContent=totalHeures.toFixed(1)+'h';document.getElementById('statSalaire').textContent=totalSalaire.toLocaleString('fr-FR')+' F';let html=`<table><thead><tr><th>#</th><th>Enseignant</th><th>Type</th><th>Classes</th><th>Nb Cours</th><th>Heures</th><th>Salaire</th></tr></thead><tbody>`;donneesPointage.forEach((e,i)=>{const isPerm=e.type==='PERMANENT';html+=`<tr><td>${i+1}</td><td><strong>${e.nom}</strong></td><td><span class="badge ${isPerm?'badge-permanent':'badge-vacataire'}">${isPerm?'PERMANENT':'VACATAIRE'}</span></td><td style="font-size:11px;color:var(--text2)">${(e.classes||[]).join(', ')||'—'}</td><td style="text-align:center">${e.nbCours}</td><td style="text-align:center;font-weight:600">${isPerm?'—':e.totalHeures.toFixed(1)+'h'}</td><td style="text-align:right;font-weight:700;color:var(--bleu)">${e.totalSalaire.toLocaleString('fr-FR')} F</td></tr>`;});html+=`</tbody><tfoot><tr class="total-row"><td colspan="5" style="text-align:right">TOTAL MASSE SALARIALE</td><td style="text-align:center">${totalHeures.toFixed(1)}h</td><td style="text-align:right">${totalSalaire.toLocaleString('fr-FR')} F CFA</td></tr></tfoot></table>`;document.getElementById('tableBody').innerHTML=html;document.getElementById('statPerm').textContent=nbPerm;}
+
+function afficherTableauVide(){['statEns','statHeures','statSalaire','statPerm'].forEach(id=>{document.getElementById(id).textContent='0';});document.getElementById('statHeures').textContent='0h';document.getElementById('statSalaire').textContent='0 F';document.getElementById('tableBody').innerHTML='<p style="text-align:center;padding:40px;color:var(--text2)">Aucun pointage validé ce mois</p>';}
+
+function afficherAttente(lignes,mois){coursEnAttente=lignes.filter(row=>{const statut=String(row[9]||'').trim().toUpperCase();const moisRow=serielVersMois(row[6]);return statut==='EN ATTENTE'&&moisRow===mois;});const section=document.getElementById('sectionAttente');const table=document.getElementById('tableAttente');document.getElementById('statAttente').textContent=coursEnAttente.length;const totalAttenteF=coursEnAttente.reduce((s,row)=>{const tarif=getTarif(ecoleConnectee,String(row[2]||''));const heureD=toHeure(row[1]);const heureF=toHeure(row[7]);const dureeMin=heureD&&heureF?Math.max(0,parseHeureJS(heureF)-parseHeureJS(heureD)):0;const calc=calculerSalaireV2(dureeMin,tarif);return s+calc.salaire;},0);document.getElementById('statAttenteSub').textContent=coursEnAttente.length>0?totalAttenteF.toLocaleString('fr-FR')+' F potentiels':'';if(coursEnAttente.length===0){section.style.display='none';document.getElementById('attenteCompteur').textContent='0 cours';return;}section.style.display='block';document.getElementById('attenteCompteur').textContent=coursEnAttente.length+' cours';let html=`<table><thead><tr><th>Date</th><th>Enseignant</th><th>Classe</th><th>Matière</th><th>Début retenu</th><th>Fin retenue</th><th>Durée</th><th>Salaire si validé</th><th>Action</th></tr></thead><tbody>`;coursEnAttente.forEach((row,idx)=>{const tarif=getTarif(ecoleConnectee,String(row[2]||''));const debutRetenuV2=row[12]?String(row[12]).trim():'';const finRetenueV2=row[13]?String(row[13]).trim():'';const heureD=debutRetenuV2||toHeure(row[1]);const heureF=finRetenueV2||toHeure(row[7]);const dureeMin=heureD&&heureF?Math.max(0,parseHeureJS(heureF)-parseHeureJS(heureD)):0;const calc=calculerSalaireV2(dureeMin,tarif);html+=`<tr><td>${toDate(row[0])}</td><td><strong>${row[4]||''}</strong></td><td>${row[2]||''}</td><td>${row[3]||''}</td><td>${heureD||'—'}</td><td>${heureF||'—'}</td><td style="color:var(--orange);font-weight:700">${dureeMin} min</td><td style="font-weight:700;color:var(--vert)">${calc.salaire.toLocaleString('fr-FR')} F</td><td><button onclick="ouvrirModalAttente(${idx})" style="padding:6px 14px;background:var(--bleu);color:white;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">Traiter →</button></td></tr>`;});html+='</tbody></table>';table.innerHTML=html;}
+
+function ouvrirModalAttente(idx){coursCourant=coursEnAttente[idx];const row=coursCourant;const tarif=getTarif(ecoleConnectee,String(row[2]||''));const debutRetenuV2=row[12]?String(row[12]).trim():'';const finRetenueV2=row[13]?String(row[13]).trim():'';const detailV2txt=row[15]?String(row[15]).trim():'';const heureD=debutRetenuV2||toHeure(row[1]);const heureF=finRetenueV2||toHeure(row[7]);const dureeMin=heureD&&heureF?Math.max(0,parseHeureJS(heureF)-parseHeureJS(heureD)):0;const calc=calculerSalaireV2(dureeMin,tarif);let regleV2='';if(calc.resteMin>=50){regleV2=`${Math.floor(dureeMin/60)}h + ${calc.resteMin}min ≥ 50min → <b style="color:var(--vert)">${calc.heuresValidees}h validées ✅</b>`;}else if(calc.resteMin>0){regleV2=`${Math.floor(dureeMin/60)}h + ${calc.resteMin}min < 50min → <b style="color:var(--orange)">${Math.floor(dureeMin/60)}h validées + ${calc.resteMin}min soumis ⏰</b>`;}else{regleV2=`${Math.floor(dureeMin/60)}h complètes → <b style="color:var(--vert)">${calc.heuresValidees}h ✅</b>`;}document.getElementById('modalAttenteInfo').innerHTML=`<div style="background:#F5F7FA;border-radius:10px;padding:14px;font-size:13px;line-height:1.9;"><b>Enseignant :</b> ${row[4]||'—'}<br><b>Classe :</b> ${row[2]||'—'} &nbsp;|&nbsp; <b>Matière :</b> ${row[3]||'—'}<br><b>Date :</b> ${toDate(row[0])}</div><div class="calcul-bloc"><div class="calcul-row"><span>Début retenu</span><span style="color:var(--bleu);font-weight:700">${heureD||'—'}</span></div><div class="calcul-row"><span>Fin retenue</span><span style="color:var(--bleu);font-weight:700">${heureF||'—'}</span></div><div class="calcul-row"><span>Durée nette</span><span style="color:var(--orange)">${dureeMin} min (${Math.floor(dureeMin/60)}h${dureeMin%60}min)</span></div><div class="calcul-row"><span>Tarif horaire</span><span>${tarif.toLocaleString('fr-FR')} F/h</span></div>${detailV2txt?`<div class="calcul-row"><span>Détail Apps Script</span><span style="font-size:11px;color:var(--text2)">${detailV2txt}</span></div>`:''}</div><div class="detail-v2"><div class="detail-v2-titre">🧮 Règle calcul V2</div>${regleV2}</div><div class="salaire-options"><div class="sal-box vert"><div class="sal-box-label">✅ Si VALIDÉ (100%)</div><div class="sal-box-val">${calc.salaire.toLocaleString('fr-FR')} F</div></div><div class="sal-box orange"><div class="sal-box-label">⚠️ Si 50%</div><div class="sal-box-val">${calc.salPartiel.toLocaleString('fr-FR')} F</div></div></div>`;document.getElementById('modalRaison').value='';document.getElementById('modalAttente').style.display='flex';}
+
+function fermerModalAttente(){document.getElementById('modalAttente').style.display='none';coursCourant=null;}
+
+async function traiterAttente(decision){if(!coursCourant)return;const raison=document.getElementById('modalRaison').value||'';const row=coursCourant;const tarif=getTarif(ecoleConnectee,String(row[2]||''));const heureD=(row[12]?String(row[12]).trim():'')||toHeure(row[1]);const heureF=(row[13]?String(row[13]).trim():'')||toHeure(row[7]);const dureeMin=heureD&&heureF?Math.max(0,parseHeureJS(heureF)-parseHeureJS(heureD)):0;const calc=calculerSalaireV2(dureeMin,tarif);let salaire=0;if(decision==='VALIDÉ')salaire=calc.salaire;if(decision==='PARTIEL')salaire=calc.salPartiel;if(decision==='REJETÉ')salaire=0;const cbName='dir_'+Date.now();const params=new URLSearchParams({callback:cbName,type:'TRAITER_ATTENTE',ecole:ecoleConnectee||'',enseignant:String(row[4]||''),classe:String(row[2]||''),date:toDate(row[0]),decision,raison,salaire});return new Promise(function(resolve){const script=document.createElement('script');window[cbName]=function(res){delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(res&&res.ok){showToast('✅ '+decision+' enregistré — '+salaire.toLocaleString('fr-FR')+' F','success');fermerModalAttente();setTimeout(function(){chargerPointage();},2000);}else{showToast('❌ Erreur : '+(res?res.error:'inconnue'),'error');}resolve(res);};script.onerror=function(){delete window[cbName];try{document.body.removeChild(script);}catch(e){}showToast('❌ Erreur de connexion','error');resolve({ok:false});};script.src=APPS_SCRIPT_URL+'?'+params.toString();document.body.appendChild(script);setTimeout(function(){if(window[cbName]){delete window[cbName];showToast('⏱️ Délai dépassé — réessayez','error');resolve({ok:false});}},10000);});}
+
+// ══════════════════════════════════════════════
+// BULLETINS PRIMAIRE
+// ══════════════════════════════════════════════
+function chargerBulletinsPrimaire(){
+  const section=document.getElementById('sectionBulletinPrimaire');
+  const liste=document.getElementById('bulletinListeAttente');
+  liste.innerHTML='<div class="spinner"></div><div class="loading-text">Chargement bulletins...</div>';
+  section.style.display='block';
+  const cbName='bul_dir_'+Date.now();
+  const script=document.createElement('script');
+  window[cbName]=function(data){
+    delete window[cbName];
+    try{document.body.removeChild(script);}catch(e){}
+    if(!data||!data.ok){
+      liste.innerHTML='<p style="padding:20px;color:var(--rouge)">Erreur chargement bulletins</p>';
+      return;
+    }
+    const bulletins=data.bulletins||[];
+    document.getElementById('statBulletins').textContent=bulletins.length;
+    document.getElementById('bulletinCompteur').textContent=bulletins.length+' bulletin(s)';
+    if(bulletins.length===0){
+      liste.innerHTML='<p style="padding:20px;text-align:center;color:var(--text2)">✅ Aucun bulletin en attente</p>';
+      return;
+    }
+    let html='';
+    bulletins.forEach(function(b,idx){
+      html+=`<div class="bul-card">
+        <div class="bul-info">
+          <div class="bul-classe">📚 ${b.classe} — ${b.mois}</div>
+          <div class="bul-meta">Soumis par ${b.enseignant||'—'} · ${b.nb_eleves||0} élèves · ${b.annee||'2025-2026'}</div>
+        </div>
+        <span class="bul-nb">${b.nb_eleves||0} élèves</span>
+        <button class="btn-valider-bul" onclick="ouvrirModalBulletin(${idx})">Valider →</button>
+      </div>`;
+    });
+    liste.innerHTML=html;
+    window._bulletinsEnAttente=bulletins;
   };
+  script.onerror=function(){
+    delete window[cbName];
+    liste.innerHTML='<p style="padding:20px;color:var(--rouge)">Erreur réseau</p>';
+  };
+  script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type=GET_ATTENTE_PRIMAIRE&ecole='+encodeURIComponent(ecoleConnectee||'');
+  document.body.appendChild(script);
 }
 
-function toDate(val) {
-  if (!val) return '';
-  const n = parseFloat(val);
-  if (!isNaN(n) && n > 40000) {
-    const d = new Date(Math.round((n - 25569) * 86400 * 1000));
-    return d.getUTCDate().toString().padStart(2,'0') + '/' +
-           (d.getUTCMonth()+1).toString().padStart(2,'0') + '/' + d.getUTCFullYear();
-  }
-  return String(val);
-}
-
-function toHeure(val) {
-  if (!val) return '';
-  const n = parseFloat(val);
-  if (!isNaN(n) && n > 0 && n < 1) {
-    const totalMin = Math.round(n * 24 * 60);
-    return Math.floor(totalMin/60).toString().padStart(2,'0') + ':' +
-           (totalMin%60).toString().padStart(2,'0');
-  }
-  return String(val).trim();
-}
-
-function parseHeureJS(h) {
-  if (!h) return 0;
-  const s = h.toString().replace('h',':');
-  const p = s.split(':').map(Number);
-  return (p[0]||0) * 60 + (p[1]||0);
-}
-
-function serielVersMois(val) {
-  if (!val) return '';
-  const n = parseFloat(val);
-  if (!isNaN(n) && n > 40000) {
-    const d = new Date(Math.round((n - 25569) * 86400 * 1000));
-    return d.getUTCFullYear() + '-' + String(d.getUTCMonth()+1).padStart(2,'0');
-  }
-  return String(val).trim().substring(0, 7);
-}
-
-// ═══════════════════════════════════════════════════════
-// ÉTAT GLOBAL
-// ═══════════════════════════════════════════════════════
-let ecoleConnectee = null;
-let donneesPointage = [];
-let coursEnAttente  = [];
-let coursCourant    = null;
-var tentativesPin   = 0;
-
-// ═══════════════════════════════════════════════════════
-// CONNEXION
-// ═══════════════════════════════════════════════════════
-function remplirMois() {
-  const sel = document.getElementById('filtreMois');
-  const now = new Date();
-  for (let i = 0; i < 6; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const val = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
-    const opt = document.createElement('option');
-    opt.value = val;
-    opt.textContent = d.toLocaleDateString('fr-FR', {month:'long', year:'numeric'});
-    if (i === 0) opt.selected = true;
-    sel.appendChild(opt);
-  }
-}
-
-function seConnecter() {
-  const ecole = document.getElementById('loginEcole').value;
-  const pin   = document.getElementById('loginPin').value.trim();
-  if (!ecole) { showToast('Sélectionnez votre école', 'error'); return; }
-  if (pin.length < 4) { showToast('Entrez votre code PIN', 'error'); return; }
-  const pinAttendu = PINS_DIRECTION[ecole];
-  if (!pinAttendu || pin !== pinAttendu) {
-    tentativesPin++;
-    if (tentativesPin >= 3) { showToast('Accès bloqué — Contactez le fondateur', 'error'); return; }
-    showToast('PIN incorrect (' + tentativesPin + '/3)', 'error');
-    document.getElementById('loginPin').value = '';
-    return;
-  }
-  tentativesPin  = 0;
-  ecoleConnectee = ecole;
-  document.getElementById('loginWrap').style.display  = 'none';
-  document.getElementById('mainHeader').style.display = 'flex';
-  document.getElementById('dashboard').style.display  = 'block';
-  document.getElementById('headerEcole').textContent  = ecole;
-  remplirMois();
-  chargerPointage();
-}
-
-function logout() {
-  ecoleConnectee = null; donneesPointage = []; coursEnAttente = [];
-  document.getElementById('loginWrap').style.display = 'block';
-  document.getElementById('mainHeader').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('loginPin').value = '';
-  document.getElementById('sectionAttente').style.display = 'none';
-}
-
-// ═══════════════════════════════════════════════════════
-// CHARGEMENT DONNÉES
-// ✅ CORRECTION 2 — Lecture jusqu'à col P (colonnes V2)
-// ═══════════════════════════════════════════════════════
-async function chargerPointage() {
-  const mois = document.getElementById('filtreMois').value;
-  document.getElementById('tableBody').innerHTML =
-    '<div class="spinner"></div><div class="loading-text">Chargement...</div>';
-  try {
-    const sheetsId = SHEETS_IDS[ecoleConnectee];
-    // ✅ Lecture jusqu'à col P pour récupérer colonnes V2
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/POINTAGE_MENSUEL!A2:P2000?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
-    const res  = await fetch(url);
-    const data = await res.json();
-
-    if (!data.values || data.values.length === 0) { afficherTableauVide(); return; }
-
-    // Filtrer validés pour le tableau salaires
-    const lignesValides = data.values.filter(row => {
-      const statut  = String(row[9]||'').trim().toUpperCase();
-      const moisRow = serielVersMois(row[6]);
-      return (statut === 'VALIDÉ' || statut === 'VALIDE' || statut === 'PARTIEL') && moisRow === mois;
-    });
-
-    // Grouper par enseignant
-    const recap = {};
-    lignesValides.forEach(row => {
-      const nom     = String(row[4]||'').trim();
-      const heures  = parseFloat(row[8]) || 0;
-      const salaire = parseFloat(row[11]) || 0;
-      const classe  = String(row[2]||'').trim();
-      if (!recap[nom]) recap[nom] = { nom, totalHeures:0, totalSalaire:0, nbCours:0, classes:[] };
-      recap[nom].totalHeures  += heures;
-      recap[nom].totalSalaire += salaire;
-      recap[nom].nbCours++;
-      if (!recap[nom].classes.includes(classe)) recap[nom].classes.push(classe);
-    });
-
-    donneesPointage = Object.values(recap);
-
-    // ✅ Afficher EN ATTENTE avec données V2
-    afficherAttente(data.values, mois);
-    await chargerPermanents(recap);
-    afficherTableau();
-
-  } catch(e) {
-    document.getElementById('tableBody').innerHTML =
-      `<p style="text-align:center;padding:30px;color:var(--rouge)">Erreur chargement — ${e.message}</p>`;
-  }
-}
-
-async function chargerPermanents(recap) {
-  try {
-    const sheetsId = SHEETS_IDS[ecoleConnectee];
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/ENSEIGNANTS!A2:F200?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
-    const res  = await fetch(url);
-    const data = await res.json();
-    if (!data.values) return;
-    data.values.forEach(row => {
-      const nom   = String(row[0]||'').trim();
-      const actif = String(row[3]||'').trim().toUpperCase();
-      const type  = String(row[4]||'VACATAIRE').trim().toUpperCase();
-      const fixe  = parseFloat(row[5]) || 0;
-      if (actif !== 'OUI' || type !== 'PERMANENT' || fixe <= 0) return;
-      if (!recap[nom]) {
-        recap[nom] = { nom, totalHeures:0, totalSalaire:0, nbCours:0, classes:[], type:'PERMANENT' };
-        donneesPointage.push(recap[nom]);
-      }
-      recap[nom].totalSalaire = fixe;
-      recap[nom].type = 'PERMANENT';
-    });
-  } catch(e) {}
-}
-
-// ═══════════════════════════════════════════════════════
-// AFFICHAGE TABLEAU SALAIRES
-// ═══════════════════════════════════════════════════════
-function afficherTableau() {
-  if (donneesPointage.length === 0) { afficherTableauVide(); return; }
-  donneesPointage.sort((a,b) => b.totalSalaire - a.totalSalaire);
-  const totalSalaire = donneesPointage.reduce((s,e) => s + e.totalSalaire, 0);
-  const totalHeures  = donneesPointage.reduce((s,e) => s + e.totalHeures, 0);
-  const nbPerm       = donneesPointage.filter(e => e.type === 'PERMANENT').length;
-
-  document.getElementById('statEns').textContent = donneesPointage.length;
-  document.getElementById('statHeures').textContent = totalHeures.toFixed(1) + 'h';
-  document.getElementById('statSalaire').textContent = totalSalaire.toLocaleString('fr-FR') + ' F';
-
-  let html = `<table><thead><tr>
-    <th>#</th><th>Enseignant</th><th>Type</th><th>Classes</th>
-    <th>Nb Cours</th><th>Heures</th><th>Salaire</th>
-  </tr></thead><tbody>`;
-
-  donneesPointage.forEach((e, i) => {
-    const isPerm = e.type === 'PERMANENT';
-    html += `<tr>
-      <td>${i+1}</td>
-      <td><strong>${e.nom}</strong></td>
-      <td><span class="badge ${isPerm?'badge-permanent':'badge-vacataire'}">${isPerm?'PERMANENT':'VACATAIRE'}</span></td>
-      <td style="font-size:11px;color:var(--text2)">${(e.classes||[]).join(', ')||'—'}</td>
-      <td style="text-align:center">${e.nbCours}</td>
-      <td style="text-align:center;font-weight:600">${isPerm?'—':e.totalHeures.toFixed(1)+'h'}</td>
-      <td style="text-align:right;font-weight:700;color:var(--bleu)">${e.totalSalaire.toLocaleString('fr-FR')} F</td>
-    </tr>`;
-  });
-
-  html += `</tbody><tfoot><tr class="total-row">
-    <td colspan="5" style="text-align:right">TOTAL MASSE SALARIALE</td>
-    <td style="text-align:center">${totalHeures.toFixed(1)}h</td>
-    <td style="text-align:right">${totalSalaire.toLocaleString('fr-FR')} F CFA</td>
-  </tr></tfoot></table>`;
-
-  document.getElementById('tableBody').innerHTML = html;
-  document.getElementById('statPerm').textContent = nbPerm;
-}
-
-function afficherTableauVide() {
-  ['statEns','statHeures','statSalaire','statPerm'].forEach(id => {
-    document.getElementById(id).textContent = '0';
-  });
-  document.getElementById('statHeures').textContent = '0h';
-  document.getElementById('statSalaire').textContent = '0 F';
-  document.getElementById('tableBody').innerHTML =
-    '<p style="text-align:center;padding:40px;color:var(--text2)">Aucun pointage validé ce mois</p>';
-}
-
-// ═══════════════════════════════════════════════════════
-// AFFICHAGE EN ATTENTE
-// ✅ CORRECTION 2 — Utilise colonnes V2 (M=debutRetenu, N=finRetenue, O=resteMin, P=detail)
-// ═══════════════════════════════════════════════════════
-function afficherAttente(lignes, mois) {
-  coursEnAttente = lignes.filter(row => {
-    const statut  = String(row[9]||'').trim().toUpperCase();
-    const moisRow = serielVersMois(row[6]);
-    return statut === 'EN ATTENTE' && moisRow === mois;
-  });
-
-  const section = document.getElementById('sectionAttente');
-  const table   = document.getElementById('tableAttente');
-
-  // ✅ CORRECTION 1 — Stat card EN ATTENTE
-  document.getElementById('statAttente').textContent = coursEnAttente.length;
-  const totalAttenteF = coursEnAttente.reduce((s, row) => {
-    const tarif    = getTarif(ecoleConnectee, String(row[2]||''));
-    const heureD   = toHeure(row[1]);
-    const heureF   = toHeure(row[7]);
-    const dureeMin = heureD && heureF ? Math.max(0, parseHeureJS(heureF) - parseHeureJS(heureD)) : 0;
-    const calc     = calculerSalaireV2(dureeMin, tarif);
-    return s + calc.salaire;
-  }, 0);
-  document.getElementById('statAttenteSub').textContent =
-    coursEnAttente.length > 0 ? totalAttenteF.toLocaleString('fr-FR') + ' F potentiels' : '';
-
-  if (coursEnAttente.length === 0) {
-    section.style.display = 'none';
-    document.getElementById('attenteCompteur').textContent = '0 cours';
-    return;
-  }
-
-  section.style.display = 'block';
-  document.getElementById('attenteCompteur').textContent = coursEnAttente.length + ' cours';
-
-  let html = `<table><thead><tr>
-    <th>Date</th><th>Enseignant</th><th>Classe</th><th>Matière</th>
-    <th>Début retenu</th><th>Fin retenue</th><th>Durée</th><th>Salaire si validé</th><th>Action</th>
-  </tr></thead><tbody>`;
-
-  coursEnAttente.forEach((row, idx) => {
-    const tarif = getTarif(ecoleConnectee, String(row[2]||''));
-
-    // ✅ Priorité colonnes V2 (M=col12, N=col13, O=col14)
-    const debutRetenuV2 = row[12] ? String(row[12]).trim() : '';
-    const finRetenueV2  = row[13] ? String(row[13]).trim() : '';
-    const resteMinV2    = row[14] ? parseInt(row[14]) : null;
-
-    // Fallback colonnes V1
-    const heureD = debutRetenuV2 || toHeure(row[1]);
-    const heureF = finRetenueV2  || toHeure(row[7]);
-    const dureeMin = heureD && heureF ? Math.max(0, parseHeureJS(heureF) - parseHeureJS(heureD)) : 0;
-    const calc = calculerSalaireV2(dureeMin, tarif);
-
-    html += `<tr>
-      <td>${toDate(row[0])}</td>
-      <td><strong>${row[4]||''}</strong></td>
-      <td>${row[2]||''}</td>
-      <td>${row[3]||''}</td>
-      <td>${heureD||'—'}</td>
-      <td>${heureF||'—'}</td>
-      <td style="color:var(--orange);font-weight:700">${dureeMin} min</td>
-      <td style="font-weight:700;color:var(--vert)">${calc.salaire.toLocaleString('fr-FR')} F</td>
-      <td>
-        <button onclick="ouvrirModalAttente(${idx})"
-          style="padding:6px 14px;background:var(--bleu);color:white;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;white-space:nowrap;">
-          Traiter →
-        </button>
-      </td>
-    </tr>`;
-  });
-
-  html += '</tbody></table>';
-  table.innerHTML = html;
-}
-
-// ═══════════════════════════════════════════════════════
-// MODAL
-// ═══════════════════════════════════════════════════════
-function ouvrirModalAttente(idx) {
-  coursCourant = coursEnAttente[idx];
-  const row    = coursCourant;
-  const tarif  = getTarif(ecoleConnectee, String(row[2]||''));
-
-  // ✅ Colonnes V2 en priorité
-  const debutRetenuV2 = row[12] ? String(row[12]).trim() : '';
-  const finRetenueV2  = row[13] ? String(row[13]).trim() : '';
-  const detailV2txt   = row[15] ? String(row[15]).trim() : '';
-
-  const heureD   = debutRetenuV2 || toHeure(row[1]);
-  const heureF   = finRetenueV2  || toHeure(row[7]);
-  const dureeMin = heureD && heureF ? Math.max(0, parseHeureJS(heureF) - parseHeureJS(heureD)) : 0;
-  const calc     = calculerSalaireV2(dureeMin, tarif);
-
-  // Texte règle V2
-  let regleV2 = '';
-  if (calc.resteMin >= 50) {
-    regleV2 = `${Math.floor(dureeMin/60)}h + ${calc.resteMin}min ≥ 50min → <b style="color:var(--vert)">${calc.heuresValidees}h validées ✅</b>`;
-  } else if (calc.resteMin > 0) {
-    regleV2 = `${Math.floor(dureeMin/60)}h + ${calc.resteMin}min &lt; 50min → <b style="color:var(--orange)">${Math.floor(dureeMin/60)}h validées + ${calc.resteMin}min soumis ⏰</b>`;
+function ouvrirModalBulletin(idx){
+  bulletinEnCours=window._bulletinsEnAttente[idx];
+  const b=bulletinEnCours;
+  document.getElementById('modalBulletinInfo').innerHTML=
+    `<strong>Classe :</strong> ${b.classe} &nbsp;|&nbsp; <strong>Mois :</strong> ${b.mois} &nbsp;|&nbsp; <strong>Élèves :</strong> ${b.nb_eleves||0}`;
+  const eleves=b.eleves||[];
+  if(eleves.length===0){
+    document.getElementById('modalBulletinNotes').innerHTML='<p style="color:var(--text2)">Aucun élève</p>';
   } else {
-    regleV2 = `${Math.floor(dureeMin/60)}h complètes → <b style="color:var(--vert)">${calc.heuresValidees}h ✅</b>`;
-  }
-
-  document.getElementById('modalAttenteInfo').innerHTML = `
-    <div style="background:#F5F7FA;border-radius:10px;padding:14px;font-size:13px;line-height:1.9;">
-      <b>Enseignant :</b> ${row[4]||'—'}<br>
-      <b>Classe :</b> ${row[2]||'—'} &nbsp;|&nbsp; <b>Matière :</b> ${row[3]||'—'}<br>
-      <b>Date :</b> ${toDate(row[0])}
-    </div>
-    <div class="calcul-bloc">
-      <div class="calcul-row"><span>Début retenu</span><span style="color:var(--bleu);font-weight:700">${heureD||'—'}</span></div>
-      <div class="calcul-row"><span>Fin retenue</span><span style="color:var(--bleu);font-weight:700">${heureF||'—'}</span></div>
-      <div class="calcul-row"><span>Durée nette</span><span style="color:var(--orange)">${dureeMin} min (${Math.floor(dureeMin/60)}h${dureeMin%60}min)</span></div>
-      <div class="calcul-row"><span>Tarif horaire</span><span>${tarif.toLocaleString('fr-FR')} F/h</span></div>
-      ${detailV2txt ? `<div class="calcul-row"><span>Détail Apps Script</span><span style="font-size:11px;color:var(--text2)">${detailV2txt}</span></div>` : ''}
-    </div>
-    <div class="detail-v2">
-      <div class="detail-v2-titre">🧮 Règle calcul V2</div>
-      ${regleV2}
-    </div>
-    <div class="salaire-options">
-      <div class="sal-box vert">
-        <div class="sal-box-label">✅ Si VALIDÉ (100%)</div>
-        <div class="sal-box-val">${calc.salaire.toLocaleString('fr-FR')} F</div>
-      </div>
-      <div class="sal-box orange">
-        <div class="sal-box-label">⚠️ Si 50%</div>
-        <div class="sal-box-val">${calc.salPartiel.toLocaleString('fr-FR')} F</div>
-      </div>
-    </div>`;
-
-  document.getElementById('modalRaison').value = '';
-  document.getElementById('modalAttente').style.display = 'flex';
-}
-
-function fermerModalAttente() {
-  document.getElementById('modalAttente').style.display = 'none';
-  coursCourant = null;
-}
-
-// ✅ CORRECTION 4 — traiterAttente() utilise calcul V2
-async function traiterAttente(decision) {
-  if (!coursCourant) return;
-  const raison  = document.getElementById('modalRaison').value || '';
-  const row     = coursCourant;
-  const tarif   = getTarif(ecoleConnectee, String(row[2]||''));
-
-  const heureD   = (row[12] ? String(row[12]).trim() : '') || toHeure(row[1]);
-  const heureF   = (row[13] ? String(row[13]).trim() : '') || toHeure(row[7]);
-  const dureeMin = heureD && heureF ? Math.max(0, parseHeureJS(heureF) - parseHeureJS(heureD)) : 0;
-  const calc     = calculerSalaireV2(dureeMin, tarif);
-
-  // ✅ Salaire calculé selon règle V2
-  let salaire = 0;
-  if (decision === 'VALIDÉ')  salaire = calc.salaire;
-  if (decision === 'PARTIEL') salaire = calc.salPartiel;
-  if (decision === 'REJETÉ')  salaire = 0;
-
-  const cbName = 'dir_' + Date.now();
-  const params = new URLSearchParams({
-    callback: cbName, type: 'TRAITER_ATTENTE',
-    ecole:      ecoleConnectee || '',
-    enseignant: String(row[4]||''),
-    classe:     String(row[2]||''),
-    date:       toDate(row[0]),
-    decision, raison, salaire
-  });
-
-  return new Promise(function(resolve) {
-    const script = document.createElement('script');
-    window[cbName] = function(res) {
-      delete window[cbName];
-      try { document.body.removeChild(script); } catch(e) {}
-      if (res && res.ok) {
-        showToast('✅ ' + decision + ' enregistré — ' + salaire.toLocaleString('fr-FR') + ' F', 'success');
-        fermerModalAttente();
-        setTimeout(function() { chargerPointage(); }, 2000);
-      } else {
-        showToast('❌ Erreur : ' + (res ? res.error : 'inconnue'), 'error');
-      }
-      resolve(res);
-    };
-    script.onerror = function() {
-      delete window[cbName];
-      try { document.body.removeChild(script); } catch(e) {}
-      showToast('❌ Erreur de connexion', 'error');
-      resolve({ ok: false });
-    };
-    script.src = APPS_SCRIPT_URL + '?' + params.toString();
-    document.body.appendChild(script);
-    setTimeout(function() {
-      if (window[cbName]) {
-        delete window[cbName];
-        showToast('⏱️ Délai dépassé — réessayez', 'error');
-        resolve({ ok: false });
-      }
-    }, 10000);
-  });
-}
-
-// ═══════════════════════════════════════════════════════
-// SYNC ENSEIGNANTS
-// ═══════════════════════════════════════════════════════
-async function syncEnseignants() {
-  const btn = document.querySelector('.btn-sync');
-  const res = document.getElementById('syncResult');
-  btn.textContent = '⏳ Sync...';
-  btn.disabled = true;
-  res.style.display = 'none';
-  try {
-    const sheetsId = SHEETS_IDS[ecoleConnectee];
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/ENSEIGNANTS!A2:F200?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
-    const r    = await fetch(url);
-    const data = await r.json();
-    if (!data.values) { res.textContent = '⚠️ Aucune donnée dans ENSEIGNANTS'; res.style.display='block'; return; }
-    let nbActifs=0, nbPerm=0, nbVaca=0;
-    data.values.forEach(row => {
-      if (String(row[3]||'').trim().toUpperCase() !== 'OUI') return;
-      nbActifs++;
-      if (String(row[4]||'').trim().toUpperCase() === 'PERMANENT') nbPerm++; else nbVaca++;
+    const matieres=Object.keys(eleves[0]).filter(k=>!['matricule','nom','prenoms','CONDUITE'].includes(k));
+    let html=`<table class="bul-detail-table"><thead><tr><th>Élève</th>`;
+    matieres.forEach(m=>{html+=`<th>${m}</th>`;});
+    html+=`<th>CONDUITE</th></tr></thead><tbody>`;
+    eleves.forEach(el=>{
+      html+=`<tr><td><strong>${el.nom||''}</strong><br><span style="font-size:11px;color:var(--text2)">${el.matricule||''}</span></td>`;
+      matieres.forEach(m=>{html+=`<td style="text-align:center">${el[m]||0}</td>`;});
+      html+=`<td style="text-align:center;color:var(--orange);font-weight:700">${el.CONDUITE||0}</td></tr>`;
     });
-    res.innerHTML = `✅ Sync réussie — <b>${nbActifs} enseignants actifs</b> : ${nbPerm} permanent(s) · ${nbVaca} vacataire(s)`;
-    res.style.display = 'block';
-    showToast(`✅ ${nbActifs} enseignants synchronisés`, 'success');
-    chargerPointage();
-  } catch(e) {
-    res.textContent = '❌ Erreur : ' + e.message;
-    res.style.display = 'block';
-    showToast('❌ Erreur synchronisation', 'error');
-  } finally {
-    btn.textContent = '👥 Sync Enseignants';
-    btn.disabled = false;
+    html+='</tbody></table>';
+    document.getElementById('modalBulletinNotes').innerHTML=html;
   }
+  document.getElementById('modalBulletin').style.display='flex';
 }
 
-// ═══════════════════════════════════════════════════════
-// EXPORT CSV
-// ═══════════════════════════════════════════════════════
-function exporterCSV() {
-  if (!donneesPointage.length) { showToast('Aucune donnée à exporter', 'error'); return; }
-  const mois = document.getElementById('filtreMois').value;
-  let csv = 'NOM,TYPE,NB COURS,HEURES,SALAIRE\n';
-  donneesPointage.forEach(e => {
-    csv += `"${e.nom}","${e.type||'VACATAIRE'}",${e.nbCours},${e.totalHeures.toFixed(2)},${e.totalSalaire}\n`;
-  });
-  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  const a    = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `Salaires_${ecoleConnectee}_${mois}.csv`;
-  a.click();
-  showToast('✅ Export réussi', 'success');
+function confirmerValidationBulletin(){
+  if(!bulletinEnCours)return;
+  const b=bulletinEnCours;
+  const cbName='bul_val_'+Date.now();
+  const script=document.createElement('script');
+  window[cbName]=function(data){
+    delete window[cbName];
+    try{document.body.removeChild(script);}catch(e){}
+    if(data&&data.ok){
+      showToast('✅ Bulletin validé et publié !','success');
+      document.getElementById('modalBulletin').style.display='none';
+      bulletinEnCours=null;
+      setTimeout(chargerBulletinsPrimaire,1500);
+    } else {
+      showToast('❌ '+(data?data.error:'Erreur'),'error');
+    }
+  };
+  script.onerror=function(){
+    delete window[cbName];
+    showToast('❌ Erreur réseau','error');
+  };
+  script.src=APPS_SCRIPT_URL+'?callback='+cbName
+    +'&type=VALIDER_BULLETIN_PRIMAIRE'
+    +'&ecole='+encodeURIComponent(ecoleConnectee||'')
+    +'&classe='+encodeURIComponent(b.classe||'')
+    +'&mois='+encodeURIComponent(b.mois||'')
+    +'&annee='+encodeURIComponent(b.annee||'2025-2026');
+  document.body.appendChild(script);
+  showToast('⏳ Validation en cours...','');
 }
 
-// ═══════════════════════════════════════════════════════
-// TOAST — EN HAUT, DISPARAÎT AUTOMATIQUEMENT
-// ═══════════════════════════════════════════════════════
+async function syncEnseignants(){const btn=document.querySelector('.btn-sync');const res=document.getElementById('syncResult');btn.textContent='⏳ Sync...';btn.disabled=true;res.style.display='none';try{const sheetsId=SHEETS_IDS[ecoleConnectee];const url=`https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/ENSEIGNANTS!A2:F200?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;const r=await fetch(url);const data=await r.json();if(!data.values){res.textContent='⚠️ Aucune donnée dans ENSEIGNANTS';res.style.display='block';return;}let nbActifs=0,nbPerm=0,nbVaca=0;data.values.forEach(row=>{if(String(row[3]||'').trim().toUpperCase()!=='OUI')return;nbActifs++;if(String(row[4]||'').trim().toUpperCase()==='PERMANENT')nbPerm++;else nbVaca++;});res.innerHTML=`✅ Sync réussie — <b>${nbActifs} enseignants actifs</b> : ${nbPerm} permanent(s) · ${nbVaca} vacataire(s)`;res.style.display='block';showToast(`✅ ${nbActifs} enseignants synchronisés`,'success');chargerPointage();}catch(e){res.textContent='❌ Erreur : '+e.message;res.style.display='block';showToast('❌ Erreur synchronisation','error');}finally{btn.textContent='👥 Sync Enseignants';btn.disabled=false;}}
+
+function exporterCSV(){if(!donneesPointage.length){showToast('Aucune donnée à exporter','error');return;}const mois=document.getElementById('filtreMois').value;let csv='NOM,TYPE,NB COURS,HEURES,SALAIRE\n';donneesPointage.forEach(e=>{csv+=`"${e.nom}","${e.type||'VACATAIRE'}",${e.nbCours},${e.totalHeures.toFixed(2)},${e.totalSalaire}\n`;});const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`Salaires_${ecoleConnectee}_${mois}.csv`;a.click();showToast('✅ Export réussi','success');}
+
 let toastTimer;
-function showToast(msg, type='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = `toast ${type} show`;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 4000);
-}
+function showToast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast ${type} show`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),4000);}
 </script>
 </body>
 </html>
