@@ -321,6 +321,7 @@ function chargerBulletinsPrimaire(){
   const liste=document.getElementById('bulletinListeAttente');
   liste.innerHTML='<div class="spinner"></div><div class="loading-text">Chargement bulletins...</div>';
   section.style.display='block';
+  section.scrollIntoView({behavior:'smooth'});
   const cbName='bul_dir_'+Date.now();
   const script=document.createElement('script');
   window[cbName]=function(data){
@@ -330,7 +331,7 @@ function chargerBulletinsPrimaire(){
       liste.innerHTML='<p style="padding:20px;color:var(--rouge)">Erreur chargement bulletins</p>';
       return;
     }
-    const bulletins=data.bulletins||[];
+    const bulletins=data.bulletins||data.enAttente||[];
     document.getElementById('statBulletins').textContent=bulletins.length;
     document.getElementById('bulletinCompteur').textContent=bulletins.length+' bulletin(s)';
     if(bulletins.length===0){
@@ -342,9 +343,9 @@ function chargerBulletinsPrimaire(){
       html+=`<div class="bul-card">
         <div class="bul-info">
           <div class="bul-classe">📚 ${b.classe} — ${b.mois}</div>
-          <div class="bul-meta">Soumis par ${b.enseignant||'—'} · ${b.nb_eleves||0} élèves · ${b.annee||'2025-2026'}</div>
+          <div class="bul-meta">${b.nb||b.nb_eleves||0} élève(s) · ${b.annee||'2025-2026'}</div>
         </div>
-        <span class="bul-nb">${b.nb_eleves||0} élèves</span>
+        <span class="bul-nb">${b.nb||b.nb_eleves||0} élève(s)</span>
         <button class="btn-valider-bul" onclick="ouvrirModalBulletin(${idx})">Valider →</button>
       </div>`;
     });
@@ -353,8 +354,10 @@ function chargerBulletinsPrimaire(){
   };
   script.onerror=function(){
     delete window[cbName];
-    liste.innerHTML='<p style="padding:20px;color:var(--rouge)">Erreur réseau</p>';
+    liste.innerHTML='<p style="padding:20px;color:var(--rouge)">❌ Erreur réseau — vérifiez la connexion</p>';
+    showToast('❌ Erreur chargement bulletins','error');
   };
+  setTimeout(function(){if(window[cbName]){delete window[cbName];liste.innerHTML='<p style="padding:20px;color:var(--rouge)">⏱️ Délai dépassé</p>';}},10000);
   script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type=GET_ATTENTE_PRIMAIRE&ecole='+encodeURIComponent(ecoleConnectee||'');
   document.body.appendChild(script);
 }
@@ -363,23 +366,12 @@ function ouvrirModalBulletin(idx){
   bulletinEnCours=window._bulletinsEnAttente[idx];
   const b=bulletinEnCours;
   document.getElementById('modalBulletinInfo').innerHTML=
-    `<strong>Classe :</strong> ${b.classe} &nbsp;|&nbsp; <strong>Mois :</strong> ${b.mois} &nbsp;|&nbsp; <strong>Élèves :</strong> ${b.nb_eleves||0}`;
-  const eleves=b.eleves||[];
-  if(eleves.length===0){
-    document.getElementById('modalBulletinNotes').innerHTML='<p style="color:var(--text2)">Aucun élève</p>';
-  } else {
-    const matieres=Object.keys(eleves[0]).filter(k=>!['matricule','nom','prenoms','CONDUITE'].includes(k));
-    let html=`<table class="bul-detail-table"><thead><tr><th>Élève</th>`;
-    matieres.forEach(m=>{html+=`<th>${m}</th>`;});
-    html+=`<th>CONDUITE</th></tr></thead><tbody>`;
-    eleves.forEach(el=>{
-      html+=`<tr><td><strong>${el.nom||''}</strong><br><span style="font-size:11px;color:var(--text2)">${el.matricule||''}</span></td>`;
-      matieres.forEach(m=>{html+=`<td style="text-align:center">${el[m]||0}</td>`;});
-      html+=`<td style="text-align:center;color:var(--orange);font-weight:700">${el.CONDUITE||0}</td></tr>`;
-    });
-    html+='</tbody></table>';
-    document.getElementById('modalBulletinNotes').innerHTML=html;
-  }
+    `<div style="background:#F5F7FA;border-radius:10px;padding:14px;font-size:13px;line-height:2;">
+      <b>Classe :</b> ${b.classe} &nbsp;|&nbsp; <b>Mois :</b> ${b.mois}<br>
+      <b>Élèves avec notes :</b> ${b.nb||b.nb_eleves||0} &nbsp;|&nbsp; <b>Année :</b> ${b.annee||'2025-2026'}
+    </div>
+    <p style="margin-top:12px;font-size:13px;color:var(--text2);">Cliquez "Valider et publier" pour calculer les rangs et rendre les bulletins visibles aux parents.</p>`;
+  document.getElementById('modalBulletinNotes').innerHTML='';
   document.getElementById('modalBulletin').style.display='flex';
 }
 
