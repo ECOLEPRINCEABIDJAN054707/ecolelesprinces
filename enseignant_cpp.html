@@ -447,8 +447,14 @@ canvas#sigCanvas{display:block;width:100%;height:100px;touch-action:none;}
         <div style="font-size:13px;font-weight:700;color:var(--vert);margin-bottom:6px;">Résumé avant envoi</div>
         <div id="bulletinResumeTexte" style="font-size:12px;color:var(--text2);line-height:1.8;"></div>
       </div>
-      <button class="btn btn-vert" id="btnSoumettreBulletin" onclick="soumettreNotesBulletin()">📤 Soumettre — en attente validation</button>
     </div>
+  </div>
+</div>
+<!-- Bouton soumettre sticky -->
+<div id="btnSoumettreZone" style="display:none;position:sticky;bottom:62px;left:0;right:0;padding:10px 16px;background:white;border-top:1px solid var(--border);z-index:85;box-shadow:0 -2px 8px rgba(0,0,0,0.08);">
+  <button class="btn btn-vert" id="btnSoumettreBulletin" onclick="soumettreNotesBulletin()">📤 Soumettre — en attente validation directrice</button>
+</div>
+<div style="display:none;" id="_ph">
     <div id="bulletinVide" style="text-align:center;padding:40px 20px;color:var(--text2);">
       <div style="font-size:48px;margin-bottom:12px;">📅</div>
       <p style="font-size:14px;font-weight:700;color:var(--bleu);">Choisissez un mois</p>
@@ -773,7 +779,7 @@ function afficherTableauBulletin(cfg){
 
 function validerNoteBulletin(input){var max=parseFloat(input.dataset.max)||10;var val=parseFloat(input.value);if(!isNaN(val)){if(val>max)input.value=max;if(val<0)input.value=0;input.classList.add('ok');}else{input.classList.remove('ok');}mettreAJourResumeBulletin();}
 
-function mettreAJourResumeBulletin(){var cfg=CONFIG_BULLETIN[bulletinNiveauActuel];if(!cfg)return;var completParEleve={};document.querySelectorAll('#bulletinListe input[data-mat]').forEach(function(inp){var idx=inp.dataset.idx,mat=inp.dataset.mat;if(inp.value.trim()!==''&&!isNaN(parseFloat(inp.value))&&mat!=='CONDUITE'){if(!completParEleve[idx])completParEleve[idx]=0;completParEleve[idx]++;}});var nbSaisis=Object.values(completParEleve).filter(function(nb){return nb===cfg.matieres.length;}).length;if(nbSaisis>0){document.getElementById('bulletinResume').style.display='block';document.getElementById('bulletinResumeTexte').innerHTML='<strong>'+nbSaisis+' / '+bulletinElevesData.length+' élèves</strong> avec toutes les notes<br>Mois : <strong>'+MOIS_LABELS[bulletinMoisActuel]+'</strong> · Classe : <strong>'+(user.classeDefaut||'—')+'</strong>';}}
+function mettreAJourResumeBulletin(){var cfg=CONFIG_BULLETIN[bulletinNiveauActuel];if(!cfg)return;var completParEleve={};document.querySelectorAll('#bulletinListe input[data-mat]').forEach(function(inp){var idx=inp.dataset.idx,mat=inp.dataset.mat;if(inp.value.trim()!==''&&!isNaN(parseFloat(inp.value))&&mat!=='CONDUITE'){if(!completParEleve[idx])completParEleve[idx]=0;completParEleve[idx]++;}});var nbSaisis=Object.values(completParEleve).filter(function(nb){return nb===cfg.matieres.length;}).length;if(nbSaisis>0){document.getElementById('bulletinResume').style.display='block';var bz=document.getElementById('btnSoumettreZone');if(bz)bz.style.display='block';document.getElementById('bulletinResumeTexte').innerHTML='<strong>'+nbSaisis+' / '+bulletinElevesData.length+' élèves</strong> avec toutes les notes<br>Mois : <strong>'+MOIS_LABELS[bulletinMoisActuel]+'</strong> · Classe : <strong>'+(user.classeDefaut||'—')+'</strong>';}}
 
 async function soumettreNotesBulletin(){
   var cfg=CONFIG_BULLETIN[bulletinNiveauActuel];if(!cfg||!bulletinMoisActuel){showToast('Choisissez un mois','error');return;}
@@ -782,7 +788,7 @@ async function soumettreNotesBulletin(){
   document.getElementById('btnSoumettreBulletin').disabled=true;showLoader('Envoi des notes...');
   try{var cbName='bul_'+Date.now();var result=await new Promise(function(resolve){var script=document.createElement('script');window[cbName]=function(data){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(data);};script.onerror=function(){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:false,error:'Erreur réseau'});};script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type=SAISIR_NOTES_PRIMAIRE&ecole='+encodeURIComponent(user.ecole)+'&classe='+encodeURIComponent(user.classeDefaut||'')+'&mois='+encodeURIComponent(bulletinMoisActuel)+'&annee=2025-2026&eleves='+encodeURIComponent(JSON.stringify(elevesNotesBul));document.body.appendChild(script);setTimeout(function(){if(window[cbName]){delete window[cbName];resolve({ok:false,error:'Délai'});}},15000);});
     hideLoader();
-    if(result&&result.ok){showToast('✅ Notes envoyées — en attente validation directrice','success');document.getElementById('bulletinSaisieZone').style.display='none';document.getElementById('bulletinVide').style.display='block';document.getElementById('bulletinResume').style.display='none';document.querySelectorAll('.bul-mois-btn').forEach(function(b){b.classList.remove('actif');});bulletinMoisActuel='';}
+    if(result&&result.ok){showToast('✅ Notes envoyées — en attente validation directrice','success');document.getElementById('bulletinSaisieZone').style.display='none';document.getElementById('bulletinVide').style.display='block';document.getElementById('bulletinResume').style.display='none';var bz=document.getElementById('btnSoumettreZone');if(bz)bz.style.display='none';document.querySelectorAll('.bul-mois-btn').forEach(function(b){b.classList.remove('actif');});bulletinMoisActuel='';}
     else{showToast('❌ Erreur : '+(result?result.error:'inconnue'),'error');}
   }catch(e){hideLoader();showToast('❌ Erreur réseau','error');}
   document.getElementById('btnSoumettreBulletin').disabled=false;
