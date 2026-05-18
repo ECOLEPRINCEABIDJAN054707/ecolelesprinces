@@ -426,10 +426,16 @@ canvas#sigCanvas{display:block;width:100%;height:100px;touch-action:none;}
     <div class="header-title"><h1>Bulletin mensuel</h1><p id="bulletinSousTitre">Saisie des notes par mois</p></div>
   </div>
   <div style="padding:16px;" class="has-nav">
+    <div class="form-group">
+      <label>Classe</label>
+      <select id="bulletinClasseSelect" onchange="changerClasseBulletin(this.value)">
+        <option value="">— Sélectionner la classe —</option>
+      </select>
+    </div>
     <div class="section-titre">Mois de la composition</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;" id="moisGrid"></div>
     <div id="bulletinInfo" style="display:none;background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;">
-      <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Classe détectée</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:4px;">Classe sélectionnée</div>
       <div style="font-size:15px;font-weight:700;color:var(--bleu);" id="bulletinClasseLabel">—</div>
       <div style="font-size:11px;color:var(--text2);margin-top:3px;" id="bulletinNiveauLabel">—</div>
     </div>
@@ -675,14 +681,68 @@ var bulletinMoisActuel='',bulletinElevesData=[],bulletinNiveauActuel='';
 
 function getBulletinNiveau(classe){var c=(classe||'').trim().toUpperCase();if(c.indexOf('MAT')>=0||c==='PSA'||c==='MSA'||c==='GSA')return'MAT';if(c.indexOf('CP1')>=0)return'CP1';if(c.indexOf('CP2')>=0)return'CP2';if(c.indexOf('CE1')>=0)return'CE1';if(c.indexOf('CE2')>=0)return'CE2';if(c.indexOf('CM1')>=0)return'CM1';if(c.indexOf('CM2')>=0)return'CM2';return'';}
 
-function initBulletin(){
-  if(!user||user.niveau!=='primaire')return;
-  var classe=user.classeDefaut||'';var niveau=getBulletinNiveau(classe);bulletinNiveauActuel=niveau;
+function changerClasseBulletin(classe){
+  if(!classe)return;
+  var niveau=getBulletinNiveau(classe);
+  bulletinNiveauActuel=niveau;
   document.getElementById('bulletinSousTitre').textContent=classe+' — Saisie mensuelle';
-  if(niveau&&CONFIG_BULLETIN[niveau]){document.getElementById('bulletinInfo').style.display='block';document.getElementById('bulletinClasseLabel').textContent=classe;var cfg=CONFIG_BULLETIN[niveau];document.getElementById('bulletinNiveauLabel').textContent=cfg.matieres.length+' matières — sur '+cfg.sur;}
+  if(niveau&&CONFIG_BULLETIN[niveau]){
+    document.getElementById('bulletinInfo').style.display='block';
+    document.getElementById('bulletinClasseLabel').textContent=classe;
+    var cfg=CONFIG_BULLETIN[niveau];
+    document.getElementById('bulletinNiveauLabel').textContent=cfg.matieres.length+' matières — sur '+cfg.sur;
+  }
   var grid=document.getElementById('moisGrid');grid.innerHTML='';
-  MOIS_BULLETIN.forEach(function(m){var btn=document.createElement('button');btn.className='bul-mois-btn';btn.textContent=MOIS_LABELS[m];btn.dataset.mois=m;btn.onclick=function(){document.querySelectorAll('.bul-mois-btn').forEach(function(b){b.classList.remove('actif');});btn.classList.add('actif');selectionnerMoisBulletin(m,classe,niveau);};grid.appendChild(btn);});
-  document.getElementById('bulletinSaisieZone').style.display='none';document.getElementById('bulletinVide').style.display='block';document.getElementById('bulletinResume').style.display='none';
+  MOIS_BULLETIN.forEach(function(m){
+    var btn=document.createElement('button');
+    btn.className='bul-mois-btn';
+    btn.textContent=MOIS_LABELS[m];
+    btn.dataset.mois=m;
+    btn.onclick=function(){
+      document.querySelectorAll('.bul-mois-btn').forEach(function(b){b.classList.remove('actif');});
+      btn.classList.add('actif');
+      selectionnerMoisBulletin(m,classe,niveau);
+    };
+    grid.appendChild(btn);
+  });
+  document.getElementById('bulletinSaisieZone').style.display='none';
+  document.getElementById('bulletinVide').style.display='block';
+  document.getElementById('bulletinResume').style.display='none';
+}
+
+async function initBulletin(){
+  if(!user||user.niveau!=='primaire')return;
+  var sel=document.getElementById('bulletinClasseSelect');
+  sel.innerHTML='<option value="">— Sélectionner la classe —</option>';
+  try{
+    var url='https://sheets.googleapis.com/v4/spreadsheets/'+user.sheetsId+'?key='+API_KEY+'&fields=sheets.properties.title';
+    var res=await fetch(url);var data=await res.json();
+    if(data.sheets){
+      var exclus=['SYNTHESE','ENSEIGNANTS','ABSENCES','APPELS','CAHIER_TEXTES','NOTES_T1','NOTES_T2','NOTES_T3','NOTES_S1','NOTES_S2','NOTES_EB1','NOTES_EB2','NOTES_EB3','NOTES_EB4','POINTAGE_MENSUEL','GPS_CLASSES','CONFIGURATION_TARIF','EDT','HISTORIQUE_PAIEMENTS','SALLES','BULLETINS_PUBLIES_PRIM','SYNTHESE_BACKUP'];
+      var classes=data.sheets.map(function(s){return s.properties.title;}).filter(function(t){
+        return !exclus.some(function(e){return t.toUpperCase().includes(e);})
+          &&!t.toUpperCase().startsWith('EDT_')
+          &&!t.toUpperCase().startsWith('NOTES_PRIMAIRE')
+          &&t.length>1
+          &&getBulletinNiveau(t)!=='';
+      });
+      classes.forEach(function(c){
+        var opt=document.createElement('option');
+        opt.value=c;opt.textContent=c;
+        sel.appendChild(opt);
+      });
+      if(user.classeDefaut){
+        for(var i=0;i<sel.options.length;i++){
+          var v=sel.options[i].value;
+          if(v===user.classeDefaut||v===user.classeDefaut.replace(/ /g,'')){
+            sel.selectedIndex=i;
+            changerClasseBulletin(v);
+            break;
+          }
+        }
+      }
+    }
+  }catch(e){showToast('Erreur chargement classes','error');}
 }
 
 async function selectionnerMoisBulletin(mois,classe,niveau){
