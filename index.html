@@ -923,14 +923,16 @@ async function chargerFicheRenseignement(eleve){
       if(t.label){lt+='<tr><td colspan="5" style="background:#D4AF37;color:#1A3A5C;font-weight:700;font-size:12px;padding:6px 8px;border:1px solid #c8a000;text-align:center;">'+t.label+'</td></tr>';}
       else{
         const bg=cpt%2===0?'#ffffff':'#f4f7fd';cpt++;
-        lt+='<tr style="background:'+bg+'"><td style="padding:8px 6px;border:1px solid #dde3f0;font-size:13px;font-weight:700;">'+t.niveau+'</td>'
-          +'<td style="padding:8px 4px;border:1px solid #dde3f0;text-align:center;font-size:13px;font-weight:600;">'+(t.inscription?t.inscription.toLocaleString('fr-FR'):'-')+'</td>'
-          +'<td style="padding:8px 4px;border:1px solid #dde3f0;text-align:center;font-size:13px;font-weight:600;">'+(t.scolarite?t.scolarite.toLocaleString('fr-FR'):'-')+'</td>'
-          +'<td style="padding:8px 4px;border:1px solid #dde3f0;text-align:center;color:#1a3a6b;font-weight:800;font-size:14px;">'+(t.total?t.total.toLocaleString('fr-FR'):'-')+'</td>'
-          +'<td style="padding:8px 4px;border:1px solid #dde3f0;text-align:center;font-size:13px;">'+(t.t1?t.t1.toLocaleString('fr-FR'):'-')+'</td>'
-          +'<td style="padding:8px 4px;border:1px solid #dde3f0;text-align:center;font-size:13px;">'+(t.t2?t.t2.toLocaleString('fr-FR'):'-')+'</td>'
-          +'<td style="padding:8px 4px;border:1px solid #dde3f0;text-align:center;font-size:13px;">'+(t.t3?t.t3.toLocaleString('fr-FR'):'-')+'</td>'
-          +'<td style="padding:8px 4px;border:1px solid #dde3f0;text-align:center;font-size:13px;">'+(t.t4?t.t4.toLocaleString('fr-FR'):'-')+'</td></tr>';
+        var tdC='padding:8px 4px;border:1px solid #dde3f0;text-align:center;font-size:13px;font-weight:700;';
+        lt+='<tr style="background:'+bg+'">'
+          +'<td style="padding:8px 6px;border:1px solid #dde3f0;font-size:12px;font-weight:700;white-space:nowrap;">'+t.niveau+'</td>'
+          +'<td style="'+tdC+'">'+(t.inscription?t.inscription.toLocaleString('fr-FR'):'-')+'</td>'
+          +'<td style="'+tdC+'">'+(t.scolarite?t.scolarite.toLocaleString('fr-FR'):'-')+'</td>'
+          +'<td style="'+tdC+'color:#1a3a6b;">'+(t.total?t.total.toLocaleString('fr-FR'):'-')+'</td>'
+          +'<td style="'+tdC+'">'+(t.t1?t.t1.toLocaleString('fr-FR'):'-')+'</td>'
+          +'<td style="'+tdC+'">'+(t.t2?t.t2.toLocaleString('fr-FR'):'-')+'</td>'
+          +'<td style="'+tdC+'">'+(t.t3?t.t3.toLocaleString('fr-FR'):'-')+'</td>'
+          +'<td style="'+tdC+'">'+(t.t4?t.t4.toLocaleString('fr-FR'):'-')+'</td></tr>';
       }
     });
   }else{lt='<tr><td colspan="5" style="text-align:center;padding:16px;color:#aaa;font-size:13px;">Tarifs non disponibles - Contactez l\'ecole au '+info.tel1+'</td></tr>';}
