@@ -418,20 +418,21 @@ function voirBulletin(idx) {
 
   // En-tête avec logo et armoirie
   html += '<div style="background:linear-gradient(135deg,#1F4E79,#1565C0);color:white;padding:14px 16px;">';
-  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">';
   // Logo CPP à gauche
-  html += '<img src="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/logo_cpp.png" style="width:55px;height:55px;object-fit:contain;" onerror="this.style.display=\'none\'">';
+  html += '<img src="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/logo_cpp.png" style="width:60px;height:60px;object-fit:contain;flex-shrink:0;" onerror="this.style.display=\'none\'">';
   // Centre : texte
-  html += '<div style="text-align:center;flex:1;padding:0 10px;">';
-  html += '<div style="font-size:0.65em;opacity:0.85;margin-bottom:1px;">REPUBLIQUE DE COTE D\'IVOIRE</div>';
-  html += '<img src="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/drapeau_ci.png" style="width:40px;height:40px;object-fit:contain;display:block;margin:3px auto;" onerror="this.style.display=\'none\'">';
-  html += '<div style="font-size:0.62em;opacity:0.75;margin-bottom:6px;">Union - Discipline - Travail</div>';
-  html += '<div style="font-size:0.95em;font-weight:bold;margin-bottom:3px;">'+nomEcole+'</div>';
-  html += '<div style="font-size:0.65em;opacity:0.85;margin-bottom:6px;">ANNEE SCOLAIRE 2025-2026</div>';
+  html += '<div style="text-align:center;flex:1;">';
+  html += '<div style="font-size:0.95em;font-weight:bold;margin-bottom:4px;">'+nomEcole+'</div>';
+  html += '<div style="font-size:0.65em;opacity:0.85;margin-bottom:4px;">ANNEE SCOLAIRE 2025-2026</div>';
   html += '<div style="background:rgba(255,255,255,0.2);border-radius:20px;display:inline-block;padding:4px 16px;font-size:0.82em;font-weight:bold;">BULLETIN MENSUEL — '+moisLabel+'</div>';
   html += '</div>';
-  // Armoirie vide à droite (équilibre visuel)
-  html += '<div style="width:55px;"></div>';
+  // Armoirie à droite avec textes
+  html += '<div style="text-align:center;flex-shrink:0;">';
+  html += '<div style="font-size:0.58em;opacity:0.85;margin-bottom:2px;">REPUBLIQUE DE COTE D\'IVOIRE</div>';
+  html += '<img src="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/drapeau_ci.png" style="width:45px;height:45px;object-fit:contain;display:block;margin:2px auto;" onerror="this.style.display=\'none\'">';
+  html += '<div style="font-size:0.55em;opacity:0.75;">Union - Discipline - Travail</div>';
+  html += '</div>';
   html += '</div>';
   // Contact directrice
   html += '<div style="text-align:center;font-size:0.68em;opacity:0.85;border-top:1px solid rgba(255,255,255,0.3);padding-top:8px;">';
@@ -507,6 +508,22 @@ function voirBulletin(idx) {
   html += '</div>';
 
   html += '</div></div>';
+
+  // Signature et cachet
+  html += '<div style="display:flex;justify-content:space-between;align-items:flex-end;padding:16px 14px;border-top:1px solid #E0E4EF;margin-top:8px;">';
+  // Cachet à gauche
+  html += '<div style="text-align:center;">';
+  html += '<div style="width:90px;height:70px;border:2px dashed #ccc;border-radius:8px;display:flex;align-items:center;justify-content:center;">';
+  html += '<span style="font-size:0.7em;color:#aaa;">CACHET</span>';
+  html += '</div>';
+  html += '</div>';
+  // Signature directrice à droite
+  html += '<div style="text-align:right;">';
+  html += '<div style="font-size:0.72em;color:#555;margin-bottom:4px;">La Directrice</div>';
+  html += '<div style="width:110px;height:50px;border-bottom:1px solid #333;margin-bottom:4px;"></div>';
+  html += '<div style="font-size:0.7em;font-weight:bold;color:#1F4E79;">KOKOBO OULO LATH NINA</div>';
+  html += '</div>';
+  html += '</div>';
 
   // Bouton imprimer
   html += '<div style="padding:12px 14px;">';
