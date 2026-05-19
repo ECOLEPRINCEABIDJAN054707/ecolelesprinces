@@ -739,34 +739,32 @@ function estPrimaire(classe){var c=(classe||"").trim().toUpperCase();return ['MA
 function estTerminale(classe){var c=(classe||"").trim().toUpperCase();return /^TLE|^TLED|^TLEA|^TLE\s|TERMINALE/.test(c);}
 function estCM2(classe){var c=(classe||"").trim().toUpperCase().replace(/[ÈÉÊË]/g,"E").replace(/[ÀÂÄ]/g,"A").replace(/[ÎÏ]/g,"I").replace(/[ÔÖ]/g,"O").replace(/[ÛÙÜ]/g,"U").replace(/Ç/g,"C");return c==="CM2"||c==="CM 2"||/^CM2[A-Z0-9]/.test(c)||/^CM\s*2/.test(c);}
 
+
+
+
+async function chargerResultatExamen(eleve){var onglet=estCM2(eleve.classe)?"CEPE_2026":estTerminale(eleve.classe)?"BAC_2026":"BEPC_2026";try{var mat=eleve.matricule.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");var url="https://sheets.googleapis.com/v4/spreadsheets/"+eleve.sheetsId+"/values/"+encodeURIComponent(onglet+"!A2:G200")+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";var res=await fetch(url);if(!res.ok)return null;var data=await res.json();if(!data.values)return null;for(var i=0;i<data.values.length;i++){var row=data.values[i];var m=String(row[1]||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");if(m!==mat)continue;return{score:(row[3]!==undefined&&row[3]!=="")? parseFloat(row[3]):null,statut:String(row[4]||"").trim().toUpperCase(),dec:String(row[6]||"").trim().toUpperCase(),type:estCM2(eleve.classe)?"CEPE":estTerminale(eleve.classe)?"BAC":"BEPC"};}}catch(e){console.warn("Examen:",e.message);}return null;}
+function _cardRNO_Attente(prenom,moy,tel,typeExamen,ecoleCode,classeReelle){var isBac=typeExamen==="BAC";var examLabel=isBac?"BAC":"BEPC";var destBepc=DESTINATIONS_BEPC[ecoleCode]||"College Les Princes d\u0027Abidjan";var prochaineInfo=isBac?"Vous serez informe(e) de votre orientation apres les resultats":"Votre enfant sera oriente(e) en 2NDE au "+destBepc;return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#1565C0,#1976D2)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-float-soft\">&#9203;</span><div class=\"cpp-titre\">Resultats "+examLabel+" en attente</div><div class=\"cpp-sous\">"+prenom+(moy>0?", Moyenne annuelle : <strong>"+moy.toFixed(2)+"/20</strong>":"")+"</div><div class=\"cpp-msg-box\">Vos resultats du "+examLabel+" seront publies ici des qu\u0027ils seront disponibles.</div><div class=\"cpp-next-class\" style=\"background:rgba(255,255,255,0.2)\"><div class=\"cpp-nc-label\" style=\"color:rgba(255,255,255,0.8)\">"+(isBac?"APRES LES RESULTATS":"EN CAS DE REUSSITE AU "+examLabel)+"</div><div class=\"cpp-nc-value\" style=\"color:#fff\">"+prochaineInfo+"</div></div></div>"+_blocContact(tel);}
+function _cardRNO_Admis_BEPC(prenom,moy,score,tel,typeExamen,nomEcole){var isBac=typeExamen==="BAC";var examLabel=isBac?"BAC":"BEPC";var scoreLabel=score!==null?"Score "+examLabel+" : "+score+" points":"ADMIS(E) AU "+examLabel;return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#2E7D32,#388E3C)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-bounce\">&#127881;</span><div class=\"cpp-titre\">Felicitations ! Admis(e) au "+examLabel+" !</div><div style=\"display:inline-block;background:#D4AF37;color:#1A3A5C;font-weight:bold;font-size:1em;padding:6px 20px;border-radius:20px;margin-bottom:10px;\">"+scoreLabel+"</div><div class=\"cpp-sous\">"+prenom+(moy>0?", Moyenne annuelle : <strong>"+moy.toFixed(2)+"/20</strong>":"")+"</div></div>"+_blocInscription(tel)+_blocContact(tel);}
+function _cardRNO_Refuse_BEPC(prenom,moy,score,tel,typeExamen,nomEcole,classe){var isBac=typeExamen==="BAC";var examLabel=isBac?"BAC":"BEPC";var scoreLabel=score!==null?"Score "+examLabel+" : "+score+" points":"Non admis(e) cette annee";return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#E65100,#F57C00)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-pulse\">&#128170;</span><div class=\"cpp-titre\">Courage "+prenom+" !</div><div style=\"display:inline-block;background:rgba(255,255,255,0.2);color:#fff;font-weight:bold;font-size:0.95em;padding:5px 16px;border-radius:20px;margin-bottom:10px;\">"+scoreLabel+"</div><div class=\"cpp-msg-box\">Avec du travail et de la methode, vous reussirez a la prochaine session !</div></div>"+_blocContact(tel);}
+function _cardCEPE_Attente(prenom,moy,tel,ecoleCode,classe){var destCepe=DESTINATIONS_CEPE[ecoleCode]||"College Prive Les Princes d\u0027Abidjan";return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#4A148C,#6A1B9A)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-float-soft\">&#9203;</span><div class=\"cpp-titre\">Resultats CEPE en attente</div><div class=\"cpp-sous\">"+prenom+(moy>0?", Moyenne annuelle : <strong>"+moy.toFixed(2)+"/20</strong>":"")+"</div><div class=\"cpp-next-class\" style=\"background:rgba(255,255,255,0.2)\"><div class=\"cpp-nc-label\" style=\"color:rgba(255,255,255,0.8)\">EN CAS DE REUSSITE AU CEPE</div><div class=\"cpp-nc-value\" style=\"color:#fff\">Votre enfant sera affecte(e) en 6EME au "+destCepe+"</div></div></div>"+_blocContact(tel);}
+function _cardCEPE_Admis(prenom,moy,score,tel,ecoleCode){var destCepe=DESTINATIONS_CEPE[ecoleCode]||"College Prive Les Princes d\u0027Abidjan";return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#4A148C,#6A1B9A)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-bounce\">&#127881;</span><div class=\"cpp-titre\">Felicitations ! Admis(e) au CEPE !</div><div class=\"cpp-next-class\" style=\"background:#D4AF37\"><div class=\"cpp-nc-label\" style=\"color:#5a3a00\">PROCHAINE CLASSE</div><div class=\"cpp-nc-value\" style=\"color:#1A3A5C\">6EME \u2014 "+destCepe+"</div></div></div>"+_blocInscription(tel)+_blocContact(tel);}
+function _cardCEPE_Refuse(prenom,moy,score,tel,ecoleCode){return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#E65100,#F57C00)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-pulse\">&#128170;</span><div class=\"cpp-titre\">Courage "+prenom+" !</div><div class=\"cpp-msg-box\">Le redoublement en CM2 est une nouvelle chance. Avec du travail, vous reussirez l\u0027annee prochaine !</div></div>"+_blocContact(tel);}
+
 async function afficherSectionResultats(eleve) {
   var section=document.getElementById("sectionResultats");var div=document.getElementById("resultatsBody");if(!section||!div)return;section.style.display="block";var titreRes=document.getElementById("titreResultats");if(titreRes)titreRes.innerHTML="&#127942; RESULTATS DE FIN D'ANNEE "+ANNEE_SCOLAIRE_ACTIVE+" <span>v</span>";var decision=(eleve.decision||"").trim().toUpperCase();var moyRaw=parseFloat(String(eleve.moy_annuelle||0).replace(',','.'))||0;var moy=(moyRaw>0&&moyRaw<=20)?moyRaw:0;var classe=(eleve.classe||"").trim().toUpperCase();var ecole=(eleve.ecoleCode||"").trim().toUpperCase();var prenom=(eleve.nom||"").split(" ")[0];var typeClasse=detecterTypeClasse(classe,ecole);var info=window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{};var tel=info.tel||"0708111269";var nc=getProchaineClasse(classe);var htmlAnim="";
-  if(!decision||decision==="RNO"){
-    var isBac=/^(TLE|TERMINALE)/i.test(classe);
-    var isCepe=/^CM2/i.test(classe);
-    var examNom=isBac?"BAC":isCepe?"CEPE":"BEPC";
-    var destBEPC=(window.DESTINATIONS_BEPC&&window.DESTINATIONS_BEPC[ecole])||"College Les Princes d'Abidjan";
-    var msgAttendu=isBac
-      ?"Votre enfant a termine sa classe de Terminale. Nous attendons les resultats officiels du BAC. Ils seront affiches ici des la proclamation."
-      :isCepe
-      ?"Votre enfant a termine le CM2. Nous attendons les resultats officiels du CEPE. Ils seront affiches ici des la proclamation."
-      :"Votre enfant a termine sa classe de 3EME. Nous attendons les resultats officiels du BEPC. En cas de reussite, votre enfant sera oriente au lycee.";
-    var orientInfo=isBac
-      ?"En cas de reussite au BAC, votre enfant recevra son orientation universitaire."
-      :isCepe
-      ?"En cas de reussite au CEPE, votre enfant sera oriente en 6EME."
-      :"En cas de reussite au BEPC, votre enfant sera oriente en 2NDE au "+destBEPC+".";
-    htmlAnim="<div style='background:#E8F4FD;border-radius:12px;padding:20px;text-align:center;margin-bottom:14px;border:2px solid #90CAF9'>"
-      +"<div style='font-size:48px;margin-bottom:10px'>&#9203;</div>"
-      +"<p style='font-weight:bold;color:#1F4E79;font-size:17px;margin-bottom:10px'>En attente des resultats du "+examNom+"</p>"
-      +"<p style='font-size:13px;color:#555;line-height:1.8;margin-bottom:12px'>"+msgAttendu+"</p>"
-      +"<div style='background:#E3F2FD;border-radius:8px;padding:12px;margin-bottom:10px;border-left:4px solid #1F4E79'>"
-      +"<p style='font-size:12px;color:#1F4E79;font-weight:bold;margin-bottom:4px'>&#127979; Orientation prevue</p>"
-      +"<p style='font-size:12px;color:#555'>"+orientInfo+"</p>"
-      +"</div>"
-      +"<div style='background:#1F4E79;border-radius:8px;padding:10px;color:white;font-size:12px'>"
-      +"&#128197; Proclamation des resultats : Juin - Juillet 2026"
-      +"</div></div>";
+  if (decision === "RNO") {
+    var examen = await chargerResultatExamen(eleve);
+    var typeExamen = estCM2(classe) ? "CEPE" : estTerminale(classe) ? "BAC" : "BEPC";
+    var nomEcoleEleve = (window.SHEETS_IDS_COMPLET[eleve.sheetsId] || {}).nom || info.nom || "College Les Princes";
+    if (typeExamen === "CEPE") {
+      if (!examen || examen.score === null) htmlAnim = _cardCEPE_Attente(prenom,moy,tel,eleve.ecoleCode,eleve.classe);
+      else if (examen.statut === "ADMIS") { htmlAnim = _cardCEPE_Admis(prenom,moy,examen.score,tel,eleve.ecoleCode); setTimeout(function(){ _lancerConfettis("cardDecision", ["&#127881;","&#127882;","&#11088;","&#129395;","&#127942;"]); }, 400); }
+      else htmlAnim = _cardCEPE_Refuse(prenom,moy,examen.score,tel,eleve.ecoleCode);
+    } else {
+      if (!examen || examen.score === null) htmlAnim = _cardRNO_Attente(prenom,moy,tel,typeExamen,eleve.ecoleCode,eleve.classe);
+      else if (examen.statut === "ADMIS") { htmlAnim = _cardRNO_Admis_BEPC(prenom,moy,examen.score,tel,typeExamen,eleve.ecoleCode); setTimeout(function(){ _lancerConfettis("cardDecision", ["&#127881;","&#127882;","&#11088;","&#129395;","&#127942;"]); }, 400); }
+      else htmlAnim = _cardRNO_Refuse_BEPC(prenom,moy,examen.score,tel,typeExamen,eleve.ecoleCode,eleve.classe);
+    }
   }
   else if(decision==="ADMIS"){htmlAnim=_cardAdmisStandard(prenom,classe,moy,nc,tel);}
   else if(decision==="REDOUBLANT"){htmlAnim=_cardRedoublant(prenom,classe,moy,tel);}
