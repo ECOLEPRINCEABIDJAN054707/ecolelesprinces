@@ -866,7 +866,7 @@ async function chargerFicheRenseignement(eleve){
   div.innerHTML='<div style="margin:8px 0;background:white;border-radius:8px;padding:16px;text-align:center;color:#1a3a6b;"><div class="spinner" style="width:24px;height:24px;border:3px solid #D6E4F0;border-top-color:#1F4E79;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;"></div><p style="font-size:0.85em;">Chargement de la fiche...</p></div>';
   let tarifs=[];
   try{
-    const range=encodeURIComponent("CONFIGURATION_TARIF!A1:F200");
+    const range=encodeURIComponent("CONFIGURATION_TARIF!A1:I200");
     const url="https://sheets.googleapis.com/v4/spreadsheets/"+eleve.sheetsId+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
     const res=await fetch(url);
     if(res.ok){
@@ -887,14 +887,29 @@ async function chargerFicheRenseignement(eleve){
         for(let i=debut;i<data.values.length;i++){
           const row=data.values[i];
           const colA=String(row[0]||'').trim();
-          const colB=String(row[1]||'').trim();
-          const colC=String(row[2]||'').trim();
-          const colD=String(row[3]||'').trim();
-          const colE=String(row[4]||'').trim();
+          const colB=String(row[1]||'').trim(); // Inscription
+          const colC=String(row[2]||'').trim(); // Scolarite
+          const colD=String(row[3]||'').trim(); // Total
+          const colE=String(row[4]||'').trim(); // Insc+1er Vers
+          const colF=String(row[5]||'').trim(); // 2e Vers
+          const colG=String(row[6]||'').trim(); // 3e Vers
+          const colH=String(row[7]||'').trim(); // 4e Vers
           if(!colA)continue;
-          const total=parseFloat(colB.replace(/\s/g,''))||0;
-          if(!total||isNaN(total)){tarifs.push({label:colA});continue;}
-          tarifs.push({niveau:colA,total:total,t1:parseFloat(colC.replace(/\s/g,''))||0,t2:parseFloat(colD.replace(/\s/g,''))||0,t3:parseFloat(colE.replace(/\s/g,''))||0});
+          // Détecter si c'est un label (ligne de titre) ou une ligne de données
+          const totalVal=parseFloat(colD.replace(/[\s ]/g,''))||0;
+          const inscVal=parseFloat(colB.replace(/[\s ]/g,'').replace('-',''))||0;
+          const scolVal=parseFloat(colC.replace(/[\s ]/g,''))||0;
+          if(!totalVal&&!scolVal){tarifs.push({label:colA});continue;}
+          tarifs.push({
+            niveau:colA,
+            inscription:inscVal,
+            scolarite:scolVal,
+            total:totalVal||scolVal,
+            t1:parseFloat(colE.replace(/[\s ]/g,''))||0,
+            t2:parseFloat(colF.replace(/[\s ]/g,''))||0,
+            t3:parseFloat(colG.replace(/[\s ]/g,''))||0,
+            t4:parseFloat(colH.replace(/[\s ]/g,'').replace('-',''))||0
+          });
         }
       }
     }
@@ -908,7 +923,14 @@ async function chargerFicheRenseignement(eleve){
       if(t.label){lt+='<tr><td colspan="5" style="background:#D4AF37;color:#1A3A5C;font-weight:700;font-size:12px;padding:6px 8px;border:1px solid #c8a000;text-align:center;">'+t.label+'</td></tr>';}
       else{
         const bg=cpt%2===0?'#ffffff':'#f4f7fd';cpt++;
-        lt+='<tr style="background:'+bg+'"><td style="padding:7px 8px;border:1px solid #dde3f0;font-size:13px;font-weight:600;">'+t.niveau+'</td><td style="padding:7px 8px;border:1px solid #dde3f0;text-align:center;color:#1a3a6b;font-weight:700;">'+(t.total?t.total.toLocaleString('fr-FR')+' F':'-')+'</td><td style="padding:7px 8px;border:1px solid #dde3f0;text-align:center;font-size:12px;">'+(t.t1?t.t1.toLocaleString('fr-FR')+' F':'-')+'</td><td style="padding:7px 8px;border:1px solid #dde3f0;text-align:center;font-size:12px;">'+(t.t2?t.t2.toLocaleString('fr-FR')+' F':'-')+'</td><td style="padding:7px 8px;border:1px solid #dde3f0;text-align:center;font-size:12px;">'+(t.t3?t.t3.toLocaleString('fr-FR')+' F':'-')+'</td></tr>';
+        lt+='<tr style="background:'+bg+'"><td style="padding:6px 6px;border:1px solid #dde3f0;font-size:12px;font-weight:600;">'+t.niveau+'</td>'
+          +'<td style="padding:6px 4px;border:1px solid #dde3f0;text-align:center;font-size:11px;">'+(t.inscription?t.inscription.toLocaleString('fr-FR')+' F':'-')+'</td>'
+          +'<td style="padding:6px 4px;border:1px solid #dde3f0;text-align:center;font-size:11px;">'+(t.scolarite?t.scolarite.toLocaleString('fr-FR')+' F':'-')+'</td>'
+          +'<td style="padding:6px 4px;border:1px solid #dde3f0;text-align:center;color:#1a3a6b;font-weight:700;font-size:11px;">'+(t.total?t.total.toLocaleString('fr-FR')+' F':'-')+'</td>'
+          +'<td style="padding:6px 4px;border:1px solid #dde3f0;text-align:center;font-size:11px;">'+(t.t1?t.t1.toLocaleString('fr-FR')+' F':'-')+'</td>'
+          +'<td style="padding:6px 4px;border:1px solid #dde3f0;text-align:center;font-size:11px;">'+(t.t2?t.t2.toLocaleString('fr-FR')+' F':'-')+'</td>'
+          +'<td style="padding:6px 4px;border:1px solid #dde3f0;text-align:center;font-size:11px;">'+(t.t3?t.t3.toLocaleString('fr-FR')+' F':'-')+'</td>'
+          +'<td style="padding:6px 4px;border:1px solid #dde3f0;text-align:center;font-size:11px;">'+(t.t4?t.t4.toLocaleString('fr-FR')+' F':'-')+'</td></tr>';
       }
     });
   }else{lt='<tr><td colspan="5" style="text-align:center;padding:16px;color:#aaa;font-size:13px;">Tarifs non disponibles - Contactez l\'ecole au '+info.tel1+'</td></tr>';}
@@ -927,7 +949,7 @@ async function chargerFicheRenseignement(eleve){
     +'<div id="'+ficheId+'">'
     +'<div style="padding:14px 16px">'
     +'<div style="font-size:13px;font-weight:700;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;margin-bottom:10px;">&#128176; GRILLE DES FRAIS DE SCOLARITE 2026-2027</div>'
-    +'<div style="overflow-x:auto;margin-bottom:14px;border-radius:6px;border:1px solid #dde3f0"><table style="width:100%;border-collapse:collapse;min-width:340px"><thead><tr style="background:#1a3a6b;color:#fff"><th style="padding:9px 8px;text-align:left;font-size:12px;">Classes</th><th style="padding:9px 8px;text-align:center;font-size:12px;">Total</th><th style="padding:9px 8px;text-align:center;font-size:11px;">Inscription</th><th style="padding:9px 8px;text-align:center;font-size:11px;">1er vers.</th><th style="padding:9px 8px;text-align:center;font-size:11px;">2e vers.</th></tr></thead><tbody>'+lt+'</tbody></table></div>'
+    +'<div style="overflow-x:auto;margin-bottom:14px;border-radius:6px;border:1px solid #dde3f0"><table style="width:100%;border-collapse:collapse;min-width:500px"><thead><tr style="background:#1a3a6b;color:#fff"><th style="padding:8px 6px;text-align:left;font-size:11px;">Classes</th><th style="padding:8px 4px;text-align:center;font-size:11px;">Inscript.</th><th style="padding:8px 4px;text-align:center;font-size:11px;">Scolarite</th><th style="padding:8px 4px;text-align:center;font-size:11px;">Total</th><th style="padding:8px 4px;text-align:center;font-size:10px;">1er Vers</th><th style="padding:8px 4px;text-align:center;font-size:10px;">2e Vers</th><th style="padding:8px 4px;text-align:center;font-size:10px;">3e Vers</th><th style="padding:8px 4px;text-align:center;font-size:10px;">4e Vers</th></tr></thead><tbody>'+lt+'</tbody></table></div>'
     +'<div style="font-size:13px;font-weight:700;color:#b8860b;border-bottom:2px solid #b8860b;padding-bottom:4px;margin-bottom:10px;">&#128179; MODE DE PAIEMENT</div>'
     +'<div style="display:flex;gap:10px;margin-bottom:12px"><div style="flex:1;background:#e8faf2;border:2px solid #1a9e6b;border-radius:8px;padding:12px;text-align:center"><div style="font-size:13px;font-weight:700;color:#0d6e49;margin-bottom:6px">&#128153; WAVE</div><div style="font-size:12px;font-weight:700;color:#0d6e49;background:#c8f0de;padding:6px 8px;border-radius:6px;">'+info.wave+'</div></div>'
     +(info.orange?'<div style="display:flex;align-items:center;color:#999;font-weight:700;font-size:14px;flex-shrink:0">OU</div><div style="flex:1;background:#fff3e8;border:2px solid #e07010;border-radius:8px;padding:12px;text-align:center"><div style="font-size:13px;font-weight:700;color:#b85a00;margin-bottom:6px">&#127820; ORANGE MONEY</div><div style="font-size:14px;font-weight:700;color:#b85a00;background:#ffe0c8;padding:6px 8px;border-radius:6px;font-family:monospace;">'+info.orange+'</div></div>':'')
