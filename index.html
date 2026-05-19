@@ -546,8 +546,19 @@ function detecterTypeClasse(classe, ecoleCode) {
   return 'STANDARD';
 }
 
-const PROGRESSION = {'PSA':'MSA','MSA':'GSA','GSA':'CP1','CP1':'CP2','CP2':'CE1','CE1':'CE2','CE2':'CM1','CM1':'CM2','CM2':'6EME','6EME':'5EME','5EME':'4EME','4EME':'3EME','3EME':'2NDE C','2NDE C':'1ERE C','1ERE C':'TLE D','TLE D':'','TLE A':''};
-function getProchaineClasse(classe) { if (!classe) return null; return PROGRESSION[classe.toUpperCase().trim()] || null; }
+const PROGRESSION = {'PSA':'MSA','MSA':'GSA','GSA':'CP1','CP1':'CP2','CP2':'CE1','CE1':'CE2','CE2':'CM1','CM1':'CM2','CM2':'6EME','6EME':'5EME','5EME':'4EME','4EME':'3EME','3EME':'2NDE C ou A','2NDE C':'1ERE C','2NDE A':'1ERE A','1ERE C':'TLE D','1ERE A':'TLE A','TLE D':'','TLE A':''};
+function getProchaineClasse(classe) {
+  if (!classe) return null;
+  var c = classe.toUpperCase().trim();
+  // Cherche exact d'abord
+  if (PROGRESSION[c] !== undefined) return PROGRESSION[c] || null;
+  // Cherche par préfixe (ex: "3EME A" → "3EME")
+  var keys = Object.keys(PROGRESSION);
+  for (var i = 0; i < keys.length; i++) {
+    if (c.indexOf(keys[i]) === 0 || keys[i].indexOf(c) === 0) return PROGRESSION[keys[i]] || null;
+  }
+  return null;
+}
 
 async function chargerPhotoEleve(matricule, imgElement, fallback) {
   if (!matricule) { imgElement.src = fallback; return; }
