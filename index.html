@@ -547,12 +547,24 @@ function detecterTypeClasse(classe, ecoleCode) {
 }
 
 const PROGRESSION = {'PSA':'MSA','MSA':'GSA','GSA':'CP1','CP1':'CP2','CP2':'CE1','CE1':'CE2','CE2':'CM1','CM1':'CM2','CM2':'6EME','6EME':'5EME','5EME':'4EME','4EME':'3EME','3EME':'2NDE C ou A','2NDE C':'1ERE C','2NDE A':'1ERE A','1ERE C':'TLE D','1ERE A':'TLE A','TLE D':'','TLE A':''};
-function getProchaineClasse(classe) {
+function getProchaineClasse(classe, moy) {
   if (!classe) return null;
   var c = classe.toUpperCase().trim();
+  // Logique spéciale pour 2NDE selon moyenne
+  if (c.indexOf('2NDE') === 0 || c.indexOf('2ND') === 0) {
+    if (c.indexOf('A') >= 0) {
+      // 2NDE A : admis → 1ERE A
+      return '1ERE A';
+    } else {
+      // 2NDE C : moyenne >= 14 → 1ERE C, sinon → 1ERE D
+      if (moy !== undefined && moy !== null && moy >= 14) return '1ERE C';
+      if (moy !== undefined && moy !== null && moy < 14) return '1ERE D';
+      return '1ERE C'; // par défaut
+    }
+  }
   // Cherche exact d'abord
   if (PROGRESSION[c] !== undefined) return PROGRESSION[c] || null;
-  // Cherche par préfixe (ex: "3EME A" → "3EME")
+  // Cherche par préfixe
   var keys = Object.keys(PROGRESSION);
   for (var i = 0; i < keys.length; i++) {
     if (c.indexOf(keys[i]) === 0 || keys[i].indexOf(c) === 0) return PROGRESSION[keys[i]] || null;
@@ -751,7 +763,7 @@ function _cardCEPE_Admis(prenom,moy,score,tel,ecoleCode){var destCepe=DESTINATIO
 function _cardCEPE_Refuse(prenom,moy,score,tel,ecoleCode){return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#E65100,#F57C00)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-pulse\">&#128170;</span><div class=\"cpp-titre\">Courage "+prenom+" !</div><div class=\"cpp-msg-box\">Le redoublement en CM2 est une nouvelle chance. Avec du travail, vous reussirez l\u0027annee prochaine !</div></div>"+_blocContact(tel);}
 
 async function afficherSectionResultats(eleve) {
-  var section=document.getElementById("sectionResultats");var div=document.getElementById("resultatsBody");if(!section||!div)return;section.style.display="block";var titreRes=document.getElementById("titreResultats");if(titreRes)titreRes.innerHTML="&#127942; RESULTATS DE FIN D'ANNEE "+ANNEE_SCOLAIRE_ACTIVE+" <span>v</span>";var decision=(eleve.decision||"").trim().toUpperCase();var moyRaw=parseFloat(String(eleve.moy_annuelle||0).replace(',','.'))||0;var moy=(moyRaw>0&&moyRaw<=20)?moyRaw:0;var classe=(eleve.classe||"").trim().toUpperCase();var ecole=(eleve.ecoleCode||"").trim().toUpperCase();var prenom=(eleve.nom||"").split(" ")[0];var typeClasse=detecterTypeClasse(classe,ecole);var info=window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{};var tel=info.tel||"0708111269";var nc=getProchaineClasse(classe);var htmlAnim="";
+  var section=document.getElementById("sectionResultats");var div=document.getElementById("resultatsBody");if(!section||!div)return;section.style.display="block";var titreRes=document.getElementById("titreResultats");if(titreRes)titreRes.innerHTML="&#127942; RESULTATS DE FIN D'ANNEE "+ANNEE_SCOLAIRE_ACTIVE+" <span>v</span>";var decision=(eleve.decision||"").trim().toUpperCase();var moyRaw=parseFloat(String(eleve.moy_annuelle||0).replace(',','.'))||0;var moy=(moyRaw>0&&moyRaw<=20)?moyRaw:0;var classe=(eleve.classe||"").trim().toUpperCase();var ecole=(eleve.ecoleCode||"").trim().toUpperCase();var prenom=(eleve.nom||"").split(" ")[0];var typeClasse=detecterTypeClasse(classe,ecole);var info=window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{};var tel=info.tel||"0708111269";var nc=getProchaineClasse(classe,moy);var htmlAnim="";
   if (decision === "RNO") {
     var examen = await chargerResultatExamen(eleve);
     var typeExamen = estCM2(classe) ? "CEPE" : estTerminale(classe) ? "BAC" : "BEPC";
