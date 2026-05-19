@@ -416,11 +416,23 @@ function voirBulletin(idx) {
 
   var html = '<div id="bulletinImprimable" style="background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-family:Arial,sans-serif;">';
 
-  // En-tête
-  html += '<div style="background:linear-gradient(135deg,#1F4E79,#1565C0);color:white;padding:16px;text-align:center;">';
-  html += '<div style="font-size:0.72em;opacity:0.85;margin-bottom:2px;">ANNEE SCOLAIRE 2025-2026</div>';
-  html += '<div style="font-size:1em;font-weight:bold;margin-bottom:6px;">'+nomEcole+'</div>';
+  // En-tête avec logo et armoirie
+  html += '<div style="background:linear-gradient(135deg,#1F4E79,#1565C0);color:white;padding:14px 16px;">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">';
+  html += '<img src="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/drapeau_ci.png" style="width:55px;height:55px;object-fit:contain;" onerror="this.style.display=\'none\'">';
+  html += '<div style="text-align:center;flex:1;padding:0 10px;">';
+  html += '<div style="font-size:0.65em;opacity:0.85;margin-bottom:1px;">REPUBLIQUE DE COTE D\'IVOIRE</div>';
+  html += '<div style="font-size:0.62em;opacity:0.75;margin-bottom:6px;">Union - Discipline - Travail</div>';
+  html += '<div style="font-size:0.95em;font-weight:bold;margin-bottom:3px;">'+nomEcole+'</div>';
+  html += '<div style="font-size:0.65em;opacity:0.85;margin-bottom:6px;">ANNEE SCOLAIRE 2025-2026</div>';
   html += '<div style="background:rgba(255,255,255,0.2);border-radius:20px;display:inline-block;padding:4px 16px;font-size:0.82em;font-weight:bold;">BULLETIN MENSUEL — '+moisLabel+'</div>';
+  html += '</div>';
+  html += '<img src="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/logo_cpp.png" style="width:55px;height:55px;object-fit:contain;" onerror="this.style.display=\'none\'">';
+  html += '</div>';
+  // Contact directrice
+  html += '<div style="text-align:center;font-size:0.68em;opacity:0.85;border-top:1px solid rgba(255,255,255,0.3);padding-top:8px;">';
+  html += 'Directrice : KOKOBO OULO LATH NINA &nbsp;|&nbsp; Tel : 07 47 47 79 26';
+  html += '</div>';
   html += '</div>';
 
   // Infos élève
