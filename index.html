@@ -730,7 +730,33 @@ function estCM2(classe){var c=(classe||"").trim().toUpperCase().replace(/[ÈÉÊ
 
 async function afficherSectionResultats(eleve) {
   var section=document.getElementById("sectionResultats");var div=document.getElementById("resultatsBody");if(!section||!div)return;section.style.display="block";var titreRes=document.getElementById("titreResultats");if(titreRes)titreRes.innerHTML="&#127942; RESULTATS DE FIN D'ANNEE "+ANNEE_SCOLAIRE_ACTIVE+" <span>v</span>";var decision=(eleve.decision||"").trim().toUpperCase();var moyRaw=parseFloat(String(eleve.moy_annuelle||0).replace(',','.'))||0;var moy=(moyRaw>0&&moyRaw<=20)?moyRaw:0;var classe=(eleve.classe||"").trim().toUpperCase();var ecole=(eleve.ecoleCode||"").trim().toUpperCase();var prenom=(eleve.nom||"").split(" ")[0];var typeClasse=detecterTypeClasse(classe,ecole);var info=window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{};var tel=info.tel||"0708111269";var nc=getProchaineClasse(classe);var htmlAnim="";
-  if(!decision||decision==="RNO"){htmlAnim="<div style='background:#F0F4F8;border-radius:10px;padding:20px;text-align:center;margin-bottom:14px'><div style='font-size:40px;margin-bottom:10px'>&#9203;</div><p style='font-weight:bold;color:#1F4E79;font-size:16px;margin-bottom:8px'>Resultats en cours de preparation</p><p style='font-size:13px;color:#666;line-height:1.6'>Disponibles apres les evaluations T3.<br>Reconnectez-vous en Juin 2026.</p></div>";}
+  if(!decision||decision==="RNO"){
+    var isBac=/^(TLE|TERMINALE)/i.test(classe);
+    var isCepe=/^CM2/i.test(classe);
+    var examNom=isBac?"BAC":isCepe?"CEPE":"BEPC";
+    var destBEPC=(window.DESTINATIONS_BEPC&&window.DESTINATIONS_BEPC[ecole])||"College Les Princes d'Abidjan";
+    var msgAttendu=isBac
+      ?"Votre enfant a termine sa classe de Terminale. Nous attendons les resultats officiels du BAC. Ils seront affiches ici des la proclamation."
+      :isCepe
+      ?"Votre enfant a termine le CM2. Nous attendons les resultats officiels du CEPE. Ils seront affiches ici des la proclamation."
+      :"Votre enfant a termine sa classe de 3EME. Nous attendons les resultats officiels du BEPC. En cas de reussite, votre enfant sera oriente au lycee.";
+    var orientInfo=isBac
+      ?"En cas de reussite au BAC, votre enfant recevra son orientation universitaire."
+      :isCepe
+      ?"En cas de reussite au CEPE, votre enfant sera oriente en 6EME."
+      :"En cas de reussite au BEPC, votre enfant sera oriente en 2NDE au "+destBEPC+".";
+    htmlAnim="<div style='background:#E8F4FD;border-radius:12px;padding:20px;text-align:center;margin-bottom:14px;border:2px solid #90CAF9'>"
+      +"<div style='font-size:48px;margin-bottom:10px'>&#9203;</div>"
+      +"<p style='font-weight:bold;color:#1F4E79;font-size:17px;margin-bottom:10px'>En attente des resultats du "+examNom+"</p>"
+      +"<p style='font-size:13px;color:#555;line-height:1.8;margin-bottom:12px'>"+msgAttendu+"</p>"
+      +"<div style='background:#E3F2FD;border-radius:8px;padding:12px;margin-bottom:10px;border-left:4px solid #1F4E79'>"
+      +"<p style='font-size:12px;color:#1F4E79;font-weight:bold;margin-bottom:4px'>&#127979; Orientation prevue</p>"
+      +"<p style='font-size:12px;color:#555'>"+orientInfo+"</p>"
+      +"</div>"
+      +"<div style='background:#1F4E79;border-radius:8px;padding:10px;color:white;font-size:12px'>"
+      +"&#128197; Proclamation des resultats : Juin - Juillet 2026"
+      +"</div></div>";
+  }
   else if(decision==="ADMIS"){htmlAnim=_cardAdmisStandard(prenom,classe,moy,nc,tel);}
   else if(decision==="REDOUBLANT"){htmlAnim=_cardRedoublant(prenom,classe,moy,tel);}
   else if(decision==="EXCLU"){htmlAnim=_cardExclu(prenom,classe,tel);}
