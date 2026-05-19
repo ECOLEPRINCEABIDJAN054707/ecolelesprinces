@@ -372,7 +372,9 @@ function chargerBulletinsMensuels(eleve) {
     try { document.body.removeChild(script); } catch(e) {}
     body.innerHTML = "<p style='text-align:center;padding:20px;color:#C62828;font-size:0.85em;'>Erreur chargement bulletins. Reessayez.</p>";
   };
-  var params = 'callback='+cbName+'&type=LIRE_BULLETINS_PARENT&matricule='+encodeURIComponent(eleve.matricule)+'&annee=2025-2026';
+  var ECOLE_PRIM_MAP = {'AKEIKOI_1':'AKEIKOI 1','AKEIKOI_2':'AKEIKOI 2','ACADEMIE':'ACADEMIE','RITA':'GS RITA ROSANE','GNONTINROU':'GNONTINROU','KOUTOUAN':'KOUTOUAN'};
+  var ecolePrim = ECOLE_PRIM_MAP[eleve.ecoleCode] || eleve.ecoleCode || '';
+  var params = 'callback='+cbName+'&type=LIRE_BULLETINS_PARENT&matricule='+encodeURIComponent(eleve.matricule)+'&annee=2025-2026&ecole='+encodeURIComponent(ecolePrim);
   script.src = APPS_SCRIPT_PRIM + '?' + params;
   document.body.appendChild(script);
   setTimeout(function() {
