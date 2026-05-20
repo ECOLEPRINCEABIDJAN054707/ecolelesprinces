@@ -436,7 +436,7 @@ function voirBulletin(idx) {
   html += '</div>';
   // Contact directrice (sans nom, juste téléphone)
   html += '<div style="text-align:center;font-size:0.68em;opacity:0.85;border-top:1px solid rgba(255,255,255,0.3);padding-top:8px;">';
-  html += 'Tel : 07 47 47 79 26';
+  html += (dirBul?'Tel : '+dirBul.tel:'');
   html += '</div>';
   html += '</div>';
 
@@ -519,9 +519,21 @@ function voirBulletin(idx) {
   html += '</div>';
   // Signature directrice à droite
   html += '<div style="text-align:right;">';
-  html += '<div style="font-size:0.72em;color:#555;margin-bottom:2px;">La Directrice</div>';
+  var DIRECTEURS = {
+    'AKEIKOI_1':  {titre:'La Directrice', nom:'KOKOBO OULO LATH NINA',    tel:'07 47 47 79 26'},
+    'AKEIKOI_2':  {titre:'La Directrice', nom:'KADJA PRISCA',              tel:'07 07 77 75 45'},
+    'ACADEMIE':   {titre:'La Directrice', nom:"N'GBRA LINDA MARYSE",       tel:'07 07 31 29 10'},
+    'RITA':       {titre:'Le Directeur',  nom:'OCHO TCHIMOU Pacome Dasis', tel:'07 04 22 59 15'},
+    'GNONTINROU': {titre:'Le Directeur',  nom:'',                          tel:'07 78 06 90 66'},
+    'KOUTOUAN':   {titre:'Le Directeur',  nom:'GBOMENE LUE VALERY',        tel:'07 47 33 01 28'},
+    'CPP':        {titre:'Le Directeur',  nom:'',                          tel:'07 08 11 12 69'},
+  };
+  var ecoleDir = (window._eleveActuel && window._eleveActuel.ecoleCode) ? window._eleveActuel.ecoleCode : 'CPP';
+  var dirInfo = DIRECTEURS[ecoleDir] || {titre:'Le Directeur', nom:''};
+  var dirBul = dirInfo;;
+  html += '<div style="font-size:0.72em;color:#555;margin-bottom:2px;">'+dirInfo.titre+'</div>';
   html += '<div style="width:110px;height:35px;border-bottom:1.5px solid #333;margin-bottom:2px;"></div>';
-  html += '<div style="font-size:0.7em;font-weight:bold;color:#1F4E79;">KOKOBO OULO LATH NINA</div>';
+  html += '<div style="font-size:0.7em;font-weight:bold;color:#1F4E79;">'+dirInfo.nom+'</div>';
   html += '</div>';
   html += '</div>';
 
