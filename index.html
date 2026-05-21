@@ -772,7 +772,11 @@ function afficherEspaceParent(eleve) {
   }
   var accesComplet = eleve.gratuit || soldeParsed === 0;
   if (accesComplet) {
-    chargerAnnonces(eleve); chargerNotes(eleve); chargerAbsences(eleve); chargerCahierTextes(eleve); afficherSectionResultats(eleve);
+    var _isPrimaire = ECOLES_PRIMAIRES_EP.includes(eleve.ecoleCode);
+    if (!_isPrimaire) {
+      chargerAnnonces(eleve); chargerNotes(eleve); chargerAbsences(eleve); chargerCahierTextes(eleve);
+    }
+    afficherSectionResultats(eleve);
     // ✅ BULLETINS MENSUELS PRIMAIRE
     chargerBulletinsMensuels(eleve);
     document.getElementById("sectionBloque").style.display = "none";
@@ -781,7 +785,10 @@ function afficherEspaceParent(eleve) {
     document.getElementById("sectionBulletinsMensuels").style.display = "none";
     afficherSectionBloquee(eleve, soldeParsed, verseParsed);
   }
-  chargerEDT(eleve); chargerFicheRenseignement(eleve);
+  if (!ECOLES_PRIMAIRES_EP.includes(eleve.ecoleCode)) {
+    chargerEDT(eleve);
+  }
+  chargerFicheRenseignement(eleve);
   window._eleveActuel = eleve;
   document.getElementById("loginWrapper").style.display = "none";
   document.getElementById("parentSpace").style.display = "block";
