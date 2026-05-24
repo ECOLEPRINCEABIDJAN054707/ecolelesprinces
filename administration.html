@@ -491,12 +491,12 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
     <div class="sec-body">
       <div class="actions-grid">
-        <div class="action-btn" onclick="showToast('Scolarité — Connexion Sheets requise','')"><div class="ab-ico">📋</div><div class="ab-titre">Scolarité</div><div class="ab-desc">Sans solde total</div></div>
-        <div class="action-btn" onclick="showToast('En retard — Bientôt','')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Soldes impayés</div></div>
-        <div class="action-btn" onclick="showToast('Vierge — Bientôt','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Noms uniquement</div></div>
-        <div class="action-btn" onclick="showToast('Contacts — Bientôt','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
-        <div class="action-btn" onclick="showToast('Absences — Bientôt','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences</div><div class="ab-desc">+ contacts</div></div>
-        <div class="action-btn" onclick="showToast('Relances — Bientôt','')"><div class="ab-ico">📬</div><div class="ab-titre">Relances</div><div class="ab-desc">Bons parents</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('DIR')"><div class="ab-ico">📋</div><div class="ab-titre">Scolarité</div><div class="ab-desc">Sans solde total</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('DIR')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Soldes impayés</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('DIR')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Noms uniquement</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('DIR')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('DIR')"><div class="ab-ico">📅</div><div class="ab-titre">Absences + contacts</div><div class="ab-desc">Suivi absences</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('DIR')"><div class="ab-ico">📬</div><div class="ab-titre">Relances</div><div class="ab-desc">Bons parents</div></div>
       </div>
       <!-- Bouton bulletins primaire (PRIM + BOTH) -->
       <div id="dirBtnBulZone" style="display:none;padding:0 12px 12px">
@@ -598,14 +598,6 @@ table tr:nth-child(even){background:#F8FAFD}
   </div>
 
   <!-- 1. NOM + CLASSE — lecture seule -->
-  <div class="section">
-    <div class="sec-head sec-bleu open" onclick="toggleSec(this)">
-      <h3>👥 Élèves — Nom & Classe</h3><span class="arr">▼</span>
-    </div>
-    <div class="sec-body open" id="comElevesBody">
-      <p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>
-    </div>
-  </div>
 
   <!-- 2. NOTES & MOYENNES — lecture seule -->
   <div class="section">
@@ -695,11 +687,11 @@ table tr:nth-child(even){background:#F8FAFD}
     <div class="sec-body">
       
       <div class="actions-grid">
-        <div class="action-btn" onclick="showToast('Scolarité — Connexion Sheets requise','')"><div class="ab-ico">📋</div><div class="ab-titre">Scolarité complète</div><div class="ab-desc">Tous les élèves</div></div>
-        <div class="action-btn" onclick="showToast('En retard — Bientôt disponible','')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Soldes impayés</div></div>
-        <div class="action-btn" onclick="showToast('Vierge — Bientôt disponible','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Noms uniquement</div></div>
-        <div class="action-btn" onclick="showToast('Contacts — Bientôt disponible','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
-        <div class="action-btn" onclick="showToast('Absences+contacts — Bientôt','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences + contacts</div><div class="ab-desc">Suivi absences</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('COM')"><div class="ab-ico">📋</div><div class="ab-titre">Scolarité complète</div><div class="ab-desc">Tous les élèves</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('COM')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Soldes impayés</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('COM')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Noms uniquement</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('COM')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('COM')"><div class="ab-ico">📅</div><div class="ab-titre">Absences + contacts</div><div class="ab-desc">Suivi absences</div></div>
         </div>
       </div>
     </div>
@@ -711,7 +703,7 @@ table tr:nth-child(even){background:#F8FAFD}
     <div class="sec-body">
       <div style="padding:14px">
         <p style="font-size:0.8em;color:var(--gris);margin-bottom:10px">Générer les bons de relance pour les élèves en retard de paiement — 3 bons par page A4</p>
-        <button onclick="showToast('Relances — Connexion Google Sheets requise','')" style="width:100%;padding:11px;background:var(--rouge);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.82em;cursor:pointer">📬 Générer bons de relance</button>
+        <button onclick="ouvrirListesV9('COM')" style="width:100%;padding:11px;background:var(--rouge);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.82em;cursor:pointer">📬 Générer bons de relance</button>
       </div>
     </div>
   </div>
@@ -770,15 +762,7 @@ table tr:nth-child(even){background:#F8FAFD}
     <span style="font-size:0.7em;color:var(--gris)">— Philosophie Princes Smart School</span>
   </div>
 
-  <!-- 1. NOM + CLASSE — lecture seule -->
-  <div class="section">
-    <div class="sec-head sec-bleu" onclick="toggleSec(this)">
-      <h3>👥 Élèves — Nom & Classe</h3><span class="arr">▼</span>
-    </div>
-    <div class="sec-body" id="eduNomClasseBody">
-      <p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>
-    </div>
-  </div>
+
 
   <!-- 2. NOTES & MOYENNES — lecture seule -->
   <div class="section">
@@ -867,11 +851,11 @@ table tr:nth-child(even){background:#F8FAFD}
     <div class="sec-body">
       
       <div class="actions-grid">
-        <div class="action-btn" onclick="showToast('Liste vierge — Bientôt disponible','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Mes élèves uniquement</div></div>
-        <div class="action-btn" onclick="showToast('Contacts — Bientôt disponible','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents mes élèves</div></div>
-        <div class="action-btn" onclick="showToast('Absences+contacts — Bientôt','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences + contacts</div><div class="ab-desc">Mes élèves uniquement</div></div>
-        <div class="action-btn" onclick="showToast('Scolarité sans total — Bientôt','')"><div class="ab-ico">💳</div><div class="ab-titre">Scolarité</div><div class="ab-desc">Sans solde total</div></div>
-        <div class="action-btn" onclick="showToast('En retard — Bientôt disponible','')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Soldes impayés</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('EDU')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Mes élèves uniquement</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('EDU')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents mes élèves</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('EDU')"><div class="ab-ico">📅</div><div class="ab-titre">Absences + contacts</div><div class="ab-desc">Mes élèves uniquement</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('EDU')"><div class="ab-ico">💳</div><div class="ab-titre">Scolarité</div><div class="ab-desc">Sans solde total</div></div>
+        <div class="action-btn" onclick="ouvrirListesV9('EDU')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Soldes impayés</div></div>
       </div>
     </div>
   </div>
@@ -1839,14 +1823,34 @@ function afficherCom(s){
   // PAS de ligne masse salariale totale — interdite pour comptable
   document.getElementById('comSalBody').innerHTML=h3;
 
-  // Inscriptions — modifier
-  let h2='';
-  INSCRIPTIONS_DEMO.forEach((ins,i)=>{
-    const sc={nouveau:'bg-bleu',valide:'bg-vert',attente:'bg-orange'};
-    const sl={nouveau:'Nouveau',valide:'Validé',attente:'En attente'};
-    h2+='<div class="item"><div class="item-av" style="background:var(--bleu);color:#fff">'+(i+1)+'</div><div class="item-info"><div class="item-nom">'+ins.nom+'</div><div class="item-meta">Classe : '+ins.classe+' · '+ins.date+'</div></div><span class="bdg '+sc[ins.statut]+'">'+sl[ins.statut]+'</span></div>';
+  // Inscriptions — charger depuis SYNTHESE (élèves = inscrits)
+  chargerSynthese(s.ecole).then(function(eleves){
+    const data = eleves && eleves.length ? eleves : null;
+    const cI = document.getElementById('comInscBody');
+    if(!cI) return;
+    if(!data){
+      cI.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise — Les élèves inscrits proviennent de la feuille SYNTHESE</p>';
+      return;
+    }
+    // Grouper par classe
+    const byClasse = {};
+    data.forEach(function(e){
+      if(!byClasse[e.classe]) byClasse[e.classe]=[];
+      byClasse[e.classe].push(e);
+    });
+    let h2='<div style="padding:10px 14px;background:#E8F5E9;font-size:0.76em;color:var(--vert);border-bottom:1px solid var(--border)">'+data.length+' élèves inscrits · '+Object.keys(byClasse).length+' classes</div>';
+    Object.keys(byClasse).sort().forEach(function(classe){
+      const eleves = byClasse[classe];
+      h2+='<div style="padding:8px 16px;background:#F5F7FA;border-bottom:1px solid var(--border);font-size:0.8em;font-weight:700;color:var(--bleu)">'+classe+' — '+eleves.length+' élève(s)</div>';
+      eleves.forEach(function(e){
+        const tc=e.statut==='SOLDE'?'#2E7D32':e.statut==='PARTIEL'?'#E65100':'#C62828';
+        const badge=e.statut==='SOLDE'?'<span class="bdg bg-vert">Soldé</span>':e.statut==='PARTIEL'?'<span class="bdg bg-orange">Partiel</span>':'<span class="bdg bg-rouge">Impayé</span>';
+        h2+='<div class="item"><div class="item-av" style="background:rgba(31,78,121,0.1);color:var(--bleu)">'+e.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+e.nom+'</div><div class="item-meta">'+e.classe+(e.tel1?' · '+e.tel1:'')+'</div></div>'+badge+'</div>';
+      });
+    });
+    cI.innerHTML=h2;
+    document.getElementById('cStatInsc').textContent=data.length;
   });
-  document.getElementById('comInscBody').innerHTML=h2;
   chargerResultatsEtMessages(s.ecole,'COM');
 
   // Tâches
@@ -2054,43 +2058,62 @@ let donneesMessages  = [];
 async function chargerResultats(ecole){
   const sheetsId = SHEETS_IDS[ecole];
   if(!sheetsId) return [];
-  try{
-    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/RESULTATS?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r = await fetch(url); const data = await r.json();
-    if(!data.values || data.values.length < 2) return [];
-    return data.values.slice(1).filter(row=>row[2]&&String(row[2]).trim()).map(row=>({
-      niveau   : String(row[0]||'').trim(),
-      matricule: String(row[1]||'').trim(),
-      nom      : String(row[2]||'').trim(),
-      moy      : parseFloat(row[3])||0,
-      decision : String(row[4]||'').trim().toUpperCase(),
-      classeSup: String(row[5]||'').trim(),
-      source   : String(row[6]||'').trim(),
-    }));
-  }catch(e){console.log('Erreur RESULTATS:',e.message);return [];}
+  const sheetNames = ['RESULTATS','RÉSULTATS','DELIBERATIONS','DELIBERATION','RÉSULTAT','RESULTAT','Resultats','Results'];
+  for(const sheetName of sheetNames){
+    try{
+      const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sheetName)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+      const r = await fetch(url);
+      const data = await r.json();
+      if(data.values && data.values.length >= 2){
+        const rows = data.values.slice(1).filter(function(row){return row[2]&&String(row[2]).trim();});
+        return rows.map(function(row){
+          return {
+            niveau   : String(row[0]||'').trim(),
+            matricule: String(row[1]||'').trim(),
+            nom      : String(row[2]||'').trim(),
+            moy      : parseFloat(row[3])||0,
+            decision : String(row[4]||'').trim().toUpperCase(),
+            classeSup: String(row[5]||'').trim(),
+            source   : String(row[6]||'').trim(),
+          };
+        });
+      }
+    }catch(e){}
+  }
+  return [];
 }
+
 
 async function chargerMessages(ecole){
   const sheetsId = SHEETS_IDS[ecole];
   if(!sheetsId) return [];
-  try{
-    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/MESSAGES?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r = await fetch(url); const data = await r.json();
-    if(!data.values || data.values.length < 2) return [];
-    return data.values.slice(1).filter(row=>row[0]).map(row=>({
-      date     : String(row[0]||'').trim(),
-      type     : String(row[1]||'').trim(),
-      sujet    : String(row[2]||'').trim(),
-      message  : String(row[3]||'').trim(),
-      nom      : String(row[4]||'').trim(),
-      matricule: String(row[5]||'').trim(),
-      classe   : String(row[6]||'').trim(),
-      ecole    : String(row[7]||'').trim(),
-      statut   : String(row[8]||'').trim()||'CONNEXION',
-      reponse  : String(row[9]||'').trim(),
-    }));
-  }catch(e){console.log('Erreur MESSAGES:',e.message);return [];}
+  const sheetNames = ['MESSAGES','MESSAGE','CONTACTS','CONNEXIONS','JOURNAL'];
+  for(const sheetName of sheetNames){
+    try{
+      const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sheetName)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+      const r = await fetch(url);
+      const data = await r.json();
+      if(data.values && data.values.length >= 2){
+        return data.values.slice(1).filter(function(row){return row[0];}).map(function(row){
+          return {
+            date     : String(row[0]||'').trim(),
+            type     : String(row[1]||'').trim(),
+            sujet    : String(row[2]||'').trim(),
+            message  : String(row[3]||'').trim(),
+            nom      : String(row[4]||'').trim(),
+            matricule: String(row[5]||'').trim(),
+            classe   : String(row[6]||'').trim(),
+            ecole    : String(row[7]||'').trim(),
+            statut   : String(row[8]||'').trim()||'CONNEXION',
+            reponse  : String(row[9]||'').trim(),
+          };
+        });
+      }
+    }catch(e){}
+  }
+  return [];
 }
+
 
 function renderTableResultats(data, tableId, filtreClasseId, filtreDecId, filtreNomId){
   // Peupler le filtre classes
@@ -2206,6 +2229,552 @@ async function chargerResultatsEtMessages(ecole, profil){
     renderTableResultats(resultats,'eduResTable','eduResFiltreClasse',null,'eduResFiltreNom');
     renderMessages(messages,'eduMsgBody',false);
   }
+}
+
+
+
+// ══ LISTES V9 — CPP LES PRINCES (adapté depuis Apps Script V9) ══
+
+var ORDRE_NIV = ["1A BT","2A BT","3A BT","1A CAP","2A CAP","3A CAP","1A BEP","2A BEP","3A BEP",
+  "PSA","TPS","MS","GS","CP","CP1","CP2","CE1","CE2","CM1","CM2",
+  "6EME","5EME","4EME","3EME","2NDE","1ERE","TERMINALE","TLE","CAP","BEP","BAC PRO","BTS","AUTRES"];
+
+var EXCLUS_ONGLETS = ["IMPORT","SYNTHESE","ANNONCES","ABSENCES","STATISTIQUE","NON_ATTRIB","GUIDE",
+  "HISTORIQUE","CORRECTION","AIDE","FEUILLE","SHEET","NOTES_T","EXAM_BLANC","PHOTOS","BULLETINS",
+  "MESSAGES","TEMP_","EDT_","CONFIGURATION","MANQUANTS","LISTE_D","CACHE_","INDEX_","EXPORT_",
+  "RESULTATS","DELIBERATIONS","POINTAGE","ENSEIGNANTS","CAHIER","STAFF","TARIFS"];
+
+function getNiv(nom){
+  if(!nom||typeof nom!=="string")return"AUTRES";
+  var n=nom.toUpperCase().trim();
+  if(/^1A\s*BT/.test(n))return"1A BT";if(/^2A\s*BT/.test(n))return"2A BT";if(/^3A\s*BT/.test(n))return"3A BT";
+  if(/^1A\s*CAP/.test(n))return"1A CAP";if(/^2A\s*CAP/.test(n))return"2A CAP";if(/^3A\s*CAP/.test(n))return"3A CAP";
+  if(/^1A\s*BEP/.test(n))return"1A BEP";if(/^2A\s*BEP/.test(n))return"2A BEP";if(/^3A\s*BEP/.test(n))return"3A BEP";
+  if(/^PSA/.test(n))return"PSA";if(/^TPS/.test(n))return"TPS";
+  if(/^MS(\s|$|-|_|\d)/.test(n)||n==="MS")return"MS";
+  if(/^GS(\s|$|-|_|\d)/.test(n)||n==="GS")return"GS";
+  if(/^CP1/.test(n))return"CP1";if(/^CP2/.test(n))return"CP2";
+  if(/^CP(\s|$|-|_|\d)/.test(n)||n==="CP")return"CP";
+  if(/^CE1/.test(n))return"CE1";if(/^CE2/.test(n))return"CE2";
+  if(/^CM1/.test(n))return"CM1";if(/^CM2/.test(n))return"CM2";
+  if(/^6/.test(n)||/^SIXI/.test(n))return"6EME";
+  if(/^5/.test(n)||/^CINQU/.test(n))return"5EME";
+  if(/^4/.test(n)||/^QUATR/.test(n))return"4EME";
+  if(/^3/.test(n)||/^TROI/.test(n))return"3EME";
+  if(/^2NDE/.test(n)||/^SECOND/.test(n))return"2NDE";
+  if(/^1ERE/.test(n)||/^1[EÈ]/.test(n)||/^PREM/.test(n))return"1ERE";
+  if(/^TLE/.test(n)||/^TERM/.test(n))return"TERMINALE";
+  if(/^MATERNELLE/.test(n)||/^MAT/.test(n))return"MATERNELLE";
+  if(/^CAP/.test(n))return"CAP";if(/^BAC/.test(n))return"BAC PRO";
+  if(/^BTS/.test(n))return"BTS";if(/^BEP/.test(n))return"BEP";
+  return"AUTRES";
+}
+
+function estOngletValide(nom){
+  if(!nom||typeof nom!=="string")return false;
+  var u=nom.toUpperCase().trim();
+  if(!u)return false;
+  for(var i=0;i<EXCLUS_ONGLETS.length;i++){if(u.indexOf(EXCLUS_ONGLETS[i])>=0)return false;}
+  return true;
+}
+
+// Lire un onglet de classe depuis Google Sheets API
+async function lireOngletClasse(sheetsId, nomClasse){
+  try{
+    var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(nomClasse)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    var r=await fetch(url);var data=await r.json();
+    if(!data.values||data.values.length<2)return[];
+    var headers=data.values[0].map(function(h){return String(h||'').toUpperCase().trim();});
+    var iMat=headers.findIndex(function(h){return h.includes('MATR');});
+    var iNom=headers.findIndex(function(h){return h.includes('NOM')&&h.includes('PREN');});
+    if(iNom===-1)iNom=headers.findIndex(function(h){return h.includes('NOM');});
+    var iDu=headers.findIndex(function(h){return h.includes('MONTANT')||h.includes('DU')||h.includes('SCOLAR');});
+    var iVerse=headers.findIndex(function(h){return h.includes('VERS')||h.includes('PAY');});
+    var iSolde=headers.findIndex(function(h){return h.includes('SOLDE')||h.includes('RESTE');});
+    var iTel1=headers.findIndex(function(h){return h.includes('TEL')&&(h.includes('1')||h.includes('PERE'));});
+    var iTel2=headers.findIndex(function(h){return h.includes('TEL')&&(h.includes('2')||h.includes('MERE'));});
+    var iTel3=headers.findIndex(function(h){return h.includes('TEL')&&(h.includes('3')||h.includes('TUT'));});
+    return data.values.slice(1).filter(function(row){return row[iNom>=0?iNom:0];}).map(function(row){
+      var solde=parseFloat(row[iSolde>=0?iSolde:0])||0;
+      var verse=parseFloat(row[iVerse>=0?iVerse:0])||0;
+      var du=parseFloat(row[iDu>=0?iDu:0])||0;
+      return{
+        matricule:String(row[iMat>=0?iMat:0]||'').trim(),
+        nom_prenom:String(row[iNom>=0?iNom:0]||'').trim(),
+        montant_du:du, versement:verse, solde:solde,
+        tel1:String(row[iTel1>=0?iTel1:0]||'').trim(),
+        tel2:String(row[iTel2>=0?iTel2:0]||'').trim(),
+        tel3:String(row[iTel3>=0?iTel3:0]||'').trim(),
+        statut:solde<=0?'SOLDE':verse===0?'IMPAYE':'PARTIEL'
+      };
+    });
+  }catch(e){console.log('Erreur onglet '+nomClasse+':',e.message);return[];}
+}
+
+// Lister tous les onglets du Sheets
+async function listerOnglets(sheetsId){
+  try{
+    var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'?key='+API_KEY+'&fields=sheets.properties.title';
+    var r=await fetch(url);var data=await r.json();
+    if(!data.sheets)return[];
+    return data.sheets.map(function(s){return s.properties.title;}).filter(estOngletValide);
+  }catch(e){return[];}
+}
+
+// Ouvrir la modale listes V9
+async function ouvrirListesV9(profil){
+  var ecole=currentStaff?currentStaff.ecole:null;
+  var label=currentStaff?currentStaff.label:'';
+  if(!ecole){showToast('Non connecte','error');return;}
+  var sheetsId=SHEETS_IDS[ecole];
+  if(!sheetsId){showToast('Ecole non configuree','error');return;}
+  showToast('Chargement des classes...','');
+  var onglets=await listerOnglets(sheetsId);
+  if(!onglets.length){
+    showToast('Aucune classe trouvee dans ce Sheets','error');
+    // Fallback SYNTHESE
+    imprimerListe('scolarite',profil);
+    return;
+  }
+  // Grouper par niveau
+  var niveaux={};
+  onglets.forEach(function(nom){
+    var niv=getNiv(nom);
+    if(!niveaux[niv])niveaux[niv]=[];
+    niveaux[niv].push(nom);
+  });
+  var keys=Object.keys(niveaux).sort(function(a,b){
+    var ia=ORDRE_NIV.indexOf(a),ib=ORDRE_NIV.indexOf(b);
+    if(ia===-1)ia=99;if(ib===-1)ib=99;return ia-ib;
+  });
+  afficherModaleListesV9({niveaux:niveaux,keys:keys,onglets:onglets,sheetsId:sheetsId,label:label,profil:profil});
+}
+
+function afficherModaleListesV9(ctx){
+  // Supprimer modale existante
+  var old=document.getElementById('modaleListesV9');
+  if(old)old.remove();
+
+  var TC={
+    c:{lb:'Scolarite complete',cd:'SCOLARITE'},
+    r:{lb:'En retard',cd:'ENRETARD'},
+    a:{lb:'A jour / Soldes',cd:'AJOUR'},
+    l:{lb:'Liste + contacts',cd:'SIMPLE'},
+    v:{lb:'Liste vierge',cd:'VIERGE'},
+    b:{lb:'Absences + contacts',cd:'ABSENCES'}
+  };
+
+  var m=document.createElement('div');
+  m.id='modaleListesV9';
+  m.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9990;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:10px';
+
+  var types_html='';
+  Object.keys(TC).forEach(function(k){
+    var colors={c:'#1F4E79',r:'#C62828',a:'#2E7D32',l:'#4A148C',v:'#00695C',b:'#37474F'};
+    types_html+='<label style="display:flex;align-items:center;gap:6px;padding:7px 10px;border:2px solid #D6E4F0;border-radius:6px;cursor:pointer;font-size:0.78em;font-weight:700;background:#fff">'
+      +'<input type="checkbox" id="lt_'+k+'" '+(k==='c'||k==='r'?'checked':'')+'> '
+      +'<span style="color:'+colors[k]+'">'+TC[k].lb+'</span></label>';
+  });
+
+  var niveaux_html='';
+  ctx.keys.forEach(function(niv){
+    var nb=ctx.niveaux[niv].length;
+    var nid='niv_'+niv.replace(/[^A-Z0-9]/gi,'_');
+    niveaux_html+='<label style="display:flex;align-items:center;gap:6px;padding:7px 10px;border:2px solid #C8E6C9;border-radius:6px;cursor:pointer;font-size:0.78em;font-weight:700;background:#fff" id="'+nid+'">'
+      +'<input type="checkbox" id="cb_'+nid+'"> '
+      +'<span>'+niv+' ('+nb+')</span></label>';
+  });
+
+  var classes_html='';
+  ctx.onglets.forEach(function(cl){
+    classes_html+='<button id="btn_cl_'+cl.replace(/[^A-Z0-9]/gi,'_')+'" data-classe="'+cl+'" onclick="genPDFClasseBtn(this)" '
+      +'style="padding:8px 6px;border:2px solid #D6E4F0;border-radius:6px;font-size:0.74em;font-weight:700;cursor:pointer;background:#fff;text-align:left">'
+      +'<b>'+cl+'</b><br><small style="color:#888;font-weight:normal">Cliquer PDF</small></button>';
+  });
+
+  m.innerHTML='<div style="background:#fff;border-radius:12px;width:100%;max-width:600px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.3)">'
+    // Header
+    +'<div style="background:#1F4E79;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">'
+    +'<span style="font-weight:700;font-size:0.95em">Listes par Niveau — '+ctx.label+'</span>'
+    +'<button onclick="fermerModale()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:20px;padding:4px 10px;cursor:pointer">&#x2715;</button>'
+    +'</div>'
+    // Types
+    +'<div style="padding:12px;border-bottom:1px solid #E0E4EF">'
+    +'<p style="font-size:0.74em;font-weight:700;color:var(--bleu);margin-bottom:8px;text-transform:uppercase">Types de listes</p>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'+types_html+'</div>'
+    +'</div>'
+    // Mode 1 — par classe individuelle
+    +'<div style="padding:12px;border-bottom:1px solid #E0E4EF">'
+    +'<p style="font-size:0.74em;font-weight:700;color:var(--bleu);margin-bottom:6px;text-transform:uppercase">Mode 1 — PDF par classe</p>'
+    +'<div id="grilleClasses" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">'+classes_html+'</div>'
+    +'</div>'
+    // Mode 2 — par niveau
+    +'<div style="padding:12px">'
+    +'<p style="font-size:0.74em;font-weight:700;color:#2E7D32;margin-bottom:6px;text-transform:uppercase">Mode 2 — PDF groupe par niveau</p>'
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">'+niveaux_html+'</div>'
+    +'<div style="display:flex;gap:6px;margin-bottom:8px">'
+    +'<button onclick="toutCocherNiv(true)" style="flex:1;padding:7px;border:1.5px solid #2E7D32;background:#fff;color:#2E7D32;border-radius:6px;font-size:0.76em;font-weight:700;cursor:pointer">Tout cocher</button>'
+    +'<button onclick="toutCocherNiv(false)" style="flex:1;padding:7px;border:1.5px solid #C62828;background:#fff;color:#C62828;border-radius:6px;font-size:0.76em;font-weight:700;cursor:pointer">Tout decocher</button>'
+    +'</div>'
+    +'<div id="progListes" style="display:none;padding:8px;background:#E3F2FD;border-radius:6px;font-size:0.78em;color:var(--bleu);font-weight:700;margin-bottom:8px">Chargement...</div>'
+    +'<button onclick="genPDFGroupe()" style="width:100%;padding:11px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.84em;cursor:pointer">Generer PDF groupe par niveau</button>'
+    +'</div>'
+    +'</div>';
+
+  document.body.appendChild(m);
+
+  // Stocker contexte
+  window._listesCtx = ctx;
+  window._listesTC  = TC;
+  window._listesCACHE = {};
+}
+
+function toutCocherNiv(val){
+  if(!window._listesCtx)return;
+  window._listesCtx.keys.forEach(function(niv){
+    var nid='niv_'+niv.replace(/[^A-Z0-9]/gi,'_');
+    var cb=document.getElementById('cb_'+nid);
+    var lbl=document.getElementById(nid);
+    if(cb)cb.checked=val;
+    if(lbl)lbl.style.background=val?'#E8F5E9':'#fff';
+  });
+}
+
+function getTypesCoches(){
+  var TC=window._listesTC||{};
+  return Object.keys(TC).filter(function(k){
+    var el=document.getElementById('lt_'+k);return el&&el.checked;
+  });
+}
+
+function fermerModale(){var m=document.getElementById('modaleListesV9');if(m)m.remove();}
+function fermerModaleRel(){var m=document.getElementById('modaleRelancesV9');if(m)m.remove();}
+
+function genPDFClasseBtn(btn){
+  var nomClasse=btn.getAttribute('data-classe');
+  if(nomClasse)genPDFClasse(nomClasse);
+}
+
+async function genPDFClasse(nomClasse){
+  var ctx=window._listesCtx;if(!ctx)return;
+  var types=getTypesCoches();
+  if(!types.length){showToast('Cochez au moins un type de liste','error');return;}
+  var btnId='btn_cl_'+nomClasse.replace(/[^A-Z0-9]/gi,'_');
+  var btn=document.getElementById(btnId);
+  if(btn){btn.style.background='#FFF3E0';btn.innerHTML='<b>'+nomClasse+'</b><br><small>Chargement...</small>';}
+  var eleves=window._listesCACHE[nomClasse];
+  if(!eleves){
+    eleves=await lireOngletClasse(ctx.sheetsId,nomClasse);
+    window._listesCACHE[nomClasse]=eleves;
+  }
+  if(btn){btn.style.background='#E8F5E9';btn.innerHTML='<b>'+nomClasse+'</b><br><small style="color:#2E7D32">PDF ouvert ✓</small>';}
+  var d=new Date(),dd=String(d.getDate()).padStart(2,'0')+String(d.getMonth()+1).padStart(2,'0')+d.getFullYear();
+  var ne=ctx.label.replace(/[^A-Z0-9]/gi,'_').toUpperCase().substring(0,15);
+  types.forEach(function(k){
+    var nf=ne+'_'+nomClasse.replace(/[^A-Z0-9]/gi,'_')+'_'+window._listesTC[k].cd+'_'+dd;
+    var w=window.open('','_blank');
+    if(!w){showToast('Autorisez les popups pour imprimer','error');return;}
+    w.document.write(mkDocSimpleV9({nom:nomClasse,eleves:eleves},k,nf,ctx.label));
+    w.document.close();
+  });
+}
+
+async function genPDFGroupe(){
+  var ctx=window._listesCtx;if(!ctx)return;
+  var types=getTypesCoches();
+  if(!types.length){showToast('Cochez au moins un type','error');return;}
+  var niveaux_coches=ctx.keys.filter(function(niv){
+    var cb=document.getElementById('cb_niv_'+niv.replace(/[^A-Z0-9]/gi,'_'));
+    return cb&&cb.checked;
+  });
+  if(!niveaux_coches.length){showToast('Cochez au moins un niveau','error');return;}
+  var a_charger=[];
+  niveaux_coches.forEach(function(niv){
+    (ctx.niveaux[niv]||[]).forEach(function(cl){if(a_charger.indexOf(cl)===-1)a_charger.push(cl);});
+  });
+  var prog=document.getElementById('progListes');
+  if(prog)prog.style.display='block';
+  var nb=0;
+  for(var i=0;i<a_charger.length;i++){
+    var cl=a_charger[i];
+    if(prog)prog.textContent='Chargement '+(i+1)+'/'+a_charger.length+' classes...';
+    if(!window._listesCACHE[cl]){
+      window._listesCACHE[cl]=await lireOngletClasse(ctx.sheetsId,cl);
+    }
+    nb++;
+  }
+  if(prog)prog.style.display='none';
+  var d=new Date(),dd=String(d.getDate()).padStart(2,'0')+String(d.getMonth()+1).padStart(2,'0')+d.getFullYear();
+  var ne=ctx.label.replace(/[^A-Z0-9]/gi,'_').toUpperCase().substring(0,15);
+  types.forEach(function(k){
+    var classes_chargees=[];
+    niveaux_coches.forEach(function(niv){
+      (ctx.niveaux[niv]||[]).forEach(function(cl){if(window._listesCACHE[cl])classes_chargees.push(cl);});
+    });
+    var nf=ne+'_'+window._listesTC[k].cd+'_GROUPE_'+dd;
+    var w=window.open('','_blank');
+    if(!w){showToast('Autorisez les popups','error');return;}
+    w.document.write(mkDocGroupeV9(classes_chargees,k,nf,ctx.label));
+    w.document.close();
+  });
+}
+
+// Helpers PDF
+var SV9={
+  c:'text-align:center;font-size:12px;border:1.5px solid #333;padding:4px;',
+  m:'font-weight:bold;font-size:12px;border:1.5px solid #333;padding:4px;color:#1F4E79;',
+  b:'font-weight:bold;font-size:12px;border:1.5px solid #333;padding:4px;',
+  r:'text-align:right;font-weight:bold;font-size:12px;border:1.5px solid #333;padding:4px;',
+  e:'border:1.5px solid #333;padding:4px;height:18px;'
+};
+function fltV9(el,k){
+  if(!el)return[];
+  if(k==='c'||k==='l'||k==='v'||k==='b')return el;
+  if(k==='r')return el.filter(function(e){return Number(e.solde)>0;});
+  if(k==='a')return el.filter(function(e){return Number(e.solde)<=0;});
+  return el;
+}
+function fnV9(n){return Number(n||0).toLocaleString('fr-FR')+' F';}
+function smV9(el,f){return el.reduce(function(s,e){return s+Number(e[f]||0);},0);}
+function ctV9(e){var n=[];if(e.tel1)n.push(e.tel1);if(e.tel2)n.push(e.tel2);if(e.tel3)n.push(e.tel3);return n.join(' / ')||'-';}
+function siV9(e){var s=Number(e.solde||0),v=Number(e.versement||0);if(s<=0)return'SOLDE';if(v===0)return'IMPAYE';return'PARTIEL';}
+
+function mkRowsV9(el,k){
+  var rows='';
+  el.forEach(function(e,i){
+    var bg=i%2===0?'#fff':'#f5f5f5';
+    if(k==='v'){
+      rows+='<tr style="background:'+bg+'"><td style="'+SV9.c+'">'+(i+1)+'</td><td style="'+SV9.m+'">'+e.matricule+'</td><td style="'+SV9.b+'">'+e.nom_prenom+'</td><td style="'+SV9.e+'"></td><td style="'+SV9.e+'"></td><td style="'+SV9.e+'"></td><td style="'+SV9.e+'"></td><td style="'+SV9.e+'"></td></tr>';
+    } else if(k==='b'||k==='l'){
+      rows+='<tr style="background:'+bg+'"><td style="'+SV9.c+'">'+(i+1)+'</td><td style="'+SV9.m+'">'+e.matricule+'</td><td style="'+SV9.b+'">'+e.nom_prenom+'</td><td style="'+SV9.c+'">'+ctV9(e)+'</td></tr>';
+    } else {
+      var st=siV9(e);var stc=st==='SOLDE'?'color:#2E7D32':st==='IMPAYE'?'color:#C62828':'color:#E65100';
+      rows+='<tr style="background:'+bg+'"><td style="'+SV9.c+'">'+(i+1)+'</td><td style="'+SV9.m+'">'+e.matricule+'</td><td style="'+SV9.b+'">'+e.nom_prenom+'</td><td style="'+SV9.r+'">'+fnV9(e.montant_du)+'</td><td style="'+SV9.r+'">'+fnV9(e.versement)+'</td><td style="'+SV9.r+'"><b style="'+stc+'">'+fnV9(e.solde)+'</b></td><td style="'+SV9.c+'"><b style="'+stc+'">'+st+'</b></td><td style="'+SV9.c+'">'+ctV9(e)+'</td></tr>';
+    }
+  });
+  return rows;
+}
+
+function mkEntetePDF(nomEcole){
+  return '<div style="text-align:center;margin-bottom:5px">'
+    +'<div style="font-size:11px;color:#333">Ministere de l Education Nationale et de l Alphabetisation</div>'
+    +'<div style="font-size:16px;font-weight:bold;color:#000">'+nomEcole+'</div>'
+    +'</div>'
+    +'<hr style="border:none;border-top:2px solid #000;margin:3px 0">';
+}
+
+var TH_V9={
+  v:'<th>N</th><th>MATRICULE</th><th>NOM ET PRENOMS</th><th>N1</th><th>N2</th><th>N3</th><th>N4</th><th>N5</th>',
+  b:'<th>N</th><th>MATRICULE</th><th>NOM ET PRENOMS</th><th>CONTACTS PARENTS</th>',
+  l:'<th>N</th><th>MATRICULE</th><th>NOM ET PRENOMS</th><th>CONTACTS PARENTS</th>',
+  def:'<th>N</th><th>MATRICULE</th><th>NOM ET PRENOMS</th><th>MONTANT DU</th><th>VERSEMENT</th><th>SOLDE</th><th>STATUT</th><th>CONTACTS PARENTS</th>'
+};
+
+function mkDocSimpleV9(data,k,nf,nomEcole){
+  var TC=window._listesTC;
+  var tc=TC[k];
+  var d=new Date(),de=d.toLocaleDateString('fr-FR')+' a '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  var el=fltV9(data.eleves,k);
+  var rows=mkRowsV9(el,k);
+  var th=TH_V9[k]||TH_V9.def;
+  var tv=smV9(el,'montant_du'),vv=smV9(el,'versement'),sv=smV9(el,'solde');
+  var nbs=el.filter(function(e){return Number(e.solde)<=0;}).length;
+  var nbi=el.filter(function(e){return Number(e.versement)===0;}).length;
+  var nbp=el.length-nbs-nbi;
+  var corps=mkEntetePDF(nomEcole)
+    +'<div style="background:#000;color:white;text-align:center;padding:7px"><b style="font-size:14px">'+tc.lb.toUpperCase()+' — '+data.nom+' — 2025-2026</b></div>'
+    +'<div style="display:flex;justify-content:space-between;background:#eee;padding:5px 8px;font-size:12px;border:1.5px solid #333;margin-bottom:3px"><b>'+el.length+' eleve(s)</b><span>'+de+'</span></div>'
+    +'<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#000;color:white">'+th+'</tr></thead><tbody>'+rows+'</tbody></table>';
+  if(k!=='v'&&k!=='b'&&k!=='l'){
+    corps+='<div style="background:#000;color:white;display:flex;justify-content:space-between;padding:5px 8px;font-size:13px;font-weight:bold;margin-top:2px">'
+      +'<span>TOTAUX</span><span>Du:'+fnV9(tv)+'</span><span>Verse:'+fnV9(vv)+'</span><span>Solde:'+fnV9(sv)+'</span></div>';
+  }
+  if(k==='c'){
+    corps+='<div style="display:flex;gap:3px;margin-top:3px">'
+      +'<div style="flex:1;padding:4px;text-align:center;background:#eee;border:1.5px solid #333;font-weight:bold;font-size:13px">Soldes:'+nbs+'</div>'
+      +'<div style="flex:1;padding:4px;text-align:center;background:#eee;border:1.5px solid #333;font-weight:bold;font-size:13px">Partiels:'+nbp+'</div>'
+      +'<div style="flex:1;padding:4px;text-align:center;background:#eee;border:1.5px solid #333;font-weight:bold;font-size:13px">Impayes:'+nbi+'</div></div>';
+  }
+  corps+='<div style="text-align:center;font-size:11px;margin-top:4px;border-top:2px solid #000;padding-top:3px;font-weight:bold">'+nomEcole+' — '+data.nom+' — '+de+'</div>';
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+nf+'</title>'
+    +'<style>body{font-family:Arial,sans-serif;font-size:13px;margin:0;padding:8px;color:#000}'
+    +'@media print{body{margin:0;padding:0} .np{display:none!important} @page{size:A4 portrait;margin:8mm}}'
+    +'table{width:100%;border-collapse:collapse}'
+    +'th{background:#000;color:#fff;padding:6px 4px;text-align:center;font-weight:bold;font-size:12px;border:1px solid rgba(255,255,255,0.3)}'
+    +'tbody tr:nth-child(even){background:#f5f5f5}</style></head><body>'
+    +'<div class="np" style="background:#f5f5f5;padding:10px;border-bottom:3px solid #000;margin-bottom:10px">'
+    +'<b style="font-size:14px">'+nf+'</b><br><br>'
+    +'<button onclick="window.print()" style="background:#000;color:#fff;border:none;padding:9px 18px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-right:8px">Imprimer / PDF</button>'
+    +'<button onclick="window.close()" style="background:#555;color:#fff;border:none;padding:9px 14px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px">Fermer</button>'
+    +'<div style="font-size:12px;color:#555;margin-top:5px">Portrait → A4</div></div>'
+    +corps+'</body></html>';
+}
+
+function mkDocGroupeV9(classes,k,nf,nomEcole){
+  var TC=window._listesTC;var tc=TC[k];
+  var d=new Date(),de=d.toLocaleDateString('fr-FR')+' a '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  var th=TH_V9[k]||TH_V9.def;
+  var corps='';var cl_index=0;
+  // Grouper par niveau
+  var par_niv={};
+  classes.forEach(function(cl){
+    if(!window._listesCACHE[cl])return;
+    var niv=getNiv(cl);
+    if(!par_niv[niv])par_niv[niv]=[];
+    par_niv[niv].push(cl);
+  });
+  var niv_tries=Object.keys(par_niv).sort(function(a,b){
+    var ia=ORDRE_NIV.indexOf(a),ib=ORDRE_NIV.indexOf(b);
+    if(ia===-1)ia=99;if(ib===-1)ib=99;return ia-ib;
+  });
+  niv_tries.forEach(function(niv){
+    par_niv[niv].forEach(function(cl){
+      var eleves=window._listesCACHE[cl]||[];
+      var el=fltV9(eleves,k);
+      if(!el.length)return;
+      var rows=mkRowsV9(el,k);
+      var pb=cl_index>0?'page-break-before:always;':'';
+      corps+='<div style="'+pb+'">';
+      corps+=mkEntetePDF(nomEcole);
+      corps+='<div style="background:#000;color:white;text-align:center;padding:5px;margin-bottom:5px"><b style="font-size:13px">'+tc.lb.toUpperCase()+' — 2025-2026</b></div>';
+      corps+='<table style="width:100%;border-collapse:collapse"><thead>';
+      corps+='<tr><td colspan="8" style="padding:6px 8px;font-weight:bold;font-size:14px;background:#eee;border-top:2px solid #000;border-bottom:1px solid #333">'+cl+' ('+el.length+' eleves)</td></tr>';
+      corps+='<tr style="background:#000;color:white">'+th+'</tr></thead><tbody>'+rows+'</tbody>';
+      if(k!=='v'&&k!=='b'&&k!=='l'){
+        var tv=smV9(el,'montant_du'),vv=smV9(el,'versement'),sv=smV9(el,'solde');
+        corps+='<tfoot><tr style="background:#000;color:white"><td colspan="3" style="padding:4px 8px;font-size:12px;font-weight:bold">TOTAUX '+cl+'</td><td style="padding:4px;font-size:12px;font-weight:bold;text-align:right">'+fnV9(tv)+'</td><td style="padding:4px;font-size:12px;font-weight:bold;text-align:right">'+fnV9(vv)+'</td><td style="padding:4px;font-size:12px;font-weight:bold;text-align:right">'+fnV9(sv)+'</td><td colspan="2"></td></tr></tfoot>';
+      }
+      corps+='</table>';
+      corps+='<div style="text-align:center;font-size:11px;margin-top:4px;border-top:2px solid #000;padding-top:3px;font-weight:bold">'+nomEcole+' — '+cl+' — '+de+'</div>';
+      corps+='</div>';
+      cl_index++;
+    });
+  });
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+nf+'</title>'
+    +'<style>body{font-family:Arial,sans-serif;font-size:13px;margin:0;padding:8px;color:#000}'
+    +'@media print{body{margin:0;padding:0} .np{display:none!important} @page{size:A4 portrait;margin:8mm}}'
+    +'table{width:100%;border-collapse:collapse}'
+    +'thead{display:table-header-group}'
+    +'th{background:#000;color:#fff;padding:6px 4px;text-align:center;font-weight:bold;font-size:12px;border:1px solid rgba(255,255,255,0.3)}'
+    +'tbody tr:nth-child(even){background:#f5f5f5}</style></head><body>'
+    +'<div class="np" style="background:#f5f5f5;padding:10px;border-bottom:3px solid #000;margin-bottom:10px;text-align:center">'
+    +'<b style="font-size:14px">'+nf+'</b><br><br>'
+    +'<button onclick="window.print()" style="background:#000;color:#fff;border:none;padding:9px 18px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-right:8px">Imprimer / PDF</button>'
+    +'<button onclick="window.close()" style="background:#555;color:#fff;border:none;padding:9px 14px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px">Fermer</button>'
+    +'<div style="font-size:12px;color:#555;margin-top:5px">Choisir les pages voulues</div></div>'
+    +corps+'</body></html>';
+}
+
+// Relances V9
+async function ouvrirRelancesV9(){
+  var ecole=currentStaff?currentStaff.ecole:null;
+  var label=currentStaff?currentStaff.label:'';
+  if(!ecole){showToast('Non connecte','error');return;}
+  var sheetsId=SHEETS_IDS[ecole];
+  if(!sheetsId){showToast('Ecole non configuree','error');return;}
+  showToast('Chargement classes...','');
+  var onglets=await listerOnglets(sheetsId);
+  if(!onglets.length){imprimerListe('relance','');return;}
+  afficherModaleRelancesV9({onglets:onglets,sheetsId:sheetsId,label:label});
+}
+
+function afficherModaleRelancesV9(ctx){
+  var old=document.getElementById('modaleRelancesV9');if(old)old.remove();
+  var opts='<option value="TOUTE_ECOLE">Toute ecole ('+ctx.onglets.length+' classes)</option>';
+  ctx.onglets.forEach(function(c){opts+='<option value="'+c+'">'+c+'</option>';});
+  var m=document.createElement('div');
+  m.id='modaleRelancesV9';
+  m.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9990;display:flex;align-items:center;justify-content:center;padding:10px';
+  m.innerHTML='<div style="background:#fff;border-radius:12px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.3)">'
+    +'<div style="background:#C62828;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center">'
+    +'<span style="font-weight:700;font-size:0.95em">Relances Parents — '+ctx.label+'</span>'
+    +'<button onclick="fermerModaleRel()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:20px;padding:4px 10px;cursor:pointer">&#x2715;</button>'
+    +'</div>'
+    +'<div style="padding:16px">'
+    +'<div style="margin-bottom:12px"><label style="font-size:0.74em;font-weight:700;color:var(--bleu);display:block;margin-bottom:5px">Classe</label>'
+    +'<select id="relCl" style="width:100%;padding:9px;border:1.5px solid var(--border);border-radius:8px;font-size:0.84em;font-family:DM Sans,sans-serif;outline:none">'+opts+'</select></div>'
+    +'<div style="margin-bottom:12px"><label style="font-size:0.74em;font-weight:700;color:var(--bleu);display:block;margin-bottom:5px">Type</label>'
+    +'<select id="relTr" style="width:100%;padding:9px;border:1.5px solid var(--border);border-radius:8px;font-size:0.84em;font-family:DM Sans,sans-serif;outline:none">'
+    +'<option value="r">En retard de paiement</option>'
+    +'<option value="i">N ayant rien paye</option>'
+    +'<option value="t">Tous les eleves</option>'
+    +'</select></div>'
+    +'<div style="margin-bottom:14px"><label style="font-size:0.74em;font-weight:700;color:var(--bleu);display:block;margin-bottom:5px">Message (optionnel)</label>'
+    +'<textarea id="relMsg" placeholder="Laisser vide pour message standard" style="width:100%;padding:9px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;font-family:DM Sans,sans-serif;outline:none;height:70px;resize:none"></textarea></div>'
+    +'<button id="btnGenRel" onclick="genRelancesV9()" style="width:100%;padding:12px;background:#C62828;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.88em;cursor:pointer">Generer les Bons de Relance</button>'
+    +'<p style="font-size:0.72em;color:var(--gris);margin-top:8px;text-align:center">3 bons par page A4 — decoupables apres impression</p>'
+    +'</div></div>';
+  document.body.appendChild(m);
+  window._relCtx=ctx;
+}
+
+async function genRelancesV9(){
+  var ctx=window._relCtx;if(!ctx)return;
+  var cl=document.getElementById('relCl').value;
+  var tr=document.getElementById('relTr').value;
+  var mp=document.getElementById('relMsg').value.trim();
+  var btn=document.getElementById('btnGenRel');
+  btn.disabled=true;btn.textContent='Chargement...';
+  var classes_data=[];
+  if(cl==='TOUTE_ECOLE'){
+    for(var i=0;i<ctx.onglets.length;i++){
+      var c=ctx.onglets[i];
+      if(!window._listesCACHE||!window._listesCACHE[c])
+        window._listesCACHE=window._listesCACHE||{},window._listesCACHE[c]=await lireOngletClasse(ctx.sheetsId,c);
+      classes_data.push({nom:c,eleves:window._listesCACHE[c]||[]});
+    }
+  }else{
+    if(!window._listesCACHE)window._listesCACHE={};
+    if(!window._listesCACHE[cl])window._listesCACHE[cl]=await lireOngletClasse(ctx.sheetsId,cl);
+    classes_data.push({nom:cl,eleves:window._listesCACHE[cl]||[]});
+  }
+  btn.disabled=false;btn.textContent='Generer les Bons de Relance';
+  var w=window.open('','_blank');
+  if(!w){showToast('Autorisez les popups','error');return;}
+  w.document.write(mkBonsV9({config:{nom_ecole:ctx.label,annee:'2025-2026'},classes:classes_data},tr,mp));
+  w.document.close();
+}
+
+function mkBonsV9(data,tr,mp){
+  var MSGS={
+    r:'Nous vous informons que la scolarite de votre enfant presente un solde impaye. Merci de regulariser dans les meilleurs delais.',
+    i:'Votre enfant ne figure pas dans nos registres de paiement. Merci de regulariser sa situation rapidement.',
+    t:'Nous vous informons de la situation de scolarite de votre enfant pour l annee 2025-2026.'
+  };
+  var mf=mp||MSGS[tr]||MSGS.r;
+  var d=new Date(),de=d.toLocaleDateString('fr-FR');
+  var bons='',tot=0;
+  data.classes.forEach(function(cl){
+    var el=cl.eleves||[];
+    var filtered=tr==='t'?el:tr==='r'?el.filter(function(e){return Number(e.solde)>0;}):el.filter(function(e){return Number(e.versement)===0;});
+    filtered.forEach(function(e){
+      tot++;
+      var s=Number(e.solde||0),v=Number(e.versement||0),du=Number(e.montant_du||0);
+      var st=s<=0?'SOLDE':v===0?'IMPAYE':'PARTIEL';
+      var tel=ctV9(e)||e.tel1||e.tel2||e.tel3||'-';
+      bons+='<div style="border:2px solid #000;border-radius:3px;padding:8px 10px;margin-bottom:8px;page-break-inside:avoid">'
+        +'<div style="border-bottom:2px solid #000;padding-bottom:4px;margin-bottom:5px;display:flex;justify-content:space-between;align-items:center">'
+        +'<b style="font-size:11px">'+data.config.nom_ecole+'</b>'
+        +'<span style="font-size:9px;font-weight:bold;background:#000;color:white;padding:2px 7px;border-radius:3px">BON DE RELANCE — '+data.config.annee+'</span>'
+        +'</div>'
+        +'<div style="font-size:9px;margin-bottom:3px"><b>Eleve :</b> '+e.nom_prenom+' &nbsp;<b>Matricule :</b> '+e.matricule+' &nbsp;<b>Classe :</b> '+cl.nom+'</div>'
+        +'<div style="font-size:9px;margin-bottom:3px"><b>Total :</b> '+fnV9(du)+' &nbsp;<b>Verse :</b> '+fnV9(v)+' &nbsp;<b>Reste :</b> <b>'+fnV9(s)+'</b> &nbsp;Statut : '+st+'</div>'
+        +'<div style="font-size:9px;margin-bottom:4px"><b>Contact :</b> '+tel+'</div>'
+        +'<div style="background:#f5f5f5;border:1px solid #ccc;padding:4px 8px;font-size:9px;font-style:italic;border-radius:3px;margin-bottom:4px">'+mf+'</div>'
+        +'<div style="display:flex;justify-content:space-between;border-top:1px solid #ccc;padding-top:3px;font-size:8px">'
+        +'<span><b>Date :</b> '+de+'</span><span>Signature : ___________</span></div>'
+        +'</div>';
+    });
+  });
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>'
+    +'body{font-family:Arial,sans-serif;font-size:10px;margin:0;padding:8px}'
+    +'@media print{body{margin:0;padding:0} .np{display:none!important} @page{size:A4 portrait;margin:6mm}}'
+    +'</style></head><body>'
+    +'<div class="np" style="padding:10px;border-bottom:2px solid #000;margin-bottom:10px;background:#f5f5f5">'
+    +'<button onclick="window.print()" style="background:#000;color:white;border:none;padding:9px 18px;font-size:12px;font-weight:bold;cursor:pointer;border-radius:4px;margin-right:8px">Imprimer les Bons</button>'
+    +'<button onclick="window.close()" style="background:#555;color:white;border:none;padding:9px 14px;font-size:12px;font-weight:bold;cursor:pointer;border-radius:4px">Fermer</button>'
+    +'<span style="margin-left:10px;font-size:10px;color:#555">'+tot+' bon(s) a imprimer</span>'
+    +'</div>'+bons+'</body></html>';
 }
 
 // ══ HELPERS ══
