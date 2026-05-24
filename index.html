@@ -720,7 +720,7 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
         du: parseMontant(row[3]), verse: parseMontant(row[4]), solde: parseMontant(row[5]),
         tel1: String(row[6]||"").trim(), tel2: String(row[7]||"").trim(), tel3: String(row[8]||"").trim(),
         statut: String(row[9]||"").trim(), club1: String(row[10]||"").trim(), club2: String(row[11]||"").trim(),
-        decision: String(row[14]||"").trim().toUpperCase(),
+        decision: String(row[14]||"").trim().toUpperCase(), moy_annuelle: parseFloat(String(row[15]||"").replace(",",".")) || 0, niveau_suivant: String(row[16]||"").trim(),
         moy_annuelle: parseFloat(String(row[15]||"").replace(",",".")) || 0,
         ecoleCode: codeEcole, sheetsId: sheetsIdDirect,
       };
@@ -817,7 +817,7 @@ function _cardCEPE_Admis(prenom,moy,score,tel,ecoleCode){var destCepe=DESTINATIO
 function _cardCEPE_Refuse(prenom,moy,score,tel,ecoleCode){return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#E65100,#F57C00)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-pulse\">&#128170;</span><div class=\"cpp-titre\">Courage "+prenom+" !</div><div class=\"cpp-msg-box\">Le redoublement en CM2 est une nouvelle chance. Avec du travail, vous reussirez l\u0027annee prochaine !</div></div>"+_blocContact(tel);}
 
 async function afficherSectionResultats(eleve) {
-  var section=document.getElementById("sectionResultats");var div=document.getElementById("resultatsBody");if(!section||!div)return;section.style.display="block";var titreRes=document.getElementById("titreResultats");if(titreRes)titreRes.innerHTML="&#127942; RESULTATS DE FIN D'ANNEE "+ANNEE_SCOLAIRE_ACTIVE+" <span>v</span>";var decision=(eleve.decision||"").trim().toUpperCase();var moyRaw=parseFloat(String(eleve.moy_annuelle||0).replace(',','.'))||0;var moy=(moyRaw>0&&moyRaw<=20)?moyRaw:0;var classe=(eleve.classe||"").trim().toUpperCase();var ecole=(eleve.ecoleCode||"").trim().toUpperCase();var prenom=(eleve.nom||"").split(" ")[0];var typeClasse=detecterTypeClasse(classe,ecole);var info=window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{};var tel=info.tel||"0708111269";var nc=getProchaineClasse(classe,moy);var htmlAnim="";
+  var section=document.getElementById("sectionResultats");var div=document.getElementById("resultatsBody");if(!section||!div)return;section.style.display="block";var titreRes=document.getElementById("titreResultats");if(titreRes)titreRes.innerHTML="&#127942; RESULTATS DE FIN D'ANNEE "+ANNEE_SCOLAIRE_ACTIVE+" <span>v</span>";var decision=(eleve.decision||"").trim().toUpperCase();var moyRaw=parseFloat(String(eleve.moy_annuelle||0).replace(',','.'))||0;var moy=(moyRaw>0&&moyRaw<=20)?moyRaw:0;var classe=(eleve.classe||"").trim().toUpperCase();var ecole=(eleve.ecoleCode||"").trim().toUpperCase();var prenom=(eleve.nom||"").split(" ")[0];var typeClasse=detecterTypeClasse(classe,ecole);var info=window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{};var tel=info.tel||"0708111269";var nc = eleve.niveau_suivant || getProchaineClasse(classe,moy);var htmlAnim="";
   if (decision === "RNO") {
     var examen = await chargerResultatExamen(eleve);
     var typeExamen = estCM2(classe) ? "CEPE" : estTerminale(classe) ? "BAC" : "BEPC";
