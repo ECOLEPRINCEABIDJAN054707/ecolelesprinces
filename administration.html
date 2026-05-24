@@ -224,6 +224,12 @@ table tr:nth-child(even){background:#F8FAFD}
 .modal-btns button{flex:1;padding:11px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.82em;min-width:70px}
 .raison-sel{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.84em;font-family:'DM Sans',sans-serif;outline:none;margin-top:10px}
 
+/* PÉDAGOGIE ONGLETS */
+.peda-tab{padding:10px 14px;cursor:pointer;font-size:0.78em;font-weight:600;color:var(--gris);border-bottom:3px solid transparent;white-space:nowrap;transition:all 0.2s}
+.peda-tab:hover{color:var(--bleu)}
+.peda-tab.active{color:var(--bleu);border-bottom-color:var(--bleu)}
+.peda-page{display:none}.peda-page.active{display:block}
+
 /* TOAST */
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(80px);background:#333;color:#fff;padding:11px 18px;border-radius:24px;font-size:0.8em;font-weight:600;z-index:9999;transition:transform 0.3s;white-space:nowrap;opacity:0}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -339,13 +345,92 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 
-  <!-- SECTION SUIVI PÉDAGO (tous types) -->
+  <!-- SECTION SUIVI PÉDAGO COMPLET -->
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
-      <h3>📈 Suivi pédagogique — Cahiers de textes</h3><span class="arr">▼</span>
+      <h3>📈 Suivi pédagogique complet</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="dirPedaBody">
-      <p style="padding:14px;font-size:0.82em;color:var(--gris)">⏳ Chargement du suivi pédagogique...</p>
+      <!-- ONGLETS -->
+      <div style="display:flex;overflow-x:auto;border-bottom:2px solid var(--border);background:#fff">
+        <div class="peda-tab active" onclick="showPedaPage('dashboard',this)">📊 Dashboard</div>
+        <div class="peda-tab" onclick="showPedaPage('saisie',this)">✏️ Saisie Cahier</div>
+        <div class="peda-tab" onclick="showPedaPage('suivi',this)">📈 Suivi</div>
+        <div class="peda-tab" onclick="showPedaPage('alertes',this)">🔔 Alertes</div>
+        <div class="peda-tab" onclick="showPedaPage('progressions',this)">📚 Progressions CI</div>
+      </div>
+
+      <!-- PAGE DASHBOARD -->
+      <div id="peda-dashboard" class="peda-page active" style="padding:12px">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+          <div class="stat-box vert"><div class="stat-val" id="pStat-ok">—</div><div class="stat-lbl">✅ Dans les temps</div></div>
+          <div class="stat-box orange"><div class="stat-val" id="pStat-att">—</div><div class="stat-lbl">⚠️ Attention</div></div>
+          <div class="stat-box rouge"><div class="stat-val" id="pStat-ret">—</div><div class="stat-lbl">🔴 Retard</div></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <select id="pFiltreStatut" onchange="filtrerPedaDash()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:'DM Sans',sans-serif;outline:none">
+            <option value="">Tous statuts</option>
+            <option value="ok">✅ Dans les temps</option>
+            <option value="attention">⚠️ Attention</option>
+            <option value="retard">🔴 Retard</option>
+            <option value="avance">🚀 En avance</option>
+          </select>
+          <input id="pFiltreSearch" type="text" placeholder="🔍 Rechercher enseignant..." oninput="filtrerPedaDash()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:'DM Sans',sans-serif;outline:none;flex:1;min-width:140px">
+          <button onclick="actualiserPeda()" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.78em;font-weight:600;cursor:pointer">🔄 Actualiser</button>
+        </div>
+        <div id="peda-dashboard-content" class="tbl-wrap">
+          <div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div><p style="font-size:0.82em">Chargement...</p></div>
+        </div>
+      </div>
+
+      <!-- PAGE SAISIE -->
+      <div id="peda-saisie" class="peda-page" style="padding:14px;display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div><label style="font-size:0.72em;font-weight:700;color:var(--bleu);display:block;margin-bottom:4px">📅 Date</label><input type="date" id="pf-date" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82em;outline:none"></div>
+          <div><label style="font-size:0.72em;font-weight:700;color:var(--bleu);display:block;margin-bottom:4px">⏰ Heure</label><input type="time" id="pf-heure" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82em;outline:none"></div>
+          <div><label style="font-size:0.72em;font-weight:700;color:var(--bleu);display:block;margin-bottom:4px">📚 Classe</label><input type="text" id="pf-classe" placeholder="Ex: TLE D-2" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82em;outline:none"></div>
+          <div><label style="font-size:0.72em;font-weight:700;color:var(--bleu);display:block;margin-bottom:4px">📖 Matière</label><input type="text" id="pf-matiere" placeholder="Ex: Mathématiques" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82em;outline:none"></div>
+          <div><label style="font-size:0.72em;font-weight:700;color:var(--bleu);display:block;margin-bottom:4px">👨‍🏫 Enseignant</label><input type="text" id="pf-enseignant" placeholder="Nom et prénom" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82em;outline:none"></div>
+          <div><label style="font-size:0.72em;font-weight:700;color:var(--bleu);display:block;margin-bottom:4px">📝 Leçon / Titre</label><input type="text" id="pf-lecon" placeholder="Titre de la leçon" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82em;outline:none"></div>
+          <div><label style="font-size:0.72em;font-weight:700;color:var(--bleu);display:block;margin-bottom:4px">📊 Sem. théorique</label><input type="number" id="pf-sem-theo" min="1" max="30" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82em;outline:none"></div>
+          <div><label style="font-size:0.72em;font-weight:700;color:var(--bleu);display:block;margin-bottom:4px">📊 Sem. réelle</label><input type="number" id="pf-sem-reel" min="1" max="30" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82em;outline:none"></div>
+          <div><label style="font-size:0.72em;font-weight:700;color:var(--bleu);display:block;margin-bottom:4px">✅ Avancement (%)</label><input type="number" id="pf-avancement" min="0" max="100" placeholder="0-100" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82em;outline:none"></div>
+          <div><label style="font-size:0.72em;font-weight:700;color:var(--bleu);display:block;margin-bottom:4px">📋 Devoir donné</label><input type="text" id="pf-devoir" placeholder="Description" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82em;outline:none"></div>
+        </div>
+        <div style="grid-column:1/-1;margin-top:8px"><label style="font-size:0.72em;font-weight:700;color:var(--bleu);display:block;margin-bottom:4px">💬 Observations</label><textarea id="pf-obs" placeholder="Remarques..." style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82em;outline:none;resize:none;height:60px"></textarea></div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button onclick="sauvegarderCahierDir()" style="flex:1;padding:10px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-weight:700;font-family:'DM Sans',sans-serif;font-size:0.82em;cursor:pointer">💾 Enregistrer dans Google Sheets</button>
+          <button onclick="resetCahierDir()" style="padding:10px 14px;background:var(--border);border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:0.82em;cursor:pointer">🗑️ Effacer</button>
+        </div>
+        <div id="pf-feedback" style="margin-top:8px"></div>
+      </div>
+
+      <!-- PAGE SUIVI -->
+      <div id="peda-suivi" class="peda-page" style="padding:0;display:none">
+        <div style="padding:10px 12px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+          <input id="pFiltreEns" type="text" placeholder="🔍 Enseignant..." oninput="filtrerPedaSuivi()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:'DM Sans',sans-serif;outline:none;flex:1;min-width:120px">
+          <input id="pFiltreClasse" type="text" placeholder="Classe..." oninput="filtrerPedaSuivi()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:'DM Sans',sans-serif;outline:none;width:90px">
+        </div>
+        <div id="peda-suivi-content" class="tbl-wrap">
+          <div style="text-align:center;padding:20px;color:var(--gris);font-size:0.82em">Chargement...</div>
+        </div>
+      </div>
+
+      <!-- PAGE ALERTES -->
+      <div id="peda-alertes" class="peda-page" style="padding:12px;display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <span style="font-size:0.8em;font-weight:600;color:var(--bleu)">Enseignants en retard sur le programme</span>
+          <button onclick="envoyerAlertesEmailDir()" style="padding:6px 12px;background:var(--rouge);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">📧 Envoyer rapport</button>
+        </div>
+        <div id="peda-alertes-content">
+          <div style="text-align:center;padding:20px;color:var(--gris);font-size:0.82em">Chargement des alertes...</div>
+        </div>
+      </div>
+
+      <!-- PAGE PROGRESSIONS CI -->
+      <div id="peda-progressions" class="peda-page" style="padding:12px;display:none">
+        <div id="peda-prog-content"></div>
+      </div>
     </div>
   </div>
 
@@ -455,50 +540,137 @@ table tr:nth-child(even){background:#F8FAFD}
       <button class="btn-logout" onclick="logout()">Déconnexion</button>
     </div>
   </div>
+  <!-- Stats : impayés, inscriptions, tâches -->
   <div class="stats-row s3">
-    <div class="stat-box rouge"><div class="stat-val" id="cStatImpaye">0</div><div class="stat-lbl">Impayés</div></div>
+    <div class="stat-box rouge"><div class="stat-val" id="cStatImpaye">0</div><div class="stat-lbl">Soldes impayés</div></div>
     <div class="stat-box or"><div class="stat-val" id="cStatInsc">0</div><div class="stat-lbl">Nouvelles inscr.</div></div>
     <div class="stat-box vert"><div class="stat-val" id="cStatTaches">0</div><div class="stat-lbl">Tâches du jour</div></div>
   </div>
+
+  <!-- 1. NOM + CLASSE — lecture seule -->
   <div class="section">
-    <div class="sec-head sec-bleu open" onclick="toggleSec(this)"><h3>💳 Suivi des paiements</h3><span class="arr">▼</span></div>
+    <div class="sec-head sec-bleu open" onclick="toggleSec(this)">
+      <h3>👥 Élèves — Nom & Classe (lecture)</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body open" id="comElevesBody">
+      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Pas de modification autorisée</p>
+    </div>
+  </div>
+
+  <!-- 2. NOTES & MOYENNES — lecture seule -->
+  <div class="section">
+    <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+      <h3>📊 Notes & Moyennes (lecture)</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="comNotesBody">
+      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Connexion Google Sheets requise</p>
+    </div>
+  </div>
+
+  <!-- 3. ABSENCES — lecture seule -->
+  <div class="section">
+    <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+      <h3>📅 Absences (lecture)</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="comAbsencesBody">
+      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Connexion Google Sheets requise</p>
+    </div>
+  </div>
+
+  <!-- 4. SOLDE ÉLÈVE INDIVIDUEL — lecture seule -->
+  <div class="section">
+    <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
+      <h3>💳 Soldes élèves — Suivi paiements (lecture)</h3><span class="arr">▼</span>
+    </div>
     <div class="sec-body open" id="comPaiBody"></div>
   </div>
+
+  <!-- 5. SALAIRES ENSEIGNANTS — ✓✓ modifier -->
   <div class="section">
-    <div class="sec-head sec-vert" onclick="toggleSec(this)"><h3>📋 Inscriptions 2025-2026</h3><span class="arr">▼</span></div>
-    <div class="sec-body" id="comInscBody"></div>
-  </div>
-  <div class="section">
-    <div class="sec-head sec-or" onclick="toggleSec(this)"><h3>💰 Salaires enseignants</h3><span class="arr">▼</span></div>
+    <div class="sec-head sec-or" onclick="toggleSec(this)">
+      <h3>💰 Salaires enseignants (✓✓ modifier)</h3><span class="arr">▼</span>
+    </div>
     <div class="sec-body" id="comSalBody"></div>
   </div>
+
+  <!-- 6. INSCRIPTIONS — modifier -->
   <div class="section">
-    <div class="sec-head sec-orange" onclick="toggleSec(this)"><h3>✅ Tâches administratives</h3><span class="arr">▼</span></div>
-    <div class="sec-body" id="comTachesBody"></div>
+    <div class="sec-head sec-vert" onclick="toggleSec(this)">
+      <h3>📋 Inscriptions 2025-2026 (✓✓ modifier)</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="comInscBody"></div>
   </div>
+
+  <!-- 7. LISTES — scolarité, en retard, vierge, contacts, absences+contacts -->
   <div class="section">
-    <div class="sec-head sec-bleu" onclick="toggleSec(this)"><h3>🖨️ Listes & Relances</h3><span class="arr">▼</span></div>
+    <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+      <h3>🖨️ Listes par niveau (✓🖨 impression)</h3><span class="arr">▼</span>
+    </div>
     <div class="sec-body">
+      <div style="padding:10px 14px;background:#FFF8E1;font-size:0.76em;color:#7a5f00;border-bottom:1px solid var(--border)">
+        ✓ Scolarité complète · En retard · Liste vierge · Liste+contacts · Absences+contacts
+      </div>
       <div class="actions-grid">
-        <div class="action-btn" onclick="showToast('Scolarité — Bientôt','')"><div class="ab-ico">📋</div><div class="ab-titre">Scolarité complète</div><div class="ab-desc">Tous les élèves</div></div>
-        <div class="action-btn" onclick="showToast('En retard — Bientôt','')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Soldes impayés</div></div>
-        <div class="action-btn" onclick="showToast('Vierge — Bientôt','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Noms uniquement</div></div>
-        <div class="action-btn" onclick="showToast('Contacts — Bientôt','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
-        <div class="action-btn" onclick="showToast('Absences — Bientôt','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences</div><div class="ab-desc">+ contacts</div></div>
-        <div class="action-btn" onclick="showToast('Relances — Bientôt','')"><div class="ab-ico">📬</div><div class="ab-titre">Relances parents</div><div class="ab-desc">3 bons / A4</div></div>
+        <div class="action-btn" onclick="showToast('Scolarité — Connexion Sheets requise','')"><div class="ab-ico">📋</div><div class="ab-titre">Scolarité complète</div><div class="ab-desc">Tous les élèves</div></div>
+        <div class="action-btn" onclick="showToast('En retard — Bientôt disponible','')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Soldes impayés</div></div>
+        <div class="action-btn" onclick="showToast('Vierge — Bientôt disponible','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Noms uniquement</div></div>
+        <div class="action-btn" onclick="showToast('Contacts — Bientôt disponible','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
+        <div class="action-btn" onclick="showToast('Absences+contacts — Bientôt','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences + contacts</div><div class="ab-desc">Suivi absences</div></div>
+        <div class="action-btn" style="border-color:var(--rouge)" onclick="showToast('NON AUTORISÉ — Le comptable ne voit pas le solde total','error')"><div class="ab-ico">🚫</div><div class="ab-titre">Solde total</div><div class="ab-desc">Non autorisé</div></div>
       </div>
     </div>
   </div>
+
+  <!-- 8. RELANCES PARENTS — ✓🖨 -->
   <div class="section">
-    <div class="sec-head sec-violet" onclick="toggleSec(this)"><h3>📨 Courriers</h3><span class="arr">▼</span></div>
+    <div class="sec-head sec-rouge" onclick="toggleSec(this)">
+      <h3>📬 Relances parents (✓🖨 impression)</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body">
+      <div style="padding:14px">
+        <p style="font-size:0.8em;color:var(--gris);margin-bottom:10px">Générer les bons de relance pour les élèves en retard de paiement — 3 bons par page A4</p>
+        <button onclick="showToast('Relances — Connexion Google Sheets requise','')" style="width:100%;padding:11px;background:var(--rouge);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.82em;cursor:pointer">📬 Générer bons de relance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. MOTIFS EXCLUSION — lecture -->
+  <div class="section">
+    <div class="sec-head sec-violet" onclick="toggleSec(this)">
+      <h3>🔒 Motifs exclusion (✓ lecture)</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="comMotifsBody">
+      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Connexion Google Sheets requise</p>
+    </div>
+  </div>
+
+  <!-- 10. TÂCHES ADMIN -->
+  <div class="section">
+    <div class="sec-head sec-orange" onclick="toggleSec(this)">
+      <h3>✅ Tâches administratives</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="comTachesBody"></div>
+  </div>
+
+  <!-- 11. COURRIERS -->
+  <div class="section">
+    <div class="sec-head sec-violet" onclick="toggleSec(this)">
+      <h3>📨 Courriers & correspondances</h3><span class="arr">▼</span>
+    </div>
     <div class="sec-body" id="comCourrierBody"></div>
   </div>
-  <div class="footer">Réseau CPP Les Princes d'Abidjan · Espace Comptable · 2025-2026</div>
+
+  <!-- INTERDIT -->
+  <div class="section">
+    <div style="padding:12px 16px;background:#FFEBEE;border-left:4px solid var(--rouge)">
+      <p style="font-size:0.76em;font-weight:700;color:var(--rouge);margin-bottom:4px">🚫 Accès INTERDIT pour le Comptable</p>
+      <p style="font-size:0.72em;color:var(--rouge)">Solde total école · Masse salariale totale · Modifier SYNTHESE · Codes secrets staff · Saisir notes · Valider bulletins</p>
+    </div>
+  </div>
+
+  <div class="footer">Princes Smart School · Espace Comptable · 2025-2026</div>
 </div>
 
-<!-- ══════════════════════════════
-     ESPACE ÉDUCATEUR
-══════════════════════════════ -->
 <div id="espaceEdu" class="espace">
   <div class="hdr hdr-edu">
     <div class="hdr-top">
@@ -518,34 +690,139 @@ table tr:nth-child(even){background:#F8FAFD}
     <div class="stat-box or"><div class="stat-val" id="eStatEleves">0</div><div class="stat-lbl">Mes élèves</div></div>
     <div class="stat-box vert"><div class="stat-val" id="eStatReussite">0%</div><div class="stat-lbl">Taux réussite</div></div>
   </div>
+
+  <!-- Citation motivante -->
+  <div style="margin:0 14px 10px;background:linear-gradient(135deg,rgba(212,175,55,0.1),rgba(61,42,110,0.15));border:1px solid rgba(212,175,55,0.3);border-radius:12px;padding:14px;text-align:center">
+    <p id="eduCitation" style="font-size:0.82em;color:var(--or);font-style:italic;line-height:1.7">"Un éducateur n'enseigne pas une matière. Il ouvre un avenir."</p>
+    <span style="font-size:0.7em;color:var(--gris)">— Philosophie Princes Smart School</span>
+  </div>
+
+  <!-- 1. NOM + CLASSE — lecture seule -->
   <div class="section">
-    <div class="sec-head sec-bleu open" onclick="toggleSec(this)"><h3>📊 Tableau de bord élèves</h3><span class="arr">▼</span></div>
+    <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+      <h3>👥 Élèves — Nom & Classe (lecture)</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="eduNomClasseBody">
+      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Pas de modification autorisée</p>
+    </div>
+  </div>
+
+  <!-- 2. NOTES & MOYENNES — lecture seule -->
+  <div class="section">
+    <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+      <h3>📊 Notes & Moyennes (lecture)</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="eduNotesBody">
+      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Pour accompagner les élèves</p>
+    </div>
+  </div>
+
+  <!-- 3. ABSENCES — lecture seule -->
+  <div class="section">
+    <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+      <h3>📅 Absences (lecture)</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="eduAbsencesBody">
+      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Suivi présence élèves</p>
+    </div>
+  </div>
+
+  <!-- 4. SOLDE ÉLÈVE INDIVIDUEL — lecture seule -->
+  <div class="section">
+    <div class="sec-head sec-or" onclick="toggleSec(this)">
+      <h3>💳 Solde individuel élève (✓ lecture)</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="eduSoldeBody">
+      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture seule · Pas de solde total · Connexion Sheets requise</p>
+    </div>
+  </div>
+
+  <!-- 5. TABLEAU DE BORD ÉLÈVES complet -->
+  <div class="section">
+    <div class="sec-head sec-bleu open" onclick="toggleSec(this)">
+      <h3>📊 Tableau de bord — Mes élèves</h3><span class="arr">▼</span>
+    </div>
     <div class="sec-body open" id="eduElevesBody"></div>
   </div>
+
+  <!-- 6. LISTES — vierge, contacts, absences+contacts, scolarité sans total -->
   <div class="section">
-    <div class="sec-head sec-fonce" onclick="toggleSec(this)"><h3>✦ Les 7 engagements</h3><span class="arr">▼</span></div>
-    <div class="sec-body" id="eduCharteBody"></div>
-  </div>
-  <div class="section">
-    <div class="sec-head sec-vert" onclick="toggleSec(this)"><h3>🖨️ Mes listes</h3><span class="arr">▼</span></div>
+    <div class="sec-head sec-vert" onclick="toggleSec(this)">
+      <h3>🖨️ Mes listes (✓🖨 impression)</h3><span class="arr">▼</span>
+    </div>
     <div class="sec-body">
+      <div style="padding:10px 14px;background:#E8F5E9;font-size:0.76em;color:var(--vert);border-bottom:1px solid var(--border)">
+        ✓ Liste vierge · Liste+contacts (ses élèves) · Absences+contacts (ses élèves) · Scolarité sans total
+      </div>
       <div class="actions-grid">
-        <div class="action-btn" onclick="showToast('Vierge — Bientôt','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Mes élèves</div></div>
-        <div class="action-btn" onclick="showToast('Contacts — Bientôt','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
-        <div class="action-btn" onclick="showToast('Absences — Bientôt','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences</div><div class="ab-desc">+ contacts</div></div>
-        <div class="action-btn" onclick="showToast('Scolarité — Bientôt','')"><div class="ab-ico">💳</div><div class="ab-titre">Scolarité</div><div class="ab-desc">Sans total</div></div>
+        <div class="action-btn" onclick="showToast('Liste vierge — Bientôt disponible','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Mes élèves uniquement</div></div>
+        <div class="action-btn" onclick="showToast('Contacts — Bientôt disponible','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents mes élèves</div></div>
+        <div class="action-btn" onclick="showToast('Absences+contacts — Bientôt','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences + contacts</div><div class="ab-desc">Mes élèves uniquement</div></div>
+        <div class="action-btn" onclick="showToast('Scolarité sans total — Bientôt','')"><div class="ab-ico">💳</div><div class="ab-titre">Scolarité</div><div class="ab-desc">Sans solde total</div></div>
+        <div class="action-btn" style="border-color:var(--rouge);opacity:0.6" onclick="showToast('NON AUTORISÉ — En retard est réservé au comptable/directeur','error')"><div class="ab-ico">🚫</div><div class="ab-titre">Liste en retard</div><div class="ab-desc">Non autorisé</div></div>
+        <div class="action-btn" style="border-color:var(--rouge);opacity:0.6" onclick="showToast('NON AUTORISÉ — Relances réservées au comptable/directeur','error')"><div class="ab-ico">🚫</div><div class="ab-titre">Relances parents</div><div class="ab-desc">Non autorisé</div></div>
       </div>
     </div>
   </div>
+
+  <!-- 7. MOTIFS EXCLUSION — lecture -->
   <div class="section">
-    <div class="sec-head sec-or" onclick="toggleSec(this)"><h3>🎓 Formation professionnelle</h3><span class="arr">▼</span></div>
+    <div class="sec-head sec-violet" onclick="toggleSec(this)">
+      <h3>🔒 Motifs exclusion (✓ lecture)</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="eduMotifsBody">
+      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Pour accompagner les familles</p>
+    </div>
+  </div>
+
+  <!-- 8. CHARTE 7 ENGAGEMENTS -->
+  <div class="section">
+    <div class="sec-head sec-fonce" onclick="toggleSec(this)">
+      <h3>✦ Ma charte — Les 7 engagements</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="eduCharteBody"></div>
+  </div>
+
+  <!-- 9. OUTILS QUOTIDIENS -->
+  <div class="section">
+    <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+      <h3>🛠 Mes outils quotidiens</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body">
+      <div class="actions-grid">
+        <div class="action-btn" onclick="showToast('Journal de bord — Bientôt','')"><div class="ab-ico">📓</div><div class="ab-titre">Journal de bord</div><div class="ab-desc">Observations élèves</div></div>
+        <div class="action-btn" onclick="showToast('Fiche de suivi — Bientôt','')"><div class="ab-ico">📋</div><div class="ab-titre">Fiche de suivi</div><div class="ab-desc">Entretien parent-éducateur</div></div>
+        <div class="action-btn" onclick="showToast('Contrat progrès — Bientôt','')"><div class="ab-ico">🤝</div><div class="ab-titre">Contrat progrès</div><div class="ab-desc">Plan de remédiation</div></div>
+        <div class="action-btn" onclick="showToast('Messagerie — Bientôt','')"><div class="ab-ico">💬</div><div class="ab-titre">Messagerie</div><div class="ab-desc">Contact collègues/direction</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. FORMATION -->
+  <div class="section">
+    <div class="sec-head sec-or" onclick="toggleSec(this)">
+      <h3>🎓 Formation professionnelle</h3><span class="arr">▼</span>
+    </div>
     <div class="sec-body" id="eduFormBody"></div>
   </div>
+
+  <!-- 11. FORUM RÉSEAU -->
   <div class="section">
-    <div class="sec-head sec-fonce" onclick="toggleSec(this)"><h3>🌍 Forum réseau — 12 écoles</h3><span class="arr">▼</span></div>
+    <div class="sec-head sec-fonce" onclick="toggleSec(this)">
+      <h3>🌍 Communauté réseau — 12 écoles</h3><span class="arr">▼</span>
+    </div>
     <div class="sec-body" id="eduForumBody"></div>
   </div>
-  <div class="footer">Réseau CPP Les Princes d'Abidjan · Espace Éducateur · 2025-2026</div>
+
+  <!-- INTERDIT -->
+  <div class="section">
+    <div style="padding:12px 16px;background:#FFEBEE;border-left:4px solid var(--rouge)">
+      <p style="font-size:0.76em;font-weight:700;color:var(--rouge);margin-bottom:4px">🚫 Accès INTERDIT pour l'Éducateur</p>
+      <p style="font-size:0.72em;color:var(--rouge)">Salaires enseignants · Solde total · Masse salariale · Modifier SYNTHESE · Saisir notes · Valider bulletins · Codes secrets</p>
+    </div>
+  </div>
+
+  <div class="footer">Princes Smart School · Espace Éducateur · 2025-2026</div>
 </div>
 
 <!-- MODAL COURS EN ATTENTE -->
@@ -830,6 +1107,7 @@ function afficherDir(s){
 
   // Suivi pédago
   chargerSuiviPedago(s);
+  setTimeout(initSaisiePedago, 500);
 
   // Agenda
   let hag='';
@@ -1225,54 +1503,71 @@ function afficherCom(s){
   document.getElementById('comAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]).join('');
   document.getElementById('comNom').textContent=s.nom;
   document.getElementById('comEcole').textContent=s.label;
+
+  // Stats
   const imp=PAIEMENTS_DEMO.filter(p=>p.statut!=='SOLDE').length;
   const nouv=INSCRIPTIONS_DEMO.filter(i=>i.statut==='nouveau').length;
   document.getElementById('cStatImpaye').textContent=imp;
   document.getElementById('cStatInsc').textContent=nouv;
   document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;
-  // Paiements
-  let h='';
+
+  // Élèves nom+classe — lecture seule
+  let hEl='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">✓ Lecture seule — '+PAIEMENTS_DEMO.length+' élèves (données démo)</div>';
+  PAIEMENTS_DEMO.forEach(p=>{hEl+='<div class="item"><div class="item-av" style="background:rgba(31,78,121,0.1);color:var(--bleu)">${p.nom.charAt(0)}</div><div class="item-info"><div class="item-nom">'+p.nom+'</div><div class="item-meta">Classe : '+p.classe+'</div></div></div>'.replace('${p.nom.charAt(0)}',p.nom.charAt(0));});
+  const cEl=document.getElementById('comElevesBody');if(cEl)cEl.innerHTML=hEl;
+
+  // Notes — lecture seule
+  const cN=document.getElementById('comNotesBody');
+  if(cN)cN.innerHTML='<p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture seule · Connexion Google Sheets requise pour afficher les vraies notes</p>';
+
+  // Absences — lecture seule
+  const cA=document.getElementById('comAbsencesBody');
+  if(cA)cA.innerHTML='<p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture seule · Connexion Google Sheets requise pour afficher les vraies absences</p>';
+
+  // Soldes élèves — lecture seule (PAS de total)
+  let h='<div style="padding:10px 14px;background:#FFEBEE;font-size:0.76em;color:var(--rouge);border-bottom:1px solid var(--border)">✓ Lecture seule · Pas de solde total autorisé</div>';
   PAIEMENTS_DEMO.forEach(p=>{
     const bg=p.statut==='SOLDE'?'rgba(46,125,50,0.12)':p.statut==='PARTIEL'?'rgba(230,81,0,0.12)':'rgba(198,40,40,0.12)';
     const tc=p.statut==='SOLDE'?'#2E7D32':p.statut==='PARTIEL'?'#E65100':'#C62828';
     const badge=p.statut==='SOLDE'?'<span class="bdg bg-vert">✓ Soldé</span>':p.statut==='PARTIEL'?'<span class="bdg bg-orange">⚠ Partiel</span>':'<span class="bdg bg-rouge">✗ Impayé</span>';
-    h+=`<div class="item"><div class="item-av" style="background:${bg};color:${tc}">${p.nom.charAt(0)}</div>
-      <div class="item-info"><div class="item-nom">${p.nom} ${badge}</div><div class="item-meta">${p.classe} · ${p.verse.toLocaleString('fr-FR')} / ${p.du.toLocaleString('fr-FR')} F</div></div>
-      <div class="item-val"><div class="val" style="color:${tc}">${p.solde>0?p.solde.toLocaleString('fr-FR')+' F':'✓'}</div><div class="lbl">${p.solde>0?'Reste':'Complet'}</div></div></div>`;
+    h+='<div class="item"><div class="item-av" style="background:'+bg+';color:'+tc+'">'+p.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+p.nom+' '+badge+'</div><div class="item-meta">'+p.classe+' · Versé: '+p.verse.toLocaleString('fr-FR')+' / '+p.du.toLocaleString('fr-FR')+' F</div></div><div class="item-val"><div class="val" style="color:'+tc+'">'+(p.solde>0?p.solde.toLocaleString('fr-FR')+' F':'✓')+'</div><div class="lbl">'+(p.solde>0?'Reste':'Soldé')+'</div></div></div>';
   });
+  // PAS de ligne total — interdit pour comptable
   document.getElementById('comPaiBody').innerHTML=h;
-  // Inscriptions
-  let h2='';
+
+  // Salaires — ✓✓ modifier
+  let h3='<div style="padding:10px 14px;background:#FFF8E1;font-size:0.76em;color:#7a5f00;border-bottom:1px solid var(--border)">✓✓ Modification autorisée · Données du fichier salaires 2025-2026</div>';
+  SALAIRES_ADMIN.filter(e=>e.salaire>0).forEach(e=>{h3+='<div class="rap-ligne"><span class="rap-label">'+e.nom+' <span style="color:var(--gris);font-size:0.8em">'+e.fonction+'</span></span><span class="rap-val">'+e.salaire.toLocaleString('fr-FR')+' F</span></div>';});
+  // PAS de ligne masse salariale totale — interdite pour comptable
+  document.getElementById('comSalBody').innerHTML=h3;
+
+  // Inscriptions — modifier
+  let h2='<div style="padding:10px 14px;background:#E8F5E9;font-size:0.76em;color:var(--vert);border-bottom:1px solid var(--border)">✓✓ Modification autorisée · Gestion des inscriptions</div>';
   INSCRIPTIONS_DEMO.forEach((ins,i)=>{
     const sc={nouveau:'bg-bleu',valide:'bg-vert',attente:'bg-orange'};
     const sl={nouveau:'Nouveau',valide:'Validé',attente:'En attente'};
-    h2+=`<div class="item"><div class="item-av" style="background:var(--bleu);color:#fff">${i+1}</div>
-      <div class="item-info"><div class="item-nom">${ins.nom}</div><div class="item-meta">Classe : ${ins.classe} · ${ins.date}</div></div>
-      <span class="bdg ${sc[ins.statut]}">${sl[ins.statut]}</span></div>`;
+    h2+='<div class="item"><div class="item-av" style="background:var(--bleu);color:#fff">'+(i+1)+'</div><div class="item-info"><div class="item-nom">'+ins.nom+'</div><div class="item-meta">Classe : '+ins.classe+' · '+ins.date+'</div></div><span class="bdg '+sc[ins.statut]+'">'+sl[ins.statut]+'</span></div>';
   });
   document.getElementById('comInscBody').innerHTML=h2;
-  // Salaires
-  let h3='';
-  SALAIRES_ADMIN.filter(e=>e.salaire>0).forEach(e=>{
-    h3+=`<div class="rap-ligne"><span class="rap-label">${e.nom} <span style="color:var(--gris);font-size:0.8em">${e.fonction}</span></span><span class="rap-val">${e.salaire.toLocaleString('fr-FR')} F</span></div>`;
-  });
-  const total=SALAIRES_ADMIN.reduce((s,e)=>s+(e.salaire||0),0);
-  h3+=`<div class="rap-ligne total"><span class="rap-label">TOTAL</span><span class="rap-val">${total.toLocaleString('fr-FR')} F CFA</span></div>`;
-  document.getElementById('comSalBody').innerHTML=h3;
+
   // Tâches
   let h4='';
   TACHES_DEMO.forEach((t,i)=>{
     const ps={haute:'prio-h',normale:'prio-n',basse:'prio-b'};
     const pl={haute:'Urgent',normale:'Normal',basse:'Faible'};
-    h4+=`<div class="tache"><div class="tache-check ${t.done?'done':''}" onclick="toggleTache(${i},this)">${t.done?'✓':''}</div>
-      <div class="tache-titre ${t.done?'done':''}">${t.titre}<br><small style="color:var(--gris)">⏰ ${t.heure}</small></div>
-      <span class="prio ${ps[t.prio]}">${pl[t.prio]}</span></div>`;
+    h4+='<div class="tache"><div class="tache-check '+(t.done?'done':'')+'" onclick="toggleTache('+i+',this)">'+(t.done?'✓':'')+'</div><div class="tache-titre '+(t.done?'done':'')+'">'+t.titre+'<br><small style="color:var(--gris)">⏰ '+t.heure+'</small></div><span class="prio '+ps[t.prio]+'">'+pl[t.prio]+'</span></div>';
   });
   document.getElementById('comTachesBody').innerHTML=h4;
+
   // Courriers
-  document.getElementById('comCourrierBody').innerHTML=`
-    <div class="item" style="flex-direction:column;align-items:flex-start;gap:4px"><div style="font-size:0.7em;color:var(--bleu);font-weight:700">CRT-2026-045 🔴 URGENT</div><div style="font-size:0.84em;font-weight:600">Circulaire DREN — Calendrier examens 2026</div><div style="font-size:0.7em;color:var(--gris)">📅 22/05/2026 · 📥 Reçu</div></div>
-    <div class="item" style="flex-direction:column;align-items:flex-start;gap:4px"><div style="font-size:0.7em;color:var(--bleu);font-weight:700">CRT-2026-044</div><div style="font-size:0.84em;font-weight:600">Demande attestation — Parent KONE</div><div style="font-size:0.7em;color:var(--gris)">📅 21/05/2026 · 📥 Reçu</div></div>`;
+  document.getElementById('comCourrierBody').innerHTML=
+    '<div class="item" style="flex-direction:column;align-items:flex-start;gap:4px"><div style="font-size:0.7em;color:var(--bleu);font-weight:700">CRT-2026-045 🔴 URGENT</div><div style="font-size:0.84em;font-weight:600">Circulaire DREN — Calendrier examens 2026</div><div style="font-size:0.7em;color:var(--gris)">📅 22/05/2026 · 📥 Reçu</div></div>'+
+    '<div class="item" style="flex-direction:column;align-items:flex-start;gap:4px"><div style="font-size:0.7em;color:var(--bleu);font-weight:700">CRT-2026-044</div><div style="font-size:0.84em;font-weight:600">Demande attestation — Parent KONE</div><div style="font-size:0.7em;color:var(--gris)">📅 21/05/2026 · 📥 Reçu</div></div>';
+
+  // Motifs exclusion — lecture
+  const cM=document.getElementById('comMotifsBody');
+  if(cM)cM.innerHTML='<p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture seule · Connexion Google Sheets requise</p>';
+
   document.getElementById('espaceCom').style.display='block';
 }
 
@@ -1281,31 +1576,77 @@ function afficherEdu(s){
   document.getElementById('eduAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]).join('');
   document.getElementById('eduNom').textContent=s.nom;
   document.getElementById('eduEcole').textContent=s.label;
+
   const alertes=ELEVES_EDU_DEMO.filter(e=>e.alerte).length;
   const admis=ELEVES_EDU_DEMO.filter(e=>e.moy>=5).length;
   document.getElementById('eStatAlert').textContent=alertes;
   document.getElementById('eStatEleves').textContent=ELEVES_EDU_DEMO.length;
   document.getElementById('eStatReussite').textContent=Math.round(admis/ELEVES_EDU_DEMO.length*100)+'%';
-  let h='';
+
+  // Nom+Classe — lecture seule
+  const eNC=document.getElementById('eduNomClasseBody');
+  if(eNC){
+    let h='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">✓ Lecture seule · Pas de modification autorisée</div>';
+    ELEVES_EDU_DEMO.forEach(e=>{h+='<div class="item"><div class="item-av" style="background:rgba(31,78,121,0.1);color:var(--bleu)">'+e.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+e.nom+'</div><div class="item-meta">Classe : '+e.classe+'</div></div></div>';});
+    eNC.innerHTML=h;
+  }
+
+  // Notes — lecture seule
+  const eN=document.getElementById('eduNotesBody');
+  if(eN){
+    let h='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">✓ Lecture seule · Pour accompagner les élèves</div>';
+    ELEVES_EDU_DEMO.forEach(e=>{
+      const c=e.moy>=10?'var(--vert)':e.moy>=5?'var(--orange)':'var(--rouge)';
+      h+='<div class="item"><div class="item-av" style="background:rgba(212,175,55,0.15);color:'+c+'">'+e.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+e.nom+'</div><div class="item-meta">'+e.classe+'</div></div><div class="item-val"><div class="val" style="color:'+c+'">'+e.moy.toFixed(2)+'</div><div class="lbl">/20</div></div></div>';
+    });
+    eN.innerHTML=h;
+  }
+
+  // Absences — lecture seule
+  const eA=document.getElementById('eduAbsencesBody');
+  if(eA)eA.innerHTML='<p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture seule · Connexion Google Sheets requise</p>';
+
+  // Solde individuel — lecture seule (PAS de total)
+  const eS=document.getElementById('eduSoldeBody');
+  if(eS){
+    let h='<div style="padding:10px 14px;background:#FFF8E1;font-size:0.76em;color:#7a5f00;border-bottom:1px solid var(--border)">✓ Lecture seule · Pas de solde total autorisé</div>';
+    PAIEMENTS_DEMO.forEach(p=>{
+      const tc=p.statut==='SOLDE'?'#2E7D32':p.statut==='PARTIEL'?'#E65100':'#C62828';
+      h+='<div class="item"><div class="item-av" style="background:rgba(212,175,55,0.1);color:var(--or)">'+p.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+p.nom+'</div><div class="item-meta">'+p.classe+'</div></div><div class="item-val"><div class="val" style="color:'+tc+'">'+(p.solde>0?p.solde.toLocaleString('fr-FR')+' F':'Soldé')+'</div></div></div>';
+    });
+    eS.innerHTML=h;
+  }
+
+  // Tableau de bord élèves avec alertes
+  let h='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">'+alertes+' élève(s) en difficulté · '+admis+' admis · Taux réussite : '+Math.round(admis/ELEVES_EDU_DEMO.length*100)+'%</div>';
   [...ELEVES_EDU_DEMO].sort((a,b)=>a.moy-b.moy).forEach(e=>{
     const c=e.moy>=7?'#00C896':e.moy>=5?'#D4AF37':'#E74C3C';
     const bg=e.moy>=7?'rgba(0,200,150,0.15)':e.moy>=5?'rgba(212,175,55,0.15)':'rgba(231,76,60,0.15)';
     const badge=e.alerte?'<span class="bdg bg-rouge">⚠ Alerte</span>':'<span class="bdg bg-vert">✓ Suivi</span>';
-    h+=`<div class="item"><div class="item-av" style="background:${bg};color:${c}">${e.nom.charAt(0)}</div>
-      <div class="item-info"><div class="item-nom">${e.nom} ${badge}</div><div class="item-meta">${e.classe}</div></div>
-      <div class="item-val"><div class="val" style="color:${c}">${e.moy.toFixed(2)}</div><div class="lbl">/20</div></div></div>`;
+    h+='<div class="item"><div class="item-av" style="background:'+bg+';color:'+c+'">'+e.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+e.nom+' '+badge+'</div><div class="item-meta">'+e.classe+'</div></div><div class="item-val"><div class="val" style="color:'+c+'">'+e.moy.toFixed(2)+'</div><div class="lbl">/20</div></div></div>';
   });
   document.getElementById('eduElevesBody').innerHTML=h;
+
+  // Motifs exclusion — lecture seule
+  const eM=document.getElementById('eduMotifsBody');
+  if(eM)eM.innerHTML='<p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture seule · Pour accompagner les familles</p>';
+
+  // Charte 7 engagements
   let h2='';
-  CHARTE.forEach((c,i)=>{h2+=`<div class="charte-item"><div class="charte-num">${i+1}</div><div><div class="charte-titre">${c.titre}</div><div class="charte-desc">${c.desc}</div></div></div>`;});
+  CHARTE.forEach((c,i)=>{h2+='<div class="charte-item"><div class="charte-num">'+(i+1)+'</div><div><div class="charte-titre">'+c.titre+'</div><div class="charte-desc">'+c.desc+'</div></div></div>';});
   document.getElementById('eduCharteBody').innerHTML=h2;
-  const bc={NOUVEAU:'bg-vert',ESSENTIEL:'bg-orange',AVANCÉ:'bg-violet'};
+
+  // Formations
+  const bc={NOUVEAU:'bg-vert',ESSENTIEL:'bg-orange','AVANCÉ':'bg-violet'};
   let h3='';
-  FORMATIONS_DEMO.forEach(f=>{h3+=`<div class="item"><span class="bdg ${bc[f.badge]||'bg-bleu'}" style="flex-shrink:0">${f.badge}</span><div class="item-info"><div class="item-nom">${f.titre}</div><div class="item-meta">⏱ ${f.duree}</div></div></div>`;});
+  FORMATIONS_DEMO.forEach(f=>{h3+='<div class="item"><span class="bdg '+(bc[f.badge]||'bg-bleu')+'" style="flex-shrink:0">'+f.badge+'</span><div class="item-info"><div class="item-nom">'+f.titre+'</div><div class="item-meta">⏱ '+f.duree+'</div></div></div>';});
   document.getElementById('eduFormBody').innerHTML=h3;
+
+  // Forum
   let h4='';
-  FORUM_DEMO.forEach(f=>{h4+=`<div class="forum-item"><div class="forum-auteur">✦ ${f.auteur}</div><div class="forum-msg">${f.msg}</div><div class="forum-meta">${f.meta}</div></div>`;});
+  FORUM_DEMO.forEach(f=>{h4+='<div class="forum-item"><div class="forum-auteur">✦ '+f.auteur+'</div><div class="forum-msg">'+f.msg+'</div><div class="forum-meta">'+f.meta+'</div></div>';});
   document.getElementById('eduForumBody').innerHTML=h4;
+
   document.getElementById('espaceEdu').style.display='block';
 }
 
