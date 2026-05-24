@@ -862,7 +862,7 @@ const TARIF_DEFAUT = {college:1000,lycee:1200};
 
 const STAFF = {
   'DIRACAD001'  :{code:'657577', nom:'Directrice EPV Académie Les Princes',  ecole:'ACADEMIE',  profil:'DIR', type:'PRIM', label:"EPV Académie Les Princes"},
-  'DIRAKK1001'  :{code:'507343', nom:'Directeur EPV Akeïkoï 1',              ecole:'AKEIKOI 1', profil:'DIR', type:'PRIM', label:"EPV Les Princes Akeïkoï 1"},
+  'DIRAKK1001'  :{code:'507343', nom:'KOKOBO Nina',                         ecole:'AKEIKOI 1', profil:'DIR', type:'PRIM', label:"EPV Les Princes Akeïkoï 1"},
   'DIRAKK2001'  :{code:'541576', nom:'Directeur EPV Akeïkoï 2',              ecole:'AKEIKOI 2', profil:'DIR', type:'PRIM', label:"EPV Les Princes Akeïkoï 2"},
   'DIRCPP001'   :{code:'155812', nom:'Directeur CPP Les Princes',            ecole:'CPP LES PRINCES', profil:'DIR', type:'SEC', label:"CPP Les Princes d'Abidjan"},
   'DIRSOAK001'  :{code:'352487', nom:'Directeur CPP Soakpé',                 ecole:'SOAKPE',    profil:'DIR', type:'SEC', label:"CPP Les Princes de Soakpé"},
@@ -877,7 +877,6 @@ const STAFF = {
   'COMCPP001'   :{code:'123456', nom:'KOUACO Robine',    ecole:'CPP LES PRINCES', profil:'COM', type:'SEC', label:"CPP Les Princes d'Abidjan"},
   'COMRITA001'  :{code:'222222', nom:'Comptable Rita',   ecole:'GS RITA ROSANE',  profil:'COM', type:'BOTH', label:"GS Rita Rosane"},
   'EDUCPP001'   :{code:'111111', nom:'KOUAKOU Serge Landry', ecole:'CPP LES PRINCES', profil:'EDU', type:'SEC', label:"CPP Les Princes d'Abidjan"},
-  'EDURITA001'  :{code:'333333', nom:'KOBOYO Nina',          ecole:'AKEIKOI 1',   profil:'EDU', type:'PRIM', label:"EPV Princes Akeïkoï 1"},
 };
 
 const PAIEMENTS_DEMO = [
@@ -981,6 +980,13 @@ function login(){
     tentativesPin++;
     if(tentativesPin>=3){affErr('Accès bloqué — Contactez le fondateur.');return;}
     affErr('Matricule ou code incorrect. ('+tentativesPin+'/3)');
+    document.getElementById('inputCode').value='';
+    return;
+  }
+  // Bloquer les éducateurs sur les écoles primaires
+  const ECOLES_PRIM=['ACADEMIE','AKEIKOI 1','AKEIKOI 2'];
+  if(s.profil==='EDU'&&ECOLES_PRIM.includes(s.ecole)){
+    affErr('Les écoles primaires n\'ont pas d\'espace Éducateur. Contactez la Direction.');
     document.getElementById('inputCode').value='';
     return;
   }
