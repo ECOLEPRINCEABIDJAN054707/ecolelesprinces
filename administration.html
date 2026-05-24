@@ -1414,56 +1414,193 @@ function exporterCSV(){
 }
 
 // ══ SUIVI PÉDAGO (depuis pedagogie.html) ══
-async function chargerSuiviPedago(s){
-  const body=document.getElementById('dirPedaBody');
-  if(!body)return;
-  const semActuelle=getSemActuelle();
-  try{
-    const sheetsId=SHEETS_IDS[s.ecole];
-    if(!sheetsId){body.innerHTML=genDemoPeda(semActuelle);return;}
-    const url=`https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/CAHIER_TEXTES?key=${API_KEY}`;
-    const r=await fetch(url);const data=await r.json();
-    if(!data.values||data.values.length<=1){body.innerHTML=genDemoPeda(semActuelle);return;}
-    const rows=data.values.slice(1).map(row=>({
-      classe:row[2]||'',matiere:row[3]||'',enseignant:row[4]||'',
-      lecon:row[5]||'',avancement:parseInt(row[7])||50,
-      semTheo:parseInt(row[12])||semActuelle,semReel:parseInt(row[13])||semActuelle,
-      date:row[0]||''
-    }));
-    if(!rows.length){body.innerHTML=genDemoPeda(semActuelle);return;}
-    body.innerHTML=renderSuiviTable(rows,semActuelle);
-  }catch(e){body.innerHTML=genDemoPeda(semActuelle);}
+
+// ══ PÉDAGOGIE COMPLÈTE — 5 ONGLETS ══
+const PROGRESSIONS_CI = {
+  MATHS:{label:'Mathématiques',icon:'📐',niveaux:{'6ème':{T1:['Entiers naturels','Droites','Décimaux'],T2:['Fractions','Angles','Triangles','Proportionnalité'],T3:['Parallélogramme','Statistique','Pavés droits']},'3ème':{T1:['Calcul littéral','Théorème de Thalès','Racines carrées'],T2:['Angles inscrits','Vecteurs','Équations'],T3:['Applications affines','Pyramides']},'Tle D':{T1:['Limites','Probabilité','Dérivabilité','Logarithme'],T2:['Exponentielle','Complexes','Intégrale'],T3:['Suites numériques','Statistique']}}},
+  FRANCAIS:{label:'Français',icon:'📖',niveaux:{'6ème':{T1:['Lettre personnelle','Phrase et GN'],T2:['Description','Portrait'],T3:['Récit']},'3ème':{T1:['Texte argumentatif'],T2:['Résumé argumentatif'],T3:['Article de journal']},'1ère A':{T1:['Oeuvre poétique','Commentaire composé'],T2:['GT Romanesque','Focalisation'],T3:['Dissertation littéraire']}}},
+  ANGLAIS:{label:'Anglais',icon:'🇬🇧',niveaux:{'6ème':{T1:['Unit 1 - At School','Unit 2 - At Home','Unit 3 - Time & Date'],T2:['Unit 4 - Jobs','Unit 5 - Clothes','Unit 6 - Foods'],T3:['Unit 7 - Animals & Health','Unit 8 - Sports & Games']}}},
+  SVT:{label:'SVT',icon:'🌿',niveaux:{'6ème':{T1:['Formation de la graine','Germination'],T2:['Croissance des plantes'],T3:['Actions néfastes environnement']},'Tle D':{T1:['Réflexe','Tissu nerveux','Coeur'],T2:['Reproduction','Hérédité'],T3:['Milieu intérieur','VIH']}}},
+  HISTOIRE:{label:'Histoire-Géographie',icon:'🌍',niveaux:{'6ème':{T1:["L Histoire","Sources de reconstitution"],T2:["La Préhistoire","Le Paléolithique en CI"],T3:["La métallurgie du fer en CI"]}}},
+  PHILO:{label:'Philosophie',icon:'💭',niveaux:{'Tle C-D-E':{T1:['Méthodologie','L Homme et la société'],T2:['Les conditions du progrès'],T3:['La connaissance']}}}
+};
+let donneesSheetPeda=[];
+
+function showPedaPage(id,el){
+  document.querySelectorAll('.peda-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.peda-page').forEach(p=>{p.style.display='none';p.classList.remove('active');});
+  if(el)el.classList.add('active');
+  const pg=document.getElementById('peda-'+id);
+  if(pg){pg.style.display='block';pg.classList.add('active');}
+  if(id==='progressions')renderProgressionsCIDir();
+  if(id==='alertes')renderAlertesDir();
+  if(id==='suivi')renderSuiviDir();
 }
 
-function genDemoPeda(sem){
-  const demo=[
+function actualiserPeda(){showToast('🔄 Actualisation...','');chargerSuiviPedago(currentStaff);}
+
+async function chargerSuiviPedago(s){
+  const sem=getSemActuelle();
+  try{
+    const sheetsId=SHEETS_IDS[s.ecole];
+    if(!sheetsId){useDemoPeda(sem);return;}
+    const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/CAHIER_TEXTES?key='+API_KEY;
+    const r=await fetch(url);const data=await r.json();
+    if(!data.values||data.values.length<=1){useDemoPeda(sem);return;}
+    donneesSheetPeda=data.values.slice(1).map(row=>({
+      classe:row[2]||'',matiere:row[3]||'',enseignant:row[4]||'',
+      lecon:row[5]||'',avancement:parseInt(row[7])||50,
+      semTheo:parseInt(row[12])||sem,semReel:parseInt(row[13])||sem,date:row[0]||''
+    })).filter(r=>r.enseignant);
+    if(!donneesSheetPeda.length){useDemoPeda(sem);return;}
+  }catch(e){useDemoPeda(sem);return;}
+  renderDashboardPeda();renderSuiviDir();renderAlertesDir();
+}
+
+function useDemoPeda(sem){
+  donneesSheetPeda=[
     {classe:'TLE D-2',matiere:'Mathématiques',enseignant:'KOUASSI Jean',lecon:'Dérivation',avancement:65,semTheo:sem,semReel:sem-1,date:new Date().toLocaleDateString('fr-FR')},
     {classe:'3EME EX1',matiere:'SVT',enseignant:'BAMBA Marie',lecon:'Hérédité',avancement:80,semTheo:sem,semReel:sem,date:new Date().toLocaleDateString('fr-FR')},
     {classe:'TLE D-1',matiere:'Mathématiques',enseignant:'KONE Fatoumata',lecon:'Complexes',avancement:45,semTheo:sem,semReel:sem-3,date:new Date().toLocaleDateString('fr-FR')},
+    {classe:'6EME EX1',matiere:'Anglais',enseignant:'DIALLO Ibrahim',lecon:'Unit 8 Sports',avancement:90,semTheo:sem,semReel:sem+1,date:new Date().toLocaleDateString('fr-FR')},
+    {classe:'1ERE D-2',matiere:'Français',enseignant:'TOURE Mariam',lecon:'Dissertation',avancement:72,semTheo:sem,semReel:sem-1,date:new Date().toLocaleDateString('fr-FR')},
+    {classe:'4EME EX2',matiere:'EPS',enseignant:'YAO Kouamé',lecon:'Lancer de poids',avancement:55,semTheo:sem,semReel:sem-2,date:new Date().toLocaleDateString('fr-FR')},
+    {classe:'3EME 5',matiere:'Histoire-Géo',enseignant:'COULIBALY Aya',lecon:'Métallurgie CI',avancement:83,semTheo:sem,semReel:sem,date:new Date().toLocaleDateString('fr-FR')},
   ];
-  return renderSuiviTable(demo,sem);
+  renderDashboardPeda();renderSuiviDir();renderAlertesDir();
 }
 
-function renderSuiviTable(rows,sem){
+function renderDashboardPeda(){
+  const sem=getSemActuelle();
   let ok=0,att=0,ret=0,av=0;
-  rows.forEach(d=>{const e=(d.semReel||1)-(d.semTheo||sem);const s=getStatut(e);if(s.code==='ok')ok++;else if(s.code==='attention')att++;else if(s.code==='retard')ret++;else av++;});
-  let h=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px">
-    <div style="background:#EAF3DE;border-radius:8px;padding:10px;text-align:center"><div style="font-size:1.4em;font-weight:700;color:var(--vert)">${ok}</div><div style="font-size:0.68em;color:var(--gris)">✅ Dans les temps</div></div>
-    <div style="background:#FFF3E0;border-radius:8px;padding:10px;text-align:center"><div style="font-size:1.4em;font-weight:700;color:var(--orange)">${att}</div><div style="font-size:0.68em;color:var(--gris)">⚠️ Attention</div></div>
-    <div style="background:#FFEBEE;border-radius:8px;padding:10px;text-align:center"><div style="font-size:1.4em;font-weight:700;color:var(--rouge)">${ret}</div><div style="font-size:0.68em;color:var(--gris)">🔴 Retard</div></div>
-    <div style="background:#FFF8E1;border-radius:8px;padding:10px;text-align:center"><div style="font-size:1.4em;font-weight:700;color:#7a5f00">${av}</div><div style="font-size:0.68em;color:var(--gris)">🚀 En avance</div></div>
-  </div>`;
-  h+=`<div class="tbl-wrap"><table><thead><tr><th>Enseignant</th><th>Classe</th><th>Matière</th><th>Leçon actuelle</th><th>Sem.Th</th><th>Sem.R</th><th>Progression</th><th>Statut</th></tr></thead><tbody>`;
-  rows.forEach(d=>{
-    const ecart=(d.semReel||1)-(d.semTheo||sem);
-    const st=getStatut(ecart);
+  donneesSheetPeda.forEach(d=>{const e=(d.semReel||1)-(d.semTheo||sem);const s=getStatut(e);if(s.code==='ok')ok++;else if(s.code==='attention')att++;else if(s.code==='retard')ret++;else av++;});
+  ['pStat-ok','pStat-att','pStat-ret'].forEach((id,i)=>{const el=document.getElementById(id);if(el)el.textContent=[ok,att,ret][i];});
+  renderDashboardTablePeda(donneesSheetPeda);
+}
+
+function renderDashboardTablePeda(data){
+  const sem=getSemActuelle();
+  const c=document.getElementById('peda-dashboard-content');if(!c)return;
+  if(!data.length){c.innerHTML='<p style="text-align:center;padding:20px;color:var(--gris);font-size:0.82em">Aucune donnée — Commencez la saisie des cahiers.</p>';return;}
+  let h='<table><thead><tr><th>Enseignant</th><th>Classe</th><th>Matière</th><th>Leçon</th><th>Progression</th><th>Statut</th></tr></thead><tbody>';
+  data.forEach(d=>{
+    const ecart=(d.semReel||1)-(d.semTheo||sem);const st=getStatut(ecart);
     const av2=Math.min(100,Math.max(0,d.avancement||0));
-    const eL=ecart>0?`<span style="color:var(--vert)">+${ecart}</span>`:ecart===0?`<span style="color:var(--gris)">0</span>`:`<span style="color:${ecart<=-3?'var(--rouge)':'var(--orange)'};font-weight:700">${ecart}</span>`;
-    const progColor=av2>=80?'fill-vert':av2>=50?'fill-or':av2>=30?'fill-orange':'fill-rouge';
-    h+=`<tr><td><strong>${d.enseignant}</strong></td><td>${d.classe}</td><td>${d.matiere}</td><td style="max-width:140px;font-size:0.76em">${d.lecon||'—'}</td><td style="text-align:center">${d.semTheo||'—'}</td><td style="text-align:center">${eL}</td><td><div class="prog-bar" style="width:70px"><div class="prog-fill ${progColor}" style="width:${av2}%"></div></div></td><td><span class="bdg ${st.cls}" style="font-size:0.65em">${st.label}</span></td></tr>`;
+    const pc=av2>=80?'fill-vert':av2>=50?'fill-or':av2>=30?'fill-orange':'fill-rouge';
+    h+='<tr><td><strong>'+d.enseignant+'</strong></td><td>'+d.classe+'</td><td>'+d.matiere+'</td><td style="max-width:150px;font-size:0.76em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(d.lecon||'—')+'</td><td><div style="display:flex;align-items:center;gap:5px"><div class="prog-bar" style="width:65px"><div class="prog-fill '+pc+'" style="width:'+av2+'%"></div></div><span style="font-size:0.72em">'+av2+'%</span></div></td><td><span class="bdg '+st.cls+'" style="font-size:0.63em">'+st.label+'</span></td></tr>';
   });
-  h+='</tbody></table></div>';
-  return h;
+  h+='</tbody></table>';
+  c.innerHTML='<div class="tbl-wrap">'+h+'</div>';
+}
+
+function filtrerPedaDash(){
+  const statut=(document.getElementById('pFiltreStatut')||{}).value||'';
+  const search=((document.getElementById('pFiltreSearch')||{}).value||'').toLowerCase();
+  const sem=getSemActuelle();
+  const f=donneesSheetPeda.filter(d=>{const e=(d.semReel||1)-(d.semTheo||sem);const s=getStatut(e);return(!statut||s.code===statut)&&(!search||(d.enseignant||'').toLowerCase().includes(search));});
+  renderDashboardTablePeda(f);
+}
+
+function renderSuiviDir(){
+  const sem=getSemActuelle();
+  const c=document.getElementById('peda-suivi-content');if(!c)return;
+  if(!donneesSheetPeda.length){c.innerHTML='<p style="text-align:center;padding:20px;color:var(--gris);font-size:0.82em">Aucune donnée</p>';return;}
+  const ens=((document.getElementById('pFiltreEns')||{}).value||'').toLowerCase();
+  const cls=((document.getElementById('pFiltreClasse')||{}).value||'').toLowerCase();
+  const data=donneesSheetPeda.filter(d=>(!ens||(d.enseignant||'').toLowerCase().includes(ens))&&(!cls||(d.classe||'').toLowerCase().includes(cls)));
+  let h='<table><thead><tr><th>Enseignant</th><th>Classe</th><th>Matière</th><th>Leçon</th><th>S.Th</th><th>S.R</th><th>Écart</th><th>Prog.</th><th>Statut</th><th>Date</th></tr></thead><tbody>';
+  data.forEach(d=>{
+    const ecart=(d.semReel||1)-(d.semTheo||sem);const st=getStatut(ecart);
+    const av2=Math.min(100,Math.max(0,d.avancement||0));
+    const pc=av2>=80?'fill-vert':av2>=50?'fill-or':av2>=30?'fill-orange':'fill-rouge';
+    const eL=ecart>0?'<span style="color:var(--vert)">+'+ecart+'</span>':ecart===0?'<span style="color:var(--gris)">0</span>':'<span style="color:'+(ecart<=-3?'var(--rouge)':'var(--orange)')+';font-weight:700">'+ecart+'</span>';
+    h+='<tr><td><strong>'+d.enseignant+'</strong></td><td>'+d.classe+'</td><td>'+d.matiere+'</td><td style="max-width:120px;font-size:0.74em">'+(d.lecon||'—')+'</td><td style="text-align:center">'+(d.semTheo||'—')+'</td><td style="text-align:center">'+(d.semReel||'—')+'</td><td style="text-align:center">'+eL+'</td><td><div class="prog-bar" style="width:55px"><div class="prog-fill '+pc+'" style="width:'+av2+'%"></div></div></td><td><span class="bdg '+st.cls+'" style="font-size:0.61em">'+st.label+'</span></td><td style="font-size:0.7em;color:var(--gris)">'+(d.date||'—')+'</td></tr>';
+  });
+  h+='</tbody></table>';
+  c.innerHTML='<div class="tbl-wrap">'+h+'</div>';
+}
+
+function filtrerPedaSuivi(){renderSuiviDir();}
+
+function renderAlertesDir(){
+  const sem=getSemActuelle();
+  const c=document.getElementById('peda-alertes-content');if(!c)return;
+  const alertes=donneesSheetPeda.filter(d=>((d.semReel||1)-(d.semTheo||sem))<=-2).sort((a,b)=>((a.semReel||1)-(a.semTheo||sem))-((b.semReel||1)-(b.semTheo||sem)));
+  if(!alertes.length){c.innerHTML='<div style="text-align:center;padding:24px;color:var(--vert)"><div style="font-size:2.5em">✅</div><p style="font-weight:700;margin-top:8px;font-size:0.84em">Aucune alerte !</p></div>';return;}
+  let h='<p style="font-size:0.78em;color:var(--gris);margin-bottom:10px">'+alertes.length+' alerte(s) — Semaine : <strong>'+sem+'</strong></p>';
+  alertes.forEach(d=>{
+    const ecart=(d.semReel||1)-(d.semTheo||sem);const grave=ecart<=-3;
+    h+='<div style="display:flex;gap:10px;padding:11px 14px;border-radius:8px;margin-bottom:7px;border:1px solid;background:'+(grave?'#FFEBEE':'#FFF3E0')+';border-color:'+(grave?'#EF9A9A':'#FFCC80')+'"><div style="font-size:1.2em;flex-shrink:0">'+(grave?'🔴':'⚠️')+'</div><div><div style="font-weight:700;font-size:0.83em;margin-bottom:2px">'+d.enseignant+' — '+d.classe+' / '+d.matiere+'</div><div style="font-size:0.74em;color:var(--gris)">Retard <strong>'+Math.abs(ecart)+' sem.</strong> — Leçon: '+(d.lecon||'—')+'</div></div></div>';
+  });
+  c.innerHTML=h;
+}
+
+async function envoyerAlertesEmailDir(){
+  const sem=getSemActuelle();
+  const alertes=donneesSheetPeda.filter(d=>((d.semReel||1)-(d.semTheo||sem))<=-2);
+  if(!alertes.length){showToast('✅ Aucune alerte','success');return;}
+  try{
+    await fetch(APPS_SCRIPT_PEDA,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({type:'EMAIL_ALERTES',to:'manet.serge@yahoo.fr',subject:'Alertes Pédagogiques - Sem '+sem,
+        alertes:alertes.map(d=>d.enseignant+' ('+d.classe+'): retard '+Math.abs((d.semReel||1)-(d.semTheo||sem))+' sem.')})});
+    showToast('📧 Rapport envoyé','success');
+  }catch(e){showToast('❌ Erreur envoi','error');}
+}
+
+async function sauvegarderCahierDir(){
+  const g=id=>document.getElementById(id);
+  const vals={date:(g('pf-date')||{}).value||'',heure:(g('pf-heure')||{}).value||'',
+    classe:(g('pf-classe')||{}).value||'',matiere:(g('pf-matiere')||{}).value||'',
+    enseignant:(g('pf-enseignant')||{}).value||'',lecon:(g('pf-lecon')||{}).value||'',
+    avancement:(g('pf-avancement')||{}).value||50,devoir:(g('pf-devoir')||{}).value||'',
+    obs:(g('pf-obs')||{}).value||''};
+  if(!vals.date||!vals.classe||!vals.matiere||!vals.enseignant){showToast('⚠️ Champs obligatoires manquants','error');return;}
+  const fb=g('pf-feedback');if(fb)fb.innerHTML='<p style="font-size:0.78em;color:var(--bleu)">⏳ Enregistrement...</p>';
+  try{
+    await fetch(APPS_SCRIPT_PEDA,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({type:'CAHIER',date:vals.date,heure:vals.heure,classe:vals.classe,
+        matiere:vals.matiere,enseignant:vals.enseignant,ecole:currentStaff.ecole,
+        lecon:vals.lecon,contenu:'',avancement:vals.avancement,devoir:vals.devoir,docs:'',obs:vals.obs})});
+    if(fb)fb.innerHTML='<div style="padding:7px 10px;background:#E8F5E9;border-radius:8px;color:var(--vert);font-size:0.78em;font-weight:600">✅ Enregistré !</div>';
+    showToast('✅ Cahier enregistré !','success');
+    resetCahierDir();setTimeout(()=>{if(fb)fb.innerHTML='';actualiserPeda();},2000);
+  }catch(e){if(fb)fb.innerHTML='<div style="padding:7px 10px;background:#FFEBEE;border-radius:8px;color:var(--rouge);font-size:0.78em">❌ Erreur connexion</div>';}
+}
+
+function resetCahierDir(){
+  ['pf-classe','pf-matiere','pf-enseignant','pf-lecon','pf-avancement','pf-devoir','pf-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+}
+
+function renderProgressionsCIDir(){
+  const c=document.getElementById('peda-prog-content');
+  if(!c||c.dataset.rendered)return;
+  c.dataset.rendered='1';
+  let h='';
+  Object.entries(PROGRESSIONS_CI).forEach(([key,mat])=>{
+    h+='<div style="margin-bottom:12px"><button onclick="this.classList.toggle(&quot;open&quot;);this.nextElementSibling.style.display=this.classList.contains(&quot;open&quot;)?&quot;grid&quot;:&quot;none&quot;" style="width:100%;display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.82em;cursor:pointer;text-align:left;margin-bottom:5px"><span>'+mat.icon+'</span><span>'+mat.label+'</span><span style="margin-left:auto">▼</span></button><div style="display:none;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px">';
+    Object.entries(mat.niveaux).forEach(([niveau,data])=>{
+      h+='<div style="background:#F5F7FA;border-radius:8px;padding:10px 12px;border:1px solid var(--border)"><div style="font-weight:700;font-size:0.76em;color:var(--bleu2);margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)">📘 '+niveau+'</div>';
+      ['T1','T2','T3'].forEach(t=>{
+        if(data[t]&&data[t].length){
+          const lbl={T1:'1er Trimestre',T2:'2ème Trimestre',T3:'3ème Trimestre'};
+          h+='<div style="font-size:0.66em;font-weight:700;color:var(--gris);text-transform:uppercase;margin:5px 0 2px">'+lbl[t]+'</div>';
+          data[t].forEach(l=>{h+='<div style="font-size:0.72em;padding:2px 0;display:flex;gap:4px"><span style="color:var(--or);font-weight:bold;flex-shrink:0">›</span>'+l+'</div>';});
+        }
+      });
+      h+='</div>';
+    });
+    h+='</div></div>';
+  });
+  c.innerHTML=h;
+}
+
+function initSaisiePedago(){
+  const now=new Date();
+  const pfd=document.getElementById('pf-date');if(pfd)pfd.value=now.toISOString().split('T')[0];
+  const pfh=document.getElementById('pf-heure');if(pfh)pfh.value=now.toTimeString().slice(0,5);
+  const sem=getSemActuelle();
+  const pst=document.getElementById('pf-sem-theo');if(pst)pst.value=sem;
+  const psr=document.getElementById('pf-sem-reel');if(psr)psr.value=sem;
 }
 
 // ══ FONDATEUR ══
