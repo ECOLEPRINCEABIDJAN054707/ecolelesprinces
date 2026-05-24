@@ -596,7 +596,7 @@ function detecterTypeClasse(classe, ecoleCode) {
 const PROGRESSION = {'PSA':'MSA','MSA':'GSA','GSA':'CP1','CP1':'CP2','CP2':'CE1','CE1':'CE2','CE2':'CM1','CM1':'CM2','CM2':'6EME','6EME':'5EME','5EME':'4EME','4EME':'3EME','3EME':'2NDE C ou A','2NDE C':'1ERE C','2NDE A':'1ERE A','1ERE C':'TLE D','1ERE A':'TLE A','TLE D':'','TLE A':''};
 function getProchaineClasse(classe, moy) {
   if (!classe) return null;
-  var c = classe.toUpperCase().trim();
+  var c = classe.toUpperCase().trim().replace(/[ÈÉÊË]/g,'E').replace(/[ÀÂÄ]/g,'A').replace(/\s+[0-9]+$/,'').replace(/\s+[A-Z]$/,'');
   // Logique spéciale pour 2NDE selon moyenne
   if (c.indexOf('2NDE') === 0 || c.indexOf('2ND') === 0) {
     if (c.indexOf('A') >= 0) {
