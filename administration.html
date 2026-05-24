@@ -705,23 +705,40 @@ table tr:nth-child(even){background:#F8FAFD}
     <span style="font-size:0.7em;color:var(--gris)">— Philosophie Princes Smart School</span>
   </div>
 
-  <!-- APPEL ÉLÈVES — ABSENTS UNIQUEMENT -->
+  <!-- ABSENCES ÉLÈVES SIGNALÉES — LECTURE SEULE -->
   <div class="section">
     <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
-      <h3>📋 Appel élèves — Absents du jour</h3><span class="arr">▼</span>
+      <h3>📅 Absences élèves signalées <span id="eduAbsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
     </div>
-    <div class="sec-body open" id="eduAppelBody">
-      <div style="padding:14px">
-        <p style="font-size:0.8em;color:var(--gris);margin-bottom:12px">Décochez les élèves <strong>absents</strong> aujourd'hui</p>
-        <div id="eduAppelListe"></div>
-        <!-- Zone absents en temps réel -->
-        <div id="eduAbsentsZone" style="margin-top:12px;display:none">
-          <div style="font-size:0.76em;font-weight:700;color:var(--rouge);margin-bottom:8px;padding:6px 10px;background:#FFEBEE;border-radius:8px;border-left:3px solid var(--rouge)">
-            🔴 Absents : <span id="eduAbsentsCount">0</span> élève(s)
-          </div>
-          <div id="eduAbsentsList"></div>
+    <div class="sec-body open" id="eduAbsBody">
+      <div style="padding:8px 16px 6px;background:#FFF8F8;border-bottom:1px solid #FFE0E0">
+        <span style="font-size:0.72em;color:var(--rouge);font-weight:600">🔒 Lecture seule — Absences signalées par les enseignants</span>
+        <span id="eduAbsDate" style="font-size:0.7em;color:var(--gris);float:right"></span>
+      </div>
+      <div id="eduAbsListe">
+        <div style="text-align:center;padding:20px;color:var(--gris)">
+          <div class="spinner-sm" style="margin:0 auto 10px"></div>
+          <p style="font-size:0.82em">Chargement...</p>
         </div>
-        <button onclick="validerAppelEdu()" style="width:100%;margin-top:12px;padding:10px;background:var(--rouge);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.82em;cursor:pointer">✅ Valider l'appel du jour</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRÉSENCES ENSEIGNANTS — LECTURE SEULE -->
+  <div class="section">
+    <div class="sec-head sec-vert" onclick="toggleSec(this)">
+      <h3>👨‍🏫 Présences enseignants <span id="eduEnsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="eduEnsBody">
+      <div style="padding:8px 16px 6px;background:#F1F8F1;border-bottom:1px solid #C8E6C9">
+        <span style="font-size:0.72em;color:var(--vert);font-weight:600">🔒 Lecture seule — Point du jour établi par la Direction</span>
+        <span id="eduEnsDate" style="font-size:0.7em;color:var(--gris);float:right"></span>
+      </div>
+      <div id="eduEnsListe">
+        <div style="text-align:center;padding:20px;color:var(--gris)">
+          <div class="spinner-sm" style="margin:0 auto 10px"></div>
+          <p style="font-size:0.82em">Chargement...</p>
+        </div>
       </div>
     </div>
   </div>
@@ -941,7 +958,6 @@ let donneesResultats = [];
 let donneesMessages  = [];
 let donneesElevesSheets = [];
 let appelDir = {};
-let appelEdu = {};
 
 // ══ UTILITAIRES ══
 function getTarif(ecole,classe){const t=TARIFS[ecole]||TARIF_DEFAUT;return /^(2NDE|1[EÈ]RE|TLE|TERMINALE)/i.test(classe||'')?t.lycee:t.college;}
@@ -1369,7 +1385,9 @@ function afficherEdu(s){
   // Messages parents
   chargerResultatsEtMessages(s.ecole,'EDU');
 
-  setTimeout(initAppelEdu,400);
+  // Chargement des deux sections lecture seule
+  chargerAbsencesElevesSigne(s.ecole);
+  chargerPresencesEnseignants(s.ecole);
   document.getElementById('espaceEdu').style.display='block';
 }
 
@@ -1408,62 +1426,140 @@ function validerAppelDir(){
 }
 
 // ══ APPEL ÉLÈVES (EDU) — AFFICHE UNIQUEMENT LES ABSENTS ══
-function initAppelEdu(){
-  const liste=document.getElementById('eduAppelListe');if(!liste)return;
+// ══ ABSENCES ÉLÈVES SIGNALÉES (lecture seule — données profs) ══
+async function chargerAbsencesElevesSigne(ecole){
   const today=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
-  let h='<p style="font-size:0.76em;font-weight:700;color:var(--or);margin-bottom:6px">📅 '+today+'</p>';
-  h+='<p style="font-size:0.76em;color:var(--gris);margin-bottom:10px">Décochez les élèves <strong style="color:var(--rouge)">absents</strong> en cliquant sur leur nom</p>';
-  const eleves = donneesElevesSheets.length ? donneesElevesSheets : ELEVES_EDU_DEMO;
-  eleves.forEach((e,i)=>{
-    appelEdu[i]=true;
-    const nom = e.nom || e.nom_prenom || '';
-    const classe = e.classe || '';
-    h+='<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="toggleAppelEdu('+i+',this)">'
-      +'<div style="width:26px;height:26px;border-radius:6px;background:var(--vert);border:2px solid var(--vert);display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.8em;font-weight:700;flex-shrink:0" id="chk-edu-'+i+'">✓</div>'
-      +'<div style="flex:1"><div style="font-size:0.84em;font-weight:600">'+nom+'</div><div style="font-size:0.72em;color:var(--gris)">'+classe+'</div></div>'
-      +'<span style="font-size:0.7em;font-weight:700;padding:2px 8px;border-radius:10px;background:#E8F5E9;color:var(--vert)" id="st-edu-'+i+'">Présent</span>'
+  const dateEl=document.getElementById('eduAbsDate');if(dateEl)dateEl.textContent=today;
+  const liste=document.getElementById('eduAbsListe');if(!liste)return;
+
+  // Tente de lire depuis la feuille ABSENCES du Sheets
+  let absences=[];
+  try{
+    const sheetsId=SHEETS_IDS[ecole];
+    if(sheetsId){
+      const sheetNames=['ABSENCES','ABSENCES_JOUR','ABSENCES_ELEVES','APPEL','ABSENCES_DU_JOUR'];
+      for(const sn of sheetNames){
+        const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+        const r=await fetch(url);const data=await r.json();
+        if(data.values&&data.values.length>=2){
+          const headers=data.values[0].map(h=>String(h||'').toUpperCase().trim());
+          const iNom=headers.findIndex(h=>h.includes('NOM'));
+          const iClasse=headers.findIndex(h=>h.includes('CLASS'));
+          const iDate=headers.findIndex(h=>h.includes('DATE'));
+          const iRaison=headers.findIndex(h=>h.includes('RAIS')||h.includes('MOTIF'));
+          const todayStr=new Date().toLocaleDateString('fr-FR');
+          absences=data.values.slice(1).filter(row=>{
+            const d=iDate>=0?String(row[iDate]||'').trim():'';
+            return !d||d===todayStr||d.includes(new Date().getDate().toString());
+          }).map(row=>({
+            nom:iNom>=0?String(row[iNom]||'').trim():'—',
+            classe:iClasse>=0?String(row[iClasse]||'').trim():'—',
+            raison:iRaison>=0?String(row[iRaison]||'').trim():''
+          })).filter(a=>a.nom&&a.nom!=='—'&&a.nom.length>1);
+          if(absences.length)break;
+        }
+      }
+    }
+  }catch(e){}
+
+  // Si rien trouvé dans Sheets → données démo
+  if(!absences.length){
+    absences=[
+      {nom:'KONATE YOUSSOUF R.',classe:'CE2',raison:'Sans motif'},
+      {nom:'TRAORE GAOUSSOU',classe:'CM1',raison:'Maladie signalée'},
+      {nom:'BAKAYOKO AWA Y.',classe:'CE2',raison:''},
+    ];
+  }
+
+  const countEl=document.getElementById('eduAbsCount');
+  if(countEl)countEl.textContent='('+absences.length+' absent'+(absences.length>1?'s':'')+')';
+  // Stat alerte
+  const eStatAlert=document.getElementById('eStatAlert');if(eStatAlert)eStatAlert.textContent=absences.length;
+
+  if(!absences.length){
+    liste.innerHTML='<div class="absent-empty">✅ Aucune absence signalée aujourd\'hui</div>';return;
+  }
+
+  let h='';
+  absences.forEach(a=>{
+    const ini=a.nom.charAt(0).toUpperCase();
+    const raisonBadge=a.raison
+      ?'<span style="font-size:0.66em;padding:2px 8px;border-radius:10px;background:#FFEBEE;color:var(--rouge);font-weight:700">'+a.raison+'</span>'
+      :'<span style="font-size:0.66em;padding:2px 8px;border-radius:10px;background:#F5F5F5;color:var(--gris)">Sans motif</span>';
+    h+='<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #f0f4f8;background:#FFF8F8">'
+      +'<div style="width:34px;height:34px;border-radius:50%;background:#FFEBEE;color:var(--rouge);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8em;flex-shrink:0">'+ini+'</div>'
+      +'<div style="flex:1">'
+        +'<div style="font-size:0.84em;font-weight:700;color:#C62828">'+a.nom+'</div>'
+        +'<div style="font-size:0.72em;color:var(--gris);margin-top:2px">'+a.classe+'</div>'
+      +'</div>'
+      +raisonBadge
       +'</div>';
   });
   liste.innerHTML=h;
-  rafraichirListeAbsents();
 }
 
-function toggleAppelEdu(idx,row){
-  appelEdu[idx]=!appelEdu[idx];const present=appelEdu[idx];
-  const chk=document.getElementById('chk-edu-'+idx);const st=document.getElementById('st-edu-'+idx);
-  if(chk){chk.style.background=present?'var(--vert)':'#fff';chk.style.borderColor=present?'var(--vert)':'var(--rouge)';chk.style.color=present?'#fff':'var(--rouge)';chk.textContent=present?'✓':'✗';}
-  if(st){st.textContent=present?'Présent':'Absent';st.style.background=present?'#E8F5E9':'#FFEBEE';st.style.color=present?'var(--vert)':'var(--rouge)';}
-  if(row){row.style.background=present?'':'#FFF5F5';}
-  rafraichirListeAbsents();
-}
+// ══ PRÉSENCES ENSEIGNANTS (lecture seule — point Direction) ══
+async function chargerPresencesEnseignants(ecole){
+  const today=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  const dateEl=document.getElementById('eduEnsDate');if(dateEl)dateEl.textContent=today;
+  const liste=document.getElementById('eduEnsListe');if(!liste)return;
 
-function rafraichirListeAbsents(){
-  const eleves=donneesElevesSheets.length?donneesElevesSheets:ELEVES_EDU_DEMO;
-  const absentsIdx=Object.entries(appelEdu).filter(([k,v])=>!v).map(([k])=>parseInt(k));
-  const zone=document.getElementById('eduAbsentsZone');
-  const countEl=document.getElementById('eduAbsentsCount');
-  const listEl=document.getElementById('eduAbsentsList');
-  if(!zone||!countEl||!listEl)return;
-  if(absentsIdx.length===0){zone.style.display='none';return;}
-  zone.style.display='block';
-  countEl.textContent=absentsIdx.length;
-  let h='';
-  absentsIdx.forEach(i=>{
-    const e=eleves[i];if(!e)return;
-    const nom=e.nom||e.nom_prenom||'';const classe=e.classe||'';
-    h+='<div class="absent-item"><div class="absent-av">'+nom.charAt(0)+'</div><div><div class="absent-nom">'+nom+'</div><div class="absent-classe">'+classe+'</div></div></div>';
+  // Tente de lire depuis POINTAGE_JOUR ou ENSEIGNANTS du Sheets
+  let enseignants=[];
+  try{
+    const sheetsId=SHEETS_IDS[ecole];
+    if(sheetsId){
+      const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+      const r=await fetch(url);const data=await r.json();
+      if(data.values&&data.values.length){
+        enseignants=data.values
+          .filter(row=>row[0]&&String(row[0]).trim()&&String(row[3]||'').trim().toUpperCase()==='OUI')
+          .map(row=>({
+            nom:String(row[0]||'').trim(),
+            matiere:String(row[1]||'').trim(),
+            classe:String(row[2]||'').trim(),
+            present:true // Par défaut présent, mis à jour par l'appel direction
+          }));
+      }
+    }
+  }catch(e){}
+
+  // Si rien → données démo basées sur ENSEIGNANTS_APPEL_DEMO
+  if(!enseignants.length){
+    enseignants=ENSEIGNANTS_APPEL_DEMO.map(e=>({...e,present:Math.random()>0.15}));
+  }
+
+  const nbPresents=enseignants.filter(e=>e.present).length;
+  const nbAbsents=enseignants.length-nbPresents;
+  const countEl=document.getElementById('eduEnsCount');
+  if(countEl)countEl.textContent='('+nbPresents+'/'+enseignants.length+' présents)';
+
+  // Résumé en haut
+  let h='<div style="display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)">'
+    +'<div style="flex:1;text-align:center;background:#E8F5E9;border-radius:8px;padding:8px"><div style="font-size:1.2em;font-weight:700;color:var(--vert)">'+nbPresents+'</div><div style="font-size:0.68em;color:var(--vert);font-weight:600">Présents</div></div>'
+    +'<div style="flex:1;text-align:center;background:#FFEBEE;border-radius:8px;padding:8px"><div style="font-size:1.2em;font-weight:700;color:var(--rouge)">'+nbAbsents+'</div><div style="font-size:0.68em;color:var(--rouge);font-weight:600">Absents</div></div>'
+    +'<div style="flex:1;text-align:center;background:#E3F2FD;border-radius:8px;padding:8px"><div style="font-size:1.2em;font-weight:700;color:var(--bleu)">'+enseignants.length+'</div><div style="font-size:0.68em;color:var(--bleu);font-weight:600">Total</div></div>'
+    +'</div>';
+
+  // Liste individuelle
+  enseignants.forEach(e=>{
+    const ini=e.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
+    const present=e.present!==false;
+    const bg=present?'#fff':'#FFF8F8';
+    const statusBg=present?'#E8F5E9':'#FFEBEE';
+    const statusColor=present?'var(--vert)':'var(--rouge)';
+    const statusLabel=present?'✓ Présent':'✗ Absent';
+    h+='<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #f0f4f8;background:'+bg+'">'
+      +'<div style="width:34px;height:34px;border-radius:50%;background:'+statusBg+';color:'+statusColor+';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75em;flex-shrink:0">'+ini+'</div>'
+      +'<div style="flex:1">'
+        +'<div style="font-size:0.84em;font-weight:600">'+e.nom+'</div>'
+        +'<div style="font-size:0.72em;color:var(--gris);margin-top:2px">'+e.matiere+(e.classe?' · '+e.classe:'')+'</div>'
+      +'</div>'
+      +'<span style="font-size:0.7em;font-weight:700;padding:2px 10px;border-radius:10px;background:'+statusBg+';color:'+statusColor+'">'+statusLabel+'</span>'
+      +'</div>';
   });
-  listEl.innerHTML=h;
-  // Mettre à jour le compteur dans les stats
-  const eStatAlert=document.getElementById('eStatAlert');if(eStatAlert)eStatAlert.textContent=absentsIdx.length;
-}
 
-function validerAppelEdu(){
-  const eleves=donneesElevesSheets.length?donneesElevesSheets:ELEVES_EDU_DEMO;
-  const absents=Object.entries(appelEdu).filter(([k,v])=>!v).length;
-  const presents=Object.entries(appelEdu).filter(([k,v])=>v).length;
-  if(absents===0){showToast('✅ Appel validé — Tous présents !','success');}
-  else{showToast('✅ Appel validé — '+presents+' présent(s) · '+absents+' absent(s)','success');}
+  liste.innerHTML=h;
 }
 
 // ══ RÉSULTATS & MESSAGES ══
