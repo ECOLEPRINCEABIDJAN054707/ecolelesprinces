@@ -271,7 +271,7 @@ table tr:nth-child(even){background:#F8FAFD}
 <!-- ══════════════════════════════
      ESPACE DIRECTEUR
 ══════════════════════════════ -->
-<div id="espaceDir" class="espace">
+<div id="espaceDir" class="espace" style="display:none">
   <div class="hdr hdr-dir">
     <div class="hdr-top">
       <div class="hdr-profil">
@@ -519,7 +519,7 @@ table tr:nth-child(even){background:#F8FAFD}
 <!-- ══════════════════════════════
      ESPACE FONDATEUR
 ══════════════════════════════ -->
-<div id="espaceFond" class="espace">
+<div id="espaceFond" class="espace" style="display:none">
   <div class="hdr hdr-fond">
     <div class="hdr-top">
       <div class="hdr-profil">
@@ -576,7 +576,7 @@ table tr:nth-child(even){background:#F8FAFD}
 <!-- ══════════════════════════════
      ESPACE COMPTABLE
 ══════════════════════════════ -->
-<div id="espaceCom" class="espace">
+<div id="espaceCom" class="espace" style="display:none">
   <div class="hdr hdr-com">
     <div class="hdr-top">
       <div class="hdr-profil">
@@ -744,7 +744,7 @@ table tr:nth-child(even){background:#F8FAFD}
   <div class="footer">Princes Smart School · Espace Comptable · 2025-2026</div>
 
 
-<div id="espaceEdu" class="espace">
+<div id="espaceEdu" class="espace" style="display:none">
   <div class="hdr hdr-edu">
     <div class="hdr-top">
       <div class="hdr-profil">
@@ -2162,8 +2162,21 @@ async function envoyerReponse(btn){
   const matricule = btn.getAttribute('data-mat');
   const inputId   = btn.getAttribute('data-rep');
   const inp = document.getElementById(inputId);
-  if(!inp||!inp.value.trim()){showToast('Ecrivez une reponse avant d envoyer','error');return;}
+  if(!inp||!inp.value.trim()){showToast('Ecrivez une reponse','error');return;}
   const rep = inp.value.trim();
+  try{
+    await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({type:'REPONDRE_MESSAGE',matricule:matricule,reponse:rep,ecole:currentStaff.ecole})});
+    showToast('Reponse envoyee','success');
+    inp.value='';
+    chargerMessages(currentStaff.ecole).then(function(msgs){
+      donneesMessages=msgs;
+      var bodyId=currentStaff.profil==='DIR'?'dirMsgBody':currentStaff.profil==='COM'?'comMsgBody':'eduMsgBody';
+      renderMessages(msgs,bodyId,currentStaff.profil!=='EDU');
+    });
+  }catch(e){showToast('Erreur envoi','error');}
+}
+
 async function chargerResultatsEtMessages(ecole, profil){
   // Résultats
   const [resultats, messages] = await Promise.all([
