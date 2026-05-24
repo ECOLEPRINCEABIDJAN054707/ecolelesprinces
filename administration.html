@@ -1542,8 +1542,121 @@ var EXCLUS_ONGLETS=["IMPORT","SYNTHESE","ANNONCES","ABSENCES","STATISTIQUE","NON
 function getNiv(nom){if(!nom||typeof nom!=="string")return"AUTRES";var n=nom.toUpperCase().trim();if(/^1A\s*BT/.test(n))return"1A BT";if(/^2A\s*BT/.test(n))return"2A BT";if(/^3A\s*BT/.test(n))return"3A BT";if(/^1A\s*CAP/.test(n))return"1A CAP";if(/^2A\s*CAP/.test(n))return"2A CAP";if(/^3A\s*CAP/.test(n))return"3A CAP";if(/^1A\s*BEP/.test(n))return"1A BEP";if(/^2A\s*BEP/.test(n))return"2A BEP";if(/^3A\s*BEP/.test(n))return"3A BEP";if(/^PSA/.test(n))return"PSA";if(/^TPS/.test(n))return"TPS";if(/^MS(\s|$|-|_|\d)/.test(n)||n==="MS")return"MS";if(/^GS(\s|$|-|_|\d)/.test(n)||n==="GS")return"GS";if(/^CP1/.test(n))return"CP1";if(/^CP2/.test(n))return"CP2";if(/^CP(\s|$|-|_|\d)/.test(n)||n==="CP")return"CP";if(/^CE1/.test(n))return"CE1";if(/^CE2/.test(n))return"CE2";if(/^CM1/.test(n))return"CM1";if(/^CM2/.test(n))return"CM2";if(/^6/.test(n)||/^SIXI/.test(n))return"6EME";if(/^5/.test(n)||/^CINQU/.test(n))return"5EME";if(/^4/.test(n)||/^QUATR/.test(n))return"4EME";if(/^3/.test(n)||/^TROI/.test(n))return"3EME";if(/^2NDE/.test(n)||/^SECOND/.test(n))return"2NDE";if(/^1ERE/.test(n)||/^1[EÈ]/.test(n)||/^PREM/.test(n))return"1ERE";if(/^TLE/.test(n)||/^TERM/.test(n))return"TERMINALE";if(/^MATERNELLE/.test(n)||/^MAT/.test(n))return"MATERNELLE";if(/^CAP/.test(n))return"CAP";if(/^BAC/.test(n))return"BAC PRO";if(/^BTS/.test(n))return"BTS";if(/^BEP/.test(n))return"BEP";return"AUTRES";}
 function estOngletValide(nom){if(!nom||typeof nom!=="string")return false;var u=nom.toUpperCase().trim();if(!u)return false;for(var i=0;i<EXCLUS_ONGLETS.length;i++){if(u.indexOf(EXCLUS_ONGLETS[i])>=0)return false;}return true;}
 
+// ══ DIAGNOSTIC COLONNES ══
+async function diagColonnes(sheetsId,nomClasse){
+  try{
+    var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(nomClasse)+'!A1:Z3?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    var r=await fetch(url);var data=await r.json();
+    if(!data.values||!data.values.length){showToast('Sheet introuvable : '+nomClasse,'error');return;}
+    var row0=data.values[0];var row1=data.values[1]||[];
+    var html='<div style="position:fixed;bottom:60px;left:10px;right:10px;background:#1A0A2E;color:#fff;border-radius:10px;padding:12px;z-index:9999;font-size:0.72em;max-height:220px;overflow-y:auto">';
+    html+='<b style="color:var(--or)">🔍 Colonnes détectées — '+nomClasse+'</b><br><br>';
+    row0.forEach(function(h,i){var valEx=String(row1[i]||'').substring(0,18);html+='<span style="color:#A5D6A7">COL '+i+'</span> : <b>'+String(h||'(vide)')+'</b> → <span style="color:#FFF9C4">ex: '+valEx+'</span><br>';});
+    html+='<br><button onclick="this.parentElement.remove()" style="background:var(--rouge);color:#fff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:0.85em">✕ Fermer</button></div>';
+    document.body.insertAdjacentHTML('beforeend',html);
+  }catch(e){}
+}
+
 async function lireOngletClasse(sheetsId,nomClasse){
-  try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(nomClasse)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';var r=await fetch(url);var data=await r.json();if(!data.values||data.values.length<2)return[];var headers=data.values[0].map(function(h){return String(h||'').toUpperCase().trim();});var iMat=headers.findIndex(function(h){return h.includes('MATR');});var iNom=headers.findIndex(function(h){return h.includes('NOM')&&h.includes('PREN');});if(iNom===-1)iNom=headers.findIndex(function(h){return h.includes('NOM');});var iDu=headers.findIndex(function(h){return h.includes('MONTANT')||h.includes('DU')||h.includes('SCOLAR');});var iVerse=headers.findIndex(function(h){return h.includes('VERS')||h.includes('PAY');});var iSolde=headers.findIndex(function(h){return h.includes('SOLDE')||h.includes('RESTE');});var iTel1=headers.findIndex(function(h){return h.includes('TEL')&&(h.includes('1')||h.includes('PERE'));});var iTel2=headers.findIndex(function(h){return h.includes('TEL')&&(h.includes('2')||h.includes('MERE'));});var iTel3=headers.findIndex(function(h){return h.includes('TEL')&&(h.includes('3')||h.includes('TUT'));});return data.values.slice(1).filter(function(row){return row[iNom>=0?iNom:0];}).map(function(row){var solde=parseFloat(row[iSolde>=0?iSolde:0])||0,verse=parseFloat(row[iVerse>=0?iVerse:0])||0,du=parseFloat(row[iDu>=0?iDu:0])||0;return{matricule:String(row[iMat>=0?iMat:0]||'').trim(),nom_prenom:String(row[iNom>=0?iNom:0]||'').trim(),montant_du:du,versement:verse,solde:solde,tel1:String(row[iTel1>=0?iTel1:0]||'').trim(),tel2:String(row[iTel2>=0?iTel2:0]||'').trim(),tel3:String(row[iTel3>=0?iTel3:0]||'').trim(),statut:solde<=0?'SOLDE':verse===0?'IMPAYE':'PARTIEL'};});}catch(e){return[];}
+  try{
+    var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(nomClasse)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    var r=await fetch(url);var data=await r.json();
+    if(!data.values||data.values.length<2)return[];
+
+    // Ligne 0 = en-têtes (si c'est bien des en-têtes), sinon on tente en mode positionnel
+    var row0=data.values[0].map(function(h){return String(h||'').toUpperCase().trim();});
+
+    // Détecte si la ligne 0 est un en-tête ou une ligne de données
+    var estEnTete = row0.some(function(h){
+      return h.includes('NOM')||h.includes('MAT')||h.includes('PRENOM')||h.includes('ELEVE')||h.includes('TEL')||h.includes('SOL')||h.includes('VERS');
+    });
+
+    var iMat=-1,iNom=-1,iPrenom=-1,iDu=-1,iVerse=-1,iSolde=-1;
+    var iTel1=-1,iTel2=-1,iTel3=-1;
+    var dataRows;
+
+    if(estEnTete){
+      var headers=row0;
+      dataRows=data.values.slice(1);
+
+      // MATRICULE
+      iMat=headers.findIndex(function(h){return h.includes('MATR');});
+
+      // NOM PRENOM — cherche d'abord colonne combinée "NOM ET PRENOMS" ou "NOM PRENOM"
+      iNom=headers.findIndex(function(h){return (h.includes('NOM')&&h.includes('PREN'))||(h.includes('NOM')&&h.includes('ET'));});
+      // Sinon colonne NOM seule (on cherchera PRENOM séparément)
+      if(iNom===-1) iNom=headers.findIndex(function(h){return h==='NOM'||h==='NOMS'||h==='NOM COMPLET'||h==='NOM DE L\'ELEVE';});
+      if(iNom===-1) iNom=headers.findIndex(function(h){return h.includes('NOM')&&!h.includes('PRENOM');});
+      // PRENOM séparé
+      iPrenom=headers.findIndex(function(h){return h.includes('PRENOM')&&!h.includes('NOM');});
+
+      // MONTANT DÛ
+      iDu=headers.findIndex(function(h){return h.includes('MONTANT')||h==='DU'||h.includes('SCOLAR')||h.includes('FRAIS')||h.includes('A PAYER')||h.includes('APAYER');});
+      if(iDu===-1) iDu=headers.findIndex(function(h){return h.includes('DU');});
+
+      // VERSEMENT / PAIEMENT
+      iVerse=headers.findIndex(function(h){return h.includes('VERS')||h.includes('PAYE')||h.includes('REGLE')||h.includes('RECU')||h.includes('ENCAISS');});
+      if(iVerse===-1) iVerse=headers.findIndex(function(h){return h.includes('PAY');});
+
+      // SOLDE / RESTE
+      iSolde=headers.findIndex(function(h){return h.includes('SOLDE')||h.includes('RESTE')||h.includes('IMPAYE')||h.includes('RELIQUAT');});
+
+      // TÉLÉPHONES — plusieurs variantes
+      // Tel 1 / père
+      iTel1=headers.findIndex(function(h){return (h.includes('TEL')&&(h.includes(' 1')||h.includes('_1')||h.endsWith('1')))||(h.includes('TEL')&&h.includes('PERE'))||(h.includes('TEL')&&h.includes('PAP'));});
+      if(iTel1===-1) iTel1=headers.findIndex(function(h){return h==='TEL'||h==='TELEPHONE'||h==='CONTACT'||h.includes('TEL PARENT');});
+      // Tel 2 / mère
+      iTel2=headers.findIndex(function(h){return (h.includes('TEL')&&(h.includes(' 2')||h.includes('_2')||h.endsWith('2')))||(h.includes('TEL')&&h.includes('MERE'))||(h.includes('TEL')&&h.includes('MAN'));});
+      // Tel 3 / tuteur
+      iTel3=headers.findIndex(function(h){return (h.includes('TEL')&&(h.includes(' 3')||h.includes('_3')||h.endsWith('3')))||(h.includes('TEL')&&h.includes('TUT'))||(h.includes('TEL')&&h.includes('AUT'));});
+
+    } else {
+      // Pas d'en-tête détecté : mode positionnel
+      // Structure supposée : COL0=Matricule, COL1=Nom, COL2=Classe ou Nom, COL3=Scolarité, COL4=Versement, COL5=Solde, COL6=Tel1, COL7=Tel2
+      dataRows=data.values;
+      iMat=0; iNom=1; iDu=3; iVerse=4; iSolde=5; iTel1=6; iTel2=7;
+    }
+
+    // Log debug dans la console (inoffensif)
+    console.log('[LISTE] '+nomClasse+' → iMat='+iMat+' iNom='+iNom+' iPrenom='+iPrenom+' iDu='+iDu+' iVerse='+iVerse+' iSolde='+iSolde+' iTel1='+iTel1+' iTel2='+iTel2+' iTel3='+iTel3);
+
+    return dataRows.filter(function(row){
+      // Filtre : ligne non vide avec au moins un nom ou matricule
+      var nomVal=iNom>=0?String(row[iNom]||'').trim():'';
+      var matVal=iMat>=0?String(row[iMat]||'').trim():'';
+      return nomVal.length>1||matVal.length>1;
+    }).map(function(row){
+      var nomVal=iNom>=0?String(row[iNom]||'').trim():'';
+      var prenomVal=iPrenom>=0?String(row[iPrenom]||'').trim():'';
+      // Si nom et prénom séparés, on concatène
+      var nomComplet=prenomVal&&!nomVal.includes(prenomVal)?nomVal+' '+prenomVal:nomVal;
+
+      var du=iDu>=0?parseFloat(String(row[iDu]||'').replace(/\s/g,'').replace(',','.'))||0:0;
+      var verse=iVerse>=0?parseFloat(String(row[iVerse]||'').replace(/\s/g,'').replace(',','.'))||0:0;
+      var solde=iSolde>=0?parseFloat(String(row[iSolde]||'').replace(/\s/g,'').replace(',','.'))||0:0;
+
+      // Si solde non trouvé, on le calcule
+      if(iSolde===-1&&du>0) solde=du-verse;
+
+      var t1=iTel1>=0?String(row[iTel1]||'').trim():'';
+      var t2=iTel2>=0?String(row[iTel2]||'').trim():'';
+      var t3=iTel3>=0?String(row[iTel3]||'').trim():'';
+
+      // Nettoyage téléphones : supprimer valeurs non-numériques parasites
+      function nettoyeTel(t){t=t.replace(/[^0-9+]/g,'');return t.length>=8?t:'';}
+      t1=nettoyeTel(t1);t2=nettoyeTel(t2);t3=nettoyeTel(t3);
+
+      return{
+        matricule:iMat>=0?String(row[iMat]||'').trim():'',
+        nom_prenom:nomComplet,
+        montant_du:du,
+        versement:verse,
+        solde:solde,
+        tel1:t1,tel2:t2,tel3:t3,
+        statut:solde<=0?'SOLDE':verse===0?'IMPAYE':'PARTIEL'
+      };
+    });
+  }catch(e){console.error('[LISTE] Erreur '+nomClasse+':',e);return[];}
 }
 
 async function listerOnglets(sheetsId){
@@ -1581,7 +1694,14 @@ async function genPDFClasse(nomClasse){
   var ctx=window._listesCtx;if(!ctx)return;var types=getTypesCoches();if(!types.length){showToast('Cochez au moins un type','error');return;}
   var btnId='btn_cl_'+nomClasse.replace(/[^A-Z0-9]/gi,'_');var btn=document.getElementById(btnId);if(btn){btn.style.background='#FFF3E0';btn.innerHTML='<b>'+nomClasse+'</b><br><small>Chargement...</small>';}
   var eleves=window._listesCACHE[nomClasse];if(!eleves){eleves=await lireOngletClasse(ctx.sheetsId,nomClasse);window._listesCACHE[nomClasse]=eleves;}
-  if(btn){btn.style.background='#E8F5E9';btn.innerHTML='<b>'+nomClasse+'</b><br><small style="color:#2E7D32">✓ OK</small>';}
+  if(!eleves||!eleves.length){
+    if(btn){btn.style.background='#FFEBEE';btn.innerHTML='<b>'+nomClasse+'</b><br><small style="color:#C62828">0 élève</small>';}
+    showToast('⚠️ Aucun élève chargé pour '+nomClasse,'error');
+    // Diagnostic automatique : afficher les vraies en-têtes du sheet
+    diagColonnes(ctx.sheetsId,nomClasse);
+    return;
+  }
+  if(btn){btn.style.background='#E8F5E9';btn.innerHTML='<b>'+nomClasse+'</b><br><small style="color:#2E7D32">✓ '+eleves.length+' élèves</small>';}
   var d=new Date(),dd=String(d.getDate()).padStart(2,'0')+String(d.getMonth()+1).padStart(2,'0')+d.getFullYear();var ne=ctx.label.replace(/[^A-Z0-9]/gi,'_').toUpperCase().substring(0,15);
   types.forEach(function(k){var nf=ne+'_'+nomClasse.replace(/[^A-Z0-9]/gi,'_')+'_'+window._listesTC[k].cd+'_'+dd;var w=window.open('','_blank');if(!w){showToast('Autorisez les popups','error');return;}w.document.write(mkDocSimpleV9({nom:nomClasse,eleves:eleves},k,nf,ctx.label));w.document.close();});
 }
