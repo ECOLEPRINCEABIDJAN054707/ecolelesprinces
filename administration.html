@@ -61,7 +61,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1A1A2E;min-hei
 
 /* STATS */
 .stats-row{display:grid;gap:10px;padding:12px 14px}
-.s3{grid-template-columns:repeat(3,1fr)}.s4{grid-template-columns:repeat(4,1fr)}.s5{grid-template-columns:repeat(5,1fr)}
+.s3{grid-template-columns:repeat(3,1fr)}.s4{grid-template-columns:repeat(4,1fr)}.s5{grid-template-columns:repeat(5,1fr)}.s6{grid-template-columns:repeat(3,1fr)}
 .s6{grid-template-columns:repeat(3,1fr)}
 .stat-box{background:#fff;border-radius:10px;padding:10px 6px;text-align:center;box-shadow:var(--shadow);border-top:3px solid var(--bleu2)}
 .stat-box.vert{border-top-color:var(--vert)}.stat-box.rouge{border-top-color:var(--rouge)}
@@ -434,6 +434,56 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 
+  <!-- SECTION APPEL ENSEIGNANTS -->
+  <div class="section" id="dirSecAppel">
+    <div class="sec-head sec-vert" onclick="toggleSec(this)">
+      <h3>📋 Appel enseignants — Présences du jour</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="dirAppelBody">
+      <div style="padding:14px">
+        <p style="font-size:0.8em;color:var(--gris);margin-bottom:12px">Cochez les enseignants présents aujourd'hui</p>
+        <div id="dirAppelListe"></div>
+        <button onclick="validerAppelDir()" style="width:100%;margin-top:12px;padding:10px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.82em;cursor:pointer">✅ Valider l'appel du jour</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- SECTION RÉSULTATS -->
+  <div class="section">
+    <div class="sec-head sec-emeraude" onclick="toggleSec(this)">
+      <h3>📊 Résultats — Délibérations <span id="dirResCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="dirResBody">
+      <div style="display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+        <select id="dirResFiltreClasse" onchange="filtrerResultatsDir()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:'DM Sans',sans-serif;outline:none">
+          <option value="">Toutes les classes</option>
+        </select>
+        <select id="dirResFiltreDecision" onchange="filtrerResultatsDir()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:'DM Sans',sans-serif;outline:none">
+          <option value="">Toutes décisions</option>
+          <option value="ADMIS">ADMIS</option>
+          <option value="REDOUBLANT">REDOUBLANT</option>
+          <option value="RNO">RNO</option>
+          <option value="EXCLU">EXCLU</option>
+        </select>
+        <input id="dirResFiltreNom" type="text" placeholder="🔍 Rechercher élève..." oninput="filtrerResultatsDir()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:'DM Sans',sans-serif;outline:none;flex:1;min-width:140px">
+      </div>
+      <div id="dirResTable" class="tbl-wrap">
+        <p style="padding:14px;font-size:0.82em;color:var(--gris)">⏳ Chargement des résultats...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION MESSAGES PARENTS -->
+  <div class="section">
+    <div class="sec-head sec-violet" onclick="toggleSec(this)">
+      <h3>💬 Messages parents <span id="dirMsgCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="dirMsgBody">
+      <p style="padding:14px;font-size:0.82em;color:var(--gris)">⏳ Chargement des messages...</p>
+    </div>
+  </div>
+
   <!-- SECTION LISTES -->
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
@@ -550,45 +600,45 @@ table tr:nth-child(even){background:#F8FAFD}
   <!-- 1. NOM + CLASSE — lecture seule -->
   <div class="section">
     <div class="sec-head sec-bleu open" onclick="toggleSec(this)">
-      <h3>👥 Élèves — Nom & Classe (lecture)</h3><span class="arr">▼</span>
+      <h3>👥 Élèves — Nom & Classe</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body open" id="comElevesBody">
-      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Pas de modification autorisée</p>
+      <p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>
     </div>
   </div>
 
   <!-- 2. NOTES & MOYENNES — lecture seule -->
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
-      <h3>📊 Notes & Moyennes (lecture)</h3><span class="arr">▼</span>
+      <h3>📊 Notes & Moyennes</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="comNotesBody">
-      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Connexion Google Sheets requise</p>
+      <p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>
     </div>
   </div>
 
   <!-- 3. ABSENCES — lecture seule -->
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
-      <h3>📅 Absences (lecture)</h3><span class="arr">▼</span>
+      <h3>📅 Absences</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="comAbsencesBody">
-      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Connexion Google Sheets requise</p>
+      <p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>
     </div>
   </div>
 
   <!-- 4. SOLDE ÉLÈVE INDIVIDUEL — lecture seule -->
   <div class="section">
     <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
-      <h3>💳 Soldes élèves — Suivi paiements (lecture)</h3><span class="arr">▼</span>
+      <h3>💳 Suivi des paiements</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body open" id="comPaiBody"></div>
   </div>
 
-  <!-- 5. SALAIRES ENSEIGNANTS — ✓✓ modifier -->
+
   <div class="section">
     <div class="sec-head sec-or" onclick="toggleSec(this)">
-      <h3>💰 Salaires enseignants (✓✓ modifier)</h3><span class="arr">▼</span>
+      <h3>💰 Salaires enseignants</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="comSalBody"></div>
   </div>
@@ -596,35 +646,67 @@ table tr:nth-child(even){background:#F8FAFD}
   <!-- 6. INSCRIPTIONS — modifier -->
   <div class="section">
     <div class="sec-head sec-vert" onclick="toggleSec(this)">
-      <h3>📋 Inscriptions 2025-2026 (✓✓ modifier)</h3><span class="arr">▼</span>
+      <h3>📋 Inscriptions 2025-2026</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="comInscBody"></div>
   </div>
 
   <!-- 7. LISTES — scolarité, en retard, vierge, contacts, absences+contacts -->
+
+  <!-- SECTION RÉSULTATS COM -->
+  <div class="section">
+    <div class="sec-head sec-emeraude" onclick="toggleSec(this)">
+      <h3>📊 Résultats — Délibérations <span id="comResCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="comResBody">
+      <div style="display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+        <select id="comResFiltreClasse" onchange="filtrerResultatsCom()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:'DM Sans',sans-serif;outline:none">
+          <option value="">Toutes les classes</option>
+        </select>
+        <select id="comResFiltreDecision" onchange="filtrerResultatsCom()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:'DM Sans',sans-serif;outline:none">
+          <option value="">Toutes décisions</option>
+          <option value="ADMIS">ADMIS</option>
+          <option value="REDOUBLANT">REDOUBLANT</option>
+          <option value="RNO">RNO</option>
+          <option value="EXCLU">EXCLU</option>
+        </select>
+        <input id="comResFiltreNom" type="text" placeholder="🔍 Rechercher..." oninput="filtrerResultatsCom()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:'DM Sans',sans-serif;outline:none;flex:1;min-width:120px">
+      </div>
+      <div id="comResTable" class="tbl-wrap">
+        <p style="padding:14px;font-size:0.82em;color:var(--gris)">⏳ Chargement...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION MESSAGES PARENTS COM -->
+  <div class="section">
+    <div class="sec-head sec-violet" onclick="toggleSec(this)">
+      <h3>💬 Messages parents <span id="comMsgCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="comMsgBody">
+      <p style="padding:14px;font-size:0.82em;color:var(--gris)">⏳ Chargement des messages...</p>
+    </div>
+  </div>
+
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
-      <h3>🖨️ Listes par niveau (✓🖨 impression)</h3><span class="arr">▼</span>
+      <h3>🖨️ Listes par niveau</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body">
-      <div style="padding:10px 14px;background:#FFF8E1;font-size:0.76em;color:#7a5f00;border-bottom:1px solid var(--border)">
-        ✓ Scolarité complète · En retard · Liste vierge · Liste+contacts · Absences+contacts
-      </div>
+      
       <div class="actions-grid">
         <div class="action-btn" onclick="showToast('Scolarité — Connexion Sheets requise','')"><div class="ab-ico">📋</div><div class="ab-titre">Scolarité complète</div><div class="ab-desc">Tous les élèves</div></div>
         <div class="action-btn" onclick="showToast('En retard — Bientôt disponible','')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Soldes impayés</div></div>
         <div class="action-btn" onclick="showToast('Vierge — Bientôt disponible','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Noms uniquement</div></div>
         <div class="action-btn" onclick="showToast('Contacts — Bientôt disponible','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
         <div class="action-btn" onclick="showToast('Absences+contacts — Bientôt','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences + contacts</div><div class="ab-desc">Suivi absences</div></div>
-        <div class="action-btn" style="border-color:var(--rouge)" onclick="showToast('NON AUTORISÉ — Le comptable ne voit pas le solde total','error')"><div class="ab-ico">🚫</div><div class="ab-titre">Solde total</div><div class="ab-desc">Non autorisé</div></div>
+        </div>
       </div>
     </div>
   </div>
-
-  <!-- 8. RELANCES PARENTS — ✓🖨 -->
   <div class="section">
     <div class="sec-head sec-rouge" onclick="toggleSec(this)">
-      <h3>📬 Relances parents (✓🖨 impression)</h3><span class="arr">▼</span>
+      <h3>📬 Relances parents</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body">
       <div style="padding:14px">
@@ -637,10 +719,10 @@ table tr:nth-child(even){background:#F8FAFD}
   <!-- 9. MOTIFS EXCLUSION — lecture -->
   <div class="section">
     <div class="sec-head sec-violet" onclick="toggleSec(this)">
-      <h3>🔒 Motifs exclusion (✓ lecture)</h3><span class="arr">▼</span>
+      <h3>🔒 Motifs exclusion</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="comMotifsBody">
-      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Connexion Google Sheets requise</p>
+      <p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>
     </div>
   </div>
 
@@ -659,15 +741,6 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
     <div class="sec-body" id="comCourrierBody"></div>
   </div>
-
-  <!-- INTERDIT -->
-  <div class="section">
-    <div style="padding:12px 16px;background:#FFEBEE;border-left:4px solid var(--rouge)">
-      <p style="font-size:0.76em;font-weight:700;color:var(--rouge);margin-bottom:4px">🚫 Accès INTERDIT pour le Comptable</p>
-      <p style="font-size:0.72em;color:var(--rouge)">Solde total école · Masse salariale totale · Modifier SYNTHESE · Codes secrets staff · Saisir notes · Valider bulletins</p>
-    </div>
-  </div>
-
   <div class="footer">Princes Smart School · Espace Comptable · 2025-2026</div>
 </div>
 
@@ -700,40 +773,40 @@ table tr:nth-child(even){background:#F8FAFD}
   <!-- 1. NOM + CLASSE — lecture seule -->
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
-      <h3>👥 Élèves — Nom & Classe (lecture)</h3><span class="arr">▼</span>
+      <h3>👥 Élèves — Nom & Classe</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="eduNomClasseBody">
-      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Pas de modification autorisée</p>
+      <p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>
     </div>
   </div>
 
   <!-- 2. NOTES & MOYENNES — lecture seule -->
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
-      <h3>📊 Notes & Moyennes (lecture)</h3><span class="arr">▼</span>
+      <h3>📊 Notes & Moyennes</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="eduNotesBody">
-      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Pour accompagner les élèves</p>
+      <p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>
     </div>
   </div>
 
   <!-- 3. ABSENCES — lecture seule -->
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
-      <h3>📅 Absences (lecture)</h3><span class="arr">▼</span>
+      <h3>📅 Absences</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="eduAbsencesBody">
-      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Suivi présence élèves</p>
+      <p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>
     </div>
   </div>
 
   <!-- 4. SOLDE ÉLÈVE INDIVIDUEL — lecture seule -->
   <div class="section">
     <div class="sec-head sec-or" onclick="toggleSec(this)">
-      <h3>💳 Solde individuel élève (✓ lecture)</h3><span class="arr">▼</span>
+      <h3>💳 Soldes élèves</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="eduSoldeBody">
-      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture seule · Pas de solde total · Connexion Sheets requise</p>
+      <p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>
     </div>
   </div>
 
@@ -744,23 +817,63 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
     <div class="sec-body open" id="eduElevesBody"></div>
   </div>
-
-  <!-- 6. LISTES — vierge, contacts, absences+contacts, scolarité sans total -->
   <div class="section">
     <div class="sec-head sec-vert" onclick="toggleSec(this)">
-      <h3>🖨️ Mes listes (✓🖨 impression)</h3><span class="arr">▼</span>
+      <h3>📋 Appel élèves — Présences du jour</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="eduAppelBody">
+      <div style="padding:14px">
+        <p style="font-size:0.8em;color:var(--gris);margin-bottom:12px">Cochez les élèves présents aujourd'hui · Abscences automatiquement enregistrées</p>
+        <div id="eduAppelListe"></div>
+        <button onclick="validerAppelEdu()" style="width:100%;margin-top:12px;padding:10px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.82em;cursor:pointer">✅ Valider l'appel du jour</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. LISTES — vierge, contacts, absences+contacts, scolarité sans total -->
+
+  <!-- SECTION RÉSULTATS EDU -->
+  <div class="section">
+    <div class="sec-head sec-emeraude" onclick="toggleSec(this)">
+      <h3>📊 Résultats — Délibérations <span id="eduResCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="eduResBody">
+      <div style="display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+        <select id="eduResFiltreClasse" onchange="filtrerResultatsEdu()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:'DM Sans',sans-serif;outline:none">
+          <option value="">Toutes les classes</option>
+        </select>
+        <input id="eduResFiltreNom" type="text" placeholder="🔍 Rechercher..." oninput="filtrerResultatsEdu()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:'DM Sans',sans-serif;outline:none;flex:1;min-width:120px">
+      </div>
+      <div id="eduResTable" class="tbl-wrap">
+        <p style="padding:14px;font-size:0.82em;color:var(--gris)">⏳ Chargement...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION MESSAGES PARENTS EDU -->
+  <div class="section">
+    <div class="sec-head sec-violet" onclick="toggleSec(this)">
+      <h3>💬 Messages parents <span id="eduMsgCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="eduMsgBody">
+      <p style="padding:14px;font-size:0.82em;color:var(--gris)">⏳ Chargement des messages...</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-head sec-vert" onclick="toggleSec(this)">
+      <h3>🖨️ Mes listes</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body">
-      <div style="padding:10px 14px;background:#E8F5E9;font-size:0.76em;color:var(--vert);border-bottom:1px solid var(--border)">
-        ✓ Liste vierge · Liste+contacts (ses élèves) · Absences+contacts (ses élèves) · Scolarité sans total
-      </div>
+      
       <div class="actions-grid">
         <div class="action-btn" onclick="showToast('Liste vierge — Bientôt disponible','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Mes élèves uniquement</div></div>
         <div class="action-btn" onclick="showToast('Contacts — Bientôt disponible','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents mes élèves</div></div>
         <div class="action-btn" onclick="showToast('Absences+contacts — Bientôt','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences + contacts</div><div class="ab-desc">Mes élèves uniquement</div></div>
         <div class="action-btn" onclick="showToast('Scolarité sans total — Bientôt','')"><div class="ab-ico">💳</div><div class="ab-titre">Scolarité</div><div class="ab-desc">Sans solde total</div></div>
-        <div class="action-btn" style="border-color:var(--rouge);opacity:0.6" onclick="showToast('NON AUTORISÉ — En retard est réservé au comptable/directeur','error')"><div class="ab-ico">🚫</div><div class="ab-titre">Liste en retard</div><div class="ab-desc">Non autorisé</div></div>
-        <div class="action-btn" style="border-color:var(--rouge);opacity:0.6" onclick="showToast('NON AUTORISÉ — Relances réservées au comptable/directeur','error')"><div class="ab-ico">🚫</div><div class="ab-titre">Relances parents</div><div class="ab-desc">Non autorisé</div></div>
+        <div class="action-btn" onclick="showToast('En retard — Bientôt disponible','')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Soldes impayés</div></div>
+        </div>
+        </div>
       </div>
     </div>
   </div>
@@ -768,10 +881,10 @@ table tr:nth-child(even){background:#F8FAFD}
   <!-- 7. MOTIFS EXCLUSION — lecture -->
   <div class="section">
     <div class="sec-head sec-violet" onclick="toggleSec(this)">
-      <h3>🔒 Motifs exclusion (✓ lecture)</h3><span class="arr">▼</span>
+      <h3>🔒 Motifs exclusion</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="eduMotifsBody">
-      <p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture uniquement — Pour accompagner les familles</p>
+      <p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>
     </div>
   </div>
 
@@ -813,15 +926,6 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
     <div class="sec-body" id="eduForumBody"></div>
   </div>
-
-  <!-- INTERDIT -->
-  <div class="section">
-    <div style="padding:12px 16px;background:#FFEBEE;border-left:4px solid var(--rouge)">
-      <p style="font-size:0.76em;font-weight:700;color:var(--rouge);margin-bottom:4px">🚫 Accès INTERDIT pour l'Éducateur</p>
-      <p style="font-size:0.72em;color:var(--rouge)">Salaires enseignants · Solde total · Masse salariale · Modifier SYNTHESE · Saisir notes · Valider bulletins · Codes secrets</p>
-    </div>
-  </div>
-
   <div class="footer">Princes Smart School · Espace Éducateur · 2025-2026</div>
 </div>
 
@@ -1108,6 +1212,7 @@ function afficherDir(s){
   // Suivi pédago
   chargerSuiviPedago(s);
   setTimeout(initSaisiePedago, 500);
+  setTimeout(initAppelDir, 600);
 
   // Agenda
   let hag='';
@@ -1116,6 +1221,7 @@ function afficherDir(s){
 
   // Charger données réelles
   if(!isPRIM) chargerPointage();
+  chargerResultatsEtMessages(s.ecole,'DIR');
 
   document.getElementById('espaceDir').style.display='block';
 }
@@ -1636,56 +1742,114 @@ function afficherFond(s){
 }
 
 // ══ COMPTABLE ══
+
+// ══ CHARGEMENT SYNTHESE — Données réelles Google Sheets ══
+// Structure SYNTHESE : col0=NOM, col1=CLASSE, col2=SCOLARITE, col3=VERSE, col4=SOLDE, col5=STATUT...
+// (adapter les index si votre SYNTHESE a une structure différente)
+let donneesElevesSheets = []; // Cache partagé COM + EDU
+
+async function chargerSynthese(ecole){
+  // Structure SYNTHESE : col0=CLASSE col1=MATRICULE col2=NOM ET PRENOMS
+  // col3=MONTANT DU col4=VERSEMENT col5=SOLDE col6=TEL1 col7=TEL2 col8=TEL3
+  // col9=STATUT col10=CLUB1 col11=CLUB2 col14=DECISION col15=MOY_ANNUELLE
+  const sheetsId = SHEETS_IDS[ecole];
+  if(!sheetsId) return null;
+  try{
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r = await fetch(url);
+    const data = await r.json();
+    if(!data.values || data.values.length < 2) return null;
+    const rows = data.values.slice(1); // ignorer en-tête
+    return rows
+      .filter(row => row[2] && String(row[2]).trim()) // filtrer lignes vides
+      .map(row => {
+        const solde  = parseFloat(row[5])||0;
+        const verse  = parseFloat(row[4])||0;
+        const sco    = parseFloat(row[3])||0;
+        const moy    = parseFloat(row[15])||0;
+        let statut   = 'SOLDE';
+        if(solde > 0 && verse === 0) statut = 'IMPAYE';
+        else if(solde > 0) statut = 'PARTIEL';
+        return {
+          classe   : String(row[0]||'').trim(),
+          matricule: String(row[1]||'').trim(),
+          nom      : String(row[2]||'').trim(),
+          sco      : sco,
+          verse    : verse,
+          solde    : solde,
+          tel1     : String(row[6]||'').trim(),
+          tel2     : String(row[7]||'').trim(),
+          tel3     : String(row[8]||'').trim(),
+          statut   : String(row[9]||statut).trim().toUpperCase()||statut,
+          decision : String(row[14]||'').trim(),
+          moy      : moy,
+          alerte   : moy > 0 && moy < 5
+        };
+      });
+  }catch(e){
+    console.log('Erreur SYNTHESE:', e.message);
+    return null;
+  }
+}
+
 function afficherCom(s){
   document.getElementById('comAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]).join('');
   document.getElementById('comNom').textContent=s.nom;
   document.getElementById('comEcole').textContent=s.label;
 
-  // Stats
-  const imp=PAIEMENTS_DEMO.filter(p=>p.statut!=='SOLDE').length;
-  const nouv=INSCRIPTIONS_DEMO.filter(i=>i.statut==='nouveau').length;
-  document.getElementById('cStatImpaye').textContent=imp;
-  document.getElementById('cStatInsc').textContent=nouv;
   document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;
+  document.getElementById('cStatInsc').textContent=INSCRIPTIONS_DEMO.filter(i=>i.statut==='nouveau').length;
 
-  // Élèves nom+classe — lecture seule
-  let hEl='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">✓ Lecture seule — '+PAIEMENTS_DEMO.length+' élèves (données démo)</div>';
-  PAIEMENTS_DEMO.forEach(p=>{hEl+='<div class="item"><div class="item-av" style="background:rgba(31,78,121,0.1);color:var(--bleu)">${p.nom.charAt(0)}</div><div class="item-info"><div class="item-nom">'+p.nom+'</div><div class="item-meta">Classe : '+p.classe+'</div></div></div>'.replace('${p.nom.charAt(0)}',p.nom.charAt(0));});
-  const cEl=document.getElementById('comElevesBody');if(cEl)cEl.innerHTML=hEl;
-
-  // Notes — lecture seule
+  // Affichage chargement initial
+  const cEl=document.getElementById('comElevesBody');
+  const cPai=document.getElementById('comPaiBody');
   const cN=document.getElementById('comNotesBody');
-  if(cN)cN.innerHTML='<p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture seule · Connexion Google Sheets requise pour afficher les vraies notes</p>';
-
-  // Absences — lecture seule
   const cA=document.getElementById('comAbsencesBody');
-  if(cA)cA.innerHTML='<p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture seule · Connexion Google Sheets requise pour afficher les vraies absences</p>';
+  const loading='<p style="padding:14px;font-size:0.82em;color:var(--gris)">⏳ Chargement depuis Google Sheets...</p>';
+  if(cEl)cEl.innerHTML=loading; if(cPai)cPai.innerHTML=loading;
+  if(cN)cN.innerHTML='<p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>';
+  if(cA)cA.innerHTML='<p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>';
 
-  // Soldes élèves — lecture seule (PAS de total)
-  let h='<div style="padding:10px 14px;background:#FFEBEE;font-size:0.76em;color:var(--rouge);border-bottom:1px solid var(--border)">✓ Lecture seule · Pas de solde total autorisé</div>';
-  PAIEMENTS_DEMO.forEach(p=>{
-    const bg=p.statut==='SOLDE'?'rgba(46,125,50,0.12)':p.statut==='PARTIEL'?'rgba(230,81,0,0.12)':'rgba(198,40,40,0.12)';
-    const tc=p.statut==='SOLDE'?'#2E7D32':p.statut==='PARTIEL'?'#E65100':'#C62828';
-    const badge=p.statut==='SOLDE'?'<span class="bdg bg-vert">✓ Soldé</span>':p.statut==='PARTIEL'?'<span class="bdg bg-orange">⚠ Partiel</span>':'<span class="bdg bg-rouge">✗ Impayé</span>';
-    h+='<div class="item"><div class="item-av" style="background:'+bg+';color:'+tc+'">'+p.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+p.nom+' '+badge+'</div><div class="item-meta">'+p.classe+' · Versé: '+p.verse.toLocaleString('fr-FR')+' / '+p.du.toLocaleString('fr-FR')+' F</div></div><div class="item-val"><div class="val" style="color:'+tc+'">'+(p.solde>0?p.solde.toLocaleString('fr-FR')+' F':'✓')+'</div><div class="lbl">'+(p.solde>0?'Reste':'Soldé')+'</div></div></div>';
+  // Chargement SYNTHESE réelle
+  chargerSynthese(s.ecole).then(eleves=>{
+    const data = eleves && eleves.length ? eleves : PAIEMENTS_DEMO.map(p=>({nom:p.nom,classe:p.classe,sco:p.du,verse:p.verse,solde:p.solde,statut:p.statut}));
+    donneesElevesSheets = data;
+
+    const imp = data.filter(e=>e.statut!=='SOLDE').length;
+    document.getElementById('cStatImpaye').textContent=imp;
+
+    // Élèves nom+classe
+    let hEl='';
+    data.forEach(p=>{hEl+='<div class="item"><div class="item-av" style="background:rgba(31,78,121,0.1);color:var(--bleu)">'+p.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+p.nom+'</div><div class="item-meta">'+p.classe+'</div></div></div>';});
+    if(cEl)cEl.innerHTML=hEl||'<p style="padding:14px;color:var(--gris);font-size:0.82em">Aucun élève trouvé</p>';
+
+    // Soldes élèves — PAS de total
+    let h='';
+    data.forEach(p=>{
+      const bg=p.statut==='SOLDE'?'rgba(46,125,50,0.12)':p.statut==='PARTIEL'?'rgba(230,81,0,0.12)':'rgba(198,40,40,0.12)';
+      const tc=p.statut==='SOLDE'?'#2E7D32':p.statut==='PARTIEL'?'#E65100':'#C62828';
+      const badge=p.statut==='SOLDE'?'<span class="bdg bg-vert">✓ Soldé</span>':p.statut==='PARTIEL'?'<span class="bdg bg-orange">⚠ Partiel</span>':'<span class="bdg bg-rouge">✗ Impayé</span>';
+      const tel=p.tel1||p.tel2||p.tel3||'';
+      h+='<div class="item"><div class="item-av" style="background:'+bg+';color:'+tc+'">'+p.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+p.nom+' '+badge+'</div><div class="item-meta">'+p.classe+(tel?' · 📞 '+tel:'')+'<br>'+p.verse.toLocaleString('fr-FR')+' / '+p.sco.toLocaleString('fr-FR')+' F</div></div><div class="item-val"><div class="val" style="color:'+tc+'">'+(p.solde>0?p.solde.toLocaleString('fr-FR')+' F':'✓')+'</div><div class="lbl">'+(p.solde>0?'Reste':'Soldé')+'</div></div></div>';
+    });
+    if(cPai)cPai.innerHTML=h||'<p style="padding:14px;color:var(--gris);font-size:0.82em">Aucune donnée</p>';
   });
-  // PAS de ligne total — interdit pour comptable
-  document.getElementById('comPaiBody').innerHTML=h;
 
-  // Salaires — ✓✓ modifier
-  let h3='<div style="padding:10px 14px;background:#FFF8E1;font-size:0.76em;color:#7a5f00;border-bottom:1px solid var(--border)">✓✓ Modification autorisée · Données du fichier salaires 2025-2026</div>';
+  // Salaires
+  let h3='';
   SALAIRES_ADMIN.filter(e=>e.salaire>0).forEach(e=>{h3+='<div class="rap-ligne"><span class="rap-label">'+e.nom+' <span style="color:var(--gris);font-size:0.8em">'+e.fonction+'</span></span><span class="rap-val">'+e.salaire.toLocaleString('fr-FR')+' F</span></div>';});
   // PAS de ligne masse salariale totale — interdite pour comptable
   document.getElementById('comSalBody').innerHTML=h3;
 
   // Inscriptions — modifier
-  let h2='<div style="padding:10px 14px;background:#E8F5E9;font-size:0.76em;color:var(--vert);border-bottom:1px solid var(--border)">✓✓ Modification autorisée · Gestion des inscriptions</div>';
+  let h2='';
   INSCRIPTIONS_DEMO.forEach((ins,i)=>{
     const sc={nouveau:'bg-bleu',valide:'bg-vert',attente:'bg-orange'};
     const sl={nouveau:'Nouveau',valide:'Validé',attente:'En attente'};
     h2+='<div class="item"><div class="item-av" style="background:var(--bleu);color:#fff">'+(i+1)+'</div><div class="item-info"><div class="item-nom">'+ins.nom+'</div><div class="item-meta">Classe : '+ins.classe+' · '+ins.date+'</div></div><span class="bdg '+sc[ins.statut]+'">'+sl[ins.statut]+'</span></div>';
   });
   document.getElementById('comInscBody').innerHTML=h2;
+  chargerResultatsEtMessages(s.ecole,'COM');
 
   // Tâches
   let h4='';
@@ -1703,7 +1867,7 @@ function afficherCom(s){
 
   // Motifs exclusion — lecture
   const cM=document.getElementById('comMotifsBody');
-  if(cM)cM.innerHTML='<p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture seule · Connexion Google Sheets requise</p>';
+  if(cM)cM.innerHTML='<p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>';
 
   document.getElementById('espaceCom').style.display='block';
 }
@@ -1714,59 +1878,67 @@ function afficherEdu(s){
   document.getElementById('eduNom').textContent=s.nom;
   document.getElementById('eduEcole').textContent=s.label;
 
-  const alertes=ELEVES_EDU_DEMO.filter(e=>e.alerte).length;
-  const admis=ELEVES_EDU_DEMO.filter(e=>e.moy>=5).length;
-  document.getElementById('eStatAlert').textContent=alertes;
-  document.getElementById('eStatEleves').textContent=ELEVES_EDU_DEMO.length;
-  document.getElementById('eStatReussite').textContent=Math.round(admis/ELEVES_EDU_DEMO.length*100)+'%';
-
-  // Nom+Classe — lecture seule
+  // Chargement initial
   const eNC=document.getElementById('eduNomClasseBody');
-  if(eNC){
-    let h='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">✓ Lecture seule · Pas de modification autorisée</div>';
-    ELEVES_EDU_DEMO.forEach(e=>{h+='<div class="item"><div class="item-av" style="background:rgba(31,78,121,0.1);color:var(--bleu)">'+e.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+e.nom+'</div><div class="item-meta">Classe : '+e.classe+'</div></div></div>';});
-    eNC.innerHTML=h;
-  }
-
-  // Notes — lecture seule
   const eN=document.getElementById('eduNotesBody');
-  if(eN){
-    let h='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">✓ Lecture seule · Pour accompagner les élèves</div>';
-    ELEVES_EDU_DEMO.forEach(e=>{
-      const c=e.moy>=10?'var(--vert)':e.moy>=5?'var(--orange)':'var(--rouge)';
-      h+='<div class="item"><div class="item-av" style="background:rgba(212,175,55,0.15);color:'+c+'">'+e.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+e.nom+'</div><div class="item-meta">'+e.classe+'</div></div><div class="item-val"><div class="val" style="color:'+c+'">'+e.moy.toFixed(2)+'</div><div class="lbl">/20</div></div></div>';
-    });
-    eN.innerHTML=h;
-  }
-
-  // Absences — lecture seule
   const eA=document.getElementById('eduAbsencesBody');
-  if(eA)eA.innerHTML='<p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture seule · Connexion Google Sheets requise</p>';
-
-  // Solde individuel — lecture seule (PAS de total)
   const eS=document.getElementById('eduSoldeBody');
-  if(eS){
-    let h='<div style="padding:10px 14px;background:#FFF8E1;font-size:0.76em;color:#7a5f00;border-bottom:1px solid var(--border)">✓ Lecture seule · Pas de solde total autorisé</div>';
-    PAIEMENTS_DEMO.forEach(p=>{
-      const tc=p.statut==='SOLDE'?'#2E7D32':p.statut==='PARTIEL'?'#E65100':'#C62828';
-      h+='<div class="item"><div class="item-av" style="background:rgba(212,175,55,0.1);color:var(--or)">'+p.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+p.nom+'</div><div class="item-meta">'+p.classe+'</div></div><div class="item-val"><div class="val" style="color:'+tc+'">'+(p.solde>0?p.solde.toLocaleString('fr-FR')+' F':'Soldé')+'</div></div></div>';
-    });
-    eS.innerHTML=h;
-  }
+  const ld='<p style="padding:14px;font-size:0.82em;color:var(--gris)">⏳ Chargement...</p>';
+  if(eNC)eNC.innerHTML=ld; if(eN)eN.innerHTML=ld; if(eS)eS.innerHTML=ld;
+  if(eA)eA.innerHTML='<p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>';
 
-  // Tableau de bord élèves avec alertes
-  let h='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">'+alertes+' élève(s) en difficulté · '+admis+' admis · Taux réussite : '+Math.round(admis/ELEVES_EDU_DEMO.length*100)+'%</div>';
-  [...ELEVES_EDU_DEMO].sort((a,b)=>a.moy-b.moy).forEach(e=>{
-    const c=e.moy>=7?'#00C896':e.moy>=5?'#D4AF37':'#E74C3C';
-    const bg=e.moy>=7?'rgba(0,200,150,0.15)':e.moy>=5?'rgba(212,175,55,0.15)':'rgba(231,76,60,0.15)';
-    const badge=e.alerte?'<span class="bdg bg-rouge">⚠ Alerte</span>':'<span class="bdg bg-vert">✓ Suivi</span>';
-    h+='<div class="item"><div class="item-av" style="background:'+bg+';color:'+c+'">'+e.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+e.nom+' '+badge+'</div><div class="item-meta">'+e.classe+'</div></div><div class="item-val"><div class="val" style="color:'+c+'">'+e.moy.toFixed(2)+'</div><div class="lbl">/20</div></div></div>';
+  // Chargement SYNTHESE — partager avec COM si déjà chargé
+  const srcData = donneesElevesSheets.length ? Promise.resolve(donneesElevesSheets) : chargerSynthese(s.ecole);
+  srcData.then(eleves=>{
+    const raw = eleves && eleves.length ? eleves : ELEVES_EDU_DEMO.map(e=>({nom:e.nom,classe:e.classe,sco:0,verse:0,solde:0,statut:'SOLDE',moy:e.moy,alerte:e.alerte}));
+    donneesElevesSheets = raw;
+
+    const alertes = raw.filter(e=>e.alerte||e.statut==='IMPAYE').length;
+    const admis   = raw.filter(e=>(e.moy||10)>=5).length;
+    document.getElementById('eStatAlert').textContent=alertes;
+    document.getElementById('eStatEleves').textContent=raw.length;
+    document.getElementById('eStatReussite').textContent=raw.length?Math.round(admis/raw.length*100)+'%':'—';
+
+    // Nom+Classe
+    let hNC='';
+    raw.forEach(e=>{hNC+='<div class="item"><div class="item-av" style="background:rgba(31,78,121,0.1);color:var(--bleu)">'+e.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+e.nom+'</div><div class="item-meta">'+e.classe+'</div></div></div>';});
+    if(eNC)eNC.innerHTML=hNC||ld;
+
+    // Notes
+    let hN='';
+    raw.forEach(e=>{
+      const moy=e.moy||0;
+      const c=moy>=10?'var(--vert)':moy>=5?'var(--orange)':'var(--rouge)';
+      hN+='<div class="item"><div class="item-av" style="background:rgba(212,175,55,0.15);color:'+c+'">'+e.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+e.nom+'</div><div class="item-meta">'+e.classe+'</div></div>'+(moy?'<div class="item-val"><div class="val" style="color:'+c+'">'+moy.toFixed(2)+'</div><div class="lbl">/20</div></div>':'')+'</div>';
+    });
+    if(eN)eN.innerHTML=hN||'<p style="padding:14px;color:var(--gris);font-size:0.82em">Connexion Sheets requise</p>';
+
+    // Solde individuel — PAS de total
+    let hS='';
+    raw.forEach(p=>{
+      const tc=p.statut==='SOLDE'?'#2E7D32':p.statut==='PARTIEL'?'#E65100':'#C62828';
+      hS+='<div class="item"><div class="item-av" style="background:rgba(212,175,55,0.1);color:var(--or)">'+p.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+p.nom+'</div><div class="item-meta">'+p.classe+'</div></div><div class="item-val"><div class="val" style="color:'+tc+'">'+(p.solde>0?p.solde.toLocaleString('fr-FR')+' F':'Soldé')+'</div></div></div>';
+    });
+    if(eS)eS.innerHTML=hS||ld;
+
+    // Tableau de bord
+    let h='';
+    [...raw].sort((a,b)=>((a.alerte||a.statut==='IMPAYE')?0:1)-((b.alerte||b.statut==='IMPAYE')?0:1)||(a.moy||10)-(b.moy||10)).forEach(e=>{
+      const moy=e.moy||0;
+      const c=moy>=7?'#00C896':moy>=5?'#D4AF37':'#E74C3C';
+      const bg=moy>=7?'rgba(0,200,150,0.15)':moy>=5?'rgba(212,175,55,0.15)':'rgba(231,76,60,0.15)';
+      const badge=(e.alerte||e.statut==='IMPAYE')?'<span class="bdg bg-rouge">⚠ Alerte</span>':'<span class="bdg bg-vert">✓ Suivi</span>';
+      h+='<div class="item"><div class="item-av" style="background:'+bg+';color:'+c+'">'+e.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+e.nom+' '+badge+'</div><div class="item-meta">'+e.classe+'</div></div>'+(moy?'<div class="item-val"><div class="val" style="color:'+c+'">'+moy.toFixed(2)+'</div><div class="lbl">/20</div></div>':'')+'</div>';
+    });
+    document.getElementById('eduElevesBody').innerHTML=h||'<p style="padding:14px;color:var(--gris);font-size:0.82em">Aucune donnée</p>';
   });
-  document.getElementById('eduElevesBody').innerHTML=h;
+
+  // Résultats + Messages
+  chargerResultatsEtMessages(s.ecole,'EDU');
 
   // Motifs exclusion — lecture seule
   const eM=document.getElementById('eduMotifsBody');
-  if(eM)eM.innerHTML='<p style="padding:12px 16px;font-size:0.8em;color:var(--gris)">✓ Lecture seule · Pour accompagner les familles</p>';
+  if(eM)eM.innerHTML='<p style="padding:12px 16px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>';
 
   // Charte 7 engagements
   let h2='';
@@ -1784,7 +1956,259 @@ function afficherEdu(s){
   FORUM_DEMO.forEach(f=>{h4+='<div class="forum-item"><div class="forum-auteur">✦ '+f.auteur+'</div><div class="forum-msg">'+f.msg+'</div><div class="forum-meta">'+f.meta+'</div></div>';});
   document.getElementById('eduForumBody').innerHTML=h4;
 
+  setTimeout(initAppelEdu, 400);
   document.getElementById('espaceEdu').style.display='block';
+}
+
+
+// ══ APPEL ENSEIGNANTS (DIR) ══
+const ENSEIGNANTS_APPEL_DEMO = [
+  {nom:'KOUASSI Jean',matiere:'Mathématiques',classe:'TLE D-2'},
+  {nom:'BAMBA Marie',matiere:'SVT',classe:'3EME EX1'},
+  {nom:'KONE Fatoumata',matiere:'Mathématiques',classe:'TLE D-1'},
+  {nom:'DIALLO Ibrahim',matiere:'Anglais',classe:'6EME EX1'},
+  {nom:'TOURE Mariam',matiere:'Français',classe:'1ERE D-2'},
+  {nom:'YAO Kouamé',matiere:'EPS',classe:'4EME EX2'},
+  {nom:'COULIBALY Aya',matiere:'Histoire-Géo',classe:'3EME 5'},
+];
+let appelDir = {};
+let appelEdu = {};
+
+function initAppelDir(){
+  const liste = document.getElementById('dirAppelListe');
+  if(!liste) return;
+  const today = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  let h = '<p style="font-size:0.76em;font-weight:700;color:var(--bleu);margin-bottom:10px">📅 '+today+'</p>';
+  ENSEIGNANTS_APPEL_DEMO.forEach((e,i)=>{
+    appelDir[i] = true;
+    h += '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)">'
+       + '<div onclick="toggleAppelDir('+i+',this)" style="width:26px;height:26px;border-radius:6px;background:var(--vert);border:2px solid var(--vert);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:0.8em;font-weight:700;flex-shrink:0" id="chk-dir-'+i+'">✓</div>'
+       + '<div style="flex:1"><div style="font-size:0.84em;font-weight:600">'+e.nom+'</div><div style="font-size:0.72em;color:var(--gris)">'+e.matiere+' · '+e.classe+'</div></div>'
+       + '<span style="font-size:0.7em;font-weight:700;padding:2px 8px;border-radius:10px;background:#E8F5E9;color:var(--vert)" id="st-dir-'+i+'">Présent</span>'
+       + '</div>';
+  });
+  liste.innerHTML = h;
+}
+
+function toggleAppelDir(idx, el){
+  appelDir[idx] = !appelDir[idx];
+  const present = appelDir[idx];
+  el.style.background = present ? 'var(--vert)' : '#fff';
+  el.style.borderColor = present ? 'var(--vert)' : 'var(--rouge)';
+  el.style.color = present ? '#fff' : 'var(--rouge)';
+  el.textContent = present ? '✓' : '✗';
+  const st = document.getElementById('st-dir-'+idx);
+  if(st){ st.textContent = present ? 'Présent' : 'Absent'; st.style.background = present ? '#E8F5E9' : '#FFEBEE'; st.style.color = present ? 'var(--vert)' : 'var(--rouge)';}
+}
+
+function validerAppelDir(){
+  const absents = Object.entries(appelDir).filter(([k,v])=>!v).map(([k])=>ENSEIGNANTS_APPEL_DEMO[k].nom);
+  const presents = Object.entries(appelDir).filter(([k,v])=>v).length;
+  showToast('✅ Appel validé — '+presents+' présent(s)'+(absents.length?' · '+absents.length+' absent(s)':''),'success');
+}
+
+// ══ APPEL ÉLÈVES (EDU) ══
+function initAppelEdu(){
+  const liste = document.getElementById('eduAppelListe');
+  if(!liste) return;
+  const today = new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  let h = '<p style="font-size:0.76em;font-weight:700;color:var(--or);margin-bottom:10px">📅 '+today+'</p>';
+  ELEVES_EDU_DEMO.forEach((e,i)=>{
+    appelEdu[i] = true;
+    h += '<div style="display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)">'
+       + '<div onclick="toggleAppelEdu('+i+',this)" style="width:26px;height:26px;border-radius:6px;background:var(--vert);border:2px solid var(--vert);display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:0.8em;font-weight:700;flex-shrink:0" id="chk-edu-'+i+'">✓</div>'
+       + '<div style="flex:1"><div style="font-size:0.84em;font-weight:600">'+e.nom+'</div><div style="font-size:0.72em;color:var(--gris)">'+e.classe+'</div></div>'
+       + '<span style="font-size:0.7em;font-weight:700;padding:2px 8px;border-radius:10px;background:#E8F5E9;color:var(--vert)" id="st-edu-'+i+'">Présent</span>'
+       + '</div>';
+  });
+  liste.innerHTML = h;
+}
+
+function toggleAppelEdu(idx, el){
+  appelEdu[idx] = !appelEdu[idx];
+  const present = appelEdu[idx];
+  el.style.background = present ? 'var(--vert)' : '#fff';
+  el.style.borderColor = present ? 'var(--vert)' : 'var(--rouge)';
+  el.style.color = present ? '#fff' : 'var(--rouge)';
+  el.textContent = present ? '✓' : '✗';
+  const st = document.getElementById('st-edu-'+idx);
+  if(st){ st.textContent = present ? 'Présent' : 'Absent'; st.style.background = present ? '#E8F5E9' : '#FFEBEE'; st.style.color = present ? 'var(--vert)' : 'var(--rouge)';}
+  // Mettre à jour le compteur alerte
+  const absents = Object.entries(appelEdu).filter(([k,v])=>!v).length;
+  const eStatAlert = document.getElementById('eStatAlert');
+  if(eStatAlert) eStatAlert.textContent = absents;
+}
+
+function validerAppelEdu(){
+  const absents = Object.entries(appelEdu).filter(([k,v])=>!v).length;
+  const presents = Object.entries(appelEdu).filter(([k,v])=>v).length;
+  showToast('✅ Appel validé — '+presents+' présent(s)'+(absents?' · '+absents+' absent(s)':''),'success');
+}
+
+
+// ══ RÉSULTATS & MESSAGES — Google Sheets ══
+// RESULTATS : col0=NIVEAU col1=MATRICULE col2=NOM ET PRENOMS col3=MOY ANNUELLE col4=DECISION col5=CLASSE SUPERIEURE col6=SOURCE
+// MESSAGES  : col0=DATE col1=TYPE col2=SUJET col3=MESSAGE col4=NOM col5=MATRICULE col6=CLASSE col7=ECOLE col8=STATUT col9=REPONSE
+
+let donneesResultats = [];
+let donneesMessages  = [];
+
+async function chargerResultats(ecole){
+  const sheetsId = SHEETS_IDS[ecole];
+  if(!sheetsId) return [];
+  try{
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/RESULTATS?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r = await fetch(url); const data = await r.json();
+    if(!data.values || data.values.length < 2) return [];
+    return data.values.slice(1).filter(row=>row[2]&&String(row[2]).trim()).map(row=>({
+      niveau   : String(row[0]||'').trim(),
+      matricule: String(row[1]||'').trim(),
+      nom      : String(row[2]||'').trim(),
+      moy      : parseFloat(row[3])||0,
+      decision : String(row[4]||'').trim().toUpperCase(),
+      classeSup: String(row[5]||'').trim(),
+      source   : String(row[6]||'').trim(),
+    }));
+  }catch(e){console.log('Erreur RESULTATS:',e.message);return [];}
+}
+
+async function chargerMessages(ecole){
+  const sheetsId = SHEETS_IDS[ecole];
+  if(!sheetsId) return [];
+  try{
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/MESSAGES?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r = await fetch(url); const data = await r.json();
+    if(!data.values || data.values.length < 2) return [];
+    return data.values.slice(1).filter(row=>row[0]).map(row=>({
+      date     : String(row[0]||'').trim(),
+      type     : String(row[1]||'').trim(),
+      sujet    : String(row[2]||'').trim(),
+      message  : String(row[3]||'').trim(),
+      nom      : String(row[4]||'').trim(),
+      matricule: String(row[5]||'').trim(),
+      classe   : String(row[6]||'').trim(),
+      ecole    : String(row[7]||'').trim(),
+      statut   : String(row[8]||'').trim()||'CONNEXION',
+      reponse  : String(row[9]||'').trim(),
+    }));
+  }catch(e){console.log('Erreur MESSAGES:',e.message);return [];}
+}
+
+function renderTableResultats(data, tableId, filtreClasseId, filtreDecId, filtreNomId){
+  // Peupler le filtre classes
+  const sel = document.getElementById(filtreClasseId);
+  if(sel && sel.options.length <= 1){
+    const classes = [...new Set(data.map(r=>r.niveau))].sort();
+    classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+  }
+  const fc = (document.getElementById(filtreClasseId)||{}).value||'';
+  const fd = (document.getElementById(filtreDecId)||{}).value||'';
+  const fn = ((document.getElementById(filtreNomId)||{}).value||'').toLowerCase();
+  const filtered = data.filter(r=>
+    (!fc||r.niveau===fc)&&(!fd||r.decision===fd)&&(!fn||r.nom.toLowerCase().includes(fn))
+  );
+  const tbl = document.getElementById(tableId);
+  if(!tbl)return;
+  if(!filtered.length){tbl.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun résultat</p>';return;}
+  let h='<table><thead><tr><th>Niveau</th><th>Matricule</th><th>Nom et Prénoms</th><th>Moy.</th><th>Décision</th><th>Classe sup.</th></tr></thead><tbody>';
+  filtered.forEach(r=>{
+    const dc = r.decision==='ADMIS'?'var(--vert)':r.decision==='EXCLU'?'var(--rouge)':r.decision==='REDOUBLANT'?'var(--orange)':'var(--bleu)';
+    const dbg = r.decision==='ADMIS'?'bg-vert':r.decision==='EXCLU'?'bg-rouge':r.decision==='REDOUBLANT'?'bg-orange':'bg-bleu';
+    const mc = r.moy>=10?'var(--vert)':r.moy>=5?'var(--orange)':'var(--rouge)';
+    h+='<tr><td>'+r.niveau+'</td><td style="font-size:0.72em;color:var(--gris)">'+r.matricule+'</td><td><strong>'+r.nom+'</strong></td><td style="font-weight:700;color:'+mc+'">'+r.moy.toFixed(2)+'</td><td><span class="bdg '+dbg+'">'+r.decision+'</span></td><td style="font-size:0.8em">'+r.classeSup+'</td></tr>';
+  });
+  h+='</tbody></table>';
+  tbl.innerHTML=h;
+}
+
+function filtrerResultatsDir(){renderTableResultats(donneesResultats,'dirResTable','dirResFiltreClasse','dirResFiltreDecision','dirResFiltreNom');}
+function filtrerResultatsCom(){renderTableResultats(donneesResultats,'comResTable','comResFiltreClasse','comResFiltreDecision','comResFiltreNom');}
+function filtrerResultatsEdu(){renderTableResultats(donneesResultats,'eduResTable','eduResFiltreClasse',null,'eduResFiltreNom');}
+
+function renderMessages(data, bodyId, canReply){
+  const body = document.getElementById(bodyId); if(!body)return;
+  if(!data.length){body.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun message</p>';return;}
+  // Filtrer les vrais messages (pas juste CONNEXION)
+  const msgs = data.filter(m=>m.statut!=='CONNEXION'||m.message);
+  const connexions = data.filter(m=>m.statut==='CONNEXION'&&!m.message);
+  let h='';
+  // Stats connexions
+  if(connexions.length){
+    h+='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">📱 '+connexions.length+' connexion(s) parent récente(s)</div>';
+  }
+  // Messages réels
+  if(msgs.length){
+    msgs.forEach((m,i)=>{
+      const nonLu = !m.reponse;
+      h+='<div style="padding:12px 16px;border-bottom:1px solid var(--border);background:'+(nonLu?'#FFF8E1':'#fff')+'">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
+        +'<div style="font-size:0.82em;font-weight:700">'+m.nom+' <span style="font-size:0.8em;color:var(--gris)">· '+m.classe+'</span></div>'
+        +'<div style="font-size:0.7em;color:var(--gris)">'+m.date+(nonLu?'  <span style="color:var(--orange);font-weight:700">● Non lu</span>':'')+'</div>'
+        +'</div>'
+        +'<div style="font-size:0.8em;margin-bottom:6px">'+m.message+'</div>';
+      if(m.reponse){
+        h+='<div style="background:#E8F5E9;border-radius:6px;padding:6px 10px;font-size:0.76em;color:var(--vert)">✓ Réponse : '+m.reponse+'</div>';
+      } else if(canReply){
+        h+='<div style="display:flex;gap:6px;margin-top:6px">'
+          +'<input id="rep-'+i+'" type="text" placeholder="Votre réponse..." style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:'DM Sans',sans-serif;outline:none">'
+          +'<button onclick="envoyerReponse(''+m.matricule+'','rep-'+i+'')" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">Répondre</button>'
+          +'</div>';
+      }
+      h+='</div>';
+    });
+  } else if(!connexions.length){
+    h='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun message parent</p>';
+  }
+  body.innerHTML=h;
+}
+
+async function envoyerReponse(matricule, inputId){
+  const inp = document.getElementById(inputId);
+  if(!inp||!inp.value.trim()){showToast('Écrivez une réponse avant d'envoyer','error');return;}
+  const rep = inp.value.trim();
+  try{
+    await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},
+      body:JSON.stringify({type:'REPONDRE_MESSAGE',matricule,reponse:rep,ecole:currentStaff.ecole})});
+    showToast('✅ Réponse envoyée','success');
+    inp.value='';
+    // Recharger messages
+    chargerMessages(currentStaff.ecole).then(msgs=>{
+      donneesMessages=msgs;
+      const bodyId = currentStaff.profil==='DIR'?'dirMsgBody':currentStaff.profil==='COM'?'comMsgBody':'eduMsgBody';
+      renderMessages(msgs, bodyId, currentStaff.profil!=='EDU');
+    });
+  }catch(e){showToast('❌ Erreur envoi','error');}
+}
+
+async function chargerResultatsEtMessages(ecole, profil){
+  // Résultats
+  const [resultats, messages] = await Promise.all([
+    chargerResultats(ecole),
+    chargerMessages(ecole)
+  ]);
+  donneesResultats = resultats;
+  donneesMessages  = messages;
+
+  const countRes = resultats.length;
+  const countMsg = messages.filter(m=>m.statut!=='CONNEXION'||m.message).length;
+  const countCon = messages.filter(m=>m.statut==='CONNEXION').length;
+
+  if(profil==='DIR'){
+    const el=document.getElementById('dirResCount'); if(el)el.textContent='('+countRes+' élèves)';
+    const em=document.getElementById('dirMsgCount'); if(em)em.textContent='('+countMsg+' msg · '+countCon+' connexions)';
+    renderTableResultats(resultats,'dirResTable','dirResFiltreClasse','dirResFiltreDecision','dirResFiltreNom');
+    renderMessages(messages,'dirMsgBody',true);
+  } else if(profil==='COM'){
+    const el=document.getElementById('comResCount'); if(el)el.textContent='('+countRes+' élèves)';
+    const em=document.getElementById('comMsgCount'); if(em)em.textContent='('+countMsg+' msg · '+countCon+' connexions)';
+    renderTableResultats(resultats,'comResTable','comResFiltreClasse','comResFiltreDecision','comResFiltreNom');
+    renderMessages(messages,'comMsgBody',true);
+  } else if(profil==='EDU'){
+    const el=document.getElementById('eduResCount'); if(el)el.textContent='('+countRes+' élèves)';
+    const em=document.getElementById('eduMsgCount'); if(em)em.textContent='('+countMsg+' msg)';
+    renderTableResultats(resultats,'eduResTable','eduResFiltreClasse',null,'eduResFiltreNom');
+    renderMessages(messages,'eduMsgBody',false);
+  }
 }
 
 // ══ HELPERS ══
