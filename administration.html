@@ -35,154 +35,200 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1A1A2E;min-hei
 
 /* ══ LOADING ══ */
 .loading-screen{display:none;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:14px;background:var(--bg)}
-.spinner{width:42px;height:42px;border:3px solid var(--border);border-top-color:var(--bleu2);border-radius:50%;animation:spin 0.8s linear infinite}
+.spinner-sm{width:42px;height:42px;border:3px solid var(--border);border-top-color:var(--bleu2);border-radius:50%;animation:spin 0.8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ══ ESPACE ══ */
 .espace{display:none}
 
 /* HEADER */
-.hdr{color:#fff;padding:16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.2)}
+.hdr{color:#fff;padding:14px 16px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.2)}
 .hdr-dir{background:linear-gradient(135deg,var(--bleu),var(--bleu2))}
 .hdr-fond{background:linear-gradient(135deg,#1A0A2E,#4A148C)}
 .hdr-com{background:linear-gradient(135deg,#BF360C,#E64A19)}
 .hdr-edu{background:linear-gradient(135deg,#1A0A2E,#2D1B4E)}
-.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .hdr-profil{display:flex;align-items:center;gap:12px}
-.hdr-avatar{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1em;border:2px solid rgba(255,255,255,0.3);flex-shrink:0}
-.hdr-info h2{font-size:0.95em;font-weight:600;margin-bottom:2px}
-.hdr-badge{display:inline-block;font-size:0.68em;font-weight:700;padding:2px 10px;border-radius:20px}
+.hdr-avatar{width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1em;border:2px solid rgba(255,255,255,0.3);flex-shrink:0}
+.hdr-info h2{font-size:0.92em;font-weight:600;margin-bottom:2px}
+.hdr-badge{display:inline-block;font-size:0.67em;font-weight:700;padding:2px 10px;border-radius:20px}
 .badge-dir{background:var(--or);color:var(--bleu)}
 .badge-fond{background:var(--or);color:#1A0A2E}
 .badge-com{background:#fff;color:#BF360C}
 .badge-edu{background:var(--or);color:#1A0A2E}
-.hdr-ecole{font-size:0.74em;opacity:0.8;margin-top:2px}
-.btn-logout{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:6px 14px;border-radius:20px;font-size:0.74em;cursor:pointer;font-family:'DM Sans',sans-serif}
+.hdr-ecole{font-size:0.73em;opacity:0.8;margin-top:2px}
+.btn-logout{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:6px 12px;border-radius:20px;font-size:0.72em;cursor:pointer;font-family:'DM Sans',sans-serif}
 
 /* STATS */
-.stats-row{display:grid;gap:10px;padding:14px}
-.stats-3{grid-template-columns:repeat(3,1fr)}
-.stats-4{grid-template-columns:repeat(4,1fr)}
-.stat-box{background:#fff;border-radius:10px;padding:12px 8px;text-align:center;box-shadow:var(--shadow);border-top:3px solid var(--bleu2)}
+.stats-row{display:grid;gap:10px;padding:12px 14px}
+.s3{grid-template-columns:repeat(3,1fr)}.s4{grid-template-columns:repeat(4,1fr)}.s5{grid-template-columns:repeat(5,1fr)}
+.s6{grid-template-columns:repeat(3,1fr)}
+.stat-box{background:#fff;border-radius:10px;padding:10px 6px;text-align:center;box-shadow:var(--shadow);border-top:3px solid var(--bleu2)}
 .stat-box.vert{border-top-color:var(--vert)}.stat-box.rouge{border-top-color:var(--rouge)}
 .stat-box.or{border-top-color:var(--or)}.stat-box.orange{border-top-color:var(--orange)}
-.stat-box.violet{border-top-color:var(--violet)}
-.stat-val{font-size:1.6em;font-weight:700;color:var(--bleu);line-height:1;margin-bottom:3px}
+.stat-box.violet{border-top-color:var(--violet)}.stat-box.emeraude{border-top-color:#00897B}
+.stat-val{font-size:1.4em;font-weight:700;color:var(--bleu);line-height:1;margin-bottom:2px}
 .stat-box.vert .stat-val{color:var(--vert)}.stat-box.rouge .stat-val{color:var(--rouge)}
 .stat-box.or .stat-val{color:#7a5f00}.stat-box.orange .stat-val{color:var(--orange)}
-.stat-box.violet .stat-val{color:var(--violet)}
-.stat-lbl{font-size:0.66em;color:var(--gris);line-height:1.3}
+.stat-box.violet .stat-val{color:var(--violet)}.stat-box.emeraude .stat-val{color:#00897B}
+.stat-lbl{font-size:0.63em;color:var(--gris);line-height:1.3}
+.stat-sub{font-size:0.6em;color:var(--gris);margin-top:2px}
+
+/* FILTERS */
+.filters-bar{display:flex;gap:8px;padding:0 14px 12px;flex-wrap:wrap;align-items:center}
+.filters-bar select{padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;background:#fff;outline:none;font-family:'DM Sans',sans-serif}
+.btn-f{padding:7px 12px;border:none;border-radius:8px;font-size:0.78em;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-f-bleu{background:var(--bleu);color:#fff}
+.btn-f-vert{background:var(--vert);color:#fff}
+.btn-f-violet{background:#7B1FA2;color:#fff}
+.btn-f-emeraude{background:#00897B;color:#fff}
 
 /* SECTIONS */
 .section{background:#fff;margin:0 14px 10px;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-.sec-head{padding:13px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
-.sec-head h3{font-size:0.86em;font-weight:600}
+.sec-head{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer}
+.sec-head h3{font-size:0.84em;font-weight:600}
 .sec-head .arr{font-size:0.78em;opacity:0.8;transition:transform 0.2s}
 .sec-head.open .arr{transform:rotate(180deg)}
-.sec-body{display:none;padding:0}
-.sec-body.open{display:block}
-.sec-bleu{background:var(--bleu);color:#fff}
-.sec-vert{background:var(--vert);color:#fff}
-.sec-rouge{background:var(--rouge);color:#fff}
-.sec-or{background:var(--or);color:var(--bleu)}
-.sec-orange{background:var(--orange);color:#fff}
-.sec-violet{background:var(--violet);color:#fff}
-.sec-fonce{background:#1A0A2E;color:#fff}
-.sec-emeraude{background:#00695C;color:#fff}
+.sec-body{display:none}.sec-body.open{display:block}
+.sec-bleu{background:var(--bleu);color:#fff}.sec-vert{background:var(--vert);color:#fff}
+.sec-rouge{background:var(--rouge);color:#fff}.sec-or{background:var(--or);color:var(--bleu)}
+.sec-orange{background:var(--orange);color:#fff}.sec-violet{background:var(--violet);color:#fff}
+.sec-fonce{background:#1A0A2E;color:#fff}.sec-emeraude{background:#00897B;color:#fff}
+
+/* TABLES */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:500px}
+table thead tr{background:var(--bleu);color:#fff}
+table th{padding:10px 12px;text-align:left;font-size:0.74em;font-weight:700;text-transform:uppercase;white-space:nowrap}
+table td{padding:9px 12px;font-size:0.8em;border-bottom:1px solid var(--border)}
+table tr:last-child td{border-bottom:none}
+table tr:nth-child(even){background:#F8FAFD}
+.total-row td{font-weight:700;background:#EEF4FB;color:var(--bleu)}
+.badge-v{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.7em;font-weight:700}
+.badge-perm{background:#E8F5E9;color:var(--vert)}.badge-vac{background:#E3F2FD;color:var(--bleu2)}
 
 /* ITEMS LISTE */
-.item{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid #f0f4f8}
+.item{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #f0f4f8}
 .item:last-child{border-bottom:none}
-.item-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.82em;flex-shrink:0}
+.item-av{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8em;flex-shrink:0}
 .item-info{flex:1}
-.item-nom{font-size:0.86em;font-weight:600;margin-bottom:2px}
-.item-meta{font-size:0.74em;color:var(--gris)}
+.item-nom{font-size:0.84em;font-weight:600;margin-bottom:2px}
+.item-meta{font-size:0.72em;color:var(--gris)}
 .item-val{text-align:right}
-.item-val .val{font-size:0.9em;font-weight:700}
-.item-val .lbl{font-size:0.68em;color:var(--gris)}
-.badge-s{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.65em;font-weight:700}
+.item-val .val{font-size:0.88em;font-weight:700}
+.item-val .lbl{font-size:0.66em;color:var(--gris)}
+.bdg{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.64em;font-weight:700}
 .bg-vert{background:#E8F5E9;color:var(--vert)}.bg-orange{background:#FFF3E0;color:var(--orange)}
 .bg-rouge{background:#FFEBEE;color:var(--rouge)}.bg-bleu{background:#E3F2FD;color:var(--bleu2)}
 .bg-violet{background:#F3E5F5;color:var(--violet)}
 
+/* ATTENTE */
+.attente-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:2px solid var(--border)}
+.attente-badge{background:#FFF3E0;border:1.5px solid #FFB74D;color:var(--orange);padding:3px 12px;border-radius:20px;font-size:0.78em;font-weight:700}
+.calcul-bloc{background:#F0F7FF;border-radius:8px;padding:10px 12px;margin:8px 0;border-left:3px solid var(--bleu2)}
+.calcul-row{display:flex;justify-content:space-between;font-size:0.75em;margin-bottom:3px}
+.calcul-row span:first-child{color:var(--gris)}
+.calcul-row span:last-child{font-weight:700}
+.sal-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.sal-box{border-radius:8px;padding:8px;text-align:center;border:1.5px solid}
+.sal-box.vert{background:#E8F5E9;border-color:#A5D6A7}
+.sal-box.orange{background:#FFF3E0;border-color:#FFB74D}
+.sal-box-label{font-size:0.68em;font-weight:600;margin-bottom:3px}
+.sal-box-val{font-size:0.95em;font-weight:800}
+.sal-box.vert .sal-box-label,.sal-box.vert .sal-box-val{color:var(--vert)}
+.sal-box.orange .sal-box-label,.sal-box.orange .sal-box-val{color:var(--orange)}
+.detail-v2{background:#F8FFF8;border:1.5px solid #A5D6A7;border-radius:8px;padding:8px 12px;margin:6px 0;font-size:0.75em}
+.detail-v2-titre{font-size:0.7em;font-weight:700;color:var(--vert);text-transform:uppercase;margin-bottom:4px}
+
+/* BULLETINS */
+.bul-card{background:#fff;border-radius:10px;border:1.5px solid var(--border);padding:12px 14px;margin:8px 14px;display:flex;align-items:center;gap:12px}
+.bul-info{flex:1}
+.bul-classe{font-size:0.88em;font-weight:700;color:var(--bleu)}
+.bul-meta{font-size:0.72em;color:var(--gris);margin-top:2px}
+.bul-nb{background:#E3F2FD;color:var(--bleu);font-size:0.78em;font-weight:700;padding:3px 10px;border-radius:20px}
+.btn-val-bul{padding:7px 14px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer}
+
 /* RAPPORT */
-.rap-ligne{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid #f0f4f8}
+.rap-ligne{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;border-bottom:1px solid #f0f4f8}
 .rap-ligne:last-child{border-bottom:none}
 .rap-ligne.total{background:#F0F7FF;font-weight:700}
-.rap-label{font-size:0.84em;color:#333}
-.rap-val{font-size:0.9em;font-weight:700;color:var(--bleu)}
+.rap-label{font-size:0.82em;color:#333}
+.rap-val{font-size:0.88em;font-weight:700;color:var(--bleu)}
 .rap-val.vert{color:var(--vert)}.rap-val.rouge{color:var(--rouge)}
 
 /* TÂCHES */
-.tache{padding:12px 16px;border-bottom:1px solid #f0f4f8;display:flex;align-items:center;gap:12px}
+.tache{padding:11px 16px;border-bottom:1px solid #f0f4f8;display:flex;align-items:center;gap:12px}
 .tache:last-child{border-bottom:none}
-.tache-check{width:24px;height:24px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s}
+.tache-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.2s;font-size:0.7em}
 .tache-check.done{background:var(--vert);border-color:var(--vert);color:#fff}
-.tache-titre{font-size:0.86em;font-weight:500;flex:1}
+.tache-titre{font-size:0.84em;font-weight:500;flex:1}
 .tache-titre.done{text-decoration:line-through;color:var(--gris)}
-.prio{font-size:0.68em;font-weight:700;padding:2px 8px;border-radius:10px}
+.prio{font-size:0.66em;font-weight:700;padding:2px 8px;border-radius:10px}
 .prio-h{background:#FFEBEE;color:var(--rouge)}.prio-n{background:#E3F2FD;color:var(--bleu2)}.prio-b{background:#F3E5F5;color:var(--violet)}
 
 /* ACTIONS */
-.actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
-.action-btn{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:14px 10px;text-align:center;cursor:pointer;transition:all 0.15s}
+.actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px}
+.action-btn{background:var(--bg);border:1.5px solid var(--border);border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;transition:all 0.15s}
 .action-btn:active{transform:scale(0.96)}
-.action-btn .ab-ico{font-size:1.5em;margin-bottom:6px}
-.action-btn .ab-titre{font-size:0.8em;font-weight:600;margin-bottom:2px}
-.action-btn .ab-desc{font-size:0.68em;color:var(--gris);line-height:1.3}
+.ab-ico{font-size:1.4em;margin-bottom:5px}
+.ab-titre{font-size:0.78em;font-weight:600;margin-bottom:2px}
+.ab-desc{font-size:0.66em;color:var(--gris);line-height:1.3}
 
 /* AGENDA */
-.agenda-item{padding:11px 16px;border-bottom:1px solid #f0f4f8;display:flex;gap:12px;align-items:flex-start}
+.agenda-item{padding:10px 16px;border-bottom:1px solid #f0f4f8;display:flex;gap:10px;align-items:flex-start}
 .agenda-item:last-child{border-bottom:none}
-.agenda-date{border-radius:8px;padding:6px 10px;text-align:center;flex-shrink:0;min-width:44px}
-.agenda-date .jour{font-size:1.2em;font-weight:700;line-height:1;color:#fff}
-.agenda-date .mois{font-size:0.62em;text-transform:uppercase;opacity:0.85;color:#fff}
-.agenda-titre{font-size:0.86em;font-weight:600;margin-bottom:3px}
-.agenda-detail{font-size:0.74em;color:var(--gris);line-height:1.5}
+.agenda-date{border-radius:8px;padding:5px 8px;text-align:center;flex-shrink:0;min-width:40px}
+.agenda-date .jour{font-size:1.1em;font-weight:700;line-height:1;color:#fff}
+.agenda-date .mois{font-size:0.58em;text-transform:uppercase;opacity:0.85;color:#fff}
+.agenda-titre{font-size:0.84em;font-weight:600;margin-bottom:2px}
+.agenda-detail{font-size:0.72em;color:var(--gris);line-height:1.5}
+
+/* SUIVI PÉDAGO */
+.prog-bar{height:7px;background:var(--border);border-radius:4px;overflow:hidden;min-width:70px}
+.prog-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.fill-vert{background:var(--vert)}.fill-orange{background:var(--orange)}.fill-rouge{background:var(--rouge)}.fill-or{background:var(--or)}
+.alerte-item{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-bottom:1px solid #f0f4f8}
+.alerte-item:last-child{border-bottom:none}
+.alerte-ico{font-size:1.2em;flex-shrink:0}
+.alerte-nom{font-size:0.84em;font-weight:600;margin-bottom:2px}
+.alerte-detail{font-size:0.72em;color:var(--gris)}
+
+/* SYNC RESULT */
+.sync-result{background:#F3E5F5;border:1.5px solid #CE93D8;border-radius:8px;padding:8px 12px;font-size:0.78em;color:#6A1B9A;margin:0 14px 10px;display:none}
 
 /* KPI FONDATEUR */
-.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
-.kpi-card{background:var(--bg);border-radius:10px;padding:14px;border-left:4px solid var(--or)}
-.kpi-ecole{font-size:0.72em;font-weight:700;color:var(--bleu);margin-bottom:6px;text-transform:uppercase}
-.kpi-row{display:flex;justify-content:space-between;font-size:0.78em;margin-bottom:3px}
+.kpi-card{background:var(--bg);border-radius:10px;padding:12px;border-left:4px solid var(--or);margin:6px}
+.kpi-ecole{font-size:0.7em;font-weight:700;color:var(--bleu);margin-bottom:5px;text-transform:uppercase}
+.kpi-row{display:flex;justify-content:space-between;font-size:0.76em;margin-bottom:2px}
 .kpi-row span:last-child{font-weight:700}
 
-/* ENSEIGNANT ITEM -->
-.ens-item{padding:11px 16px;border-bottom:1px solid #f0f4f8;display:flex;align-items:center;gap:10px}
-.ens-item:last-child{border-bottom:none}
-.ens-avatar{width:34px;height:34px;border-radius:50%;background:var(--bleu);color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.82em;font-weight:700;flex-shrink:0}
-.ens-info{flex:1}
-.ens-nom{font-size:0.86em;font-weight:600}
-.ens-meta{font-size:0.72em;color:var(--gris)}
-.ens-sal{font-size:0.88em;font-weight:700;color:var(--bleu)}
-
 /* CHARTE EDU */
-.charte-item{display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid #f0f4f8;align-items:flex-start}
+.charte-item{display:flex;gap:10px;padding:11px 16px;border-bottom:1px solid #f0f4f8;align-items:flex-start}
 .charte-item:last-child{border-bottom:none}
-.charte-num{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--or),var(--or2));color:var(--bleu);font-weight:700;font-size:0.8em;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.charte-titre{font-size:0.86em;font-weight:600;color:var(--or);margin-bottom:3px}
-.charte-desc{font-size:0.78em;color:rgba(0,0,0,0.7);line-height:1.5}
-
-/* ALERTE PÉDAGO */
-.alerte-item{padding:12px 16px;border-bottom:1px solid #f0f4f8;display:flex;gap:10px;align-items:flex-start}
-.alerte-item:last-child{border-bottom:none}
-.alerte-ico{font-size:1.3em;flex-shrink:0}
-.alerte-nom{font-size:0.86em;font-weight:600;margin-bottom:2px}
-.alerte-detail{font-size:0.74em;color:var(--gris)}
+.charte-num{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--or),var(--or2));color:var(--bleu);font-weight:700;font-size:0.78em;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.charte-titre{font-size:0.84em;font-weight:600;color:var(--or);margin-bottom:2px}
+.charte-desc{font-size:0.76em;color:rgba(0,0,0,0.7);line-height:1.5}
 
 /* FORUM EDU */
-.forum-item{padding:12px 16px;border-bottom:1px solid #f0f4f8}
+.forum-item{padding:11px 16px;border-bottom:1px solid #f0f4f8}
 .forum-item:last-child{border-bottom:none}
-.forum-auteur{font-size:0.72em;color:var(--or);font-weight:700;margin-bottom:3px}
-.forum-msg{font-size:0.83em;line-height:1.5}
-.forum-meta{font-size:0.7em;color:var(--gris);margin-top:4px}
+.forum-auteur{font-size:0.7em;color:var(--or);font-weight:700;margin-bottom:2px}
+.forum-msg{font-size:0.81em;line-height:1.5}
+.forum-meta{font-size:0.68em;color:var(--gris);margin-top:3px}
+
+/* MODAL */
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:1000;align-items:center;justify-content:center;overflow-y:auto}
+.modal-card{background:#fff;border-radius:14px;padding:22px;max-width:480px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,0.25);margin:16px auto}
+.modal-card h3{color:var(--bleu);margin-bottom:14px;font-size:0.95em}
+.modal-btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.modal-btns button{flex:1;padding:11px;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.82em;min-width:70px}
+.raison-sel{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.84em;font-family:'DM Sans',sans-serif;outline:none;margin-top:10px}
 
 /* TOAST */
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:#333;color:#fff;padding:12px 20px;border-radius:24px;font-size:0.82em;font-weight:600;z-index:9999;transition:transform 0.3s;white-space:nowrap;opacity:0}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(80px);background:#333;color:#fff;padding:11px 18px;border-radius:24px;font-size:0.8em;font-weight:600;z-index:9999;transition:transform 0.3s;white-space:nowrap;opacity:0}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.success{background:var(--vert)}.toast.error{background:var(--rouge)}
-
-.footer{text-align:center;padding:20px 16px;font-size:0.72em;color:var(--gris);border-top:1px solid var(--border);margin-top:8px}
+.footer{text-align:center;padding:18px 14px;font-size:0.7em;color:var(--gris);border-top:1px solid var(--border);margin-top:8px}
 </style>
 </head>
 <body>
@@ -191,7 +237,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1A1A2E;min-hei
 <div id="loginPage" class="login-page">
   <div class="login-logo">
     <span class="ico">🏛️</span>
-    <h1>RÉSEAU PRINCES</h1>
+    <h1>PRINCES SMART SCHOOL</h1>
     <p>ESPACE ADMINISTRATION · 2025-2026</p>
   </div>
   <div class="login-card">
@@ -212,18 +258,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1A1A2E;min-hei
 
 <!-- ══ LOADING ══ -->
 <div id="loadingPage" class="loading-screen">
-  <div class="spinner"></div>
+  <div class="spinner-sm"></div>
   <p id="loadingTxt">Chargement...</p>
 </div>
 
-<!-- ══ ESPACE DIR ══ -->
+<!-- ══════════════════════════════
+     ESPACE DIRECTEUR
+══════════════════════════════ -->
 <div id="espaceDir" class="espace">
   <div class="hdr hdr-dir">
     <div class="hdr-top">
       <div class="hdr-profil">
         <div class="hdr-avatar" id="dirAvatar">D</div>
         <div class="hdr-info">
-          <div class="hdr-badge badge-dir">Directeur · Pédagogie</div>
+          <div class="hdr-badge badge-dir" id="dirBadgeType">Directeur</div>
           <h2 id="dirNom">Directeur</h2>
           <div class="hdr-ecole" id="dirEcole">École</div>
         </div>
@@ -231,74 +279,111 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1A1A2E;min-hei
       <button class="btn-logout" onclick="logout()">Déconnexion</button>
     </div>
   </div>
-  <div class="stats-row stats-4">
-    <div class="stat-box vert"><div class="stat-val" id="dStatEns">—</div><div class="stat-lbl">Enseignants</div></div>
-    <div class="stat-box rouge"><div class="stat-val" id="dStatAlert">0</div><div class="stat-lbl">Alertes pédago</div></div>
-    <div class="stat-box or"><div class="stat-val" id="dStatBul">—</div><div class="stat-lbl">Bulletins attente</div></div>
-    <div class="stat-box orange"><div class="stat-val" id="dStatAtt">—</div><div class="stat-lbl">Cours en attente</div></div>
+
+  <!-- Stats dynamiques selon type -->
+  <div id="dirStatsZone"></div>
+
+  <!-- Filtres (SEC + BOTH uniquement) -->
+  <div id="dirFiltresZone" style="display:none">
+    <div class="filters-bar">
+      <select id="filtreMois" onchange="chargerPointage()"></select>
+      <button class="btn-f btn-f-bleu" onclick="chargerPointage()">🔄 Actualiser</button>
+      <button class="btn-f btn-f-vert" onclick="exporterCSV()">📥 CSV</button>
+      <button class="btn-f btn-f-violet" onclick="syncEnseignants()">👥 Sync</button>
+    </div>
+    <div class="sync-result" id="syncResult"></div>
   </div>
-  <!-- Alertes pédago -->
-  <div class="section">
+
+  <!-- SECTION ALERTES PÉDAGO (tous types) -->
+  <div class="section" id="dirSecAlertes">
     <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
       <h3>🔔 Alertes pédagogiques</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body open" id="dirAlertesBody"></div>
   </div>
-  <!-- Suivi enseignants -->
+
+  <!-- SECTION COURS EN ATTENTE (SEC + BOTH) -->
+  <div class="section" id="dirSecAttente" style="display:none">
+    <div class="sec-head sec-orange open" onclick="toggleSec(this)">
+      <h3>⏱️ Cours en attente de validation</h3>
+      <span class="attente-badge" id="attenteCompteur">0 cours</span>
+    </div>
+    <div class="sec-body open">
+      <div class="attente-header" style="display:none" id="attenteHeader">
+        <span id="attenteCompteur2"></span>
+      </div>
+      <div class="tbl-wrap" id="tableAttente"></div>
+    </div>
+  </div>
+
+  <!-- SECTION BULLETINS PRIMAIRE (PRIM + BOTH) -->
+  <div class="section" id="dirSecBulletins" style="display:none">
+    <div class="sec-head sec-emeraude" onclick="toggleSec(this)">
+      <h3>📋 Bulletins primaire — en attente</h3>
+      <span class="bdg bg-bleu" id="bulletinCompteur">0</span>
+    </div>
+    <div class="sec-body" id="dirBulBody">
+      <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez sur "📋 Bulletins" pour charger</p>
+    </div>
+  </div>
+
+  <!-- SECTION SALAIRES (SEC + BOTH) -->
+  <div class="section" id="dirSecSalaires" style="display:none">
+    <div class="sec-head sec-or" onclick="toggleSec(this)">
+      <h3>💰 Salaires & Pointage enseignants</h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body">
+      <div id="tableBody" style="padding:8px">
+        <div style="text-align:center;padding:30px;color:var(--gris)">Sélectionnez un mois et cliquez Actualiser</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION SUIVI PÉDAGO (tous types) -->
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
-      <h3>👨‍🏫 Suivi des enseignants</h3><span class="arr">▼</span>
+      <h3>📈 Suivi pédagogique — Cahiers de textes</h3><span class="arr">▼</span>
     </div>
-    <div class="sec-body" id="dirEnsBody"></div>
-  </div>
-  <!-- Notes & Moyennes -->
-  <div class="section">
-    <div class="sec-head sec-vert" onclick="toggleSec(this)">
-      <h3>📊 Notes & Moyennes — Saisie directeur</h3><span class="arr">▼</span>
+    <div class="sec-body" id="dirPedaBody">
+      <p style="padding:14px;font-size:0.82em;color:var(--gris)">⏳ Chargement du suivi pédagogique...</p>
     </div>
-    <div class="sec-body" id="dirNotesBody"></div>
   </div>
-  <!-- Bulletins -->
-  <div class="section">
-    <div class="sec-head sec-emeraude" onclick="toggleSec(this)">
-      <h3>📋 Bulletins — En attente validation</h3><span class="arr">▼</span>
-    </div>
-    <div class="sec-body" id="dirBulBody"></div>
-  </div>
-  <!-- Salaires -->
-  <div class="section">
-    <div class="sec-head sec-or" onclick="toggleSec(this)">
-      <h3>💰 Salaires enseignants</h3><span class="arr">▼</span>
-    </div>
-    <div class="sec-body" id="dirSalBody"></div>
-  </div>
-  <!-- Listes -->
+
+  <!-- SECTION LISTES -->
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
       <h3>🖨️ Listes par niveau</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body">
       <div class="actions-grid">
-        <div class="action-btn" onclick="showToast('Listes — Connexion Google Sheets requise','')"><div class="ab-ico">📋</div><div class="ab-titre">Scolarité complète</div><div class="ab-desc">Sans solde total</div></div>
-        <div class="action-btn" onclick="showToast('En retard — Bientôt disponible','')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Élèves avec solde impayé</div></div>
-        <div class="action-btn" onclick="showToast('Liste vierge — Bientôt disponible','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Noms uniquement</div></div>
-        <div class="action-btn" onclick="showToast('Contacts — Bientôt disponible','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
-        <div class="action-btn" onclick="showToast('Absences — Bientôt disponible','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences + contacts</div><div class="ab-desc">Suivi des absences</div></div>
-        <div class="action-btn" onclick="showToast('Relances — Bientôt disponible','')"><div class="ab-ico">📬</div><div class="ab-titre">Relances parents</div><div class="ab-desc">Bons de relance</div></div>
+        <div class="action-btn" onclick="showToast('Scolarité — Connexion Sheets requise','')"><div class="ab-ico">📋</div><div class="ab-titre">Scolarité</div><div class="ab-desc">Sans solde total</div></div>
+        <div class="action-btn" onclick="showToast('En retard — Bientôt','')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Soldes impayés</div></div>
+        <div class="action-btn" onclick="showToast('Vierge — Bientôt','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Noms uniquement</div></div>
+        <div class="action-btn" onclick="showToast('Contacts — Bientôt','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
+        <div class="action-btn" onclick="showToast('Absences — Bientôt','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences</div><div class="ab-desc">+ contacts</div></div>
+        <div class="action-btn" onclick="showToast('Relances — Bientôt','')"><div class="ab-ico">📬</div><div class="ab-titre">Relances</div><div class="ab-desc">Bons parents</div></div>
+      </div>
+      <!-- Bouton bulletins primaire (PRIM + BOTH) -->
+      <div id="dirBtnBulZone" style="display:none;padding:0 12px 12px">
+        <button onclick="chargerBulletinsPrimaire()" style="width:100%;padding:10px;background:#00897B;color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">📋 Charger Bulletins Primaire</button>
       </div>
     </div>
   </div>
-  <!-- Agenda -->
+
+  <!-- AGENDA -->
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
-      <h3>📅 Agenda de l'école</h3><span class="arr">▼</span>
+      <h3>📅 Agenda</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="dirAgendaBody"></div>
   </div>
+
   <div class="footer">Réseau CPP Les Princes d'Abidjan · Espace Direction · 2025-2026</div>
 </div>
 
-<!-- ══ ESPACE FOND ══ -->
+<!-- ══════════════════════════════
+     ESPACE FONDATEUR
+══════════════════════════════ -->
 <div id="espaceFond" class="espace">
   <div class="hdr hdr-fond">
     <div class="hdr-top">
@@ -307,50 +392,55 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1A1A2E;min-hei
         <div class="hdr-info">
           <div class="hdr-badge badge-fond">👑 Fondateur</div>
           <h2 id="fondNom">Fondateur</h2>
-          <div class="hdr-ecole">Réseau CPP Les Princes d'Abidjan · 12 écoles</div>
+          <div class="hdr-ecole">Réseau CPP Les Princes · 12 écoles</div>
         </div>
       </div>
       <button class="btn-logout" onclick="logout()">Déconnexion</button>
     </div>
   </div>
-  <div class="stats-row stats-4">
-    <div class="stat-box bleu"><div class="stat-val">12</div><div class="stat-lbl">Écoles</div></div>
-    <div class="stat-box vert"><div class="stat-val" id="fStatEleves">—</div><div class="stat-lbl">Élèves total</div></div>
-    <div class="stat-box or"><div class="stat-val" id="fStatEns">—</div><div class="stat-lbl">Enseignants</div></div>
-    <div class="stat-box rouge"><div class="stat-val" id="fStatImpaye">—</div><div class="stat-lbl">Impayés réseau</div></div>
+  <div class="stats-row s4">
+    <div class="stat-box"><div class="stat-val">12</div><div class="stat-lbl">Écoles</div></div>
+    <div class="stat-box vert"><div class="stat-val">5 000+</div><div class="stat-lbl">Élèves</div></div>
+    <div class="stat-box or"><div class="stat-val">180+</div><div class="stat-lbl">Enseignants</div></div>
+    <div class="stat-box rouge"><div class="stat-val">—</div><div class="stat-lbl">Impayés réseau</div></div>
   </div>
-  <!-- KPIs réseau -->
   <div class="section">
     <div class="sec-head sec-fonce open" onclick="toggleSec(this)">
-      <h3>📊 KPIs — Vue réseau 12 écoles</h3><span class="arr">▼</span>
+      <h3>📊 KPIs réseau — 12 écoles</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body open" id="fondKpiBody"></div>
   </div>
-  <!-- Soldes totaux -->
   <div class="section">
     <div class="sec-head sec-vert" onclick="toggleSec(this)">
       <h3>💰 Soldes totaux par école</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="fondSoldesBody"></div>
   </div>
-  <!-- Masse salariale -->
   <div class="section">
     <div class="sec-head sec-or" onclick="toggleSec(this)">
-      <h3>👥 Masse salariale réseau</h3><span class="arr">▼</span>
+      <h3>👥 Masse salariale — Personnel admin</h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="fondSalBody"></div>
   </div>
-  <!-- Codes secrets -->
   <div class="section">
     <div class="sec-head sec-rouge" onclick="toggleSec(this)">
       <h3>🔐 Gestion des accès staff</h3><span class="arr">▼</span>
     </div>
-    <div class="sec-body" id="fondCodesBody"></div>
+    <div class="sec-body">
+      <div class="actions-grid">
+        <div class="action-btn" onclick="showToast('Modifier code — Bientôt','')"><div class="ab-ico">🔑</div><div class="ab-titre">Modifier code</div><div class="ab-desc">Reset code secret</div></div>
+        <div class="action-btn" onclick="showToast('Nouveau matricule — Bientôt','')"><div class="ab-ico">➕</div><div class="ab-titre">Nouveau matricule</div><div class="ab-desc">Créer un accès</div></div>
+        <div class="action-btn" onclick="showToast('Bloquer — Bientôt','')"><div class="ab-ico">🔒</div><div class="ab-titre">Bloquer accès</div><div class="ab-desc">Désactiver matricule</div></div>
+        <div class="action-btn" onclick="showToast('Journal — Bientôt','')"><div class="ab-ico">📜</div><div class="ab-titre">Journal accès</div><div class="ab-desc">Historique connexions</div></div>
+      </div>
+    </div>
   </div>
   <div class="footer">Réseau CPP Les Princes d'Abidjan · Espace Fondateur · 2025-2026</div>
 </div>
 
-<!-- ══ ESPACE COM ══ -->
+<!-- ══════════════════════════════
+     ESPACE COMPTABLE
+══════════════════════════════ -->
 <div id="espaceCom" class="espace">
   <div class="hdr hdr-com">
     <div class="hdr-top">
@@ -365,80 +455,50 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1A1A2E;min-hei
       <button class="btn-logout" onclick="logout()">Déconnexion</button>
     </div>
   </div>
-  <div class="stats-row stats-3">
+  <div class="stats-row s3">
     <div class="stat-box rouge"><div class="stat-val" id="cStatImpaye">0</div><div class="stat-lbl">Impayés</div></div>
     <div class="stat-box or"><div class="stat-val" id="cStatInsc">0</div><div class="stat-lbl">Nouvelles inscr.</div></div>
     <div class="stat-box vert"><div class="stat-val" id="cStatTaches">0</div><div class="stat-lbl">Tâches du jour</div></div>
   </div>
-  <!-- Paiements -->
   <div class="section">
-    <div class="sec-head sec-bleu open" onclick="toggleSec(this)">
-      <h3>💳 Suivi des paiements</h3><span class="arr">▼</span>
-    </div>
+    <div class="sec-head sec-bleu open" onclick="toggleSec(this)"><h3>💳 Suivi des paiements</h3><span class="arr">▼</span></div>
     <div class="sec-body open" id="comPaiBody"></div>
   </div>
-  <!-- Inscriptions -->
   <div class="section">
-    <div class="sec-head sec-vert" onclick="toggleSec(this)">
-      <h3>📋 Inscriptions 2025-2026</h3><span class="arr">▼</span>
-    </div>
+    <div class="sec-head sec-vert" onclick="toggleSec(this)"><h3>📋 Inscriptions 2025-2026</h3><span class="arr">▼</span></div>
     <div class="sec-body" id="comInscBody"></div>
   </div>
-  <!-- Salaires -->
   <div class="section">
-    <div class="sec-head sec-or" onclick="toggleSec(this)">
-      <h3>💰 Salaires enseignants</h3><span class="arr">▼</span>
-    </div>
+    <div class="sec-head sec-or" onclick="toggleSec(this)"><h3>💰 Salaires enseignants</h3><span class="arr">▼</span></div>
     <div class="sec-body" id="comSalBody"></div>
   </div>
-  <!-- Tâches -->
   <div class="section">
-    <div class="sec-head sec-orange" onclick="toggleSec(this)">
-      <h3>✅ Tâches administratives</h3><span class="arr">▼</span>
-    </div>
+    <div class="sec-head sec-orange" onclick="toggleSec(this)"><h3>✅ Tâches administratives</h3><span class="arr">▼</span></div>
     <div class="sec-body" id="comTachesBody"></div>
   </div>
-  <!-- Listes -->
   <div class="section">
-    <div class="sec-head sec-bleu" onclick="toggleSec(this)">
-      <h3>🖨️ Listes & Relances</h3><span class="arr">▼</span>
-    </div>
+    <div class="sec-head sec-bleu" onclick="toggleSec(this)"><h3>🖨️ Listes & Relances</h3><span class="arr">▼</span></div>
     <div class="sec-body">
       <div class="actions-grid">
-        <div class="action-btn" onclick="showToast('Scolarité — Bientôt disponible','')"><div class="ab-ico">📋</div><div class="ab-titre">Scolarité complète</div><div class="ab-desc">Tous les élèves</div></div>
-        <div class="action-btn" onclick="showToast('En retard — Bientôt disponible','')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Soldes impayés</div></div>
-        <div class="action-btn" onclick="showToast('Vierge — Bientôt disponible','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Noms uniquement</div></div>
-        <div class="action-btn" onclick="showToast('Contacts — Bientôt disponible','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
-        <div class="action-btn" onclick="showToast('Absences — Bientôt disponible','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences + contacts</div><div class="ab-desc">Suivi absences</div></div>
-        <div class="action-btn" onclick="showToast('Relances — Bientôt disponible','')"><div class="ab-ico">📬</div><div class="ab-titre">Relances parents</div><div class="ab-desc">3 bons / page A4</div></div>
+        <div class="action-btn" onclick="showToast('Scolarité — Bientôt','')"><div class="ab-ico">📋</div><div class="ab-titre">Scolarité complète</div><div class="ab-desc">Tous les élèves</div></div>
+        <div class="action-btn" onclick="showToast('En retard — Bientôt','')"><div class="ab-ico">⚠️</div><div class="ab-titre">En retard</div><div class="ab-desc">Soldes impayés</div></div>
+        <div class="action-btn" onclick="showToast('Vierge — Bientôt','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Noms uniquement</div></div>
+        <div class="action-btn" onclick="showToast('Contacts — Bientôt','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
+        <div class="action-btn" onclick="showToast('Absences — Bientôt','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences</div><div class="ab-desc">+ contacts</div></div>
+        <div class="action-btn" onclick="showToast('Relances — Bientôt','')"><div class="ab-ico">📬</div><div class="ab-titre">Relances parents</div><div class="ab-desc">3 bons / A4</div></div>
       </div>
     </div>
   </div>
-  <!-- Courriers -->
   <div class="section">
-    <div class="sec-head sec-violet" onclick="toggleSec(this)">
-      <h3>📨 Courriers & correspondances</h3><span class="arr">▼</span>
-    </div>
+    <div class="sec-head sec-violet" onclick="toggleSec(this)"><h3>📨 Courriers</h3><span class="arr">▼</span></div>
     <div class="sec-body" id="comCourrierBody"></div>
-  </div>
-  <!-- Actions rapides -->
-  <div class="section">
-    <div class="sec-head sec-rouge" onclick="toggleSec(this)">
-      <h3>⚡ Actions rapides</h3><span class="arr">▼</span>
-    </div>
-    <div class="sec-body">
-      <div class="actions-grid">
-        <div class="action-btn" onclick="showToast('Reçu — Bientôt disponible','')"><div class="ab-ico">🖨️</div><div class="ab-titre">Imprimer reçu</div><div class="ab-desc">Reçu de paiement</div></div>
-        <div class="action-btn" onclick="showToast('Attestation — Bientôt disponible','')"><div class="ab-ico">📄</div><div class="ab-titre">Attestation</div><div class="ab-desc">Scolarité / Présence</div></div>
-        <div class="action-btn" onclick="showToast('Relevé — Bientôt disponible','')"><div class="ab-ico">📊</div><div class="ab-titre">Relevé compte</div><div class="ab-desc">Historique élève</div></div>
-        <div class="action-btn" onclick="showToast('Convocation — Bientôt disponible','')"><div class="ab-ico">📬</div><div class="ab-titre">Convocation parent</div><div class="ab-desc">Générer convocation</div></div>
-      </div>
-    </div>
   </div>
   <div class="footer">Réseau CPP Les Princes d'Abidjan · Espace Comptable · 2025-2026</div>
 </div>
 
-<!-- ══ ESPACE EDU ══ -->
+<!-- ══════════════════════════════
+     ESPACE ÉDUCATEUR
+══════════════════════════════ -->
 <div id="espaceEdu" class="espace">
   <div class="hdr hdr-edu">
     <div class="hdr-top">
@@ -453,126 +513,165 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:#1A1A2E;min-hei
       <button class="btn-logout" onclick="logout()">Déconnexion</button>
     </div>
   </div>
-  <div class="stats-row stats-3">
-    <div class="stat-box rouge"><div class="stat-val" id="eStatAlert">0</div><div class="stat-lbl">Élèves en difficulté</div></div>
+  <div class="stats-row s3">
+    <div class="stat-box rouge"><div class="stat-val" id="eStatAlert">0</div><div class="stat-lbl">En difficulté</div></div>
     <div class="stat-box or"><div class="stat-val" id="eStatEleves">0</div><div class="stat-lbl">Mes élèves</div></div>
     <div class="stat-box vert"><div class="stat-val" id="eStatReussite">0%</div><div class="stat-lbl">Taux réussite</div></div>
   </div>
-  <!-- Tableau élèves -->
   <div class="section">
-    <div class="sec-head sec-bleu open" onclick="toggleSec(this)">
-      <h3>📊 Tableau de bord — Mes élèves</h3><span class="arr">▼</span>
-    </div>
+    <div class="sec-head sec-bleu open" onclick="toggleSec(this)"><h3>📊 Tableau de bord élèves</h3><span class="arr">▼</span></div>
     <div class="sec-body open" id="eduElevesBody"></div>
   </div>
-  <!-- Charte -->
   <div class="section">
-    <div class="sec-head sec-fonce" onclick="toggleSec(this)">
-      <h3>✦ Ma charte — Les 7 engagements</h3><span class="arr">▼</span>
-    </div>
+    <div class="sec-head sec-fonce" onclick="toggleSec(this)"><h3>✦ Les 7 engagements</h3><span class="arr">▼</span></div>
     <div class="sec-body" id="eduCharteBody"></div>
   </div>
-  <!-- Listes -->
   <div class="section">
-    <div class="sec-head sec-vert" onclick="toggleSec(this)">
-      <h3>🖨️ Mes listes</h3><span class="arr">▼</span>
-    </div>
+    <div class="sec-head sec-vert" onclick="toggleSec(this)"><h3>🖨️ Mes listes</h3><span class="arr">▼</span></div>
     <div class="sec-body">
       <div class="actions-grid">
-        <div class="action-btn" onclick="showToast('Liste vierge — Bientôt disponible','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Mes élèves</div></div>
-        <div class="action-btn" onclick="showToast('Contacts — Bientôt disponible','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
-        <div class="action-btn" onclick="showToast('Absences — Bientôt disponible','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences + contacts</div><div class="ab-desc">Suivi absences</div></div>
-        <div class="action-btn" onclick="showToast('Scolarité — Bientôt disponible','')"><div class="ab-ico">💳</div><div class="ab-titre">Scolarité sans total</div><div class="ab-desc">Vue pédagogique</div></div>
+        <div class="action-btn" onclick="showToast('Vierge — Bientôt','')"><div class="ab-ico">📄</div><div class="ab-titre">Liste vierge</div><div class="ab-desc">Mes élèves</div></div>
+        <div class="action-btn" onclick="showToast('Contacts — Bientôt','')"><div class="ab-ico">📞</div><div class="ab-titre">Liste + contacts</div><div class="ab-desc">Tél. parents</div></div>
+        <div class="action-btn" onclick="showToast('Absences — Bientôt','')"><div class="ab-ico">📅</div><div class="ab-titre">Absences</div><div class="ab-desc">+ contacts</div></div>
+        <div class="action-btn" onclick="showToast('Scolarité — Bientôt','')"><div class="ab-ico">💳</div><div class="ab-titre">Scolarité</div><div class="ab-desc">Sans total</div></div>
       </div>
     </div>
   </div>
-  <!-- Formation -->
   <div class="section">
-    <div class="sec-head sec-or" onclick="toggleSec(this)">
-      <h3>🎓 Formation professionnelle</h3><span class="arr">▼</span>
-    </div>
+    <div class="sec-head sec-or" onclick="toggleSec(this)"><h3>🎓 Formation professionnelle</h3><span class="arr">▼</span></div>
     <div class="sec-body" id="eduFormBody"></div>
   </div>
-  <!-- Forum -->
   <div class="section">
-    <div class="sec-head sec-fonce" onclick="toggleSec(this)">
-      <h3>🌍 Communauté réseau — 12 écoles</h3><span class="arr">▼</span>
-    </div>
+    <div class="sec-head sec-fonce" onclick="toggleSec(this)"><h3>🌍 Forum réseau — 12 écoles</h3><span class="arr">▼</span></div>
     <div class="sec-body" id="eduForumBody"></div>
   </div>
   <div class="footer">Réseau CPP Les Princes d'Abidjan · Espace Éducateur · 2025-2026</div>
 </div>
 
+<!-- MODAL COURS EN ATTENTE -->
+<div class="modal" id="modalAttente">
+  <div class="modal-card">
+    <h3>⏱️ Cours en attente de validation</h3>
+    <div id="modalAttenteInfo"></div>
+    <select class="raison-sel" id="modalRaison">
+      <option value="">— Raison (optionnel) —</option>
+      <option value="Grève">Grève</option>
+      <option value="Absence élèves">Absence élèves</option>
+      <option value="Coupure courant">Coupure courant</option>
+      <option value="Intempéries">Intempéries</option>
+      <option value="Réunion école">Réunion école</option>
+      <option value="Autre">Autre</option>
+    </select>
+    <div class="modal-btns">
+      <button onclick="traiterAttente('VALIDÉ')" style="background:var(--vert);color:#fff">✅ Valider</button>
+      <button onclick="traiterAttente('PARTIEL')" style="background:var(--orange);color:#fff">⚠️ 50%</button>
+      <button onclick="traiterAttente('REJETÉ')" style="background:var(--rouge);color:#fff">❌ Rejeter</button>
+      <button onclick="fermerModalAttente()" style="background:#E0E4EF">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BULLETIN -->
+<div class="modal" id="modalBulletin">
+  <div class="modal-card">
+    <h3>📋 Valider le bulletin</h3>
+    <div id="modalBulletinInfo"></div>
+    <div class="modal-btns">
+      <button onclick="confirmerValidationBulletin()" style="background:var(--vert);color:#fff">✅ Valider et publier</button>
+      <button onclick="document.getElementById('modalBulletin').style.display='none'" style="background:#E0E4EF">Annuler</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// ══ DONNÉES DÉMO ══
-const STAFF = {
-  // ══ DIRECTEURS — Codes réels ══
-  'DIRCPP001'  :{code:'155812',nom:'Directeur CPP Les Princes',      ecole:"CPP Les Princes d'Abidjan",         profil:'DIR'},
-  'DIRACAD001' :{code:'657577',nom:'Directeur Académie Les Princes',  ecole:"Académie Les Princes",              profil:'DIR'},
-  'DIRGUINGLO01':{code:'752618',nom:'Directeur Guinglo Ville',        ecole:"CPP Les Princes de Guinglo Ville",  profil:'DIR'},
-  'DIRGNONT001':{code:'486622',nom:'Directeur Gnontinrou',            ecole:"CPP Gnontinrou",                    profil:'DIR'},
-  'DIRKOUT001' :{code:'998950',nom:'Directeur Koutouan',              ecole:"CPP Les Princes de Koutouan",       profil:'DIR'},
-  'DIRSOAK001' :{code:'352487',nom:'Directeur Soakpé',                ecole:"CPP Les Princes de Soakpé",         profil:'DIR'},
-  'DIRAKK1001' :{code:'507343',nom:'Directeur Akeïkoï 1',             ecole:"EPV Les Princes Akeïkoï 1",         profil:'DIR'},
-  'DIRAKK2001' :{code:'541576',nom:'Directeur Akeïkoï 2',             ecole:"EPV Les Princes Akeïkoï 2",         profil:'DIR'},
-  'DIRPRO001'  :{code:'492494',nom:'Directeur CPP Professionnel',     ecole:"CPP Professionnel",                 profil:'DIR'},
-  'DIRTECH001' :{code:'502107',nom:'Directeur CPP Technique',         ecole:"CPP Technique",                     profil:'DIR'},
-  'DIRKOUIBLY01':{code:'816442',nom:'Directeur ETL Kouibly',          ecole:"ETL Les Princes de Kouibly",        profil:'DIR'},
-  'DIRRITA001' :{code:'864499',nom:'Directeur GS Rita Rosane',        ecole:"GS Rita Rosane",                    profil:'DIR'},
-  // ══ FONDATEUR ══
-  'FONDCPP001' :{code:'000001',nom:'Fondateur Réseau Princes',        ecole:'Réseau CPP Les Princes — 12 écoles',profil:'FOND'},
-  // ══ COMPTABLES — Codes à définir ══
-  'COMCPP001'  :{code:'123456',nom:'KOUACO Robine',                   ecole:"CPP Les Princes d'Abidjan",         profil:'COM'},
-  'COMRITA001' :{code:'222222',nom:'Comptable GS Rita Rosane',        ecole:'GS Rita Rosane',                    profil:'COM'},
-  // ══ ÉDUCATEURS — Codes à définir ══
-  'EDUCPP001'  :{code:'111111',nom:'KOUAKOU Serge Landry',            ecole:"CPP Les Princes d'Abidjan",         profil:'EDU'},
-  'EDURITA001' :{code:'333333',nom:'KOBOYO Nina',                     ecole:'EPV Princes Akeikoi 1',             profil:'EDU'},
+// ══ CONFIGURATION ══
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwjAM2rllgEREhjzl--QdxtYIm7cTO6gUpaGexBuKv5ScGRJU0E8kJEvIfOpcES0FK7/exec';
+const APPS_SCRIPT_PEDA = 'https://script.google.com/macros/s/AKfycbwp27cGwqXrYZXDjcpl-Io_gtNKcczIdxMJ974NUrDHxmR46JgY0F7FRXhsMtuatDhM/exec';
+const API_KEY = 'AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA';
+
+const SHEETS_IDS = {
+  'CPP LES PRINCES':'1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
+  'ACADEMIE':'1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M',
+  'GUINGLO VILLE':'1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA',
+  'GNONTINROU':'1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4',
+  'KOUTOUAN':'167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg',
+  'SOAKPE':'1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys',
+  'AKEIKOI 1':'1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE',
+  'AKEIKOI 2':'11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog',
+  'CPP PRO':'1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs',
+  'CPP TECH':'15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc',
+  'ETL PRINCES KOUIBLY':'1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s',
+  'GS RITA ROSANE':'1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0'
 };
 
-const PAIEMENTS = [
+const TARIFS = {
+  'CPP LES PRINCES':{college:1200,lycee:1500},
+  'CPP PRO':{college:1200,lycee:1500},
+  'CPP TECH':{college:1200,lycee:1500},
+  'ETL PRINCES KOUIBLY':{college:1000,lycee:1200}
+};
+const TARIF_DEFAUT = {college:1000,lycee:1200};
+
+// ══ STAFF — 4 profils · 3 types d'école ══
+const STAFF = {
+  // PRIM : EPV Académie, Akeïkoï 1, Akeïkoï 2
+  'DIRACAD001'  :{code:'657577', nom:'Directrice EPV Académie Les Princes',  ecole:'ACADEMIE',  profil:'DIR', type:'PRIM', label:"EPV Académie Les Princes"},
+  'DIRAKK1001'  :{code:'507343', nom:'Directeur EPV Akeïkoï 1',              ecole:'AKEIKOI 1', profil:'DIR', type:'PRIM', label:"EPV Les Princes Akeïkoï 1"},
+  'DIRAKK2001'  :{code:'541576', nom:'Directeur EPV Akeïkoï 2',              ecole:'AKEIKOI 2', profil:'DIR', type:'PRIM', label:"EPV Les Princes Akeïkoï 2"},
+  // SEC : CPP Princes, Soakpé, Guinglo, CPP Pro, CPP Tech, ETL Kouibly
+  'DIRCPP001'   :{code:'155812', nom:'Directeur CPP Les Princes',            ecole:'CPP LES PRINCES', profil:'DIR', type:'SEC', label:"CPP Les Princes d'Abidjan"},
+  'DIRSOAK001'  :{code:'352487', nom:'Directeur CPP Soakpé',                 ecole:'SOAKPE',    profil:'DIR', type:'SEC', label:"CPP Les Princes de Soakpé"},
+  'DIRGUINGLO01':{code:'752618', nom:'Directeur Guinglo Ville',              ecole:'GUINGLO VILLE', profil:'DIR', type:'SEC', label:"CPP Les Princes de Guinglo Ville"},
+  'DIRPRO001'   :{code:'492494', nom:'Directeur CPP Professionnel',          ecole:'CPP PRO',   profil:'DIR', type:'SEC', label:"CPP Professionnel"},
+  'DIRTECH001'  :{code:'502107', nom:'Directeur CPP Technique',              ecole:'CPP TECH',  profil:'DIR', type:'SEC', label:"CPP Technique"},
+  'DIRKOUIBLY01':{code:'816442', nom:'Directeur ETL Les Princes de Kouibly', ecole:'ETL PRINCES KOUIBLY', profil:'DIR', type:'SEC', label:"ETL Les Princes de Kouibly"},
+  // BOTH : Gnontinrou, Koutouan, GS Rita Rosane
+  'DIRGNONT001' :{code:'486622', nom:'Directeur CPP Gnontinrou',             ecole:'GNONTINROU',profil:'DIR', type:'BOTH', label:"CPP Gnontinrou"},
+  'DIRKOUT001'  :{code:'998950', nom:'Directeur CPP Koutouan',               ecole:'KOUTOUAN',  profil:'DIR', type:'BOTH', label:"CPP Les Princes de Koutouan"},
+  'DIRRITA001'  :{code:'864499', nom:'Directrice GS Rita Rosane',            ecole:'GS RITA ROSANE', profil:'DIR', type:'BOTH', label:"GS Rita Rosane"},
+  // FONDATEUR
+  'FONDCPP001'  :{code:'000001', nom:'Fondateur Réseau Princes', ecole:'CPP LES PRINCES', profil:'FOND', type:'ALL', label:"Réseau CPP Les Princes — 12 écoles"},
+  // COMPTABLES
+  'COMCPP001'   :{code:'123456', nom:'KOUACO Robine',    ecole:'CPP LES PRINCES', profil:'COM', type:'SEC', label:"CPP Les Princes d'Abidjan"},
+  'COMRITA001'  :{code:'222222', nom:'Comptable Rita',   ecole:'GS RITA ROSANE',  profil:'COM', type:'BOTH', label:"GS Rita Rosane"},
+  // ÉDUCATEURS
+  'EDUCPP001'   :{code:'111111', nom:'KOUAKOU Serge Landry', ecole:'CPP LES PRINCES', profil:'EDU', type:'SEC', label:"CPP Les Princes d'Abidjan"},
+  'EDURITA001'  :{code:'333333', nom:'KOBOYO Nina',          ecole:'AKEIKOI 1',   profil:'EDU', type:'PRIM', label:"EPV Princes Akeïkoï 1"},
+};
+
+// ══ DONNÉES DÉMO ══
+const PAIEMENTS_DEMO = [
   {nom:'KONATE Youssouf R.',classe:'CE2',du:60000,verse:60000,solde:0,statut:'SOLDE'},
   {nom:'BAKAYOKO Awa Y.',classe:'GS',du:55000,verse:30000,solde:25000,statut:'PARTIEL'},
   {nom:'TRAORE Gaoussou',classe:'CM1',du:60000,verse:0,solde:60000,statut:'IMPAYE'},
   {nom:'OUATTARA Sitchon H.',classe:'CM2',du:60000,verse:60000,solde:0,statut:'SOLDE'},
   {nom:'DJIDJA Bagoue L.',classe:'CM1',du:60000,verse:45000,solde:15000,statut:'PARTIEL'},
-  {nom:'AMANI Serge N.',classe:'GS',du:55000,verse:55000,solde:0,statut:'SOLDE'},
 ];
-const INSCRIPTIONS = [
+const INSCRIPTIONS_DEMO = [
   {nom:'KOUASSI Ange Marie',classe:'CP1',date:'20/05/2026',statut:'nouveau'},
   {nom:'BAMBA Fatoumata',classe:'6EME',date:'19/05/2026',statut:'valide'},
   {nom:'DIALLO Ibrahim K.',classe:'CE2',date:'18/05/2026',statut:'attente'},
-  {nom:'TOURE Mariam',classe:'3EME',date:'17/05/2026',statut:'valide'},
 ];
-const TACHES = [
-  {titre:'Préparer les reçus de paiement mai 2026',prio:'haute',heure:'09h00',done:false},
+const TACHES_DEMO = [
+  {titre:'Préparer reçus de paiement mai 2026',prio:'haute',heure:'09h00',done:false},
   {titre:'Envoyer liste impayés à la direction',prio:'haute',heure:'11h00',done:false},
   {titre:'Mettre à jour fiches inscription CP1',prio:'normale',heure:'14h00',done:false},
   {titre:'Commander fournitures de bureau',prio:'basse',heure:'15h00',done:false},
 ];
-const SALAIRES_ENS = [
-  {nom:'KOUASSI Jean',classe:'TLE D-2',heures:24,salaire:28800,type:'VACATAIRE'},
-  {nom:'BAMBA Marie',classe:'3EME EX1',heures:18,salaire:18000,type:'VACATAIRE'},
-  {nom:'KONE Fatoumata',classe:'TLE D-1',heures:30,salaire:36000,type:'VACATAIRE'},
-  {nom:'TOURE Ibrahim',classe:'2NDE',heures:12,salaire:14400,type:'PERMANENT',fixe:120000},
+const SALAIRES_ADMIN = [
+  {nom:'BOTI GNAZOUA Edith',fonction:'Directrice',ecole:"CPP Les Princes",salaire:0,note:'Direction'},
+  {nom:'GONDO TOKPA Gervais',fonction:'Éducateur',ecole:"CPP Les Princes",salaire:225000},
+  {nom:'MAHAN FAHE Gnonnindoue',fonction:'Assistante',ecole:"CPP Les Princes",salaire:250000},
+  {nom:'NIOULÉ Severain',fonction:'Éducateur',ecole:"CPP Les Princes",salaire:100000},
+  {nom:'DEKA ZIKE Willy',fonction:'Éducateur',ecole:"CPP Les Princes",salaire:100000},
+  {nom:'LAMIEN Bernadette',fonction:'Éducatrice',ecole:"CPP Les Princes",salaire:100000},
+  {nom:'YAO Abraham',fonction:'Éducateur',ecole:"CPP Les Princes",salaire:75000},
+  {nom:'KOUACO Robine',fonction:'Secrétaire',ecole:"CPP Les Princes",salaire:50000},
+  {nom:"N'DA ADENON Sylvain",fonction:'Administrateur',ecole:"CPP Les Princes",salaire:50000},
 ];
-const COURRIERS = [
-  {ref:'CRT-2026-045',titre:'Circulaire DREN — Calendrier examens 2026',date:'22/05/2026',type:'Reçu',urgent:true},
-  {ref:'CRT-2026-044',titre:'Demande attestation scolaire — Parent KONE',date:'21/05/2026',type:'Reçu',urgent:false},
-  {ref:'CRT-2026-043',titre:'Facture fournitures scolaires',date:'20/05/2026',type:'Reçu',urgent:false},
-];
-const AGENDA = [
-  {jour:'26',mois:'MAI',titre:'Réunion direction — Bilan T3',detail:'09h00 · Salle de réunion'},
-  {jour:'31',mois:'MAI',titre:'Clôture inscriptions 2026-2027',detail:'Date limite dossiers'},
-  {jour:'05',mois:'JUN',titre:'Paiement salaires enseignants',detail:'Wave + Orange Money'},
-];
-const ALERTES_PEDA = [
-  {ico:'🔴',nom:'KONE Fatoumata · TLE D-1 · Maths',detail:'Retard 3 semaines — Dernière leçon: Complexes'},
-  {ico:'⚠️',nom:'YAO Kouamé · 4EME EX2 · EPS',detail:'Retard 2 semaines — Lancer de poids'},
-  {ico:'⚠️',nom:'COULIBALY Aya · 3EME 5 · Histoire',detail:'Retard 2 semaines — Métallurgie CI'},
-];
-const ELEVES_EDU = [
+const ELEVES_EDU_DEMO = [
   {nom:'KONATE YOUSSOUF R.',classe:'CE2',moy:4.59,alerte:true},
   {nom:'DJIDJA BAGOUE LIAM',classe:'CM1',moy:9.00,alerte:false},
   {nom:'OUATTARA SITCHON H.',classe:'CM2',moy:9.00,alerte:false},
@@ -582,161 +681,587 @@ const ELEVES_EDU = [
 ];
 const CHARTE = [
   {titre:"Je vois l'enfant avant la matière",desc:"Je m'intéresse à la personne entière : ses émotions, son contexte, ses aspirations."},
-  {titre:'Je suis garant de la trajectoire',desc:"Je ne me contente pas d'enseigner. Je m'assure que chaque élève progresse."},
+  {titre:'Je suis garant de la trajectoire',desc:"Je m'assure que chaque élève progresse vers son potentiel réel."},
   {titre:'Je maîtrise les outils du système',desc:"Je lis et j'utilise Smart School pour anticiper les difficultés."},
   {titre:'Je communique avec les familles',desc:"Je maintiens un lien régulier et bienveillant avec les parents."},
   {titre:'Je me forme en continu',desc:"Je consacre du temps à ma propre croissance professionnelle."},
   {titre:'Je porte les valeurs Princes',desc:"Mon comportement reflète l'excellence que nous promettons."},
   {titre:"Je construis l'Afrique de demain",desc:"Chaque élève que j'accompagne contribue à une Côte d'Ivoire plus forte."},
 ];
-const FORMATIONS = [
-  {badge:'NOUVEAU',titre:'Neurosciences et apprentissage en Afrique',duree:'45 min · Certificat Princes Niveau 1'},
+const FORMATIONS_DEMO = [
+  {badge:'NOUVEAU',titre:'Neurosciences et apprentissage en Afrique',duree:'45 min · Certificat Princes N1'},
   {badge:'ESSENTIEL',titre:'Gestion de classe bienveillante',duree:'1h30 · Fondamentaux éducateur'},
   {badge:'ESSENTIEL',titre:'Lire et exploiter Smart School',duree:'30 min · Maîtrise des données'},
   {badge:'AVANCÉ',titre:'Standards IBO et Cambridge en contexte ivoirien',duree:'2h · Vision internationale'},
 ];
-const FORUM = [
+const FORUM_DEMO = [
   {auteur:'GBOMENE Valéry · Koutouan',msg:"Comment gérez-vous les élèves qui refusent de participer en classe ?",meta:'Il y a 2h · 4 réponses'},
   {auteur:'KOBOYO Nina · Akeikoi 1',msg:"Je partage : j'utilise un carnet de fierté pour chaque élève.",meta:'Hier · 12 réactions'},
 ];
 const KPI_ECOLES = [
-  {nom:'CPP Les Princes',eleves:842,ens:38,impaye:45,taux:78},
-  {nom:'GS Rita Rosane',eleves:187,ens:12,impaye:22,taux:82},
-  {nom:'Académie Princes',eleves:320,ens:18,impaye:31,taux:75},
-  {nom:'CPP Guinglo Ville',eleves:256,ens:15,impaye:18,taux:88},
+  {nom:"CPP Les Princes d'Abidjan",eleves:842,ens:38,impaye:45,taux:78,sal:985000},
+  {nom:'GS Rita Rosane',eleves:187,ens:12,impaye:22,taux:82,sal:400000},
+  {nom:'CPP Gnontinrou',eleves:210,ens:14,impaye:18,taux:85,sal:440000},
+  {nom:'CPP Koutouan',eleves:280,ens:16,impaye:31,taux:75,sal:590000},
+  {nom:'Guinglo Ville',eleves:156,ens:9,impaye:12,taux:88,sal:295000},
+  {nom:'CPP Soakpé',eleves:145,ens:8,impaye:15,taux:80,sal:350000},
+];
+const AGENDA_DEMO = [
+  {jour:'26',mois:'MAI',titre:'Réunion direction — Bilan T3',detail:'09h00 · Salle de réunion',col:'#1F4E79'},
+  {jour:'31',mois:'MAI',titre:'Clôture inscriptions 2026-2027',detail:'Date limite dossiers',col:'#C62828'},
+  {jour:'05',mois:'JUN',titre:'Paiement salaires enseignants',detail:'Wave + Orange Money',col:'#2E7D32'},
+  {jour:'15',mois:'JUN',titre:'Archivage dossiers 2025-2026',detail:'Numérisation + classement',col:'#E65100'},
 ];
 
+// ══ VARIABLES GLOBALES ══
+let currentStaff = null;
+let donneesPointage = [], coursEnAttente = [], coursCourant = null;
+let bulletinEnCours = null, tentativesPin = 0;
+let donneesSheet = [];
+
+// ══ UTILITAIRES ══
+function getTarif(ecole,classe){const t=TARIFS[ecole]||TARIF_DEFAUT;return /^(2NDE|1[EÈ]RE|TLE|TERMINALE)/i.test(classe||'')?t.lycee:t.college;}
+function calculerSalaireV2(dureeMin,tarif){const S=50,hC=Math.floor(dureeMin/60),r=dureeMin%60;let hV=hC;if(r>=S)hV+=1;return{heuresValidees:hV,heuresAttente:r>0&&r<S?1:0,resteMin:r,salaire:hV*tarif,salPartiel:Math.round(hV*tarif*0.5)};}
+function toDate(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>40000){const d=new Date(Math.round((n-25569)*86400*1000));return d.getUTCDate().toString().padStart(2,'0')+'/'+(d.getUTCMonth()+1).toString().padStart(2,'0')+'/'+d.getUTCFullYear();}return String(val);}
+function toHeure(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>0&&n<1){const m=Math.round(n*24*60);return Math.floor(m/60).toString().padStart(2,'0')+':'+(m%60).toString().padStart(2,'0');}return String(val).trim();}
+function parseH(h){if(!h)return 0;const s=h.toString().replace('h',':').split(':').map(Number);return(s[0]||0)*60+(s[1]||0);}
+function serielVersMois(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>40000){const d=new Date(Math.round((n-25569)*86400*1000));return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');}return String(val).trim().substring(0,7);}
+function getSemActuelle(){var debut=new Date('2025-09-08'),now=new Date(),diff=Math.floor((now-debut)/(7*24*60*60*1000))+1;return Math.max(1,Math.min(30,diff));}
+function getStatut(ecart){if(ecart>0)return{code:'avance',label:'🚀 En avance',cls:'bg-or'};if(ecart>=-1)return{code:'ok',label:'✅ Dans les temps',cls:'bg-vert'};if(ecart===-2)return{code:'attention',label:'⚠️ Attention',cls:'bg-orange'};return{code:'retard',label:'🔴 Retard',cls:'bg-rouge'};}
+
 // ══ LOGIN ══
-function login() {
-  const mat = document.getElementById('inputMat').value.trim().toUpperCase();
-  const code = document.getElementById('inputCode').value.trim();
-  const err = document.getElementById('errMsg');
-  err.style.display = 'none';
-  if (!mat || !code) { affErr('Veuillez remplir tous les champs.'); return; }
-  const staff = STAFF[mat];
-  if (!staff || staff.code !== code) { affErr('Matricule ou code incorrect.'); return; }
-  document.getElementById('loginPage').style.display = 'none';
-  document.getElementById('loadingPage').style.display = 'flex';
-  document.getElementById('loadingTxt').textContent = 'Chargement de votre espace...';
-  setTimeout(() => {
-    document.getElementById('loadingPage').style.display = 'none';
-    if (staff.profil === 'DIR') afficherDir(staff);
-    else if (staff.profil === 'FOND') afficherFond(staff);
-    else if (staff.profil === 'COM') afficherCom(staff);
-    else if (staff.profil === 'EDU') afficherEdu(staff);
-  }, 1000);
+function login(){
+  const mat=document.getElementById('inputMat').value.trim().toUpperCase();
+  const code=document.getElementById('inputCode').value.trim();
+  const err=document.getElementById('errMsg');
+  err.style.display='none';
+  if(!mat||!code){affErr('Veuillez remplir tous les champs.');return;}
+  const s=STAFF[mat];
+  if(!s||s.code!==code){
+    tentativesPin++;
+    if(tentativesPin>=3){affErr('Accès bloqué — Contactez le fondateur.');return;}
+    affErr('Matricule ou code incorrect. ('+tentativesPin+'/3)');
+    document.getElementById('inputCode').value='';
+    return;
+  }
+  tentativesPin=0;
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('loadingPage').style.display='flex';
+  document.getElementById('loadingTxt').textContent='Chargement de votre espace...';
+  currentStaff=s;
+  setTimeout(()=>{
+    document.getElementById('loadingPage').style.display='none';
+    if(s.profil==='DIR') afficherDir(s);
+    else if(s.profil==='FOND') afficherFond(s);
+    else if(s.profil==='COM') afficherCom(s);
+    else if(s.profil==='EDU') afficherEdu(s);
+  },900);
 }
 function affErr(m){const e=document.getElementById('errMsg');e.textContent=m;e.style.display='block';}
 
 // ══ DIRECTEUR ══
-function afficherDir(s) {
-  document.getElementById('dirAvatar').textContent = s.nom.split(' ').slice(0,2).map(w=>w[0]).join('');
-  document.getElementById('dirNom').textContent = s.nom;
-  document.getElementById('dirEcole').textContent = s.ecole;
-  document.getElementById('dStatEns').textContent = SALAIRES_ENS.length;
-  document.getElementById('dStatAlert').textContent = ALERTES_PEDA.length;
-  document.getElementById('dStatBul').textContent = '3';
-  document.getElementById('dStatAtt').textContent = '2';
-  // Alertes
-  let h='';
-  ALERTES_PEDA.forEach(a=>{h+=`<div class="alerte-item"><div class="alerte-ico">${a.ico}</div><div><div class="alerte-nom">${a.nom}</div><div class="alerte-detail">${a.detail}</div></div></div>`;});
-  document.getElementById('dirAlertesBody').innerHTML=h||'<p style="padding:16px;color:var(--gris)">✅ Aucune alerte</p>';
-  // Enseignants
-  let h2='';
-  SALAIRES_ENS.forEach(e=>{h2+=`<div class="ens-item"><div class="ens-avatar">${e.nom.charAt(0)}</div><div class="ens-info"><div class="ens-nom">${e.nom}</div><div class="ens-meta">${e.classe} · ${e.type}</div></div><div class="ens-sal">${e.salaire.toLocaleString('fr-FR')} F</div></div>`;});
-  document.getElementById('dirEnsBody').innerHTML=h2;
-  // Notes
-  document.getElementById('dirNotesBody').innerHTML='<p style="padding:16px;font-size:0.84em;color:var(--gris)">📊 Interface de saisie des notes — Connexion Google Sheets requise</p>';
-  // Bulletins
-  document.getElementById('dirBulBody').innerHTML='<p style="padding:16px;font-size:0.84em;color:var(--gris)">📋 3 bulletins en attente de validation — Connexion Apps Script requise</p>';
-  // Salaires
-  let h3='';
-  const total=SALAIRES_ENS.reduce((s,e)=>s+e.salaire,0);
-  SALAIRES_ENS.forEach(e=>{h3+=`<div class="rap-ligne"><span class="rap-label">${e.nom} (${e.type})</span><span class="rap-val">${e.salaire.toLocaleString('fr-FR')} F</span></div>`;});
-  h3+=`<div class="rap-ligne total"><span class="rap-label">TOTAL MASSE SALARIALE</span><span class="rap-val">${total.toLocaleString('fr-FR')} F CFA</span></div>`;
-  document.getElementById('dirSalBody').innerHTML=h3;
+function afficherDir(s){
+  document.getElementById('dirAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]).join('');
+  document.getElementById('dirNom').textContent=s.nom;
+  document.getElementById('dirEcole').textContent=s.label;
+
+  const isPRIM = s.type==='PRIM';
+  const isSEC  = s.type==='SEC';
+  const isBOTH = s.type==='BOTH';
+
+  // Badge selon type
+  const typeLabels={PRIM:'Directeur · Primaire',SEC:'Directeur · Secondaire',BOTH:'Directeur · Prim+Sec'};
+  document.getElementById('dirBadgeType').textContent = typeLabels[s.type]||'Directeur';
+
+  // Stats selon type
+  let statsHTML = '';
+  if(isPRIM){
+    statsHTML = `<div class="stats-row s3">
+      <div class="stat-box emeraude"><div class="stat-val" id="statBulletins">—</div><div class="stat-lbl">📋 Bulletins attente</div></div>
+      <div class="stat-box rouge"><div class="stat-val" id="dStatAlert">0</div><div class="stat-lbl">🔔 Alertes pédago</div></div>
+      <div class="stat-box vert"><div class="stat-val" id="statEleves">—</div><div class="stat-lbl">👨‍🎓 Élèves</div></div>
+    </div>`;
+  } else if(isSEC){
+    statsHTML = `<div class="stats-row s5">
+      <div class="stat-box"><div class="stat-val" id="statEns">—</div><div class="stat-lbl">👨‍🏫 Enseignants</div></div>
+      <div class="stat-box vert"><div class="stat-val" id="statHeures">—</div><div class="stat-lbl">⏱️ Heures mois</div></div>
+      <div class="stat-box or"><div class="stat-val" id="statSalaire">—</div><div class="stat-lbl">💰 Masse sal.</div></div>
+      <div class="stat-box rouge"><div class="stat-val" id="statPerm">—</div><div class="stat-lbl">📌 Permanents</div></div>
+      <div class="stat-box orange"><div class="stat-val" id="statAttente">—</div><div class="stat-lbl">⏰ En attente</div><div class="stat-sub" id="statAttenteSub"></div></div>
+    </div>`;
+  } else { // BOTH
+    statsHTML = `<div class="stats-row s6">
+      <div class="stat-box"><div class="stat-val" id="statEns">—</div><div class="stat-lbl">👨‍🏫 Enseignants</div></div>
+      <div class="stat-box or"><div class="stat-val" id="statSalaire">—</div><div class="stat-lbl">💰 Masse sal.</div></div>
+      <div class="stat-box orange"><div class="stat-val" id="statAttente">—</div><div class="stat-lbl">⏰ En attente</div></div>
+      <div class="stat-box emeraude"><div class="stat-val" id="statBulletins">—</div><div class="stat-lbl">📋 Bulletins</div></div>
+      <div class="stat-box rouge"><div class="stat-val" id="dStatAlert">0</div><div class="stat-lbl">🔔 Alertes</div></div>
+      <div class="stat-box vert"><div class="stat-val" id="statPerm">—</div><div class="stat-lbl">📌 Permanents</div></div>
+    </div>`;
+  }
+  document.getElementById('dirStatsZone').innerHTML = statsHTML;
+
+  // Afficher sections selon type
+  if(!isPRIM){
+    document.getElementById('dirFiltresZone').style.display='block';
+    document.getElementById('dirSecAttente').style.display='block';
+    document.getElementById('dirSecSalaires').style.display='block';
+    remplirMois();
+  }
+  if(!isSEC){
+    document.getElementById('dirSecBulletins').style.display='block';
+    document.getElementById('dirBtnBulZone').style.display='block';
+  }
+
+  // Alertes pédago (démo)
+  const alertesDemo = [
+    {ico:'⚠️',nom:'KONE Fatoumata · TLE D-1 · Maths',detail:'Retard 2 semaines — Complexes'},
+    {ico:'⚠️',nom:'YAO Kouamé · 4EME EX2 · EPS',detail:'Retard 2 semaines — Lancer de poids'},
+  ];
+  const visiblesAlertes = isPRIM ? [] : alertesDemo;
+  let ha='';
+  if(visiblesAlertes.length===0){
+    ha='<p style="padding:14px;text-align:center;color:var(--gris)">✅ Aucune alerte pédagogique</p>';
+  } else {
+    visiblesAlertes.forEach(a=>{ha+=`<div class="alerte-item"><div class="alerte-ico">${a.ico}</div><div><div class="alerte-nom">${a.nom}</div><div class="alerte-detail">${a.detail}</div></div></div>`;});
+  }
+  document.getElementById('dirAlertesBody').innerHTML=ha;
+  if(document.getElementById('dStatAlert')) document.getElementById('dStatAlert').textContent=visiblesAlertes.length;
+
+  // Suivi pédago
+  chargerSuiviPedago(s);
+
   // Agenda
-  afficherAgenda('dirAgendaBody');
+  let hag='';
+  AGENDA_DEMO.forEach(a=>{hag+=`<div class="agenda-item"><div class="agenda-date" style="background:${a.col}"><div class="jour">${a.jour}</div><div class="mois">${a.mois}</div></div><div><div class="agenda-titre">${a.titre}</div><div class="agenda-detail">${a.detail}</div></div></div>`;});
+  document.getElementById('dirAgendaBody').innerHTML=hag;
+
+  // Charger données réelles
+  if(!isPRIM) chargerPointage();
+
   document.getElementById('espaceDir').style.display='block';
 }
 
+// ══ REMPLIR MOIS ══
+function remplirMois(){
+  const sel=document.getElementById('filtreMois');
+  if(!sel||sel.options.length>1) return;
+  const now=new Date();
+  for(let i=0;i<6;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+    const val=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const opt=document.createElement('option');
+    opt.value=val;
+    opt.textContent=d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    if(i===0)opt.selected=true;
+    sel.appendChild(opt);
+  }
+}
+
+// ══ CHARGER POINTAGE (depuis direction.html) ══
+async function chargerPointage(){
+  const moisSel=document.getElementById('filtreMois');
+  if(!moisSel)return;
+  const mois=moisSel.value;
+  const tbBody=document.getElementById('tableBody');
+  if(tbBody)tbBody.innerHTML='<div style="text-align:center;padding:24px"><div class="spinner-sm" style="margin:0 auto 10px"></div><p style="color:var(--gris);font-size:0.82em">Chargement...</p></div>';
+  try{
+    const sheetsId=SHEETS_IDS[currentStaff.ecole];
+    if(!sheetsId) return;
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/POINTAGE_MENSUEL!A2:P2000?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const res=await fetch(url);
+    const data=await res.json();
+    if(!data.values||data.values.length===0){afficherTableauVide();return;}
+    const lignesValides=data.values.filter(row=>{
+      const statut=String(row[9]||'').trim().toUpperCase();
+      const moisRow=serielVersMois(row[6]);
+      return(statut==='VALIDÉ'||statut==='VALIDE'||statut==='PARTIEL')&&moisRow===mois;
+    });
+    const recap={};
+    lignesValides.forEach(row=>{
+      const nom=String(row[4]||'').trim();
+      const heures=parseFloat(row[8])||0;
+      const salaire=parseFloat(row[11])||0;
+      const classe=String(row[2]||'').trim();
+      if(!recap[nom])recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[]};
+      recap[nom].totalHeures+=heures;
+      recap[nom].totalSalaire+=salaire;
+      recap[nom].nbCours++;
+      if(!recap[nom].classes.includes(classe))recap[nom].classes.push(classe);
+    });
+    donneesPointage=Object.values(recap);
+    afficherAttente(data.values,mois);
+    await chargerPermanents(recap);
+    afficherTableau();
+  }catch(e){
+    if(tbBody)tbBody.innerHTML=`<p style="text-align:center;padding:20px;color:var(--rouge);font-size:0.82em">Erreur chargement — ${e.message}</p>`;
+  }
+}
+
+async function chargerPermanents(recap){
+  try{
+    const sheetsId=SHEETS_IDS[currentStaff.ecole];
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/ENSEIGNANTS!A2:F200?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const res=await fetch(url);
+    const data=await res.json();
+    if(!data.values)return;
+    data.values.forEach(row=>{
+      const nom=String(row[0]||'').trim();
+      const actif=String(row[3]||'').trim().toUpperCase();
+      const type=String(row[4]||'VACATAIRE').trim().toUpperCase();
+      const fixe=parseFloat(row[5])||0;
+      if(actif!=='OUI'||type!=='PERMANENT'||fixe<=0)return;
+      if(!recap[nom]){recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],type:'PERMANENT'};donneesPointage.push(recap[nom]);}
+      recap[nom].totalSalaire=fixe;recap[nom].type='PERMANENT';
+    });
+  }catch(e){}
+}
+
+function afficherTableau(){
+  if(!donneesPointage.length){afficherTableauVide();return;}
+  donneesPointage.sort((a,b)=>b.totalSalaire-a.totalSalaire);
+  const totalS=donneesPointage.reduce((s,e)=>s+e.totalSalaire,0);
+  const totalH=donneesPointage.reduce((s,e)=>s+e.totalHeures,0);
+  const nbPerm=donneesPointage.filter(e=>e.type==='PERMANENT').length;
+  const setEl=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setEl('statEns',donneesPointage.length);
+  setEl('statHeures',totalH.toFixed(1)+'h');
+  setEl('statSalaire',totalS.toLocaleString('fr-FR')+' F');
+  setEl('statPerm',nbPerm);
+  let html=`<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Enseignant</th><th>Type</th><th>Classes</th><th>Cours</th><th>Heures</th><th>Salaire</th></tr></thead><tbody>`;
+  donneesPointage.forEach((e,i)=>{
+    const isP=e.type==='PERMANENT';
+    html+=`<tr><td>${i+1}</td><td><strong>${e.nom}</strong></td><td><span class="badge-v ${isP?'badge-perm':'badge-vac'}">${isP?'PERM':'VAC'}</span></td><td style="font-size:0.72em;color:var(--gris)">${(e.classes||[]).join(', ')||'—'}</td><td style="text-align:center">${e.nbCours}</td><td style="text-align:center;font-weight:600">${isP?'—':e.totalHeures.toFixed(1)+'h'}</td><td style="text-align:right;font-weight:700;color:var(--bleu)">${e.totalSalaire.toLocaleString('fr-FR')} F</td></tr>`;
+  });
+  html+=`</tbody><tfoot><tr class="total-row"><td colspan="5" style="text-align:right">TOTAL MASSE SALARIALE</td><td style="text-align:center">${totalH.toFixed(1)}h</td><td style="text-align:right">${totalS.toLocaleString('fr-FR')} F CFA</td></tr></tfoot></table></div>`;
+  const tbBody=document.getElementById('tableBody');
+  if(tbBody)tbBody.innerHTML=html;
+}
+
+function afficherTableauVide(){
+  ['statEns','statHeures','statSalaire','statPerm'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='0';});
+  const tbBody=document.getElementById('tableBody');
+  if(tbBody)tbBody.innerHTML='<p style="text-align:center;padding:30px;color:var(--gris);font-size:0.82em">Aucun pointage validé ce mois</p>';
+}
+
+function afficherAttente(lignes,mois){
+  coursEnAttente=lignes.filter(row=>{
+    const statut=String(row[9]||'').trim().toUpperCase();
+    const moisRow=serielVersMois(row[6]);
+    return statut==='EN ATTENTE'&&moisRow===mois;
+  });
+  const section=document.getElementById('dirSecAttente');
+  if(section)section.style.display='block';
+  const setEl=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  setEl('statAttente',coursEnAttente.length);
+  setEl('attenteCompteur',coursEnAttente.length+' cours');
+  const totalAttenteF=coursEnAttente.reduce((s,row)=>{
+    const tarif=getTarif(currentStaff.ecole,String(row[2]||''));
+    const hD=toHeure(row[1]),hF=toHeure(row[7]);
+    const dureeMin=hD&&hF?Math.max(0,parseH(hF)-parseH(hD)):0;
+    return s+calculerSalaireV2(dureeMin,tarif).salaire;
+  },0);
+  setEl('statAttenteSub',coursEnAttente.length>0?totalAttenteF.toLocaleString('fr-FR')+' F potentiels':'');
+  if(!coursEnAttente.length){
+    const ta=document.getElementById('tableAttente');
+    if(ta)ta.innerHTML='<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">✅ Aucun cours en attente</p>';
+    return;
+  }
+  let html=`<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Enseignant</th><th>Classe</th><th>Matière</th><th>Début</th><th>Fin</th><th>Durée</th><th>Salaire si validé</th><th>Action</th></tr></thead><tbody>`;
+  coursEnAttente.forEach((row,idx)=>{
+    const tarif=getTarif(currentStaff.ecole,String(row[2]||''));
+    const hD=(row[12]?String(row[12]).trim():'')||toHeure(row[1]);
+    const hF=(row[13]?String(row[13]).trim():'')||toHeure(row[7]);
+    const dureeMin=hD&&hF?Math.max(0,parseH(hF)-parseH(hD)):0;
+    const calc=calculerSalaireV2(dureeMin,tarif);
+    html+=`<tr><td>${toDate(row[0])}</td><td><strong>${row[4]||''}</strong></td><td>${row[2]||''}</td><td>${row[3]||''}</td><td>${hD||'—'}</td><td>${hF||'—'}</td><td style="color:var(--orange);font-weight:700">${dureeMin} min</td><td style="font-weight:700;color:var(--vert)">${calc.salaire.toLocaleString('fr-FR')} F</td><td><button onclick="ouvrirModalAttente(${idx})" style="padding:5px 10px;background:var(--bleu);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.75em;font-weight:600">Traiter →</button></td></tr>`;
+  });
+  html+='</tbody></table></div>';
+  const ta=document.getElementById('tableAttente');
+  if(ta)ta.innerHTML=html;
+}
+
+function ouvrirModalAttente(idx){
+  coursCourant=coursEnAttente[idx];
+  const row=coursCourant;
+  const tarif=getTarif(currentStaff.ecole,String(row[2]||''));
+  const hD=(row[12]?String(row[12]).trim():'')||toHeure(row[1]);
+  const hF=(row[13]?String(row[13]).trim():'')||toHeure(row[7]);
+  const dureeMin=hD&&hF?Math.max(0,parseH(hF)-parseH(hD)):0;
+  const calc=calculerSalaireV2(dureeMin,tarif);
+  let regleV2='';
+  if(calc.resteMin>=50){regleV2=`${Math.floor(dureeMin/60)}h+${calc.resteMin}min ≥ 50min → <b style="color:var(--vert)">${calc.heuresValidees}h validées ✅</b>`;}
+  else if(calc.resteMin>0){regleV2=`${Math.floor(dureeMin/60)}h+${calc.resteMin}min < 50min → <b style="color:var(--orange)">${Math.floor(dureeMin/60)}h + ${calc.resteMin}min ⏰</b>`;}
+  else{regleV2=`${Math.floor(dureeMin/60)}h complètes → <b style="color:var(--vert)">${calc.heuresValidees}h ✅</b>`;}
+  document.getElementById('modalAttenteInfo').innerHTML=`
+    <div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:0.82em;line-height:1.9;margin-bottom:8px">
+      <b>Enseignant :</b> ${row[4]||'—'}<br>
+      <b>Classe :</b> ${row[2]||'—'} · <b>Matière :</b> ${row[3]||'—'}<br>
+      <b>Date :</b> ${toDate(row[0])}
+    </div>
+    <div class="calcul-bloc">
+      <div class="calcul-row"><span>Début retenu</span><span style="color:var(--bleu)">${hD||'—'}</span></div>
+      <div class="calcul-row"><span>Fin retenue</span><span style="color:var(--bleu)">${hF||'—'}</span></div>
+      <div class="calcul-row"><span>Durée nette</span><span style="color:var(--orange)">${dureeMin} min</span></div>
+      <div class="calcul-row"><span>Tarif horaire</span><span>${tarif.toLocaleString('fr-FR')} F/h</span></div>
+    </div>
+    <div class="detail-v2"><div class="detail-v2-titre">🧮 Règle calcul V2</div>${regleV2}</div>
+    <div class="sal-opts">
+      <div class="sal-box vert"><div class="sal-box-label">✅ Si VALIDÉ</div><div class="sal-box-val">${calc.salaire.toLocaleString('fr-FR')} F</div></div>
+      <div class="sal-box orange"><div class="sal-box-label">⚠️ Si 50%</div><div class="sal-box-val">${calc.salPartiel.toLocaleString('fr-FR')} F</div></div>
+    </div>`;
+  document.getElementById('modalRaison').value='';
+  document.getElementById('modalAttente').style.display='flex';
+}
+
+function fermerModalAttente(){document.getElementById('modalAttente').style.display='none';coursCourant=null;}
+
+async function traiterAttente(decision){
+  if(!coursCourant)return;
+  const raison=document.getElementById('modalRaison').value||'';
+  const row=coursCourant;
+  const tarif=getTarif(currentStaff.ecole,String(row[2]||''));
+  const hD=(row[12]?String(row[12]).trim():'')||toHeure(row[1]);
+  const hF=(row[13]?String(row[13]).trim():'')||toHeure(row[7]);
+  const dureeMin=hD&&hF?Math.max(0,parseH(hF)-parseH(hD)):0;
+  const calc=calculerSalaireV2(dureeMin,tarif);
+  let salaire=0;
+  if(decision==='VALIDÉ')salaire=calc.salaire;
+  if(decision==='PARTIEL')salaire=calc.salPartiel;
+  const cbName='dir_'+Date.now();
+  const params=new URLSearchParams({callback:cbName,type:'TRAITER_ATTENTE',ecole:currentStaff.ecole||'',enseignant:String(row[4]||''),classe:String(row[2]||''),date:toDate(row[0]),decision,raison,salaire});
+  return new Promise(resolve=>{
+    const script=document.createElement('script');
+    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}
+      if(res&&res.ok){showToast('✅ '+decision+' — '+salaire.toLocaleString('fr-FR')+' F','success');fermerModalAttente();setTimeout(()=>chargerPointage(),2000);}
+      else{showToast('❌ Erreur : '+(res?res.error:'inconnue'),'error');}resolve(res);};
+    script.onerror=()=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}showToast('❌ Erreur connexion','error');resolve({ok:false});};
+    script.src=APPS_SCRIPT_URL+'?'+params.toString();
+    document.body.appendChild(script);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];showToast('⏱️ Délai dépassé','error');resolve({ok:false});}},10000);
+  });
+}
+
+// ══ BULLETINS PRIMAIRE ══
+function chargerBulletinsPrimaire(){
+  const body=document.getElementById('dirBulBody');
+  if(!body)return;
+  body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div><p style="color:var(--gris);font-size:0.82em">Chargement bulletins...</p></div>';
+  const sec=document.getElementById('dirSecBulletins');
+  if(sec){sec.style.display='block';const b=sec.querySelector('.sec-body');if(b)b.classList.add('open');const h=sec.querySelector('.sec-head');if(h)h.classList.add('open');}
+  const cbName='bul_dir_'+Date.now();
+  const script=document.createElement('script');
+  window[cbName]=data=>{
+    delete window[cbName];try{document.body.removeChild(script);}catch(e){}
+    if(!data||!data.ok){body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur chargement bulletins</p>';return;}
+    const bulletins=data.bulletins||data.enAttente||[];
+    const bc=document.getElementById('bulletinCompteur');if(bc)bc.textContent=bulletins.length;
+    const bs=document.getElementById('statBulletins');if(bs)bs.textContent=bulletins.length;
+    if(!bulletins.length){body.innerHTML='<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">✅ Aucun bulletin en attente</p>';return;}
+    let html='';
+    bulletins.forEach((b,idx)=>{
+      html+=`<div class="bul-card">
+        <div class="bul-info"><div class="bul-classe">📚 ${b.classe} — ${b.mois}</div><div class="bul-meta">${b.nb||b.nb_eleves||0} élève(s) · ${b.annee||'2025-2026'}</div></div>
+        <span class="bul-nb">${b.nb||b.nb_eleves||0}</span>
+        <button class="btn-val-bul" onclick="ouvrirModalBulletin(${idx})">Valider →</button>
+      </div>`;
+    });
+    body.innerHTML=html;
+    window._bulletinsEnAttente=bulletins;
+  };
+  script.onerror=()=>{delete window[cbName];body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">❌ Erreur réseau</p>';};
+  setTimeout(()=>{if(window[cbName]){delete window[cbName];body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">⏱️ Délai dépassé</p>';}},10000);
+  script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type=GET_ATTENTE_PRIMAIRE&ecole='+encodeURIComponent(currentStaff.ecole||'');
+  document.body.appendChild(script);
+}
+
+function ouvrirModalBulletin(idx){
+  bulletinEnCours=window._bulletinsEnAttente[idx];
+  const b=bulletinEnCours;
+  document.getElementById('modalBulletinInfo').innerHTML=`
+    <div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:0.82em;line-height:2;margin-bottom:10px">
+      <b>Classe :</b> ${b.classe} &nbsp;|&nbsp; <b>Mois :</b> ${b.mois}<br>
+      <b>Élèves :</b> ${b.nb||b.nb_eleves||0} &nbsp;|&nbsp; <b>Année :</b> ${b.annee||'2025-2026'}
+    </div>
+    <p style="font-size:0.8em;color:var(--gris)">Cliquez "Valider et publier" pour calculer les rangs et rendre les bulletins visibles aux parents.</p>`;
+  document.getElementById('modalBulletin').style.display='flex';
+}
+
+function confirmerValidationBulletin(){
+  if(!bulletinEnCours)return;
+  const b=bulletinEnCours;
+  const cbName='bul_val_'+Date.now();
+  const script=document.createElement('script');
+  window[cbName]=data=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}
+    if(data&&data.ok){showToast('✅ Bulletin validé et publié !','success');document.getElementById('modalBulletin').style.display='none';bulletinEnCours=null;setTimeout(chargerBulletinsPrimaire,1500);}
+    else{showToast('❌ '+(data?data.error:'Erreur'),'error');}};
+  script.onerror=()=>{delete window[cbName];showToast('❌ Erreur réseau','error');};
+  script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type=VALIDER_BULLETIN_PRIMAIRE'+'&ecole='+encodeURIComponent(currentStaff.ecole||'')+'&classe='+encodeURIComponent(b.classe||'')+'&mois='+encodeURIComponent(b.mois||'')+'&annee='+encodeURIComponent(b.annee||'2025-2026');
+  document.body.appendChild(script);
+  showToast('⏳ Validation en cours...','');
+}
+
+// ══ SYNC ENSEIGNANTS ══
+async function syncEnseignants(){
+  const res=document.getElementById('syncResult');
+  showToast('⏳ Synchronisation...','');
+  try{
+    const sheetsId=SHEETS_IDS[currentStaff.ecole];
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/ENSEIGNANTS!A2:F200?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const r=await fetch(url);const data=await r.json();
+    if(!data.values){showToast('⚠️ Aucune donnée ENSEIGNANTS','error');return;}
+    let nbA=0,nbP=0,nbV=0;
+    data.values.forEach(row=>{
+      if(String(row[3]||'').trim().toUpperCase()!=='OUI')return;
+      nbA++;
+      if(String(row[4]||'').trim().toUpperCase()==='PERMANENT')nbP++;else nbV++;
+    });
+    if(res){res.innerHTML=`✅ <b>${nbA} enseignants actifs</b> : ${nbP} permanent(s) · ${nbV} vacataire(s)`;res.style.display='block';}
+    showToast(`✅ ${nbA} enseignants synchronisés`,'success');
+    chargerPointage();
+  }catch(e){showToast('❌ Erreur synchronisation','error');}
+}
+
+// ══ EXPORT CSV ══
+function exporterCSV(){
+  if(!donneesPointage.length){showToast('Aucune donnée à exporter','error');return;}
+  const moisSel=document.getElementById('filtreMois');
+  const mois=moisSel?moisSel.value:'';
+  let csv='NOM,TYPE,NB COURS,HEURES,SALAIRE\n';
+  donneesPointage.forEach(e=>{csv+=`"${e.nom}","${e.type||'VACATAIRE'}",${e.nbCours},${e.totalHeures.toFixed(2)},${e.totalSalaire}\n`;});
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`Salaires_${currentStaff.ecole}_${mois}.csv`;a.click();
+  showToast('✅ Export réussi','success');
+}
+
+// ══ SUIVI PÉDAGO (depuis pedagogie.html) ══
+async function chargerSuiviPedago(s){
+  const body=document.getElementById('dirPedaBody');
+  if(!body)return;
+  const semActuelle=getSemActuelle();
+  try{
+    const sheetsId=SHEETS_IDS[s.ecole];
+    if(!sheetsId){body.innerHTML=genDemoPeda(semActuelle);return;}
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${sheetsId}/values/CAHIER_TEXTES?key=${API_KEY}`;
+    const r=await fetch(url);const data=await r.json();
+    if(!data.values||data.values.length<=1){body.innerHTML=genDemoPeda(semActuelle);return;}
+    const rows=data.values.slice(1).map(row=>({
+      classe:row[2]||'',matiere:row[3]||'',enseignant:row[4]||'',
+      lecon:row[5]||'',avancement:parseInt(row[7])||50,
+      semTheo:parseInt(row[12])||semActuelle,semReel:parseInt(row[13])||semActuelle,
+      date:row[0]||''
+    }));
+    if(!rows.length){body.innerHTML=genDemoPeda(semActuelle);return;}
+    body.innerHTML=renderSuiviTable(rows,semActuelle);
+  }catch(e){body.innerHTML=genDemoPeda(semActuelle);}
+}
+
+function genDemoPeda(sem){
+  const demo=[
+    {classe:'TLE D-2',matiere:'Mathématiques',enseignant:'KOUASSI Jean',lecon:'Dérivation',avancement:65,semTheo:sem,semReel:sem-1,date:new Date().toLocaleDateString('fr-FR')},
+    {classe:'3EME EX1',matiere:'SVT',enseignant:'BAMBA Marie',lecon:'Hérédité',avancement:80,semTheo:sem,semReel:sem,date:new Date().toLocaleDateString('fr-FR')},
+    {classe:'TLE D-1',matiere:'Mathématiques',enseignant:'KONE Fatoumata',lecon:'Complexes',avancement:45,semTheo:sem,semReel:sem-3,date:new Date().toLocaleDateString('fr-FR')},
+  ];
+  return renderSuiviTable(demo,sem);
+}
+
+function renderSuiviTable(rows,sem){
+  let ok=0,att=0,ret=0,av=0;
+  rows.forEach(d=>{const e=(d.semReel||1)-(d.semTheo||sem);const s=getStatut(e);if(s.code==='ok')ok++;else if(s.code==='attention')att++;else if(s.code==='retard')ret++;else av++;});
+  let h=`<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px">
+    <div style="background:#EAF3DE;border-radius:8px;padding:10px;text-align:center"><div style="font-size:1.4em;font-weight:700;color:var(--vert)">${ok}</div><div style="font-size:0.68em;color:var(--gris)">✅ Dans les temps</div></div>
+    <div style="background:#FFF3E0;border-radius:8px;padding:10px;text-align:center"><div style="font-size:1.4em;font-weight:700;color:var(--orange)">${att}</div><div style="font-size:0.68em;color:var(--gris)">⚠️ Attention</div></div>
+    <div style="background:#FFEBEE;border-radius:8px;padding:10px;text-align:center"><div style="font-size:1.4em;font-weight:700;color:var(--rouge)">${ret}</div><div style="font-size:0.68em;color:var(--gris)">🔴 Retard</div></div>
+    <div style="background:#FFF8E1;border-radius:8px;padding:10px;text-align:center"><div style="font-size:1.4em;font-weight:700;color:#7a5f00">${av}</div><div style="font-size:0.68em;color:var(--gris)">🚀 En avance</div></div>
+  </div>`;
+  h+=`<div class="tbl-wrap"><table><thead><tr><th>Enseignant</th><th>Classe</th><th>Matière</th><th>Leçon actuelle</th><th>Sem.Th</th><th>Sem.R</th><th>Progression</th><th>Statut</th></tr></thead><tbody>`;
+  rows.forEach(d=>{
+    const ecart=(d.semReel||1)-(d.semTheo||sem);
+    const st=getStatut(ecart);
+    const av2=Math.min(100,Math.max(0,d.avancement||0));
+    const eL=ecart>0?`<span style="color:var(--vert)">+${ecart}</span>`:ecart===0?`<span style="color:var(--gris)">0</span>`:`<span style="color:${ecart<=-3?'var(--rouge)':'var(--orange)'};font-weight:700">${ecart}</span>`;
+    const progColor=av2>=80?'fill-vert':av2>=50?'fill-or':av2>=30?'fill-orange':'fill-rouge';
+    h+=`<tr><td><strong>${d.enseignant}</strong></td><td>${d.classe}</td><td>${d.matiere}</td><td style="max-width:140px;font-size:0.76em">${d.lecon||'—'}</td><td style="text-align:center">${d.semTheo||'—'}</td><td style="text-align:center">${eL}</td><td><div class="prog-bar" style="width:70px"><div class="prog-fill ${progColor}" style="width:${av2}%"></div></div></td><td><span class="bdg ${st.cls}" style="font-size:0.65em">${st.label}</span></td></tr>`;
+  });
+  h+='</tbody></table></div>';
+  return h;
+}
+
 // ══ FONDATEUR ══
-function afficherFond(s) {
-  document.getElementById('fondAvatar').textContent = 'F';
-  document.getElementById('fondNom').textContent = s.nom;
-  document.getElementById('fStatEleves').textContent = '5 000+';
-  document.getElementById('fStatEns').textContent = '180+';
-  document.getElementById('fStatImpaye').textContent = '116';
+function afficherFond(s){
+  document.getElementById('fondAvatar').textContent='F';
+  document.getElementById('fondNom').textContent=s.nom;
   // KPIs
-  let h='';
+  let h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px">';
   KPI_ECOLES.forEach(e=>{
-    h+=`<div class="kpi-card" style="margin:8px">
-      <div class="kpi-ecole">🏫 ${e.nom}</div>
+    h+=`<div class="kpi-card"><div class="kpi-ecole">🏫 ${e.nom}</div>
       <div class="kpi-row"><span>Élèves</span><span>${e.eleves}</span></div>
       <div class="kpi-row"><span>Enseignants</span><span>${e.ens}</span></div>
       <div class="kpi-row"><span>Impayés</span><span style="color:var(--rouge)">${e.impaye}</span></div>
-      <div class="kpi-row"><span>Taux recouvrement</span><span style="color:var(--vert)">${e.taux}%</span></div>
+      <div class="kpi-row"><span>Recouvrement</span><span style="color:var(--vert)">${e.taux}%</span></div>
     </div>`;
   });
-  document.getElementById('fondKpiBody').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px">${h}</div>`;
+  h+='</div>';
+  document.getElementById('fondKpiBody').innerHTML=h;
   // Soldes
   let h2='';
-  KPI_ECOLES.forEach(e=>{const solde=Math.round(e.eleves*e.taux*0.01*55000);h2+=`<div class="rap-ligne"><span class="rap-label">🏫 ${e.nom}</span><span class="rap-val vert">${solde.toLocaleString('fr-FR')} F</span></div>`;});
+  KPI_ECOLES.forEach(e=>{h2+=`<div class="rap-ligne"><span class="rap-label">🏫 ${e.nom}</span><span class="rap-val vert">${(e.eleves*e.taux*0.01*55000).toLocaleString('fr-FR')} F</span></div>`;});
   document.getElementById('fondSoldesBody').innerHTML=h2;
-  // Masse salariale
-  document.getElementById('fondSalBody').innerHTML='<p style="padding:16px;font-size:0.84em;color:var(--gris)">💰 Données en temps réel — Connexion Google Sheets réseau requise</p>';
-  // Codes
-  document.getElementById('fondCodesBody').innerHTML=`
-    <div style="padding:14px">
-      <p style="font-size:0.84em;color:var(--gris);margin-bottom:12px">Gestion des matricules et codes secrets de tout le personnel</p>
-      <div class="actions-grid">
-        <div class="action-btn" onclick="showToast('Gestion codes — Bientôt','')"><div class="ab-ico">🔑</div><div class="ab-titre">Modifier un code</div><div class="ab-desc">Reset code secret</div></div>
-        <div class="action-btn" onclick="showToast('Nouveau staff — Bientôt','')"><div class="ab-ico">➕</div><div class="ab-titre">Nouveau matricule</div><div class="ab-desc">Créer un accès</div></div>
-        <div class="action-btn" onclick="showToast('Bloquer — Bientôt','')"><div class="ab-ico">🔒</div><div class="ab-titre">Bloquer un accès</div><div class="ab-desc">Désactiver matricule</div></div>
-        <div class="action-btn" onclick="showToast('Journal — Bientôt','')"><div class="ab-ico">📜</div><div class="ab-titre">Journal des accès</div><div class="ab-desc">Historique connexions</div></div>
-      </div>
-    </div>`;
+  // Salaires admin
+  let h3='';
+  SALAIRES_ADMIN.forEach(e=>{
+    if(!e.salaire)return;
+    h3+=`<div class="rap-ligne"><span class="rap-label">${e.nom} <span style="color:var(--gris);font-size:0.8em">${e.fonction} · ${e.ecole}</span></span><span class="rap-val">${e.salaire.toLocaleString('fr-FR')} F</span></div>`;
+  });
+  const total=SALAIRES_ADMIN.reduce((s,e)=>s+(e.salaire||0),0);
+  h3+=`<div class="rap-ligne total"><span class="rap-label">TOTAL RÉSEAU (données partielles)</span><span class="rap-val">${total.toLocaleString('fr-FR')} F CFA</span></div>`;
+  document.getElementById('fondSalBody').innerHTML=h3;
   document.getElementById('espaceFond').style.display='block';
 }
 
 // ══ COMPTABLE ══
-function afficherCom(s) {
-  document.getElementById('comAvatar').textContent = s.nom.split(' ').slice(0,2).map(w=>w[0]).join('');
-  document.getElementById('comNom').textContent = s.nom;
-  document.getElementById('comEcole').textContent = s.ecole;
-  const imp=PAIEMENTS.filter(p=>p.statut!=='SOLDE').length;
-  const nouv=INSCRIPTIONS.filter(i=>i.statut==='nouveau').length;
+function afficherCom(s){
+  document.getElementById('comAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]).join('');
+  document.getElementById('comNom').textContent=s.nom;
+  document.getElementById('comEcole').textContent=s.label;
+  const imp=PAIEMENTS_DEMO.filter(p=>p.statut!=='SOLDE').length;
+  const nouv=INSCRIPTIONS_DEMO.filter(i=>i.statut==='nouveau').length;
   document.getElementById('cStatImpaye').textContent=imp;
   document.getElementById('cStatInsc').textContent=nouv;
-  document.getElementById('cStatTaches').textContent=TACHES.filter(t=>!t.done).length;
+  document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;
   // Paiements
   let h='';
-  PAIEMENTS.forEach(p=>{
+  PAIEMENTS_DEMO.forEach(p=>{
     const bg=p.statut==='SOLDE'?'rgba(46,125,50,0.12)':p.statut==='PARTIEL'?'rgba(230,81,0,0.12)':'rgba(198,40,40,0.12)';
     const tc=p.statut==='SOLDE'?'#2E7D32':p.statut==='PARTIEL'?'#E65100':'#C62828';
-    const badge=p.statut==='SOLDE'?'<span class="badge-s bg-vert">✓ Soldé</span>':p.statut==='PARTIEL'?'<span class="badge-s bg-orange">⚠ Partiel</span>':'<span class="badge-s bg-rouge">✗ Impayé</span>';
-    h+=`<div class="item"><div class="item-avatar" style="background:${bg};color:${tc}">${p.nom.charAt(0)}</div>
+    const badge=p.statut==='SOLDE'?'<span class="bdg bg-vert">✓ Soldé</span>':p.statut==='PARTIEL'?'<span class="bdg bg-orange">⚠ Partiel</span>':'<span class="bdg bg-rouge">✗ Impayé</span>';
+    h+=`<div class="item"><div class="item-av" style="background:${bg};color:${tc}">${p.nom.charAt(0)}</div>
       <div class="item-info"><div class="item-nom">${p.nom} ${badge}</div><div class="item-meta">${p.classe} · ${p.verse.toLocaleString('fr-FR')} / ${p.du.toLocaleString('fr-FR')} F</div></div>
-      <div class="item-val"><div class="val" style="color:${tc}">${p.solde>0?p.solde.toLocaleString('fr-FR')+' F':'✓'}</div><div class="lbl">${p.solde>0?'Reste dû':'Complet'}</div></div></div>`;
+      <div class="item-val"><div class="val" style="color:${tc}">${p.solde>0?p.solde.toLocaleString('fr-FR')+' F':'✓'}</div><div class="lbl">${p.solde>0?'Reste':'Complet'}</div></div></div>`;
   });
   document.getElementById('comPaiBody').innerHTML=h;
   // Inscriptions
   let h2='';
-  INSCRIPTIONS.forEach((ins,i)=>{
+  INSCRIPTIONS_DEMO.forEach((ins,i)=>{
     const sc={nouveau:'bg-bleu',valide:'bg-vert',attente:'bg-orange'};
     const sl={nouveau:'Nouveau',valide:'Validé',attente:'En attente'};
-    h2+=`<div class="item"><div class="item-avatar" style="background:var(--bleu);color:#fff">${i+1}</div>
+    h2+=`<div class="item"><div class="item-av" style="background:var(--bleu);color:#fff">${i+1}</div>
       <div class="item-info"><div class="item-nom">${ins.nom}</div><div class="item-meta">Classe : ${ins.classe} · ${ins.date}</div></div>
-      <span class="badge-s ${sc[ins.statut]}">${sl[ins.statut]}</span></div>`;
+      <span class="bdg ${sc[ins.statut]}">${sl[ins.statut]}</span></div>`;
   });
   document.getElementById('comInscBody').innerHTML=h2;
   // Salaires
   let h3='';
-  SALAIRES_ENS.forEach(e=>{h3+=`<div class="rap-ligne"><span class="rap-label">${e.nom} (${e.type})</span><span class="rap-val">${e.salaire.toLocaleString('fr-FR')} F</span></div>`;});
+  SALAIRES_ADMIN.filter(e=>e.salaire>0).forEach(e=>{
+    h3+=`<div class="rap-ligne"><span class="rap-label">${e.nom} <span style="color:var(--gris);font-size:0.8em">${e.fonction}</span></span><span class="rap-val">${e.salaire.toLocaleString('fr-FR')} F</span></div>`;
+  });
+  const total=SALAIRES_ADMIN.reduce((s,e)=>s+(e.salaire||0),0);
+  h3+=`<div class="rap-ligne total"><span class="rap-label">TOTAL</span><span class="rap-val">${total.toLocaleString('fr-FR')} F CFA</span></div>`;
   document.getElementById('comSalBody').innerHTML=h3;
   // Tâches
   let h4='';
-  TACHES.forEach((t,i)=>{
+  TACHES_DEMO.forEach((t,i)=>{
     const ps={haute:'prio-h',normale:'prio-n',basse:'prio-b'};
     const pl={haute:'Urgent',normale:'Normal',basse:'Faible'};
     h4+=`<div class="tache"><div class="tache-check ${t.done?'done':''}" onclick="toggleTache(${i},this)">${t.done?'✓':''}</div>
@@ -745,94 +1270,67 @@ function afficherCom(s) {
   });
   document.getElementById('comTachesBody').innerHTML=h4;
   // Courriers
-  let h5='';
-  COURRIERS.forEach(c=>{h5+=`<div class="item" style="flex-direction:column;align-items:flex-start;gap:4px">
-    <div style="font-size:0.72em;color:var(--bleu);font-weight:700">${c.ref} ${c.urgent?'🔴 URGENT':''}</div>
-    <div style="font-size:0.86em;font-weight:600">${c.titre}</div>
-    <div style="font-size:0.72em;color:var(--gris)">📅 ${c.date} · ${c.type==='Reçu'?'📥 Reçu':'📤 Envoyé'}</div></div>`;});
-  document.getElementById('comCourrierBody').innerHTML=h5;
+  document.getElementById('comCourrierBody').innerHTML=`
+    <div class="item" style="flex-direction:column;align-items:flex-start;gap:4px"><div style="font-size:0.7em;color:var(--bleu);font-weight:700">CRT-2026-045 🔴 URGENT</div><div style="font-size:0.84em;font-weight:600">Circulaire DREN — Calendrier examens 2026</div><div style="font-size:0.7em;color:var(--gris)">📅 22/05/2026 · 📥 Reçu</div></div>
+    <div class="item" style="flex-direction:column;align-items:flex-start;gap:4px"><div style="font-size:0.7em;color:var(--bleu);font-weight:700">CRT-2026-044</div><div style="font-size:0.84em;font-weight:600">Demande attestation — Parent KONE</div><div style="font-size:0.7em;color:var(--gris)">📅 21/05/2026 · 📥 Reçu</div></div>`;
   document.getElementById('espaceCom').style.display='block';
 }
 
 // ══ ÉDUCATEUR ══
-function afficherEdu(s) {
-  document.getElementById('eduAvatar').textContent = s.nom.split(' ').slice(0,2).map(w=>w[0]).join('');
-  document.getElementById('eduNom').textContent = s.nom;
-  document.getElementById('eduEcole').textContent = s.ecole;
-  const alertes=ELEVES_EDU.filter(e=>e.alerte).length;
-  const admis=ELEVES_EDU.filter(e=>e.moy>=5).length;
+function afficherEdu(s){
+  document.getElementById('eduAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]).join('');
+  document.getElementById('eduNom').textContent=s.nom;
+  document.getElementById('eduEcole').textContent=s.label;
+  const alertes=ELEVES_EDU_DEMO.filter(e=>e.alerte).length;
+  const admis=ELEVES_EDU_DEMO.filter(e=>e.moy>=5).length;
   document.getElementById('eStatAlert').textContent=alertes;
-  document.getElementById('eStatEleves').textContent=ELEVES_EDU.length;
-  document.getElementById('eStatReussite').textContent=Math.round(admis/ELEVES_EDU.length*100)+'%';
-  // Élèves
+  document.getElementById('eStatEleves').textContent=ELEVES_EDU_DEMO.length;
+  document.getElementById('eStatReussite').textContent=Math.round(admis/ELEVES_EDU_DEMO.length*100)+'%';
   let h='';
-  [...ELEVES_EDU].sort((a,b)=>a.moy-b.moy).forEach(e=>{
+  [...ELEVES_EDU_DEMO].sort((a,b)=>a.moy-b.moy).forEach(e=>{
     const c=e.moy>=7?'#00C896':e.moy>=5?'#D4AF37':'#E74C3C';
     const bg=e.moy>=7?'rgba(0,200,150,0.15)':e.moy>=5?'rgba(212,175,55,0.15)':'rgba(231,76,60,0.15)';
-    const badge=e.alerte?'<span class="badge-s bg-rouge">⚠ Alerte</span>':'<span class="badge-s bg-vert">✓ Suivi</span>';
-    h+=`<div class="item"><div class="item-avatar" style="background:${bg};color:${c}">${e.nom.charAt(0)}</div>
+    const badge=e.alerte?'<span class="bdg bg-rouge">⚠ Alerte</span>':'<span class="bdg bg-vert">✓ Suivi</span>';
+    h+=`<div class="item"><div class="item-av" style="background:${bg};color:${c}">${e.nom.charAt(0)}</div>
       <div class="item-info"><div class="item-nom">${e.nom} ${badge}</div><div class="item-meta">${e.classe}</div></div>
       <div class="item-val"><div class="val" style="color:${c}">${e.moy.toFixed(2)}</div><div class="lbl">/20</div></div></div>`;
   });
   document.getElementById('eduElevesBody').innerHTML=h;
-  // Charte
   let h2='';
-  CHARTE.forEach((c,i)=>{h2+=`<div class="charte-item"><div class="charte-num">${i+1}</div>
-    <div><div class="charte-titre">${c.titre}</div><div class="charte-desc">${c.desc}</div></div></div>`;});
+  CHARTE.forEach((c,i)=>{h2+=`<div class="charte-item"><div class="charte-num">${i+1}</div><div><div class="charte-titre">${c.titre}</div><div class="charte-desc">${c.desc}</div></div></div>`;});
   document.getElementById('eduCharteBody').innerHTML=h2;
-  // Formations
-  let h3='';
   const bc={NOUVEAU:'bg-vert',ESSENTIEL:'bg-orange',AVANCÉ:'bg-violet'};
-  FORMATIONS.forEach(f=>{h3+=`<div class="item gap-12"><span class="badge-s ${bc[f.badge]||'bg-bleu'}">${f.badge}</span>
-    <div class="item-info"><div class="item-nom">${f.titre}</div><div class="item-meta">⏱ ${f.duree}</div></div></div>`;});
+  let h3='';
+  FORMATIONS_DEMO.forEach(f=>{h3+=`<div class="item"><span class="bdg ${bc[f.badge]||'bg-bleu'}" style="flex-shrink:0">${f.badge}</span><div class="item-info"><div class="item-nom">${f.titre}</div><div class="item-meta">⏱ ${f.duree}</div></div></div>`;});
   document.getElementById('eduFormBody').innerHTML=h3;
-  // Forum
   let h4='';
-  FORUM.forEach(f=>{h4+=`<div class="forum-item"><div class="forum-auteur">✦ ${f.auteur}</div>
-    <div class="forum-msg">${f.msg}</div><div class="forum-meta">${f.meta}</div></div>`;});
+  FORUM_DEMO.forEach(f=>{h4+=`<div class="forum-item"><div class="forum-auteur">✦ ${f.auteur}</div><div class="forum-msg">${f.msg}</div><div class="forum-meta">${f.meta}</div></div>`;});
   document.getElementById('eduForumBody').innerHTML=h4;
   document.getElementById('espaceEdu').style.display='block';
 }
 
 // ══ HELPERS ══
-function afficherAgenda(id){
-  let h='';
-  const cols=['#1F4E79','#2E7D32','#C62828'];
-  AGENDA.forEach((a,i)=>{h+=`<div class="agenda-item">
-    <div class="agenda-date" style="background:${cols[i%3]}"><div class="jour">${a.jour}</div><div class="mois">${a.mois}</div></div>
-    <div><div class="agenda-titre">${a.titre}</div><div class="agenda-detail">${a.detail}</div></div></div>`;});
-  document.getElementById(id).innerHTML=h;
-}
-
-function toggleSec(hdr){
-  const body=hdr.nextElementSibling;
-  hdr.classList.toggle('open');
-  body.classList.toggle('open');
-}
-
+function toggleSec(hdr){const body=hdr.nextElementSibling;hdr.classList.toggle('open');body.classList.toggle('open');}
 function toggleTache(idx,el){
-  TACHES[idx].done=!TACHES[idx].done;
-  el.classList.toggle('done');
-  el.textContent=TACHES[idx].done?'✓':'';
+  TACHES_DEMO[idx].done=!TACHES_DEMO[idx].done;
+  el.classList.toggle('done');el.textContent=TACHES_DEMO[idx].done?'✓':'';
   el.nextElementSibling.classList.toggle('done');
-  document.getElementById('cStatTaches').textContent=TACHES.filter(t=>!t.done).length;
-  showToast(TACHES[idx].done?'✓ Tâche accomplie !':'Tâche remise en cours',TACHES[idx].done?'success':'');
+  document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;
+  showToast(TACHES_DEMO[idx].done?'✓ Accomplie !':'Remise en cours',TACHES_DEMO[idx].done?'success':'');
 }
-
 function logout(){
   ['espaceDir','espaceFond','espaceCom','espaceEdu'].forEach(id=>{document.getElementById(id).style.display='none';});
   document.getElementById('loginPage').style.display='flex';
-  document.getElementById('inputMat').value='';
-  document.getElementById('inputCode').value='';
+  document.getElementById('inputMat').value='';document.getElementById('inputCode').value='';
+  currentStaff=null;donneesPointage=[];coursEnAttente=[];tentativesPin=0;
+  const sel=document.getElementById('filtreMois');if(sel)sel.innerHTML='';
 }
-
 let tt;
 function showToast(msg,type=''){
   const t=document.getElementById('toast');
   t.textContent=msg;t.className=`toast ${type} show`;
-  clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),3000);
+  clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),3500);
 }
-
 document.addEventListener('keypress',e=>{if(e.key==='Enter')login();});
 </script>
 </body>
