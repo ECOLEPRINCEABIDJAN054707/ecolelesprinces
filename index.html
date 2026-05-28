@@ -202,8 +202,8 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
           <p style="font-size:2em;font-weight:bold;" id="montantText">-</p>
           <p style="font-size:0.75em;opacity:0.8;margin-top:2px;">F CFA</p>
         </div>
-        
-          
+        <div style="background:#EFF6FF;border-radius:10px;padding:14px;margin-bottom:12px;border-left:4px solid #1F6FEB;">
+          <p style="font-weight:bold;color:#1F6FEB;font-size:0.9em;margin-bottom:12px;">&#128153; PAYER VIA WAVE</p>
           <div class="step"><div class="step-n" style="background:#1F6FEB;">1</div><p>Ouvrez l'application <strong>Wave</strong></p></div>
           <div class="step"><div class="step-n" style="background:#1F6FEB;">2</div><p>Appuyez sur <strong>Paiements</strong></p></div>
           <div class="step"><div class="step-n" style="background:#1F6FEB;">3</div><p>Recherchez <strong id="nomEcoleWave">GROUPE SCOLAIRE LES PRINCES</strong></p></div>
@@ -213,7 +213,7 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
           <div class="step"><div class="step-n" style="background:#1F6FEB;">7</div><p>Entrez le <strong>montant</strong> que vous pouvez payer</p></div>
           <div class="step"><div class="step-n" style="background:#1F6FEB;">8</div><p>Confirmez avec votre <strong>code PIN</strong></p></div>
         </div>
-        <a href="https://pay.wave.com/m/M_nIgf2a67TXMn/c/ci/" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#1F9AE0;color:white;border-radius:10px;padding:14px;font-size:15px;font-weight:bold;text-decoration:none;margin-bottom:12px;">&#128153; Payer directement via Wave — Cliquez ici</a><div style="background:#DBEAFE;border-radius:8px;padding:10px;text-align:center;margin-bottom:12px;border-left:4px solid #1F6FEB;"><p style="font-size:0.82em;color:#1F4E79;margin-bottom:4px;">&#128203; Votre matricule a indiquer lors du paiement :</p><p style="font-size:1.1em;font-weight:bold;color:#1F6FEB;" id="matRefWave">-</p></div> <div id="sectionOrangeMoney" style="background:#FFF3E0;border-radius:10px;padding:14px;margin-bottom:12px;border-left:4px solid #FF6600;">
+        <div id="sectionOrangeMoney" style="background:#FFF3E0;border-radius:10px;padding:14px;margin-bottom:12px;border-left:4px solid #FF6600;">
           <p style="font-weight:bold;color:#FF6600;font-size:0.9em;margin-bottom:12px;">&#127820; PAYER VIA ORANGE MONEY</p>
           <div class="step"><div class="step-n" style="background:#FF6600;">1</div><p>Composez <strong id="codeOrange" style="color:#FF6600;font-size:1.05em;background:#FFE0CC;padding:2px 8px;border-radius:6px;">#144*43*1721*1#</strong></p></div>
           <div class="step"><div class="step-n" style="background:#FF6600;">2</div><p><strong id="nomEcoleOrange">GROUPE SCOLAIRE LES PRINCES</strong> s'affiche - validez</p></div>
@@ -917,19 +917,19 @@ async function chargerFicheRenseignement(eleve){
           const colH=String(row[7]||'').trim(); // 4e Vers
           if(!colA)continue;
           // Détecter si c'est un label (ligne de titre) ou une ligne de données
-          const totalVal=parseFloat(colD.replace(/[\s ]/g,''))||0;
-          const inscVal=parseFloat(colB.replace(/[\s ]/g,'').replace('-',''))||0;
-          const scolVal=parseFloat(colC.replace(/[\s ]/g,''))||0;
+          const totalVal=parseFloat(colD.replace(/[\s ]/g,''))||0;
+          const inscVal=parseFloat(colB.replace(/[\s ]/g,'').replace('-',''))||0;
+          const scolVal=parseFloat(colC.replace(/[\s ]/g,''))||0;
           if(!totalVal&&!scolVal){tarifs.push({label:colA});continue;}
           tarifs.push({
             niveau:colA,
             inscription:inscVal,
             scolarite:scolVal,
             total:totalVal||scolVal,
-            t1:parseFloat(colE.replace(/[\s ]/g,''))||0,
-            t2:parseFloat(colF.replace(/[\s ]/g,''))||0,
-            t3:parseFloat(colG.replace(/[\s ]/g,''))||0,
-            t4:parseFloat(colH.replace(/[\s ]/g,'').replace('-',''))||0
+            t1:parseFloat(colE.replace(/[\s ]/g,''))||0,
+            t2:parseFloat(colF.replace(/[\s ]/g,''))||0,
+            t3:parseFloat(colG.replace(/[\s ]/g,''))||0,
+            t4:parseFloat(colH.replace(/[\s ]/g,'').replace('-',''))||0
           });
         }
       }
