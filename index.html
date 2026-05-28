@@ -720,7 +720,7 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
         du: parseMontant(row[3]), verse: parseMontant(row[4]), solde: parseMontant(row[5]),
         tel1: String(row[6]||"").trim(), tel2: String(row[7]||"").trim(), tel3: String(row[8]||"").trim(),
         statut: String(row[9]||"").trim(), club1: String(row[10]||"").trim(), club2: String(row[11]||"").trim(),
-        decision: String(row[14]||"").trim().toUpperCase(), moy_annuelle: parseFloat(String(row[15]||"").replace(",",".")) || 0, niveau_suivant: String(row[16]||"").trim(),
+        decision: String(row[14]||"").trim().toUpperCase(), moy_annuelle: parseFloat(String(row[15]||"").replace(",",".")) || 0, niveau_suivant: String(row[17]||"").trim(),
         moy_annuelle: parseFloat(String(row[15]||"").replace(",",".")) || 0,
         ecoleCode: codeEcole, sheetsId: sheetsIdDirect,
       };
