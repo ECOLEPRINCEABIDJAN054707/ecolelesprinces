@@ -599,7 +599,6 @@ function getProchaineClasse(classe, moy) {
   var c = classe.toUpperCase().trim()
     .replace(/[ÈÉÊË]/g,'E').replace(/[ÀÂÄ]/g,'A')
     .replace(/[ÎÏ]/g,'I').replace(/Ç/g,'C')
-    .replace(/\s+EX\d*$/,'')  // enlève EX à la fin
     .replace(/[-]\d+$/,'')    // enlève -1, -2 etc
     .replace(/\s+\d+$/,'');   // enlève numéro de classe
   // Logique spéciale pour 2NDE selon moyenne
