@@ -593,12 +593,13 @@ function detecterTypeClasse(classe, ecoleCode) {
   return 'STANDARD';
 }
 
-const PROGRESSION = {'PSA':'MSA','MSA':'GSA','GSA':'CP1','CP1':'CP2','CP2':'CE1','CE1':'CE2','CE2':'CM1','CM1':'CM2','CM2':'6EME','6EME':'5EME','5EME':'4EME','4EME':'3EME','3EME':'2NDE','2NDE C':'1ERE C','2NDE A':'1ERE A','2NDE':'1ERE','1ERE C':'TLE D','1ERE A':'TLE A','1ERE D':'TLE D','1ERE':'TLE','TLE D':'','TLE A':'','TLE C':'','TLE':''};
+const PROGRESSION = {'PSA':'MSA','MSA':'GSA','GSA':'CP1','CP1':'CP2','CP2':'CE1','CE1':'CE2','CE2':'CM1','CM1':'CM2','CM2':'6EME','6EME':'5EME','5EME':'4EME','4EME':'3EME','3EME':'2NDE','6EME EX':'5EME EX','5EME EX':'4EME EX','4EME EX':'3EME EX','3EME EX':'2NDE EX','2NDE C':'1ERE C','2NDE A':'1ERE A','2NDE':'1ERE','2NDE C EX':'1ERE C EX','2NDE A EX':'1ERE A EX','2NDE EX':'1ERE EX','1ERE C EX':'TLE D EX','1ERE A EX':'TLE A EX','1ERE EX':'TLE EX','1ERE C':'TLE D','1ERE A':'TLE A','1ERE D':'TLE D','1ERE':'TLE','TLE D EX':'','TLE A EX':'','TLE EX':'','TLE D':'','TLE A':'','TLE C':'','TLE':''};
 function getProchaineClasse(classe, moy) {
   if (!classe) return null;
   var c = classe.toUpperCase().trim()
     .replace(/[ÈÉÊË]/g,'E').replace(/[ÀÂÄ]/g,'A')
     .replace(/[ÎÏ]/g,'I').replace(/Ç/g,'C')
+    .replace(/EX\d+/g,'EX')   // normalise EX1 EX2 → EX
     .replace(/[-]\d+$/,'')    // enlève -1, -2 etc
     .replace(/\s+\d+$/,'');   // enlève numéro de classe
   // Logique spéciale pour 2NDE selon moyenne
