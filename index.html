@@ -765,7 +765,7 @@ function afficherEspaceParent(eleve) {
     "<img id='photoEleve' src='" + photoFallback + "' style='width:100%;height:100%;object-fit:cover;' alt='Photo'></div>" +
     "<div style='flex:1;'><div class='eleve-mat-badge'>" + eleve.matricule + "</div>" +
     "<div class='eleve-nom'>" + eleve.nom + "</div>" +
-    "<div class='eleve-infos'>" + eleve.classe + " | " + nomEcole + "</div>" +
+    "<div class='eleve-infos'>" + (window._classe2026||eleve.classe) + " | " + nomEcole + "</div>" +
     "<div style='font-size:12px;color:rgba(255,255,255,0.85);margin-top:4px'>&#128197; Annee scolaire " + ANNEE_SCOLAIRE_ACTIVE + "</div>" +
     badgeHTML + "</div></div><button class='btn-logout' onclick='logout()'>Deconnexion</button></div>";
   setTimeout(function() { const imgEl = document.getElementById("photoEleve"); if (imgEl) chargerPhotoEleve(eleve.matricule, imgEl, photoFallback); }, 500);
@@ -899,6 +899,7 @@ async function chargerInscription2026(eleve) {
     const data  = await res.json();
     const rows  = data.values || [];
 
+    window._classe2026 = null;
     let inscrit = null;
     for (const row of rows) {
       const mat = String(row[1]||'').trim().toUpperCase().replace(/\s+/g,'');
@@ -912,6 +913,11 @@ async function chargerInscription2026(eleve) {
           solde   : parseFloat(row[5]) || 0,
           statut  : String(row[9]||'').trim().toUpperCase()
         };
+        window._classe2026 = inscrit.classe;
+        const hdrInfos = document.querySelector('.eleve-infos');
+        if (hdrInfos) hdrInfos.textContent = inscrit.classe + ' | ' + ((window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{}).nom||'');
+        const hdrAnnee = document.querySelector('#mainHeader [style*="font-size:12px"]');
+        if (hdrAnnee) hdrAnnee.textContent = '\u{1F4C5} Annee scolaire 2026-2027';
         break;
       }
     }
