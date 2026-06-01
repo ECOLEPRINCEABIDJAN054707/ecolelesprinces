@@ -157,7 +157,8 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
 </div>
 <div class="parent-space" id="parentSpace">
   <div id="eleveCard"></div>
-  <div id="statutPay"></div>
+  <div id="statutPay">
+  <div id="paiement2026Bloc" style="display:none;margin-top:6px;"></div></div>
   <div id="sectionAnnonces" style="display:none;">
     <div class="section" style="border-left:4px solid #C62828;">
       <div class="sec-header" style="background:#C62828;" onclick="toggleSec(this)">&#128226; ANNONCES DE L'ECOLE <span>v</span></div>
@@ -914,10 +915,22 @@ async function chargerInscription2026(eleve) {
           statut  : String(row[9]||'').trim().toUpperCase()
         };
         window._classe2026 = inscrit.classe;
+        window._inscrit2026 = inscrit;
+        // Mettre à jour bloc paiement 2026-2027
+        const pay2026 = document.getElementById('paiement2026Bloc');
+        if (pay2026) {
+          pay2026.style.display = 'block';
+          pay2026.innerHTML = '<div class="paiement-bar ' + (inscrit.solde===0?'paiement-ok':'paiement-partiel') + '"><div class="pay-icon">' + (inscrit.solde===0?'&#10003;':'&#9888;') + '</div><div class="pay-text"><h4>Scolarite 2026-2027' + (inscrit.solde===0?' entierement payee':'') + '</h4><p class="pay-montant">Montant du : ' + (inscrit.du||0).toLocaleString("fr-FR") + ' F CFA</p><p class="pay-montant">Verse : ' + (inscrit.verse||0).toLocaleString("fr-FR") + ' F CFA</p>' + (inscrit.solde>0?'<p class="pay-montant c-rouge">Solde : ' + inscrit.solde.toLocaleString("fr-FR") + ' F CFA</p>':'<p class="pay-montant c-vert">Entierement paye</p>') + '</div></div>';
+        }
         const hdrInfos = document.querySelector('.eleve-infos');
         if (hdrInfos) hdrInfos.textContent = inscrit.classe + ' | ' + ((window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{}).nom||'');
-        const hdrAnnee = document.querySelector('#mainHeader [style*="font-size:12px"]');
-        if (hdrAnnee) hdrAnnee.textContent = '\u{1F4C5} Annee scolaire 2026-2027';
+        // Mettre à jour l'année dans l'en-tête
+        const hdrAll = document.querySelectorAll('#mainHeader div');
+        hdrAll.forEach(function(d) {
+          if (d.textContent.indexOf('Annee scolaire') >= 0) {
+            d.textContent = '\uD83D\uDCC5 Annee scolaire 2026-2027';
+          }
+        });
         break;
       }
     }
