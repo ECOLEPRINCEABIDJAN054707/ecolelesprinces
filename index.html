@@ -703,7 +703,7 @@ async function login() {
 
 async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
   try {
-    const range = encodeURIComponent("SYNTHESE!A2:P5000");
+    const range = encodeURIComponent("SYNTHESE!A2:R5000");
     const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsIdDirect + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
     let res = null;
     for (let tentative = 0; tentative < 3; tentative++) {
