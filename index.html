@@ -593,10 +593,15 @@ function detecterTypeClasse(classe, ecoleCode) {
   return 'STANDARD';
 }
 
-const PROGRESSION = {'PSA':'MSA','MSA':'GSA','GSA':'CP1','CP1':'CP2','CP2':'CE1','CE1':'CE2','CE2':'CM1','CM1':'CM2','CM2':'6EME','6EME':'5EME','5EME':'4EME','4EME':'3EME','3EME':'2NDE C ou A','2NDE C':'1ERE C','2NDE A':'1ERE A','1ERE C':'TLE D','1ERE A':'TLE A','TLE D':'','TLE A':''};
+const PROGRESSION = {'PSA':'MSA','MSA':'GSA','GSA':'CP1','CP1':'CP2','CP2':'CE1','CE1':'CE2','CE2':'CM1','CM1':'CM2','CM2':'6EME','6EME':'5EME','5EME':'4EME','4EME':'3EME','3EME':'2NDE','2NDE C':'1ERE C','2NDE A':'1ERE A','2NDE':'1ERE','1ERE C':'TLE D','1ERE A':'TLE A','1ERE D':'TLE D','1ERE':'TLE','TLE D':'','TLE A':'','TLE C':'','TLE':''};
 function getProchaineClasse(classe, moy) {
   if (!classe) return null;
-  var c = classe.toUpperCase().trim();
+  var c = classe.toUpperCase().trim()
+    .replace(/[ÈÉÊË]/g,'E').replace(/[ÀÂÄ]/g,'A')
+    .replace(/[ÎÏ]/g,'I').replace(/Ç/g,'C')
+    .replace(/\s+EX\d*$/,'')  // enlève EX à la fin
+    .replace(/[-]\d+$/,'')    // enlève -1, -2 etc
+    .replace(/\s+\d+$/,'');   // enlève numéro de classe
   // Logique spéciale pour 2NDE selon moyenne
   if (c.indexOf('2NDE') === 0 || c.indexOf('2ND') === 0) {
     if (c.indexOf('A') >= 0) {
@@ -813,7 +818,7 @@ function _cardCEPE_Admis(prenom,moy,score,tel,ecoleCode){var destCepe=DESTINATIO
 function _cardCEPE_Refuse(prenom,moy,score,tel,ecoleCode){return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#E65100,#F57C00)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-pulse\">&#128170;</span><div class=\"cpp-titre\">Courage "+prenom+" !</div><div class=\"cpp-msg-box\">Le redoublement en CM2 est une nouvelle chance. Avec du travail, vous reussirez l\u0027annee prochaine !</div></div>"+_blocContact(tel);}
 
 async function afficherSectionResultats(eleve) {
-  var section=document.getElementById("sectionResultats");var div=document.getElementById("resultatsBody");if(!section||!div)return;section.style.display="block";var titreRes=document.getElementById("titreResultats");if(titreRes)titreRes.innerHTML="&#127942; RESULTATS DE FIN D'ANNEE "+ANNEE_SCOLAIRE_ACTIVE+" <span>v</span>";var decision=(eleve.decision||"").trim().toUpperCase();var moyRaw=parseFloat(String(eleve.moy_annuelle||0).replace(',','.'))||0;var moy=(moyRaw>0&&moyRaw<=20)?moyRaw:0;var classe=(eleve.classe||"").trim().toUpperCase();var ecole=(eleve.ecoleCode||"").trim().toUpperCase();var prenom=(eleve.nom||"").split(" ")[0];var typeClasse=detecterTypeClasse(classe,ecole);var info=window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{};var tel=info.tel||"0708111269";var nc=eleve.niveau_suivant||getProchaineClasse(classe,moy);var estEX=(typeClasse==="EXCELLENCE")||_estNouveauEX(classe,nc);var htmlAnim="";
+  var section=document.getElementById("sectionResultats");var div=document.getElementById("resultatsBody");if(!section||!div)return;section.style.display="block";var titreRes=document.getElementById("titreResultats");if(titreRes)titreRes.innerHTML="&#127942; RESULTATS DE FIN D'ANNEE "+ANNEE_SCOLAIRE_ACTIVE+" <span>v</span>";var decision=(eleve.decision||"").trim().toUpperCase();var moyRaw=parseFloat(String(eleve.moy_annuelle||0).replace(',','.'))||0;var moy=(moyRaw>0&&moyRaw<=20)?moyRaw:0;var classe=(eleve.classe||"").trim().toUpperCase();var ecole=(eleve.ecoleCode||"").trim().toUpperCase();var prenom=(eleve.nom||"").split(" ")[0];var typeClasse=detecterTypeClasse(classe,ecole);var info=window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{};var tel=info.tel||"0708111269";var nc=eleve.niveau_suivant||getProchaineClasse(classe,moy);var estEX=(typeClasse==="EXCELLENCE")||_estNouveauEX(classe,nc)||(nc&&/EX/i.test(nc))||(eleve.ecoleCode==="CPP"&&moy>=14&&!/EX/i.test(classe));var htmlAnim="";
   if (decision === "RNO") {
     var examen = await chargerResultatExamen(eleve);
     var typeExamen = estCM2(classe) ? "CEPE" : estTerminale(classe) ? "BAC" : "BEPC";
@@ -981,7 +986,7 @@ function toggleSec(header){const body=header.nextElementSibling;const arrow=head
 function logout(){sessionStorage.removeItem("eleveConnecte");document.getElementById("parentSpace").style.display="none";document.getElementById("loginWrapper").style.display="block";document.getElementById("mainHeader").style.background="linear-gradient(135deg,#1F4E79,#1565C0)";document.getElementById("headerTitle").textContent="🏫 ECOLE LES PRINCES";document.getElementById("headerSub").textContent="Espace Parents - Suivi Scolaire en Ligne";document.getElementById("inputMat").value="";document.getElementById("inputTel").value="";document.getElementById("errorMsg").style.display="none";window.scrollTo(0,0);}
 function demarrerBlocage(){document.getElementById("loginWrapper").style.display="none";document.getElementById("blockedMsg").style.display="block";let sec=CONFIG.BLOCAGE_MIN*60;const timerEl=document.getElementById("blockedTimer");blocageInterval=setInterval(()=>{sec--;const m=Math.floor(sec/60),s=sec%60;timerEl.textContent=m+":"+s.toString().padStart(2,"0");if(sec<=0){clearInterval(blocageInterval);tentatives=0;document.getElementById("blockedMsg").style.display="none";document.getElementById("loginWrapper").style.display="block";}},1000);}
 function enregistrerVisite(eleve){try{var ec=eleve.ecoleCode||"CPP";var ua=navigator.userAgent||"";var appareil=/Mobile|Android|iPhone|iPad/.test(ua)?"Mobile":"Desktop";console.log("Visite:",eleve.matricule,appareil);}catch(e){}}
-window.addEventListener("load",()=>{const saved=sessionStorage.getItem("eleveConnecte");if(saved){try{afficherEspaceParent(JSON.parse(saved));}catch(e){sessionStorage.removeItem("eleveConnecte");}}});
+window.addEventListener("load",()=>{sessionStorage.removeItem("eleveConnecte");});
 document.addEventListener("keypress",e=>{if(e.key==="Enter")login();});
 let deferredPrompt;
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;document.getElementById("pwaBanner").style.display="flex";});
