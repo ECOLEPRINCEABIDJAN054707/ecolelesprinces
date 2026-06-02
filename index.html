@@ -827,7 +827,7 @@ function _cardCEPE_Refuse(prenom,moy,score,tel,ecoleCode){return "<div class=\"c
 
 async function afficherSectionResultats(eleve) {
   var section=document.getElementById("sectionResultats");var div=document.getElementById("resultatsBody");if(!section||!div)return;section.style.display="block";var titreRes=document.getElementById("titreResultats");if(titreRes)titreRes.innerHTML="&#127942; RESULTATS DE FIN D'ANNEE "+ANNEE_SCOLAIRE_ACTIVE+" <span>v</span>";var decision=(eleve.decision||"").trim().toUpperCase();var moyRaw=parseFloat(String(eleve.moy_annuelle||0).replace(',','.'))||0;var moy=(moyRaw>0&&moyRaw<=20)?moyRaw:0;var classe=(eleve.classe||"").trim().toUpperCase();var ecole=(eleve.ecoleCode||"").trim().toUpperCase();var prenom=(eleve.nom||"").split(" ")[0];var typeClasse=detecterTypeClasse(classe,ecole);var info=window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{};var tel=info.tel||"0708111269";var nc=eleve.niveau_suivant||getProchaineClasse(classe,moy);var estEX=(typeClasse==="EXCELLENCE")||_estNouveauEX(classe,nc)||(nc&&/EX/i.test(nc))||(eleve.ecoleCode==="CPP"&&moy>=14&&!/EX/i.test(classe));var htmlAnim="";
-  if (decision === "RNO") {
+  if (decision === "RNO" || decision === "RE") {
     var examen = await chargerResultatExamen(eleve);
     var typeExamen = estCM2(classe) ? "CEPE" : estTerminale(classe) ? "BAC" : "BEPC";
     var nomEcoleEleve = (window.SHEETS_IDS_COMPLET[eleve.sheetsId] || {}).nom || info.nom || "College Les Princes";
@@ -937,8 +937,8 @@ async function chargerInscription2026(eleve) {
 
     section.style.display = 'block';
 
-    if (!inscrit) {
-      // Pas encore inscrit
+    if (!inscrit || inscrit.verse === 0) {
+      // Pas encore inscrit ou versement zéro
       body.innerHTML = _cardPasInscrit2026(eleve, info);
     } else if (inscrit.solde === 0) {
       // Inscrit et soldé
