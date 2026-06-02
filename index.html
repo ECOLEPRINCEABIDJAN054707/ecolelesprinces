@@ -786,7 +786,10 @@ function afficherEspaceParent(eleve) {
   }
   var accesComplet = eleve.gratuit || soldeParsed === 0;
   if (accesComplet) {
-    chargerAnnonces(eleve); chargerNotes(eleve); chargerAbsences(eleve); chargerCahierTextes(eleve); afficherSectionResultats(eleve);
+    chargerAnnonces(eleve); chargerNotes(eleve); chargerAbsences(eleve); chargerCahierTextes(eleve);
+    // Forcer RNO pour CM2 sans décision
+    if (!eleve.decision && /CM2/i.test(eleve.classe||"")) eleve.decision = "RNO";
+    afficherSectionResultats(eleve);
     // ✅ BULLETINS MENSUELS PRIMAIRE
     chargerBulletinsMensuels(eleve);
     document.getElementById("sectionBloque").style.display = "none";
