@@ -989,7 +989,7 @@ function _cardInscrit2026Solde(inscrit, info) {
   var type = _typeClasse2026(inscrit.classe);
   var emoji = type==='EXCELLENCE' ? '🏆' : type==='PRIVILEGE' ? '⭐' : '✅';
   var couleur = type==='EXCELLENCE' ? 'linear-gradient(135deg,#1A237E,#1565C0)' : type==='PRIVILEGE' ? '#B8860B' : '#1A3A5C';
-  var tel = info.tel || '0708111269';
+  var tel = info.tel || info.wave || '0747477926';
   return '<div class="cpp-decision-card" style="background:' + couleur + ';border:' + (type==='EXCELLENCE'?'3px solid #D4AF37':'none') + ';">' +
     '<div style="font-size:3em;margin-bottom:8px;">' + emoji + '</div>' +
     '<div style="font-size:1.1em;font-weight:bold;color:' + (type==='EXCELLENCE'?'#D4AF37':'#fff') + ';margin-bottom:6px;">INSCRIPTION 2026-2027 CONFIRMÉE !</div>' +
@@ -1035,7 +1035,7 @@ function _cardInscrit2026Partiel(inscrit, info) {
 }
 
 function _cardPasInscrit2026(eleve, info) {
-  var tel = info.tel || '0708111269';
+  var tel = info.tel || info.wave || '0747477926';
   var btnWave = '<a href="https://pay.wave.com/m/M_nIgf2a67TXMn/c/ci/" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:12px;background:#1F9AE0;color:white;border-radius:10px;padding:18px;text-decoration:none;margin-bottom:12px;">' +
     '<span style="font-size:26px;">💙</span>' +
     '<span style="display:flex;flex-direction:column;line-height:1.6;">' +
