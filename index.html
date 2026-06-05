@@ -791,15 +791,24 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
 function afficherEspaceProspect(eleve) {
   const nomEcole = (eleve.ecole && eleve.ecole.nom) ? eleve.ecole.nom : "Groupe Scolaire Rita Rosane Abobo";
   const couleur = "#1F4E79";
-  document.getElementById("mainHeader").style.background = "linear-gradient(135deg,#1F4E79,#1565C0)";
-  document.getElementById("headerTitle").textContent = nomEcole;
-  document.getElementById("headerSub").textContent = "Espace Parents - Suivi Scolaire";
+  // Masquer login, afficher contenu
+  const loginWrap = document.getElementById("loginWrapper");
+  const mainDiv = document.getElementById("parentSpace");
+  const eleveCardEl = document.getElementById("eleveCard");
+  const mainHdr = document.getElementById("mainHeader");
+  const hdrTitle = document.getElementById("headerTitle");
+  const hdrSub = document.getElementById("headerSub");
+  if (loginWrap) loginWrap.style.display = "none";
+  if (mainDiv) mainDiv.style.display = "block";
+  if (mainHdr) mainHdr.style.background = "linear-gradient(135deg,#1F4E79,#1565C0)";
+  if (hdrTitle) hdrTitle.textContent = nomEcole;
+  if (hdrSub) hdrSub.textContent = "Espace Parents - Suivi Scolaire";
   const nomEncode = encodeURIComponent(eleve.nom);
   const photoFallback = "https://ui-avatars.com/api/?name=" + nomEncode + "&background=1F4E79&color=fff&size=200&bold=true";
   const scoreText = eleve.scoreCepe > 0 ? '<div style="font-size:1.1em;font-weight:bold;color:#D4AF37;margin:4px 0;">Score CEPE : ' + eleve.scoreCepe + ' / 200</div>' : '';
   const telEcole = '0704225915';
   const waveEcole = nomEcole;
-  document.getElementById("eleveCard").innerHTML =
+  if (eleveCardEl) eleveCardEl.innerHTML =
     "<div class='eleve-header' style='background:linear-gradient(135deg," + couleur + "," + couleur + "BB)'>" +
     "<div style='display:flex;align-items:center;gap:12px;padding:8px 12px;'>" +
     "<div style='width:70px;height:70px;border-radius:50%;border:3px solid white;overflow:hidden;flex-shrink:0;background:#fff;'>" +
@@ -811,10 +820,11 @@ function afficherEspaceProspect(eleve) {
     "<div style='font-size:0.8em;color:rgba(255,255,255,0.85);'>CM2 | " + nomEcole + "</div>" +
     "<div style='font-size:0.75em;color:rgba(255,255,255,0.7);margin-top:2px;'>📅 Année scolaire 2025-2026</div>" +
     "</div></div></div>";
-  document.getElementById("loginWrapper").style.display = "none";
-  document.getElementById("mainContent").style.display = "block";
-  const mainDiv = document.getElementById("mainContent");
-  mainDiv.innerHTML =
+  const inscDiv = document.getElementById("sectionInscription2026");
+  if (inscDiv) inscDiv.style.display = "none";
+  const prospectDiv = document.getElementById("parentSpace");
+  if (!prospectDiv) return;
+  prospectDiv.innerHTML =
     '<div style="background:linear-gradient(135deg,#2E7D32,#1B5E20);color:#fff;border-radius:12px;padding:20px;margin:12px 0;text-align:center;">' +
     '<div style="font-size:1.5em;margin-bottom:8px;">🎉</div>' +
     '<div style="font-weight:bold;font-size:1.1em;margin-bottom:6px;">Admis(e) au CEPE 2026 !</div>' +
