@@ -740,10 +740,116 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
       };
     }
   } catch(e) { console.warn("Sheets inaccessible:", codeEcole, e.message); }
+  // Chercher dans CEPE_2026 (prospects courtisation)
+  try {
+    const rangeCepe = encodeURIComponent("CEPE_2026!A2:J500");
+    const urlCepe = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsIdDirect + "/values/" + rangeCepe + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+    const resCepe = await fetch(urlCepe);
+    if (resCepe.ok) {
+      const dataCepe = await resCepe.json();
+      if (dataCepe.values) {
+        for (let i = 0; i < dataCepe.values.length; i++) {
+          const row = dataCepe.values[i];
+          // Structure CEPE_2026 : col0=CLASSE, col1=N°ouMAT, col2=MATRICULE, col3=NOM, col4=SCORE, col7=TEL
+          // Chercher le matricule en col1 ou col2
+          // Structure CEPE_2026 :
+          // Anciens élèves : col0=N°, col1=CLASSE, col2=MATRICULE, col3=NOM, col4=SCORE, col8=TEL
+          // Prospects      : col0=N°, col1=MATRICULE, col2=NOM, col3=SCORE, col7=TEL
+          const matClean = matricule.replace(/[^A-Z0-9]/g,"");
+          const matColB = String(row[1]||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+          const matColC = String(row[2]||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+          let nom, score, tel, classe;
+          if (matColC === matClean) {
+            // Ancien élève — matricule en col C
+            nom = String(row[3]||"").trim();
+            score = parseFloat(row[4])||0;
+            tel = String(row[8]||row[7]||"").trim();
+            classe = String(row[1]||"CM2A").trim();
+          } else if (matColB === matClean) {
+            // Prospect — matricule en col B
+            nom = String(row[2]||"").trim();
+            score = parseFloat(row[3])||0;
+            tel = String(row[7]||row[8]||"").trim();
+            classe = "CM2A";
+          } else { continue; }
+          return {
+            classe: classe, matricule: matClean, nom: nom,
+            du: 0, verse: 0, solde: 0,
+            tel1: tel, tel2: "", tel3: "",
+            statut: "PROSPECT", club1: "", club2: "",
+            ecoleCode: codeEcole, sheetsId: sheetsIdDirect,
+            decision: "RNO", moy: 0,
+            scoreCepe: score, estProspect: true
+          };
+        }
+      }
+    }
+  } catch(eCepe) { console.warn("CEPE_2026 inaccessible:", eCepe.message); }
   return null;
 }
 
+function afficherEspaceProspect(eleve) {
+  const nomEcole = (eleve.ecole && eleve.ecole.nom) ? eleve.ecole.nom : "Groupe Scolaire Rita Rosane Abobo";
+  const couleur = "#1F4E79";
+  document.getElementById("mainHeader").style.background = "linear-gradient(135deg,#1F4E79,#1565C0)";
+  document.getElementById("headerTitle").textContent = nomEcole;
+  document.getElementById("headerSub").textContent = "Espace Parents - Suivi Scolaire";
+  const nomEncode = encodeURIComponent(eleve.nom);
+  const photoFallback = "https://ui-avatars.com/api/?name=" + nomEncode + "&background=1F4E79&color=fff&size=200&bold=true";
+  const scoreText = eleve.scoreCepe > 0 ? '<div style="font-size:1.1em;font-weight:bold;color:#D4AF37;margin:4px 0;">Score CEPE : ' + eleve.scoreCepe + ' / 200</div>' : '';
+  const config = getConfig ? getConfig() : {};
+  const telEcole = (config && config.tel_ecole) ? config.tel_ecole : '0704225915';
+  const waveEcole = (config && config.wave) ? config.wave : nomEcole;
+  document.getElementById("eleveCard").innerHTML =
+    "<div class='eleve-header' style='background:linear-gradient(135deg," + couleur + "," + couleur + "BB)'>" +
+    "<div style='display:flex;align-items:center;gap:12px;padding:8px 12px;'>" +
+    "<div style='width:70px;height:70px;border-radius:50%;border:3px solid white;overflow:hidden;flex-shrink:0;background:#fff;'>" +
+    "<img src='" + photoFallback + "' style='width:100%;height:100%;object-fit:cover;'>" +
+    "</div><div style='flex:1;'>" +
+    "<div style='font-size:0.75em;color:rgba(255,255,255,0.8);'>Matricule CEPE</div>" +
+    "<div style='font-size:0.85em;color:rgba(255,255,255,0.9);background:rgba(0,0,0,0.2);padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:4px;'>" + eleve.matricule + "</div>" +
+    "<div style='font-size:1em;font-weight:bold;color:#fff;'>" + eleve.nom + "</div>" +
+    "<div style='font-size:0.8em;color:rgba(255,255,255,0.85);'>CM2 | " + nomEcole + "</div>" +
+    "<div style='font-size:0.75em;color:rgba(255,255,255,0.7);margin-top:2px;'>📅 Année scolaire 2025-2026</div>" +
+    "</div></div></div>";
+  document.getElementById("loginWrapper").style.display = "none";
+  document.getElementById("mainContent").style.display = "block";
+  const mainDiv = document.getElementById("mainContent");
+  mainDiv.innerHTML =
+    '<div style="background:linear-gradient(135deg,#2E7D32,#1B5E20);color:#fff;border-radius:12px;padding:20px;margin:12px 0;text-align:center;">' +
+    '<div style="font-size:1.5em;margin-bottom:8px;">🎉</div>' +
+    '<div style="font-weight:bold;font-size:1.1em;margin-bottom:6px;">Admis(e) au CEPE 2026 !</div>' +
+    scoreText +
+    '<div style="font-size:0.85em;opacity:0.9;margin-top:6px;">Félicitations ' + eleve.nom.split(" ")[0] + ' !</div>' +
+    '</div>' +
+    '<div style="background:#fff;border-radius:12px;padding:20px;margin:12px 0;box-shadow:0 2px 8px rgba(0,0,0,0.1);text-align:center;">' +
+    '<div style="font-size:1.1em;font-weight:bold;color:#1F4E79;margin-bottom:12px;">🏫 Rejoignez ' + nomEcole + ' en 2026-2027 !</div>' +
+    '<div style="font-size:0.9em;color:#444;margin-bottom:16px;line-height:1.6;">' +
+    '✅ Classes modernes et bien équipées<br>' +
+    '✅ Suivi scolaire numérique pour les parents<br>' +
+    '✅ Encadrement de qualité<br>' +
+    '✅ Inscription ouverte dès maintenant' +
+    '</div>' +
+    '<div style="background:linear-gradient(135deg,#0D47A1,#1565C0);color:#fff;border-radius:10px;padding:16px;margin:12px 0;">' +
+    '<div style="font-size:0.85em;margin-bottom:8px;opacity:0.9;">ANNÉE SCOLAIRE 2026-2027</div>' +
+    '<div style="font-size:1.1em;font-weight:bold;margin-bottom:12px;">💙 INSCRIVEZ VOTRE ENFANT ICI</div>' +
+    '<div style="font-size:0.85em;margin-bottom:8px;">PAYER VIA WAVE</div>' +
+    '<div style="font-size:1em;font-weight:bold;background:rgba(255,255,255,0.2);padding:8px;border-radius:8px;">' + waveEcole + '</div>' +
+    '</div>' +
+    '<div style="background:#1F4E79;color:#fff;border-radius:10px;padding:12px;margin-top:12px;">' +
+    '<div style="font-size:0.85em;color:#D4AF37;font-weight:bold;margin-bottom:4px;">📞 Contact & Inscription</div>' +
+    '<div style="font-size:1.1em;font-weight:bold;">' + telEcole + '</div>' +
+    '<div style="font-size:0.75em;opacity:0.8;margin-top:4px;">Lundi au Samedi - 7h30 à 17h30</div>' +
+    '</div>' +
+    '</div>';
+}
+
 function afficherEspaceParent(eleve) {
+  // Cas prospect : élève CEPE d'une autre école courtisé
+  if (eleve.estProspect) {
+    afficherEspaceProspect(eleve);
+    return;
+  }
   const ecole = eleve.ecole;
   const couleur = (ecole && ecole.couleur) ? ecole.couleur : "#1F4E79";
   const nomEcole = (ecole && ecole.nom) ? ecole.nom : "Reseau Les Princes";
