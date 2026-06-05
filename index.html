@@ -797,9 +797,8 @@ function afficherEspaceProspect(eleve) {
   const nomEncode = encodeURIComponent(eleve.nom);
   const photoFallback = "https://ui-avatars.com/api/?name=" + nomEncode + "&background=1F4E79&color=fff&size=200&bold=true";
   const scoreText = eleve.scoreCepe > 0 ? '<div style="font-size:1.1em;font-weight:bold;color:#D4AF37;margin:4px 0;">Score CEPE : ' + eleve.scoreCepe + ' / 200</div>' : '';
-  const config = getConfig ? getConfig() : {};
-  const telEcole = (config && config.tel_ecole) ? config.tel_ecole : '0704225915';
-  const waveEcole = (config && config.wave) ? config.wave : nomEcole;
+  const telEcole = '0704225915';
+  const waveEcole = nomEcole;
   document.getElementById("eleveCard").innerHTML =
     "<div class='eleve-header' style='background:linear-gradient(135deg," + couleur + "," + couleur + "BB)'>" +
     "<div style='display:flex;align-items:center;gap:12px;padding:8px 12px;'>" +
