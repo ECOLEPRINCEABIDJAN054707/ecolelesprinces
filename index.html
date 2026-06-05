@@ -321,6 +321,8 @@ const ECOLES = [
   { code:"AKEIKOI_2",   nom:"EPV Les Princes Akeikoi 2",                         ville:"Abobo",           couleur:"#C62828" },
   { code:"ACADEMIE",    nom:"EPV Academie des Princes",                          ville:"Abobo",           couleur:"#B8860B" },
   { code:"RITA",        nom:"Groupe Scolaire Rita Rosane Abobo",                 ville:"Abobo",           couleur:"#607D8B" },
+  { code:"DABOU",  nom:"College Prive Les Princes de Dabou",        ville:"Dabou",        couleur:"#1B5E20", tel:"0505286960", wave:"0505286960", base2026:"1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA" },
+  { code:"ANYAMA", nom:"College Prive Les Princes d Anyama-Adjame", ville:"Anyama-Adjame", couleur:"#4A148C", tel:"0799228524", wave:"0799228524", base2026:"1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE" },
 ];
 const ANNEE_SCOLAIRE_ACTIVE = "2025-2026";
 const CONFIG = { SHEETS_ID:"1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI", API_KEY:"AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA", MAX_TENTATIVES:3, BLOCAGE_MIN:30 };
@@ -669,6 +671,8 @@ async function login() {
     {code:"CPP_TECH",id:"15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc"},
     {code:"KOUIBLY_TEC",id:"1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s"},
     {code:"RITA",id:"1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0"},
+    {code:"DABOU",id:"1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA"},
+    {code:"ANYAMA",id:"1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE"},
   ];
   for (let i = 0; i < TOUTES_ECOLES.length; i++) {
     const ec = TOUTES_ECOLES[i];
