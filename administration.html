@@ -1222,7 +1222,11 @@ async function chargerClassesEdu(s){
       const norm=s=>s.toUpperCase().trim().replace(/\s+/g,' ').replace(/[ÈÉÊË]/g,'E').replace(/[ÀÂ]/g,'A');
       return norm(e.classe)===norm(cl);
     }));
-    if(elevesF.length===0&&classesEdu.length===0)elevesF=eleves.filter(e=>/^(6|5|4|3|2NDE|1ERE|TLE)/i.test(e.classe));
+    if(elevesF.length===0&&classesEdu.length===0){
+      // Classes non configurées - afficher message
+      container.innerHTML='<div style="padding:16px;background:#FFF3E0;border-radius:8px;margin:12px"><div style="font-size:0.84em;font-weight:700;color:var(--orange);margin-bottom:6px">Classes non configurees</div><div style="font-size:0.78em;color:#555;line-height:1.6">Demandez au directeur dajouter vos classes dans onglet EDUCATEURS du Google Sheets.<br>Colonne D : liste des classes separees par des virgules.<br>Exemple : 6EME 3,6EME 4,5EME 5,5EME 6</div></div>';
+      return;
+    }
     if(elevesF.length===0){container.innerHTML='<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun eleve trouve.<br><span style="font-size:0.85em">Classes: '+(classesEdu.join(', ')||'Toutes')+'</span></p>';return;}
     const total=elevesF.length,enDiff=elevesF.filter(e=>e.alerte).length,admis=elevesF.filter(e=>(e.moy||0)>=5).length;
     document.getElementById('eStatEleves').textContent=total;
@@ -1750,7 +1754,7 @@ function renderEDT(data) {
   }
 
   // Calculer heures totales
-  const totalMin = data.reduce((s,r) => s + (r.heures>0 ? r.heures*60 : parseHeuresToMinutes(r.heures)), 0);
+  const totalMin = Math.round(data.reduce((s,r) => s + parseHeuresToMinutes(r.heures), 0));
   const totalH = Math.floor(totalMin/60);
   const totalMn = totalMin % 60;
   const nbEns = new Set(data.map(r=>r.enseignant).filter(Boolean)).size;
@@ -1770,7 +1774,7 @@ function renderEDT(data) {
   data.forEach(r => {
     const key = r.enseignant || 'Inconnu';
     if(!byEns[key]) byEns[key] = {enseignant:key, cours:[], totalMin:0, classes:new Set()};
-    const min = r.heures>0 ? r.heures*60 : parseHeuresToMinutes(r.heures);
+    const min = parseHeuresToMinutes(r.heures);
     byEns[key].cours.push(r);
     byEns[key].totalMin += min;
     if(r.classe) byEns[key].classes.add(r.classe);
@@ -1781,7 +1785,7 @@ function renderEDT(data) {
 
   enseignants.forEach(ens => {
     const tH = Math.floor(ens.totalMin/60);
-    const tM = ens.totalMin % 60;
+    const tM = Math.round(ens.totalMin) % 60;
     const nbV = ens.cours.filter(r=>r.statut==='VALIDÉ'||r.statut==='VALIDE'||r.statut==='PARTIEL').length;
     const nbA = ens.cours.filter(r=>r.statut==='EN ATTENTE').length;
     const ini = ens.enseignant.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
@@ -1813,7 +1817,7 @@ function renderEDT(data) {
     Object.keys(parClasse).sort().forEach(cl => {
       const cours = parClasse[cl];
       const hCl = cours.reduce((s,c) => s + (c.heures>0?c.heures*60:parseHeuresToMinutes(c.heures)), 0);
-      const hClH = Math.floor(hCl/60), hClM = hCl%60;
+      const hClH = Math.floor(hCl/60), hClM = Math.round(hCl)%60;
 
       html += '<div style="background:#F5F0FF;padding:6px 14px;border-bottom:1px solid #E8E0F0;display:flex;justify-content:space-between;align-items:center">';
       html += '<span style="font-size:0.78em;font-weight:700;color:var(--violet)">'+cl+' &mdash; '+cours.length+' cours</span>';
