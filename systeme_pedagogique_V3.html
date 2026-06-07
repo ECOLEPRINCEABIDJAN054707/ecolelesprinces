@@ -145,6 +145,7 @@ tr:hover td{background:var(--bleu-pale);}
     <div class="tab" onclick="showPage('suivi',this)">📈 Suivi Enseignants</div>
     <div class="tab" onclick="showPage('alertes',this)">🔔 Alertes</div>
     <div class="tab" onclick="showPage('progressions',this)">📚 Progressions CI</div>
+    <div class="tab" onclick="showPage('terrain',this)">🚨 Terrain</div>
   </div>
 </div>
 
@@ -275,6 +276,26 @@ tr:hover td{background:var(--bleu-pale);}
         <span class="badge badge-or">D.P.F.C. / C.N.D.</span>
       </div>
       <div class="card-body"><div id="progressions-content"></div></div>
+    </div>
+  </div>
+  <div id="page-terrain" class="page">
+    <div class="stats-grid" style="margin-bottom:22px;">
+      <div class="stat-card rouge"><div class="stat-val" id="terrain-nb-cours">—</div><div class="stat-label">🔴 Cours absents signalés</div></div>
+      <div class="stat-card orange"><div class="stat-val" id="terrain-nb-cahier">—</div><div class="stat-label">⚠️ Cahiers non saisis</div></div>
+      <div class="stat-card" style="border-left-color:#6A1B9A"><div class="stat-val" style="color:#6A1B9A" id="terrain-nb-signal">—</div><div class="stat-label">🔔 Autres signalements</div></div>
+      <div class="stat-card vert"><div class="stat-val" id="terrain-nb-traite">—</div><div class="stat-label">✅ Traités</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h2>🚨 Alertes terrain — 12 écoles</h2>
+        <div class="filters">
+          <select class="filter-select" id="terrain-filtre-ecole" onchange="filtrerTerrain()"><option value="">Toutes les écoles</option></select>
+          <select class="filter-select" id="terrain-filtre-type" onchange="filtrerTerrain()"><option value="">Tous types</option><option value="COURS">🔴 Cours absents</option><option value="CAHIER">⚠️ Cahiers manquants</option><option value="SIGNALEMENT">🔔 Signalements</option></select>
+          <select class="filter-select" id="terrain-filtre-statut" onchange="filtrerTerrain()"><option value="">Tous statuts</option><option value="EN ATTENTE">En attente</option><option value="TRAITE">Traités</option></select>
+          <button class="btn btn-or" onclick="chargerTerrain()">🔄 Actualiser</button>
+        </div>
+      </div>
+      <div class="card-body"><div id="terrain-content"><div class="loading"><div class="spinner"></div><p>Cliquez Actualiser pour charger...</p></div></div></div>
     </div>
   </div>
 
@@ -460,6 +481,7 @@ function showPage(id, el) {
   if (el) el.classList.add('active');
   if (id === 'progressions') renderProgressions();
   if (id === 'alertes') renderAlertes();
+  if (id === 'terrain') chargerTerrain();
 }
 
 function resetForm() {
@@ -788,7 +810,14 @@ function toggleProg(btn) {
   next.style.display = next.style.display === 'none' ? 'grid' : 'none';
 }
 
-function actualiser() {
+var donneesTerrain=[];
+async function chargerTerrain(){var container=document.getElementById('terrain-content');if(!container)return;container.innerHTML='<div class="loading"><div class="spinner"></div><p>Analyse de 12 écoles...</p></div>';var tousSignalements=[];var ecoleNoms=Object.keys(SHEETS_IDS);for(var i=0;i<ecoleNoms.length;i++){var nomEcole=ecoleNoms[i];var sheetId=SHEETS_IDS[nomEcole];try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/MESSAGES!A2:J300?key='+CONFIG.apiKey+'&valueRenderOption=UNFORMATTED_VALUE';var r=await fetch(url);var data=await r.json();if(data.values&&data.values.length){data.values.forEach(function(row,idx){var statut=String(row[8]||'').trim();var role=String(row[5]||'').trim().toUpperCase();if(!statut.includes('Signalement')&&!statut.includes('EDT')&&role!=='EDUCATEUR')return;var typeRaw=String(row[1]||'').trim().toUpperCase();var typeCode=typeRaw.includes('COURS')?'COURS':typeRaw.includes('CAHIER')?'CAHIER':'SIGNALEMENT';tousSignalements.push({ecole:nomEcole,sheetId:sheetId,date:String(row[0]||'').trim(),typeCode:typeCode,description:String(row[2]||'').trim(),obs:String(row[3]||'').trim(),educateur:String(row[4]||'').trim(),traite:String(row[9]||'').trim().toUpperCase()==='OUI',rowNum:idx+2});});}}catch(e){console.log('Terrain erreur '+nomEcole+': '+e.message);}}tousSignalements.sort(function(a,b){if(a.traite!==b.traite)return a.traite?1:-1;return 0;});donneesTerrain=tousSignalements;var selEcole=document.getElementById('terrain-filtre-ecole');if(selEcole&&selEcole.options.length<=1){ecoleNoms.forEach(function(e){var opt=document.createElement('option');opt.value=e;opt.textContent=e;selEcole.appendChild(opt);});}var nbCours=tousSignalements.filter(function(s){return s.typeCode==='COURS';}).length;var nbCahier=tousSignalements.filter(function(s){return s.typeCode==='CAHIER';}).length;var nbSignal=tousSignalements.filter(function(s){return s.typeCode==='SIGNALEMENT';}).length;var nbTraite=tousSignalements.filter(function(s){return s.traite;}).length;['terrain-nb-cours','terrain-nb-cahier','terrain-nb-signal','terrain-nb-traite'].forEach(function(id,i){var el=document.getElementById(id);if(el)el.textContent=[nbCours,nbCahier,nbSignal,nbTraite][i];});renderTerrain(tousSignalements);}
+function renderTerrain(data){var container=document.getElementById('terrain-content');if(!container)return;if(!data.length){container.innerHTML='<div style="text-align:center;padding:40px;color:var(--gris4)"><div style="font-size:3rem;">✅</div><p style="font-weight:700;margin-top:10px">Aucun signalement terrain</p></div>';return;}var parEcole={};data.forEach(function(s){if(!parEcole[s.ecole])parEcole[s.ecole]=[];parEcole[s.ecole].push(s);});var html='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:18px;">';Object.keys(parEcole).forEach(function(ecole){var liste=parEcole[ecole];var nbNonTraites=liste.filter(function(s){return!s.traite;}).length;var couleur=nbNonTraites>0?'#C62828':'#2E7D32';html+='<div style="background:white;border-radius:10px;padding:10px 12px;border-left:3px solid '+couleur+';box-shadow:0 1px 6px rgba(0,0,0,.06)"><div style="font-size:.78rem;font-weight:700;color:'+couleur+';margin-bottom:3px">'+ecole+'</div><div style="font-size:1.2rem;font-weight:700;color:'+couleur+'">'+liste.length+'</div><div style="font-size:.68rem;color:var(--gris4)">'+nbNonTraites+' en attente</div></div>';});html+='</div><div class="table-wrap"><table><thead><tr><th>École</th><th>Date</th><th>Type</th><th>Description</th><th>Éducateur</th><th>Statut</th><th>Action</th></tr></thead><tbody>';data.forEach(function(s){var typeBadge=s.typeCode==='COURS'?'<span class="badge badge-rouge">🔴 Cours absent</span>':s.typeCode==='CAHIER'?'<span class="badge badge-orange">⚠️ Cahier manquant</span>':'<span class="badge badge-bleu">🔔 Signalement</span>';var statutBadge=s.traite?'<span class="badge badge-vert">✅ Traité</span>':'<span class="badge badge-orange">⏳ En attente</span>';var actionBtn=s.traite?'<button style="padding:4px10px;background:#2E7D32;color:white;border:none;border-radius:6px;font-size:.74rem;font-weight:700;cursor:pointer;" onclick="marquerTraiteTerrain(\''+s.sheetId+'\','+s.rowNum+',this)">✅ Traiter</button>';var desc=(s.description||'—').substring(0,50);html+='<tr><td><strong>'+s.ecole+'</strong></td><td>'+s.date+'</td><td>'+typeBadge+'</td><td>'+desc+'</td><td>'+(s.educateur||'—')+'</td><td>'+statutBadge+'</td><td>'+actionBtn+'</td></tr>';});html+='</tbody></table></div>';container.innerHTML=html;}
+function filtrerTerrain(){var fE=(document.getElementById('terrain-filtre-ecole')||{}).value||'';var fT=(document.getElementById('terrain-filtre-type')||{}).value||'';var fS=(document.getElementById('terrain-filtre-statut')||{}).value||'';var f=donneesTerrain.filter(function(s){var sm=!fS||(fS==='EN ATTENTE'&&!s.traite)||(fS==='TRAITE'&&s.traite);return(!fE||s.ecole===fE)&&(!fT||s.typeCode===fT)&&sm;});renderTerrain(f);}
+async function marquerTraiteTerrain(sheetId,rowNum,btn){btn.disabled=true;btn.textContent='⏳';var ecoleNom='';Object.keys(SHEETS_IDS).forEach(function(k){if(SHEETS_IDS[k]===sheetId)ecoleNom=k;});var cbName='tt_'+Date.now();var script=document.createElement('script');var params=new URLSearchParams({callback:cbName,type:'MARQUER_TRAITE',ecole:ecoleNom,rowNum:rowNum});return new Promise(function(resolve){window[cbName]=function(){delete window[cbName];try{document.body.removeChild(script);}catch(e){}showToast('✅ Traité','success');var idx=donneesTerrain.findIndex(function(s){return s.sheetId===sheetId&&s.rowNum===rowNum;});if(idx>=0)donneesTerrain[idx].traite=true;filtrerTerrain();resolve();};script.onerror=function(){delete window[cbName];btn.disabled=false;btn.textContent='✅ Traiter';resolve();};script.src=CONFIG.appsScriptUrl+'?'+params.toString();document.body.appendChild(script);setTimeout(function(){if(window[cbName]){delete window[cbName];resolve();}},8000);});} 10px;background:#ccc;color:#666;border:none;border-radius:6px;font-size:.74rem;font-weight:700;" disabled>Traité</button>':'<button style="padding:4px 10px;background:#2E7D32;color:white;border:none;border-radius:6px;font-size:.74rem;font-weight:700;cursor:pointer;" onclick="marquerTraiteTerrain(\''+s.sheetId+'\','+s.rowNum+',this)">✅ Traiter</button>';var desc=(s.description||'—').substring(0,50);html+='<tr><td><strong>'+s.ecole+'</strong></td><td>'+s.date+'</td><td>'+typeBadge+'</td><td>'+desc+'</td><td>'+(s.educateur||'—')+'</td><td>'+statutBadge+'</td><td>'+actionBtn+'</td></tr>';});html+='</tbody></table></div>';container.innerHTML=html;}
+function filtrerTerrain(){var fE=(document.getElementById('terrain-filtre-ecole')||{}).value||'';var fT=(document.getElementById('terrain-filtre-type')||{}).value||'';var fS=(document.getElementById('terrain-filtre-statut')||{}).value||'';var f=donneesTerrain.filter(function(s){var sm=!fS||(fS==='EN ATTENTE'&&!s.traite)||(fS==='TRAITE'&&s.traite);return(!fE||s.ecole===fE)&&(!fT||s.typeCode===fT)&&sm;});renderTerrain(f);}
+async function marquerTraiteTerrain(sheetId,rowNum,btn){btn.disabled=true;btn.textContent='⏳';var ecoleNom='';Object.keys(SHEETS_IDS).forEach(function(k){if(SHEETS_IDS[k]===sheetId)ecoleNom=k;});var cbName='tt_'+Date.now();var script=document.createElement('script');var params=new URLSearchParams({callback:cbName,type:'MARQUER_TRAITE',ecole:ecoleNom,rowNum:rowNum});return new Promise(function(resolve){window[cbName]=function(){delete window[cbName];try{document.body.removeChild(script);}catch(e){}showToast('✅ Traité','success');var idx=donneesTerrain.findIndex(function(s){return s.sheetId===sheetId&&s.rowNum===rowNum;});if(idx>=0)donneesTerrain[idx].traite=true;filtrerTerrain();resolve();};script.onerror=function(){delete window[cbName];btn.disabled=false;btn.textContent='✅ Traiter';resolve();};script.src=CONFIG.appsScriptUrl+'?'+params.toString();document.body.appendChild(script);setTimeout(function(){if(window[cbName]){delete window[cbName];resolve();}},8000);});}padding:4px
+  function actualiser() {
   showToast('🔄 Actualisation en cours...', '');
   chargerDonnees();
 }
