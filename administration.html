@@ -1031,7 +1031,7 @@ function login(){
     if(s.profil==='DIR') afficherDir(s);
     else if(s.profil==='FOND') afficherFond(s);
     else if(s.profil==='COM') afficherCom(s);
-    else if(s.profil==='EDU') afficherEdu(s);
+    else if(s.profil==='EDU') afficherEduV2(s);
   },900);
 }
 function affErr(m){const e=document.getElementById('errMsg');e.textContent=m;e.style.display='block';}
@@ -1397,7 +1397,42 @@ function afficherCom(s){
   document.getElementById('espaceCom').style.display='block';
 }
 
-// ══ ÉDUCATEUR ══
+function afficherEduV2(s){
+  document.getElementById('eduAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]).join('');
+  document.getElementById('eduNom').textContent=s.nom;
+  document.getElementById('eduEcole').textContent=s.label;
+  var matKey=Object.keys(STAFF).find(function(k){return STAFF[k]===s;});
+  var mesClasses=CLASSES_EDUCATEURS[matKey]||[];
+  chargerSynthese(s.ecole).then(function(eleves){
+    var raw=eleves&&eleves.length?eleves:[];
+    var meseleves=mesClasses.length?raw.filter(function(e){
+      var cl=(e.classe||'').toUpperCase().replace(/\s/g,'');
+      return mesClasses.some(function(mc){return cl===mc.toUpperCase().replace(/\s/g,'');});
+    }):raw;
+    donneesElevesSheets=meseleves;
+    var alertes=meseleves.filter(function(e){return e.alerte||e.statut==='IMPAYE';}).length;
+    var admis=meseleves.filter(function(e){return(e.moy||10)>=5;}).length;
+    document.getElementById('eStatAlert').textContent=alertes;
+    document.getElementById('eStatEleves').textContent=meseleves.length;
+    document.getElementById('eStatReussite').textContent=meseleves.length?Math.round(admis/meseleves.length*100)+'%':'—';
+  });
+  var h2='';CHARTE.forEach(function(c,i){h2+='<div class="charte-item"><div class="charte-num">'+(i+1)+'</div><div><div class="charte-titre">'+c.titre+'</div><div class="charte-desc">'+c.desc+'</div></div></div>';});
+  document.getElementById('eduCharteBody').innerHTML=h2;
+  var hClasses='<div style="margin:0 14px 10px;background:#E3F2FD;border-radius:12px;padding:12px 14px;border-left:4px solid var(--bleu)">'
+    +'<div style="font-size:0.72em;font-weight:700;color:var(--bleu);margin-bottom:8px;text-transform:uppercase">📚 Mes classes ('+mesClasses.length+')</div>'
+    +'<div style="display:flex;flex-wrap:wrap;gap:6px;">';
+  mesClasses.forEach(function(cl){
+    hClasses+='<span style="background:var(--bleu);color:#fff;padding:3px 10px;border-radius:20px;font-size:0.76em;font-weight:700">'+cl+'</span>';
+  });
+  hClasses+='</div></div>';
+  var citEl=document.getElementById('eduCitation');
+  if(citEl&&citEl.parentElement)citEl.parentElement.insertAdjacentHTML('afterend',hClasses);
+  chargerResultatsEtMessages(s.ecole,'EDU');
+  chargerAbsencesElevesSigne(s.ecole);
+  chargerPresencesEnseignants(s.ecole);
+  document.getElementById('espaceEdu').style.display='block';
+}
+  // ══ ÉDUCATEUR ══
 function afficherEdu(s){
   document.getElementById('eduAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]).join('');
   document.getElementById('eduNom').textContent=s.nom;
