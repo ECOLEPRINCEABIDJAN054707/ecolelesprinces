@@ -863,16 +863,16 @@ const STAFF={
   'EDUCPP003'  :{code:'111003',nom:'YAO ABRAHAM',      ecole:'CPP LES PRINCES',profil:'EDU',type:'SEC',label:"CPP Les Princes d'Abidjan",classes:['2NDE C','2NDE A']},
   'EDUCPP004'  :{code:'111004',nom:'NIOULLE SEVERIN',  ecole:'CPP LES PRINCES',profil:'EDU',type:'SEC',label:"CPP Les Princes d'Abidjan",classes:['3EME EX1','3EME EX2','3EME 3','3EME 4','3EME 5','3EME 6','3EME 7','6EME EX1','6EME EX2','5EME EX1','4EME EX1']},
   'EDUCPP005'  :{code:'111005',nom:'KOUACO',            ecole:'CPP LES PRINCES',profil:'EDU',type:'SEC',label:"CPP Les Princes d'Abidjan",classes:['6EME 3','6EME 4','6EME 5','6EME 6','6EME 7','5EME 3','5EME 4','5EME 5','5EME 6','5EME 7']},
-  'EDUCGUINGLO01':{code:'112001',nom:'KOUHON SYLVAIN', ecole:'GUINGLO VILLE',  profil:'EDU',type:'SEC',label:'CPP Les Princes de Guinglo Ville',classes:[]},
-  'EDUCGNONT01':{code:'113001',nom:'DON RODRIGUE',     ecole:'GNONTINROU',     profil:'EDU',type:'BOTH',label:'CPP Gnontinrou',classes:[]},
-  'EDUCDABOU01':{code:'114001',nom:'LATH THERESE',     ecole:'CPP DABOU',      profil:'EDU',type:'SEC',label:'CPP Les Princes de Dabou',classes:[]},
-  'EDUCRITA01' :{code:'115001',nom:'KOFFI PAUL',       ecole:'GS RITA ROSANE', profil:'EDU',type:'BOTH',label:'GS Rita Rosane',classes:[]},
-  'EDUCTECH01' :{code:'116001',nom:'YAO',               ecole:'CPP TECH',       profil:'EDU',type:'SEC',label:'CPP Technique',classes:[]},
-  'EDUCKOUT01' :{code:'117001',nom:'YAO',               ecole:'KOUTOUAN',       profil:'EDU',type:'BOTH',label:'CPP Les Princes de Koutouan',classes:[]},
-  'EDUCSOAK01' :{code:'118001',nom:'YAO KOFFI',         ecole:'SOAKPE',         profil:'EDU',type:'SEC',label:"CPP Les Princes de Soakpe",classes:[]},
-  'EDUCKOUIBLY01':{code:'119001',nom:'ZAKIHO',          ecole:'ETL PRINCES KOUIBLY',profil:'EDU',type:'SEC',label:'ETL Les Princes de Kouibly',classes:[]},
-  'EDUCANYAMA01':{code:'120001',nom:'ZOROKOUA',         ecole:'CPP ANYAMA',     profil:'EDU',type:'SEC',label:"CPP Les Princes d'Anyama",classes:[]},
-  'EDUCPRO01'  :{code:'121001',nom:'YAO',               ecole:'CPP PRO',        profil:'EDU',type:'SEC',label:'CPP Professionnel',classes:[]}
+  'EDUCGUINGLO01':{code:'112001',nom:'KOUHON SYLVAIN', ecole:'GUINGLO VILLE',  profil:'EDU',type:'SEC',label:'CPP Les Princes de Guinglo Ville',classes:['6EME','5EME','4EME','3EME','2NDE','1ERE','TLE']},
+  'EDUCGNONT01':{code:'113001',nom:'DON RODRIGUE',     ecole:'GNONTINROU',     profil:'EDU',type:'BOTH',label:'CPP Gnontinrou',classes:['6EME','5EME','4EME','3EME','2NDE','1ERE','TLE']},
+  'EDUCDABOU01':{code:'114001',nom:'LATH THERESE',     ecole:'CPP DABOU',      profil:'EDU',type:'SEC',label:'CPP Les Princes de Dabou',classes:['6EME','5EME','4EME','3EME','2NDE','1ERE','TLE']},
+  'EDUCRITA01' :{code:'115001',nom:'KOFFI PAUL',       ecole:'GS RITA ROSANE', profil:'EDU',type:'BOTH',label:'GS Rita Rosane',classes:['6EME','5EME','4EME','3EME','2NDE C','1ERE A','1ERE D','TLE A','TLE D','CP1','CP2','CE1','CE2','CM1','CM2','MATERNELLE']},
+  'EDUCTECH01' :{code:'116001',nom:'YAO',               ecole:'CPP TECH',       profil:'EDU',type:'SEC',label:'CPP Technique',classes:['2NDE F2','1ERE F2','TLE F2','2NDE G1','1ERE G1','TLE G1','2NDE G2','1ERE G2','TLE G2']},
+  'EDUCKOUT01' :{code:'117001',nom:'YAO',               ecole:'KOUTOUAN',       profil:'EDU',type:'BOTH',label:'CPP Les Princes de Koutouan',classes:['6EME','5EME','4EME','3EME','2NDE','1ERE','TLE']},
+  'EDUCSOAK01' :{code:'118001',nom:'YAO KOFFI',         ecole:'SOAKPE',         profil:'EDU',type:'SEC',label:"CPP Les Princes de Soakpe",classes:['6EME','5EME','4EME','3EME','2NDE','1ERE','TLE']},
+  'EDUCKOUIBLY01':{code:'119001',nom:'ZAKIHO',          ecole:'ETL PRINCES KOUIBLY',profil:'EDU',type:'SEC',label:'ETL Les Princes de Kouibly',classes:['2NDE G1','1ERE G1','TLE G1','2NDE G2','1ERE G2','TLE G2']},
+  'EDUCANYAMA01':{code:'120001',nom:'ZOROKOUA',         ecole:'CPP ANYAMA',     profil:'EDU',type:'SEC',label:"CPP Les Princes d'Anyama",classes:['6EME','5EME','4EME','3EME','2NDE','1ERE','TLE']},
+  'EDUCPRO01'  :{code:'121001',nom:'YAO',               ecole:'CPP PRO',        profil:'EDU',type:'SEC',label:'CPP Professionnel',classes:['1BT Secretariat','2BT Secretariat','3BT Secretariat','1BT Comptabilite','2BT Comptabilite','3BT Comptabilite']}
 };
 const CHARTE=[
   {titre:"Je vois l'enfant avant la matiere",desc:"Je m'interesse a la personne entiere : ses emotions, son contexte, ses aspirations."},
@@ -1756,7 +1756,7 @@ function renderEDT(data) {
   // Calculer heures totales
   const totalMin = Math.round(data.reduce((s,r) => s + parseHeuresToMinutes(r.heures), 0));
   const totalH = Math.floor(totalMin/60);
-  const totalMn = totalMin % 60;
+  const totalMn = Math.round(totalMin % 60);
   const nbEns = new Set(data.map(r=>r.enseignant).filter(Boolean)).size;
   const nbClasses = new Set(data.map(r=>r.classe).filter(Boolean)).size;
   const nbRetard = data.filter(r=>r.statut==='EN ATTENTE').length;
@@ -1774,7 +1774,7 @@ function renderEDT(data) {
   data.forEach(r => {
     const key = r.enseignant || 'Inconnu';
     if(!byEns[key]) byEns[key] = {enseignant:key, cours:[], totalMin:0, classes:new Set()};
-    const min = parseHeuresToMinutes(r.heures);
+    const min = Math.round(parseHeuresToMinutes(r.heures));
     byEns[key].cours.push(r);
     byEns[key].totalMin += min;
     if(r.classe) byEns[key].classes.add(r.classe);
@@ -1785,7 +1785,7 @@ function renderEDT(data) {
 
   enseignants.forEach(ens => {
     const tH = Math.floor(ens.totalMin/60);
-    const tM = Math.round(ens.totalMin) % 60;
+    const tM = Math.round(ens.totalMin % 60);
     const nbV = ens.cours.filter(r=>r.statut==='VALIDÉ'||r.statut==='VALIDE'||r.statut==='PARTIEL').length;
     const nbA = ens.cours.filter(r=>r.statut==='EN ATTENTE').length;
     const ini = ens.enseignant.split(' ').map(w=>w[0]||'').join('').substring(0,2).toUpperCase();
@@ -1816,7 +1816,7 @@ function renderEDT(data) {
 
     Object.keys(parClasse).sort().forEach(cl => {
       const cours = parClasse[cl];
-      const hCl = cours.reduce((s,c) => s + (c.heures>0?c.heures*60:parseHeuresToMinutes(c.heures)), 0);
+      const hCl = Math.round(cours.reduce((s,c) => s + parseHeuresToMinutes(c.heures), 0));
       const hClH = Math.floor(hCl/60), hClM = Math.round(hCl)%60;
 
       html += '<div style="background:#F5F0FF;padding:6px 14px;border-bottom:1px solid #E8E0F0;display:flex;justify-content:space-between;align-items:center">';
