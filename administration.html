@@ -1218,7 +1218,10 @@ async function chargerClassesEdu(s){
       });
     }
     let elevesF=eleves;
-    if(classesEdu.length>0)elevesF=eleves.filter(e=>classesEdu.some(cl=>e.classe.toUpperCase()===cl.toUpperCase()));
+    if(classesEdu.length>0)elevesF=eleves.filter(e=>classesEdu.some(cl=>{
+      const norm=s=>s.toUpperCase().trim().replace(/\s+/g,' ').replace(/[ÈÉÊË]/g,'E').replace(/[ÀÂ]/g,'A');
+      return norm(e.classe)===norm(cl);
+    }));
     if(elevesF.length===0&&classesEdu.length===0)elevesF=eleves.filter(e=>/^(6|5|4|3|2NDE|1ERE|TLE)/i.test(e.classe));
     if(elevesF.length===0){container.innerHTML='<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun eleve trouve.<br><span style="font-size:0.85em">Classes: '+(classesEdu.join(', ')||'Toutes')+'</span></p>';return;}
     const total=elevesF.length,enDiff=elevesF.filter(e=>e.alerte).length,admis=elevesF.filter(e=>(e.moy||0)>=5).length;
@@ -1529,8 +1532,14 @@ async function chargerNotesDevoir() {
     }
   }
 
+  // Peupler select classes depuis éducateur même si vide
+  const selCD = document.getElementById('eduDevsFiltreClasse');
+  if(selCD && selCD.options.length <= 1 && classesEdu.length > 0) {
+    classesEdu.forEach(cl => { const o=document.createElement('option'); o.value=cl; o.textContent=cl; selCD.appendChild(o); });
+  }
+
   if(!found || data.length === 0) {
-    const dc = document.getElementById('eduDevsCount'); if(dc) dc.textContent = '';
+    const dc = document.getElementById('eduDevsCount'); if(dc) dc.textContent = '(0)';
     if(container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.82em">Aucun cahier de textes enregistre pour vos classes.<br><span style="font-size:0.85em;color:var(--orange)">Les enseignants nont pas encore saisi de cours dans Smart School.</span></div>';
     return;
   }
@@ -1688,9 +1697,19 @@ async function chargerEDT() {
     ens.forEach(e => { const o=document.createElement('option'); o.value=e; o.textContent=e; selE.appendChild(o); });
   }
 
+  // Peupler les selects depuis les classes de l'éducateur même si POINTAGE vide
+  const selCpre = document.getElementById('eduEdtFiltreClasse');
+  if(selCpre && selCpre.options.length <= 1 && classesEdu.length > 0) {
+    classesEdu.forEach(cl => { const o=document.createElement('option'); o.value=cl; o.textContent=cl; selCpre.appendChild(o); });
+  }
+
   if(!found || data.length === 0) {
-    const dc=document.getElementById('eduEdtCount'); if(dc) dc.textContent='';
-    if(container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.82em">Aucune donnee de pointage pour vos classes.<br><span style="font-size:0.85em;color:var(--orange)">Le pointage mensuel nest pas encore disponible.</span></div>';
+    const dc=document.getElementById('eduEdtCount'); if(dc) dc.textContent='(0 cours)';
+    if(container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.82em">'
+      +'<div style="font-size:2em;margin-bottom:8px">📋</div>'
+      +'<div style="font-weight:600;margin-bottom:6px">Aucun cours enregistre ce mois</div>'
+      +'<div style="font-size:0.85em;color:var(--orange)">Les enseignants doivent utiliser App Enseignant<br>pour que les heures apparaissent ici.</div>'
+      +'</div>';
     return;
   }
 
