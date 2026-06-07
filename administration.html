@@ -1531,7 +1531,7 @@ async function chargerNotesDevoir() {
 
   if(!found || data.length === 0) {
     const dc = document.getElementById('eduDevsCount'); if(dc) dc.textContent = '';
-    if(container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.82em">Aucun cahier de textes enregistre pour vos classes.<br><span style="font-size:0.85em;color:var(--orange)">Les enseignants n\'ont pas encore saisi de cours dans Smart School.</span></div>';
+    if(container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.82em">Aucun cahier de textes enregistre pour vos classes.<br><span style="font-size:0.85em;color:var(--orange)">Les enseignants nont pas encore saisi de cours dans Smart School.</span></div>';
     return;
   }
 
@@ -1690,7 +1690,7 @@ async function chargerEDT() {
 
   if(!found || data.length === 0) {
     const dc=document.getElementById('eduEdtCount'); if(dc) dc.textContent='';
-    if(container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.82em">Aucune donnée de pointage pour vos classes.<br><span style="font-size:0.85em;color:var(--orange)">Le pointage mensuel n'est pas encore disponible.</span></div>';
+    if(container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.82em">Aucune donnee de pointage pour vos classes.<br><span style="font-size:0.85em;color:var(--orange)">Le pointage mensuel nest pas encore disponible.</span></div>';
     return;
   }
 
