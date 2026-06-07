@@ -98,6 +98,32 @@ tr:nth-child(even){background:#F8FAFD;}
 .bul-detail-table th{background:var(--bleu);color:white;padding:7px 10px;text-align:left;font-weight:600;}
 .bul-detail-table td{padding:7px 10px;border-bottom:1px solid var(--border);}
 .bul-detail-table tr:nth-child(even) td{background:#F8FAFD;}
+.signal-card{background:white;border-radius:12px;border:1.5px solid var(--border);padding:12px 16px;margin-bottom:10px;border-left:4px solid var(--orange);}
+.signal-card.traite{border-left-color:var(--vert);opacity:0.75;}
+.signal-card.cours-absent{border-left-color:var(--rouge);}
+.signal-card.cahier-manquant{border-left-color:var(--orange);}
+.signal-header{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:6px;}
+.signal-type{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;white-space:nowrap;}
+.signal-cours{background:#FFEBEE;color:var(--rouge);}
+.signal-cahier{background:#FFF3E0;color:var(--orange);}
+.signal-signalement{background:#F3E5F5;color:#6A1B9A;}
+.signal-date{font-size:11px;color:var(--text2);}
+.signal-desc{font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;}
+.signal-meta{font-size:11px;color:var(--text2);line-height:1.6;}
+.signal-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.btn-traite{padding:6px 14px;background:var(--vert);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
+.btn-traite.traite{background:var(--border);color:var(--text2);cursor:default;}
+.signal-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.signal-stat{background:white;border-radius:10px;padding:12px;text-align:center;border-left:3px solid var(--bleu);}
+.signal-stat.rouge{border-color:var(--rouge);}
+.signal-stat.orange{border-color:var(--orange);}
+.signal-stat.violet{border-color:#6A1B9A;}
+.signal-stat-val{font-size:22px;font-weight:700;color:var(--bleu);}
+.signal-stat.rouge .signal-stat-val{color:var(--rouge);}
+.signal-stat.orange .signal-stat-val{color:var(--orange);}
+.signal-stat.violet .signal-stat-val{color:#6A1B9A;}
+.signal-stat-label{font-size:10px;color:var(--text2);margin-top:3px;}
+.signal-empty{text-align:center;padding:30px;color:var(--text2);}
 </style>
 </head>
 <body>
