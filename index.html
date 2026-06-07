@@ -1270,29 +1270,7 @@ const BULLETINS_KOUTOUAN = {
   "P00470585":"1Re1q9nuByiod0WIm39iztHZrp1x3ZIdJ",
   "P25058566":"1DDtzcxraPVRzqlZ7LUkVLM0aWp1lstNr"
 };
-async function getBulletinAnnuelCPPTech(matricule, sheetsId) {
-  try {
-    var matClean = matricule.trim().toUpperCase();
-    var url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId +
-              "/values/" + encodeURIComponent("BULLETINS_CPP_TECH!A2:C500") +
-              "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
-    var res = await fetch(url);
-    if (!res.ok) return "";
-    var data = await res.json();
-    if (!data.values) return "";
-    for (var i = 0; i < data.values.length; i++) {
-      var row = data.values[i];
-      var mat = String(row[0]||"").trim().toUpperCase();
-      if (mat !== matClean) continue;
-      var lien = String(row[1]||"").trim();
-      if (!lien && row[2]) lien = "https://drive.google.com/file/d/" + row[2] + "/view";
-      if (lien) {
-        return "<div style='margin-top:10px'><a href='" + lien + "' target='_blank' style='display:block;background:linear-gradient(135deg,#1B4F72,#2E86C1);color:#fff;border-radius:10px;padding:14px;text-align:center;text-decoration:none;font-weight:bold;font-size:0.95em;'>&#128196; BULLETIN ANNUEL 2024-2025<br/><span style='font-size:0.8em;opacity:0.85;'>Voir et telecharger mon bulletin PDF</span></a></div>";
-      }
-    }
-  } catch(e) {}
-  return "";
-}
+  
   async function getBulletinAnnuelCPPTech(matricule, sheetsId) {
   try {
     var matClean = matricule.trim().toUpperCase();
@@ -1317,7 +1295,6 @@ async function getBulletinAnnuelCPPTech(matricule, sheetsId) {
   return "";
 }
 
-async function getBulletinAnnuelKoutouan(matricule) {
 async function getBulletinAnnuelKoutouan(matricule) {
   var fid = BULLETINS_KOUTOUAN[matricule.trim().toUpperCase()];
   if (!fid) return "";
