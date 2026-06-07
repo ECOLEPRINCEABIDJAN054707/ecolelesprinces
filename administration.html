@@ -1580,7 +1580,7 @@ function renderNotesDevoirs(data) {
     const alerteCol = tauxD < 50 ? 'var(--rouge)' : tauxD < 80 ? 'var(--orange)' : 'var(--vert)';
 
     html += '<div style="border-bottom:2px solid var(--border)">';
-    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(135deg,var(--bleu),var(--bleu2));color:#fff;cursor:pointer" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(135deg,var(--bleu),var(--bleu2));color:#fff;cursor:pointer" onclick="toggleEdtDetail(this)">';
     html += '<div><div style="font-size:0.88em;font-weight:700">' + cl + '</div><div style="font-size:0.7em;opacity:0.85">' + rows.length + ' cours · <span style="color:' + (tauxD<50?'#FFCDD2':tauxD<80?'#FFE0B2':'#C8E6C9') + '">' + nbD + ' devoir(s) (' + tauxD + '%)</span></div></div>';
     html += '<span style="font-size:0.78em;opacity:0.8">&#9660;</span></div>';
     html += '<div style="display:none">';
@@ -1770,7 +1770,7 @@ function renderEDT(data) {
     // Card enseignant
     html += '<div style="border-bottom:2px solid var(--border)">';
     // Header cliquable
-    html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;background:#F8F0FF" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">';
+    html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;background:#F8F0FF" onclick="toggleEdtDetail(this)">';
     html += '<div style="width:36px;height:36px;border-radius:50%;background:var(--violet);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8em;flex-shrink:0">'+ini+'</div>';
     html += '<div style="flex:1">';
     html += '<div style="font-size:0.86em;font-weight:700;color:#1A1A2E">'+ens.enseignant+'</div>';
@@ -1928,6 +1928,10 @@ function mkDocGroupeV9(classes,k,nf,nomEcole){var TC=window._listesTC;var tc=TC[
 // ══ HELPERS ══
 function toggleSec(hdr){const body=hdr.nextElementSibling;hdr.classList.toggle('open');body.classList.toggle('open');}
 function toggleTache(idx,el){TACHES_DEMO[idx].done=!TACHES_DEMO[idx].done;el.classList.toggle('done');el.textContent=TACHES_DEMO[idx].done?'✓':'';el.nextElementSibling.classList.toggle('done');document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;showToast(TACHES_DEMO[idx].done?'Accomplie !':'Remise en cours',TACHES_DEMO[idx].done?'success':'');}
+function toggleEdtDetail(el) {
+  var next = el.nextElementSibling;
+  if(next) next.style.display = next.style.display === 'none' ? 'block' : 'none';
+}
 function logout(){['espaceDir','espaceFond','espaceCom','espaceEdu'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('loginPage').style.display='flex';document.getElementById('inputMat').value='';document.getElementById('inputCode').value='';currentStaff=null;donneesPointage=[];coursEnAttente=[];tentativesPin=0;donneesDevoirs=[];notesElevesCache={};const sel=document.getElementById('filtreMois');if(sel)sel.innerHTML='';}
 document.addEventListener('keypress',e=>{if(e.key==='Enter'&&document.getElementById('loginPage').style.display!=='none')login();});
 </script>
