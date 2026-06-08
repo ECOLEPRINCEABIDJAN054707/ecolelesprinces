@@ -904,7 +904,7 @@ function hideLoader(){document.getElementById('loadingPage').style.display='none
 function affErr(m){const e=document.getElementById('errMsg');e.textContent=m;e.style.display='block';}
 let tt;function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(type||'')+' show';clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),3500);}
 function toggleSec(hdr){const body=hdr.nextElementSibling;hdr.classList.toggle('open');body.classList.toggle('open');}
-function detecterEdu(val){const isEdu=val.startsWith('EDU-')||STAFF[val]&&STAFF[val].profil==='EDU';document.getElementById('grpEcoleEdu').style.display=isEdu?'block':'none';document.getElementById('eduHint').style.display=isEdu?'block':'none';}
+function detecterEdu(val){const inStaff=STAFF[val]&&STAFF[val].profil==='EDU';const needsEcole=val.startsWith('EDU-')&&!inStaff;document.getElementById('grpEcoleEdu').style.display=needsEcole?'block':'none';document.getElementById('eduHint').style.display=needsEcole?'block':'none';}
 function login(){
   const mat=document.getElementById('inputMat').value.trim().toUpperCase();
   const code=document.getElementById('inputCode').value.trim();
@@ -916,7 +916,7 @@ function login(){
     if(s.profil==='EDU'&&PRIM.includes(s.ecole)){affErr("Les ecoles primaires n'ont pas d'espace Educateur.");return;}
     tentativesPin=0;procederLogin(s);return;
   }
-  if(mat.startsWith('EDU-')||mat.startsWith('EDUCPP')){
+  if(mat.startsWith('EDU-')){
     const ecole=document.getElementById('inputEcoleEdu').value;
     if(!ecole){affErr('Selectionnez votre ecole.');document.getElementById('grpEcoleEdu').style.display='block';return;}
     verifierEducateurSheets(mat,code,ecole);return;
