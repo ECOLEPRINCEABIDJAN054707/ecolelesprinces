@@ -1898,7 +1898,14 @@ async function listerOnglets(sheetsId){try{var url='https://sheets.googleapis.co
 async function ouvrirListesV9(profil){
   var ecole=currentStaff?currentStaff.ecole:null;var label=currentStaff?currentStaff.label:'';
   if(!ecole){showToast('Non connecte','error');return;}var sheetsId=SHEETS_IDS[ecole];if(!sheetsId){showToast('Ecole non configuree','error');return;}
-  showToast('Chargement des classes...','');var onglets=await listerOnglets(sheetsId);
+  showToast('Chargement des classes...','');
+  var onglets=[];
+  // Pour un éducateur, utiliser uniquement ses classes STAFF
+  if(profil==='EDU' && currentStaff && currentStaff.classes && currentStaff.classes.length){
+    onglets=currentStaff.classes.slice();
+  } else {
+    onglets=await listerOnglets(sheetsId);
+  }
   if(!onglets.length){showToast('Aucune classe trouvee','error');return;}
   var niveaux={};onglets.forEach(function(nom){var niv=getNiv(nom);if(!niveaux[niv])niveaux[niv]=[];niveaux[niv].push(nom);});
   var keys=Object.keys(niveaux).sort(function(a,b){var ia=ORDRE_NIV.indexOf(a),ib=ORDRE_NIV.indexOf(b);if(ia===-1)ia=99;if(ib===-1)ib=99;return ia-ib;});
