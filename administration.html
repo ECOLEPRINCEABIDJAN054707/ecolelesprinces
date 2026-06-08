@@ -1227,7 +1227,7 @@ async function chargerClassesEdu(s){
       container.innerHTML='<div style="padding:16px;background:#FFF3E0;border-radius:8px;margin:12px"><div style="font-size:0.84em;font-weight:700;color:var(--orange);margin-bottom:6px">Classes non configurees</div><div style="font-size:0.78em;color:#555;line-height:1.6">Demandez au directeur dajouter vos classes dans onglet EDUCATEURS du Google Sheets.<br>Colonne D : liste des classes separees par des virgules.<br>Exemple : 6EME 3,6EME 4,5EME 5,5EME 6</div></div>';
       return;
     }
-    if(elevesF.length===0){container.innerHTML='<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun eleve trouve.<br><span style="font-size:0.85em">Classes: '+(classesEdu.join(', ')||'Toutes')+'</span></p>';return;}
+    if(elevesF.length===0){const vraisClasses=[...new Set(eleves.map(e=>e.classe))].sort().slice(0,20);container.innerHTML='<div style="padding:14px;background:#FFF3E0;border-radius:8px;margin:8px 14px"><div style="font-size:0.82em;font-weight:700;color:var(--orange);margin-bottom:8px">Aucun eleve trouve - Verifier les noms</div><div style="font-size:0.75em;margin-bottom:6px"><b>Classes dans STAFF :</b> '+classesEdu.join(', ')+'</div><div style="font-size:0.75em"><b>Classes SYNTHESE :</b> '+vraisClasses.join(', ')+'</div></div>';return;}
     const total=elevesF.length,enDiff=elevesF.filter(e=>e.alerte).length,admis=elevesF.filter(e=>(e.moy||0)>=5).length;
     document.getElementById('eStatEleves').textContent=total;
     document.getElementById('eStatAlert').textContent=enDiff;
