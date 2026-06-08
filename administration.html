@@ -1898,13 +1898,17 @@ async function diagColonnes(sheetsId,nomClasse){
 }
 
 async function lireOngletClasse(sheetsId,nomClasse){
-  try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(nomClasse)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';var r=await fetch(url);var data=await r.json();if(!data.values||data.values.length<2)return[];
-  // Chercher la vraie ligne d'en-tête parmi les 5 premières lignes (gère titre fusionné + infos école)
-  var headerIdx=-1;for(var li=0;li<Math.min(5,data.values.length);li++){var testRow=data.values[li].map(function(h){return String(h||'').toUpperCase().trim();});if(testRow.some(function(h){return h==='MATRICULE'||h==='N'||h==='MATRICULE ';})){headerIdx=li;break;}}
+  // Essayer d'abord l'onglet individuel, sinon lire SYNTHESE et filtrer
+  var result = await _lireOngletDirect(sheetsId,nomClasse);
+  if(result && result.length > 0) return result;
+  // Fallback : lire depuis SYNTHESE et filtrer par classe
+  return await _lireDepuisSynthese(sheetsId,nomClasse);
+}
+async function _lireOngletDirect(sheetsId,nomClasse){
+  try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(nomClasse)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';var r=await fetch(url);if(!r.ok)return[];var data=await r.json();if(!data.values||data.values.length<2)return[];
+  var headerIdx=-1;for(var li=0;li<Math.min(5,data.values.length);li++){var testRow=data.values[li].map(function(h){return String(h||'').toUpperCase().trim();});if(testRow.some(function(h){return h==='MATRICULE'||h==='N';})){headerIdx=li;break;}}
   var iMat=-1,iNom=-1,iPrenom=-1,iDu=-1,iVerse=-1,iSolde=-1,iTel1=-1,iTel2=-1,iTel3=-1,dataRows;
-  if(headerIdx>=0){
-    var headers=data.values[headerIdx].map(function(h){return String(h||'').toUpperCase().trim();});
-    dataRows=data.values.slice(headerIdx+1);
+  if(headerIdx>=0){var headers=data.values[headerIdx].map(function(h){return String(h||'').toUpperCase().trim();});dataRows=data.values.slice(headerIdx+1);
     iMat=headers.findIndex(function(h){return h==='MATRICULE'||h.includes('MATR');});
     iNom=headers.findIndex(function(h){return h==='NOM ET PRENOMS'||(h.includes('NOM')&&h.includes('PREN'))||(h.includes('NOM')&&h.includes('ET'));});
     if(iNom===-1)iNom=headers.findIndex(function(h){return h==='NOM';});
@@ -1915,11 +1919,21 @@ async function lireOngletClasse(sheetsId,nomClasse){
     iTel1=headers.findIndex(function(h){return h==='TEL1'||h==='TEL PERE'||h==='TEL'||(h.includes('TEL')&&h.endsWith('1'));});
     iTel2=headers.findIndex(function(h){return h==='TEL2'||h==='TEL MERE'||(h.includes('TEL')&&h.endsWith('2'));});
     iTel3=headers.findIndex(function(h){return h==='TEL3'||h==='TEL TUTEUR'||(h.includes('TEL')&&h.endsWith('3'));});
-  }else{
-    // Fallback : structure SYNTHESE col A=CLASSE, B=MATRICULE, C=NOM, D=MONTANT, E=VERSEMENT, F=SOLDE, G=TEL1, H=TEL2, I=TEL3
-    dataRows=data.values.slice(1);iMat=1;iNom=2;iDu=3;iVerse=4;iSolde=5;iTel1=6;iTel2=7;iTel3=8;
-  }
-  return dataRows.filter(function(row){return(iNom>=0?String(row[iNom]||'').trim().length>1:false)||(iMat>=0?String(row[iMat]||'').trim().length>1:false);}).map(function(row){var nomVal=iNom>=0?String(row[iNom]||'').trim():'';var prenomVal=iPrenom>=0?String(row[iPrenom]||'').trim():'';var nomComplet=prenomVal&&!nomVal.includes(prenomVal)?nomVal+' '+prenomVal:nomVal;var du=iDu>=0?parseFloat(String(row[iDu]||'').replace(/\s/g,''))||0:0;var verse=iVerse>=0?parseFloat(String(row[iVerse]||'').replace(/\s/g,''))||0:0;var solde=iSolde>=0?parseFloat(String(row[iSolde]||'').replace(/\s/g,''))||0:du-verse;function nTel(t){t=(t+'').replace(/[^0-9+]/g,'');return t.length>=8?t:'';}return{matricule:iMat>=0?String(row[iMat]||'').trim():'',nom_prenom:nomComplet,montant_du:du,versement:verse,solde:solde,tel1:nTel(iTel1>=0?row[iTel1]||'':''),tel2:nTel(iTel2>=0?row[iTel2]||'':''),tel3:nTel(iTel3>=0?row[iTel3]||'':''),statut:solde<=0?'SOLDE':verse===0?'IMPAYE':'PARTIEL'};});}catch(e){return[];}
+  }else{dataRows=data.values.slice(1);iMat=1;iNom=2;iDu=3;iVerse=4;iSolde=5;iTel1=6;iTel2=7;iTel3=8;}
+  return _parseEleves(dataRows,iMat,iNom,iPrenom,iDu,iVerse,iSolde,iTel1,iTel2,iTel3);
+  }catch(e){return[];}
+}
+async function _lireDepuisSynthese(sheetsId,nomClasse){
+  try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';var r=await fetch(url);if(!r.ok)return[];var data=await r.json();if(!data.values||data.values.length<2)return[];
+  var norm=function(s){return s.toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U').replace(/[ÔÖÓÒÕ]/g,'O').replace(/[ÎÏÍÌ]/g,'I').replace(/[-_]/g,' ').replace(/\s+/g,' ');};
+  var nc=norm(nomClasse);
+  // En-tête ligne 0 : CLASSE=0, MATRICULE=1, NOM=2, MONTANT_DU=3, VERSEMENT=4, SOLDE=5, TEL1=6, TEL2=7, TEL3=8
+  var rows=data.values.slice(1).filter(function(row){return row[0]&&norm(String(row[0]||''))===nc;});
+  return _parseEleves(rows,1,2,-1,3,4,5,6,7,8);
+  }catch(e){return[];}
+}
+function _parseEleves(dataRows,iMat,iNom,iPrenom,iDu,iVerse,iSolde,iTel1,iTel2,iTel3){
+  return dataRows.filter(function(row){return(iNom>=0?String(row[iNom]||'').trim().length>1:false)||(iMat>=0?String(row[iMat]||'').trim().length>1:false);}).map(function(row){var nomVal=iNom>=0?String(row[iNom]||'').trim():'';var prenomVal=iPrenom>=0?String(row[iPrenom]||'').trim():'';var nomComplet=prenomVal&&!nomVal.includes(prenomVal)?nomVal+' '+prenomVal:nomVal;var du=iDu>=0?parseFloat(String(row[iDu]||'').replace(/\s/g,''))||0:0;var verse=iVerse>=0?parseFloat(String(row[iVerse]||'').replace(/\s/g,''))||0:0;var solde=iSolde>=0?parseFloat(String(row[iSolde]||'').replace(/\s/g,''))||0:du-verse;function nTel(t){t=(t+'').replace(/[^0-9+]/g,'');return t.length>=8?t:'';}return{matricule:iMat>=0?String(row[iMat]||'').trim():'',nom_prenom:nomComplet,montant_du:du,versement:verse,solde:solde,tel1:nTel(iTel1>=0?row[iTel1]||'':''),tel2:nTel(iTel2>=0?row[iTel2]||'':''),tel3:nTel(iTel3>=0?row[iTel3]||'':''),statut:solde<=0?'SOLDE':verse===0?'IMPAYE':'PARTIEL'};});
 }
 
 async function listerOnglets(sheetsId){try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'?key='+API_KEY+'&fields=sheets.properties.title';var r=await fetch(url);var data=await r.json();if(!data.sheets)return[];return data.sheets.map(function(s){return s.properties.title;}).filter(estOngletValide);}catch(e){return[];}}
