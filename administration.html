@@ -211,6 +211,7 @@ table tr:nth-child(even){background:#F8FAFD}
   <div class="login-card">
     <h2>Acc&egrave;s S&eacute;curis&eacute;</h2>
     <p>Directeur &middot; Comptable &middot; &Eacute;ducateur</p>
+
     <div class="inp-grp" id="grpEcoleEdu" style="display:none">
       <label>Votre &eacute;cole</label>
       <select id="inputEcoleEdu">
@@ -1935,7 +1936,7 @@ async function genPDFClasse(nomClasse){
   if(!eleves||!eleves.length){if(btn){btn.style.background='#FFEBEE';btn.innerHTML='<b>'+nomClasse+'</b><br><small style="color:#C62828">0 eleve</small>';}showToast('Aucun eleve pour '+nomClasse,'error');diagColonnes(ctx.sheetsId,nomClasse);return;}
   if(btn){btn.style.background='#E8F5E9';btn.innerHTML='<b>'+nomClasse+'</b><br><small style="color:#2E7D32">✓ '+eleves.length+'</small>';}
   var d=new Date(),dd=String(d.getDate()).padStart(2,'0')+String(d.getMonth()+1).padStart(2,'0')+d.getFullYear();var ne=ctx.label.replace(/[^A-Z0-9]/gi,'_').toUpperCase().substring(0,15);
-  types.forEach(function(k){var nf=ne+'_'+nomClasse.replace(/[^A-Z0-9]/gi,'_')+'_'+window._listesTC[k].cd+'_'+dd;var w=window.open('','_blank');if(!w){showToast('Autorisez les popups','error');return;}w.document.write(mkDocSimpleV9({nom:nomClasse,eleves:eleves},k,nf,ctx.label));w.document.close();});
+  types.forEach(function(k){var nf=ne+'_'+nomClasse.replace(/[^A-Z0-9]/gi,'_')+'_'+window._listesTC[k].cd+'_'+dd;var html=mkDocSimpleV9({nom:nomClasse,eleves:eleves},k,nf,ctx.label);var blob=new Blob([html],{type:'text/html'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},5000);});
 }
 
 async function genPDFGroupe(){
@@ -1946,7 +1947,7 @@ async function genPDFGroupe(){
   for(var i=0;i<a_charger.length;i++){var cl=a_charger[i];if(prog)prog.textContent='Chargement '+(i+1)+'/'+a_charger.length+'...';if(!window._listesCACHE[cl])window._listesCACHE[cl]=await lireOngletClasse(ctx.sheetsId,cl);}
   if(prog)prog.style.display='none';
   var d=new Date(),dd=String(d.getDate()).padStart(2,'0')+String(d.getMonth()+1).padStart(2,'0')+d.getFullYear();var ne=ctx.label.replace(/[^A-Z0-9]/gi,'_').toUpperCase().substring(0,15);
-  types.forEach(function(k){var classes_chargees=[];niveaux_coches.forEach(function(niv){(ctx.niveaux[niv]||[]).forEach(function(cl){if(window._listesCACHE[cl])classes_chargees.push(cl);});});var nf=ne+'_'+window._listesTC[k].cd+'_GROUPE_'+dd;var w=window.open('','_blank');if(!w){showToast('Autorisez les popups','error');return;}w.document.write(mkDocGroupeV9(classes_chargees,k,nf,ctx.label));w.document.close();});
+  types.forEach(function(k){var classes_chargees=[];niveaux_coches.forEach(function(niv){(ctx.niveaux[niv]||[]).forEach(function(cl){if(window._listesCACHE[cl])classes_chargees.push(cl);});});var nf=ne+'_'+window._listesTC[k].cd+'_GROUPE_'+dd;var html=mkDocGroupeV9(classes_chargees,k,nf,ctx.label);var blob=new Blob([html],{type:'text/html'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},5000);});
 }
 
 var SV9={c:"text-align:center;font-size:12px;border:1.5px solid #333;padding:4px;",m:"font-weight:bold;font-size:12px;border:1.5px solid #333;padding:4px;color:#1F4E79;",b:"font-weight:bold;font-size:12px;border:1.5px solid #333;padding:4px;",r:"text-align:right;font-weight:bold;font-size:12px;border:1.5px solid #333;padding:4px;",e:"border:1.5px solid #333;padding:4px;height:18px;"};
