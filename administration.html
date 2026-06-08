@@ -1281,7 +1281,7 @@ async function ouvrirModalNotesProf(type){
       const sheetsId=SHEETS_IDS[s.ecole];
       const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'?key='+API_KEY+'&fields=sheets.properties.title';
       const r=await fetch(url);const data=await r.json();
-      if(data.sheets){const excl=['SYNTHESE','ENSEIGNANTS','ABSENCES','POINTAGE','RESULTATS','MESSAGES','CAHIER','EDUCATEURS','NOTES_T'];classes=data.sheets.map(sh=>sh.properties.title).filter(t=>!excl.some(ex=>t.toUpperCase().includes(ex))&&/^(6|5|4|3|2NDE|1ERE|TLE)/i.test(t));}
+      if(data.sheets){const excl=['SYNTHESE','ENSEIGNANTS','ABSENCES','POINTAGE','RESULTATS','MESSAGES','CAHIER','EDUCATEURS','NOTES_T'];const isPRIM=currentStaff&&currentStaff.type==='PRIM';const regexSEC=/^(6|5|4|3|2NDE|1ERE|TLE|2NDE|BT)/i;const regexPRIM=/^(CP|CE|CM|GS|MS|PS|TPS|SIL|CI|CP1|CP2|CE1|CE2|CM1|CM2|MATERNELLE)/i;const regex=isPRIM?regexPRIM:regexSEC;classes=data.sheets.map(sh=>sh.properties.title).filter(t=>!excl.some(ex=>t.toUpperCase().includes(ex))&&regex.test(t));}
     }catch(e){}
   }
   const container=document.getElementById('modalNotesClasses');
@@ -1930,7 +1930,7 @@ function _parseEleves(dataRows,iMat,iNom,iPrenom,iDu,iVerse,iSolde,iTel1,iTel2,i
   return dataRows.filter(function(row){return(iNom>=0?String(row[iNom]||'').trim().length>1:false)||(iMat>=0?String(row[iMat]||'').trim().length>1:false);}).map(function(row){var nomVal=iNom>=0?String(row[iNom]||'').trim():'';var prenomVal=iPrenom>=0?String(row[iPrenom]||'').trim():'';var nomComplet=prenomVal&&!nomVal.includes(prenomVal)?nomVal+' '+prenomVal:nomVal;var du=iDu>=0?parseFloat(String(row[iDu]||'').replace(/\s/g,''))||0:0;var verse=iVerse>=0?parseFloat(String(row[iVerse]||'').replace(/\s/g,''))||0:0;var solde=iSolde>=0?parseFloat(String(row[iSolde]||'').replace(/\s/g,''))||0:du-verse;function nTel(t){t=(t+'').replace(/[^0-9+]/g,'');return t.length>=8?t:'';}return{matricule:iMat>=0?String(row[iMat]||'').trim():'',nom_prenom:nomComplet,montant_du:du,versement:verse,solde:solde,tel1:nTel(iTel1>=0?row[iTel1]||'':''),tel2:nTel(iTel2>=0?row[iTel2]||'':''),tel3:nTel(iTel3>=0?row[iTel3]||'':''),statut:solde<=0?'SOLDE':verse===0?'IMPAYE':'PARTIEL'};});
 }
 
-async function listerOnglets(sheetsId){try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'?key='+API_KEY+'&fields=sheets.properties.title';var r=await fetch(url);var data=await r.json();if(!data.sheets)return[];return data.sheets.map(function(s){return s.properties.title;}).filter(estOngletValide);}catch(e){return[];}}
+async function listerOnglets(sheetsId){try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'?key='+API_KEY+'&fields=sheets.properties.title';var r=await fetch(url);var data=await r.json();if(!data.sheets)return[];var isPRIM=currentStaff&&currentStaff.type==='PRIM';var tous=data.sheets.map(function(s){return s.properties.title;}).filter(estOngletValide);if(isPRIM){return tous.filter(function(t){return/^(CP|CE|CM|GS|MS|PS|TPS|SIL|CI|MATERNELLE)/i.test(t);});}return tous.filter(function(t){return/^(6|5|4|3|2NDE|1ERE|TLE|BT)/i.test(t);});}catch(e){return[];}}
 
 async function ouvrirListesV9(profil){
   var ecole=currentStaff?currentStaff.ecole:null;var label=currentStaff?currentStaff.label:'';
