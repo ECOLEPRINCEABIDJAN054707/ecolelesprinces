@@ -1195,7 +1195,7 @@ function afficherEdu(s){
   let h2='';CHARTE.forEach((c,i)=>{h2+='<div class="charte-item"><div class="charte-num">'+(i+1)+'</div><div><div class="charte-titre">'+c.titre+'</div><div class="charte-desc">'+c.desc+'</div></div></div>';});
   document.getElementById('eduCharteBody').innerHTML=h2;
   chargerResultatsEtMessages(s.ecole,'EDU');
-  chargerAbsencesElevesSigne(s.ecole);
+  chargerAbsencesElevesSigne(s.ecole, s.classes||[]);
   chargerPresencesEnseignants(s.ecole);
   chargerClassesEdu(s);
   chargerNotesDevoir();
@@ -1377,7 +1377,8 @@ function validerAppelDir(){
   const p=Object.values(appelDir).filter(v=>v).length,a=Object.values(appelDir).filter(v=>!v).length;
   showToast('Appel valide — '+p+' present(s)'+(a?' · '+a+' absent(s)':''),'success');
 }
-async function chargerAbsencesElevesSigne(ecole){
+async function chargerAbsencesElevesSigne(ecole, classesEdu){
+  classesEdu = classesEdu || [];
   const today=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
   const dateEl=document.getElementById('eduAbsDate');if(dateEl)dateEl.textContent=today;
   const liste=document.getElementById('eduAbsListe');if(!liste)return;
@@ -1391,6 +1392,11 @@ async function chargerAbsencesElevesSigne(ecole){
       }
     }
   }catch(e){}
+  // Filtrer par classes de l'éducateur
+  if(classesEdu.length > 0) {
+    const norm = s => s.toUpperCase().trim().replace(/\s+/g,' ').replace(/[ÈÉÊË]/g,'E');
+    absences = absences.filter(a => classesEdu.some(cl => norm(a.classe) === norm(cl)));
+  }
   const countEl=document.getElementById('eduAbsCount');if(countEl)countEl.textContent='('+absences.length+' absent'+(absences.length>1?'s':'')+')';
   if(!absences.length){liste.innerHTML='<div style="padding:20px;text-align:center;color:var(--vert);font-size:0.84em;font-weight:600">✅ Aucune absence signalee aujourd\'hui</div>';return;}
   let h='';absences.forEach(a=>{const rb=a.raison?'<span style="font-size:0.66em;padding:2px 8px;border-radius:10px;background:#FFEBEE;color:var(--rouge);font-weight:700">'+a.raison+'</span>':'<span style="font-size:0.66em;padding:2px 8px;border-radius:10px;background:#F5F5F5;color:var(--gris)">Sans motif</span>';h+='<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #f0f4f8;background:#FFF8F8"><div style="width:34px;height:34px;border-radius:50%;background:#FFEBEE;color:var(--rouge);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8em;flex-shrink:0">'+a.nom.charAt(0)+'</div><div style="flex:1"><div style="font-size:0.84em;font-weight:700;color:#C62828">'+a.nom+'</div><div style="font-size:0.72em;color:var(--gris);margin-top:2px">'+a.classe+'</div></div>'+rb+'</div>';});
