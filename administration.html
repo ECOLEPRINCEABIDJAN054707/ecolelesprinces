@@ -1534,28 +1534,18 @@ async function chargerNotesDevoir() {
 
   donneesDevoirs = data;
 
-  // Peupler les filtres
+  // Toujours peupler le select classe avec les classes de l'éducateur
   const selClasse = document.getElementById('eduDevsFiltreClasse');
   const selMat = document.getElementById('eduDevsFiltreMatiere');
   if(selClasse) {
-    const existingClasses = [...selClasse.options].map(o=>o.value).filter(v=>v);
-    if(existingClasses.length === 0) {
-      const classes = [...new Set(data.map(r=>r.classe))].sort();
-      classes.forEach(cl => { const o = document.createElement('option'); o.value=cl; o.textContent=cl; selClasse.appendChild(o); });
-    }
+    selClasse.innerHTML = '<option value="">Toutes mes classes</option>';
+    const classesAfficher = classesEdu.length > 0 ? classesEdu : [...new Set(data.map(r=>r.classe))].sort();
+    classesAfficher.forEach(cl => { const o = document.createElement('option'); o.value=cl; o.textContent=cl; selClasse.appendChild(o); });
   }
   if(selMat) {
-    const existingMats = [...selMat.options].map(o=>o.value).filter(v=>v);
-    if(existingMats.length === 0) {
-      const mats = [...new Set(data.map(r=>r.matiere).filter(Boolean))].sort();
-      mats.forEach(m => { const o = document.createElement('option'); o.value=m; o.textContent=m; selMat.appendChild(o); });
-    }
-  }
-
-  // Peupler select classes depuis éducateur même si vide
-  const selCD = document.getElementById('eduDevsFiltreClasse');
-  if(selCD && selCD.options.length <= 1 && classesEdu.length > 0) {
-    classesEdu.forEach(cl => { const o=document.createElement('option'); o.value=cl; o.textContent=cl; selCD.appendChild(o); });
+    selMat.innerHTML = '<option value="">Toutes matières</option>';
+    const mats = [...new Set(data.map(r=>r.matiere).filter(Boolean))].sort();
+    mats.forEach(m => { const o = document.createElement('option'); o.value=m; o.textContent=m; selMat.appendChild(o); });
   }
 
   if(!found || data.length === 0) {
@@ -1712,19 +1702,16 @@ async function chargerEDT() {
   // Peupler filtres
   const selC = document.getElementById('eduEdtFiltreClasse');
   const selE = document.getElementById('eduEdtFiltreEns');
-  if(selC && selC.options.length <= 1) {
-    const classes = [...new Set(data.map(r=>r.classe))].filter(Boolean).sort();
-    classes.forEach(cl => { const o=document.createElement('option'); o.value=cl; o.textContent=cl; selC.appendChild(o); });
+  // Toujours peupler le select classe avec les classes de l'éducateur
+  if(selC) {
+    selC.innerHTML = '<option value="">Toutes mes classes</option>';
+    const classesAfficher = classesEdu.length > 0 ? classesEdu : [...new Set(data.map(r=>r.classe))].filter(Boolean).sort();
+    classesAfficher.forEach(cl => { const o=document.createElement('option'); o.value=cl; o.textContent=cl; selC.appendChild(o); });
   }
-  if(selE && selE.options.length <= 1) {
+  if(selE) {
+    selE.innerHTML = '<option value="">Tous les enseignants</option>';
     const ens = [...new Set(data.map(r=>r.enseignant))].filter(Boolean).sort();
     ens.forEach(e => { const o=document.createElement('option'); o.value=e; o.textContent=e; selE.appendChild(o); });
-  }
-
-  // Peupler les selects depuis les classes de l'éducateur même si POINTAGE vide
-  const selCpre = document.getElementById('eduEdtFiltreClasse');
-  if(selCpre && selCpre.options.length <= 1 && classesEdu.length > 0) {
-    classesEdu.forEach(cl => { const o=document.createElement('option'); o.value=cl; o.textContent=cl; selCpre.appendChild(o); });
   }
 
   if(!found || data.length === 0) {
