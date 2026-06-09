@@ -2360,9 +2360,18 @@ function afficherResultatDir(data){
       if(ecart>=2)alerte='<div style="background:#FFF3E0;border-left:3px solid #E65100;padding:8px;border-radius:6px;font-size:0.78em;color:#E65100;margin-bottom:8px">⚠️ ATTENTION : Niveau MENA = <b>'+data.niveau+'</b> mais niveau choisi = <b>'+data.niveau_suivant+'</b><br>Ecart de '+ecart+' niveaux — Un document justificatif sera requis</div>';
     }
   }
-  // Avertissement si champs critiques manquants
+  // Si matricule non détecté → basculer vers saisie manuelle avec données partielles
   if(!data.matricule||!data.nom_prenoms){
-    alerte+='<div style="background:#FFEBEE;border-left:3px solid #C62828;padding:8px;border-radius:6px;font-size:0.78em;color:#C62828;margin-bottom:8px">⚠️ Matricule ou nom non detecte — Verifiez la photo (nette, bien eclairee) ou utilisez la saisie manuelle</div>';
+    hideImportLoading();
+    // Pré-remplir la saisie manuelle avec ce qui a été détecté
+    showImportTab('manuel');
+    if(data.statut_norm){var sel=document.getElementById('m-statut');if(sel)sel.value=data.statut_norm;}
+    if(data.niveau_suivant){var sel2=document.getElementById('m-niveau');if(sel2)sel2.value=data.niveau_suivant;}
+    if(data.date_naissance){var el=document.getElementById('m-nais');if(el)el.value=data.date_naissance;}
+    if(data.lieu_naissance){var el2=document.getElementById('m-lieu');if(el2)el2.value=data.lieu_naissance;}
+    if(data.sexe){var sel3=document.getElementById('m-sexe');if(sel3)sel3.value=data.sexe;}
+    affImportErr('Photo insuffisante pour lire le matricule. Formulaire pré-rempli avec les infos détectées — Complétez le matricule et le nom.');
+    return;
   }
   var champs=[['Annee document',anneeDoc+' → '+anneeLabel],
     ['Matricule',data.matricule||'⚠️ Non detecte'],['Nom et Prenoms',data.nom_prenoms||'⚠️ Non detecte'],
@@ -2374,13 +2383,12 @@ function afficherResultatDir(data){
     if(c[1])h+='<div style="margin-bottom:6px"><div style="font-size:0.7em;font-weight:700;color:var(--gris)">'+c[0]+'</div><div style="font-size:0.84em;font-weight:700;color:#1A1A1A">'+c[1]+'</div></div>';
   });
   // Champ niveau modifiable
-  h+='<div style="margin-bottom:8px"><div style="font-size:0.7em;font-weight:700;color:#E65100">MODIFIER LE NIVEAU SI BESOIN</div>'
+  var nivActuel=data.niveau_suivant||'Non détecté';
+  var optNiveaux=['PSA','MSA','GSA','CP1A','CP2A','CE1A','CE2A','CM1A','CM2A','6EME','5EME','4EME','3EME','2NDE','1ERE','TLE'];
+  var optStr=optNiveaux.map(function(n){return'<option value="'+n+'"'+(n===nivActuel?' selected':'')+'>'+n+'</option>';}).join('');
+  h+='<div style="margin-bottom:8px"><div style="font-size:0.7em;font-weight:700;color:#E65100">NIVEAU 2026-2027</div>'
     +'<select id="nivModifDir" style="width:100%;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px">'
-    +'<option value="">-- Garder: '+(data.niveau_suivant||'')+'</option>'
-    +'<option>PSA</option><option>MSA</option><option>GSA</option>'
-    +'<option>CP1A</option><option>CP2A</option><option>CE1A</option><option>CE2A</option><option>CM1A</option><option>CM2A</option>'
-    +'<option>6EME</option><option>5EME</option><option>4EME</option><option>3EME</option>'
-    +'<option>2NDE</option><option>1ERE</option><option>TLE</option></select></div>';
+    +'<option value="">-- Garder: '+nivActuel+'</option>'+optStr+'</select></div>';
   h+='<div style="margin-bottom:8px"><div style="font-size:0.7em;font-weight:700;color:var(--gris)">MOTIF (obligatoire si niveau modifié)</div>'
     +'<input type="text" id="motifModifDir" placeholder="Ex: Redoublant avec document officiel" style="width:100%;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px"></div>';
   // Contacts parents OBLIGATOIRES
