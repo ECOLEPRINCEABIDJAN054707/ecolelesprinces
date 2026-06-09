@@ -2218,21 +2218,19 @@ async function analyserFichierDir(){
 }
 
 async function _analyserAvecClaude(base64,mimeType){
-  var prompt='Lis ce document scolaire ivoirien (recu MENA ou fiche cursus SIGFNE). Reponds UNIQUEMENT avec ce JSON sans markdown: {"matricule":null,"nom_prenoms":null,"date_naissance":null,"lieu_naissance":null,"sexe":null,"niveau":null,"niveau_suivant":null,"decision":null,"statut":null,"ecole_origine":null,"nom_pere":null,"nom_mere":null}. Remplis chaque champ depuis le document. statut=AFF si affecte Etat sinon NAFF. Si info absente laisse null.';
-  var resp=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':CLAUDE_API_KEY_DIR,'anthropic-version':'2023-06-01'},
-    body:JSON.stringify({model:'claude-opus-4-5',max_tokens:600,
-      messages:[{role:'user',content:[
-        {type:'image',source:{type:'base64',media_type:mimeType,data:base64}},
-        {type:'text',text:prompt}
-      ]}]
-    })
-  });
-  var data=await resp.json();
-  if(data.error)throw new Error(data.error.message);
-  var txt=data.content[0].text.replace(/```json[\s\S]*?```/g,'').replace(/```/g,'').trim();
-  return JSON.parse(txt);
+  // Passer par Apps Script pour eviter les restrictions CORS
+  try{
+    var resp=await fetch(APP_SCRIPT_URL_ADMIN,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'analyserDocumentMENA',base64:base64,mimeType:mimeType})
+    });
+    var data=await resp.json();
+    if(data&&data.erreur)throw new Error(data.erreur);
+    return data;
+  }catch(e){
+    throw new Error('Analyse impossible via Apps Script: '+e.message+'. Utilisez la saisie manuelle.');
+  }
 }
 
 
