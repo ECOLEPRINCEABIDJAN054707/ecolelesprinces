@@ -2200,12 +2200,15 @@ function processFileDir(file){
 
 async function analyserFichierDir(){
   if(!_fileBase64Dir){affImportErr('Selectionnez un fichier d\'abord');return;}
-  if(!CLAUDE_API_KEY_DIR&&!VISION_API_KEY_DIR){
-    affImportErr('Cle API non configuree. Utilisez la saisie manuelle ou contactez l\'administrateur.');
-    return;
-  }
-  affImportLoading('Analyse avec '+(_moteurDir==='claude'?'Claude AI':'Google Vision')+' en cours...');
+  affImportLoading('Analyse en cours...');
   try{
+    // Vérifier la taille (max 1Mo en base64)
+    var tailleKo=Math.round(_fileBase64Dir.length*0.75/1024);
+    if(tailleKo>800){
+      hideImportLoading();
+      affImportErr('Fichier trop lourd ('+tailleKo+' Ko). Prenez une photo de la page ou compressez le PDF. Ou utilisez la saisie manuelle.');
+      return;
+    }
     var result;
     if(_moteurDir==='claude'){
       result=await _analyserAvecClaude(_fileBase64Dir,_fileTypeDir);
