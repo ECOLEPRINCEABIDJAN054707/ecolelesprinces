@@ -1561,7 +1561,7 @@ async function chargerPresencesEnseignants(ecole){
       if(data.values&&data.values.length)enseignants=data.values.filter(row=>row[0]&&String(row[3]||'').trim().toUpperCase()==='OUI').map(row=>({nom:String(row[0]||'').trim(),matiere:String(row[1]||'').trim(),classe:String(row[2]||'').trim(),present:true}));
     }
   }catch(e){}
-  if(!enseignants.length)enseignants=ENSEIGNANTS_APPEL_DEMO.map(e=>({...e,present:Math.random()>0.15}));
+  if(!enseignants.length){const liste=document.getElementById('eduEnsListe');if(liste)liste.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucune donnee de presence disponible.</p>';return;}
   const nbP=enseignants.filter(e=>e.present).length;
   const countEl=document.getElementById('eduEnsCount');if(countEl)countEl.textContent='('+nbP+'/'+enseignants.length+' presents)';
   let h='<div style="display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)"><div style="flex:1;text-align:center;background:#E8F5E9;border-radius:8px;padding:8px"><div style="font-size:1.2em;font-weight:700;color:var(--vert)">'+nbP+'</div><div style="font-size:0.68em;color:var(--vert);font-weight:600">Presents</div></div><div style="flex:1;text-align:center;background:#FFEBEE;border-radius:8px;padding:8px"><div style="font-size:1.2em;font-weight:700;color:var(--rouge)">'+(enseignants.length-nbP)+'</div><div style="font-size:0.68em;color:var(--rouge);font-weight:600">Absents</div></div><div style="flex:1;text-align:center;background:#E3F2FD;border-radius:8px;padding:8px"><div style="font-size:1.2em;font-weight:700;color:var(--bleu)">'+enseignants.length+'</div><div style="font-size:0.68em;color:var(--bleu);font-weight:600">Total</div></div></div>';
