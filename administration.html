@@ -2325,7 +2325,7 @@ function afficherResultatDir(data){
     data.niveau_suivant=mapNiv[nk]||data.niveau;
   }
   // Normaliser statut
-  var st=String(data.statut||'').toUpperCase();
+  var st=String(data.statut||data.statut_norm||'').toUpperCase();
   data.statut_norm=(st.includes('AFF')&&!st.includes('NON')&&!st.includes('NAFF'))?'AFF':'NAFF';
   // Détecter année sur le document
   var anneeDoc=data.annee_scolaire||'2025-2026';
@@ -2344,11 +2344,15 @@ function afficherResultatDir(data){
       if(ecart>=2)alerte='<div style="background:#FFF3E0;border-left:3px solid #E65100;padding:8px;border-radius:6px;font-size:0.78em;color:#E65100;margin-bottom:8px">⚠️ ATTENTION : Niveau MENA = <b>'+data.niveau+'</b> mais niveau choisi = <b>'+data.niveau_suivant+'</b><br>Ecart de '+ecart+' niveaux — Un document justificatif sera requis</div>';
     }
   }
+  // Avertissement si champs critiques manquants
+  if(!data.matricule||!data.nom_prenoms){
+    alerte+='<div style="background:#FFEBEE;border-left:3px solid #C62828;padding:8px;border-radius:6px;font-size:0.78em;color:#C62828;margin-bottom:8px">⚠️ Matricule ou nom non detecte — Verifiez la photo (nette, bien eclairee) ou utilisez la saisie manuelle</div>';
+  }
   var champs=[['Annee document',anneeDoc+' → '+anneeLabel],
-    ['Matricule',data.matricule],['Nom et Prenoms',data.nom_prenoms],
-    ['Niveau MENA',data.niveau],['Niveau 2026-2027',data.niveau_suivant],
-    ['Statut',data.statut_norm],['Date naissance',data.date_naissance],
-    ['Lieu naissance',data.lieu_naissance],['Sexe',data.sexe]];
+    ['Matricule',data.matricule||'⚠️ Non detecte'],['Nom et Prenoms',data.nom_prenoms||'⚠️ Non detecte'],
+    ['Niveau MENA',data.niveau||'⚠️ Non detecte'],['Niveau 2026-2027',data.niveau_suivant||''],
+    ['Statut',data.statut_norm],['Date naissance',data.date_naissance||''],
+    ['Lieu naissance',data.lieu_naissance||''],['Sexe',data.sexe||'']];
   var h=alerte;
   champs.forEach(function(c){
     if(c[1])h+='<div style="margin-bottom:6px"><div style="font-size:0.7em;font-weight:700;color:var(--gris)">'+c[0]+'</div><div style="font-size:0.84em;font-weight:700;color:#1A1A1A">'+c[1]+'</div></div>';
