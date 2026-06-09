@@ -2367,12 +2367,44 @@ function afficherResultatDir(data){
     +'<option>2NDE</option><option>1ERE</option><option>TLE</option></select></div>';
   h+='<div style="margin-bottom:8px"><div style="font-size:0.7em;font-weight:700;color:var(--gris)">MOTIF (obligatoire si niveau modifié)</div>'
     +'<input type="text" id="motifModifDir" placeholder="Ex: Redoublant avec document officiel" style="width:100%;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px"></div>';
+  // Contacts parents OBLIGATOIRES
+  h+='<div style="background:#E3F2FD;border-left:3px solid #1F4E79;padding:8px 10px;border-radius:6px;margin-bottom:10px;font-size:0.75em;color:#1F4E79;font-weight:700">📞 CONTACTS PARENTS — Obligatoires avant inscription</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px">'
+    +'<div style="flex:1"><div style="font-size:0.7em;font-weight:700;color:#C62828">📱 TEL PÈRE *</div>'
+    +'<input type="tel" id="telPereDir" placeholder="Ex: 0701234567" maxlength="15" '
+    +'style="width:100%;padding:7px;border:2px solid #C62828;border-radius:6px;font-size:0.85em;margin-top:2px" '
+    +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')"></div>'
+    +'<div style="flex:1"><div style="font-size:0.7em;font-weight:700;color:#C62828">📱 TEL MÈRE *</div>'
+    +'<input type="tel" id="telMereDir" placeholder="Ex: 0507654321" maxlength="15" '
+    +'style="width:100%;padding:7px;border:2px solid #C62828;border-radius:6px;font-size:0.85em;margin-top:2px" '
+    +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')"></div>'
+    +'</div>'
+    +'<div style="margin-bottom:10px"><div style="font-size:0.7em;font-weight:700;color:var(--gris)">📱 TEL TUTEUR (optionnel)</div>'
+    +'<input type="tel" id="telTuteurDir" placeholder="Ex: 0101234567" maxlength="15" '
+    +'style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;margin-top:2px" '
+    +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')"></div>';
   document.getElementById('resultChamps').innerHTML=h;
   document.getElementById('zoneResultatDir').style.display='block';
 }
 
 async function confirmerInscriptionDir(){
   if(!_eleveDatasDir){return;}
+  // Vérifier contacts obligatoires
+  var telPere=document.getElementById('telPereDir')?document.getElementById('telPereDir').value.trim():'';
+  var telMere=document.getElementById('telMereDir')?document.getElementById('telMereDir').value.trim():'';
+  var telTuteur=document.getElementById('telTuteurDir')?document.getElementById('telTuteurDir').value.trim():'';
+  if(!telPere||telPere.length<8){affImportErr('⚠️ Le téléphone du père est obligatoire (min 8 chiffres)');return;}
+  if(!telMere||telMere.length<8){affImportErr('⚠️ Le téléphone de la mère est obligatoire (min 8 chiffres)');return;}
+  // Vérifier niveau si modifié
+  var nivModif=document.getElementById('nivModifDir')?document.getElementById('nivModifDir').value:'';
+  var motif=document.getElementById('motifModifDir')?document.getElementById('motifModifDir').value.trim():'';
+  if(nivModif&&!motif){affImportErr('⚠️ Le motif est obligatoire si vous modifiez le niveau');return;}
+  // Ajouter contacts dans les données
+  _eleveDatasDir.tel_pere=telPere;
+  _eleveDatasDir.tel_mere=telMere;
+  _eleveDatasDir.tel_tuteur=telTuteur;
+  if(nivModif)_eleveDatasDir.niveau_suivant=nivModif;
+  if(motif)_eleveDatasDir.motif_niveau=motif;
   affImportLoading('Inscription en cours...');
   var res=await _inscrireNouvelEleveDir(_eleveDatasDir);
   hideImportLoading();
@@ -2380,6 +2412,10 @@ async function confirmerInscriptionDir(){
     document.getElementById('zoneResultatDir').style.display='none';
     affImportSuccess(res.message);
     _eleveDatasDir=null;_fileBase64Dir='';
+    // Vider les champs
+    ['telPereDir','telMereDir','telTuteurDir','motifModifDir'].forEach(function(id){
+      var el=document.getElementById(id);if(el)el.value='';
+    });
   }else{
     affImportErr(res.message);
   }
@@ -2452,6 +2488,7 @@ async function _inscrireNouvelEleveDir(data){
         statut:statut,dateNaissance:data.date_naissance||'',
         lieuNaissance:data.lieu_naissance||'',sexe:data.sexe||'',
         nomPere:data.nom_pere||'',nomMere:data.nom_mere||'',
+        telPere:data.tel_pere||'',telMere:data.tel_mere||'',telTuteur:data.tel_tuteur||'',
         ecoleNom:s.label,sheetsId:sheetsId,source:data.source||'IMPORT'};
       try{
         var resp2=await fetch(urlScript2,{method:'POST',
