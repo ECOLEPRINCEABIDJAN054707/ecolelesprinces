@@ -431,7 +431,19 @@ table tr:nth-child(even){background:#F8FAFD}
           <input type="file" id="fileInputDir" accept=".pdf,.jpg,.jpeg,.png,.webp" style="display:none" onchange="chargerFichierDir(this)">
           <img id="previewDir" src="" style="max-width:100%;max-height:120px;border-radius:6px;margin-top:8px;display:none">
           <div id="infosFichierDir" style="display:none;margin-top:8px;padding:8px;background:#f8f9fa;border-radius:6px;font-size:0.78em;color:#333"></div>
-          <button id="btnAnalyserDir" onclick="analyserFichierDir()" style="display:none;width:100%;margin-top:10px;padding:10px;background:#1F4E79;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:700;cursor:pointer">&#128269; Analyser le document</button>
+          <!-- Contacts parents AVANT analyse -->
+        <div id="contactsAvantAnalyseDir" style="display:none;margin-top:10px">
+          <div style="background:#E3F2FD;border-left:3px solid #1F4E79;padding:7px 10px;border-radius:6px;margin-bottom:8px;font-size:0.75em;color:#1F4E79;font-weight:700">📞 Contacts parents — à renseigner maintenant</div>
+          <div style="display:flex;gap:6px;margin-bottom:6px">
+            <div style="flex:1"><label style="font-size:0.7em;font-weight:700;color:#C62828">📱 TEL PÈRE *</label>
+            <input type="tel" id="telPereDir2" placeholder="0701234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:7px;border:2px solid #C62828;border-radius:6px;font-size:0.85em;margin-top:2px"></div>
+            <div style="flex:1"><label style="font-size:0.7em;font-weight:700;color:#C62828">📱 TEL MÈRE *</label>
+            <input type="tel" id="telMereDir2" placeholder="0507654321" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:7px;border:2px solid #C62828;border-radius:6px;font-size:0.85em;margin-top:2px"></div>
+          </div>
+          <div style="margin-bottom:8px"><label style="font-size:0.7em;font-weight:700;color:var(--gris)">📱 TEL TUTEUR (optionnel)</label>
+          <input type="tel" id="telTuteurDir2" placeholder="0101234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;margin-top:2px"></div>
+        </div>
+        <button id="btnAnalyserDir" onclick="analyserFichierDir()" style="display:none;width:100%;margin-top:10px;padding:10px;background:#1F4E79;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:700;cursor:pointer">&#128269; Analyser le document</button>
         </div>
         <!-- Panel Manuel -->
         <div id="panelManuel" style="display:none">
@@ -2195,6 +2207,7 @@ function processFileDir(file){
   document.getElementById('infosFichierDir').textContent=file.name+' ('+Math.round(file.size/1024)+' Ko)';
   document.getElementById('infosFichierDir').style.display='block';
   document.getElementById('btnAnalyserDir').style.display='block';
+  document.getElementById('contactsAvantAnalyseDir').style.display='block';
   var reader=new FileReader();
   reader.onload=function(e){
     _fileBase64Dir=e.target.result.split(',')[1];
@@ -2231,7 +2244,11 @@ async function analyserFichierDir(){
     }else{
       result=await _analyserAvecVision(_fileBase64Dir,_fileTypeDir);
     }
-    afficherResultatDir(result);
+    // Transférer contacts vers la fiche
+  if(document.getElementById('telPereDir2'))result._tel_pere=document.getElementById('telPereDir2').value.trim();
+  if(document.getElementById('telMereDir2'))result._tel_mere=document.getElementById('telMereDir2').value.trim();
+  if(document.getElementById('telTuteurDir2'))result._tel_tuteur=document.getElementById('telTuteurDir2').value.trim();
+  afficherResultatDir(result);
   }catch(e){
     affImportErr('Erreur analyse: '+e.message);
   }
@@ -2274,7 +2291,7 @@ async function _analyserClaudeDirecte(base64,mimeType){
   // Appel direct à l'API Claude (fonctionne si CORS autorisé par Anthropic)
   var cle=CLAUDE_API_KEY_DIR||'';
   if(!cle)throw new Error('Cle Claude non configuree. Utilisez la saisie manuelle.');
-  var prompt='Lis ce document scolaire ivoirien (recu MENA). Reponds UNIQUEMENT avec ce JSON sans markdown: {"matricule":null,"nom_prenoms":null,"date_naissance":null,"lieu_naissance":null,"sexe":null,"niveau":null,"niveau_suivant":null,"decision":null,"statut":null,"ecole_origine":null,"nom_pere":null,"nom_mere":null,"annee_scolaire":null}. statut=AFF si AFFECTE(E) sinon NAFF. Si absent laisse null.';
+  var prompt='Ce document est un recu inscription MENA de Cote d Ivoire. Le MATRICULE ELEVE est en ROUGE et GROS (ex: 20475663D). Nom sur ligne Nom, Prenom sur Prenom(s), Niveau sur Niveau 2025-2026, Statut sur Statut. Reponds avec ce JSON sans markdown: {"matricule":null,"nom_prenoms":null,"date_naissance":null,"lieu_naissance":null,"sexe":null,"niveau":null,"niveau_suivant":null,"decision":null,"statut":null,"ecole_origine":null,"nom_pere":null,"nom_mere":null,"annee_scolaire":null}. statut=AFF si AFFECTE(E) sinon NAFF. Si absent laisse null.';
   var resp=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{'Content-Type':'application/json','x-api-key':cle,'anthropic-version':'2023-06-01'},
@@ -2408,6 +2425,10 @@ function afficherResultatDir(data){
     +'style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;margin-top:2px" '
     +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')"></div>';
   document.getElementById('resultChamps').innerHTML=h;
+  // Pré-remplir contacts si déjà saisis
+  if(data._tel_pere){var tp=document.getElementById('telPereDir');if(tp)tp.value=data._tel_pere;_eleveDatasDir.tel_pere=data._tel_pere;}
+  if(data._tel_mere){var tm=document.getElementById('telMereDir');if(tm)tm.value=data._tel_mere;_eleveDatasDir.tel_mere=data._tel_mere;}
+  if(data._tel_tuteur){var tt=document.getElementById('telTuteurDir');if(tt)tt.value=data._tel_tuteur;_eleveDatasDir.tel_tuteur=data._tel_tuteur;}
   document.getElementById('zoneResultatDir').style.display='block';
 }
 
