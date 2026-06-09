@@ -2222,19 +2222,57 @@ async function analyserFichierDir(){
 }
 
 async function _analyserAvecClaude(base64,mimeType){
-  // Passer par Apps Script pour eviter les restrictions CORS
+  // Envoyer via formulaire POST pour contourner CORS Apps Script
   try{
+    // Créer un formulaire caché et le soumettre via fetch no-cors
+    // puis lire la réponse via iframe
+    // Alternative : utiliser fetch avec mode no-cors + callback
+    
+    // Solution : POST direct avec mode cors
     var resp=await fetch(APP_SCRIPT_URL_ADMIN,{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain'},
       body:JSON.stringify({action:'analyserDocumentMENA',base64:base64,mimeType:mimeType})
     });
-    var data=await resp.json();
+    
+    // no-cors retourne opaque response - utiliser GET à la place
+    var params=new URLSearchParams();
+    params.append('action','analyserDocumentMENA');
+    params.append('mimeType',mimeType||'image/jpeg');
+    // base64 trop long pour GET - utiliser session storage
+    sessionStorage.setItem('_mena_b64',base64);
+    params.append('useSession','1');
+    
+    var resp2=await fetch(APP_SCRIPT_URL_ADMIN+'?'+params.toString());
+    var data=await resp2.json();
     if(data&&data.erreur)throw new Error(data.erreur);
     return data;
   }catch(e){
-    throw new Error('Analyse impossible via Apps Script: '+e.message+'. Utilisez la saisie manuelle.');
+    // Fallback : appel direct à Claude depuis le navigateur
+    return await _analyserClaudeDirecte(base64,mimeType);
   }
+}
+
+async function _analyserClaudeDirecte(base64,mimeType){
+  // Appel direct à l'API Claude (fonctionne si CORS autorisé par Anthropic)
+  var cle=CLAUDE_API_KEY_DIR||'';
+  if(!cle)throw new Error('Cle Claude non configuree. Utilisez la saisie manuelle.');
+  var prompt='Lis ce document scolaire ivoirien (recu MENA). Reponds UNIQUEMENT avec ce JSON sans markdown: {"matricule":null,"nom_prenoms":null,"date_naissance":null,"lieu_naissance":null,"sexe":null,"niveau":null,"niveau_suivant":null,"decision":null,"statut":null,"ecole_origine":null,"nom_pere":null,"nom_mere":null,"annee_scolaire":null}. statut=AFF si AFFECTE(E) sinon NAFF. Si absent laisse null.';
+  var resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':cle,'anthropic-version':'2023-06-01'},
+    body:JSON.stringify({model:'claude-haiku-4-5',max_tokens:600,
+      messages:[{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:mimeType||'image/jpeg',data:base64}},
+        {type:'text',text:prompt}
+      ]}]
+    })
+  });
+  var data=await resp.json();
+  if(data.error)throw new Error(data.error.message);
+  var txt=data.content[0].text.replace(/```[\s\S]*?```/g,'').replace(/```/g,'').trim();
+  return JSON.parse(txt);
 }
 
 
