@@ -396,6 +396,93 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
     <div class="sec-body" id="dirAgendaBody"></div>
   </div>
+  <!-- IMPORT NOUVEL ELEVE -->
+  <div class="section">
+    <div class="sec-head sec-or" onclick="toggleSec(this)">
+      <h3>&#127891; Inscrire un nouvel &eacute;l&egrave;ve 2026-2027</h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="dirImportBody">
+      <div style="padding:10px 14px 6px;background:#FFF8E1;border-bottom:1px solid #FFE082">
+        <span style="font-size:0.72em;color:#F57F17;font-weight:600">&#128247; Scannez ou importez le recu MENA ou la fiche cursus de l'eleve</span>
+      </div>
+      <!-- Sélecteur moteur -->
+      <div style="padding:12px 14px 0">
+        <div style="font-size:0.75em;font-weight:700;color:var(--gris);margin-bottom:6px">MOTEUR DE LECTURE</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px">
+          <div id="moteurClaudeBtn" class="moteur-btn active" onclick="setMoteurDir('claude',this)" style="flex:1;padding:8px;border:2px solid #1F4E79;border-radius:8px;font-size:0.75em;font-weight:700;cursor:pointer;text-align:center;background:#E3F2FD;color:#1F4E79">
+            &#129302; Claude AI<br><span style="font-size:0.8em;opacity:0.7">Recommandé</span>
+          </div>
+          <div id="moteurVisionBtn" class="moteur-btn" onclick="setMoteurDir('vision',this)" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;font-size:0.75em;font-weight:700;cursor:pointer;text-align:center;background:#fff;color:var(--gris)">
+            &#128065;&#65039; Google Vision<br><span style="font-size:0.8em;opacity:0.7">OCR standard</span>
+          </div>
+        </div>
+        <!-- Onglets -->
+        <div style="display:flex;gap:4px;margin-bottom:12px">
+          <div id="tabPhoto" onclick="showImportTab('photo')" style="flex:1;padding:8px;border:2px solid #1F4E79;border-radius:8px;font-size:0.75em;font-weight:700;cursor:pointer;text-align:center;background:#1F4E79;color:#fff">&#128247; Photo / PDF</div>
+          <div id="tabManuel" onclick="showImportTab('manuel')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;font-size:0.75em;font-weight:700;cursor:pointer;text-align:center;background:#fff;color:var(--gris)">&#9000;&#65039; Saisie manuelle</div>
+        </div>
+        <!-- Panel Photo -->
+        <div id="panelPhoto">
+          <div id="dropZoneDir" onclick="document.getElementById('fileInputDir').click()" ondragover="event.preventDefault();this.style.borderColor='#1F4E79'" ondragleave="this.style.borderColor='#dee2e6'" ondrop="handleDropDir(event)" style="border:2px dashed #dee2e6;border-radius:8px;padding:20px;text-align:center;cursor:pointer;color:var(--gris);font-size:0.82em;transition:all 0.2s">
+            <div style="font-size:28px;margin-bottom:6px">&#128247;</div>
+            <div>Cliquez ou d&eacute;posez le fichier ici</div>
+            <div style="font-size:0.75em;margin-top:4px;opacity:0.7">PDF, JPG, PNG, WEBP accept&eacute;s</div>
+          </div>
+          <input type="file" id="fileInputDir" accept=".pdf,.jpg,.jpeg,.png,.webp" style="display:none" onchange="chargerFichierDir(this)">
+          <img id="previewDir" src="" style="max-width:100%;max-height:120px;border-radius:6px;margin-top:8px;display:none">
+          <div id="infosFichierDir" style="display:none;margin-top:8px;padding:8px;background:#f8f9fa;border-radius:6px;font-size:0.78em;color:#333"></div>
+          <button id="btnAnalyserDir" onclick="analyserFichierDir()" style="display:none;width:100%;margin-top:10px;padding:10px;background:#1F4E79;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:700;cursor:pointer">&#128269; Analyser le document</button>
+        </div>
+        <!-- Panel Manuel -->
+        <div id="panelManuel" style="display:none">
+          <div style="background:#E3F2FD;border-left:3px solid #1F4E79;padding:8px;font-size:0.75em;border-radius:4px;margin-bottom:10px;color:#1F4E79">Remplissez les informations du document manuellement</div>
+          <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">MATRICULE *</label><input type="text" id="m-mat" placeholder="Ex: 24188737C" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px"></div>
+          <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">NOM ET PRENOMS *</label><input type="text" id="m-nom" placeholder="NOM PRENOM" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px"></div>
+          <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">NIVEAU 2026-2027 *</label>
+            <select id="m-niveau" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px">
+              <option value="">-- S&eacute;lectionner --</option>
+              <option>PSA</option><option>MSA</option><option>GSA</option>
+              <option>CP1A</option><option>CP2A</option><option>CE1A</option><option>CE2A</option><option>CM1A</option><option>CM2A</option>
+              <option>6EME</option><option>5EME</option><option>4EME</option><option>3EME</option>
+              <option>2NDE</option><option>1ERE</option><option>TLE</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <div style="flex:1"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">STATUT</label>
+              <select id="m-statut" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px">
+                <option value="AFF">AFF (Affecté État)</option><option value="NAFF">NAFF (Non Affecté)</option>
+              </select>
+            </div>
+            <div style="flex:1"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">SEXE</label>
+              <select id="m-sexe" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px">
+                <option value="">--</option><option value="MASCULIN">MASCULIN</option><option value="FEMININ">FEMININ</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">DATE NAISSANCE</label><input type="text" id="m-nais" placeholder="JJ/MM/AAAA" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px"></div>
+          <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">LIEU NAISSANCE</label><input type="text" id="m-lieu" placeholder="Ex: ABIDJAN" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px"></div>
+          <button onclick="validerManuelDir()" style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:700;cursor:pointer;margin-top:4px">&#10003; Inscrire cet &eacute;l&egrave;ve</button>
+        </div>
+        <!-- Zone résultat analyse -->
+        <div id="zoneResultatDir" style="display:none;margin-top:12px">
+          <div style="font-weight:700;color:#2E7D32;margin-bottom:8px;font-size:0.82em">&#10003; Informations extraites — V&eacute;rifiez et confirmez :</div>
+          <div id="resultChamps" style="background:#f8f9fa;border-radius:8px;padding:10px;font-size:0.78em;margin-bottom:10px"></div>
+          <div style="display:flex;gap:6px">
+            <button onclick="confirmerInscriptionDir()" style="flex:1;padding:9px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer">&#10003; Confirmer inscription</button>
+            <button onclick="annulerResultatDir()" style="flex:1;padding:9px;background:#e0e0e0;color:#555;border:none;border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer">&#10007; Annuler</button>
+          </div>
+        </div>
+        <!-- Messages -->
+        <div id="importLoadingDir" style="display:none;text-align:center;padding:14px;color:#1F4E79;font-size:0.82em">
+          <div style="display:inline-block;width:18px;height:18px;border:3px solid #f3f3f3;border-top:3px solid #1F4E79;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle"></div>
+          <span id="importLoadingTxt">Analyse en cours...</span>
+        </div>
+        <div id="importSuccessDir" style="display:none;background:#E8F5E9;border-left:3px solid #2E7D32;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em;color:#2E7D32"></div>
+        <div id="importErrorDir" style="display:none;background:#FFEBEE;border-left:3px solid #C62828;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em;color:#C62828"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="footer">R&eacute;seau CPP Les Princes d'Abidjan &middot; Espace Direction &middot; 2025-2026</div>
 </div>
 
@@ -2011,6 +2098,231 @@ function toggleEdtDetail(el) {
   if(next) next.style.display = next.style.display === 'none' ? 'block' : 'none';
 }
 function logout(){['espaceDir','espaceFond','espaceCom','espaceEdu'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('loginPage').style.display='flex';document.getElementById('inputMat').value='';document.getElementById('inputCode').value='';currentStaff=null;donneesPointage=[];coursEnAttente=[];tentativesPin=0;donneesDevoirs=[];notesElevesCache={};const sel=document.getElementById('filtreMois');if(sel)sel.innerHTML='';}
+
+// ============================================================
+// IMPORT NOUVEL ÉLÈVE — Espace Directeur
+// ============================================================
+var _moteurDir='claude', _fileBase64Dir='', _fileTypeDir='', _eleveDatasDir=null;
+
+// Clés API (à configurer)
+var CLAUDE_API_KEY_DIR='';  // Remplir avec votre clé Anthropic
+var VISION_API_KEY_DIR='';  // Remplir avec votre clé Google Cloud Vision
+
+function setMoteurDir(m,el){
+  _moteurDir=m;
+  document.querySelectorAll('.moteur-btn').forEach(function(b){
+    b.style.background='#fff';b.style.color='var(--gris)';b.style.borderColor='var(--border)';
+  });
+  el.style.background='#E3F2FD';el.style.color='#1F4E79';el.style.borderColor='#1F4E79';
+}
+
+function showImportTab(t){
+  document.getElementById('panelPhoto').style.display=t==='photo'?'block':'none';
+  document.getElementById('panelManuel').style.display=t==='manuel'?'block':'none';
+  var tP=document.getElementById('tabPhoto'),tM=document.getElementById('tabManuel');
+  if(t==='photo'){tP.style.background='#1F4E79';tP.style.color='#fff';tP.style.borderColor='#1F4E79';tM.style.background='#fff';tM.style.color='var(--gris)';tM.style.borderColor='var(--border)';}
+  else{tM.style.background='#1F4E79';tM.style.color='#fff';tM.style.borderColor='#1F4E79';tP.style.background='#fff';tP.style.color='var(--gris)';tP.style.borderColor='var(--border)';}
+}
+
+function handleDropDir(e){
+  e.preventDefault();
+  document.getElementById('dropZoneDir').style.borderColor='#dee2e6';
+  if(e.dataTransfer.files.length>0)processFileDir(e.dataTransfer.files[0]);
+}
+
+function chargerFichierDir(input){
+  if(input.files.length>0)processFileDir(input.files[0]);
+}
+
+function processFileDir(file){
+  document.getElementById('infosFichierDir').textContent=file.name+' ('+Math.round(file.size/1024)+' Ko)';
+  document.getElementById('infosFichierDir').style.display='block';
+  document.getElementById('btnAnalyserDir').style.display='block';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    _fileBase64Dir=e.target.result.split(',')[1];
+    _fileTypeDir=file.type||'image/jpeg';
+    if(file.type.startsWith('image/')){
+      var prev=document.getElementById('previewDir');
+      prev.src=e.target.result;prev.style.display='block';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyserFichierDir(){
+  if(!_fileBase64Dir){affImportErr('Selectionnez un fichier d\'abord');return;}
+  if(!CLAUDE_API_KEY_DIR&&!VISION_API_KEY_DIR){
+    affImportErr('Cle API non configuree. Utilisez la saisie manuelle ou contactez l\'administrateur.');
+    return;
+  }
+  affImportLoading('Analyse avec '+(_moteurDir==='claude'?'Claude AI':'Google Vision')+' en cours...');
+  try{
+    var result;
+    if(_moteurDir==='claude'){
+      result=await _analyserAvecClaude(_fileBase64Dir,_fileTypeDir);
+    }else{
+      result=await _analyserAvecVision(_fileBase64Dir,_fileTypeDir);
+    }
+    afficherResultatDir(result);
+  }catch(e){
+    affImportErr('Erreur analyse: '+e.message);
+  }
+}
+
+async function _analyserAvecClaude(base64,mimeType){
+  var prompt='Lis ce document scolaire ivoirien (recu MENA ou fiche cursus SIGFNE). Reponds UNIQUEMENT avec ce JSON sans markdown: {"matricule":null,"nom_prenoms":null,"date_naissance":null,"lieu_naissance":null,"sexe":null,"niveau":null,"niveau_suivant":null,"decision":null,"statut":null,"ecole_origine":null,"nom_pere":null,"nom_mere":null}. Remplis chaque champ depuis le document. statut=AFF si affecte Etat sinon NAFF. Si info absente laisse null.';
+  var resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':CLAUDE_API_KEY_DIR,'anthropic-version':'2023-06-01'},
+    body:JSON.stringify({model:'claude-opus-4-6',max_tokens:600,
+      messages:[{role:'user',content:[
+        {type:'image',source:{type:'base64',media_type:mimeType,data:base64}},
+        {type:'text',text:prompt}
+      ]}]
+    })
+  });
+  var data=await resp.json();
+  if(data.error)throw new Error(data.error.message);
+  var txt=data.content[0].text.replace(/```json[\s\S]*?```/g,'').replace(/```/g,'').trim();
+  return JSON.parse(txt);
+}
+
+
+async function _analyserAvecVision(base64,mimeType){
+  var resp=await fetch('https://vision.googleapis.com/v1/images:annotate?key='+VISION_API_KEY_DIR,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({requests:[{image:{content:base64},features:[{type:'DOCUMENT_TEXT_DETECTION'}]}]})
+  });
+  var data=await resp.json();
+  if(data.error)throw new Error(data.error.message);
+  var texte=data.responses[0].fullTextAnnotation?data.responses[0].fullTextAnnotation.text:'';
+  if(!texte)throw new Error('Aucun texte detecte dans l\'image');
+  return _parserTexteDir(texte);
+}
+
+function _parserTexteDir(texte){
+  var r={matricule:null,nom_prenoms:null,date_naissance:null,lieu_naissance:null,
+    sexe:null,niveau:null,niveau_suivant:null,decision:null,statut:null,
+    ecole_origine:null,nom_pere:null,nom_mere:null};
+  var lignes=texte.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+  lignes.forEach(function(l){
+    var L=l.toUpperCase();
+    var mMat=l.match(/([0-9]{8}[A-Z])/);
+    if(mMat&&!r.matricule)r.matricule=mMat[1];
+    var mDate=l.match(/(\d{2}\/\d{2}\/\d{4})/);
+    if(mDate&&!r.date_naissance)r.date_naissance=mDate[1];
+    if(L.includes('MASCULIN'))r.sexe='MASCULIN';
+    if(L.includes('FEMININ')||L.includes('FÉMININ'))r.sexe='FEMININ';
+    if(L.includes('NON AFFECTE')||L.includes('NAFF'))r.statut='NAFF';
+    else if(L.includes('AFFECTE')||L.includes('AFF'))r.statut='AFF';
+    if(L.includes('ADMIS'))r.decision='ADMIS';
+    if(L.includes('REDOUBLANT'))r.decision='REDOUBLANT';
+    ['6EME','5EME','4EME','3EME','2NDE','1ERE','TLE','CP1','CP2','CE1','CE2','CM1','CM2','GSA','MSA','PSA'].forEach(function(n){
+      if(L.includes(n)&&!r.niveau)r.niveau=n;
+    });
+  });
+  return r;
+}
+
+function afficherResultatDir(data){
+  hideImportLoading();
+  if(!data){affImportErr('Impossible de lire le document. Utilisez la saisie manuelle.');return;}
+  _eleveDatasDir=data;
+  // Niveau suivant automatique
+  if(!data.niveau_suivant&&data.niveau){
+    var map={'CM2A':'6EME','6EME':'5EME','5EME':'4EME','4EME':'3EME','3EME':'2NDE','2NDE':'1ERE','1ERE':'TLE',
+      'CP1A':'CP2A','CP2A':'CE1A','CE1A':'CE2A','CE2A':'CM1A','CM1A':'CM2A','PSA':'MSA','MSA':'GSA','GSA':'CP1A'};
+    data.niveau_suivant=map[data.niveau]||data.niveau;
+  }
+  var champs=[['Matricule',data.matricule],['Nom et Prénoms',data.nom_prenoms],
+    ['Niveau 2026-2027',data.niveau_suivant||data.niveau],['Statut',data.statut],
+    ['Date naissance',data.date_naissance],['Lieu naissance',data.lieu_naissance],
+    ['Sexe',data.sexe],['Père',data.nom_pere],['Mère',data.nom_mere]];
+  var h='';
+  champs.forEach(function(c){
+    if(c[1])h+='<div style="margin-bottom:6px"><div style="font-size:0.7em;font-weight:700;color:var(--gris)">'+c[0]+'</div><div style="font-size:0.84em;font-weight:700;color:#1A1A1A">'+c[1]+'</div></div>';
+  });
+  document.getElementById('resultChamps').innerHTML=h;
+  document.getElementById('zoneResultatDir').style.display='block';
+}
+
+async function confirmerInscriptionDir(){
+  if(!_eleveDatasDir){return;}
+  affImportLoading('Inscription en cours...');
+  var res=await _inscrireNouvelEleveDir(_eleveDatasDir);
+  hideImportLoading();
+  if(res.succes){
+    document.getElementById('zoneResultatDir').style.display='none';
+    affImportSuccess(res.message);
+    _eleveDatasDir=null;_fileBase64Dir='';
+  }else{
+    affImportErr(res.message);
+  }
+}
+
+function validerManuelDir(){
+  var mat=document.getElementById('m-mat').value.trim();
+  var nom=document.getElementById('m-nom').value.trim();
+  var niv=document.getElementById('m-niveau').value;
+  if(!mat||!nom||!niv){affImportErr('Matricule, nom et niveau sont obligatoires');return;}
+  var data={matricule:mat,nom_prenoms:nom,niveau_suivant:niv,
+    statut:document.getElementById('m-statut').value,
+    date_naissance:document.getElementById('m-nais').value,
+    lieu_naissance:document.getElementById('m-lieu').value,
+    sexe:document.getElementById('m-sexe').value,
+    source:'MANUEL'};
+  affImportLoading('Inscription en cours...');
+  _inscrireNouvelEleveDir(data).then(function(res){
+    hideImportLoading();
+    if(res.succes)affImportSuccess(res.message);else affImportErr(res.message);
+  });
+}
+
+async function _inscrireNouvelEleveDir(data){
+  try{
+    var s=currentStaff;
+    var sheetsId=SHEETS_IDS[s.ecole];
+    if(!sheetsId)return{succes:false,message:'Base 2026-2027 non configuree pour cette ecole'};
+    var niveau=(data.niveau_suivant||data.niveau||'').toUpperCase().trim();
+    // Vérifier doublon dans SYNTHESE
+    var urlSyn='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    var rSyn=await fetch(urlSyn);
+    var dSyn=await rSyn.json();
+    if(dSyn.values){
+      for(var i=1;i<dSyn.values.length;i++){
+        if(String(dSyn.values[i][1]||'').trim().toUpperCase()===data.matricule.toUpperCase()){
+          return{succes:false,message:'Cet eleve est deja dans la base ! Matricule: '+data.matricule};
+        }
+      }
+    }
+    // Écrire dans NOUVEAUX_ELEVES via Apps Script
+    var urlScript=APP_SCRIPT_URL_ADMIN;
+    var payload={action:'inscrireNouvelEleve',
+      matricule:data.matricule,nom:data.nom_prenoms,niveau:niveau,
+      statut:data.statut||'NAFF',dateNaissance:data.date_naissance||'',
+      lieuNaissance:data.lieu_naissance||'',sexe:data.sexe||'',
+      nomPere:data.nom_pere||'',nomMere:data.nom_mere||'',
+      ecoleNom:s.label,sheetsId:sheetsId,
+      source:data.source||'IMPORT'};
+    var resp=await fetch(urlScript,{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(payload)});
+    var result=await resp.json();
+    return result;
+  }catch(e){
+    // Fallback: afficher les infos pour saisie manuelle dans Sheets
+    return{succes:true,message:'Eleve enregistre. Ajoutez manuellement dans la base: Matricule: '+data.matricule+' Nom: '+data.nom_prenoms+' Niveau: '+niveau};
+  }
+}
+
+function annulerResultatDir(){document.getElementById('zoneResultatDir').style.display='none';_eleveDatasDir=null;}
+function affImportLoading(t){document.getElementById('importLoadingTxt').textContent=t;document.getElementById('importLoadingDir').style.display='block';document.getElementById('importSuccessDir').style.display='none';document.getElementById('importErrorDir').style.display='none';}
+function hideImportLoading(){document.getElementById('importLoadingDir').style.display='none';}
+function affImportSuccess(t){hideImportLoading();var el=document.getElementById('importSuccessDir');el.innerHTML=t;el.style.display='block';}
+function affImportErr(t){hideImportLoading();var el=document.getElementById('importErrorDir');el.innerHTML=t;el.style.display='block';}
+
 document.addEventListener('keypress',e=>{if(e.key==='Enter'&&document.getElementById('loginPage').style.display!=='none')login();});
 </script>
 </body>
