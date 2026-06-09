@@ -2222,7 +2222,7 @@ async function _analyserAvecClaude(base64,mimeType){
   var resp=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{'Content-Type':'application/json','x-api-key':CLAUDE_API_KEY_DIR,'anthropic-version':'2023-06-01'},
-    body:JSON.stringify({model:'claude-opus-4-6',max_tokens:600,
+    body:JSON.stringify({model:'claude-opus-4-5',max_tokens:600,
       messages:[{role:'user',content:[
         {type:'image',source:{type:'base64',media_type:mimeType,data:base64}},
         {type:'text',text:prompt}
