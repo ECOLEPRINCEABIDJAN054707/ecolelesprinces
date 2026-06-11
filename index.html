@@ -1485,11 +1485,14 @@ function _cardInscrit2026Partiel(inscrit, info, historique) {
     '<div style="font-size:1.4em;font-weight:bold;color:#C62828;">' + (inscrit.solde||0).toLocaleString('fr-FR') + ' F CFA</div>' +
     '<div style="font-size:11px;color:#555;">Versé : ' + (inscrit.verse||0).toLocaleString('fr-FR') + ' F CFA / ' + (inscrit.du||0).toLocaleString('fr-FR') + ' F CFA</div>' +
     '</div>' +
-    + (historique && historique.length > 0 ?
++ (historique && historique.length > 0 ?
       '<div style="background:#E3F2FD;border-radius:8px;padding:10px;margin-bottom:10px;">' +
       '<div style="font-size:11px;font-weight:bold;color:#1F4E79;margin-bottom:6px;">📅 Vos paiements effectués :</div>' +
-      historique.map(p => '<div style="font-size:11px;color:#333;padding:3px 0;border-bottom:1px solid #BBDEFB;">• ' + p.dateAffichee + ' — <strong>' + (p.montant||0).toLocaleString("fr-FR") + ' F CFA</strong> via ' + p.source + ' ✅</div>').join('') +
-      '</div>' : '')
+      historique.map(function(p) {
+        var montantNum = parseFloat(String(p.montant||'0').replace(/[^0-9.]/g,'')) || 0;
+        return '<div style="font-size:11px;color:#333;padding:3px 0;border-bottom:1px solid #BBDEFB;">• ' + p.dateAffichee + ' — <strong>' + montantNum.toLocaleString("fr-FR") + ' F CFA</strong> via ' + p.source + ' ✅</div>';
+      }).join('') +
+      '</div>' : '') +
 '<div style="background:#FFF8E1;border:1px solid #FFD54F;border-radius:8px;padding:10px;margin-bottom:10px;text-align:center;">' +
     '<div style="font-size:12px;font-weight:bold;color:#E65100;">⚠️ Payez le solde restant pour connaître votre classe exacte</div>' +
     '<div style="font-size:11px;color:#555;margin-top:4px;">Votre classe sera attribuée <strong>IMMÉDIATEMENT</strong> après règlement complet OU À PARTIR DU <strong>25 AOÛT 2026</strong></div>' +
