@@ -1345,8 +1345,31 @@ async function chargerInscription2026(eleve) {
           solde   : parseFloat(row[5]) || 0,
           statut  : String(row[9]||'').trim().toUpperCase()
         };
-        window._classe2026 = inscrit.classe;
+window._classe2026 = inscrit.classe;
         window._inscrit2026 = inscrit;
+
+        // ── FIX : masquer infos 2025-2026 si inscrit 2026-2027 ──
+        if (inscrit.verse > 0) {
+          const sectionResultats = document.getElementById('sectionResultats');
+          if (sectionResultats) sectionResultats.style.display = 'none';
+
+          const payBand = document.getElementById('statutPay');
+          if (payBand) {
+            if (inscrit.solde === 0) {
+              payBand.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>✅</div><div class='pay-text'><h4>Scolarité 2026-2027 entièrement payée</h4><p class='pay-montant c-vert'>" + (inscrit.verse||0).toLocaleString('fr-FR') + " F CFA versés</p></div></div>";
+            } else {
+              payBand.innerHTML = "<div class='paiement-bar paiement-partiel'><div class='pay-icon'>⚠️</div><div class='pay-text'><h4>Scolarité 2026-2027 — Solde restant</h4><p class='pay-montant c-or'>" + (inscrit.solde||0).toLocaleString('fr-FR') + " F CFA restants</p><p>Versé : " + (inscrit.verse||0).toLocaleString('fr-FR') + " / " + (inscrit.du||0).toLocaleString('fr-FR') + " F CFA</p></div></div>";
+            }
+          }
+
+          const montantText = document.getElementById('montantText');
+          if (montantText) {
+            montantText.textContent = inscrit.solde > 0 ? new Intl.NumberFormat('fr-FR').format(inscrit.solde) : '0';
+            const montantDu = document.getElementById('montantDu');
+            if (montantDu && inscrit.solde === 0) montantDu.style.background = 'linear-gradient(135deg,#2E7D32,#388E3C)';
+          }
+        }
+
         // Mettre à jour bloc paiement 2026-2027
         const pay2026 = document.getElementById('paiement2026Bloc');
         if (pay2026) {
