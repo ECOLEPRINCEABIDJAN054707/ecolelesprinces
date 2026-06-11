@@ -1312,7 +1312,25 @@ async function envoyerMessage(){const eleve=window._eleveActuel;if(!eleve)return
 async function envoyerSuggestion(){const eleve=window._eleveActuel;const texte=document.getElementById("suggTexte").value.trim();const statut=document.getElementById("suggStatut");if(!texte){statut.style.color="#C62828";statut.textContent="Ecrire votre suggestion.";return;}try{const now=new Date().toLocaleString("fr-FR",{timeZone:"Africa/Abidjan"});const row=[now,"Suggestion","Boite a suggestions",texte,"Anonyme","---",eleve?(eleve.classe||""):"",eleve?(eleve.ecoleCode||""):"","Non lu",""];await envoyerViaAppsScript(row,"SUGGESTION");statut.style.color="#2E7D32";statut.textContent="&#10003; Suggestion envoyee !";document.getElementById("suggTexte").value="";}catch(e){statut.style.color="#C62828";statut.textContent="&#10060; Erreur.";}}
 async function envoyerViaAppsScript(row,type){const URLS={"CPP":"https://script.google.com/macros/s/AKfycbwYWMhEitUVn3_bNqvp60nYqyBDaLlcpX2Is60cjd6u5-Gv-VsUdt8JgSR003vLWpg0mw/exec","DEFAULT":"https://script.google.com/macros/s/AKfycbwYWMhEitUVn3_bNqvp60nYqyBDaLlcpX2Is60cjd6u5-Gv-VsUdt8JgSR003vLWpg0mw/exec"};const ec=JSON.parse(sessionStorage.getItem("eleveConnecte")||"{}");const WU=URLS[ec.ecoleCode||"DEFAULT"]||URLS["DEFAULT"];return new Promise(function(resolve){try{const cbName="jsonp_"+Date.now();const script=document.createElement("script");window[cbName]=function(data){delete window[cbName];document.body.removeChild(script);resolve(data);};script.onerror=function(){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:false});};script.src=WU+"?callback="+cbName+"&type="+encodeURIComponent(type||"MESSAGE")+"&row="+encodeURIComponent(JSON.stringify(row));document.body.appendChild(script);setTimeout(function(){if(window[cbName]){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:true});}},10000);}catch(e){resolve({ok:false});}});}
 async function chargerReponsesMessages(eleve){const div=document.getElementById("reponsesMessages");if(!div||!eleve)return;try{const mat=eleve.matricule;const range=encodeURIComponent("MESSAGES!A2:J500");const url="https://sheets.googleapis.com/v4/spreadsheets/"+MESSAGES_SHEETS_ID+"/values/"+range+"?key="+CONFIG.API_KEY;const res=await fetch(url);if(!res.ok)return;const data=await res.json();if(!data.values)return;const rep=data.values.filter(r=>String(r[5]||"").trim().toUpperCase()===mat.toUpperCase()&&r[9]&&r[9].trim());if(rep.length===0){div.innerHTML="<p style='font-size:0.85em;color:#999;text-align:center;padding:8px 0;'>Aucune reponse recue pour le moment.</p>";return;}let html="<p style='font-weight:bold;color:#1A5276;margin:0 0 8px 0;'>Reponses recues</p>";rep.forEach(r=>{html+="<div style='background:#E8F4FD;border-left:4px solid #2874A6;border-radius:6px;padding:10px;margin-bottom:8px;'><div style='font-size:0.8em;color:#777;'>"+r[0]+"</div><div style='font-size:0.9em;color:#1A5276;margin-top:4px;font-weight:bold;'>"+r[9]+"</div></div>";});div.innerHTML=html;}catch(e){}}
-
+async function chargerHistoriquePaiements2026(eleve, base2026) {
+  try {
+    const mat   = eleve.matricule.trim().toUpperCase();
+    const range = encodeURIComponent('HISTORIQUE_MAJ!A3:L2000');
+    const url   = 'https://sheets.googleapis.com/v4/spreadsheets/' + base2026 +
+                  '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    const res   = await fetch(url);
+    if (!res.ok) return [];
+    const data  = await res.json();
+    if (!data.values) return [];
+    return data.values
+      .filter(row => String(row[1]||'').trim().toUpperCase() === mat)
+      .map(row => ({
+        dateAffichee : String(row[11]||row[0]||'').trim(),
+        montant      : parseFloat(row[5]) || 0,
+        source       : String(row[10]||'').trim()
+      }));
+  } catch(e) { return []; }
+}
 async function chargerInscription2026(eleve) {
   const section = document.getElementById('sectionInscription2026');
   const body    = document.getElementById('inscription2026Body');
@@ -1350,6 +1368,8 @@ window._classe2026 = inscrit.classe;
 
         // ── FIX : masquer infos 2025-2026 si inscrit 2026-2027 ──
         if (inscrit.verse > 0) {
+          const historique = await chargerHistoriquePaiements2026(eleve, base2026);
+        window._historique2026 = historique;
          const anneeHeader = document.getElementById('anneeHeader');
 if (anneeHeader) anneeHeader.textContent = '📅 Annee scolaire 2026-2027';
           const sectionResultats = document.getElementById('sectionResultats');
@@ -1402,7 +1422,7 @@ const anneeHeader = document.getElementById('anneeHeader');
       body.innerHTML = _cardInscrit2026Solde(inscrit, info);
     } else {
       // Inscrit avec solde restant
-      body.innerHTML = _cardInscrit2026Partiel(inscrit, info);
+      body.innerHTML = _cardInscrit2026Partiel(inscrit, info, window._historique2026 || []);
     }
   } catch(e) {
     console.log('Erreur inscription 2026:', e);
@@ -1443,7 +1463,7 @@ function _cardInscrit2026Solde(inscrit, info) {
     '<p style="color:#fff;font-size:1em;font-weight:bold;">' + tel + '</p></div></div>';
 }
 
-function _cardInscrit2026Partiel(inscrit, info) {
+function _cardInscrit2026Partiel(inscrit, info, historique) {
   var type = _typeClasse2026(inscrit.classe);
   var tel  = info.tel || '0708111269';
   var btnWave = '<a href="https://pay.wave.com/m/M_nIgf2a67TXMn/c/ci/" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:12px;background:#1F9AE0;color:white;border-radius:10px;padding:16px;text-decoration:none;margin-bottom:12px;">' +
@@ -1465,6 +1485,11 @@ function _cardInscrit2026Partiel(inscrit, info) {
     '<div style="font-size:1.4em;font-weight:bold;color:#C62828;">' + (inscrit.solde||0).toLocaleString('fr-FR') + ' F CFA</div>' +
     '<div style="font-size:11px;color:#555;">Versé : ' + (inscrit.verse||0).toLocaleString('fr-FR') + ' F CFA / ' + (inscrit.du||0).toLocaleString('fr-FR') + ' F CFA</div>' +
     '</div>' +
+    + (historique && historique.length > 0 ?
+      '<div style="background:#E3F2FD;border-radius:8px;padding:10px;margin-bottom:10px;">' +
+      '<div style="font-size:11px;font-weight:bold;color:#1F4E79;margin-bottom:6px;">📅 Vos paiements effectués :</div>' +
+      historique.map(p => '<div style="font-size:11px;color:#333;padding:3px 0;border-bottom:1px solid #BBDEFB;">• ' + p.dateAffichee + ' — <strong>' + (p.montant||0).toLocaleString("fr-FR") + ' F CFA</strong> via ' + p.source + ' ✅</div>').join('') +
+      '</div>' : '')
 '<div style="background:#FFF8E1;border:1px solid #FFD54F;border-radius:8px;padding:10px;margin-bottom:10px;text-align:center;">' +
     '<div style="font-size:12px;font-weight:bold;color:#E65100;">⚠️ Payez le solde restant pour connaître votre classe exacte</div>' +
     '<div style="font-size:11px;color:#555;margin-top:4px;">Votre classe sera attribuée <strong>IMMÉDIATEMENT</strong> après règlement complet OU À PARTIR DU <strong>25 AOÛT 2026</strong></div>' +
