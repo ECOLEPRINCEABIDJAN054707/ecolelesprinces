@@ -1325,7 +1325,7 @@ async function chargerHistoriquePaiements2026(eleve, base2026) {
     return data.values
       .filter(row => String(row[1]||'').trim().toUpperCase() === mat)
       .map(row => ({
-        dateAffichee : String(row[0]||'').trim(), montant      : parseFloat(String(row[5]||'0').replace(/,/g,'.').replace(/\s/g,'')) || 0,
+        dateAffichee : String(row[0]||'').trim(), montant      : parseFloat(String(row[5]||'0').replace(/\s/g,'').replace(/,(\d{3})/g,'$1').replace(',','.')) || 0,
         source       : String(row[10]||'').trim()
       }));
   } catch(e) { return []; }
@@ -1359,7 +1359,7 @@ async function chargerInscription2026(eleve) {
           nom     : String(row[2]||'').trim(),
           du      : parseFloat(row[3]) || 0,
           verse   : parseFloat(row[4]) || 0,
-          solde   : parseFloat(String(row[5]||'0').replace(/,/g,'.').replace(/\s/g,'')) || 0,
+          solde   : parseFloat(String(row[5]||'0').replace(/\s/g,'').replace(/,(\d{3})/g,'$1').replace(',','.')) || 0,
           statut  : String(row[9]||'').trim().toUpperCase()
         };
 window._classe2026 = inscrit.classe;
