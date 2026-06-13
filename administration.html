@@ -1465,7 +1465,7 @@ async function ouvrirModalNotesProf(type){
   }
   const container=document.getElementById('modalNotesClasses');
   if(!classes.length){container.innerHTML='<p style="font-size:0.78em;color:var(--rouge)">Aucune classe trouvee.</p>';document.getElementById('modalNotesMatiereZone').style.display='none';document.getElementById('modalNotesProf').style.display='flex';return;}
-  container.innerHTML=classes.sort().map(cl=>'<button class="mnc-btn" onclick="selClasseNotes(this,decodeURIComponent(''+cl.replace(/'/g,"\\'")+'\',\''+type+"'\">"+cl+'</button>').join('');
+  container.innerHTML=classes.sort().map(cl=>'<button class="mnc-btn" onclick="selClasseNotes(this,\''+cl.replace(/'/g,"\\'")+'\',\''+type+"'\">"+cl+'</button>').join('');
   document.getElementById('modalNotesMatiereZone').style.display='none';
   document.getElementById('modalNotesProf').style.display='flex';
 }
@@ -1474,7 +1474,7 @@ function selClasseNotes(btn,cl,type){
   if(type==='emargement'||type==='presence'){document.getElementById('modalNotesMatiereZone').style.display='none';return;}
   const matieres=getMatieres(cl);
   const zone=document.getElementById('modalNotesMatiereZone');
-  document.getElementById('modalNotesMatieres').innerHTML='<button class="mnm-btn all" onclick="selToutesMatieres(this)">Toutes les matieres</button>'+matieres.map(m=>'<button class="mnm-btn" onclick="selMatiereNotes(this,decodeURIComponent(''+m.replace(/'/g,"\\'")+'\',\''+type+"'\">"+m+'</button>').join('');
+  document.getElementById('modalNotesMatieres').innerHTML='<button class="mnm-btn all" onclick="selToutesMatieres(this)">Toutes les matieres</button>'+matieres.map(m=>'<button class="mnm-btn" onclick="selMatiereNotes(this,\''+m.replace(/'/g,"\\'")+'\',\''+type+"'\">"+m+'</button>').join('');
   zone.style.display='block';
 }
 function selMatiereNotes(btn,mat,type){
