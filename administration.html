@@ -1856,14 +1856,21 @@ async function chargerEDT() {
   const container = document.getElementById('edtListe');
   const statsDiv  = document.getElementById('eduEdtStats');
   if(container) container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div><p style="font-size:0.82em">Chargement...</p></div>';
-
   const classesEdu = s.classes || [];
   const sheetsId = SHEETS_IDS[s.ecole];
   if(!sheetsId) { if(container) container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Ecole non configuree.</p>'; return; }
 
+  // Jour de la semaine actuel
+  const today = new Date();
+  const joursSemaine = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const jourAujourdhui = joursSemaine[today.getDay()];
+  const dd = String(today.getDate()).padStart(2,'0');
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const yyyy = today.getFullYear();
+  const dateFormats = [dd+'/'+mm+'/'+yyyy, yyyy+'-'+mm+'-'+dd];
+
   let data = [];
-  // Priorité : POINTAGE_MENSUEL (heures réelles validées) 
-  const sheetNames = ['POINTAGE_MENSUEL', 'POINTAGE', 'EDT', 'EMPLOI_DU_TEMPS', 'SUIVI_HEURES'];
+  const sheetNames = ['POINTAGE_MENSUEL','POINTAGE','EDT','EMPLOI_DU_TEMPS','SUIVI_HEURES'];
   let found = false;
 
   for(const sn of sheetNames) {
@@ -1872,8 +1879,6 @@ async function chargerEDT() {
       const r = await fetch(url); const d = await r.json();
       if(d.values && d.values.length >= 2) {
         const headers = d.values[0].map(h => String(h||'').toUpperCase().trim());
-        // POINTAGE_MENSUEL : COL 0=date, 1=hdebut_prev, 2=classe, 3=matiere, 4=enseignant, 
-        //                     6=date_reel, 7=hfin_prev, 8=heures, 9=statut, 11=salaire
         const iDate    = headers.findIndex(h => h.includes('DATE'));
         const iClasse  = headers.findIndex(h => h.includes('CLASS'));
         const iMat     = headers.findIndex(h => h.includes('MAT'));
@@ -1883,27 +1888,154 @@ async function chargerEDT() {
         const iSalaire = headers.findIndex(h => h.includes('SAL'));
         const iHdebut  = headers.findIndex(h => h.includes('DEB'));
         const iHfin    = headers.findIndex(h => h.includes('FIN'));
-
+        const iHdebutPrev = headers.findIndex(h => h.includes('PREV') && h.includes('DEB'));
         data = d.values.slice(1).filter(row => {
           const cl = String(row[iClasse>=0?iClasse:2]||'').trim();
           const st = String(row[iStatut>=0?iStatut:9]||'').trim().toUpperCase();
-          // Inclure cours validés ET en attente
           return cl && (st==='VALIDÉ'||st==='VALIDE'||st==='PARTIEL'||st==='EN ATTENTE'||st==='');
-        }).map(row => ({
-          date:      iDate>=0    ? String(row[iDate]||'').trim()    : String(row[0]||'').trim(),
-          classe:    iClasse>=0  ? String(row[iClasse]||'').trim()  : String(row[2]||'').trim(),
-          matiere:   iMat>=0     ? String(row[iMat]||'').trim()     : String(row[3]||'').trim(),
-          enseignant:iEns>=0     ? String(row[iEns]||'').trim()     : String(row[4]||'').trim(),
-          heures:    iHeures>=0  ? parseFloat(row[iHeures])||0      : parseFloat(row[8])||0,
-          statut:    iStatut>=0  ? String(row[iStatut]||'').trim().toUpperCase() : String(row[9]||'').trim().toUpperCase(),
-          salaire:   iSalaire>=0 ? parseFloat(row[iSalaire])||0     : parseFloat(row[11])||0,
-          hdebut:    iHdebut>=0  ? String(row[iHdebut]||'').trim()  : '',
-          hfin:      iHfin>=0    ? String(row[iHfin]||'').trim()    : ''
-        }));
+        }).map(row => {
+          const dateVal = String(row[iDate>=0?iDate:0]||'').trim();
+          let estAujourdhui = false;
+          const n = parseFloat(dateVal);
+          if(!isNaN(n) && n > 40000) {
+            const d2 = new Date(Math.round((n-25569)*86400*1000));
+            const dStr = String(d2.getUTCDate()).padStart(2,'0')+'/'+String(d2.getUTCMonth()+1).padStart(2,'0')+'/'+d2.getUTCFullYear();
+            estAujourdhui = dStr === dd+'/'+mm+'/'+yyyy;
+          } else {
+            estAujourdhui = dateFormats.some(f => dateVal.startsWith(f) || dateVal === f);
+          }
+          const hDebutReel = iHdebut>=0 ? String(row[iHdebut]||'').trim() : '';
+          const hDebutPrev = iHdebutPrev>=0 ? String(row[iHdebutPrev]||'').trim() : hDebutReel;
+          // Calculer retard
+          let retardMin = 0;
+          if(hDebutReel && hDebutPrev) {
+            retardMin = parseH(hDebutReel) - parseH(hDebutPrev);
+            if(retardMin < 0) retardMin = 0;
+          }
+          return {
+            date:       dateVal,
+            estAujourdhui,
+            classe:     iClasse>=0 ? String(row[iClasse]||'').trim() : String(row[2]||'').trim(),
+            matiere:    iMat>=0    ? String(row[iMat]||'').trim()    : String(row[3]||'').trim(),
+            enseignant: iEns>=0    ? String(row[iEns]||'').trim()    : String(row[4]||'').trim(),
+            heures:     iHeures>=0 ? parseFloat(row[iHeures])||0     : parseFloat(row[8])||0,
+            statut:     iStatut>=0 ? String(row[iStatut]||'').trim().toUpperCase() : String(row[9]||'').trim().toUpperCase(),
+            salaire:    iSalaire>=0? parseFloat(row[iSalaire])||0    : parseFloat(row[11])||0,
+            hdebut:     hDebutReel,
+            hdebutPrev: hDebutPrev,
+            hfin:       iHfin>=0   ? String(row[iHfin]||'').trim()  : '',
+            retardMin
+          };
+        });
         if(data.length > 0) { found = true; break; }
       }
     } catch(e) {}
   }
+
+  // Filtrer par classes éducateur
+  if(classesEdu.length > 0) {
+    data = data.filter(row => classesEdu.some(cl => {
+      const norm = s => s.toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U').replace(/[ÔÖÓÒÕ]/g,'O').replace(/[ÎÏÍÌ]/g,'I').replace(/[-_]/g,' ').replace(/\s+/g,' ');
+      const nr = norm(row.classe), nc = norm(cl);
+      return nr===nc || nr.startsWith(nc+' ') || nr.endsWith(' '+nc) || nc.startsWith(nr+' ');
+    }));
+  }
+
+  donneesEDT = data;
+
+  // Séparer cours d'aujourd'hui et cours du mois
+  const coursAujourdhui = data.filter(r => r.estAujourdhui);
+  const coursMois = data;
+
+  // Peupler filtres
+  const selC = document.getElementById('eduEdtFiltreClasse');
+  const selE = document.getElementById('eduEdtFiltreEns');
+  if(selC) {
+    selC.innerHTML = '<option value="">Toutes mes classes</option>';
+    const classesAfficher = classesEdu.length > 0 ? classesEdu : [...new Set(data.map(r=>r.classe))].filter(Boolean).sort();
+    classesAfficher.forEach(cl => { const o=document.createElement('option'); o.value=cl; o.textContent=cl; selC.appendChild(o); });
+  }
+  if(selE) {
+    selE.innerHTML = '<option value="">Tous les enseignants</option>';
+    const ens = [...new Set(data.map(r=>r.enseignant))].filter(Boolean).sort();
+    ens.forEach(e => { const o=document.createElement('option'); o.value=e; o.textContent=e; selE.appendChild(o); });
+  }
+
+  if(!found || data.length === 0) {
+    const dc=document.getElementById('eduEdtCount'); if(dc) dc.textContent='(0 cours)';
+    if(container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.82em">'
+      +'<div style="font-size:2em;margin-bottom:8px">📋</div>'
+      +'<div style="font-weight:600;margin-bottom:6px">Aucun cours enregistré ce mois</div>'
+      +'<div style="font-size:0.85em;color:var(--orange)">Les enseignants doivent utiliser App Enseignant.</div>'
+      +'</div>';
+    return;
+  }
+
+  // Statistiques
+  const totalMin = Math.round(data.reduce((s,r) => s + parseHeuresToMinutes(r.heures), 0));
+  const totalH = Math.floor(totalMin/60);
+  const totalMn = Math.round(totalMin % 60);
+  const nbEns = new Set(data.map(r=>r.enseignant).filter(Boolean)).size;
+  const nbClasses = new Set(data.map(r=>r.classe).filter(Boolean)).size;
+  const nbRetard = data.filter(r=>r.retardMin > 0).length;
+  const nbAujourdhui = coursAujourdhui.length;
+
+  const dc = document.getElementById('eduEdtCount');
+  if(dc) dc.textContent = '('+data.length+' cours · '+totalH+'h'+(totalMn>0?String(totalMn).padStart(2,'0'):'')+ (nbAujourdhui>0?' · '+nbAujourdhui+' aujourd\'hui':'')+ ')';
+
+  if(statsDiv) statsDiv.style.display = 'block';
+  const sv = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  sv('edtTotalH', totalH+'h'+(totalMn>0?String(totalMn).padStart(2,'0'):''));
+  sv('edtNbEns', nbEns);
+  sv('edtNbClasses', nbClasses);
+  sv('edtNbRetard', nbRetard);
+
+  // ── AFFICHAGE ──
+  let html = '';
+
+  // SECTION AUJOURD'HUI
+  if(coursAujourdhui.length > 0) {
+    const nbRetardAuj = coursAujourdhui.filter(r=>r.retardMin > 0).length;
+    const nbAHeure = coursAujourdhui.filter(r=>r.retardMin === 0 && (r.statut.includes('VALID')||r.statut.includes('PARTIEL'))).length;
+    const nbAttente = coursAujourdhui.filter(r=>r.statut==='EN ATTENTE').length;
+
+    html += '<div style="margin:10px 14px;background:linear-gradient(135deg,#1F4E79,#2E75B6);border-radius:10px;padding:12px 14px;color:#fff">';
+    html += '<div style="font-size:0.82em;font-weight:700;margin-bottom:8px">📅 AUJOURD\'HUI — '+jourAujourdhui+'</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">';
+    html += '<div style="background:rgba(255,255,255,0.15);border-radius:6px;padding:6px;text-align:center"><div style="font-size:1.1em;font-weight:700">'+nbAHeure+'</div><div style="font-size:0.6em;opacity:0.85">À l\'heure</div></div>';
+    html += '<div style="background:rgba(255,150,0,0.3);border-radius:6px;padding:6px;text-align:center"><div style="font-size:1.1em;font-weight:700">'+nbRetardAuj+'</div><div style="font-size:0.6em;opacity:0.85">En retard</div></div>';
+    html += '<div style="background:rgba(255,255,255,0.1);border-radius:6px;padding:6px;text-align:center"><div style="font-size:1.1em;font-weight:700">'+nbAttente+'</div><div style="font-size:0.6em;opacity:0.85">En attente</div></div>';
+    html += '</div></div>';
+
+    // Liste cours d'aujourd'hui
+    html += '<div style="border-bottom:2px solid var(--border)">';
+    coursAujourdhui.forEach(c => {
+      const isRetard = c.retardMin > 0;
+      const isValide = c.statut.includes('VALID') || c.statut.includes('PARTIEL');
+      const isAttente = c.statut === 'EN ATTENTE';
+      const bgCours = isRetard ? '#FFF8F0' : isAttente ? '#FFFDE7' : '#F8FFF8';
+      const couleurStatut = isRetard ? 'var(--orange)' : isAttente ? '#F9A825' : 'var(--vert)';
+      const labelStatut = isRetard ? '⚠ Retard '+c.retardMin+' min' : isAttente ? '⌚ En attente' : '✓ À l\'heure';
+      const ini = c.enseignant.split(' ').slice(0,2).map(w=>w[0]||'').join('');
+      html += '<div style="padding:10px 14px;border-bottom:1px solid #f0f4f8;background:'+bgCours+'">';
+      html += '<div style="display:flex;align-items:center;gap:10px">';
+      html += '<div style="width:34px;height:34px;border-radius:50%;background:'+(isRetard?'#FFF3E0':isAttente?'#FFFDE7':'#E8F5E9')+';color:'+couleurStatut+';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75em;flex-shrink:0">'+ini+'</div>';
+      html += '<div style="flex:1">';
+      html += '<div style="font-size:0.84em;font-weight:600">'+c.enseignant+'</div>';
+      html += '<div style="font-size:0.72em;color:var(--gris)">'+c.classe+' · '+c.matiere+(c.hdebut?' · '+c.hdebut:'')+'</div>';
+      html += '</div>';
+      html += '<span style="font-size:0.68em;font-weight:700;padding:3px 8px;border-radius:10px;background:'+(isRetard?'#FFF3E0':isAttente?'#FFFDE7':'#E8F5E9')+';color:'+couleurStatut+'">'+labelStatut+'</span>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div style="margin:10px 14px;background:#F5F7FA;border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center">';
+    html += '<div style="font-size:0.84em;color:var(--gris)">📅 Aucun cours enregistré aujourd\'hui ('+jourAujourdhui+')</div>';
+    html += '</div>';
+  }
+
+  filtrerEDT();
+}
 
   // Filtrer par classes éducateur
   if(classesEdu.length > 0) {
