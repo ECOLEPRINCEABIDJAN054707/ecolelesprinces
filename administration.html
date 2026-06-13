@@ -1386,6 +1386,7 @@ function afficherEdu(s){
   chargerClassesEdu(s);
   chargerNotesDevoir();
   setTimeout(() => chargerEDT(), 500);
+ setTimeout(() => chargerPointageEdu('jour'), 800);
   document.getElementById('espaceEdu').style.display='block';
 }
 async function chargerClassesEdu(s){
@@ -2370,7 +2371,190 @@ function mkDocGroupeV9(classes,k,nf,nomEcole){var TC=window._listesTC;var tc=TC[
 // ══ HELPERS ══
 function toggleSec(hdr){const body=hdr.nextElementSibling;hdr.classList.toggle('open');body.classList.toggle('open');}
 function toggleTache(idx,el){TACHES_DEMO[idx].done=!TACHES_DEMO[idx].done;el.classList.toggle('done');el.textContent=TACHES_DEMO[idx].done?'✓':'';el.nextElementSibling.classList.toggle('done');document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;showToast(TACHES_DEMO[idx].done?'Accomplie !':'Remise en cours',TACHES_DEMO[idx].done?'success':'');}
-function toggleEdtDetail(el) {
+// ══ POINTAGE ENSEIGNANTS (ESPACE EDU) ══
+function showPointageTab(tab, el) {
+  ['jour','semaine','mois'].forEach(t => {
+    const p = document.getElementById('pointage'+t.charAt(0).toUpperCase()+t.slice(1));
+    if(p) p.style.display = 'none';
+  });
+  document.querySelectorAll('#eduPointageBody .peda-tab').forEach(t => t.classList.remove('active'));
+  const page = document.getElementById('pointage'+tab.charAt(0).toUpperCase()+tab.slice(1));
+  if(page) page.style.display = 'block';
+  if(el) el.classList.add('active');
+  chargerPointageEdu(tab);
+}
+
+async function chargerPointageEdu(periode) {
+  const s = currentStaff; if(!s) return;
+  const sheetsId = SHEETS_IDS[s.ecole]; if(!sheetsId) return;
+  const classesEdu = s.classes || [];
+  const tabId = 'pointage'+periode.charAt(0).toUpperCase()+periode.slice(1);
+  const container = document.getElementById(tabId);
+  if(!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div><p style="font-size:0.82em">Chargement...</p></div>';
+
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2,'0');
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const yyyy = today.getFullYear();
+
+  // Calculer début de semaine (lundi)
+  const jourSemaine = today.getDay() === 0 ? 6 : today.getDay() - 1;
+  const debutSemaine = new Date(today);
+  debutSemaine.setDate(today.getDate() - jourSemaine);
+
+  try {
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r = await fetch(url); const d = await r.json();
+    if(!d.values || d.values.length < 2) {
+      container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucune donnée de pointage disponible.</p>';
+      return;
+    }
+    const headers = d.values[0].map(h => String(h||'').toUpperCase().trim());
+    const iDate    = headers.findIndex(h => h.includes('DATE'));
+    const iClasse  = headers.findIndex(h => h.includes('CLASS'));
+    const iMat     = headers.findIndex(h => h.includes('MAT'));
+    const iEns     = headers.findIndex(h => h.includes('ENS') || h.includes('PROF'));
+    const iHeures  = headers.findIndex(h => h.includes('HEURE') || h === 'H');
+    const iStatut  = headers.findIndex(h => h.includes('STAT'));
+    const iSalaire = headers.findIndex(h => h.includes('SAL'));
+    const iHdebut  = headers.findIndex(h => h.includes('DEB'));
+
+    // Parser toutes les lignes
+    const toutes = d.values.slice(1).map(row => {
+      const dateVal = String(row[iDate>=0?iDate:0]||'').trim();
+      const n = parseFloat(dateVal);
+      let dateObj = null;
+      if(!isNaN(n) && n > 40000) {
+        dateObj = new Date(Math.round((n-25569)*86400*1000));
+      } else if(dateVal) {
+        const parts = dateVal.split('/');
+        if(parts.length === 3) dateObj = new Date(parts[2], parts[1]-1, parts[0]);
+      }
+      const st = String(row[iStatut>=0?iStatut:9]||'').trim().toUpperCase();
+      return {
+        dateObj,
+        dateStr: dateVal,
+        classe:     iClasse>=0  ? String(row[iClasse]||'').trim()  : String(row[2]||'').trim(),
+        matiere:    iMat>=0     ? String(row[iMat]||'').trim()     : String(row[3]||'').trim(),
+        enseignant: iEns>=0     ? String(row[iEns]||'').trim()     : String(row[4]||'').trim(),
+        heures:     iHeures>=0  ? parseFloat(row[iHeures])||0      : parseFloat(row[8])||0,
+        statut:     st,
+        salaire:    iSalaire>=0 ? parseFloat(row[iSalaire])||0     : parseFloat(row[11])||0,
+        hdebut:     iHdebut>=0  ? String(row[iHdebut]||'').trim()  : '',
+      };
+    }).filter(r => r.classe && (r.statut.includes('VALID')||r.statut.includes('PARTIEL')||r.statut==='EN ATTENTE'));
+
+    // Filtrer par classes éducateur
+    let lignes = toutes;
+    if(classesEdu.length > 0) {
+      lignes = toutes.filter(row => classesEdu.some(cl => {
+        const norm = s => s.toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/\s+/g,' ');
+        const nr = norm(row.classe), nc = norm(cl);
+        return nr===nc || nr.startsWith(nc+' ') || nr.endsWith(' '+nc) || nc.startsWith(nr+' ');
+      }));
+    }
+
+    // Filtrer selon la période
+    let lignesFiltrees = [];
+    if(periode === 'jour') {
+      lignesFiltrees = lignes.filter(r => {
+        if(!r.dateObj) return false;
+        return r.dateObj.getUTCDate()==parseInt(dd) &&
+               r.dateObj.getUTCMonth()+1==parseInt(mm) &&
+               r.dateObj.getUTCFullYear()==parseInt(yyyy);
+      });
+    } else if(periode === 'semaine') {
+      lignesFiltrees = lignes.filter(r => {
+        if(!r.dateObj) return false;
+        const d2 = new Date(r.dateObj.getUTCFullYear(), r.dateObj.getUTCMonth(), r.dateObj.getUTCDate());
+        return d2 >= debutSemaine && d2 <= today;
+      });
+    } else {
+      lignesFiltrees = lignes.filter(r => {
+        if(!r.dateObj) return false;
+        return r.dateObj.getUTCMonth()+1==parseInt(mm) &&
+               r.dateObj.getUTCFullYear()==parseInt(yyyy);
+      });
+    }
+
+    // Grouper par enseignant
+    const parEns = {};
+    lignesFiltrees.forEach(r => {
+      if(!parEns[r.enseignant]) parEns[r.enseignant] = {enseignant:r.enseignant, cours:[], totalMin:0, totalSalaire:0};
+      const min = Math.round(parseHeuresToMinutes(r.heures));
+      parEns[r.enseignant].cours.push(r);
+      parEns[r.enseignant].totalMin += min;
+      parEns[r.enseignant].totalSalaire += r.salaire;
+    });
+
+    const enseignants = Object.values(parEns).sort((a,b) => b.totalMin - a.totalMin);
+    const totalMinGlobal = enseignants.reduce((s,e) => s+e.totalMin, 0);
+    const totalSalaireGlobal = enseignants.reduce((s,e) => s+e.totalSalaire, 0);
+    const tH = Math.floor(totalMinGlobal/60);
+    const tM = totalMinGlobal % 60;
+
+    const labelPeriode = periode==='jour' ? 'aujourd\'hui' : periode==='semaine' ? 'cette semaine' : 'ce mois';
+
+    // Mise à jour badge header
+    const countEl = document.getElementById('eduPointageCount');
+    if(countEl) countEl.textContent = '('+lignesFiltrees.length+' cours · '+tH+'h'+(tM>0?String(tM).padStart(2,'0'):'')+')';
+
+    if(!enseignants.length) {
+      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.84em">Aucun cours enregistré '+labelPeriode+'.</div>';
+      return;
+    }
+
+    let html = '';
+
+    // Résumé global
+    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:#FFFDE7">';
+    html += '<div style="background:#FFF8E1;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:var(--or)">'+lignesFiltrees.length+'</div><div style="font-size:0.62em;color:#7a5f00;font-weight:600">Cours</div></div>';
+    html += '<div style="background:#FFF8E1;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:var(--or)">'+tH+'h'+(tM>0?String(tM).padStart(2,'0'):'')+'</div><div style="font-size:0.62em;color:#7a5f00;font-weight:600">Heures</div></div>';
+    html += '<div style="background:#FFF8E1;border-radius:8px;padding:8px;text-align:center"><div style="font-size:0.9em;font-weight:700;color:var(--or)">'+totalSalaireGlobal.toLocaleString('fr-FR')+'</div><div style="font-size:0.62em;color:#7a5f00;font-weight:600">F CFA</div></div>';
+    html += '</div>';
+
+    // Liste par enseignant
+    enseignants.forEach(ens => {
+      const eH = Math.floor(ens.totalMin/60);
+      const eM = ens.totalMin % 60;
+      const ini = ens.enseignant.split(' ').slice(0,2).map(w=>w[0]||'').join('');
+      const nbRetard = ens.cours.filter(c=>c.statut==='EN ATTENTE').length;
+
+      html += '<div style="border-bottom:1px solid var(--border)">';
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;background:#FFFDE7" onclick="toggleEdtDetail(this)">';
+      html += '<div style="width:36px;height:36px;border-radius:50%;background:var(--or);color:var(--bleu);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8em;flex-shrink:0">'+ini+'</div>';
+      html += '<div style="flex:1"><div style="font-size:0.86em;font-weight:700">'+ens.enseignant+'</div>';
+      html += '<div style="font-size:0.7em;color:var(--gris)">'+ens.cours.length+' cours'+(nbRetard?' · <span style="color:var(--orange)">'+nbRetard+' en attente</span>':'')+'</div></div>';
+      html += '<div style="text-align:right"><div style="font-size:0.9em;font-weight:700;color:var(--or)">'+eH+'h'+(eM>0?String(eM).padStart(2,'0'):'')+'</div>';
+      html += '<div style="font-size:0.68em;color:var(--gris)">'+ens.totalSalaire.toLocaleString('fr-FR')+' F</div></div>';
+      html += '<span style="font-size:0.7em;opacity:0.5;margin-left:4px">&#9660;</span></div>';
+
+      // Détail cours
+      html += '<div style="display:none">';
+      html += '<div class="tbl-wrap"><table style="min-width:340px"><thead><tr><th>Date</th><th>Classe</th><th>Matière</th><th>Heures</th><th>Statut</th></tr></thead><tbody>';
+      ens.cours.forEach((c,i) => {
+        const hMin = parseHeuresToMinutes(c.heures);
+        const hH = Math.floor(hMin/60), hM = hMin%60;
+        const stcls = c.statut.includes('VALID')||c.statut.includes('PARTIEL') ? 'bg-vert' : 'bg-orange';
+        const stlbl = c.statut.includes('VALID') ? '✓' : c.statut==='PARTIEL' ? '50%' : '⌚';
+        html += '<tr style="background:'+(i%2===0?'#fff':'#FFFDE7')+'">';
+        html += '<td style="font-size:0.74em;color:var(--gris)">'+(c.dateStr||'—')+'</td>';
+        html += '<td style="font-size:0.78em">'+c.classe+'</td>';
+        html += '<td style="font-size:0.78em">'+c.matiere+'</td>';
+        html += '<td style="font-size:0.8em;font-weight:700;color:var(--or);text-align:center">'+(hH>0||hM>0?hH+'h'+(hM>0?String(hM).padStart(2,'0'):''):(c.heures?c.heures.toFixed(1)+'h':'—'))+'</td>';
+        html += '<td><span class="bdg '+stcls+'" style="font-size:0.62em">'+stlbl+'</span></td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table></div></div></div>';
+    });
+
+    container.innerHTML = html;
+
+  } catch(e) {
+    container.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur: '+e.message+'</p>';
+  }
+}function toggleEdtDetail(el) {
   var next = el.nextElementSibling;
   if(next) next.style.display = next.style.display === 'none' ? 'block' : 'none';
 }
