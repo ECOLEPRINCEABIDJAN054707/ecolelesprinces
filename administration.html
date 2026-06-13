@@ -1493,7 +1493,7 @@ async function genererListeNotesPDF(){
       const sheetsId=SHEETS_IDS[currentStaff.ecole];
       const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
       const r=await fetch(url);const data=await r.json();
-      if(data.values&&data.values.length>1){eleves=data.values.slice(1).filter(row=>String(row[0]||'').trim()===classe&&row[2]&&String(row[2]).trim()).map((row,i)=>({num:i+1,matricule:String(row[1]||'').trim(),nom:String(row[2]||'').trim()}));notesElevesCache[classe]=eleves;}
+      if(data.values&&data.values.length>1){const normCl=s=>s.toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U').replace(/[ÔÖÓÒÕ]/g,'O').replace(/[ÎÏÍÌ]/g,'I'); eleves=data.values.slice(1).filter(row=>normCl(String(row[0]||'').trim())===normCl(classe)&&row[2]&&String(row[2]).trim()).map((row,i)=>({num:i+1,matricule:String(row[1]||'').trim(),nom:String(row[2]||'').trim()}));notesElevesCache[classe]=eleves;}
     }catch(e){}
   }
   if(!eleves||!eleves.length){showToast('Aucun eleve pour '+classe,'error');return;}
