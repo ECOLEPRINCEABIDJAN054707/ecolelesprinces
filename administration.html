@@ -1412,7 +1412,7 @@ async function chargerClassesEdu(s){
         .replace(/[-_]/g,' ').replace(/\s+/g,' ');
       // Comparaison exacte ET comparaison partielle (classe contient cl ou l'inverse)
       const nc=norm(e.classe), ncl=norm(cl);
-      return nc===ncl || nc.startsWith(ncl+' ') || nc.endsWith(' '+ncl) || ncl.startsWith(nc+' ');
+      return nc===ncl || nc.startsWith(ncl+' ') || nc.endsWith(' '+ncl) || ncl.startsWith(nc+' ') || nc===ncl.replace(/\s/g,'') || ncl===nc.replace(/\s/g,'');
     }));
     if(elevesF.length===0&&classesEdu.length===0){
       // Classes non configurées - afficher message
