@@ -1572,152 +1572,116 @@ async function chargerAbsencesElevesSigne(ecole, classesEdu){
   liste.innerHTML=h;
 }
 async function chargerPresencesEnseignants(ecole){
-  const today=new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
-  const dateEl=document.getElementById('eduEnsDate');if(dateEl)dateEl.textContent=today;
+  const today=new Date();
+  const todayStr=today.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+  const dateEl=document.getElementById('eduEnsDate');if(dateEl)dateEl.textContent=todayStr;
   const liste=document.getElementById('eduEnsListe');if(!liste)return;
-  let enseignants=[];
+  const sheetsId=SHEETS_IDS[ecole];
+  if(!sheetsId){liste.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">École non configurée.</p>';return;}
+  const dd=String(today.getDate()).padStart(2,'0');
+  const mm=String(today.getMonth()+1).padStart(2,'0');
+  const yyyy=today.getFullYear();
+  const dateFormats=[dd+'/'+mm+'/'+yyyy,yyyy+'-'+mm+'-'+dd,dd+'-'+mm+'-'+yyyy];
+  let appels=[];
   try{
-    const sheetsId=SHEETS_IDS[ecole];if(sheetsId){
-      const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-      const r=await fetch(url);const data=await r.json();
-      if(data.values&&data.values.length)enseignants=data.values.filter(row=>row[0]&&String(row[3]||'').trim().toUpperCase()==='OUI').map(row=>({nom:String(row[0]||'').trim(),matiere:String(row[1]||'').trim(),classe:String(row[2]||'').trim(),present:true}));
+    const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/APPELS?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r=await fetch(url);const data=await r.json();
+    if(data.values&&data.values.length>=2){
+      const headers=data.values[0].map(h=>String(h||'').toUpperCase().trim());
+      const iDate=headers.findIndex(h=>h.includes('DATE'));
+      const iHeure=headers.findIndex(h=>h.includes('HEURE')||h.includes('DEBUT'));
+      const iEns=headers.findIndex(h=>h.includes('ENS')||h.includes('PROF'));
+      const iClasse=headers.findIndex(h=>h.includes('CLASS'));
+      const iMatiere=headers.findIndex(h=>h.includes('MAT'));
+      const iPresents=headers.findIndex(h=>h.includes('PRES')&&!h.includes('ENS'));
+      const iAbsents=headers.findIndex(h=>h.includes('ABS'));
+      const iTotal=headers.findIndex(h=>h.includes('TOTAL')||h.includes('EFFECTIF'));
+      const iTaux=headers.findIndex(h=>h.includes('TAUX'));
+      appels=data.values.slice(1).filter(row=>{
+        const dateVal=String(row[iDate>=0?iDate:0]||'').trim();
+        const n=parseFloat(dateVal);
+        if(!isNaN(n)&&n>40000){
+          const d=new Date(Math.round((n-25569)*86400*1000));
+          const dStr=String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0')+'/'+d.getUTCFullYear();
+          return dStr===dd+'/'+mm+'/'+yyyy;
+        }
+        return dateFormats.some(f=>dateVal.startsWith(f)||dateVal===f);
+      }).map(row=>({
+        heure:iHeure>=0?toHeure(row[iHeure]):'',
+        enseignant:iEns>=0?String(row[iEns]||'').trim():'',
+        classe:iClasse>=0?String(row[iClasse]||'').trim():'',
+        matiere:iMatiere>=0?String(row[iMatiere]||'').trim():'',
+        presents:iPresents>=0?parseInt(row[iPresents])||0:0,
+        absents:iAbsents>=0?parseInt(row[iAbsents])||0:0,
+        total:iTotal>=0?parseInt(row[iTotal])||0:0,
+        taux:iTaux>=0?parseFloat(row[iTaux])||0:0,
+      })).filter(a=>a.enseignant||a.classe);
     }
+  }catch(e){liste.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur APPELS: '+e.message+'</p>';return;}
+  let tousEnseignants=[];
+  try{
+    const url2='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r2=await fetch(url2);const data2=await r2.json();
+    if(data2.values)tousEnseignants=data2.values.filter(row=>row[0]&&String(row[3]||'').trim().toUpperCase()==='OUI').map(row=>String(row[0]||'').trim());
   }catch(e){}
-  if(!enseignants.length){const liste=document.getElementById('eduEnsListe');if(liste)liste.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucune donnee de presence disponible.</p>';return;}
-  const nbP=enseignants.filter(e=>e.present).length;
-  const countEl=document.getElementById('eduEnsCount');if(countEl)countEl.textContent='('+nbP+'/'+enseignants.length+' presents)';
-  let h='<div style="display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)"><div style="flex:1;text-align:center;background:#E8F5E9;border-radius:8px;padding:8px"><div style="font-size:1.2em;font-weight:700;color:var(--vert)">'+nbP+'</div><div style="font-size:0.68em;color:var(--vert);font-weight:600">Presents</div></div><div style="flex:1;text-align:center;background:#FFEBEE;border-radius:8px;padding:8px"><div style="font-size:1.2em;font-weight:700;color:var(--rouge)">'+(enseignants.length-nbP)+'</div><div style="font-size:0.68em;color:var(--rouge);font-weight:600">Absents</div></div><div style="flex:1;text-align:center;background:#E3F2FD;border-radius:8px;padding:8px"><div style="font-size:1.2em;font-weight:700;color:var(--bleu)">'+enseignants.length+'</div><div style="font-size:0.68em;color:var(--bleu);font-weight:600">Total</div></div></div>';
-  enseignants.forEach(e=>{const ini=e.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');const p=e.present!==false;const sb=p?'#E8F5E9':'#FFEBEE';const sc=p?'var(--vert)':'var(--rouge)';h+='<div style="display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #f0f4f8;background:'+(p?'#fff':'#FFF8F8')+'"><div style="width:34px;height:34px;border-radius:50%;background:'+sb+';color:'+sc+';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75em;flex-shrink:0">'+ini+'</div><div style="flex:1"><div style="font-size:0.84em;font-weight:600">'+e.nom+'</div><div style="font-size:0.72em;color:var(--gris)">'+e.matiere+(e.classe?' · '+e.classe:'')+'</div></div><span style="font-size:0.7em;font-weight:700;padding:2px 10px;border-radius:10px;background:'+sb+';color:'+sc+'">'+(p?'Present':'Absent')+'</span></div>';});
+  const aFaitAppel=new Set(appels.map(a=>a.enseignant));
+  const pasEncoreAppele=tousEnseignants.filter(nom=>!aFaitAppel.has(nom));
+  const nbAppels=appels.length;
+  const nbEnsTotal=tousEnseignants.length||nbAppels;
+  const totalPresents=appels.reduce((s,a)=>s+a.presents,0);
+  const totalEleves=appels.reduce((s,a)=>s+(a.total||(a.presents+a.absents)),0);
+  const tauxGlobal=totalEleves>0?Math.round(totalPresents/totalEleves*100):0;
+  const tauxColor=tauxGlobal>=85?'var(--vert)':tauxGlobal>=70?'var(--orange)':'var(--rouge)';
+  const countEl=document.getElementById('eduEnsCount');
+  if(countEl)countEl.textContent='('+nbAppels+'/'+nbEnsTotal+' appels)';
+  let h='';
+  h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:12px 14px;border-bottom:1px solid var(--border)">';
+  h+='<div style="background:#E8F5E9;border-radius:8px;padding:10px;text-align:center"><div style="font-size:1.3em;font-weight:700;color:var(--vert)">'+nbAppels+'</div><div style="font-size:0.64em;color:var(--vert);font-weight:600">Appels faits</div></div>';
+  h+='<div style="background:#FFEBEE;border-radius:8px;padding:10px;text-align:center"><div style="font-size:1.3em;font-weight:700;color:var(--rouge)">'+pasEncoreAppele.length+'</div><div style="font-size:0.64em;color:var(--rouge);font-weight:600">Pas encore</div></div>';
+  h+='<div style="background:#E3F2FD;border-radius:8px;padding:10px;text-align:center"><div style="font-size:1.3em;font-weight:700;color:'+tauxColor+'">'+tauxGlobal+'%</div><div style="font-size:0.64em;color:var(--bleu2);font-weight:600">Présence globale</div></div>';
+  h+='</div>';
+  if(appels.length>0){
+    h+='<div style="padding:8px 14px;background:#E8F5E9;border-bottom:1px solid #C8E6C9"><span style="font-size:0.74em;font-weight:700;color:var(--vert)">✅ APPELS EFFECTUÉS AUJOURD\'HUI</span></div>';
+    const parClasse={};
+    appels.forEach(a=>{if(!parClasse[a.classe])parClasse[a.classe]=[];parClasse[a.classe].push(a);});
+    Object.keys(parClasse).sort().forEach(cl=>{
+      parClasse[cl].forEach(a=>{
+        const tauxCours=a.total>0?Math.round(a.presents/a.total*100):a.presents>0?100:0;
+        const tc=tauxCours>=85?'var(--vert)':tauxCours>=70?'var(--orange)':'var(--rouge)';
+        const ini=a.enseignant.split(' ').slice(0,2).map(w=>w[0]||'').join('');
+        h+='<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f0f4f8;background:#fff">';
+        h+='<div style="width:34px;height:34px;border-radius:50%;background:#E8F5E9;color:var(--vert);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75em;flex-shrink:0">'+ini+'</div>';
+        h+='<div style="flex:1"><div style="font-size:0.84em;font-weight:600">'+a.enseignant+'</div>';
+        h+='<div style="font-size:0.72em;color:var(--gris)">'+a.classe+(a.matiere?' · '+a.matiere:'')+(a.heure?' · '+a.heure:'')+'</div></div>';
+        h+='<div style="text-align:right">';
+        if(a.total>0||a.presents>0){
+          h+='<div style="font-size:0.82em;font-weight:700;color:'+tc+'">'+tauxCours+'%</div>';
+          h+='<div style="font-size:0.66em;color:var(--gris)">'+a.presents+'/'+(a.total||(a.presents+a.absents))+' présents</div>';
+        }
+        h+='</div></div>';
+      });
+    });
+  }
+  if(pasEncoreAppele.length>0){
+    h+='<div style="padding:8px 14px;background:#FFEBEE;border-bottom:1px solid #FFCDD2;border-top:1px solid var(--border)"><span style="font-size:0.74em;font-weight:700;color:var(--rouge)">⏳ PAS ENCORE D\'APPEL</span></div>';
+    pasEncoreAppele.forEach(nom=>{
+      const ini=nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
+      h+='<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid #f0f4f8;background:#FFF8F8">';
+      h+='<div style="width:34px;height:34px;border-radius:50%;background:#FFEBEE;color:var(--rouge);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75em;flex-shrink:0">'+ini+'</div>';
+      h+='<div style="flex:1"><div style="font-size:0.84em;font-weight:600">'+nom+'</div>';
+      h+='<div style="font-size:0.72em;color:var(--rouge)">Aucun appel enregistré aujourd\'hui</div></div>';
+      h+='<span style="font-size:0.7em;padding:2px 8px;border-radius:10px;background:#FFEBEE;color:var(--rouge);font-weight:700">⚠ Absent?</span>';
+      h+='</div>';
+    });
+  }
+  if(appels.length===0&&pasEncoreAppele.length===0){
+    h+='<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.84em">';
+    h+='<div style="font-size:1.5em;margin-bottom:8px">📋</div>';
+    h+='Aucun appel enregistré aujourd\'hui<br>';
+    h+='<span style="font-size:0.85em;color:var(--orange)">Les enseignants n\'ont pas encore utilisé l\'app</span>';
+    h+='</div>';
+  }
   liste.innerHTML=h;
-}
-async function chargerResultats(ecole){
-  const sheetsId=SHEETS_IDS[ecole];if(!sheetsId)return[];
-  for(const sn of['RESULTATS','DELIBERATIONS','RESULTAT']){try{const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';const r=await fetch(url);const data=await r.json();if(data.values&&data.values.length>=2)return data.values.slice(1).filter(row=>row[2]&&String(row[2]).trim()).map(row=>({niveau:String(row[0]||'').trim(),matricule:String(row[1]||'').trim(),nom:String(row[2]||'').trim(),moy:parseFloat(row[3])||0,decision:String(row[4]||'').trim().toUpperCase(),classeSup:String(row[5]||'').trim()}));}catch(e){}}
-  return[];
-}
-async function chargerMessages(ecole){
-  const sheetsId=SHEETS_IDS[ecole];if(!sheetsId)return[];
-  for(const sn of['MESSAGES','CONTACTS','JOURNAL']){try{const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';const r=await fetch(url);const data=await r.json();if(data.values&&data.values.length>=2)return data.values.slice(1).filter(row=>row[0]).map(row=>({date:String(row[0]||'').trim(),message:String(row[3]||'').trim(),nom:String(row[4]||'').trim(),matricule:String(row[5]||'').trim(),classe:String(row[6]||'').trim(),statut:String(row[8]||'').trim()||'CONNEXION',reponse:String(row[9]||'').trim()}));}catch(e){}}
-  return[];
-}
-function renderTableResultats(data,tableId,filtreClasseId,filtreDecId,filtreNomId){
-  const sel=document.getElementById(filtreClasseId);
-  if(sel&&sel.options.length<=1){const classes=[...new Set(data.map(r=>r.niveau))].sort();classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});}
-  const fc=(document.getElementById(filtreClasseId)||{}).value||'',fd=(document.getElementById(filtreDecId)||{}).value||'',fn=((document.getElementById(filtreNomId)||{}).value||'').toLowerCase();
-  const filtered=data.filter(r=>(!fc||r.niveau===fc)&&(!fd||r.decision===fd)&&(!fn||r.nom.toLowerCase().includes(fn)));
-  const tbl=document.getElementById(tableId);if(!tbl)return;
-  if(!filtered.length){tbl.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun resultat</p>';return;}
-  let h='<table><thead><tr><th>Niveau</th><th>Matricule</th><th>Nom et Prenoms</th><th>Moy.</th><th>Decision</th><th>Classe sup.</th></tr></thead><tbody>';
-  filtered.forEach(r=>{const dbg=r.decision==='ADMIS'?'bg-vert':r.decision==='EXCLU'?'bg-rouge':r.decision==='REDOUBLANT'?'bg-orange':'bg-bleu';const mc=r.moy>=10?'var(--vert)':r.moy>=5?'var(--orange)':'var(--rouge)';h+='<tr><td>'+r.niveau+'</td><td style="font-size:0.72em;color:var(--gris)">'+r.matricule+'</td><td><strong>'+r.nom+'</strong></td><td style="font-weight:700;color:'+mc+'">'+r.moy.toFixed(2)+'</td><td><span class="bdg '+dbg+'">'+r.decision+'</span></td><td style="font-size:0.8em">'+r.classeSup+'</td></tr>';});
-  h+='</tbody></table>';tbl.innerHTML=h;
-}
-function filtrerResultatsDir(){renderTableResultats(donneesResultats,'dirResTable','dirResFiltreClasse','dirResFiltreDecision','dirResFiltreNom');}
-function filtrerResultatsCom(){renderTableResultats(donneesResultats,'comResTable','comResFiltreClasse','comResFiltreDecision','comResFiltreNom');}
-function renderMessages(data,bodyId,canReply){
-  const body=document.getElementById(bodyId);if(!body)return;
-  if(!data.length){body.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun message</p>';return;}
-  const msgs=data.filter(m=>m.message);const connexions=data.filter(m=>m.statut==='CONNEXION'&&!m.message);
-  let h='';if(connexions.length)h+='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">'+connexions.length+' connexion(s) parent recente(s)</div>';
-  if(msgs.length){msgs.forEach((m,i)=>{const nonLu=!m.reponse;const repId='rep-msg-'+i;h+='<div style="padding:12px 16px;border-bottom:1px solid var(--border);background:'+(nonLu?'#FFF8E1':'#fff')+'"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><div style="font-size:0.82em;font-weight:700">'+m.nom+' <span style="font-size:0.8em;color:var(--gris)">· '+m.classe+'</span></div><div style="font-size:0.7em;color:var(--gris)">'+m.date+(nonLu?' <span style="color:var(--orange);font-weight:700">Non lu</span>':'')+'</div></div><div style="font-size:0.8em;margin-bottom:6px">'+m.message+'</div>';if(m.reponse){h+='<div style="background:#E8F5E9;border-radius:6px;padding:6px 10px;font-size:0.76em;color:var(--vert)">Reponse: '+m.reponse+'</div>';}else if(canReply){h+='<div style="display:flex;gap:6px;margin-top:6px"><input id="'+repId+'" type="text" placeholder="Votre reponse..." style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;outline:none"><button onclick="envoyerReponse(this)" data-mat="'+m.matricule+'" data-rep="'+repId+'" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">Repondre</button></div>';}h+='</div>';});}
-  else if(!connexions.length)h='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun message parent</p>';
-  body.innerHTML=h;
-}
-async function envoyerReponse(btn){
-  const matricule=btn.getAttribute('data-mat');const inp=document.getElementById(btn.getAttribute('data-rep'));
-  if(!inp||!inp.value.trim()){showToast('Ecrivez une reponse','error');return;}
-  try{await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({type:'REPONDRE_MESSAGE',matricule,reponse:inp.value.trim(),ecole:currentStaff.ecole})});showToast('Reponse envoyee','success');inp.value='';}catch(e){showToast('Erreur envoi','error');}
-}
-async function chargerResultatsEtMessages(ecole,profil){
-  const[resultats,messages]=await Promise.all([chargerResultats(ecole),chargerMessages(ecole)]);
-  donneesResultats=resultats;donneesMessages=messages;
-  const cRes=resultats.length,cMsg=messages.filter(m=>m.message).length,cCon=messages.filter(m=>m.statut==='CONNEXION'&&!m.message).length;
-  if(profil==='DIR'){const el=document.getElementById('dirResCount');if(el)el.textContent='('+cRes+' eleves)';const em=document.getElementById('dirMsgCount');if(em)em.textContent='('+cMsg+' msg · '+cCon+' connexions)';renderTableResultats(resultats,'dirResTable','dirResFiltreClasse','dirResFiltreDecision','dirResFiltreNom');renderMessages(messages,'dirMsgBody',true);}
-  else if(profil==='COM'){const el=document.getElementById('comResCount');if(el)el.textContent='('+cRes+' eleves)';const em=document.getElementById('comMsgCount');if(em)em.textContent='('+cMsg+' msg · '+cCon+' connexions)';renderTableResultats(resultats,'comResTable','comResFiltreClasse','comResFiltreDecision','comResFiltreNom');renderMessages(messages,'comMsgBody',true);}
-  else if(profil==='EDU'){const em=document.getElementById('eduMsgCount');if(em)em.textContent='('+cMsg+' msg)';renderMessages(messages,'eduMsgBody',false);}
-}
-
-// ══ NOTES ET DEVOIRS ENSEIGNANTS (ESPACE EDU) ══
-let donneesDevoirs = [];
-let donneesDevoir_filtrees = [];
-
-async function chargerNotesDevoir() {
-  const s = currentStaff;
-  if(!s) return;
-  const container = document.getElementById('eduDevsListe');
-  const statsDiv = document.getElementById('eduDevsStats');
-  if(container) container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div><p style="font-size:0.82em">Chargement...</p></div>';
-
-  const classesEdu = s.classes || [];
-  const sheetsId = SHEETS_IDS[s.ecole];
-  if(!sheetsId) { if(container) container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Ecole non configuree.</p>'; return; }
-
-  let data = [];
-  // Essayer plusieurs feuilles : CAHIER_TEXTES, NOTES_T, DEVOIRS, CAHIER
-  const sheetNames = ['CAHIER_TEXTES', 'NOTES_T', 'DEVOIRS', 'CAHIER', 'CAHIER DE TEXTES'];
-  let found = false;
-  for(const sn of sheetNames) {
-    try {
-      const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-      const r = await fetch(url); const d = await r.json();
-      if(d.values && d.values.length >= 2) {
-        const headers = d.values[0].map(h => String(h||'').toUpperCase().trim());
-        const iDate   = headers.findIndex(h => h.includes('DATE'));
-        const iClasse = headers.findIndex(h => h.includes('CLASS'));
-        const iMat    = headers.findIndex(h => h.includes('MAT') || h.includes('MATI'));
-        const iEns    = headers.findIndex(h => h.includes('ENS') || h.includes('PROF'));
-        const iLecon  = headers.findIndex(h => h.includes('LE') || h.includes('TITRE') || h.includes('CONTENU'));
-        const iDevoir = headers.findIndex(h => h.includes('DEV'));
-        const iAv     = headers.findIndex(h => h.includes('AVAN') || h.includes('PROG'));
-        const iSemT   = headers.findIndex(h => h.includes('THEO'));
-        const iSemR   = headers.findIndex(h => h.includes('REEL') || h.includes('RÉEL'));
-        data = d.values.slice(1).filter(row => row[iClasse >= 0 ? iClasse : 2] && String(row[iClasse >= 0 ? iClasse : 2]||'').trim()).map(row => ({
-          date:    iDate>=0  ? String(row[iDate]||'').trim()   : '',
-          classe:  iClasse>=0? String(row[iClasse]||'').trim() : String(row[2]||'').trim(),
-          matiere: iMat>=0   ? String(row[iMat]||'').trim()    : String(row[3]||'').trim(),
-          enseignant: iEns>=0? String(row[iEns]||'').trim()    : String(row[4]||'').trim(),
-          lecon:   iLecon>=0 ? String(row[iLecon]||'').trim()  : String(row[5]||'').trim(),
-          devoir:  iDevoir>=0? String(row[iDevoir]||'').trim() : '',
-          avancement: iAv>=0 ? parseInt(row[iAv])||0           : 0,
-          semTheo: iSemT>=0  ? parseInt(row[iSemT])||0         : 0,
-          semReel: iSemR>=0  ? parseInt(row[iSemR])||0         : 0
-        }));
-        if(data.length > 0) { found = true; break; }
-      }
-    } catch(e) {}
-  }
-
-  // Filtrer par classes de l'éducateur
-  if(classesEdu.length > 0) {
-    data = data.filter(row => classesEdu.some(cl => {
-    const norm = s => s.toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U').replace(/[ÔÖÓÒÕ]/g,'O').replace(/[ÎÏÍÌ]/g,'I').replace(/[-_]/g,' ').replace(/\s+/g,' ');
-    const nr = norm(row.classe), nc = norm(cl);
-    return nr===nc || nr.startsWith(nc+' ') || nr.endsWith(' '+nc) || nc.startsWith(nr+' ');
-  }));
-  }
-
-  donneesDevoirs = data;
-
-  // Toujours peupler le select classe avec les classes de l'éducateur
-  const selClasse = document.getElementById('eduDevsFiltreClasse');
-  const selMat = document.getElementById('eduDevsFiltreMatiere');
-  if(selClasse) {
-    selClasse.innerHTML = '<option value="">Toutes mes classes</option>';
-    const classesAfficher = classesEdu.length > 0 ? classesEdu : [...new Set(data.map(r=>r.classe))].sort();
-    classesAfficher.forEach(cl => { const o = document.createElement('option'); o.value=cl; o.textContent=cl; selClasse.appendChild(o); });
-  }
-  if(selMat) {
-    selMat.innerHTML = '<option value="">Toutes matières</option>';
-    const mats = [...new Set(data.map(r=>r.matiere).filter(Boolean))].sort();
-    mats.forEach(m => { const o = document.createElement('option'); o.value=m; o.textContent=m; selMat.appendChild(o); });
-  }
-
-  if(!found || data.length === 0) {
-    const dc = document.getElementById('eduDevsCount'); if(dc) dc.textContent = '(0)';
-    if(container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.82em">Aucun cahier de textes enregistre pour vos classes.<br><span style="font-size:0.85em;color:var(--orange)">Les enseignants nont pas encore saisi de cours dans Smart School.</span></div>';
-    return;
-  }
-
-  filtrerNotesDevoirs();
 }
 
 function filtrerNotesDevoirs() {
