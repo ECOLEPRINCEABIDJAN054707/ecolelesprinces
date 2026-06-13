@@ -2095,6 +2095,86 @@ async function chargerEDT() {
       +'</div>';
   }
 
+ // Filtrer par classes éducateur
+  if(classesEdu.length > 0) {
+    data = data.filter(row => classesEdu.some(cl => {
+      const norm = s => s.toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U').replace(/[ÔÖÓÒÕ]/g,'O').replace(/[ÎÏÍÌ]/g,'I').replace(/[-_]/g,' ').replace(/\s+/g,' ');
+      const nr = norm(row.classe), nc = norm(cl);
+      return nr===nc || nr.startsWith(nc+' ') || nr.endsWith(' '+nc) || nc.startsWith(nr+' ');
+    }));
+  }
+  donneesEDT = data;
+  const coursAujourdhui = data.filter(r => r.estAujourdhui);
+  const selC = document.getElementById('eduEdtFiltreClasse');
+  const selE = document.getElementById('eduEdtFiltreEns');
+  if(selC) {
+    selC.innerHTML = '<option value="">Toutes mes classes</option>';
+    const classesAfficher = classesEdu.length > 0 ? classesEdu : [...new Set(data.map(r=>r.classe))].filter(Boolean).sort();
+    classesAfficher.forEach(cl => { const o=document.createElement('option'); o.value=cl; o.textContent=cl; selC.appendChild(o); });
+  }
+  if(selE) {
+    selE.innerHTML = '<option value="">Tous les enseignants</option>';
+    const ens = [...new Set(data.map(r=>r.enseignant))].filter(Boolean).sort();
+    ens.forEach(e => { const o=document.createElement('option'); o.value=e; o.textContent=e; selE.appendChild(o); });
+  }
+  if(!found || data.length === 0) {
+    const dc=document.getElementById('eduEdtCount'); if(dc) dc.textContent='(0 cours)';
+    if(container) container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.82em">'
+      +'<div style="font-size:2em;margin-bottom:8px">📋</div>'
+      +'<div style="font-weight:600;margin-bottom:6px">Aucun cours enregistré ce mois</div>'
+      +'<div style="font-size:0.85em;color:var(--orange)">Les enseignants doivent utiliser App Enseignant.</div>'
+      +'</div>';
+    return;
+  }
+  const totalMin = Math.round(data.reduce((s,r) => s + parseHeuresToMinutes(r.heures), 0));
+  const totalH = Math.floor(totalMin/60);
+  const totalMn = Math.round(totalMin % 60);
+  const nbEns = new Set(data.map(r=>r.enseignant).filter(Boolean)).size;
+  const nbClasses = new Set(data.map(r=>r.classe).filter(Boolean)).size;
+  const nbRetard = data.filter(r=>r.retardMin > 0).length;
+  const nbAujourdhui = coursAujourdhui.length;
+  const dc = document.getElementById('eduEdtCount');
+  if(dc) dc.textContent = '('+data.length+' cours · '+totalH+'h'+(totalMn>0?String(totalMn).padStart(2,'0'):'')+(nbAujourdhui>0?' · '+nbAujourdhui+' aujourd\'hui':'')+')';
+  if(statsDiv) statsDiv.style.display = 'block';
+  const sv = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  sv('edtTotalH', totalH+'h'+(totalMn>0?String(totalMn).padStart(2,'0'):''));
+  sv('edtNbEns', nbEns);
+  sv('edtNbClasses', nbClasses);
+  sv('edtNbRetard', nbRetard);
+  let html = '';
+  if(coursAujourdhui.length > 0) {
+    const nbRetardAuj = coursAujourdhui.filter(r=>r.retardMin > 0).length;
+    const nbAHeure = coursAujourdhui.filter(r=>r.retardMin === 0 && (r.statut.includes('VALID')||r.statut.includes('PARTIEL'))).length;
+    const nbAttente = coursAujourdhui.filter(r=>r.statut==='EN ATTENTE').length;
+    html += '<div style="margin:10px 14px;background:linear-gradient(135deg,#1F4E79,#2E75B6);border-radius:10px;padding:12px 14px;color:#fff">';
+    html += '<div style="font-size:0.82em;font-weight:700;margin-bottom:8px">📅 AUJOURD\'HUI — '+jourAujourdhui+'</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">';
+    html += '<div style="background:rgba(255,255,255,0.15);border-radius:6px;padding:6px;text-align:center"><div style="font-size:1.1em;font-weight:700">'+nbAHeure+'</div><div style="font-size:0.6em;opacity:0.85">À l\'heure</div></div>';
+    html += '<div style="background:rgba(255,150,0,0.3);border-radius:6px;padding:6px;text-align:center"><div style="font-size:1.1em;font-weight:700">'+nbRetardAuj+'</div><div style="font-size:0.6em;opacity:0.85">En retard</div></div>';
+    html += '<div style="background:rgba(255,255,255,0.1);border-radius:6px;padding:6px;text-align:center"><div style="font-size:1.1em;font-weight:700">'+nbAttente+'</div><div style="font-size:0.6em;opacity:0.85">En attente</div></div>';
+    html += '</div></div>';
+    html += '<div style="border-bottom:2px solid var(--border)">';
+    coursAujourdhui.forEach(c => {
+      const isRetard = c.retardMin > 0;
+      const isAttente = c.statut === 'EN ATTENTE';
+      const bgCours = isRetard ? '#FFF8F0' : isAttente ? '#FFFDE7' : '#F8FFF8';
+      const couleurStatut = isRetard ? 'var(--orange)' : isAttente ? '#F9A825' : 'var(--vert)';
+      const labelStatut = isRetard ? '⚠ Retard '+c.retardMin+' min' : isAttente ? '⌚ En attente' : '✓ À l\'heure';
+      const ini = c.enseignant.split(' ').slice(0,2).map(w=>w[0]||'').join('');
+      html += '<div style="padding:10px 14px;border-bottom:1px solid #f0f4f8;background:'+bgCours+'">';
+      html += '<div style="display:flex;align-items:center;gap:10px">';
+      html += '<div style="width:34px;height:34px;border-radius:50%;background:'+(isRetard?'#FFF3E0':isAttente?'#FFFDE7':'#E8F5E9')+';color:'+couleurStatut+';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75em;flex-shrink:0">'+ini+'</div>';
+      html += '<div style="flex:1"><div style="font-size:0.84em;font-weight:600">'+c.enseignant+'</div>';
+      html += '<div style="font-size:0.72em;color:var(--gris)">'+c.classe+' · '+c.matiere+(c.hdebut?' · '+c.hdebut:'')+'</div></div>';
+      html += '<span style="font-size:0.68em;font-weight:700;padding:3px 8px;border-radius:10px;background:'+(isRetard?'#FFF3E0':isAttente?'#FFFDE7':'#E8F5E9')+';color:'+couleurStatut+'">'+labelStatut+'</span>';
+      html += '</div></div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div style="margin:10px 14px;background:#F5F7FA;border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center">';
+    html += '<div style="font-size:0.84em;color:var(--gris)">📅 Aucun cours enregistré aujourd\'hui ('+jourAujourdhui+')</div>';
+    html += '</div>';
+  }
   filtrerEDT();
 }
 
