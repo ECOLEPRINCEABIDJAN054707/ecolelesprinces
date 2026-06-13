@@ -870,7 +870,29 @@ table tr:nth-child(even){background:#F8FAFD}
       </div>
     </div>
   </div>
-
+<!-- POINTAGE ENSEIGNANTS -->
+  <div class="section">
+    <div class="sec-head sec-or" onclick="toggleSec(this)">
+      <h3>&#128202; Pointage enseignants <span id="eduPointageCount" style="font-size:0.78em;opacity:0.85"></span></h3>
+      <span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="eduPointageBody">
+      <div style="display:flex;border-bottom:1px solid var(--border);background:#fff">
+        <div class="peda-tab active" id="tabPointageJour" onclick="showPointageTab('jour',this)">&#128197; Aujourd'hui</div>
+        <div class="peda-tab" id="tabPointageSemaine" onclick="showPointageTab('semaine',this)">&#128198; Semaine</div>
+        <div class="peda-tab" id="tabPointageMois" onclick="showPointageTab('mois',this)">&#128467; Mois</div>
+      </div>
+      <div id="pointageJour" class="peda-page active" style="padding:0">
+        <div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div><p style="font-size:0.82em">Chargement...</p></div>
+      </div>
+      <div id="pointageSemaine" class="peda-page" style="padding:0;display:none">
+        <div style="text-align:center;padding:20px;color:var(--gris)"><p style="font-size:0.82em">Cliquez sur l'onglet pour charger</p></div>
+      </div>
+      <div id="pointageMois" class="peda-page" style="padding:0;display:none">
+        <div style="text-align:center;padding:20px;color:var(--gris)"><p style="font-size:0.82em">Cliquez sur l'onglet pour charger</p></div>
+      </div>
+    </div>
+  </div>
   <!-- MESSAGES -->
   <div class="section">
     <div class="sec-head sec-violet" onclick="toggleSec(this)">
