@@ -1923,7 +1923,15 @@ async function chargerNotesDevoir() {
     let matsFixe = [];
     classesEdu.forEach(cl => { getMatieres(cl).forEach(m => { if(!matsFixe.includes(m)) matsFixe.push(m); }); });
     if(!matsFixe.length) matsFixe = getMatieres('4EME');
-    const toutesLsMats = [...new Set([...matsFixe, ...matsData])].sort();
+    const normMat = m => m.trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const matsMerged = [...matsFixe, ...matsData];
+const matsSeen = {};
+const toutesLsMats = matsMerged.filter(m => {
+  const k = normMat(m);
+  if(matsSeen[k]) return false;
+  matsSeen[k] = true;
+  return true;
+}).sort();
     toutesLsMats.forEach(m => { const o = document.createElement('option'); o.value=m; o.textContent=m; selMat.appendChild(o); });
   }
 
