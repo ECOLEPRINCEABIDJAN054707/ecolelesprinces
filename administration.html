@@ -1619,8 +1619,13 @@ async function chargerAbsencesElevesSigne(ecole, classesEdu){
       }
     }
   }catch(e){}
-  if(classesEdu.length>0){
-    absences=absences.filter(a=>classesEdu.some(cl=>norm(a.classe)===norm(cl)));
+if(classesEdu.length > 0) {
+    absences = absences.filter(a => classesEdu.some(cl => {
+      const na = norm(a.classe), nc = norm(cl);
+      return na===nc || na.startsWith(nc+' ') || na.endsWith(' '+nc) 
+          || nc.startsWith(na+' ') || na===nc.replace(/\s/g,'') 
+          || nc===na.replace(/\s/g,'');
+    }));
   }
   if(absences.length>0){
     try{
