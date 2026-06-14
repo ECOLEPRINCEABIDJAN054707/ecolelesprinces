@@ -685,7 +685,7 @@ async function chargerEleves(classe){
   try{
     showLoader('Chargement des élèves...');
     const range=encodeURIComponent(`${classe}!B4:C300`);
-    const url=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}`;
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS_ENS[user.ecole]||user.sheetsId}/values/${range}?key=${API_KEY}`;
     const res=await fetch(url);const data=await res.json();
     if(!data.values||!data.values.length){eleves=genDemo();}
     else{eleves=data.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({classe,matricule:r[0]||'',nom:r[1]||'',statut:'present',motif:'',heure:'',obs:''}));if(!eleves.length)eleves=genDemo();}
@@ -787,7 +787,7 @@ async function chargerElevesNotes(){
   try{
     showLoader('Chargement des élèves...');
     const range=encodeURIComponent(`${classe}!B4:C300`);
-    const url=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}`;
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS_ENS[user.ecole]||user.sheetsId}/values/${range}?key=${API_KEY}`;
     const res=await fetch(url);const data=await res.json();hideLoader();
     if(!data.values||!data.values.length){document.getElementById('notesListe').innerHTML='<p style="text-align:center;color:var(--text2);padding:20px">Aucun élève</p>';return;}
     elevesNotes=data.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({matricule:r[0]||'',nom:r[1]||'',note:''}));
@@ -889,7 +889,7 @@ async function selectionnerMoisBulletin(mois,classe,niveau){
   const cfg=CONFIG_BULLETIN[niveau];if(!cfg){document.getElementById('bulletinListe').innerHTML='<p style="color:var(--red);padding:12px">Niveau non reconnu : '+niveau+'</p>';return;}
   let legendeHtml='<strong>Barèmes :</strong> ';cfg.matieres.forEach((m,i)=>{legendeHtml+=cfg.labels[i]+' <strong>/'+cfg.bareme[i]+'</strong>';if(i<cfg.matieres.length-1)legendeHtml+=' · ';});legendeHtml+=' + <strong>Conduite /10</strong>';document.getElementById('bulletinLegende').innerHTML=legendeHtml;
   try{
-    showLoader('Chargement des élèves...');const range=encodeURIComponent(classe+'!B4:C300');const url=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}`;const res=await fetch(url);const data=await res.json();hideLoader();
+    showLoader('Chargement des élèves...');const range=encodeURIComponent(classe+'!B4:C300');const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS_ENS[user.ecole]||user.sheetsId}/values/${range}?key=${API_KEY}`;const res=await fetch(url);const data=await res.json();hideLoader();
     bulletinElevesData=(!data.values||!data.values.length)?[{matricule:'MAT001',nom:'KOUASSI Aya'},{matricule:'MAT002',nom:'BAMBA Moussa'}]:data.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({matricule:r[0]||'',nom:r[1]||''}));
     afficherTableauBulletin(cfg);
   }catch(e){hideLoader();bulletinElevesData=[{matricule:'MAT001',nom:'KOUASSI Aya'}];afficherTableauBulletin(cfg);showToast('Mode démo — erreur réseau','warn');}
