@@ -820,13 +820,42 @@ async function publierNotes(){
   const classe=document.getElementById('notesClasse').value,numero=document.getElementById('notesNumero').value;
   const trimestre=document.getElementById('notesTrimestre').value,dateRemise=document.getElementById('notesDate').value;
   if(!classe||!dateRemise){showToast('Classe et date requis','error');return;}
+
+  // Vérifier que tous les élèves ont une note
+  const manquants=elevesNotes.filter(e=>e.note===''||e.note===null||e.note===undefined);
+  if(manquants.length>0){
+    showToast('⚠️ '+manquants.length+' élève(s) sans note : '+manquants.slice(0,3).map(e=>e.nom.split(' ')[0]).join(', ')+(manquants.length>3?'...':''),'error');
+    return;
+  }
+
   const vals=elevesNotes.map(e=>parseFloat(e.note)).filter(n=>!isNaN(n));
   if(!vals.length){showToast('Saisissez au moins une note','error');return;}
   const moyenne=(vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2);
   showLoader('Publication des notes...');
-  const data={date:formatDate(new Date()),dateRemise,classe,matiere:user.matiere,enseignant:user.nom,ecole:user.ecole,numeroDevoir:numero,trimestre,moyenne,notes:elevesNotes.map(e=>({matricule:e.matricule,nom:e.nom,note:e.note||'ABS'}))};
-  try{await envoyerDonnees('NOTES',data);hideLoader();showToast(`✅ Notes publiées — Moyenne: ${moyenne}/20`,'success');setTimeout(()=>goTo('accueil'),1500);}
-  catch(e){hideLoader();sauvegarderHorsLigne('NOTES',data);showToast(`📝 Notes sauvegardées — Moy: ${moyenne}/20`,'success');setTimeout(()=>goTo('accueil'),1500);}
+  const data={date:formatDate(new Date()),dateRemise,classe,matiere:user.matiere,enseignant:user.nom,ecole:user.ecole,numeroDevoir:numero,trimestre,moyenne,notes:elevesNotes.map(e=>({matricule:e.matricule,nom:e.nom,note:e.note||'0'}))};
+  try{
+    await envoyerDonnees('NOTES',data);
+    hideLoader();
+    showToast(`✅ Notes publiées — Moyenne: ${moyenne}/20`,'success');
+    // Verrouiller — afficher cadenas sauf pour les 0
+    elevesNotes.forEach((el,i)=>{
+      const inp=document.querySelector(`input[data-idx="${i}"]`);
+      if(!inp)return;
+      if(parseFloat(el.note)===0){
+        inp.style.borderColor='#FFB74D';
+        inp.style.background='#FFF3E0';
+        inp.title='Rattrapage possible';
+      } else {
+        inp.disabled=true;
+        inp.style.background='#E8F5E9';
+        inp.style.borderColor='var(--green)';
+        inp.title='Note verrouillée';
+      }
+    });
+    document.getElementById('btnPublierNotes').textContent='🔒 Notes publiées';
+    document.getElementById('btnPublierNotes').disabled=true;
+  }
+  catch(e){hideLoader();sauvegarderHorsLigne('NOTES',data);showToast(`📝 Notes sauvegardées — Moy: ${moyenne}/20`,'success');}
 }
 
 async function chargerMoyennes(){
