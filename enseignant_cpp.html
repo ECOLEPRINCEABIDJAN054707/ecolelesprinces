@@ -455,7 +455,23 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
 <script>
 const API_KEY='AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA';
 const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwVQeq9xAHyEdDYSNDO11hlfobZsHvHiRQ8fvyuiOq05Mr2XFWNTxClvYaYBazoV-d3/exec';
-const SHEETS_IDS = {
+const SHEETS_IDS_ENS = {
+  'CPP LES PRINCES':     '1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
+  'ACADEMIE':            '1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M',
+  'GUINGLO VILLE':       '1W7EvTLpb02bweyC_zmJ-HzEHujKPjvY7--JBKuMMZCA',
+  'GNONTINROU':          '1BmxayfCT27sGle0YVlYw0b1ta_9YUkvKbCGppd2fAK4',
+  'KOUTOUAN':            '167pDd1gn2K6h6kNNPZdlTfFhqJC9WjXgeUDu_BVUgpg',
+  'SOAKPE':              '1-s1aXswiTdJ3nT4TwbFOfpXpTugdMRCNFePX7tJYWys',
+  'AKEIKOI 1':           '1K3Uf4HF8fnLgtxMnC_mjemzenw94km_DwCdEDflexwE',
+  'AKEIKOI 2':           '11MQl7WYC30_P6DbbuunLWR-5xvvQ-sfph5XMsyzHUog',
+  'CPP PRO':             '1qRhwDAlBzaw9bNVIqyhTcyKAO28RowsZAOuBCFX2jWs',
+  'CPP TECH':            '15cIl3h8-RTMuD2TowvJtbC5Tsm15Ghdqv8il7d-_4bc',
+  'ETL PRINCES KOUIBLY': '1rf9lXBLGLNqhzTv1gXC3wtSm2lugPYLmlZOY7r7bT-s',
+  'GS RITA ROSANE':      '1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0',
+  'DABOU':               '1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA',
+  'ANYAMA ADJAME':       '1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE',
+};
+  const SHEETS_IDS = {
   'CPP LES PRINCES':     '1e37v34kcYXh0etsPjGo7rF7SyH0i1Xpj20azcirDUEY',
   'ACADEMIE':            '17EuXUJ4ej_brSwDhTJV1c_Ttmhxl3YkPI053YJAE9Es',
   'GUINGLO VILLE':       '1B_ynuBLsVJbTzjtyezraayR813stEuPQm3GGtatuRD8',
@@ -571,7 +587,7 @@ async function chargerClasses(){
   const sels=['modalClasse','notesClasse','moyennesClasse'];
   try{
     const range=encodeURIComponent('EDT_ENSEIGNANTS!A2:D500');
-    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS[user.ecole]}/values/${range}?key=${API_KEY}`;
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS_ENS[user.ecole]||SHEETS_IDS[user.ecole]}/values/${range}?key=${API_KEY}`;
     const res=await fetch(url);const data=await res.json();
     if(!data.values)return;
     const nomUp=user.nom.toUpperCase();
