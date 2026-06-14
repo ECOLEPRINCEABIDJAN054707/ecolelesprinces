@@ -308,7 +308,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
         <div style="font-size:28px;font-weight:800" id="resumeMoy">—</div>
       </div>
     </div>
-    <div id="moyennesListe"><p style="text-align:center;color:var(--text2);padding:24px">Sélectionnez une classe</p></div>
+    <div style="margin-bottom:12px"><input class="search-input" type="text" placeholder="🔍 Rechercher un élève..." id="searchMoyennes" oninput="filtrerMoyennes()"></div> <div id="moyennesListe"><p style="text-align:center;color:var(--text2);padding:24px">Sélectionnez une classe</p></div>
     <button class="btn btn-primary" id="btnPublierMoyennes" style="display:none;margin-top:12px" onclick="publierMoyennes()">📤 Publier les moyennes</button>
   </div>
 </div>
@@ -407,7 +407,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
       <div class="form-group"><label class="label">Trimestre</label><select class="select" id="notesTrimestre"></select></div>
     </div>
     <div class="form-group"><label class="label">Date de remise</label><input class="input" type="date" id="notesDate"></div>
-    <div id="notesListe"><p style="text-align:center;color:var(--text2);padding:24px">Sélectionnez une classe</p></div>
+    <div style="margin-bottom:12px"><input class="search-input" type="text" placeholder="🔍 Rechercher un élève..." id="searchNotes" oninput="filtrerNotes()"></div> <div id="notesListe"><p style="text-align:center;color:var(--text2);padding:24px">Sélectionnez une classe</p></div>
     <button class="btn btn-primary" id="btnPublierNotes" style="display:none;margin-bottom:20px" onclick="publierNotes()">📤 Publier les notes</button>
   </div>
   <nav class="bottom-nav">
@@ -798,7 +798,22 @@ async function chargerElevesNotes(){
 function afficherElevesNotes(){
   document.getElementById('notesListe').innerHTML=elevesNotes.map((el,i)=>`<div class="note-row"><div class="eleve-avatar" style="width:36px;height:36px;font-size:13px">${el.nom.charAt(0)}</div><div class="eleve-info"><div class="eleve-nom">${el.nom}</div><div class="eleve-mat">${el.matricule}</div></div><div style="display:flex;align-items:center;gap:4px"><input type="number" min="0" max="20" step="0.5" placeholder="—" value="${el.note}" class="note-input" data-idx="${i}" oninput="majNoteInput(this,${i})"><span style="font-size:11px;color:var(--text2)">/20</span></div></div>`).join('');
 }
-
+function filtrerNotes(){
+  const q=document.getElementById('searchNotes').value.toLowerCase();
+  document.querySelectorAll('#notesListe .note-row').forEach(row=>{
+    const nom=row.querySelector('.eleve-nom').textContent.toLowerCase();
+    const mat=row.querySelector('.eleve-mat').textContent.toLowerCase();
+    row.style.display=(!q||nom.includes(q)||mat.includes(q))?'flex':'none';
+  });
+}
+function filtrerMoyennes(){
+  const q=document.getElementById('searchMoyennes').value.toLowerCase();
+  document.querySelectorAll('#moyennesListe .note-row').forEach(row=>{
+    const nom=row.querySelector('.eleve-nom').textContent.toLowerCase();
+    const mat=row.querySelector('.eleve-mat').textContent.toLowerCase();
+    row.style.display=(!q||nom.includes(q)||mat.includes(q))?'flex':'none';
+  });
+}
 function majNoteInput(el,i){const v=parseFloat(el.value);elevesNotes[i].note=el.value;if(!isNaN(v)){el.classList.toggle('ok',v>=10);el.classList.toggle('bad',v<10);}else{el.classList.remove('ok','bad');}}
 
 async function publierNotes(){
