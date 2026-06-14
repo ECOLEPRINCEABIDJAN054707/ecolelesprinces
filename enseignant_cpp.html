@@ -588,16 +588,6 @@ async function chargerClasses(){
     });
   }catch(e){console.warn('chargerClasses:',e);}
 }
-  const sels=['modalClasse','notesClasse','moyennesClasse'];
-  try{
-    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS[user.ecole]}?key=${API_KEY}&fields=sheets.properties.title`;
-    const res=await fetch(url);const data=await res.json();
-    if(!data.sheets)return;
-    const exclus=['SYNTHESE','ENSEIGNANTS','ABSENCES','APPELS','CAHIER_TEXTES','NOTES_T1','NOTES_T2','NOTES_T3','NOTES_S1','NOTES_S2','NOTES_EB1','NOTES_EB2','NOTES_EB3','NOTES_EB4','POINTAGE_MENSUEL','GPS_CLASSES','CONFIGURATION_TARIF','EDT','HISTORIQUE_PAIEMENTS','SALLES','BULLETINS_PUBLIES_PRIM','SYNTHESE_BACKUP','NOUVEAUX_ELEVES','ALERTES_INSCRIPTION','CONTACTS_MANQUANTS','HISTORIQUE_MAJ','HISTORIQUE_IDS','NON_ATTRIBUES'];
-    const classes=data.sheets.map(s=>s.properties.title).filter(t=>!exclus.some(e=>t.toUpperCase().includes(e))&&!t.toUpperCase().startsWith('EDT_')&&t.length>1);
-    sels.forEach(id=>{const sel=document.getElementById(id);if(!sel)return;while(sel.options.length>1)sel.remove(1);classes.forEach(c=>{const opt=document.createElement('option');opt.value=c;opt.textContent=c;sel.appendChild(opt);});});
-  }catch(e){console.warn('chargerClasses:',e);}
-}
 
 async function chargerBilan(){
   const moisCode=getMoisCode();
