@@ -823,11 +823,11 @@ async function chargerMoyennes(){
   try{
     showLoader('Chargement...');
     const rangeEl=encodeURIComponent(`${classe}!B4:C300`);
-    const urlEl=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${rangeEl}?key=${API_KEY}`;
+    const urlEl=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS_ENS[user.ecole]||user.sheetsId}/values/${rangeEl}?key=${API_KEY}`;
     const resEl=await fetch(urlEl);const dataEl=await resEl.json();
     let elevesListe=[];if(dataEl.values)elevesListe=dataEl.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({matricule:r[0]||'',nom:r[1]||'',moyenne:''}));
     const rangeN=encodeURIComponent(`${trimestreActif}!A2:F2000`);
-    const urlN=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${rangeN}?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const urlN=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS_ENS[user.ecole]||user.sheetsId}/values/${rangeN}?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
     const resN=await fetch(urlN);const dataN=await resN.json();
     if(dataN.values){dataN.values.forEach(row=>{const mat=(row[0]||'').toString().trim().toUpperCase(),cls=(row[2]||'').toString().trim().toUpperCase(),ens=(row[4]||'').toString().trim().toUpperCase(),moy=row[3];if(cls!==classe.toUpperCase()||ens!==user.nom.toUpperCase())return;const eleve=elevesListe.find(e=>e.matricule.toUpperCase()===mat);if(eleve&&moy!==''&&moy!==null&&moy!==undefined)eleve.moyenne=parseFloat(moy)||'';});}
     hideLoader();moyennesData[classe]=elevesListe;afficherMoyennes(elevesListe,classe);
@@ -878,7 +878,7 @@ async function initBulletin(){
   if(!user||user.niveau!=='primaire')return;
   const sel=document.getElementById('bulletinClasseSelect');sel.innerHTML='<option value="">— Sélectionner la classe —</option>';
   try{
-    const url=`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}?key=${API_KEY}&fields=sheets.properties.title`;
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS_ENS[user.ecole]||user.sheetsId}?key=${API_KEY}&fields=sheets.properties.title`;
     const res=await fetch(url);const data=await res.json();
     if(data.sheets){const exclus=['SYNTHESE','ENSEIGNANTS','ABSENCES','APPELS','CAHIER_TEXTES','NOTES_T1','NOTES_T2','NOTES_T3','NOTES_S1','NOTES_S2','NOTES_EB1','NOTES_EB2','NOTES_EB3','NOTES_EB4','POINTAGE_MENSUEL','GPS_CLASSES','CONFIGURATION_TARIF','EDT','HISTORIQUE_PAIEMENTS','SALLES','BULLETINS_PUBLIES_PRIM','SYNTHESE_BACKUP','NOUVEAUX_ELEVES'];const classes=data.sheets.map(s=>s.properties.title).filter(t=>!exclus.some(e=>t.toUpperCase().includes(e))&&!t.toUpperCase().startsWith('EDT_')&&!t.toUpperCase().startsWith('NOTES_PRIMAIRE')&&t.length>1&&getBulletinNiveau(t)!=='');classes.forEach(c=>{const opt=document.createElement('option');opt.value=c;opt.textContent=c;sel.appendChild(opt);});if(user.classeDefaut){for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===user.classeDefaut||sel.options[i].value===user.classeDefaut.replace(/ /g,'')){sel.selectedIndex=i;changerClasseBulletin(sel.options[i].value);break;}}}}
   }catch(e){showToast('Erreur chargement classes','error');}
