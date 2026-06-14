@@ -2467,128 +2467,155 @@ async function chargerPointageEdu(periode) {
   const dd = String(today.getDate()).padStart(2,'0');
   const mm = String(today.getMonth()+1).padStart(2,'0');
   const yyyy = today.getFullYear();
-  const jourSemaine = today.getDay() === 0 ? 6 : today.getDay() - 1;
+  const jourSemaine = today.getDay()===0?6:today.getDay()-1;
   const debutSemaine = new Date(today);
-  debutSemaine.setDate(today.getDate() - jourSemaine);
-  try {
-    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r = await fetch(url); const d = await r.json();
-    if(!d.values || d.values.length < 2) {
-      container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucune donnée de pointage disponible.</p>';
-      return;
+  debutSemaine.setDate(today.getDate()-jourSemaine);
+
+  const norm = s => s.toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/\s+/g,' ');
+
+  function parseDate(val) {
+    const n = parseFloat(val);
+    if(!isNaN(n)&&n>40000) return new Date(Math.round((n-25569)*86400*1000));
+    if(val) {
+      const p = String(val).split('/');
+      if(p.length===3) return new Date(p[2],p[1]-1,p[0]);
     }
-    const headers = d.values[0].map(h => String(h||'').toUpperCase().trim());
-    const iDate    = headers.findIndex(h => h.includes('DATE'));
-    const iClasse  = headers.findIndex(h => h.includes('CLASS'));
-    const iMat     = headers.findIndex(h => h.includes('MAT'));
-    const iEns     = headers.findIndex(h => h.includes('ENS') || h.includes('PROF'));
-    const iHeures  = headers.findIndex(h => h.includes('HEURE') || h === 'H');
-    const iStatut  = headers.findIndex(h => h.includes('STAT'));
-    const iSalaire = headers.findIndex(h => h.includes('SAL'));
-    const iHdebut  = headers.findIndex(h => h.includes('DEB'));
-    const toutes = d.values.slice(1).map(row => {
-      const dateVal = String(row[iDate>=0?iDate:0]||'').trim();
-      const n = parseFloat(dateVal);
-      let dateObj = null;
-      if(!isNaN(n) && n > 40000) {
-        dateObj = new Date(Math.round((n-25569)*86400*1000));
-      } else if(dateVal) {
-        const parts = dateVal.split('/');
-        if(parts.length === 3) dateObj = new Date(parts[2], parts[1]-1, parts[0]);
-      }
-      const st = String(row[iStatut>=0?iStatut:9]||'').trim().toUpperCase();
-      return {
-        dateObj, dateStr: dateVal,
-        classe:     iClasse>=0  ? String(row[iClasse]||'').trim()  : String(row[2]||'').trim(),
-        matiere:    iMat>=0     ? String(row[iMat]||'').trim()     : String(row[3]||'').trim(),
-        enseignant: iEns>=0     ? String(row[iEns]||'').trim()     : String(row[4]||'').trim(),
-        heures:     iHeures>=0  ? parseFloat(row[iHeures])||0      : parseFloat(row[8])||0,
-        statut:     st,
-        salaire:    iSalaire>=0 ? parseFloat(row[iSalaire])||0     : parseFloat(row[11])||0,
-        hdebut:     iHdebut>=0  ? String(row[iHdebut]||'').trim()  : '',
-      };
-    }).filter(r => r.classe && (r.statut.includes('VALID')||r.statut.includes('PARTIEL')||r.statut==='EN ATTENTE'));
-    let lignes = toutes;
-    if(classesEdu.length > 0) {
-      lignes = toutes.filter(row => classesEdu.some(cl => {
-        const norm = s => s.toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/\s+/g,' ');
-        const nr = norm(row.classe), nc = norm(cl);
-        return nr===nc || nr.startsWith(nc+' ') || nr.endsWith(' '+nc) || nc.startsWith(nr+' ');
-      }));
-    }
-    let lignesFiltrees = [];
-    if(periode === 'jour') {
-      lignesFiltrees = lignes.filter(r => {
-        if(!r.dateObj) return false;
-        return r.dateObj.getUTCDate()==parseInt(dd) && r.dateObj.getUTCMonth()+1==parseInt(mm) && r.dateObj.getUTCFullYear()==parseInt(yyyy);
-      });
-    } else if(periode === 'semaine') {
-      lignesFiltrees = lignes.filter(r => {
-        if(!r.dateObj) return false;
-        const d2 = new Date(r.dateObj.getUTCFullYear(), r.dateObj.getUTCMonth(), r.dateObj.getUTCDate());
-        return d2 >= debutSemaine && d2 <= today;
-      });
-    } else {
-      lignesFiltrees = lignes.filter(r => {
-        if(!r.dateObj) return false;
-        return r.dateObj.getUTCMonth()+1==parseInt(mm) && r.dateObj.getUTCFullYear()==parseInt(yyyy);
-      });
-    }
-    const parEns = {};
-    lignesFiltrees.forEach(r => {
-      if(!parEns[r.enseignant]) parEns[r.enseignant] = {enseignant:r.enseignant, cours:[], totalMin:0, totalSalaire:0};
-      parEns[r.enseignant].cours.push(r);
-      parEns[r.enseignant].totalMin += Math.round(parseHeuresToMinutes(r.heures));
-      parEns[r.enseignant].totalSalaire += r.salaire;
+    return null;
+  }
+
+  function filtrerPeriode(rows) {
+    return rows.filter(r => {
+      if(!r.dateObj) return false;
+      const d = r.dateObj;
+      const dLocal = new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+      if(periode==='jour') return d.getUTCDate()==parseInt(dd)&&d.getUTCMonth()+1==parseInt(mm)&&d.getUTCFullYear()==parseInt(yyyy);
+      if(periode==='semaine') return dLocal>=debutSemaine&&dLocal<=today;
+      return d.getUTCMonth()+1==parseInt(mm)&&d.getUTCFullYear()==parseInt(yyyy);
     });
-    const enseignants = Object.values(parEns).sort((a,b) => b.totalMin - a.totalMin);
-    const totalMinGlobal = enseignants.reduce((s,e) => s+e.totalMin, 0);
-    const totalSalaireGlobal = enseignants.reduce((s,e) => s+e.totalSalaire, 0);
-    const tH = Math.floor(totalMinGlobal/60);
-    const tM = totalMinGlobal % 60;
-    const labelPeriode = periode==='jour' ? 'aujourd\'hui' : periode==='semaine' ? 'cette semaine' : 'ce mois';
+  }
+
+  function filtrerClasses(rows) {
+    if(!classesEdu.length) return rows;
+    return rows.filter(r => classesEdu.some(cl => {
+      const nr=norm(r.classe),nc=norm(cl);
+      return nr===nc||nr.startsWith(nc+' ')||nr.endsWith(' '+nc)||nc.startsWith(nr+' ');
+    }));
+  }
+
+  try {
+    // Lire CAHIER_TEXTES (cours publiés)
+    const urlCT = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/CAHIER_TEXTES?key='+API_KEY;
+    const rCT = await fetch(urlCT); const dCT = await rCT.json();
+    let coursCahier = [];
+    if(dCT.values&&dCT.values.length>1) {
+      coursCahier = dCT.values.slice(1).map(row=>({
+        dateObj: parseDate(String(row[0]||'')),
+        dateStr: String(row[0]||''),
+        heure:   String(row[1]||''),
+        classe:  String(row[2]||'').trim(),
+        matiere: String(row[3]||'').trim(),
+        enseignant: String(row[4]||'').trim(),
+        lecon:   String(row[5]||'').trim(),
+        statut:  'PUBLIÉ',
+        source:  'CAHIER'
+      })).filter(r=>r.classe&&r.enseignant);
+    }
+
+    // Lire POINTAGE_MENSUEL (cours validés)
+    const urlPM = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const rPM = await fetch(urlPM); const dPM = await rPM.json();
+    let coursValides = [];
+    if(dPM.values&&dPM.values.length>1) {
+      const h = dPM.values[0].map(x=>String(x||'').toUpperCase().trim());
+      const iD=h.findIndex(x=>x.includes('DATE'));
+      const iC=h.findIndex(x=>x.includes('CLASS'));
+      const iM=h.findIndex(x=>x.includes('MAT'));
+      const iE=h.findIndex(x=>x.includes('ENS')||x.includes('PROF'));
+      const iH=h.findIndex(x=>x.includes('HEURE')||x==='H');
+      const iS=h.findIndex(x=>x.includes('STAT'));
+      const iSal=h.findIndex(x=>x.includes('SAL'));
+      coursValides = dPM.values.slice(1).map(row=>({
+        dateObj: parseDate(String(row[iD>=0?iD:0]||'')),
+        dateStr: String(row[iD>=0?iD:0]||''),
+        classe:  String(row[iC>=0?iC:2]||'').trim(),
+        matiere: String(row[iM>=0?iM:3]||'').trim(),
+        enseignant: String(row[iE>=0?iE:4]||'').trim(),
+        heures:  parseFloat(row[iH>=0?iH:8])||0,
+        statut:  String(row[iS>=0?iS:9]||'').trim().toUpperCase(),
+        salaire: parseFloat(row[iSal>=0?iSal:11])||0,
+        source:  'POINTAGE'
+      })).filter(r=>r.classe&&r.enseignant);
+    }
+
+    // Fusionner — éviter doublons (même classe+matière+enseignant+date)
+    const keys = new Set(coursValides.map(r=>r.classe+'|'+r.matiere+'|'+r.enseignant+'|'+r.dateStr));
+    const cahierUniques = coursCahier.filter(r=>!keys.has(r.classe+'|'+r.matiere+'|'+r.enseignant+'|'+r.dateStr));
+    const tousLesCours = [...coursValides, ...cahierUniques];
+
+    // Filtrer par classes éducateur et période
+    const lignes = filtrerPeriode(filtrerClasses(tousLesCours));
+
+    // Grouper par CLASSE puis ENSEIGNANT
+    const parClasse = {};
+    lignes.forEach(r => {
+      if(!parClasse[r.classe]) parClasse[r.classe] = {};
+      if(!parClasse[r.classe][r.enseignant]) parClasse[r.classe][r.enseignant] = [];
+      parClasse[r.classe][r.enseignant].push(r);
+    });
+
+    const totalCours = lignes.length;
+    const labelPeriode = periode==='jour'?"aujourd'hui":periode==='semaine'?'cette semaine':'ce mois';
     const countEl = document.getElementById('eduPointageCount');
-    if(countEl) countEl.textContent = '('+lignesFiltrees.length+' cours · '+tH+'h'+(tM>0?String(tM).padStart(2,'0'):'')+')';
-    if(!enseignants.length) {
+    if(countEl) countEl.textContent = '('+totalCours+' cours)';
+
+    if(!Object.keys(parClasse).length) {
       container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.84em">Aucun cours enregistré '+labelPeriode+'.</div>';
       return;
     }
+
     let html = '';
-    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);background:#FFFDE7">';
-    html += '<div style="background:#FFF8E1;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:var(--or)">'+lignesFiltrees.length+'</div><div style="font-size:0.62em;color:#7a5f00;font-weight:600">Cours</div></div>';
-    html += '<div style="background:#FFF8E1;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:var(--or)">'+tH+'h'+(tM>0?String(tM).padStart(2,'0'):'')+'</div><div style="font-size:0.62em;color:#7a5f00;font-weight:600">Heures</div></div>';
-    html += '<div style="background:#FFF8E1;border-radius:8px;padding:8px;text-align:center"><div style="font-size:0.9em;font-weight:700;color:var(--or)">'+totalSalaireGlobal.toLocaleString('fr-FR')+'</div><div style="font-size:0.62em;color:#7a5f00;font-weight:600">F CFA</div></div>';
+    // Résumé global
+    const nbPublies = lignes.filter(r=>r.source==='CAHIER').length;
+    const nbValides = lignes.filter(r=>r.source==='POINTAGE').length;
+    html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 14px;background:#F3F4F6;border-bottom:1px solid var(--border)">';
+    html += '<div style="background:#fff;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:var(--bleu)">'+totalCours+'</div><div style="font-size:0.62em;color:var(--gris);font-weight:600">Total cours</div></div>';
+    html += '<div style="background:#E8F5E9;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:#2E7D32">'+nbValides+'</div><div style="font-size:0.62em;color:#2E7D32;font-weight:600">✅ Validés</div></div>';
+    html += '<div style="background:#FFF3E0;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:#E65100">'+nbPublies+'</div><div style="font-size:0.62em;color:#E65100;font-weight:600">⏳ En attente</div></div>';
     html += '</div>';
-    enseignants.forEach(ens => {
-      const eH = Math.floor(ens.totalMin/60);
-      const eM = ens.totalMin % 60;
-      const ini = ens.enseignant.split(' ').slice(0,2).map(w=>w[0]||'').join('');
-      const nbRetard = ens.cours.filter(c=>c.statut==='EN ATTENTE').length;
-      html += '<div style="border-bottom:1px solid var(--border)">';
-      html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;background:#FFFDE7" onclick="toggleEdtDetail(this)">';
-      html += '<div style="width:36px;height:36px;border-radius:50%;background:var(--or);color:var(--bleu);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8em;flex-shrink:0">'+ini+'</div>';
-      html += '<div style="flex:1"><div style="font-size:0.86em;font-weight:700">'+ens.enseignant+'</div>';
-      html += '<div style="font-size:0.7em;color:var(--gris)">'+ens.cours.length+' cours'+(nbRetard?' · <span style="color:var(--orange)">'+nbRetard+' en attente</span>':'')+'</div></div>';
-      html += '<div style="text-align:right"><div style="font-size:0.9em;font-weight:700;color:var(--or)">'+eH+'h'+(eM>0?String(eM).padStart(2,'0'):'')+'</div>';
-      html += '<div style="font-size:0.68em;color:var(--gris)">'+ens.totalSalaire.toLocaleString('fr-FR')+' F</div></div>';
-      html += '<span style="font-size:0.7em;opacity:0.5;margin-left:4px">&#9660;</span></div>';
-      html += '<div style="display:none">';
-      html += '<div class="tbl-wrap"><table style="min-width:340px"><thead><tr><th>Date</th><th>Classe</th><th>Matière</th><th>Heures</th><th>Statut</th></tr></thead><tbody>';
-      ens.cours.forEach((c,i) => {
-        const hMin = parseHeuresToMinutes(c.heures);
-        const hH = Math.floor(hMin/60), hM = hMin%60;
-        const stcls = c.statut.includes('VALID')||c.statut.includes('PARTIEL') ? 'bg-vert' : 'bg-orange';
-        const stlbl = c.statut.includes('VALID') ? '✓' : c.statut==='PARTIEL' ? '50%' : '⌚';
-        html += '<tr style="background:'+(i%2===0?'#fff':'#FFFDE7')+'">';
-        html += '<td style="font-size:0.74em;color:var(--gris)">'+(c.dateStr||'—')+'</td>';
-        html += '<td style="font-size:0.78em">'+c.classe+'</td>';
-        html += '<td style="font-size:0.78em">'+c.matiere+'</td>';
-        html += '<td style="font-size:0.8em;font-weight:700;color:var(--or);text-align:center">'+(hH>0||hM>0?hH+'h'+(hM>0?String(hM).padStart(2,'0'):''):(c.heures?c.heures.toFixed(1)+'h':'—'))+'</td>';
-        html += '<td><span class="bdg '+stcls+'" style="font-size:0.62em">'+stlbl+'</span></td>';
-        html += '</tr>';
+
+    // Par classe
+    Object.keys(parClasse).sort().forEach(classe => {
+      html += '<div style="margin:8px 14px 0;padding:6px 10px;background:var(--bleu);color:#fff;border-radius:8px;font-size:0.8em;font-weight:700">📚 '+classe+'</div>';
+      const enseignants = parClasse[classe];
+      Object.keys(enseignants).sort().forEach(ens => {
+        const cours = enseignants[ens];
+        const ini = ens.split(' ').slice(0,2).map(w=>w[0]||'').join('');
+        const nbV = cours.filter(c=>c.source==='POINTAGE').length;
+        const nbP = cours.filter(c=>c.source==='CAHIER').length;
+        html += '<div style="border-bottom:1px solid var(--border)">';
+        html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer" onclick="toggleEdtDetail(this)">';
+        html += '<div style="width:34px;height:34px;border-radius:50%;background:var(--bleu);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.75em;flex-shrink:0">'+ini+'</div>';
+        html += '<div style="flex:1"><div style="font-size:0.84em;font-weight:700">'+ens+'</div>';
+        html += '<div style="font-size:0.7em;color:var(--gris)">'+cours.length+' cours · ';
+        if(nbV>0) html += '<span style="color:#2E7D32">'+nbV+' validés</span>';
+        if(nbV>0&&nbP>0) html += ' · ';
+        if(nbP>0) html += '<span style="color:#E65100">'+nbP+' en attente</span>';
+        html += '</div></div>';
+        html += '<span style="font-size:0.7em;opacity:0.5">&#9660;</span></div>';
+        html += '<div style="display:none;padding:8px 14px">';
+        cours.forEach(c => {
+          const ic = c.source==='POINTAGE'?'✅':'⏳';
+          const bg = c.source==='POINTAGE'?'#E8F5E9':'#FFF3E0';
+          html += '<div style="background:'+bg+';border-radius:6px;padding:6px 10px;margin-bottom:4px;font-size:0.76em">';
+          html += ic+' <strong>'+c.matiere+'</strong>';
+          if(c.heure) html += ' · '+c.heure;
+          if(c.lecon) html += ' · <em>'+c.lecon.substring(0,40)+(c.lecon.length>40?'...':'')+'</em>';
+          html += '</div>';
+        });
+        html += '</div></div>';
       });
-      html += '</tbody></table></div></div></div>';
     });
+
     container.innerHTML = html;
   } catch(e) {
     container.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur: '+e.message+'</p>';
