@@ -571,7 +571,7 @@ async function chargerClasses(){
   const sels=['modalClasse','notesClasse','moyennesClasse'];
   try{
     const range=encodeURIComponent('EDT_ENSEIGNANTS!A2:D500');
-    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS[user.ecole]}?key=${API_KEY}`;
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS[user.ecole]}/values/${range}?key=${API_KEY}`;
     const res=await fetch(url);const data=await res.json();
     if(!data.values)return;
     const nomUp=user.nom.toUpperCase();
