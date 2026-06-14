@@ -570,6 +570,26 @@ function demarrerSession(){
 async function chargerClasses(){
   const sels=['modalClasse','notesClasse','moyennesClasse'];
   try{
+    const range=encodeURIComponent('EDT_ENSEIGNANTS!A2:D500');
+    const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS[user.ecole]}?key=${API_KEY}`;
+    const res=await fetch(url);const data=await res.json();
+    if(!data.values)return;
+    const nomUp=user.nom.toUpperCase();
+    const classes=[...new Set(
+      data.values
+        .filter(r=>(r[0]||'').toString().toUpperCase()===nomUp&&r[3]&&r[3].toString().trim())
+        .map(r=>r[3].toString().trim())
+    )].sort();
+    if(!classes.length){showToast('Aucune classe trouvée — contactez le directeur','warn');return;}
+    sels.forEach(id=>{
+      const sel=document.getElementById(id);if(!sel)return;
+      while(sel.options.length>1)sel.remove(1);
+      classes.forEach(c=>{const opt=document.createElement('option');opt.value=c;opt.textContent=c;sel.appendChild(opt);});
+    });
+  }catch(e){console.warn('chargerClasses:',e);}
+}
+  const sels=['modalClasse','notesClasse','moyennesClasse'];
+  try{
     const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS[user.ecole]}?key=${API_KEY}&fields=sheets.properties.title`;
     const res=await fetch(url);const data=await res.json();
     if(!data.sheets)return;
