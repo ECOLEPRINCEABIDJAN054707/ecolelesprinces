@@ -645,6 +645,10 @@ async function chargerPhotoEleve(matricule, imgElement, fallback) {
 }
 
 async function login() {
+ document.getElementById("eleveCard").innerHTML = "";
+  document.getElementById("statutPay").innerHTML = "";
+  document.getElementById("resultatsBody").innerHTML = "";
+  document.getElementById("sectionResultats").style.display = "none";
   if (tentatives >= CONFIG.MAX_TENTATIVES) { demarrerBlocage(); return; }
   const mat = document.getElementById("inputMat").value.trim().toUpperCase();
   const tel = document.getElementById("inputTel").value.trim().replace(/\s/g,"");
