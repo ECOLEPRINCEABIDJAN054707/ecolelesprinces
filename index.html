@@ -15,6 +15,11 @@
       for (let registration of registrations) { registration.unregister(); }
     });
   }
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/ecolelesprinces/service-worker.js')
+    .then(function(reg) { window._swRegistration = reg; })
+    .catch(function(e) { console.warn('SW:', e); });
+  }
 </script>
 <title>Ecole Les Princes - Espace Parents</title>
 <style>
