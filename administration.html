@@ -1094,7 +1094,7 @@ const MATIERES={'6EME':['Francais','Anglais','Histoire-Geographie','Mathematique
 function getMatieres(cl){if(!cl)return MATIERES['6EME'];const c=cl.toUpperCase();if(c.includes('A2'))return MATIERES['TLE A2'];if(c.includes('TLE')||c.includes('TERM'))return MATIERES['TLE'];if(c.includes('1ERE')||c.includes('1ER'))return MATIERES['1ERE'];if(c.includes('2NDE'))return MATIERES['2NDE'];if(c.includes('3'))return MATIERES['3EME'];if(c.includes('4'))return MATIERES['4EME'];if(c.includes('5'))return MATIERES['5EME'];return MATIERES['6EME'];}
 const STAFF={
   'DIRACAD001':{code:'657577',nom:'Directrice Academie',ecole:'ACADEMIE',profil:'DIR',type:'BOTH',label:'EPV Academie Les Princes'},
-  'DIRAKK1001':{code:'507343',nom:'KOKOBO Nina',ecole:'AKEIKOI 1',profil:'DIR',ttype:'BOTH',label:'EPV Les Princes Akekoi 1'},
+  'DIRAKK1001':{code:'507343',nom:'KOKOBO Nina',ecole:'AKEIKOI 1',profil:'DIR',type:'BOTH',label:'EPV Les Princes Akekoi 1'},
   'DIRAKK2001':{code:'541576',nom:'Directeur Akekoi 2',ecole:'AKEIKOI 2',profil:'DIR',type:'BOTH',label:'EPV Les Princes Akekoi 2'},
   'DIRCPP001':{code:'155812',nom:'Directeur CPP Les Princes',ecole:'CPP LES PRINCES',profil:'DIR',type:'SEC',label:"CPP Les Princes d'Abidjan"},
   'DIRSOAK001':{code:'352487',nom:'Directeur CPP Soakpe',ecole:'SOAKPE',profil:'DIR',type:'SEC',label:'CPP Les Princes de Soakpe'},
