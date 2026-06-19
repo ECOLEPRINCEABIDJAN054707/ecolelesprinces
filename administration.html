@@ -453,7 +453,7 @@ table tr:nth-child(even){background:#F8FAFD}
           <input type="tel" id="matTelPere" placeholder="07XXXXXXXX (Père) *" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
         </div>
       </div>
-      <button onclick="attrid="matTelMere" placeholder="05XXXXXXXX (Mère) *" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">         </div>         <div style="grid-column:1/-1">           <button onclick="attribuerMatriculeDir()" style="width:100%;padding:11px;background:#00897B;color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">✅ Attribuer ce matricule</button>
+      <button onclick="id="matTelMere" placeholder="05XXXXXXXX (Mère) *" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">         </div>         <div style="grid-column:1/-1">           <button onclick="attribuerMatriculeDir()" style="width:100%;padding:11px;background:#00897B;color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">✅ Attribuer ce matricule</button>
       <div id="matMessage" style="display:none;margin-top:10px;padding:10px;border-radius:6px;font-size:0.82em"></div>
     </div>
     <!-- LISTE ATTRIBUÉS -->
@@ -3448,7 +3448,7 @@ const cbName='mat_attr_'+Date.now();
         document.getElementById('matNom').value='';
         document.getElementById('matPrenom').value='';
         document.getElementById('matDDN').value='';
-        document.getElementById('matTel').value='';
+        document.getElementById('matTelPere').value='';document.getElementById('matTelMere').value='';
         document.getElementById('matSelect').value='';
         document.getElementById('matClasse').value='';
         setTimeout(chargerMatriculesPrimaire,1500);
