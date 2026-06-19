@@ -450,10 +450,10 @@ table tr:nth-child(even){background:#F8FAFD}
         </div>
         <div>
           <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">TÉL PARENT</label>
-          <input type="tel" id="matTel" placeholder="07XXXXXXXX" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+          <input type="tel" id="matTelPere" placeholder="07XXXXXXXX (Père) *" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
         </div>
       </div>
-      <button onclick="attribuerMatriculeDir()" style="width:100%;padding:11px;background:#00897B;color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">✅ Attribuer ce matricule</button>
+      <button onclick="attrid="matTelMere" placeholder="05XXXXXXXX (Mère) *" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">         </div>         <div style="grid-column:1/-1">           <button onclick="attribuerMatriculeDir()" style="width:100%;padding:11px;background:#00897B;color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">✅ Attribuer ce matricule</button>
       <div id="matMessage" style="display:none;margin-top:10px;padding:10px;border-radius:6px;font-size:0.82em"></div>
     </div>
     <!-- LISTE ATTRIBUÉS -->
@@ -3425,10 +3425,10 @@ async function attribuerMatriculeDir() {
   const prenom    = document.getElementById('matPrenom').value.trim();
   const classe    = document.getElementById('matClasse').value;
   const ddn       = document.getElementById('matDDN').value;
-  const tel       = document.getElementById('matTel').value.trim();
+  const tel       = document.getElementById('matTelPere').value.trim();
   const msgDiv    = document.getElementById('matMessage');
 
-  if(!matricule||!nom||!prenom||!classe||!ddn) {
+  const telMere=document.getElementById('matTelMere')?document.getElementById('matTelMere').value.trim():'';if(!matricule||!nom||!prenom||!classe||!ddn||!tel||tel.length<8||!telMere||telMere.length<8){msgDiv.style.cssText='display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';msgDiv.textContent='⚠️ Tél père ET mère obligatoires';return;}if(!matricule||!nom||!prenom||!classe||!ddn) {
     msgDiv.style.cssText='display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
     msgDiv.textContent='⚠️ Remplissez tous les champs obligatoires (*)';
     return;
