@@ -449,15 +449,15 @@ table tr:nth-child(even){background:#F8FAFD}
           <input type="date" id="matDDN" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
         </div>
         <div>
-          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">TÉL PÈRE *</label>
-          <input type="tel" id="matTelPere" placeholder="07XXXXXXXX" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+          <label style="font-size:0.7em;font-weight:700;color:#C62828;display:block;margin-bottom:3px">TÉL PÈRE *</label>
+          <input type="tel" id="matTelPere" placeholder="07XXXXXXXX" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
         </div>
-      </div>
-     onclick="attribuerMatriculeDir()" style="width:100%;padding:11px;background:#00897B;color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">✅ Attribuer ce matricule</button>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:#C62828;display:block;margin-bottom:3px">TÉL MÈRE *</label>
           <input type="tel" id="matTelMere" placeholder="05XXXXXXXX" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
         </div>
       </div>
-      <button onclick="attribuerMatriculeDir()" style="width:100%;padding:11px;background:#00897B;color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">✅ Attribuer ce matricule  <input type="tel" id="matTelMere" placeholder="05XXXXXXXX" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">         </div>       </div>       <button onclick="attribuerMatriculeDir()" style="width:100%;padding:11px;background:#00897B;color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">✅ Attribuer ce matricule</button>
+      <button onclick="attribuerMatriculeDir()" style="width:100%;padding:11px;background:#00897B;color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">✅ Attribuer ce matricule</button>
       <div id="matMessage" style="display:none;margin-top:10px;padding:10px;border-radius:6px;font-size:0.82em"></div>
     </div>
     <!-- LISTE ATTRIBUÉS -->
