@@ -396,6 +396,80 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
     <div class="sec-body" id="dirAgendaBody"></div>
   </div>
+ <!-- MATRICULES PRIMAIRE -->
+<div class="section" id="dirSecMatricules" style="display:none">
+  <div class="sec-head sec-emeraude" onclick="toggleSec(this)">
+    <h3>🎫 Matricules Primaire 2026-2027 <span id="dirMatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <!-- STATS -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)">
+      <div style="background:#E8F5E9;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:1.4em;font-weight:700;color:#2E7D32" id="matStatDispo">—</div>
+        <div style="font-size:0.62em;color:#2E7D32;font-weight:600">Disponibles</div>
+      </div>
+      <div style="background:#FFF9C4;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:1.4em;font-weight:700;color:#E65100" id="matStatAttrib">—</div>
+        <div style="font-size:0.62em;color:#E65100;font-weight:600">Attribués</div>
+      </div>
+      <div style="background:#E3F2FD;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:1.4em;font-weight:700;color:var(--bleu)" id="matStatTotal">—</div>
+        <div style="font-size:0.62em;color:var(--bleu);font-weight:600">Total</div>
+      </div>
+    </div>
+    <!-- FORMULAIRE ATTRIBUTION -->
+    <div style="padding:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:0.78em;font-weight:700;color:var(--bleu);margin-bottom:10px">➕ Attribuer un matricule à un nouvel élève</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">MATRICULE *</label>
+          <select id="matSelect" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none">
+            <option value="">-- Chargement... --</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">CLASSE *</label>
+          <select id="matClasse" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none">
+            <option value="">-- Choisir --</option>
+            <option>CP1</option><option>CP2</option>
+            <option>CE1</option><option>CE2</option>
+            <option>CM1</option><option>CM2</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">NOM *</label>
+          <input type="text" id="matNom" placeholder="NOM DE FAMILLE" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">PRÉNOM *</label>
+          <input type="text" id="matPrenom" placeholder="Prénom(s)" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">DATE NAISSANCE *</label>
+          <input type="date" id="matDDN" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">TÉL PARENT</label>
+          <input type="tel" id="matTel" placeholder="07XXXXXXXX" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+        </div>
+      </div>
+      <button onclick="attribuerMatriculeDir()" style="width:100%;padding:11px;background:#00897B;color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">✅ Attribuer ce matricule</button>
+      <div id="matMessage" style="display:none;margin-top:10px;padding:10px;border-radius:6px;font-size:0.82em"></div>
+    </div>
+    <!-- LISTE ATTRIBUÉS -->
+    <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:0.78em;font-weight:700;color:var(--bleu)">📋 Matricules attribués</span>
+      <input type="text" id="matSearch" placeholder="🔍 Nom / matricule..." oninput="filtrerTableauMatricules()"
+        style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.74em;outline:none;width:160px">
+    </div>
+    <div class="tbl-wrap" id="matTableWrapper">
+      <table style="min-width:400px">
+        <thead><tr><th>Matricule</th><th>Nom & Prénom</th><th>Classe</th><th>Naissance</th><th>Attribué le</th></tr></thead>
+        <tbody id="matTbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--gris)">Cliquez sur la section pour charger</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
   <!-- IMPORT NOUVEL ELEVE -->
   <div class="section">
     <div class="sec-head sec-or" onclick="toggleSec(this)">
@@ -1147,7 +1221,7 @@ function afficherDir(s){
   else stats='<div class="stats-row s6"><div class="stat-box"><div class="stat-val" id="statEns">-</div><div class="stat-lbl">Ens.</div></div><div class="stat-box or"><div class="stat-val" id="statSalaire">-</div><div class="stat-lbl">Masse sal.</div></div><div class="stat-box orange"><div class="stat-val" id="statAttente">-</div><div class="stat-lbl">Attente</div></div><div class="stat-box emeraude"><div class="stat-val" id="statBulletins">-</div><div class="stat-lbl">Bulletins</div></div><div class="stat-box rouge"><div class="stat-val" id="dStatAlert">0</div><div class="stat-lbl">Alertes</div></div><div class="stat-box vert"><div class="stat-val" id="statPerm">-</div><div class="stat-lbl">Perm.</div></div></div>';
   document.getElementById('dirStatsZone').innerHTML=stats;
   if(!isPRIM){document.getElementById('dirFiltresZone').style.display='block';document.getElementById('dirSecAttente').style.display='block';document.getElementById('dirSecSalaires').style.display='block';remplirMois();}
-  if(!isSEC){document.getElementById('dirSecBulletins').style.display='block';document.getElementById('dirBtnBulZone').style.display='block';}
+  if(!isSEC){document.getElementById('dirSecBulletins').style.display='block';document.getElementById('dirBtnBulZone').style.display='block';if(s.type==='PRIM'||s.type==='BOTH') setTimeout(chargerMatriculesPrimaire, 1200);} 
   const alertes=[];
   let ha=alertes.length?'':'<p style="padding:14px;text-align:center;color:var(--gris)">Aucune alerte</p>';
   alertes.forEach(a=>{ha+='<div class="alerte-item"><div class="alerte-ico">'+a.ico+'</div><div><div class="alerte-nom">'+a.nom+'</div><div class="alerte-detail">'+a.detail+'</div></div></div>';});
@@ -3270,7 +3344,128 @@ function afficherListeContactsManquants(liste){
   document.getElementById('modalContactsDirBody').innerHTML=h;
   modal.style.display='flex';
 }
+// ══ MATRICULES PRIMAIRE ══
+const SHEETS_IDS_PRIMAIRE = {
+  'GS RITA ROSANE': '1DARvq_r4K3ttj5c51y1M6M4wxSTsADP7kGcq1fTPpZQ',
+  'GNONTINROU':     '1izyFW1pksAY5tHc-Y6TqsvcH3GMb29dz6NGyctW9M1M',
+  'DABOU':          '1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA',
+  'ANYAMA ADJAME':  '1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE',
+  'AKEIKOI 1':      '1I_Htuvo3g_LuLscOhWIHI2s1MIvQcV2q_H1zvQwKk5M',
+  'AKEIKOI 2':      '1EXVB5n654SSgp8xet3k8b89jghqNa6iX4tgeZ3u_KrU',
+  'KOUTOUAN':       '15pnAjnfC7UKD-pxMwk8Nw4fbOZQX39KRnXSZMcNeYSc',
+  'ACADEMIE':       '17EuXUJ4ej_brSwDhTJV1c_Ttmhxl3YkPI053YJAE9Es'
+};
+let _matCache = [];
 
+function _getSheetIdPrimaire() {
+  if(!currentStaff) return null;
+  return SHEETS_IDS_PRIMAIRE[currentStaff.ecole] || null;
+}
+
+async function chargerMatriculesPrimaire() {
+  const sheetId = _getSheetIdPrimaire();
+  if(!sheetId) return;
+  const sec = document.getElementById('dirSecMatricules');
+  if(sec) sec.style.display = 'block';
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/MATRICULES_RESERVE!A4:G1000?key=${API_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const rows = (data.values || []).filter(r => r[0]);
+    _matCache = rows;
+    let dispo = 0, attrib = 0;
+    rows.forEach(r => { if(r[1]==='ATTRIBUE') attrib++; else dispo++; });
+    document.getElementById('matStatDispo').textContent = dispo;
+    document.getElementById('matStatAttrib').textContent = attrib;
+    document.getElementById('matStatTotal').textContent = rows.length;
+    const count = document.getElementById('dirMatCount');
+    if(count) count.textContent = '('+dispo+' dispo · '+attrib+' attribués)';
+    const sel = document.getElementById('matSelect');
+    sel.innerHTML = '<option value="">-- Choisir un matricule --</option>';
+    rows.filter(r => r[1]==='DISPONIBLE').forEach(r => {
+      sel.innerHTML += `<option value="${r[0]}">${r[0]}</option>`;
+    });
+    _afficherTableauMatricules(rows.filter(r => r[1]==='ATTRIBUE'));
+  } catch(e) {
+    showToast('Erreur chargement matricules','error');
+  }
+}
+
+function _afficherTableauMatricules(rows) {
+  const tbody = document.getElementById('matTbody');
+  if(!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--gris)">Aucun matricule attribué pour l\'instant</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td style="font-weight:700;color:#00897B">${r[0]||''}</td>
+      <td>${(r[2]||'').toUpperCase()} ${r[3]||''}</td>
+      <td style="text-align:center">${r[4]||''}</td>
+      <td style="text-align:center">${r[5]||''}</td>
+      <td style="text-align:center;color:var(--gris)">${r[6]||''}</td>
+    </tr>`).join('');
+}
+
+function filtrerTableauMatricules() {
+  const q = document.getElementById('matSearch').value.toLowerCase();
+  const filtered = _matCache.filter(r =>
+    r[1]==='ATTRIBUE' && (
+      (r[0]||'').toLowerCase().includes(q) ||
+      (r[2]||'').toLowerCase().includes(q) ||
+      (r[3]||'').toLowerCase().includes(q)
+    )
+  );
+  _afficherTableauMatricules(filtered);
+}
+
+async function attribuerMatriculeDir() {
+  const matricule = document.getElementById('matSelect').value;
+  const nom       = document.getElementById('matNom').value.trim();
+  const prenom    = document.getElementById('matPrenom').value.trim();
+  const classe    = document.getElementById('matClasse').value;
+  const ddn       = document.getElementById('matDDN').value;
+  const tel       = document.getElementById('matTel').value.trim();
+  const msgDiv    = document.getElementById('matMessage');
+
+  if(!matricule||!nom||!prenom||!classe||!ddn) {
+    msgDiv.style.cssText='display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
+    msgDiv.textContent='⚠️ Remplissez tous les champs obligatoires (*)';
+    return;
+  }
+  msgDiv.style.cssText='display:block;background:#E3F2FD;color:var(--bleu);border:1px solid #90CAF9;padding:10px;border-radius:6px';
+  msgDiv.textContent='⏳ Attribution en cours...';
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        action:'attribuerMatricule',
+        ecoleCode: currentStaff.ecole,
+        matricule, nom, prenom, classe, ddn, tel
+      })
+    });
+    const result = await res.json();
+    if(result.success) {
+      msgDiv.style.cssText='display:block;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;padding:10px;border-radius:6px';
+      msgDiv.textContent='✅ '+result.message;
+      document.getElementById('matNom').value='';
+      document.getElementById('matPrenom').value='';
+      document.getElementById('matDDN').value='';
+      document.getElementById('matTel').value='';
+      document.getElementById('matSelect').value='';
+      document.getElementById('matClasse').value='';
+      setTimeout(chargerMatriculesPrimaire, 1500);
+    } else {
+      msgDiv.style.cssText='display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
+      msgDiv.textContent='❌ '+result.message;
+    }
+  } catch(e) {
+    msgDiv.style.cssText='display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
+    msgDiv.textContent='❌ Erreur réseau. Réessayez.';
+  }
+}
 document.addEventListener('keypress',e=>{if(e.key==='Enter'&&document.getElementById('loginPage').style.display!=='none')login();});
 </script>
 </body>
