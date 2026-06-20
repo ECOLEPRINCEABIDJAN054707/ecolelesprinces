@@ -1844,7 +1844,8 @@ function _initFCM(){
           }).then(function(token){
             if(token){
               window._fcmToken=token;
-              console.log('FCM token obtenu');
+              sessionStorage.setItem('fcmToken', token);
+              console.log('FCM token obtenu : '+token.substring(0,20)+'...');
               _sauvegarderTokenFCM(token);
             }
           }).catch(function(e){console.warn('FCM token:',e);});
@@ -1865,7 +1866,27 @@ function _initFCM(){
       }
     });
   }catch(e){console.warn('FCM init:',e);}
-}  function _sauvegarderTokenFCM(token){   try{     var eleve=JSON.parse(sessionStorage.getItem('eleveConnecte')||'{}');     if(!eleve.matricule||!eleve.sheetsId)return;     var url='https://script.google.com/macros/s/AKfycbzwGgqVP502S65OKM_rPVnA5CSpokZ9Btmmg_mEzh_SNC56Z5yXvQxdMVjD_-VyIcx2/exec';     var cbName='fcm_'+Date.now();     var script=document.createElement('script');     window[cbName]=function(){delete window[cbName];try{document.body.removeChild(script);}catch(e){}};     script.src=url+'?callback='+cbName+'&type=SAVE_FCM_TOKEN&matricule='+encodeURIComponent(eleve.matricule)+'&sheetsId='+encodeURIComponent(eleve.sheetsId)+'&token='+encodeURIComponent(token);     document.body.appendChild(script);   }catch(e){console.warn('Save token:',e);} }  function afficherErreur(msg){const el=document.getElementById("errorMsg");el.textContent=msg;el.style.display="block";}
+}  function _sauvegarderTokenFCM(token){
+  try{
+    var eleve=JSON.parse(sessionStorage.getItem('eleveConnecte')||'{}');
+    if(!eleve.matricule||!eleve.sheetsId){
+      console.warn('FCM: matricule ou sheetsId manquant',eleve.matricule,eleve.sheetsId);
+      return;
+    }
+    var url='https://script.google.com/macros/s/AKfycbzwGgqVP502S65OKM_rPVnA5CSpokZ9Btmmg_mEzh_SNC56Z5yXvQxdMVjD_-VyIcx2/exec';
+    var cbName='fcm_'+Date.now();
+    var script=document.createElement('script');
+    window[cbName]=function(res){
+      console.log('FCM sauvegardé:',JSON.stringify(res));
+      delete window[cbName];
+      try{document.body.removeChild(script);}catch(e){}
+    };
+    var src=url+'?callback='+cbName+'&action=SAVE_FCM_TOKEN&matricule='+encodeURIComponent(eleve.matricule)+'&sheetsId='+encodeURIComponent(eleve.sheetsId)+'&token='+encodeURIComponent(token);
+    console.log('FCM envoi token pour:',eleve.matricule);
+    script.src=src;
+    document.body.appendChild(script);
+  }catch(e){console.warn('Save token:',e);}
+}  function afficherErreur(msg){const el=document.getElementById("errorMsg");el.textContent=msg;el.style.display="block";}
 function toggleSec(header){const body=header.nextElementSibling;const arrow=header.querySelector("span");body.classList.toggle("open");arrow.textContent=body.classList.contains("open")?"^":"v";}
 function logout(){sessionStorage.removeItem("eleveConnecte");document.getElementById("parentSpace").style.display="none";document.getElementById("loginWrapper").style.display="block";const sp=document.getElementById("sectionPublique");if(sp)sp.style.display="block";document.getElementById("mainHeader").style.background="linear-gradient(135deg,#1F4E79,#1565C0)";document.getElementById("headerTitle").textContent="🏫 ECOLE LES PRINCES";document.getElementById("headerSub").textContent="Espace Parents - Suivi Scolaire en Ligne";document.getElementById("inputMat").value="";document.getElementById("inputTel").value="";document.getElementById("errorMsg").style.display="none";window.scrollTo(0,0);}
 function demarrerBlocage(){document.getElementById("loginWrapper").style.display="none";document.getElementById("blockedMsg").style.display="block";let sec=CONFIG.BLOCAGE_MIN*60;const timerEl=document.getElementById("blockedTimer");blocageInterval=setInterval(()=>{sec--;const m=Math.floor(sec/60),s=sec%60;timerEl.textContent=m+":"+s.toString().padStart(2,"0");if(sec<=0){clearInterval(blocageInterval);tentatives=0;   _initFCM();document.getElementById("blockedMsg").style.display="none";document.getElementById("loginWrapper").style.display="block";}},1000);}
