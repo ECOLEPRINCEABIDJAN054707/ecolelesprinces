@@ -1444,16 +1444,7 @@ const anneeHeader = document.getElementById('anneeHeader');
     section.style.display = 'block';
 
     if (!inscrit || inscrit.verse === 0) {
-      // Si déjà admis et soldé en 2025-2026 → ne pas doubler le bouton Wave
-      var decision2025 = (eleve.decision||'').trim().toUpperCase();
-      var solde2025 = parseFloat(eleve.solde)||0;
-      var verse2025 = parseFloat(eleve.verse)||0;
-      if(solde2025===0 && verse2025>0){
-        // Parent soldé — le bouton Wave est déjà dans la card résultats
-        section.style.display='none';
-        return;
-      }
-      // Pas encore inscrit
+      // Pas encore inscrit pour 2026-2027
       body.innerHTML = _cardPasInscrit2026(eleve, info);
     } else if (inscrit.solde === 0) {
       // Inscrit et soldé
