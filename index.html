@@ -1552,7 +1552,149 @@ function _cardPasInscrit2026(eleve, info) {
 
 async function chargerAnnonces(eleve){try{const range=encodeURIComponent("ANNONCES!A4:G60");const sheetsId=eleve.sheetsId||CONFIG.SHEETS_ID;const url="https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";const res=await fetch(url);const data=await res.json();if(!data.values)return;const annonces=data.values.filter(row=>String(row[6]||"").toUpperCase()==="OUI");if(annonces.length===0)return;document.getElementById("sectionAnnonces").style.display="block";const html=annonces.map(row=>{const date=row[1]||"";const type=row[2]||"Info";const msg=row[3]||"";return "<div style='border-left:4px solid #1F4E79;background:#FAFAFA;padding:10px 14px;margin-bottom:10px;border-radius:0 8px 8px 0;'><div style='display:flex;justify-content:space-between;margin-bottom:4px;'><span style='font-weight:bold;color:#1F4E79;font-size:0.82em;'>"+type+"</span><span style='font-size:0.75em;color:#999;'>"+date+"</span></div><p style='font-size:0.85em;color:#333;line-height:1.5;'>"+msg+"</p></div>";}).join("");document.getElementById("annoncesBody").innerHTML=html;}catch(e){}}
 async function chargerCahierTextes(eleve){const div=document.getElementById("cahierBody");if(!div)return;try{const range=encodeURIComponent("CAHIER_TEXTES!A2:L200");const sid=eleve.sheetsId||CONFIG.SHEETS_ID;const url="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";const res=await fetch(url);if(!res.ok){div.innerHTML="";return;}const data=await res.json();if(!data.values||data.values.length===0){div.innerHTML="<p style='text-align:center;color:#6A1B9A;font-size:0.85em;padding:15px;'>Aucun cours enregistre.</p>";return;}const classe=(eleve.classe||"").trim().toUpperCase();const cours=data.values.filter(row=>String(row[2]||"").trim().toUpperCase()===classe);if(cours.length===0){div.innerHTML="<p style='text-align:center;color:#6A1B9A;font-size:0.85em;padding:15px;'>Aucun cours enregistre pour "+eleve.classe+"</p>";return;}cours.sort((a,b)=>String(b[0]||"").localeCompare(String(a[0]||"")));let html="";cours.slice(0,20).forEach(function(row){const date=serialToDate(row[0]);const matiere=String(row[3]||"").trim();const lecon=String(row[5]||"").trim();const contenu=String(row[6]||"").trim();const devoir=String(row[8]||"").trim();html+="<div style='border:1px solid #E1BEE7;border-radius:10px;margin-bottom:10px;overflow:hidden;'><div style='background:#4A148C;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;'><div style='color:white;font-weight:bold;font-size:0.88em;'>"+matiere+"</div><div style='color:rgba(255,255,255,0.8);font-size:0.75em;'>"+date+"</div></div><div style='padding:12px 14px;background:white;'>";if(lecon)html+="<div style='font-size:0.85em;font-weight:bold;color:#333;margin-bottom:4px;'>&#128218; "+lecon+"</div>";if(contenu)html+="<div style='font-size:0.82em;color:#555;margin-bottom:8px;line-height:1.5;'>"+contenu+"</div>";if(devoir)html+="<div style='margin-top:10px;background:#FFF8E1;border-left:4px solid #F9A825;border-radius:0 8px 8px 0;padding:10px 12px;'><div style='font-size:0.78em;font-weight:bold;color:#F9A825;margin-bottom:4px;'>&#128203; DEVOIR</div><div style='font-size:0.82em;color:#333;line-height:1.5;'>"+devoir+"</div></div>";html+="</div></div>";});div.innerHTML=html;}catch(e){div.innerHTML="<p style='text-align:center;color:#aaa;font-size:0.85em;padding:15px;'>Erreur chargement.</p>";}}
-async function chargerHistoriquePaiements(eleve){const div=document.getElementById("historiqueSection");if(!div)return;try{const range=encodeURIComponent("HISTORIQUE_PAIEMENTS!A2:I200");const sid=eleve.sheetsId||CONFIG.SHEETS_ID;const url="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";const res=await fetch(url);if(!res.ok){div.innerHTML="";return;}const data=await res.json();if(!data.values||data.values.length===0){div.innerHTML="";return;}const mat=eleve.matricule.trim().toUpperCase();const paiements=data.values.filter(row=>String(row[1]||"").trim().toUpperCase()===mat);if(paiements.length===0){div.innerHTML="";return;}const totalPaye=paiements.reduce((s,r)=>s+(parseFloat(r[4])||0),0);let html="<div style='margin-bottom:14px;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);'><div style='background:linear-gradient(135deg,#2E7D32,#388E3C);padding:12px 16px;cursor:pointer' onclick=\"var b=document.getElementById('histBody');b.style.display=b.style.display==='none'?'block':'none'\"><div style='color:white;font-weight:bold;font-size:0.92em;'>&#128179; HISTORIQUE DES PAIEMENTS</div><div style='color:rgba(255,255,255,0.85);font-size:0.75em;margin-top:2px;'>"+paiements.length+" paiement(s) — Total : "+totalPaye.toLocaleString('fr-FR')+" F CFA</div></div><div id='histBody' style='background:white;display:none;'>";paiements.forEach(function(row,i){const date=serialToDate(row[0]);const montant=parseFloat(row[4])||0;const source=String(row[5]||"").trim();const bg=i%2===0?"#FFFFFF":"#F9FBF9";html+="<div style='padding:10px 16px;border-bottom:1px solid #F0F0F0;background:"+bg+";'><div style='display:flex;justify-content:space-between;align-items:center;'><div><span style='font-size:0.72em;font-weight:bold;padding:2px 8px;border-radius:10px;background:"+(source==="WAVE"?"#E3F2FD":"#FFF3E0")+";color:"+(source==="WAVE"?"#1565C0":"#E65100")+"'>"+source+"</span><span style='font-size:0.8em;color:#555;margin-left:8px;'>"+date+"</span></div><div style='font-size:1em;font-weight:bold;color:#2E7D32;'>+"+montant.toLocaleString('fr-FR')+" F</div></div></div>";});html+="</div></div>";div.innerHTML=html;}catch(e){div.innerHTML="";}}
+async function chargerHistoriquePaiements(eleve){
+  const div=document.getElementById("historiqueSection");
+  if(!div)return;
+  try{
+    const range=encodeURIComponent("HISTORIQUE_PAIEMENTS!A2:G500");
+    const sid=eleve.sheetsId||CONFIG.SHEETS_ID;
+    const url="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
+    const res=await fetch(url);
+    if(!res.ok){div.innerHTML="";return;}
+    const data=await res.json();
+    if(!data.values||data.values.length===0){div.innerHTML="";return;}
+    const mat=eleve.matricule.trim().toUpperCase();
+    // Structure : DATE(0) MATRICULE(1) NOM(2) CLASSE(3) MONTANT(4) SOURCE(5) ID_TRANSACTION(6)
+    const paiements=data.values.filter(row=>String(row[1]||"").trim().toUpperCase()===mat&&(parseFloat(row[4])||0)>0);
+    if(paiements.length===0){div.innerHTML="";return;}
+    const totalPaye=paiements.reduce((s,r)=>s+(parseFloat(r[4])||0),0);
+    const solde=parseFloat(eleve.solde)||0;
+    const du=parseFloat(eleve.du)||0;
+
+    // ── DERNIER PAIEMENT — message rassurant ──
+    const dernier=paiements[paiements.length-1];
+    const dateDernier=serialToDate(dernier[0]);
+    const montDernier=parseFloat(dernier[4])||0;
+    const sourceDernier=String(dernier[5]||"").trim();
+    let htmlConfirm="";
+    if(montDernier>0){
+      htmlConfirm="<div style='background:#E8F5E9;border:1.5px solid #A5D6A7;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;'>"
+        +"<div style='font-size:1.8em;flex-shrink:0'>✅</div>"
+        +"<div><div style='font-size:0.82em;font-weight:700;color:#2E7D32;margin-bottom:2px'>Votre paiement a bien été enregistré</div>"
+        +"<div style='font-size:0.76em;color:#555;'>"+dateDernier+" · <strong>"+montDernier.toLocaleString('fr-FR')+" F CFA</strong> via "+sourceDernier+"</div></div></div>";
+    }
+
+    // ── PLAN DE VERSEMENTS si solde > 0 ──
+    let htmlPlan="";
+    if(solde>0&&du>0){
+      const versRestant=du-totalPaye;
+      const nbV=Math.ceil(versRestant/15000);
+      htmlPlan="<div style='background:#FFF8E1;border:1.5px solid #FFD54F;border-radius:10px;padding:12px 14px;margin-bottom:10px;'>"
+        +"<div style='font-size:0.8em;font-weight:700;color:#E65100;margin-bottom:8px;'>📅 Plan de paiement suggéré</div>"
+        +"<div style='font-size:0.76em;color:#555;margin-bottom:6px;'>Solde restant : <strong>"+solde.toLocaleString('fr-FR')+" F CFA</strong></div>"
+        +"<div style='display:grid;gap:4px;'>";
+      const now=new Date();
+      for(let v=0;v<Math.min(nbV,4);v++){
+        const d=new Date(now.getFullYear(),now.getMonth()+v+1,1);
+        const moisStr=d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+        const montV=v<nbV-1?15000:solde-(15000*v<0?0:15000*v);
+        if(montV<=0)break;
+        htmlPlan+="<div style='display:flex;justify-content:space-between;font-size:0.76em;padding:4px 0;border-bottom:1px solid #FFE082;'>"
+          +"<span>Versement "+(v+1)+" — "+moisStr+"</span>"
+          +"<span style='font-weight:700;color:#E65100;'>"+Math.min(montV,solde).toLocaleString('fr-FR')+" F</span></div>";
+      }
+      htmlPlan+="</div></div>";
+    }
+
+    // ── HISTORIQUE COMPLET ──
+    let htmlHist="<div style='margin-bottom:14px;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);'>"
+      +"<div style='background:linear-gradient(135deg,#2E7D32,#388E3C);padding:12px 16px;cursor:pointer;' onclick=\"var b=document.getElementById('histBody');b.style.display=b.style.display==='none'?'block':'none'\">"
+      +"<div style='color:white;font-weight:bold;font-size:0.92em;'>💳 MES PAIEMENTS — Transparence totale</div>"
+      +"<div style='color:rgba(255,255,255,0.85);font-size:0.75em;margin-top:2px;'>"+paiements.length+" paiement(s) · Total versé : "+totalPaye.toLocaleString('fr-FR')+" F CFA</div></div>"
+      +"<div id='histBody' style='background:white;display:none;'>";
+
+    paiements.slice().reverse().forEach(function(row,i){
+      const date=serialToDate(row[0]);
+      const montant=parseFloat(row[4])||0;
+      const source=String(row[5]||"").trim();
+      const idTrans=String(row[6]||"").trim();
+      const nom=String(row[2]||eleve.nom||"").trim();
+      const classe=String(row[3]||eleve.classe||"").trim();
+      const bg=i%2===0?"#FFFFFF":"#F9FBF9";
+      const srcBg=source==="WAVE"?"#E3F2FD":source==="ORANGE"?"#FFF3E0":source==="ESPECES"?"#E8F5E9":"#F5F5F5";
+      const srcColor=source==="WAVE"?"#1565C0":source==="ORANGE"?"#E65100":source==="ESPECES"?"#2E7D32":"#555";
+      htmlHist+="<div style='padding:10px 14px;border-bottom:1px solid #F0F0F0;background:"+bg+";'>"
+        +"<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;'>"
+        +"<div style='display:flex;align-items:center;gap:6px;'>"
+        +"<span style='font-size:0.68em;font-weight:700;padding:2px 8px;border-radius:10px;background:"+srcBg+";color:"+srcColor+"'>"+source+"</span>"
+        +"<span style='font-size:0.78em;color:#555;'>"+date+"</span></div>"
+        +"<div style='font-size:1em;font-weight:700;color:#2E7D32;'>+"+montant.toLocaleString('fr-FR')+" F</div></div>";
+      if(idTrans){
+        htmlHist+="<div style='display:flex;justify-content:space-between;align-items:center;'>"
+          +"<span style='font-size:0.66em;color:#aaa;font-family:monospace;'>"+idTrans.substring(0,20)+"...</span>"
+          +"<button onclick=\"genererRecuPDF('"+idTrans.replace(/'/g,"\\'")+"','"+date.replace(/'/g,"\\'")+"','"+nom.replace(/'/g,"\\'")+"','"+classe.replace(/'/g,"\\'")+"','"+mat+"',"+montant+",'"+source.replace(/'/g,"\\'")+"')\" "
+          +"style='font-size:0.66em;padding:2px 8px;background:#1F4E79;color:#fff;border:none;border-radius:6px;cursor:pointer;'>🖨 Reçu</button></div>";
+      }
+      htmlHist+="</div>";
+    });
+    htmlHist+="</div></div>";
+
+    div.innerHTML=htmlConfirm+htmlPlan+htmlHist;
+  }catch(e){div.innerHTML="";}
+}
+
+function genererRecuPDF(idTrans,date,nom,classe,matricule,montant,source){
+  const nomEcole=(window._eleveActuel&&window._eleveActuel.ecole&&window._eleveActuel.ecole.nom)?window._eleveActuel.ecole.nom:"Groupe Scolaire Les Princes d'Abidjan";
+  const w=window.open('','_blank');
+  if(!w){alert('Autorisez les popups');return;}
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reçu ${idTrans}</title>
+  <style>body{font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;margin:0;}
+  .recu{max-width:400px;margin:0 auto;background:#fff;border:2px solid #1F4E79;border-radius:10px;overflow:hidden;}
+  .header{background:#1F4E79;color:#fff;padding:16px;text-align:center;}
+  .header h2{font-size:14px;margin:0 0 4px;}
+  .header p{font-size:11px;margin:0;opacity:0.85;}
+  .titre{background:#D4AF37;color:#1F4E79;text-align:center;padding:8px;font-size:13px;font-weight:bold;}
+  .num{background:#F5F5F5;text-align:center;padding:6px;font-size:10px;font-family:monospace;color:#555;border-bottom:1px solid #eee;}
+  .body{padding:16px;}
+  .row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:12px;}
+  .row span:first-child{color:#777;}
+  .row span:last-child{font-weight:bold;color:#333;}
+  .montant{background:#E8F5E9;border-radius:8px;padding:12px;text-align:center;margin:12px 0;}
+  .montant .val{font-size:1.6em;font-weight:bold;color:#2E7D32;}
+  .montant .lbl{font-size:11px;color:#2E7D32;}
+  .footer{background:#F5F5F5;padding:10px;text-align:center;font-size:10px;color:#888;border-top:1px solid #eee;}
+  .valide{color:#2E7D32;font-weight:bold;font-size:13px;}
+  @media print{button{display:none!important;}body{background:white;padding:0;}}
+  </style></head><body>
+  <div style="text-align:center;margin-bottom:10px" class="no-print">
+    <button onclick="window.print()" style="background:#1F4E79;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:bold;margin-right:8px">🖨 Imprimer / PDF</button>
+    <button onclick="window.close()" style="background:#888;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:13px;">Fermer</button>
+  </div>
+  <div class="recu">
+    <div class="header">
+      <h2>🏫 ${nomEcole}</h2>
+      <p>Réseau CPP Les Princes d'Abidjan</p>
+    </div>
+    <div class="titre">REÇU DE PAIEMENT</div>
+    <div class="num">N° ${idTrans}</div>
+    <div class="body">
+      <div class="row"><span>Élève</span><span>${nom}</span></div>
+      <div class="row"><span>Classe</span><span>${classe}</span></div>
+      <div class="row"><span>Matricule</span><span>${matricule}</span></div>
+      <div class="row"><span>Date</span><span>${date}</span></div>
+      <div class="row"><span>Mode</span><span>${source}</span></div>
+      <div class="montant">
+        <div class="val">${Number(montant).toLocaleString('fr-FR')} F CFA</div>
+        <div class="lbl">Montant versé</div>
+      </div>
+      <div style="text-align:center;margin-top:8px;" class="valide">✅ Paiement enregistré</div>
+      <div style="text-align:center;font-size:10px;color:#999;margin-top:4px;">Conservez ce reçu comme preuve de paiement</div>
+    </div>
+    <div class="footer">Princes Smart School · princeabidjanecole@gmail.com · 07 08 11 12 69</div>
+  </div>
+  </body></html>`);
+  w.document.close();
+}
 function afficherSectionBloquee(eleve,soldeParsed,verseParsed){const div=document.getElementById("bloqueBody");const section=document.getElementById("sectionBloque");if(!div||!section)return;section.style.display="block";const info=window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{};const tel=info.tel||"0708111269";const btnWave='<a href="https://pay.wave.com/m/M_nIgf2a67TXMn/c/ci/" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:12px;background:#1F9AE0;color:white;border-radius:10px;padding:18px;text-decoration:none;text-align:center;margin-bottom:12px;"><span style="font-size:26px;">&#128153;</span><span style="display:flex;flex-direction:column;line-height:1.6;"><span style="font-size:15px;font-weight:bold;">ANNEE SCOLAIRE 2026-2027</span><span style="font-size:18px;font-weight:bold;">INSCRIVEZ VOTRE ENFANT ICI</span><span style="font-size:12px;opacity:0.85;margin-top:2px;">PAYER VIA WAVE</span></span></a>';div.innerHTML="<div style=\'text-align:center;padding:20px 16px;\'><div style=\'font-size:56px;margin-bottom:12px;\'>&#128274;</div><p style=\'font-size:1em;font-weight:bold;color:#C62828;margin-bottom:8px;\'>Acces bloque - Solde impaye</p><div style=\'background:#FFEBEE;border:2px solid #C62828;border-radius:10px;padding:14px;margin-bottom:16px;\'><p style=\'font-size:0.85em;color:#555;margin-bottom:4px;\'>Solde restant a payer</p><p style=\'font-size:1.8em;font-weight:bold;color:#C62828;\'>"+soldeParsed.toLocaleString('fr-FR')+" F CFA</p></div>"+btnWave+"<div style=\'background:#1A3A5C;border-radius:10px;padding:14px;text-align:center;\'><p style=\'color:#D4AF37;font-weight:bold;font-size:0.88em;margin-bottom:6px;\'>&#128222; Contactez l\'ecole</p><p style=\'color:#fff;font-size:1.1em;font-weight:bold;\'>"+tel+"</p></div></div>";}
 
 async function chargerFicheRenseignement(eleve){
