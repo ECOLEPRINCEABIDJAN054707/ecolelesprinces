@@ -1002,6 +1002,8 @@ function afficherEspaceParent(eleve) {
   document.getElementById("loginWrapper").style.display = "none";
   document.getElementById("parentSpace").style.display = "block";
   const sp = document.getElementById("sectionPublique"); if(sp) sp.style.display = "none";
+  // Initialiser FCM après login réussi — demande permission notifications
+  setTimeout(function(){ try{ _initFCM(); }catch(e){} }, 2000);
   window.scrollTo(0, 0);
 }
 
