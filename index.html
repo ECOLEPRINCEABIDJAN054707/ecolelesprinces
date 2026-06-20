@@ -1892,7 +1892,17 @@ function logout(){sessionStorage.removeItem("eleveConnecte");document.getElement
 function demarrerBlocage(){document.getElementById("loginWrapper").style.display="none";document.getElementById("blockedMsg").style.display="block";let sec=CONFIG.BLOCAGE_MIN*60;const timerEl=document.getElementById("blockedTimer");blocageInterval=setInterval(()=>{sec--;const m=Math.floor(sec/60),s=sec%60;timerEl.textContent=m+":"+s.toString().padStart(2,"0");if(sec<=0){clearInterval(blocageInterval);tentatives=0;   _initFCM();document.getElementById("blockedMsg").style.display="none";document.getElementById("loginWrapper").style.display="block";}},1000);}
 function enregistrerVisite(eleve){try{var ec=eleve.ecoleCode||"CPP";var ua=navigator.userAgent||"";var appareil=/Mobile|Android|iPhone|iPad/.test(ua)?"Mobile":"Desktop";console.log("Visite:",eleve.matricule,appareil);}catch(e){}}
 window.addEventListener("load",()=>{
-  sessionStorage.removeItem("eleveConnecte");
+  // Restaurer session si déjà connecté
+  const eleveStored = sessionStorage.getItem("eleveConnecte");
+  if(eleveStored){
+    try{
+      const eleve = JSON.parse(eleveStored);
+      if(eleve && eleve.matricule){
+        afficherEspaceParent(eleve);
+        return;
+      }
+    }catch(e){}
+  }
   // Afficher section inscription uniquement avant le 30 septembre 2026
   const fin = new Date('2026-09-30T23:59:59');
   const sp = document.getElementById('sectionPublique');
