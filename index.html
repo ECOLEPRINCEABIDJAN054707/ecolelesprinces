@@ -764,7 +764,7 @@ async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
         du: parseMontant(row[3]), verse: parseMontant(row[4]), solde: parseMontant(row[5]),
         tel1: String(row[6]||"").trim(), tel2: String(row[7]||"").trim(), tel3: String(row[8]||"").trim(),
         statut: String(row[9]||"").trim(), club1: String(row[10]||"").trim(), club2: String(row[11]||"").trim(),
-        decision: String(row[14]||"").trim().toUpperCase(),
+        decision: String(row[14]||"").trim().toUpperCase().replace(/[^A-Z]/g," ").trim().split(" ")[0],
         moy_annuelle: parseFloat(String(row[15]||"").replace(",",".")) || 0,
         niveau_suivant: String(row[17]||"").trim(),
         ecoleCode: codeEcole, sheetsId: sheetsIdDirect,
@@ -1042,7 +1042,7 @@ function _cardCEPE_Admis(prenom,moy,score,tel,ecoleCode){
 function _cardCEPE_Refuse(prenom,moy,score,tel,ecoleCode){return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#E65100,#F57C00)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-pulse\">&#128170;</span><div class=\"cpp-titre\">Courage "+prenom+" !</div><div class=\"cpp-msg-box\">Le redoublement en CM2 est une nouvelle chance. Avec du travail, vous reussirez l\u0027annee prochaine !</div></div>"+_blocContact(tel);}
 
 async function afficherSectionResultats(eleve) {
-  var section=document.getElementById("sectionResultats");var div=document.getElementById("resultatsBody");if(!section||!div)return;section.style.display="block";var titreRes=document.getElementById("titreResultats");if(titreRes)titreRes.innerHTML="&#127942; RESULTATS DE FIN D'ANNEE "+ANNEE_SCOLAIRE_ACTIVE+" <span>v</span>";var decision=(eleve.decision||"").trim().toUpperCase();
+  var section=document.getElementById("sectionResultats");var div=document.getElementById("resultatsBody");if(!section||!div)return;section.style.display="block";var titreRes=document.getElementById("titreResultats");if(titreRes)titreRes.innerHTML="&#127942; RESULTATS DE FIN D'ANNEE "+ANNEE_SCOLAIRE_ACTIVE+" <span>v</span>";var decision=(eleve.decision||"").trim().toUpperCase().replace(/[^A-Z]/g," ").trim().split(" ")[0];
   // CM2 sans décision → forcer RNO pour chercher résultats CEPE
   if (!decision && /CM2/i.test(classe)) decision = "RNO";
   // CM1 sans décision → ADMIS par défaut
