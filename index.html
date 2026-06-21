@@ -1336,7 +1336,7 @@ async function getBulletinAnnuelCPPPro(matricule, sheetsId) {
   try {
     var matClean = matricule.trim().toUpperCase();
     var url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId +
-              "/values/" + encodeURIComponent("BULLETINS_ANNUEL!A2:D500") +
+              "/values/" + encodeURIComponent("BULLETINS_ANNUEL!A2:E500") +
               "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
     var res = await fetch(url);
     if (!res.ok) return "";
@@ -1344,26 +1344,66 @@ async function getBulletinAnnuelCPPPro(matricule, sheetsId) {
     if (!data.values) return "";
     for (var i = 0; i < data.values.length; i++) {
       var row = data.values[i];
-      var mat = String(row[0]||"").trim().toUpperCase();
+      var mat    = String(row[0]||"").trim().toUpperCase();
       if (mat !== matClean) continue;
+      var nom    = String(row[1]||"").trim();
       var driveId = String(row[2]||"").trim();
       var decision = String(row[3]||"").trim();
-      var lien = driveId ? "https://drive.google.com/file/d/" + driveId + "/view" : "";
+      var lien   = driveId ? "https://drive.google.com/file/d/" + driveId + "/view" : "";
+      var prenom = nom.split(" ")[0] || nom;
 
-      // Couleur selon décision
-      var couleurDec = "#2E7D32"; var bgDec = "#E8F5E9"; var iconeDec = "✅";
-      if (decision.indexOf("Redoublant") >= 0) { couleurDec = "#C62828"; bgDec = "#FFEBEE"; iconeDec = "❌"; }
-      else if (decision.indexOf("Conseil") >= 0) { couleurDec = "#E65100"; bgDec = "#FFF3E0"; iconeDec = "🟠"; }
+      // Déterminer classe suivante et style
+      var classeActuelle = "";
+      // Lire classe depuis SYNTHESE (index 0)
+      var classeRaw = "";
+      try {
+        var urlSyn = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId +
+                     "/values/" + encodeURIComponent("SYNTHESE!A3:S2000") +
+                     "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
+        var resSyn = await fetch(urlSyn);
+        var dataSyn = await resSyn.json();
+        if (dataSyn.values) {
+          for (var j=0; j<dataSyn.values.length; j++) {
+            if (String(dataSyn.values[j][1]||"").trim().toUpperCase() === matClean) {
+              classeRaw = String(dataSyn.values[j][0]||"").trim();
+              break;
+            }
+          }
+        }
+      } catch(eS) {}
 
-      var html = "<div style='margin-top:12px;background:#F8F9FA;border-radius:12px;padding:14px;border:1px solid #E0E0E0'>";
-      html += "<div style='font-size:13px;font-weight:700;color:#1F4E79;border-bottom:1px solid #E0E0E0;padding-bottom:8px;margin-bottom:10px'>📊 RÉSULTATS DE FIN D'ANNÉE 2025-2026</div>";
-      html += "<div style='background:" + bgDec + ";border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px'>";
-      html += "<span style='font-size:22px'>" + iconeDec + "</span>";
-      html += "<div><div style='font-size:12px;color:#666'>Décision du Conseil de Classe</div>";
-      html += "<div style='font-size:15px;font-weight:700;color:" + couleurDec + "'>" + (decision || "—") + "</div></div>";
+      // Extraire filière depuis la classe ex: "1A BT TOPOGRAPHIE" → "2A BT TOPOGRAPHIE"
+      var classeNext = classeRaw.replace(/^1A/i, "2A").replace(/^1ère/i, "2ème");
+      if (!classeNext || classeNext === classeRaw) classeNext = "2eme annee BT";
+
+      var cardBg, icone, titre, sousTitre;
+      if (decision.indexOf("Redoublant") >= 0) {
+        cardBg   = "linear-gradient(135deg,#B71C1C,#C62828)";
+        icone    = "&#10060;";
+        titre    = "Redoublant(e)";
+        sousTitre = "Redoublement — " + (classeRaw || "1ere annee BT");
+      } else if (decision.indexOf("Conseil") >= 0) {
+        cardBg   = "linear-gradient(135deg,#E65100,#F57C00)";
+        icone    = "&#9989;";
+        titre    = "Admis(e) par decision du Conseil !";
+        sousTitre = "PROCHAINE CLASSE : " + classeNext;
+      } else {
+        cardBg   = "linear-gradient(135deg,#1F4E79,#2E75B6)";
+        icone    = "&#10003;";
+        titre    = "Admis(e) en classe superieure !";
+        sousTitre = "PROCHAINE CLASSE : " + classeNext;
+      }
+
+      var html = "<div id='cardDecisionPro' class='cpp-decision-card' style='background:" + cardBg + ";color:#fff;border-radius:14px;padding:20px 16px;text-align:center;margin-bottom:12px'>";
+      html += "<div style='font-size:48px;margin-bottom:10px'>" + icone + "</div>";
+      html += "<div style='font-size:1.3em;font-weight:bold;margin-bottom:6px'>" + titre + "</div>";
+      html += "<div style='font-size:0.85em;opacity:0.9;margin-bottom:14px'>Annee scolaire 2025-2026</div>";
+      html += "<div style='background:rgba(255,255,255,0.15);border-radius:10px;padding:10px 14px;margin-bottom:12px'>";
+      html += "<div style='font-size:0.75em;opacity:0.8;text-transform:uppercase;margin-bottom:4px'>" + sousTitre + "</div>";
       html += "</div>";
+
       if (lien) {
-        html += "<a href='" + lien + "' target='_blank' style='display:block;background:linear-gradient(135deg,#1B4F72,#2E86C1);color:#fff;border-radius:10px;padding:13px;text-align:center;text-decoration:none;font-weight:bold;font-size:0.95em;'>📄 BULLETIN ANNUEL 2025-2026<br><span style='font-size:0.8em;opacity:0.85;'>Voir et télécharger mon bulletin PDF</span></a>";
+        html += "<a href='" + lien + "' target='_blank' style='display:block;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);color:#fff;border-radius:10px;padding:12px;text-align:center;text-decoration:none;font-weight:bold;font-size:0.9em;'>&#128196; BULLETIN ANNUEL 2025-2026<br><span style='font-size:0.78em;opacity:0.85;font-weight:normal;'>Voir et telecharger mon bulletin PDF</span></a>";
       }
       html += "</div>";
       return html;
