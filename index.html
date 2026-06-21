@@ -1460,12 +1460,28 @@ async function chargerInscription2026(eleve) {
   if (eleve.ecoleCode === 'CPP_PRO') {
     section.style.display = 'block';
     var tel = info.tel || '0708111269';
+    var waveNum = info.wave || '0708111269';
+    var waveNom = 'COLLEGE PRIVE PROFESSIONNEL LES PRINCES';
+    var waveUrl = 'https://pay.wave.com/m/M_nIgf2a67TXMn/c/ci/';
     body.innerHTML = '<div class="cpp-decision-card" style="background:linear-gradient(135deg,#1A3A5C,#1565C0);color:#fff;border-radius:14px;padding:20px 16px;text-align:center;">' +
       '<div style="font-size:40px;margin-bottom:10px;">🎓</div>' +
       '<div style="font-size:1.1em;font-weight:bold;color:#D4AF37;margin-bottom:6px;">INSCRIPTIONS 2026-2027 OUVERTES</div>' +
       '<div style="font-size:0.85em;opacity:0.9;margin-bottom:14px;">College Prive Professionnel Les Princes</div>' +
       '<div style="background:rgba(255,255,255,0.12);border-radius:10px;padding:12px;margin-bottom:14px;text-align:left;">' +
-      '<div style="font-size:0.82em;line-height:2;">&#10003; Inscription en 2ème année BT<br>&#10003; Tarif préférentiel à l\'inscription anticipée<br>&#10003; Paiement via Wave ou Orange Money</div>' +
+      '<div style="font-size:0.82em;line-height:2;">&#10003; Inscription en 2eme annee BT<br>&#10003; Tarif preferentiel a l\'inscription anticipee<br>&#10003; Paiement via Wave ou Orange Money</div>' +
+      '</div>' +
+      '<div style="margin-bottom:10px;">' +
+      '<p style="font-weight:bold;color:#1F6FEB;font-size:0.85em;margin-bottom:8px;">&#128153; PAYER VIA WAVE</p>' +
+      '<div style="background:#E8F4FD;border-radius:8px;padding:10px;font-size:0.82em;color:#1A3A5C;text-align:left;line-height:1.8;">' +
+      '<div>1. Ouvrez <strong>Wave</strong> → Payer</div>' +
+      '<div>2. Recherchez <strong>' + waveNom + '</strong></div>' +
+      '<div>3. Entrez votre <strong>matricule</strong> comme référence</div>' +
+      '</div>' +
+      '<a href="' + waveUrl + '" target="_blank" style="display:block;margin-top:10px;background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;border-radius:10px;padding:12px;text-align:center;text-decoration:none;font-weight:bold;font-size:0.9em;">&#128153; Payer l\'inscription via Wave</a>' +
+      '</div>' +
+      '<div style="background:rgba(255,102,0,0.15);border-radius:8px;padding:10px;margin-bottom:14px;font-size:0.82em;">' +
+      '<p style="font-weight:bold;color:#FF6600;margin-bottom:4px;">&#127820; ORANGE MONEY</p>' +
+      '<p style="color:#fff;font-size:1em;font-weight:bold;">#144*43*1760*1#</p>' +
       '</div>' +
       '<div class="cpp-contact-block"><p style="color:#D4AF37;font-weight:bold;font-size:0.88em;margin-bottom:6px;">📞 Contact - Inscription & Renseignements</p>' +
       '<p style="color:#fff;font-size:1.1em;font-weight:bold;">' + tel + '</p>' +
