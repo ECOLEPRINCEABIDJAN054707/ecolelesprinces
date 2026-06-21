@@ -967,8 +967,15 @@ function afficherEspaceParent(eleve) {
     "<div class='eleve-nom'>" + eleve.nom + "</div>" +
     "<div class='eleve-infos'>" + (window._classe2026||eleve.classe) + " | " + nomEcole + "</div>" +
     "<div style='font-size:12px;color:rgba(255,255,255,0.85);margin-top:4px' id='anneeHeader'>&#128197; Annee scolaire " + ANNEE_SCOLAIRE_ACTIVE + "</div>" +
-    badgeHTML + "</div></div><button class='btn-logout' onclick='logout()'>Deconnexion</button></div>";
+    badgeHTML + "</div></div>" +
+    "<div style='position:absolute;top:12px;right:70px;'>" +
+    "<button onclick='ouvrirCentreNotifications()' id='btnCloche' style='background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:50%;width:36px;height:36px;cursor:pointer;position:relative;font-size:16px;display:flex;align-items:center;justify-content:center;'>" +
+    "&#128276;" +
+    "<span id='badgeNotif' style='display:none;position:absolute;top:-4px;right:-4px;background:#C62828;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid white;'>0</span>" +
+    "</button></div>" +
+    "<button class='btn-logout' onclick='logout()'>Deconnexion</button></div>";
   setTimeout(function() { const imgEl = document.getElementById("photoEleve"); if (imgEl) chargerPhotoEleve(eleve.matricule, imgEl, photoFallback); }, 500);
+  setTimeout(function() { _mettreAJourBadge(); _notifBienvenue(eleve.nom.split(' ')[0]); }, 800);
   const pay = document.getElementById("statutPay");
   const _pm = v => parseFloat(String(v||"").replace(/\s/g,"").replace(",",".")) || 0;
   const soldeParsed = _pm(eleve.solde), verseParsed = _pm(eleve.verse), duParsed = _pm(eleve.du);
@@ -1855,6 +1862,133 @@ function genererRecuPDF(idTrans,date,nom,classe,matricule,montant,source){
   w.document.close();
 }
 
+// ══════════════════════════════════════════════
+// CENTRE DE NOTIFICATIONS
+// ══════════════════════════════════════════════
+var _NOTIF_KEY = 'princes_notifs';
+
+function _ajouterNotification(titre, message, type) {
+  try {
+    var notifs = _lireNotifications();
+    notifs.unshift({
+      id: Date.now(),
+      titre: titre,
+      message: message,
+      type: type || 'INFO',
+      date: new Date().toLocaleDateString('fr-FR', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}),
+      lu: false
+    });
+    // Garder max 50 notifications
+    if (notifs.length > 50) notifs = notifs.slice(0, 50);
+    localStorage.setItem(_NOTIF_KEY, JSON.stringify(notifs));
+    _mettreAJourBadge();
+  } catch(e) {}
+}
+
+function _lireNotifications() {
+  try {
+    return JSON.parse(localStorage.getItem(_NOTIF_KEY) || '[]');
+  } catch(e) { return []; }
+}
+
+function _compterNonLus() {
+  return _lireNotifications().filter(function(n){ return !n.lu; }).length;
+}
+
+function _mettreAJourBadge() {
+  var badge = document.getElementById('badgeNotif');
+  if (!badge) return;
+  var nb = _compterNonLus();
+  if (nb > 0) {
+    badge.textContent = nb > 9 ? '9+' : nb;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function _marquerTousLus() {
+  try {
+    var notifs = _lireNotifications();
+    notifs.forEach(function(n){ n.lu = true; });
+    localStorage.setItem(_NOTIF_KEY, JSON.stringify(notifs));
+    _mettreAJourBadge();
+  } catch(e) {}
+}
+
+function _supprimerToutesNotifications() {
+  localStorage.removeItem(_NOTIF_KEY);
+  _mettreAJourBadge();
+  var modal = document.getElementById('centreNotifModal');
+  if (modal) modal.remove();
+}
+
+function ouvrirCentreNotifications() {
+  _marquerTousLus();
+  var notifs = _lireNotifications();
+  var old = document.getElementById('centreNotifModal');
+  if (old) old.remove();
+
+  var icones = {
+    'ABSENCE': '📅', 'PAIEMENT': '💳', 'BULLETIN': '📄',
+    'REPONSE_MESSAGE': '✉️', 'INFO': '🔔', 'ALERTE': '⚠️'
+  };
+  var couleurs = {
+    'ABSENCE': '#C62828', 'PAIEMENT': '#2E7D32', 'BULLETIN': '#1F4E79',
+    'REPONSE_MESSAGE': '#6A1B9A', 'INFO': '#1565C0', 'ALERTE': '#E65100'
+  };
+
+  var listeHTML = '';
+  if (!notifs.length) {
+    listeHTML = '<div style="padding:30px;text-align:center;color:#888;">'
+      + '<div style="font-size:3em;margin-bottom:10px;">🔕</div>'
+      + '<p style="font-size:0.9em;">Aucune notification pour l\'instant</p></div>';
+  } else {
+    notifs.forEach(function(n) {
+      var ico = icones[n.type] || '🔔';
+      var col = couleurs[n.type] || '#1F4E79';
+      listeHTML += '<div style="display:flex;gap:12px;padding:12px 16px;border-bottom:1px solid #f0f0f0;background:' + (n.lu?'#fff':'#F0F7FF') + ';">'
+        + '<div style="width:38px;height:38px;border-radius:50%;background:' + col + '20;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">' + ico + '</div>'
+        + '<div style="flex:1;">'
+        + '<div style="font-size:0.84em;font-weight:700;color:#1A1A2E;margin-bottom:2px;">' + (n.titre||'Notification') + '</div>'
+        + '<div style="font-size:0.78em;color:#555;line-height:1.4;">' + (n.message||'') + '</div>'
+        + '<div style="font-size:0.68em;color:#aaa;margin-top:4px;">' + (n.date||'') + '</div>'
+        + '</div>'
+        + (n.lu ? '' : '<div style="width:8px;height:8px;border-radius:50%;background:#C62828;margin-top:6px;flex-shrink:0;"></div>')
+        + '</div>';
+    });
+  }
+
+  var modal = document.createElement('div');
+  modal.id = 'centreNotifModal';
+  modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9998;display:flex;align-items:flex-start;justify-content:center;padding-top:60px;';
+  modal.innerHTML = '<div style="background:#fff;border-radius:14px;width:92%;max-width:420px;max-height:80vh;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.25);display:flex;flex-direction:column;">'
+    + '<div style="background:linear-gradient(135deg,#1F4E79,#2E75B6);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">'
+    + '<div><div style="font-size:1em;font-weight:700;">🔔 Notifications</div><div style="font-size:0.72em;opacity:0.85;">' + notifs.length + ' notification(s)</div></div>'
+    + '<div style="display:flex;gap:8px;align-items:center;">'
+    + (notifs.length ? '<button onclick="_supprimerToutesNotifications()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:4px 10px;border-radius:20px;font-size:0.7em;cursor:pointer;">Effacer tout</button>' : '')
+    + '<button onclick="document.getElementById(\'centreNotifModal\').remove()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:1em;">✕</button>'
+    + '</div></div>'
+    + '<div style="overflow-y:auto;flex:1;">' + listeHTML + '</div>'
+    + '</div>';
+
+  modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+  document.body.appendChild(modal);
+}
+
+// Ajouter une notif de bienvenue au premier login
+function _notifBienvenue(nomEleve) {
+  var notifs = _lireNotifications();
+  var dejaBienvenu = notifs.some(function(n){ return n.type === 'BIENVENUE'; });
+  if (!dejaBienvenu) {
+    _ajouterNotification(
+      'Bienvenue sur Princes Smart School',
+      'Bonjour ' + (nomEleve||'') + ' ! Activez les notifications pour recevoir les alertes absences et paiements en temps réel.',
+      'BIENVENUE'
+    );
+  }
+}
+
 function _lancerRecuGlobal() {
   var d = window._recuGlobalData;
   if (!d) { alert('Données non disponibles'); return; }
@@ -2107,12 +2241,18 @@ function _initFCM(){
     // Notifications en premier plan
     messaging.onMessage(function(payload){
       var data=payload.data||payload.notification||{};
-      if(data.message){
+      var titre=data.titre||payload.notification&&payload.notification.title||'Ecole Les Princes';
+      var message=data.message||payload.notification&&payload.notification.body||'';
+      if(message){
+        // Stocker dans localStorage
+        _ajouterNotification(titre, message, data.type||'INFO');
+        // Afficher toast
         var notif=document.createElement('div');
-        notif.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#1F4E79;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;z-index:9999;max-width:320px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.2);';
-        notif.textContent=(data.titre||'Ecole Les Princes')+' — '+data.message;
+        notif.style.cssText='position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#1F4E79;color:#fff;padding:12px 20px;border-radius:10px;font-size:13px;z-index:9999;max-width:320px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.2);cursor:pointer;';
+        notif.textContent=titre+' — '+message;
+        notif.onclick=function(){ouvrirCentreNotifications();notif.remove();};
         document.body.appendChild(notif);
-        setTimeout(function(){notif.remove();},5000);
+        setTimeout(function(){if(notif.parentNode)notif.remove();},5000);
       }
     });
   }catch(e){console.warn('FCM init:',e);}
