@@ -531,10 +531,6 @@ table tr:nth-child(even){background:#F8FAFD}
           <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">NIVEAU 2026-2027 *</label>
             <select id="m-niveau" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px">
               <option value="">-- S&eacute;lectionner --</option>
-              <option>PSA</option><option>MSA</option><option>GSA</option>
-              <option>CP1A</option><option>CP2A</option><option>CE1A</option><option>CE2A</option><option>CM1A</option><option>CM2A</option>
-              <option>6EME</option><option>5EME</option><option>4EME</option><option>3EME</option>
-              <option>2NDE</option><option>1ERE</option><option>TLE</option>
             </select>
           </div>
           <div style="display:flex;gap:6px;margin-bottom:8px">
@@ -1211,7 +1207,56 @@ function procederLogin(s){
   document.getElementById('loginPage').style.display='none';
   showLoader('Chargement de votre espace...');
   currentStaff=s;
+  peuplerNiveaux(s.ecole);
   setTimeout(()=>{hideLoader();if(s.profil==='DIR')afficherDir(s);else if(s.profil==='FOND')afficherFond(s);else if(s.profil==='COM')afficherCom(s);else if(s.profil==='EDU')afficherEdu(s);},900);
+}
+
+function peuplerNiveaux(ecole) {
+  var sel = document.getElementById('m-niveau');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">-- Sélectionner --</option>';
+
+  var niveaux = [];
+
+  // CPP PROFESSIONNEL — filières BT
+  if(ecole === 'CPP PRO') {
+    var filieres = ['TOPO','ELT BAT','BATIMENT','COMPTA','ELN','SECRETARIAT','TH','SMS'];
+    filieres.forEach(function(f) {
+      sel.innerHTML += '<option value="1A BT '+f+'">1A BT '+f+'</option>';
+      sel.innerHTML += '<option value="2A BT '+f+'">2A BT '+f+'</option>';
+    });
+    return;
+  }
+
+  // CPP TECHNIQUE — filières techniques
+  if(ecole === 'CPP TECH' || ecole === 'ETL PRINCES KOUIBLY') {
+    var niv_tech = [
+      '2NDE AB','2NDE F2','2NDE G1','2NDE G2',
+      '1ERE F2','1ERE G1','1ERE G2',
+      'TLE F2','TLE G1','TLE G2'
+    ];
+    niv_tech.forEach(function(n) {
+      sel.innerHTML += '<option value="'+n+'">'+n+'</option>';
+    });
+    return;
+  }
+
+  // PRIMAIRE
+  var ecolesPrim = ['GS RITA ROSANE','GNONTINROU','AKEIKOI 1','AKEIKOI 2','ACADEMIE','KOUTOUAN','CPP DABOU','CPP ANYAMA'];
+  if(ecolesPrim.indexOf(ecole) >= 0) {
+    var niv_prim = ['PSA','MSA','GSA','CP1A','CP2A','CE1A','CE2A','CM1A','CM2A',
+                    '6EME','5EME','4EME','3EME','2NDE','1ERE','TLE'];
+    niv_prim.forEach(function(n) {
+      sel.innerHTML += '<option value="'+n+'">'+n+'</option>';
+    });
+    return;
+  }
+
+  // SECONDAIRE GENERAL (défaut)
+  var niv_sec = ['6EME','5EME','4EME','3EME','2NDE','1ERE A','1ERE C','1ERE D','TLE A','TLE C','TLE D'];
+  niv_sec.forEach(function(n) {
+    sel.innerHTML += '<option value="'+n+'">'+n+'</option>';
+  });
 }
 function afficherDir(s){
   document.getElementById('dirAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
