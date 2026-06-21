@@ -1081,7 +1081,7 @@ async function afficherSectionResultats(eleve) {
   // Bouton bulletin annuel PDF + Résultats fin d'année CPP PRO
   if (eleve.ecoleCode === "CPP_PRO") {
     var btnBulPro = await getBulletinAnnuelCPPPro(eleve.matricule, eleve.sheetsId);
-    if (btnBulPro) htmlBul += btnBulPro;
+    if (btnBulPro) htmlAnim = btnBulPro; // Remplace la card vide par la card CPP Pro
   }
   var htmlNotes="<div style='margin-bottom:10px'><button id='bNotes' style='width:100%;padding:13px 16px;background:linear-gradient(135deg,#1F4E79,#1565C0);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;justify-content:space-between;align-items:center'><span>&#128202; MES NOTES DETAILLEES</span><span id='arN'>&#9660;</span></button><div id='noteSec' style='display:none;margin-top:8px;border-radius:8px;border:1px solid #D6E4F0'><div id='noteBody' style='padding:20px;text-align:center;color:#1F4E79'><p style='font-size:13px'>Chargement...</p></div></div></div>";
   var htmlAbs="<div style='margin-bottom:10px'><button id='bAbs' style='width:100%;padding:13px 16px;background:linear-gradient(135deg,#E65100,#F57C00);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;display:flex;justify-content:space-between;align-items:center'><span>&#128197; MES ABSENCES ET RETARDS</span><span id='arA'>&#9660;</span></button><div id='absSec' style='display:none;margin-top:8px;border-radius:8px;border:1px solid #FFD5B0'><div id='absBody' style='padding:20px;text-align:center;color:#E65100'><p style='font-size:13px'>Chargement...</p></div></div></div>";
@@ -1748,6 +1748,17 @@ async function chargerHistoriquePaiements(eleve){
       htmlPlan+="</div></div>";
     }
 
+    // ── BOUTON REÇU GLOBAL ──
+    const nomSafeG = (eleve.nom||'').replace(/'/g,"\\'");
+    const classeSafeG = (eleve.classe||'').replace(/'/g,"\\'");
+    const duG = parseFloat(eleve.du)||0;
+    const soldeG = parseFloat(eleve.solde)||0;
+    const paiementsJSON = JSON.stringify(paiements).replace(/'/g,"\\'");
+    let htmlRecuGlobal = "<div style='margin-bottom:10px;'>"
+      +"<button onclick=\"genererRecuGlobal('"+nomSafeG+"','"+classeSafeG+"','"+mat+"',"+duG+","+totalPaye+","+soldeG+","+JSON.stringify(paiements).replace(/\\/g,'\\\\').replace(/'/g,"\\'")+")\" "
+      +"style='width:100%;padding:12px;background:linear-gradient(135deg,#1F4E79,#2E75B6);color:#fff;border:none;border-radius:10px;font-size:0.88em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;'>"
+      +"<span style='font-size:1.2em'>📋</span> REÇU GLOBAL — Récapitulatif scolarité 2025-2026</button></div>";
+
     // ── HISTORIQUE COMPLET ──
     let htmlHist="<div style='margin-bottom:14px;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);'>"
       +"<div style='background:linear-gradient(135deg,#2E7D32,#388E3C);padding:12px 16px;cursor:pointer;' onclick=\"var b=document.getElementById('histBody');b.style.display=b.style.display==='none'?'block':'none'\">"
@@ -1780,7 +1791,7 @@ async function chargerHistoriquePaiements(eleve){
     });
     htmlHist+="</div></div>";
 
-    div.innerHTML=htmlConfirm+htmlPlan+htmlHist;
+    div.innerHTML=htmlConfirm+htmlPlan+htmlRecuGlobal+htmlHist;
   }catch(e){div.innerHTML="";}
 }
 
@@ -1830,6 +1841,112 @@ function genererRecuPDF(idTrans,date,nom,classe,matricule,montant,source){
       </div>
       <div style="text-align:center;margin-top:8px;" class="valide">✅ Paiement enregistré</div>
       <div style="text-align:center;font-size:10px;color:#999;margin-top:4px;">Conservez ce reçu comme preuve de paiement</div>
+    </div>
+    <div class="footer">Princes Smart School · princeabidjanecole@gmail.com · 07 08 11 12 69</div>
+  </div>
+  </body></html>`);
+  w.document.close();
+}
+
+function genererRecuGlobal(nom, classe, matricule, du, totalPaye, solde, paiements) {
+  const nomEcole = (window._eleveActuel && window._eleveActuel.ecole && window._eleveActuel.ecole.nom)
+    ? window._eleveActuel.ecole.nom : "Groupe Scolaire Les Princes d'Abidjan";
+  const dateGen = new Date().toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'});
+  const statut = solde <= 0 ? 'SOLDÉ' : totalPaye === 0 ? 'IMPAYÉ' : 'PARTIEL';
+  const statutColor = solde <= 0 ? '#2E7D32' : totalPaye === 0 ? '#C62828' : '#E65100';
+  const statutBg = solde <= 0 ? '#E8F5E9' : totalPaye === 0 ? '#FFEBEE' : '#FFF3E0';
+
+  let lignesPaiements = '';
+  (paiements || []).slice().reverse().forEach(function(p, i) {
+    const srcBg = p.source==="WAVE"?"#E3F2FD":p.source==="ORANGE"?"#FFF3E0":"#E8F5E9";
+    const srcColor = p.source==="WAVE"?"#1565C0":p.source==="ORANGE"?"#E65100":"#2E7D32";
+    lignesPaiements += `
+      <tr style="background:${i%2===0?'#fff':'#f9f9f9'}">
+        <td style="padding:7px 10px;font-size:12px;color:#555;">${p.date||'—'}</td>
+        <td style="padding:7px 10px;text-align:center;">
+          <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:${srcBg};color:${srcColor}">${p.source}</span>
+        </td>
+        <td style="padding:7px 10px;text-align:right;font-size:13px;font-weight:700;color:#2E7D32;">
+          +${Number(p.montant).toLocaleString('fr-FR')} F
+        </td>
+        <td style="padding:7px 10px;font-size:10px;color:#aaa;font-family:monospace;">${(p.idTrans||'').substring(0,16)}</td>
+      </tr>`;
+  });
+
+  const w = window.open('', '_blank');
+  if (!w) { alert('Autorisez les popups'); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>Reçu Global — ${matricule}</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#f5f5f5;padding:20px;margin:0;}
+    .recu{max-width:500px;margin:0 auto;background:#fff;border:2px solid #1F4E79;border-radius:12px;overflow:hidden;}
+    .header{background:linear-gradient(135deg,#1F4E79,#2E75B6);color:#fff;padding:18px;text-align:center;}
+    .header h2{font-size:15px;margin:0 0 4px;}
+    .header p{font-size:11px;margin:0;opacity:0.85;}
+    .titre{background:#D4AF37;color:#1F4E79;text-align:center;padding:8px;font-size:14px;font-weight:bold;}
+    .body{padding:16px;}
+    .info-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}
+    .info-row span:first-child{color:#777;}
+    .info-row span:last-child{font-weight:bold;color:#333;}
+    .totaux{border-radius:10px;padding:14px;margin:14px 0;}
+    .total-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;}
+    table{width:100%;border-collapse:collapse;margin-top:10px;}
+    thead tr{background:#1F4E79;color:#fff;}
+    th{padding:8px 10px;font-size:12px;text-align:left;}
+    .footer{background:#F5F5F5;padding:10px;text-align:center;font-size:10px;color:#888;border-top:1px solid #eee;}
+    @media print{.no-print{display:none!important;}body{background:white;padding:0;} @page{margin:8mm;}}
+  </style></head><body>
+  <div class="no-print" style="text-align:center;margin-bottom:16px;">
+    <button onclick="window.print()" style="background:#1F4E79;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:bold;margin-right:8px">🖨 Imprimer / Télécharger PDF</button>
+    <button onclick="window.close()" style="background:#888;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:13px;">Fermer</button>
+  </div>
+  <div class="recu">
+    <div class="header">
+      <h2>🏫 ${nomEcole}</h2>
+      <p>Réseau CPP Les Princes d'Abidjan · Tel : 07 08 11 12 69</p>
+    </div>
+    <div class="titre">📋 REÇU GLOBAL — RÉCAPITULATIF SCOLARITÉ 2025-2026</div>
+    <div class="body">
+      <div class="info-row"><span>Élève</span><span>${nom}</span></div>
+      <div class="info-row"><span>Matricule</span><span>${matricule}</span></div>
+      <div class="info-row"><span>Classe</span><span>${classe}</span></div>
+      <div class="info-row"><span>Année scolaire</span><span>2025-2026</span></div>
+      <div class="info-row"><span>Date d'édition</span><span>${dateGen}</span></div>
+
+      <div class="totaux" style="background:${statutBg};border:1.5px solid ${statutColor};">
+        <div class="total-row">
+          <span style="color:#555;">Montant total dû</span>
+          <span style="font-weight:bold;">${Number(du).toLocaleString('fr-FR')} F CFA</span>
+        </div>
+        <div class="total-row">
+          <span style="color:#2E7D32;font-weight:bold;">Total versé</span>
+          <span style="font-weight:bold;color:#2E7D32;font-size:15px;">${Number(totalPaye).toLocaleString('fr-FR')} F CFA</span>
+        </div>
+        <div class="total-row">
+          <span style="color:${statutColor};font-weight:bold;">Solde restant</span>
+          <span style="font-weight:bold;color:${statutColor};font-size:15px;">${Number(solde).toLocaleString('fr-FR')} F CFA</span>
+        </div>
+        <div style="text-align:center;margin-top:8px;">
+          <span style="background:${statutColor};color:#fff;padding:4px 16px;border-radius:20px;font-size:13px;font-weight:bold;">${statut}</span>
+        </div>
+      </div>
+
+      <div style="font-size:12px;font-weight:700;color:#1F4E79;margin-bottom:6px;">📋 Détail des paiements (${(paiements||[]).length})</div>
+      <table>
+        <thead><tr><th>Date</th><th>Mode</th><th>Montant</th><th>Référence</th></tr></thead>
+        <tbody>${lignesPaiements}</tbody>
+        <tfoot>
+          <tr style="background:#1F4E79;color:#fff;">
+            <td colspan="2" style="padding:8px 10px;font-weight:bold;font-size:13px;">TOTAL VERSÉ</td>
+            <td style="padding:8px 10px;font-weight:bold;font-size:14px;text-align:right;">${Number(totalPaye).toLocaleString('fr-FR')} F</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+      <div style="text-align:center;font-size:10px;color:#999;margin-top:12px;">
+        Document généré automatiquement par Princes Smart School<br>
+        Ce reçu fait foi de vos paiements auprès de l'établissement.
+      </div>
     </div>
     <div class="footer">Princes Smart School · princeabidjanecole@gmail.com · 07 08 11 12 69</div>
   </div>
