@@ -1749,15 +1749,22 @@ async function chargerHistoriquePaiements(eleve){
     }
 
     // ── BOUTON REÇU GLOBAL ──
-    const nomSafeG = (eleve.nom||'').replace(/'/g,"\\'");
-    const classeSafeG = (eleve.classe||'').replace(/'/g,"\\'");
     const duG = parseFloat(eleve.du)||0;
     const soldeG = parseFloat(eleve.solde)||0;
-    const paiementsJSON = JSON.stringify(paiements).replace(/'/g,"\\'");
+    // Stocker dans variable globale pour éviter les problèmes d'échappement
+    window._recuGlobalData = {
+      nom: eleve.nom||'',
+      classe: eleve.classe||'',
+      matricule: mat,
+      du: duG,
+      totalPaye: totalPaye,
+      solde: soldeG,
+      paiements: paiements
+    };
     let htmlRecuGlobal = "<div style='margin-bottom:10px;'>"
-      +"<button onclick=\"genererRecuGlobal('"+nomSafeG+"','"+classeSafeG+"','"+mat+"',"+duG+","+totalPaye+","+soldeG+","+JSON.stringify(paiements).replace(/\\/g,'\\\\').replace(/'/g,"\\'")+")\" "
+      +"<button onclick=\"_lancerRecuGlobal()\" "
       +"style='width:100%;padding:12px;background:linear-gradient(135deg,#1F4E79,#2E75B6);color:#fff;border:none;border-radius:10px;font-size:0.88em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;'>"
-      +"<span style='font-size:1.2em'>📋</span> REÇU GLOBAL — Récapitulatif scolarité 2025-2026</button></div>";
+      +"<span style='font-size:1.2em'>&#128203;</span> REÇU GLOBAL — Récapitulatif scolarité 2025-2026</button></div>";
 
     // ── HISTORIQUE COMPLET ──
     let htmlHist="<div style='margin-bottom:14px;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);'>"
@@ -1846,6 +1853,12 @@ function genererRecuPDF(idTrans,date,nom,classe,matricule,montant,source){
   </div>
   </body></html>`);
   w.document.close();
+}
+
+function _lancerRecuGlobal() {
+  var d = window._recuGlobalData;
+  if (!d) { alert('Données non disponibles'); return; }
+  genererRecuGlobal(d.nom, d.classe, d.matricule, d.du, d.totalPaye, d.solde, d.paiements);
 }
 
 function genererRecuGlobal(nom, classe, matricule, du, totalPaye, solde, paiements) {
