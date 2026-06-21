@@ -1216,47 +1216,50 @@ function peuplerNiveaux(ecole) {
   if(!sel) return;
   sel.innerHTML = '<option value="">-- Sélectionner --</option>';
 
-  var niveaux = [];
-
-  // CPP PROFESSIONNEL — filières BT
+  // CPP PROFESSIONNEL — filières BT 1A / 2A / 3A
   if(ecole === 'CPP PRO') {
     var filieres = ['TOPO','ELT BAT','BATIMENT','COMPTA','ELN','SECRETARIAT','TH','SMS'];
-    filieres.forEach(function(f) {
-      sel.innerHTML += '<option value="1A BT '+f+'">1A BT '+f+'</option>';
-      sel.innerHTML += '<option value="2A BT '+f+'">2A BT '+f+'</option>';
-    });
+    sel.innerHTML += '<optgroup label="─── 1ère Année ───">';
+    filieres.forEach(function(f){ sel.innerHTML += '<option value="1A BT '+f+'">1A BT '+f+'</option>'; });
+    sel.innerHTML += '</optgroup>';
+    sel.innerHTML += '<optgroup label="─── 2ème Année ───">';
+    filieres.forEach(function(f){ sel.innerHTML += '<option value="2A BT '+f+'">2A BT '+f+'</option>'; });
+    sel.innerHTML += '</optgroup>';
+    sel.innerHTML += '<optgroup label="─── 3ème Année (TLE) ───">';
+    filieres.forEach(function(f){ sel.innerHTML += '<option value="3A BT '+f+'">3A BT '+f+'</option>'; });
+    sel.innerHTML += '</optgroup>';
     return;
   }
 
   // CPP TECHNIQUE — filières techniques
   if(ecole === 'CPP TECH' || ecole === 'ETL PRINCES KOUIBLY') {
-    var niv_tech = [
-      '2NDE AB','2NDE F2','2NDE G1','2NDE G2',
-      '1ERE F2','1ERE G1','1ERE G2',
-      'TLE F2','TLE G1','TLE G2'
-    ];
-    niv_tech.forEach(function(n) {
-      sel.innerHTML += '<option value="'+n+'">'+n+'</option>';
-    });
+    sel.innerHTML += '<optgroup label="─── 2nde ───">';
+    ['2NDE AB','2NDE F2','2NDE G1','2NDE G2'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
+    sel.innerHTML += '</optgroup>';
+    sel.innerHTML += '<optgroup label="─── 1ère ───">';
+    ['1ERE F2','1ERE G1','1ERE G2'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
+    sel.innerHTML += '</optgroup>';
+    sel.innerHTML += '<optgroup label="─── Terminale ───">';
+    ['TLE F2','TLE G1','TLE G2'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
+    sel.innerHTML += '</optgroup>';
     return;
   }
 
-  // PRIMAIRE
+  // PRIMAIRE — écoles avec primaire
   var ecolesPrim = ['GS RITA ROSANE','GNONTINROU','AKEIKOI 1','AKEIKOI 2','ACADEMIE','KOUTOUAN','CPP DABOU','CPP ANYAMA'];
   if(ecolesPrim.indexOf(ecole) >= 0) {
-    var niv_prim = ['PSA','MSA','GSA','CP1A','CP2A','CE1A','CE2A','CM1A','CM2A',
-                    '6EME','5EME','4EME','3EME','2NDE','1ERE','TLE'];
-    niv_prim.forEach(function(n) {
-      sel.innerHTML += '<option value="'+n+'">'+n+'</option>';
-    });
-    return;
+    sel.innerHTML += '<optgroup label="─── Maternelle / Primaire ───">';
+    ['PSA','MSA','GSA','CP1A','CP2A','CE1A','CE2A','CM1A','CM2A'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
+    sel.innerHTML += '</optgroup>';
   }
 
-  // SECONDAIRE GENERAL (défaut)
-  var niv_sec = ['6EME','5EME','4EME','3EME','2NDE','1ERE A','1ERE C','1ERE D','TLE A','TLE C','TLE D'];
-  niv_sec.forEach(function(n) {
-    sel.innerHTML += '<option value="'+n+'">'+n+'</option>';
-  });
+  // SECONDAIRE GENERAL — toutes les écoles secondaires
+  sel.innerHTML += '<optgroup label="─── Collège ───">';
+  ['6EME','5EME','4EME','3EME'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
+  sel.innerHTML += '</optgroup>';
+  sel.innerHTML += '<optgroup label="─── Lycée ───">';
+  ['2NDE A','2NDE C','1ERE A','1ERE C','1ERE D','TLE A','TLE C','TLE D'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
+  sel.innerHTML += '</optgroup>';
 }
 function afficherDir(s){
   document.getElementById('dirAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
