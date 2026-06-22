@@ -1470,7 +1470,8 @@ async function chargerHistoriquePaiements2026(eleve, base2026) {
       .map(row => ({
         dateAffichee : _formatDateHisto(row[0]),
         montant      : parseFloat(String(row[5]||'0').replace(/\s/g,'').replace(/,(\d{3})/g,'$1').replace(',','.')) || 0,
-        source       : String(row[10]||'').trim()
+        source       : String(row[10]||'').trim(),
+        idTrans      : String(row[9]||'').trim()
       }));
   } catch(e) { return []; }
 }
@@ -1542,9 +1543,25 @@ async function chargerInscription2026(eleve) {
 window._classe2026 = inscrit.classe;
         window._inscrit2026 = inscrit;
 
+        // ── Mettre à jour le reçu global avec les données 2026-2027 ──
+        if (window._recuGlobalData) {
+          const historique2026temp = await chargerHistoriquePaiements2026(eleve, base2026);
+          window._recuGlobalData.annee    = '2026-2027';
+          window._recuGlobalData.classe   = inscrit.classe;
+          window._recuGlobalData.du       = inscrit.du || 0;
+          window._recuGlobalData.solde    = inscrit.solde || 0;
+          window._recuGlobalData.totalPaye = inscrit.verse || 0;
+          window._recuGlobalData.paiements = historique2026temp.map(function(p) {
+            return { date: p.dateAffichee, montant: p.montant, source: p.source, idTrans: p.idTrans||'' };
+          });
+          window._historique2026 = historique2026temp;
+        }
+
         // ── FIX : masquer infos 2025-2026 si inscrit 2026-2027 ──
         if (inscrit.verse > 0) {
-          const historique = await chargerHistoriquePaiements2026(eleve, base2026);
+          const historique = window._historique2026 && window._historique2026.length > 0
+            ? window._historique2026
+            : await chargerHistoriquePaiements2026(eleve, base2026);
         window._historique2026 = historique;
          const anneeHeader = document.getElementById('anneeHeader');
 if (anneeHeader) anneeHeader.textContent = '📅 Annee scolaire 2026-2027';
@@ -1669,9 +1686,10 @@ function _cardInscrit2026Partiel(inscrit, info, historique) {
         return '<div style="font-size:11px;color:#333;padding:3px 0;border-bottom:1px solid #BBDEFB;">• ' + p.dateAffichee + ' — <strong>' + montantNum.toLocaleString("fr-FR") + ' F CFA</strong> via ' + p.source + ' ✅</div>';
       }).join('') +
       '</div>' : '') +
-'<div style="background:#FFF8E1;border:1px solid #FFD54F;border-radius:8px;padding:10px;margin-bottom:10px;text-align:center;">' +
-    '<div style="font-size:12px;font-weight:bold;color:#E65100;">⚠️ Payez le solde restant pour connaître votre classe exacte (EX1, EX2...)</div>' +
-    '<div style="font-size:11px;color:#555;margin-top:4px;">Votre classe sera attribuée <strong>IMMÉDIATEMENT</strong> après règlement complet OU À PARTIR DU <strong>25 AOÛT 2026</strong></div>' +
+'<div style="background:#FFF8E1;border:2px solid #FF8F00;border-radius:8px;padding:12px;margin-bottom:10px;text-align:center;">' +
+    '<div style="font-size:14px;font-weight:bold;color:#E65100;margin-bottom:6px;">🏆 Les premières CLASSES sont pour les premiers parents ayant soldé !</div>' +
+    '<div style="font-size:11px;color:#555;margin-bottom:6px;">📌 EX1 → EX2 → EX3 selon l\'ordre d\'arrivée des paiements.</div>' +
+    '<div style="font-size:11px;font-weight:bold;color:#C62828;">⚡ Classe attribuée IMMÉDIATEMENT après règlement complet<br>OU À PARTIR DU 25 AOÛT 2026</div>' +
     '</div>' +
     btnWave +
     '<div class="cpp-contact-block"><p style="color:#D4AF37;font-weight:bold;font-size:0.85em;margin-bottom:4px;">📞 Contact & Renseignements</p>' +
