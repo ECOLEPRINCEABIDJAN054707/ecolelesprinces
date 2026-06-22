@@ -620,6 +620,25 @@ function serialToDate(v) {
   return String(v || '');
 }
 
+function _formatDateHisto(v) {
+  // Convertit une date sérielle Excel ou une chaîne en format dd/MM/yyyy
+  if (!v) return '—';
+  var s = String(v).trim();
+  // Déjà au format dd/MM/yyyy
+  if (/^\d{2}\/\d{2}\/\d{4}/.test(s)) return s.substring(0,10);
+  // Format dd/MM/yyyy HH:mm
+  if (/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/.test(s)) return s.substring(0,10);
+  // Nombre sériel Excel
+  var n = parseFloat(s);
+  if (!isNaN(n) && n > 40000) {
+    var d = new Date(Math.round((n - 25569) * 86400 * 1000));
+    return d.getUTCDate().toString().padStart(2,'0') + '/' +
+           (d.getUTCMonth()+1).toString().padStart(2,'0') + '/' +
+           d.getUTCFullYear();
+  }
+  return s;
+}
+
 function detecterTypeClasse(classe, ecoleCode) {
   if (ecoleCode !== 'CPP') return 'STANDARD';
   const c = (classe || '').toUpperCase().trim();
@@ -1449,7 +1468,8 @@ async function chargerHistoriquePaiements2026(eleve, base2026) {
     return data.values
       .filter(row => String(row[1]||'').trim().toUpperCase() === mat)
       .map(row => ({
-        dateAffichee : String(row[0]||'').trim(), montant      : parseFloat(String(row[5]||'0').replace(/\s/g,'').replace(/,(\d{3})/g,'$1').replace(',','.')) || 0,
+        dateAffichee : _formatDateHisto(row[0]),
+        montant      : parseFloat(String(row[5]||'0').replace(/\s/g,'').replace(/,(\d{3})/g,'$1').replace(',','.')) || 0,
         source       : String(row[10]||'').trim()
       }));
   } catch(e) { return []; }
@@ -1756,13 +1776,14 @@ async function chargerHistoriquePaiements(eleve){
     }
 
     // ── BOUTON REÇU GLOBAL ──
-    const duG = parseFloat(eleve.du)||0;
-    const soldeG = parseFloat(eleve.solde)||0;
-    // Stocker dans variable globale pour éviter les problèmes d'échappement
     // Détecter l'année selon la base de l'élève
     var bases2026 = Object.values(SHEETS_IDS_COMPLET).map(function(v){ return v.base2026; }).filter(Boolean);
     var estBase2026 = bases2026.indexOf(eleve.sheetsId) >= 0;
     var anneeRecu = estBase2026 ? '2026-2027' : '2025-2026';
+    // Utiliser les données de la bonne base
+    var inscrit2026 = window._inscrit2026 || null;
+    var duG     = estBase2026 && inscrit2026 ? (inscrit2026.du||0)    : (parseFloat(eleve.du)||0);
+    var soldeG  = estBase2026 && inscrit2026 ? (inscrit2026.solde||0) : (parseFloat(eleve.solde)||0);
 
     window._recuGlobalData = {
       nom: eleve.nom||'',
