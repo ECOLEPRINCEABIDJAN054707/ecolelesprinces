@@ -347,7 +347,7 @@ const ECOLES = [
   { code:"DABOU",  nom:"College Prive Les Princes de Dabou",        ville:"Dabou",        couleur:"#1B5E20", tel:"0505286960", wave:"0505286960", base2026:"1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA" },
   { code:"ANYAMA", nom:"College Prive Les Princes d Anyama-Adjame", ville:"Anyama-Adjame", couleur:"#4A148C", tel:"0799228524", wave:"0799228524", base2026:"1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE" },
 ];
-const ANNEE_SCOLAIRE_ACTIVE = "2025-2026";
+const ANNEE_SCOLAIRE_ACTIVE = "2026-2027";
 const CONFIG = { SHEETS_ID:"1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI", API_KEY:"AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA", MAX_TENTATIVES:3, BLOCAGE_MIN:30 };
 const SHEETS_IDS_COMPLET = {
   "1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI":{ nom:"CPP Les Princes d'Abidjan",tel:"0708111269",wave:"0708111269",base2026:"1e37v34kcYXh0etsPjGo7rF7SyH0i1Xpj20azcirDUEY" },
@@ -1641,7 +1641,7 @@ function _cardInscrit2026Partiel(inscrit, info, historique) {
     '<div style="font-size:1.4em;font-weight:bold;color:#C62828;">' + (inscrit.solde||0).toLocaleString('fr-FR') + ' F CFA</div>' +
     '<div style="font-size:11px;color:#555;">Versé : ' + (inscrit.verse||0).toLocaleString('fr-FR') + ' F CFA / ' + (inscrit.du||0).toLocaleString('fr-FR') + ' F CFA</div>' +
     '</div>' +
-+ (historique && historique.length > 0 ?
+    (historique && historique.length > 0 ?
       '<div style="background:#E3F2FD;border-radius:8px;padding:10px;margin-bottom:10px;">' +
       '<div style="font-size:11px;font-weight:bold;color:#1F4E79;margin-bottom:6px;">📅 Vos paiements effectués :</div>' +
       historique.map(function(p) {
@@ -1759,6 +1759,11 @@ async function chargerHistoriquePaiements(eleve){
     const duG = parseFloat(eleve.du)||0;
     const soldeG = parseFloat(eleve.solde)||0;
     // Stocker dans variable globale pour éviter les problèmes d'échappement
+    // Détecter l'année selon la base de l'élève
+    var bases2026 = Object.values(SHEETS_IDS_COMPLET).map(function(v){ return v.base2026; }).filter(Boolean);
+    var estBase2026 = bases2026.indexOf(eleve.sheetsId) >= 0;
+    var anneeRecu = estBase2026 ? '2026-2027' : '2025-2026';
+
     window._recuGlobalData = {
       nom: eleve.nom||'',
       classe: eleve.classe||'',
@@ -1766,12 +1771,13 @@ async function chargerHistoriquePaiements(eleve){
       du: duG,
       totalPaye: totalPaye,
       solde: soldeG,
-      paiements: paiements
+      paiements: paiements,
+      annee: anneeRecu
     };
     let htmlRecuGlobal = "<div style='margin-bottom:10px;'>"
       +"<button onclick=\"_lancerRecuGlobal()\" "
       +"style='width:100%;padding:12px;background:linear-gradient(135deg,#1F4E79,#2E75B6);color:#fff;border:none;border-radius:10px;font-size:0.88em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;'>"
-      +"<span style='font-size:1.2em'>&#128203;</span> REÇU GLOBAL — Récapitulatif scolarité 2025-2026</button></div>";
+      +"<span style='font-size:1.2em'>&#128203;</span> REÇU GLOBAL — Récapitulatif scolarité " + ANNEE_SCOLAIRE_ACTIVE + "</button></div>";
 
     // ── HISTORIQUE COMPLET ──
     let htmlHist="<div style='margin-bottom:14px;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);'>"
@@ -1992,13 +1998,14 @@ function _notifBienvenue(nomEleve) {
 function _lancerRecuGlobal() {
   var d = window._recuGlobalData;
   if (!d) { alert('Données non disponibles'); return; }
-  genererRecuGlobal(d.nom, d.classe, d.matricule, d.du, d.totalPaye, d.solde, d.paiements);
+  genererRecuGlobal(d.nom, d.classe, d.matricule, d.du, d.totalPaye, d.solde, d.paiements, d.annee);
 }
 
-function genererRecuGlobal(nom, classe, matricule, du, totalPaye, solde, paiements) {
+function genererRecuGlobal(nom, classe, matricule, du, totalPaye, solde, paiements, anneeParam) {
   const nomEcole = (window._eleveActuel && window._eleveActuel.ecole && window._eleveActuel.ecole.nom)
     ? window._eleveActuel.ecole.nom : "Groupe Scolaire Les Princes d'Abidjan";
   const dateGen = new Date().toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'});
+  const annee = anneeParam || (typeof ANNEE_SCOLAIRE_ACTIVE !== 'undefined' ? ANNEE_SCOLAIRE_ACTIVE : '2026-2027');
   const statut = solde <= 0 ? 'SOLDÉ' : totalPaye === 0 ? 'IMPAYÉ' : 'PARTIEL';
   const statutColor = solde <= 0 ? '#2E7D32' : totalPaye === 0 ? '#C62828' : '#E65100';
   const statutBg = solde <= 0 ? '#E8F5E9' : totalPaye === 0 ? '#FFEBEE' : '#FFF3E0';
@@ -2052,7 +2059,7 @@ function genererRecuGlobal(nom, classe, matricule, du, totalPaye, solde, paiemen
       <h2>🏫 ${nomEcole}</h2>
       <p>Réseau CPP Les Princes d'Abidjan · Tel : 07 08 11 12 69</p>
     </div>
-    <div class="titre">📋 REÇU GLOBAL — RÉCAPITULATIF SCOLARITÉ 2025-2026</div>
+    <div class="titre">📋 REÇU GLOBAL — RÉCAPITULATIF SCOLARITÉ ${annee}</div>
     <div class="body">
       <div class="info-row"><span>Élève</span><span>${nom}</span></div>
       <div class="info-row"><span>Matricule</span><span>${matricule}</span></div>
