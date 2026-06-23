@@ -985,7 +985,7 @@ function afficherEspaceParent(eleve) {
     "<div style='flex:1;'><div class='eleve-mat-badge'>" + eleve.matricule + "</div>" +
     "<div class='eleve-nom'>" + eleve.nom + "</div>" +
     "<div class='eleve-infos'>" + (window._classe2026||eleve.classe) + " | " + nomEcole + "</div>" +
-    "<div style='font-size:12px;color:rgba(255,255,255,0.85);margin-top:4px' id='anneeHeader'>&#128197; Annee scolaire " + ANNEE_SCOLAIRE_ACTIVE + "</div>" +
+    "<div style='font-size:12px;color:rgba(255,255,255,0.85);margin-top:4px' id='anneeHeader'>&#128197; Annee scolaire " + anneeEleve + "</div>" +
     badgeHTML + "</div></div>" +
     "<div style='position:absolute;top:12px;right:70px;'>" +
     "<button onclick='ouvrirCentreNotifications()' id='btnCloche' style='background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:50%;width:36px;height:36px;cursor:pointer;position:relative;font-size:16px;display:flex;align-items:center;justify-content:center;'>" +
@@ -998,16 +998,20 @@ function afficherEspaceParent(eleve) {
   const pay = document.getElementById("statutPay");
   const _pm = v => parseFloat(String(v||"").replace(/\s/g,"").replace(",",".")) || 0;
   const soldeParsed = _pm(eleve.solde), verseParsed = _pm(eleve.verse), duParsed = _pm(eleve.du);
+  // Détecter l'année réelle de l'élève selon sa base
+  var bases2026list = Object.values(SHEETS_IDS_COMPLET).map(function(v){ return v.base2026; }).filter(Boolean);
+  var anneeEleve = bases2026list.indexOf(eleve.sheetsId) >= 0 ? '2026-2027' : '2025-2026';
+  window._anneeEleve = anneeEleve;
   mettreAJourMontant(eleve); afficherClubs(eleve); chargerReponsesMessages(eleve); chargerHistoriquePaiements(eleve);
   enregistrerVisite(eleve);
   if (eleve.gratuit) {
     pay.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>&#127891;</div><div class='pay-text'><h4>Prise en charge etablissement</h4><p class='pay-montant c-vert'>Acces complet active</p></div></div>";
   } else if (soldeParsed === 0) {
-    pay.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>&#10003;</div><div class='pay-text'><h4>Scolarite " + ANNEE_SCOLAIRE_ACTIVE + " entierement payee</h4><p class='pay-montant c-vert'>" + verseParsed.toLocaleString('fr-FR') + " F CFA verses</p></div></div>";
+    pay.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>&#10003;</div><div class='pay-text'><h4>Scolarite " + anneeEleve + " entierement payee</h4><p class='pay-montant c-vert'>" + verseParsed.toLocaleString('fr-FR') + " F CFA verses</p></div></div>";
   } else if (verseParsed > 0) {
-    pay.innerHTML = "<div class='paiement-bar paiement-partiel'><div class='pay-icon'>&#9888;</div><div class='pay-text'><h4>Solde " + ANNEE_SCOLAIRE_ACTIVE + " restant</h4><p class='pay-montant c-or'>" + soldeParsed.toLocaleString('fr-FR') + " F CFA restants</p><p>Verse : " + verseParsed.toLocaleString('fr-FR') + " sur " + duParsed.toLocaleString('fr-FR') + " F CFA</p></div></div>";
+    pay.innerHTML = "<div class='paiement-bar paiement-partiel'><div class='pay-icon'>&#9888;</div><div class='pay-text'><h4>Solde " + anneeEleve + " restant</h4><p class='pay-montant c-or'>" + soldeParsed.toLocaleString('fr-FR') + " F CFA restants</p><p>Verse : " + verseParsed.toLocaleString('fr-FR') + " sur " + duParsed.toLocaleString('fr-FR') + " F CFA</p></div></div>";
   } else {
-    pay.innerHTML = "<div class='paiement-bar paiement-non'><div class='pay-icon'>&#10060;</div><div class='pay-text'><h4>Scolarite " + ANNEE_SCOLAIRE_ACTIVE + " non reglee</h4><p class='pay-montant c-rouge'>" + duParsed.toLocaleString('fr-FR') + " F CFA a regler</p></div></div>";
+    pay.innerHTML = "<div class='paiement-bar paiement-non'><div class='pay-icon'>&#10060;</div><div class='pay-text'><h4>Scolarite " + anneeEleve + " non reglee</h4><p class='pay-montant c-rouge'>" + duParsed.toLocaleString('fr-FR') + " F CFA a regler</p></div></div>";
   }
   var accesComplet = eleve.gratuit || soldeParsed === 0;
   if (accesComplet) {
@@ -1070,7 +1074,7 @@ function _cardCEPE_Admis(prenom,moy,score,tel,ecoleCode){
 function _cardCEPE_Refuse(prenom,moy,score,tel,ecoleCode){return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#E65100,#F57C00)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-pulse\">&#128170;</span><div class=\"cpp-titre\">Courage "+prenom+" !</div><div class=\"cpp-msg-box\">Le redoublement en CM2 est une nouvelle chance. Avec du travail, vous reussirez l\u0027annee prochaine !</div></div>"+_blocContact(tel);}
 
 async function afficherSectionResultats(eleve) {
-  var section=document.getElementById("sectionResultats");var div=document.getElementById("resultatsBody");if(!section||!div)return;section.style.display="block";var titreRes=document.getElementById("titreResultats");if(titreRes)titreRes.innerHTML="&#127942; RESULTATS DE FIN D'ANNEE "+ANNEE_SCOLAIRE_ACTIVE+" <span>v</span>";var decision=(eleve.decision||"").trim().toUpperCase().replace(/[^A-Z]/g," ").trim().split(" ")[0];
+  var section=document.getElementById("sectionResultats");var div=document.getElementById("resultatsBody");if(!section||!div)return;section.style.display="block";var titreRes=document.getElementById("titreResultats");if(titreRes)titreRes.innerHTML="&#127942; RESULTATS DE FIN D'ANNEE "+(window._anneeEleve||ANNEE_SCOLAIRE_ACTIVE)+" <span>v</span>";var decision=(eleve.decision||"").trim().toUpperCase().replace(/[^A-Z]/g," ").trim().split(" ")[0];
   // CM2 sans décision → forcer RNO pour chercher résultats CEPE
   if (!decision && /CM2/i.test(classe)) decision = "RNO";
   // CM1 sans décision → ADMIS par défaut
@@ -1584,14 +1588,16 @@ if (anneeHeader) anneeHeader.textContent = '📅 Annee scolaire 2026-2027';
             if (montantDu && inscrit.solde === 0) montantDu.style.background = 'linear-gradient(135deg,#2E7D32,#388E3C)';
           }
         }
-        // Mettre à jour bloc paiement 2026-2027
-        const pay2026 = document.getElementById('paiement2026Bloc');
-        if (pay2026) {
-          pay2026.style.display = 'block';
-          pay2026.innerHTML = '<div class="paiement-bar ' + (inscrit.solde===0?'paiement-ok':'paiement-partiel') + '"><div class="pay-icon">' + (inscrit.solde===0?'&#10003;':'&#9888;') + '</div><div class="pay-text"><h4>Scolarite 2026-2027' + (inscrit.solde===0?' entierement payee':'') + '</h4><p class="pay-montant">Montant du : ' + (inscrit.du||0).toLocaleString("fr-FR") + ' F CFA</p><p class="pay-montant">Verse : ' + (inscrit.verse||0).toLocaleString("fr-FR") + ' F CFA</p>' + (inscrit.solde>0?'<p class="pay-montant c-rouge">Solde : ' + inscrit.solde.toLocaleString("fr-FR") + ' F CFA</p>':'<p class="pay-montant c-vert">Entierement paye</p>') + '</div></div>';
+        // Mettre à jour bloc paiement 2026-2027 — seulement si versement réel
+        if (inscrit.verse > 0) {
+          const pay2026 = document.getElementById('paiement2026Bloc');
+          if (pay2026) {
+            pay2026.style.display = 'block';
+            pay2026.innerHTML = '<div class="paiement-bar ' + (inscrit.solde===0?'paiement-ok':'paiement-partiel') + '"><div class="pay-icon">' + (inscrit.solde===0?'&#10003;':'&#9888;') + '</div><div class="pay-text"><h4>Scolarite 2026-2027' + (inscrit.solde===0?' entierement payee':'') + '</h4><p class="pay-montant">Montant du : ' + (inscrit.du||0).toLocaleString("fr-FR") + ' F CFA</p><p class="pay-montant">Verse : ' + (inscrit.verse||0).toLocaleString("fr-FR") + ' F CFA</p>' + (inscrit.solde>0?'<p class="pay-montant c-rouge">Solde : ' + inscrit.solde.toLocaleString("fr-FR") + ' F CFA</p>':'<p class="pay-montant c-vert">Entierement paye</p>') + '</div></div>';
+          }
+          const hdrInfos = document.querySelector('.eleve-infos');
+          if (hdrInfos) hdrInfos.textContent = inscrit.classe + ' | ' + ((window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{}).nom||'');
         }
-        const hdrInfos = document.querySelector('.eleve-infos');
-        if (hdrInfos && inscrit.verse > 0) hdrInfos.textContent = inscrit.classe + ' | ' + ((window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{}).nom||'');
         break;
       }
     }
