@@ -1484,12 +1484,43 @@ async function chargerHistoriquePaiements2026(eleve, base2026) {
     return data.values
       .filter(row => String(row[1]||'').trim().toUpperCase() === mat)
       .map(row => ({
-        dateAffichee : _formatDateHisto(row[0]),
+        dateAffichee : _corrigerDateAppsScript(row[0]),
         montant      : parseFloat(String(row[5]||'0').replace(/\s/g,'').replace(/,(\d{3})/g,'$1').replace(',','.')) || 0,
         source       : String(row[10]||'').trim(),
         idTrans      : String(row[9]||'').trim()
       }));
   } catch(e) { return []; }
+}
+
+function _corrigerDateAppsScript(v) {
+  // Apps Script écrit les dates en MM/DD/YYYY HH:mm dans HISTORIQUE_MAJ
+  // On doit convertir en DD/MM/YYYY
+  if (!v) return '—';
+  var s = String(v).trim();
+  // Nombre sériel Excel — convertir directement
+  var n = parseFloat(s);
+  if (!isNaN(n) && n > 40000) {
+    var d = new Date(Math.round((n - 25569) * 86400 * 1000));
+    return d.getUTCDate().toString().padStart(2,'0') + '/' +
+           (d.getUTCMonth()+1).toString().padStart(2,'0') + '/' +
+           d.getUTCFullYear();
+  }
+  // Format MM/DD/YYYY HH:mm (Apps Script) — détecter et inverser
+  var m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m) {
+    var p1 = parseInt(m[1]), p2 = parseInt(m[2]);
+    // Si p1 <= 12 et p2 > 12 → c'est MM/DD → inverser
+    if (p1 <= 12 && p2 > 12) {
+      return m[2].padStart(2,'0') + '/' + m[1].padStart(2,'0') + '/' + m[3];
+    }
+    // Si p1 > 12 → c'est DD/MM → garder
+    if (p1 > 12) {
+      return m[1].padStart(2,'0') + '/' + m[2].padStart(2,'0') + '/' + m[3];
+    }
+    // Ambiguïté (p1<=12 et p2<=12) — Apps Script écrit MM/DD → inverser
+    return m[2].padStart(2,'0') + '/' + m[1].padStart(2,'0') + '/' + m[3];
+  }
+  return s;
 }
 async function chargerInscription2026(eleve) {
   const section = document.getElementById('sectionInscription2026');
@@ -1692,7 +1723,7 @@ function _cardInscrit2026Partiel(inscrit, info, historique) {
       '<div style="font-size:11px;font-weight:bold;color:#1F4E79;margin-bottom:6px;">📅 Vos paiements effectués :</div>' +
       historique.map(function(p) {
         var montantNum = parseFloat(String(p.montant||'0').replace(/[^0-9.]/g,'')) || 0;
-        return '<div style="font-size:11px;color:#333;padding:3px 0;border-bottom:1px solid #BBDEFB;">• ' + p.dateAffichee + ' — <strong>' + montantNum.toLocaleString("fr-FR") + ' F CFA</strong> via ' + p.source + ' ✅</div>';
+        return '<div style="font-size:11px;color:#333;padding:3px 0;border-bottom:1px solid #BBDEFB;">• ' + _formatDateHisto(p.dateAffichee) + ' — <strong>' + montantNum.toLocaleString("fr-FR") + ' F CFA</strong> via ' + p.source + ' ✅</div>';
       }).join('') +
       '</div>' : '') +
 '<div style="background:#FFF8E1;border:2px solid #FF8F00;border-radius:8px;padding:12px;margin-bottom:10px;text-align:center;">' +
