@@ -273,7 +273,7 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
     </div>
   </div>
   <div class="section">
-    <div class="sec-header" style="background:#4A148C" onclick="toggleSec(this)">&#128198; CALENDRIER SCOLAIRE 2025-2026 <span>v</span></div>
+    <div class="sec-header" style="background:#4A148C" onclick="toggleSec(this)">&#128198; CALENDRIER SCOLAIRE 2026-2027 <span>v</span></div>
     <div class="sec-body">
       <div style="display:grid;gap:10px;">
         <div style="background:#EDE7F6;border-radius:10px;padding:12px;border-left:4px solid #4A148C;"><p style="font-weight:bold;color:#4A148C;font-size:0.9em;margin-bottom:8px;">1er Trimestre</p><div style="font-size:0.82em;color:#444;display:grid;gap:4px;"><div style="display:flex;justify-content:space-between;"><span>&#128218; Debut des cours</span><strong>16 Septembre 2025</strong></div><div style="display:flex;justify-content:space-between;"><span>&#127876; Vacances Noel</span><strong>20 Dec. 2025 - 4 Jan. 2026</strong></div><div style="display:flex;justify-content:space-between;"><span>&#127937; Fin T1</span><strong>20 Decembre 2025</strong></div></div></div>
@@ -328,7 +328,7 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
 <div class="footer">
   <p><strong>Ecole Les Princes</strong> - Espace Parents</p>
   <p>Tel : 07 08 11 12 69 | Code : 054707 | OID : E10433084</p>
-  <p style="opacity:0.5;margin-top:4px;">&#169; 2025-2026</p>
+  <p style="opacity:0.5;margin-top:4px;">&#169; 2026-2027</p>
 </div>
 <script>
 const ECOLES = [
@@ -409,7 +409,7 @@ function chargerBulletinsMensuels(eleve) {
   };
   var ECOLE_PRIM_MAP = {'AKEIKOI_1':'AKEIKOI 1','AKEIKOI_2':'AKEIKOI 2','ACADEMIE':'ACADEMIE','RITA':'GS RITA ROSANE','GNONTINROU':'GNONTINROU','KOUTOUAN':'KOUTOUAN'};
   var ecolePrim = ECOLE_PRIM_MAP[eleve.ecoleCode] || eleve.ecoleCode || '';
-  var params = 'callback='+cbName+'&type=LIRE_BULLETINS_PARENT&matricule='+encodeURIComponent(eleve.matricule)+'&annee=2025-2026&ecole='+encodeURIComponent(ecolePrim);
+  var params = 'callback='+cbName+'&type=LIRE_BULLETINS_PARENT&matricule='+encodeURIComponent(eleve.matricule)+'&annee='+ANNEE_SCOLAIRE_ACTIVE+'&ecole='+encodeURIComponent(ecolePrim);
   script.src = APPS_SCRIPT_PRIM + '?' + params;
   document.body.appendChild(script);
   setTimeout(function() {
@@ -1584,8 +1584,6 @@ if (anneeHeader) anneeHeader.textContent = '📅 Annee scolaire 2026-2027';
             if (montantDu && inscrit.solde === 0) montantDu.style.background = 'linear-gradient(135deg,#2E7D32,#388E3C)';
           }
         }
-const anneeHeader = document.getElementById('anneeHeader');
-          if (anneeHeader) anneeHeader.textContent = '📅 Annee scolaire 2026-2027';
         // Mettre à jour bloc paiement 2026-2027
         const pay2026 = document.getElementById('paiement2026Bloc');
         if (pay2026) {
@@ -1593,14 +1591,7 @@ const anneeHeader = document.getElementById('anneeHeader');
           pay2026.innerHTML = '<div class="paiement-bar ' + (inscrit.solde===0?'paiement-ok':'paiement-partiel') + '"><div class="pay-icon">' + (inscrit.solde===0?'&#10003;':'&#9888;') + '</div><div class="pay-text"><h4>Scolarite 2026-2027' + (inscrit.solde===0?' entierement payee':'') + '</h4><p class="pay-montant">Montant du : ' + (inscrit.du||0).toLocaleString("fr-FR") + ' F CFA</p><p class="pay-montant">Verse : ' + (inscrit.verse||0).toLocaleString("fr-FR") + ' F CFA</p>' + (inscrit.solde>0?'<p class="pay-montant c-rouge">Solde : ' + inscrit.solde.toLocaleString("fr-FR") + ' F CFA</p>':'<p class="pay-montant c-vert">Entierement paye</p>') + '</div></div>';
         }
         const hdrInfos = document.querySelector('.eleve-infos');
-        if (hdrInfos) hdrInfos.textContent = inscrit.classe + ' | ' + ((window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{}).nom||'');
-        // Mettre à jour l'année dans l'en-tête
-        const hdrAll = document.querySelectorAll('#mainHeader div');
-        hdrAll.forEach(function(d) {
-          if (d.textContent.indexOf('Annee scolaire') >= 0) {
-            d.textContent = '\uD83D\uDCC5 Annee scolaire 2026-2027';
-          }
-        });
+        if (hdrInfos && inscrit.verse > 0) hdrInfos.textContent = inscrit.classe + ' | ' + ((window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{}).nom||'');
         break;
       }
     }
