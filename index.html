@@ -624,10 +624,22 @@ function _formatDateHisto(v) {
   // Convertit une date sérielle Excel ou une chaîne en format dd/MM/yyyy
   if (!v) return '—';
   var s = String(v).trim();
-  // Déjà au format dd/MM/yyyy
-  if (/^\d{2}\/\d{2}\/\d{4}/.test(s)) return s.substring(0,10);
-  // Format dd/MM/yyyy HH:mm
-  if (/^\d{2}\/\d{2}\/\d{4} \d{2}:\d{2}/.test(s)) return s.substring(0,10);
+  // Format dd/MM/yyyy HH:mm ou dd/MM/yyyy
+  if (/^\d{2}\/\d{2}\/\d{4}/.test(s)) {
+    var parts = s.substring(0,10).split('/');
+    var j = parseInt(parts[0]), m = parseInt(parts[1]), a = parseInt(parts[2]);
+    // Si le "jour" > 12 c'est forcément MM/DD → inverser
+    if (m > 12) return parts[1].padStart(2,'0') + '/' + parts[0].padStart(2,'0') + '/' + parts[2];
+    // Sinon garder tel quel (déjà DD/MM/YYYY)
+    return s.substring(0,10);
+  }
+  // Format avec heure : dd/MM/yyyy HH:mm
+  if (/^\d{1,2}\/\d{1,2}\/\d{4} \d{2}:\d{2}/.test(s)) {
+    var parts = s.split(' ')[0].split('/');
+    var j = parseInt(parts[0]), m = parseInt(parts[1]);
+    if (m > 12) return parts[1].padStart(2,'0') + '/' + parts[0].padStart(2,'0') + '/' + parts[2];
+    return parts[0].padStart(2,'0') + '/' + parts[1].padStart(2,'0') + '/' + parts[2];
+  }
   // Nombre sériel Excel
   var n = parseFloat(s);
   if (!isNaN(n) && n > 40000) {
@@ -2039,6 +2051,19 @@ function _notifBienvenue(nomEleve) {
 function _lancerRecuGlobal() {
   var d = window._recuGlobalData;
   if (!d) { alert('Données non disponibles'); return; }
+  // Si inscrit 2026-2027 disponible — forcer les bonnes données
+  if (window._inscrit2026 && window._inscrit2026.verse > 0) {
+    d.annee     = '2026-2027';
+    d.classe    = window._inscrit2026.classe;
+    d.du        = window._inscrit2026.du || 0;
+    d.solde     = window._inscrit2026.solde || 0;
+    d.totalPaye = window._inscrit2026.verse || 0;
+    if (window._historique2026 && window._historique2026.length > 0) {
+      d.paiements = window._historique2026.map(function(p) {
+        return { date: p.dateAffichee, montant: p.montant, source: p.source, idTrans: p.idTrans||'' };
+      });
+    }
+  }
   genererRecuGlobal(d.nom, d.classe, d.matricule, d.du, d.totalPaye, d.solde, d.paiements, d.annee);
 }
 
