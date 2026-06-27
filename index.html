@@ -1923,7 +1923,7 @@ function genererRecuPDF(idTrans,date,nom,classe,matricule,montant,source){
   .montant .lbl{font-size:11px;color:#2E7D32;}
   .footer{background:#F5F5F5;padding:10px;text-align:center;font-size:10px;color:#888;border-top:1px solid #eee;}
   .valide{color:#2E7D32;font-weight:bold;font-size:13px;}
-  @media print{button{display:none!important;}body{background:white;padding:0;}}
+  @media print{button{display:none!important;}body{background:white;padding:0;}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;} }
   </style></head><body>
   <div style="text-align:center;margin-bottom:10px" class="no-print">
     <button onclick="window.print()" style="background:#1F4E79;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:bold;margin-right:8px">🖨 Imprimer / PDF</button>
