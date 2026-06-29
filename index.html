@@ -1592,6 +1592,7 @@ async function chargerInscription2026(eleve) {
           statut  : String(row[9]||'').trim().toUpperCase()
         };
 window._classe2026 = inscrit.classe;
+        eleve.classe = inscrit.classe;
         window._inscrit2026 = inscrit;
 
         // ── Mettre à jour le reçu global avec les données 2026-2027 ──
