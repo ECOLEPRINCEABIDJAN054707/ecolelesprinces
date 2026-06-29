@@ -392,6 +392,151 @@ table tr:nth-child(even){background:#F8FAFD}
   </div>
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+      <!-- COLLER CE BLOC DANS administration.html -->
+<!-- JUSTE AVANT la section Agenda (chercher : &#128197; Agenda) -->
+
+<div class="section">
+  <div class="sec-head sec-orange" onclick="toggleSec(this)">
+    <h3>🔄 Changer un enseignant</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="secChangerEns">
+
+    <div style="padding:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:0.78em;font-weight:700;color:var(--bleu);margin-bottom:10px">
+        ① Sélectionnez l'école et la classe
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">ÉCOLE *</label>
+          <select id="cens_ecole" onchange="cens_chargerClasses()"
+            style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none">
+            <option value="">-- Sélectionner --</option>
+            <option value="CPP LES PRINCES">CPP Les Princes d'Abidjan</option>
+            <option value="ACADEMIE">Académie Les Princes</option>
+            <option value="GUINGLO VILLE">CPP Guinglo Ville</option>
+            <option value="GNONTINROU">CPP Gnontinrou</option>
+            <option value="KOUTOUAN">CPP Koutouan</option>
+            <option value="SOAKPE">CPP Soakpé</option>
+            <option value="AKEIKOI 1">EPV Akeïkoï 1</option>
+            <option value="AKEIKOI 2">EPV Akeïkoï 2</option>
+            <option value="CPP PRO">CPP Professionnel</option>
+            <option value="CPP TECH">CPP Technique</option>
+            <option value="ETL PRINCES KOUIBLY">ETL Kouibly</option>
+            <option value="GS RITA ROSANE">GS Rita Rosane</option>
+            <option value="DABOU">CPP Dabou</option>
+            <option value="ANYAMA ADJAME">CPP Anyama</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">CLASSE *</label>
+          <select id="cens_classe" onchange="cens_chargerEDT()"
+            style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none">
+            <option value="">-- Choisir l'école d'abord --</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="cens_edtZone" style="display:none;padding:12px 14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:0.78em;font-weight:700;color:var(--bleu);margin-bottom:8px">
+        ② EDT actuel de la classe
+      </div>
+      <div style="overflow-x:auto">
+        <table id="cens_edtTable" style="width:100%;border-collapse:collapse;font-size:0.74em;min-width:400px">
+          <thead>
+            <tr style="background:var(--bleu);color:#fff">
+              <th style="padding:6px 8px;text-align:left">HORAIRE</th>
+              <th style="padding:6px 8px">LUNDI</th>
+              <th style="padding:6px 8px">MARDI</th>
+              <th style="padding:6px 8px">MERCREDI</th>
+              <th style="padding:6px 8px">JEUDI</th>
+              <th style="padding:6px 8px">VENDREDI</th>
+            </tr>
+          </thead>
+          <tbody id="cens_edtBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="cens_formZone" style="display:none;padding:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:0.78em;font-weight:700;color:var(--bleu);margin-bottom:10px">
+        ③ Sélectionnez l'enseignant à remplacer
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:0.7em;font-weight:700;color:#C62828;display:block;margin-bottom:3px">
+          ❌ ENSEIGNANT À REMPLACER *
+        </label>
+        <select id="cens_ancien"
+          style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none">
+          <option value="">-- Sélectionner --</option>
+        </select>
+      </div>
+      <div style="margin-bottom:10px">
+        <label style="font-size:0.7em;font-weight:700;color:#2E7D32;display:block;margin-bottom:3px">
+          ✅ NOUVEL ENSEIGNANT *
+        </label>
+        <select id="cens_nouveau"
+          style="width:100%;padding:8px;border:2px solid #2E7D32;border-radius:8px;font-size:0.82em;outline:none">
+          <option value="">-- Sélectionner --</option>
+        </select>
+        <div style="font-size:0.7em;color:var(--gris);margin-top:4px">
+          Ou saisissez un nom manuellement :
+        </div>
+        <input type="text" id="cens_nouveauManuel" placeholder="Ex: KOUAME JEAN"
+          oninput="this.value=this.value.toUpperCase()"
+          style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;margin-top:4px;box-sizing:border-box">
+      </div>
+
+      <div style="margin-bottom:10px">
+        <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">
+          MOTIF DU CHANGEMENT *
+        </label>
+        <select id="cens_motif"
+          style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none">
+          <option value="">-- Sélectionner --</option>
+          <option value="Maladie">Maladie</option>
+          <option value="Congé">Congé</option>
+          <option value="Démission">Démission</option>
+          <option value="Remplacement temporaire">Remplacement temporaire</option>
+          <option value="Réorganisation">Réorganisation pédagogique</option>
+          <option value="Surcharge">Surcharge de cours</option>
+          <option value="Autre">Autre</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:10px">
+        <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">
+          DATE D'EFFET
+        </label>
+        <input type="date" id="cens_dateEffet"
+          style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none">
+      </div>
+
+      <div id="cens_resume" style="display:none;background:#E3F2FD;border-left:3px solid var(--bleu);border-radius:6px;padding:10px;margin-bottom:10px;font-size:0.78em">
+        <div style="font-weight:700;color:var(--bleu);margin-bottom:6px">📋 Résumé du changement</div>
+        <div id="cens_resumeContent"></div>
+      </div>
+
+      <button onclick="cens_confirmer()"
+        style="width:100%;padding:11px;background:linear-gradient(135deg,#E65100,#BF360C);color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">
+        🔄 Appliquer le changement
+      </button>
+    </div>
+
+    <div id="cens_resultat" style="display:none;padding:12px 14px"></div>
+
+    <div style="padding:10px 14px">
+      <button onclick="cens_voirHistorique()"
+        style="width:100%;padding:9px;background:#F5F7FA;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-weight:600;cursor:pointer;color:var(--bleu)">
+        📜 Voir l'historique des changements
+      </button>
+      <div id="cens_historique" style="display:none;margin-top:10px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- FIN SECTION CHANGER ENSEIGNANT -->
+
       <h3>&#128197; Agenda</h3><span class="arr">&#9660;</span>
     </div>
     <div class="sec-body" id="dirAgendaBody"></div>
@@ -3514,6 +3659,315 @@ const cbName='mat_attr_'+Date.now();
     setTimeout(()=>{if(window[cbName]){delete window[cbName];msgDiv.textContent='❌ Délai dépassé.';resolve({success:false});}},15000);
     script.src=APPS_SCRIPT_URL+'?'+params.toString();
     document.body.appendChild(script);
+ // COLLER CE CODE DANS administration.html
+// JUSTE AVANT la dernière ligne : document.addEventListener('keypress'...)
+
+// URL du script CHANGER_ENSEIGNANT déployé
+// REMPLACER par l'URL réelle après déploiement
+const CHANGER_ENS_URL = 'https://script.google.com/macros/s/AKfycbxbNmzHoZEsPcx5ZJcnn0AlZ4K5rGcakVcldzSMaDGXi_bhJGPmGnXzI0U26D2ZXXc8/exec';
+
+var _cens_edtData = [];
+var _cens_enseignants = [];
+
+// ── Charger les classes EDT de l'école ──
+function cens_chargerClasses() {
+  var ecole = document.getElementById('cens_ecole').value;
+  if (!ecole) return;
+  var sel = document.getElementById('cens_classe');
+  sel.innerHTML = '<option value="">⏳ Chargement...</option>';
+  document.getElementById('cens_edtZone').style.display = 'none';
+  document.getElementById('cens_formZone').style.display = 'none';
+
+  var cbName = 'cens_classes_' + Date.now();
+  var script = document.createElement('script');
+  window[cbName] = function(data) {
+    delete window[cbName];
+    try { document.body.removeChild(script); } catch(e) {}
+    sel.innerHTML = '<option value="">-- Choisir une classe --</option>';
+    if (data.ok && data.classes.length) {
+      data.classes.sort().forEach(function(cl) {
+        sel.innerHTML += '<option value="' + cl + '">' + cl + '</option>';
+      });
+    } else {
+      sel.innerHTML = '<option value="">Aucun EDT trouvé</option>';
+    }
+  };
+  script.onerror = function() {
+    sel.innerHTML = '<option value="">Erreur chargement</option>';
+  };
+  script.src = CHANGER_ENS_URL + '?callback=' + cbName +
+    '&action=LISTER_CLASSES_EDT&ecole=' + encodeURIComponent(ecole);
+  document.body.appendChild(script);
+
+  // Charger aussi les enseignants de l'école
+  cens_chargerEnseignants(ecole);
+}
+
+// ── Charger les enseignants ──
+function cens_chargerEnseignants(ecole) {
+  var cbName = 'cens_ens_' + Date.now();
+  var script = document.createElement('script');
+  window[cbName] = function(data) {
+    delete window[cbName];
+    try { document.body.removeChild(script); } catch(e) {}
+    _cens_enseignants = data.ok ? data.enseignants : [];
+  };
+  script.onerror = function() { _cens_enseignants = []; };
+  script.src = CHANGER_ENS_URL + '?callback=' + cbName +
+    '&action=LIRE_ENSEIGNANTS&ecole=' + encodeURIComponent(ecole);
+  document.body.appendChild(script);
+}
+
+// ── Charger et afficher l'EDT de la classe ──
+function cens_chargerEDT() {
+  var ecole = document.getElementById('cens_ecole').value;
+  var classe = document.getElementById('cens_classe').value;
+  if (!ecole || !classe) return;
+
+  document.getElementById('cens_edtZone').style.display = 'none';
+  document.getElementById('cens_formZone').style.display = 'none';
+  document.getElementById('cens_edtBody').innerHTML =
+    '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--gris)">⏳ Chargement...</td></tr>';
+  document.getElementById('cens_edtZone').style.display = 'block';
+
+  var cbName = 'cens_edt_' + Date.now();
+  var script = document.createElement('script');
+  window[cbName] = function(data) {
+    delete window[cbName];
+    try { document.body.removeChild(script); } catch(e) {}
+    if (!data.ok) {
+      document.getElementById('cens_edtBody').innerHTML =
+        '<tr><td colspan="6" style="text-align:center;padding:12px;color:var(--rouge)">EDT introuvable</td></tr>';
+      return;
+    }
+    _cens_edtData = data.lignes;
+    cens_afficherEDT(data.lignes);
+    cens_peuplerSelects(data.lignes);
+    document.getElementById('cens_formZone').style.display = 'block';
+  };
+  script.onerror = function() {
+    document.getElementById('cens_edtBody').innerHTML =
+      '<tr><td colspan="6" style="text-align:center;padding:12px;color:var(--rouge)">Erreur réseau</td></tr>';
+  };
+  script.src = CHANGER_ENS_URL + '?callback=' + cbName +
+    '&action=LIRE_EDT&ecole=' + encodeURIComponent(ecole) +
+    '&classe=' + encodeURIComponent(classe);
+  document.body.appendChild(script);
+}
+
+// ── Afficher l'EDT dans le tableau ──
+function cens_afficherEDT(lignes) {
+  var tbody = document.getElementById('cens_edtBody');
+  tbody.innerHTML = '';
+  var COULEURS = {
+    'MATHS':'#E3F2FD','FRS':'#F3E5F5','ANG':'#E8F5E9','HG':'#FFF8E1',
+    'PC':'#FCE4EC','SVT':'#E0F2F1','LV2':'#FFF3E0','PHILO':'#EDE7F6',
+    'EPS':'#E8EAF6','EDHC':'#F9FBE7'
+  };
+  function getBg(val) {
+    if (!val) return '#fff';
+    var v = val.toUpperCase();
+    for (var k in COULEURS) {
+      if (v.indexOf(k) === 0) return COULEURS[k];
+    }
+    return '#F5F5F5';
+  }
+  lignes.forEach(function(l, idx) {
+    var isPause = l.creneau.indexOf('RÉCR') >= 0 || l.creneau.indexOf('DÉJEUNER') >= 0;
+    var tr = document.createElement('tr');
+    if (isPause) {
+      tr.innerHTML = '<td colspan="6" style="background:#F5F5F5;color:#757575;font-style:italic;padding:4px 8px;font-size:0.72em;text-align:center">' + l.creneau + '</td>';
+    } else {
+      var bg = idx % 2 === 0 ? '#fff' : '#F8FAFD';
+      tr.style.background = bg;
+      var jours = [l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi];
+      var cells = '<td style="padding:5px 8px;font-weight:700;font-size:0.72em;color:var(--bleu);white-space:nowrap">' + l.creneau + '</td>';
+      jours.forEach(function(val) {
+        var cbg = getBg(val);
+        cells += '<td style="padding:5px 6px;text-align:center;font-size:0.72em;background:' + cbg + ';cursor:pointer" onclick="cens_selectionnerCours(\'' + val.replace(/'/g, "\\'") + '\')">' + (val || '<span style="color:#ccc">—</span>') + '</td>';
+      });
+      tr.innerHTML = cells;
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+// ── Clic sur un cours → pré-sélectionner l'enseignant ──
+function cens_selectionnerCours(val) {
+  if (!val) return;
+  var parts = val.split('-');
+  if (parts.length < 2) return;
+  var nomProf = parts.slice(1).join('-').trim();
+  var sel = document.getElementById('cens_ancien');
+  for (var i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value.toUpperCase() === nomProf.toUpperCase()) {
+      sel.selectedIndex = i;
+      cens_majResume();
+      return;
+    }
+  }
+  // Si pas trouvé, sélectionner la valeur partielle
+  for (var i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value.toUpperCase().indexOf(nomProf.toUpperCase()) >= 0) {
+      sel.selectedIndex = i;
+      cens_majResume();
+      return;
+    }
+  }
+}
+
+// ── Peupler les selects enseignants ──
+function cens_peuplerSelects(lignes) {
+  // Extraire les profs depuis l'EDT
+  var profsEDT = new Set();
+  lignes.forEach(function(l) {
+    [l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi].forEach(function(val) {
+      if (val && val.indexOf('-') >= 0) {
+        var nom = val.split('-').slice(1).join('-').trim();
+        if (nom) profsEDT.add(nom);
+      }
+    });
+  });
+
+  var selAncien = document.getElementById('cens_ancien');
+  var selNouveau = document.getElementById('cens_nouveau');
+  selAncien.innerHTML = '<option value="">-- Sélectionner --</option>';
+  selNouveau.innerHTML = '<option value="">-- Sélectionner --</option>';
+
+  // Profs dans l'EDT → dans le select ancien
+  Array.from(profsEDT).sort().forEach(function(nom) {
+    selAncien.innerHTML += '<option value="' + nom + '">' + nom + '</option>';
+  });
+
+  // Tous les enseignants de l'école → dans le select nouveau
+  if (_cens_enseignants.length) {
+    _cens_enseignants.sort(function(a,b){return a.nom.localeCompare(b.nom);}).forEach(function(ens) {
+      selNouveau.innerHTML += '<option value="' + ens.nom + '">' + ens.nom + ' (' + ens.matiere + ')</option>';
+    });
+  } else {
+    // Fallback : même liste que l'ancien
+    Array.from(profsEDT).sort().forEach(function(nom) {
+      selNouveau.innerHTML += '<option value="' + nom + '">' + nom + '</option>';
+    });
+  }
+
+  selAncien.addEventListener('change', cens_majResume);
+  selNouveau.addEventListener('change', cens_majResume);
+  document.getElementById('cens_nouveauManuel').addEventListener('input', cens_majResume);
+
+  // Date par défaut = aujourd'hui
+  var today = new Date();
+  document.getElementById('cens_dateEffet').value =
+    today.getFullYear() + '-' +
+    String(today.getMonth()+1).padStart(2,'0') + '-' +
+    String(today.getDate()).padStart(2,'0');
+}
+
+// ── Mettre à jour le résumé ──
+function cens_majResume() {
+  var ancien  = document.getElementById('cens_ancien').value;
+  var nouveau = document.getElementById('cens_nouveauManuel').value.trim() ||
+                document.getElementById('cens_nouveau').value;
+  var ecole   = document.getElementById('cens_ecole').value;
+  var classe  = document.getElementById('cens_classe').value;
+  var resumeDiv = document.getElementById('cens_resume');
+  if (!ancien || !nouveau || !classe) { resumeDiv.style.display='none'; return; }
+  resumeDiv.style.display = 'block';
+  document.getElementById('cens_resumeContent').innerHTML =
+    '🏫 <b>' + ecole + '</b><br>' +
+    '📚 Classe : <b>' + classe + '</b><br>' +
+    '❌ Remplacer : <b style="color:#C62828">' + ancien + '</b><br>' +
+    '✅ Par : <b style="color:#2E7D32">' + nouveau + '</b>';
+}
+
+// ── Confirmer et appliquer ──
+async function cens_confirmer() {
+  var ecole   = document.getElementById('cens_ecole').value;
+  var classe  = document.getElementById('cens_classe').value;
+  var ancien  = document.getElementById('cens_ancien').value;
+  var nouveau = document.getElementById('cens_nouveauManuel').value.trim() ||
+                document.getElementById('cens_nouveau').value;
+  var motif   = document.getElementById('cens_motif').value;
+
+  if (!ecole || !classe || !ancien || !nouveau) {
+    showToast('Remplissez tous les champs obligatoires', 'error');
+    return;
+  }
+  if (!motif) { showToast('Sélectionnez un motif', 'error'); return; }
+
+  var resultatDiv = document.getElementById('cens_resultat');
+  resultatDiv.style.display = 'block';
+  resultatDiv.innerHTML = '<div style="text-align:center;padding:14px;color:var(--bleu)">⏳ Application du changement...</div>';
+
+  try {
+    var resp = await fetch(CHANGER_ENS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'CHANGER_ENSEIGNANT',
+        ecole: ecole, classe: classe,
+        ancienNom: ancien, nouveauNom: nouveau,
+        motif: motif
+      })
+    });
+
+    // no-cors → réponse opaque, on suppose succès
+    resultatDiv.innerHTML =
+      '<div style="background:#E8F5E9;border-left:3px solid #2E7D32;border-radius:8px;padding:12px;font-size:0.82em">' +
+      '<div style="font-weight:700;color:#2E7D32;margin-bottom:6px">✅ Changement appliqué !</div>' +
+      '<div>🏫 ' + ecole + ' — 📚 ' + classe + '</div>' +
+      '<div>❌ <b>' + ancien + '</b> → ✅ <b>' + nouveau + '</b></div>' +
+      '<div style="margin-top:6px;font-size:0.78em;color:var(--gris)">Motif : ' + motif + '</div>' +
+      '<div style="margin-top:8px;font-size:0.76em;color:var(--orange)">⚠️ Informez les deux enseignants du changement.</div>' +
+      '</div>';
+
+    showToast('✅ ' + ancien + ' remplacé par ' + nouveau, 'success');
+
+    // Recharger l'EDT
+    setTimeout(cens_chargerEDT, 2000);
+
+  } catch(e) {
+    resultatDiv.innerHTML =
+      '<div style="background:#FFEBEE;border-left:3px solid #C62828;border-radius:8px;padding:12px;font-size:0.82em;color:#C62828">' +
+      '❌ Erreur : ' + e.message + '</div>';
+  }
+}
+
+// ── Voir l'historique ──
+function cens_voirHistorique() {
+  var div = document.getElementById('cens_historique');
+  if (div.style.display === 'block') { div.style.display='none'; return; }
+  div.style.display = 'block';
+  div.innerHTML = '<div style="text-align:center;padding:10px;color:var(--gris);font-size:0.82em">⏳ Chargement...</div>';
+
+  // Lire depuis la Centrale (HISTORIQUE_CHANGEMENTS_EDT)
+  var cbName = 'cens_hist_' + Date.now();
+  var script = document.createElement('script');
+  window[cbName] = function(data) {
+    delete window[cbName];
+    try { document.body.removeChild(script); } catch(e) {}
+    if (!data.ok || !data.historique || !data.historique.length) {
+      div.innerHTML = '<p style="padding:10px;font-size:0.78em;color:var(--gris)">Aucun changement enregistré.</p>';
+      return;
+    }
+    var html = '';
+    data.historique.slice(-10).reverse().forEach(function(h) {
+      html += '<div style="padding:8px 10px;border-bottom:1px solid var(--border);font-size:0.76em">' +
+        '<div style="font-weight:700;color:var(--bleu)">' + h.ecole + ' — ' + h.classe + '</div>' +
+        '<div>❌ ' + h.ancien + ' → ✅ ' + h.nouveau + '</div>' +
+        '<div style="color:var(--gris);margin-top:2px">' + h.date + ' · ' + (h.motif||'') + '</div>' +
+        '</div>';
+    });
+    div.innerHTML = html;
+  };
+  script.onerror = function() { div.innerHTML = '<p style="color:var(--rouge);padding:10px;font-size:0.78em">Erreur chargement</p>'; };
+  script.src = CHANGER_ENS_URL + '?callback=' + cbName + '&action=HISTORIQUE';
+  document.body.appendChild(script);
+}
+
+// FIN CODE CHANGER ENSEIGNANT
+
   });
 } document.addEventListener('keypress',e=>{if(e.key==='Enter'&&document.getElementById('loginPage').style.display!=='none')login();});
 </script>
