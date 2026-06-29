@@ -1908,7 +1908,7 @@ function genererRecuPDF(idTrans,date,nom,classe,matricule,montant,source){
   const nomEcole=(window._eleveActuel&&window._eleveActuel.ecole&&window._eleveActuel.ecole.nom)?window._eleveActuel.ecole.nom:"Groupe Scolaire Les Princes d'Abidjan";
   // Utiliser la classe et l'année 2026-2027 si disponibles
   const classeAffichee = (window._inscrit2026 && window._inscrit2026.classe) ? window._inscrit2026.classe : classe;
-  const anneeAffichee = (window._recuGlobalData && window._recuGlobalData.annee) ? window._recuGlobalData.annee : ANNEE_SCOLAIRE_ACTIVE;
+  const anneeAffichee = '2026-2027';
   const w=window.open('','_blank');
   if(!w){alert('Autorisez les popups');return;}
   w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Reçu ${idTrans}</title>
