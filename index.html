@@ -1808,9 +1808,9 @@ async function chargerHistoriquePaiements(eleve){
     const mat=eleve.matricule.trim().toUpperCase();
 
     // ── DERNIER PAIEMENT — message rassurant ──
-    const dernier=paiements[paiements.length-1];
+    const paiementsReels=paiements.filter(function(p){return p.source!=='MIGRATION';}); const dernier=paiementsReels.length>0?paiementsReels[paiementsReels.length-1]:null;
     let htmlConfirm="";
-    if(dernier.montant>0){
+    if(dernier&&dernier.montant>0){
       htmlConfirm="<div style='background:#E8F5E9;border:1.5px solid #A5D6A7;border-radius:10px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;gap:10px;'>"
         +"<div style='font-size:1.8em;flex-shrink:0'>✅</div>"
         +"<div><div style='font-size:0.82em;font-weight:700;color:#2E7D32;margin-bottom:2px'>Votre paiement a bien été enregistré</div>"
