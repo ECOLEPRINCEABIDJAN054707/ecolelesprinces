@@ -1800,7 +1800,13 @@ async function chargerHistoriquePaiements(eleve){
       }catch(e2){}
     }
 
-    if(paiements.length===0){div.innerHTML="";return;}
+    // Si paiements 2026-2027 disponibles → les utiliser
+if(window._historique2026&&window._historique2026.length>0){
+  paiements=window._historique2026.map(function(p){
+    return{date:p.dateAffichee,montant:p.montant,source:p.source,idTrans:p.idTrans||'',nom:eleve.nom||'',classe:p.classe||eleve.classe||''};
+  });
+}
+if(paiements.length===0){div.innerHTML="";return;}
 
     const totalPaye=paiements.reduce((s,r)=>s+r.montant,0);
     const solde=parseFloat(eleve.solde)||0;
