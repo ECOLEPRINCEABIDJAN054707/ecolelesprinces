@@ -1879,7 +1879,7 @@ async function chargerHistoriquePaiements(eleve){
         +"<span style='font-size:0.68em;font-weight:700;padding:2px 8px;border-radius:10px;background:"+srcBg+";color:"+srcColor+"'>"+p.source+"</span>"
         +"<span style='font-size:0.78em;color:#555;'>"+p.date+"</span></div>"
         +"<div style='font-size:1em;font-weight:700;color:#2E7D32;'>+"+p.montant.toLocaleString('fr-FR')+" F</div></div>";
-      if(p.idTrans){
+      if(p.idTrans && p.source !== 'MIGRATION'){
         const idSafe=p.idTrans.replace(/'/g,"\\'");
         const dateSafe=p.date.replace(/'/g,"\\'");
         const nomSafe=(p.nom||'').replace(/'/g,"\\'");
