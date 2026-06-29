@@ -1039,7 +1039,7 @@ function afficherEspaceParent(eleve) {
     document.getElementById("sectionBulletinsMensuels").style.display = "none";
     afficherSectionBloquee(eleve, soldeParsed, verseParsed);
   }
-  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);
+  chargerFicheRenseignement(eleve); setTimeout(function(){ chargerEDT(eleve); }, 3000); chargerInscription2026(eleve);
   window._eleveActuel = eleve;
   document.getElementById("loginWrapper").style.display = "none";
   document.getElementById("parentSpace").style.display = "block";
