@@ -1971,7 +1971,7 @@ function genererRecuPDF(idTrans,date,nom,classe,matricule,montant,source){
 // ══════════════════════════════════════════════
 // CENTRE DE NOTIFICATIONS
 // ══════════════════════════════════════════════
-var _NOTIF_KEY = 'princes_notifs';
+function _getNotifKey(){var ec=JSON.parse(sessionStorage.getItem('eleveConnecte')||'{}');return 'princes_notifs_'+(ec.matricule||'default');}
 
 function _ajouterNotification(titre, message, type) {
   try {
@@ -1986,7 +1986,7 @@ function _ajouterNotification(titre, message, type) {
     });
     // Garder max 50 notifications
     if (notifs.length > 50) notifs = notifs.slice(0, 50);
-    localStorage.setItem(_NOTIF_KEY, JSON.stringify(notifs));
+    localStorage.setItem(_getNotifKey(), JSON.stringify(notifs));
     _mettreAJourBadge();
   } catch(e) {}
 }
@@ -2017,7 +2017,7 @@ function _marquerTousLus() {
   try {
     var notifs = _lireNotifications();
     notifs.forEach(function(n){ n.lu = true; });
-    localStorage.setItem(_NOTIF_KEY, JSON.stringify(notifs));
+    localStorage.setItem(_getNotifKey(), JSON.stringify(notifs));
     _mettreAJourBadge();
   } catch(e) {}
 }
