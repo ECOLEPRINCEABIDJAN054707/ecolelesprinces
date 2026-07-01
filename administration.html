@@ -3633,7 +3633,7 @@ async function attribuerMatriculeDir() {
   msgDiv.textContent='⏳ Attribution en cours...';
 
 const cbName='mat_attr_'+Date.now();
-  const params=new URLSearchParams({callback:cbName,action:'attribuerMatricule',ecoleCode:currentStaff.ecole,matricule,nom,prenom,classe,ddn,tel});
+  const params=new URLSearchParams({callback:cbName,action:'attribuerMatricule',ecoleCode:currentStaff.ecole,matricule,nom,prenom,classe,ddn,telPere:tel,telMere});
   return new Promise(resolve=>{
     const script=document.createElement('script');
     window[cbName]=result=>{
