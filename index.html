@@ -1046,6 +1046,7 @@ function afficherEspaceParent(eleve) {
   chargerFicheRenseignement(eleve); chargerInscription2026(eleve).then(function(){   if(window._classe2026) eleve.classe = window._classe2026;   chargerEDT(eleve); }); chargerInscription2026(eleve);
   window._eleveActuel = eleve;
   eleve._sheetsId2025 = eleve.sheetsId;
+  eleve._sheetsId2025 = eleve.sheetsId;
   document.getElementById("loginWrapper").style.display = "none";
   document.getElementById("parentSpace").style.display = "block";
   const sp = document.getElementById("sectionPublique"); if(sp) sp.style.display = "none";
