@@ -1736,12 +1736,17 @@ function _cardInscrit2026Partiel(inscrit, info, historique) {
         return '<div style="font-size:11px;color:#333;padding:3px 0;border-bottom:1px solid #BBDEFB;">• ' + _formatDateHisto(p.dateAffichee) + ' — <strong>' + montantNum.toLocaleString("fr-FR") + ' F CFA</strong> via ' + p.source + ' ✅</div>';
       }).join('') +
       '</div>' : '') +
-'<div style="background:#FFF8E1;border:2px solid #FF8F00;border-radius:8px;padding:12px;margin-bottom:10px;text-align:center;">' +
+(/EX\d$/.test((inscrit.classe||'').toUpperCase().replace(/\s+/g,'')) ?
+    '<div style="background:#E8F5E9;border:2px solid #2E7D32;border-radius:8px;padding:12px;margin-bottom:10px;text-align:center;">' +
+    '<div style="font-size:14px;font-weight:bold;color:#2E7D32;margin-bottom:6px;">✅ Classe déjà confirmée !</div>' +
+    '<div style="font-size:12px;color:#333;">Votre enfant est définitivement affecté(e) en <strong>' + inscrit.classe + '</strong>. Il ne reste qu\'à régler le solde restant pour finaliser l\'inscription.</div>' +
+    '</div>' :
+    '<div style="background:#FFF8E1;border:2px solid #FF8F00;border-radius:8px;padding:12px;margin-bottom:10px;text-align:center;">' +
     '<div style="font-size:14px;font-weight:bold;color:#E65100;margin-bottom:6px;">🏆 Les premières CLASSES sont pour les premiers parents ayant soldé !</div>' +
     '<div style="font-size:12px;font-weight:bold;color:#C62828;margin-bottom:6px;">💳 Payez votre solde restant maintenant pour connaître la classe exacte de votre enfant.</div>' +
     '<div style="font-size:11px;color:#555;margin-bottom:6px;">📌 EX1 → EX2 → EX3 selon l\'ordre d\'arrivée des paiements.</div>' +
     '<div style="font-size:11px;font-weight:bold;color:#C62828;">⚡ Classe attribuée IMMÉDIATEMENT après règlement complet<br>OU À PARTIR DU 25 AOÛT 2026</div>' +
-    '</div>' +
+    '</div>') +
     btnWave +
     '<div class="cpp-contact-block"><p style="color:#D4AF37;font-weight:bold;font-size:0.85em;margin-bottom:4px;">📞 Contact & Renseignements</p>' +
     '<p style="color:#fff;font-size:1em;font-weight:bold;">' + tel + '</p></div></div>';
