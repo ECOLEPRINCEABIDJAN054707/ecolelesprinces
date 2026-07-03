@@ -375,6 +375,17 @@ table tr:nth-child(even){background:#F8FAFD}
     <div class="sec-body" id="dirMsgBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement...</p></div>
   </div>
   <div class="section">
+    <div class="sec-head sec-emeraude open" onclick="toggleSec(this)">
+      <h3>&#128269; Rechercher un &eacute;l&egrave;ve</h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body open">
+      <div style="padding:12px 14px">
+        <input type="text" id="dirSearchInput" placeholder="Tapez un nom ou un matricule..." oninput="rechercherEleveDir()" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:0.88em;outline:none;font-family:DM Sans,sans-serif;box-sizing:border-box">
+      </div>
+      <div id="dirSearchResults"></div>
+    </div>
+  </div>
+  <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
       <h3>&#128424; Listes par niveau</h3><span class="arr">&#9660;</span>
     </div>
@@ -390,151 +401,8 @@ table tr:nth-child(even){background:#F8FAFD}
       </div>
     </div>
   </div>
- <div class="section">
-  <div class="sec-head sec-orange" onclick="toggleSec(this)">
-    <h3>🔄 Changer un enseignant</h3><span class="arr">▼</span>
-  </div>
-  <div class="sec-body" id="secChangerEns">
-
-    <div style="padding:14px;border-bottom:1px solid var(--border)">
-      <div style="font-size:0.78em;font-weight:700;color:var(--bleu);margin-bottom:10px">
-        ① Sélectionnez l'école et la classe
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-        <div>
-          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">ÉCOLE *</label>
-          <select id="cens_ecole" onchange="cens_chargerClasses()"
-            style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none">
-            <option value="">-- Sélectionner --</option>
-            <option value="CPP LES PRINCES">CPP Les Princes d'Abidjan</option>
-            <option value="ACADEMIE">Académie Les Princes</option>
-            <option value="GUINGLO VILLE">CPP Guinglo Ville</option>
-            <option value="GNONTINROU">CPP Gnontinrou</option>
-            <option value="KOUTOUAN">CPP Koutouan</option>
-            <option value="SOAKPE">CPP Soakpé</option>
-            <option value="AKEIKOI 1">EPV Akeïkoï 1</option>
-            <option value="AKEIKOI 2">EPV Akeïkoï 2</option>
-            <option value="CPP PRO">CPP Professionnel</option>
-            <option value="CPP TECH">CPP Technique</option>
-            <option value="ETL PRINCES KOUIBLY">ETL Kouibly</option>
-            <option value="GS RITA ROSANE">GS Rita Rosane</option>
-            <option value="DABOU">CPP Dabou</option>
-            <option value="ANYAMA ADJAME">CPP Anyama</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">CLASSE *</label>
-          <select id="cens_classe" onchange="cens_chargerEDT()"
-            style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none">
-            <option value="">-- Choisir l'école d'abord --</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div id="cens_edtZone" style="display:none;padding:12px 14px;border-bottom:1px solid var(--border)">
-      <div style="font-size:0.78em;font-weight:700;color:var(--bleu);margin-bottom:8px">
-        ② EDT actuel de la classe
-      </div>
-      <div style="overflow-x:auto">
-        <table id="cens_edtTable" style="width:100%;border-collapse:collapse;font-size:0.74em;min-width:400px">
-          <thead>
-            <tr style="background:var(--bleu);color:#fff">
-              <th style="padding:6px 8px;text-align:left">HORAIRE</th>
-              <th style="padding:6px 8px">LUNDI</th>
-              <th style="padding:6px 8px">MARDI</th>
-              <th style="padding:6px 8px">MERCREDI</th>
-              <th style="padding:6px 8px">JEUDI</th>
-              <th style="padding:6px 8px">VENDREDI</th>
-            </tr>
-          </thead>
-          <tbody id="cens_edtBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div id="cens_formZone" style="display:none;padding:14px;border-bottom:1px solid var(--border)">
-      <div style="font-size:0.78em;font-weight:700;color:var(--bleu);margin-bottom:10px">
-        ③ Sélectionnez l'enseignant à remplacer
-      </div>
-      <div style="margin-bottom:10px">
-        <label style="font-size:0.7em;font-weight:700;color:#C62828;display:block;margin-bottom:3px">
-          ❌ ENSEIGNANT À REMPLACER *
-        </label>
-        <select id="cens_ancien"
-          style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none">
-          <option value="">-- Sélectionner --</option>
-        </select>
-      </div>
-      <div style="margin-bottom:10px">
-        <label style="font-size:0.7em;font-weight:700;color:#2E7D32;display:block;margin-bottom:3px">
-          ✅ NOUVEL ENSEIGNANT *
-        </label>
-        <select id="cens_nouveau"
-          style="width:100%;padding:8px;border:2px solid #2E7D32;border-radius:8px;font-size:0.82em;outline:none">
-          <option value="">-- Sélectionner --</option>
-        </select>
-        <div style="font-size:0.7em;color:var(--gris);margin-top:4px">
-          Ou saisissez un nom manuellement :
-        </div>
-        <input type="text" id="cens_nouveauManuel" placeholder="Ex: KOUAME JEAN"
-          oninput="this.value=this.value.toUpperCase()"
-          style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;margin-top:4px;box-sizing:border-box">
-      </div>
-
-      <div style="margin-bottom:10px">
-        <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">
-          MOTIF DU CHANGEMENT *
-        </label>
-        <select id="cens_motif"
-          style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none">
-          <option value="">-- Sélectionner --</option>
-          <option value="Maladie">Maladie</option>
-          <option value="Congé">Congé</option>
-          <option value="Démission">Démission</option>
-          <option value="Remplacement temporaire">Remplacement temporaire</option>
-          <option value="Réorganisation">Réorganisation pédagogique</option>
-          <option value="Surcharge">Surcharge de cours</option>
-          <option value="Autre">Autre</option>
-        </select>
-      </div>
-
-      <div style="margin-bottom:10px">
-        <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">
-          DATE D'EFFET
-        </label>
-        <input type="date" id="cens_dateEffet"
-          style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none">
-      </div>
-
-      <div id="cens_resume" style="display:none;background:#E3F2FD;border-left:3px solid var(--bleu);border-radius:6px;padding:10px;margin-bottom:10px;font-size:0.78em">
-        <div style="font-weight:700;color:var(--bleu);margin-bottom:6px">📋 Résumé du changement</div>
-        <div id="cens_resumeContent"></div>
-      </div>
-
-      <button onclick="cens_confirmer()"
-        style="width:100%;padding:11px;background:linear-gradient(135deg,#E65100,#BF360C);color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">
-        🔄 Appliquer le changement
-      </button>
-    </div>
-
-    <div id="cens_resultat" style="display:none;padding:12px 14px"></div>
-
-    <div style="padding:10px 14px">
-      <button onclick="cens_voirHistorique()"
-        style="width:100%;padding:9px;background:#F5F7FA;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-weight:600;cursor:pointer;color:var(--bleu)">
-        📜 Voir l'historique des changements
-      </button>
-      <div id="cens_historique" style="display:none;margin-top:10px"></div>
-    </div>
-  </div>
-</div>
-
-<!-- FIN SECTION CHANGER ENSEIGNANT -->
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
-
-
       <h3>&#128197; Agenda</h3><span class="arr">&#9660;</span>
     </div>
     <div class="sec-body" id="dirAgendaBody"></div>
@@ -1236,12 +1104,12 @@ const ECOLE_LABELS={'CPP LES PRINCES':"CPP Les Princes d'Abidjan",'GUINGLO VILLE
 const MATIERES={'6EME':['Francais','Anglais','Histoire-Geographie','Mathematiques','Physique-Chimie','SVT','EDHC','EPS','Conduite'],'5EME':['Francais','Anglais','Histoire-Geographie','Mathematiques','Physique-Chimie','SVT','EDHC','EPS','Conduite'],'4EME':['Comp Francaise','Ex Orale','Orth Grammaire','Anglais','Espagnol','Allemand','Histoire-Geographie','Mathematiques','Physique-Chimie','SVT','EDHC','EPS','Conduite'],'3EME':['Comp Francaise','Ex Orale','Orth Grammaire','Anglais','Histoire-Geographie','Mathematiques','Physique-Chimie','SVT','EDHC','EPS','Arts','Conduite'],'2NDE':['Francais','Anglais','Histoire-Geographie','Mathematiques','Physique-Chimie','SVT','EDHC','EPS','Conduite'],'1ERE':['Francais','Anglais','Histoire-Geo','Philosophie','Mathematiques','Physique-Chimie','SVT','EPS','Conduite'],'TLE':['Francais','Anglais','Histoire-Geo','Philosophie','Mathematiques','Physique-Chimie','SVT','EPS','Conduite'],'TLE A2':['Francais','Anglais','Allemand','Espagnol','Histoire-Geographie','Philosophie','Mathematiques','SVT','EPS','Conduite'],'TLE D':['Francais','Anglais','Histoire-Geographie','Philosophie','Mathematiques','Physique-Chimie','SVT','EPS','Conduite'],'1ERE A2':['Francais','Anglais','Allemand','Espagnol','Histoire-Geographie','Philosophie','Mathematiques','SVT','EPS','Conduite'],'1ERE D':['Francais','Anglais','Histoire-Geographie','Philosophie','Mathematiques','Physique-Chimie','SVT','EPS','Conduite']};
 function getMatieres(cl){if(!cl)return MATIERES['6EME'];const c=cl.toUpperCase();if(c.includes('A2'))return MATIERES['TLE A2'];if(c.includes('TLE')||c.includes('TERM'))return MATIERES['TLE'];if(c.includes('1ERE')||c.includes('1ER'))return MATIERES['1ERE'];if(c.includes('2NDE'))return MATIERES['2NDE'];if(c.includes('3'))return MATIERES['3EME'];if(c.includes('4'))return MATIERES['4EME'];if(c.includes('5'))return MATIERES['5EME'];return MATIERES['6EME'];}
 const STAFF={
-  'DIRACAD001':{code:'657577',nom:'Directrice Academie',ecole:'ACADEMIE',profil:'DIR',type:'BOTH',label:'EPV Academie Les Princes'},
-  'DIRAKK1001':{code:'507343',nom:'KOKOBO Nina',ecole:'AKEIKOI 1',profil:'DIR',type:'BOTH',label:'EPV Les Princes Akekoi 1'},
-  'DIRAKK2001':{code:'541576',nom:'Directeur Akekoi 2',ecole:'AKEIKOI 2',profil:'DIR',type:'BOTH',label:'EPV Les Princes Akekoi 2'},
+  'DIRACAD001':{code:'657577',nom:'Directrice Academie',ecole:'ACADEMIE',profil:'DIR',type:'PRIM',label:'EPV Academie Les Princes'},
+  'DIRAKK1001':{code:'507343',nom:'KOKOBO Nina',ecole:'AKEIKOI 1',profil:'DIR',type:'PRIM',label:'EPV Les Princes Akekoi 1'},
+  'DIRAKK2001':{code:'541576',nom:'Directeur Akekoi 2',ecole:'AKEIKOI 2',profil:'DIR',type:'PRIM',label:'EPV Les Princes Akekoi 2'},
   'DIRCPP001':{code:'155812',nom:'Directeur CPP Les Princes',ecole:'CPP LES PRINCES',profil:'DIR',type:'SEC',label:"CPP Les Princes d'Abidjan"},
   'DIRSOAK001':{code:'352487',nom:'Directeur CPP Soakpe',ecole:'SOAKPE',profil:'DIR',type:'SEC',label:'CPP Les Princes de Soakpe'},
-  'DIRGUINGLO01':{code:'752618',nom:'Directeur Guinglo Ville',ecole:'GUINGLO VILLE',profil:'DIR',type:'BOTH',label:'CPP Les Princes de Guinglo Ville'},
+  'DIRGUINGLO01':{code:'752618',nom:'Directeur Guinglo Ville',ecole:'GUINGLO VILLE',profil:'DIR',type:'SEC',label:'CPP Les Princes de Guinglo Ville'},
   'DIRPRO001':{code:'492494',nom:'Directeur CPP Pro',ecole:'CPP PRO',profil:'DIR',type:'SEC',label:'CPP Professionnel'},
   'DIRTECH001':{code:'502107',nom:'Directeur CPP Tech',ecole:'CPP TECH',profil:'DIR',type:'SEC',label:'CPP Technique'},
   'DIRKOUIBLY01':{code:'816442',nom:'Directeur ETL Kouibly',ecole:'ETL PRINCES KOUIBLY',profil:'DIR',type:'SEC',label:'ETL Les Princes de Kouibly'},
@@ -1262,9 +1130,9 @@ const STAFF={
   'COMKOUIBLY01':{code:'489294',nom:'Comptable',ecole:'ETL PRINCES KOUIBLY',profil:'COM',type:'SEC',label:'ETL Les Princes de Kouibly'},
   'COMDABOU01':{code:'493900',nom:'Comptable',ecole:'CPP DABOU',profil:'COM',type:'BOTH',label:'CPP Les Princes de Dabou'},
   'COMANYAMA01':{code:'697382',nom:'Comptable',ecole:'CPP ANYAMA',profil:'COM',type:'BOTH',label:"CPP Les Princes d'Anyama"},
-  'COMACAD01':{code:'343277',nom:'Comptable',ecole:'ACADEMIE',profil:'COM',type:'BOTH',label:'EPV Academie Les Princes'},
-  'COMAKK101':{code:'168981',nom:'Comptable',ecole:'AKEIKOI 1',profil:'COM',ttype:'BOTH',label:'EPV Les Princes Akekoi 1'},
-  'COMAKK201':{code:'501284',nom:'Comptable',ecole:'AKEIKOI 2',profil:'COM',type:'BOTH',label:'EPV Les Princes Akekoi 2'},
+  'COMACAD01':{code:'343277',nom:'Comptable',ecole:'ACADEMIE',profil:'COM',type:'PRIM',label:'EPV Academie Les Princes'},
+  'COMAKK101':{code:'168981',nom:'Comptable',ecole:'AKEIKOI 1',profil:'COM',type:'PRIM',label:'EPV Les Princes Akekoi 1'},
+  'COMAKK201':{code:'501284',nom:'Comptable',ecole:'AKEIKOI 2',profil:'COM',type:'PRIM',label:'EPV Les Princes Akekoi 2'},
   'EDUCPP001'  :{code:'111001',nom:'GONDO GERVAIS',    ecole:'CPP LES PRINCES',profil:'EDU',type:'SEC',label:"CPP Les Princes d'Abidjan",classes:['4EME 3','4EME 4','4EME 5','4EME 6','4EME 7']},
   'EDUCPP002'  :{code:'111002',nom:'LAMIEN BERNADETTE',ecole:'CPP LES PRINCES',profil:'EDU',type:'SEC',label:"CPP Les Princes d'Abidjan",classes:['1ERE A2-2','1ERE A2-3','1ERE A2 EX','1ERE C EX1','1ERE D-1','1ERE D-2','TLE A2-2','TLE A2-3','TLE A2 EX','TLE D-1','TLE D-2','TLE D-3','TLE D-4']},
   'EDUCPP003'  :{code:'111003',nom:'YAO ABRAHAM',      ecole:'CPP LES PRINCES',profil:'EDU',type:'SEC',label:"CPP Les Princes d'Abidjan",classes:['2NDE A-1','2NDE A-2','2NDE C-2','2NDE C-3','2NDE C-4','2NDE C EX']},
@@ -1389,7 +1257,7 @@ function peuplerNiveaux(ecole) {
   }
 
   // PRIMAIRE — écoles avec primaire
-  var ecolesPrim = ['GS RITA ROSANE','GNONTINROU','AKEIKOI 1','AKEIKOI 2','ACADEMIE','KOUTOUAN','CPP DABOU','CPP ANYAMA','GUINGLO VILLE'];
+  var ecolesPrim = ['GS RITA ROSANE','GNONTINROU','AKEIKOI 1','AKEIKOI 2','ACADEMIE','KOUTOUAN','CPP DABOU','CPP ANYAMA'];
   if(ecolesPrim.indexOf(ecole) >= 0) {
     sel.innerHTML += '<optgroup label="─── Maternelle / Primaire ───">';
     ['PSA','MSA','GSA','CP1A','CP2A','CE1A','CE2A','CM1A','CM2A'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
@@ -1427,6 +1295,7 @@ function afficherDir(s){
   document.getElementById('dirAgendaBody').innerHTML=hag;
   if(!isPRIM)chargerPointage();
   chargerResultatsEtMessages(s.ecole,'DIR');
+  chargerSynthese(s.ecole).then(function(eleves){window._dirEleves=eleves||[];});
   document.getElementById('espaceDir').style.display='block';
   // Vérifier contacts manquants en arrière-plan
   setTimeout(function(){verifierContactsManquantsDir(s);}, 1500);
@@ -1617,6 +1486,33 @@ async function chargerSynthese(ecole){
       return{classe:String(row[0]||'').trim(),matricule:String(row[1]||'').trim(),nom:String(row[2]||'').trim(),sco,verse,solde,tel1:String(row[6]||'').trim(),tel2:String(row[7]||'').trim(),statut,decision:String(row[14]||'').trim(),moy,alerte:moy>0&&moy<5};
     });
   }catch(e){return null;}
+}
+function _normRechDir(s){return String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
+async function rechercherEleveDir(){
+  const input=document.getElementById('dirSearchInput');
+  const zone=document.getElementById('dirSearchResults');
+  const q=_normRechDir(input.value);
+  if(!q){zone.innerHTML='';return;}
+  // Si les données ne sont pas encore chargées (ecole pas encore repondu), on les charge a la volee
+  if(!window._dirEleves){
+    zone.innerHTML='<p style="padding:12px 14px;font-size:0.8em;color:var(--gris)">Chargement des donn&eacute;es...</p>';
+    window._dirEleves=await chargerSynthese(currentStaff.ecole)||[];
+  }
+  const resultats=window._dirEleves.filter(e=>_normRechDir(e.nom).includes(q)||_normRechDir(e.matricule).includes(q));
+  if(!resultats.length){zone.innerHTML='<p style="padding:12px 14px;font-size:0.82em;color:var(--gris)">Aucun &eacute;l&egrave;ve trouv&eacute;.</p>';return;}
+  let h='';
+  resultats.slice(0,30).forEach(e=>{
+    const bg=e.statut==='SOLDE'?'rgba(46,125,50,0.12)':e.statut==='PARTIEL'?'rgba(230,81,0,0.12)':'rgba(198,40,40,0.12)';
+    const tc=e.statut==='SOLDE'?'#2E7D32':e.statut==='PARTIEL'?'#E65100':'#C62828';
+    const badge=e.statut==='SOLDE'?'<span class="bdg bg-vert">Solde</span>':e.statut==='PARTIEL'?'<span class="bdg bg-orange">Partiel</span>':'<span class="bdg bg-rouge">Impaye</span>';
+    const tel=e.tel1||e.tel2||'';
+    h+='<div class="item"><div class="item-av" style="background:'+bg+';color:'+tc+'">'+(e.nom.charAt(0)||'?')+'</div>'
+      +'<div class="item-info"><div class="item-nom">'+e.nom+' '+badge+'</div>'
+      +'<div class="item-meta">'+e.classe+' &middot; '+e.matricule+(tel?' &middot; '+tel:'')+'</div></div>'
+      +'<div class="item-val"><div class="val" style="color:'+tc+'">'+(e.solde>0?e.solde.toLocaleString('fr-FR')+' F':'OK')+'</div></div></div>';
+  });
+  if(resultats.length>30)h+='<p style="padding:8px 14px;font-size:0.72em;color:var(--gris);text-align:center">+'+(resultats.length-30)+' autre(s) resultat(s) - affinez votre recherche</p>';
+  zone.innerHTML=h;
 }
 function afficherCom(s){
   document.getElementById('comAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
@@ -2637,7 +2533,27 @@ function _parseEleves(dataRows,iMat,iNom,iPrenom,iDu,iVerse,iSolde,iTel1,iTel2,i
   return dataRows.filter(function(row){return(iNom>=0?String(row[iNom]||'').trim().length>1:false)||(iMat>=0?String(row[iMat]||'').trim().length>1:false);}).map(function(row){var nomVal=iNom>=0?String(row[iNom]||'').trim():'';var prenomVal=iPrenom>=0?String(row[iPrenom]||'').trim():'';var nomComplet=prenomVal&&!nomVal.includes(prenomVal)?nomVal+' '+prenomVal:nomVal;var du=iDu>=0?parseFloat(String(row[iDu]||'').replace(/\s/g,''))||0:0;var verse=iVerse>=0?parseFloat(String(row[iVerse]||'').replace(/\s/g,''))||0:0;var solde=iSolde>=0?parseFloat(String(row[iSolde]||'').replace(/\s/g,''))||0:du-verse;function nTel(t){t=(t+'').replace(/[^0-9+]/g,'');return t.length>=8?t:'';}return{matricule:iMat>=0?String(row[iMat]||'').trim():'',nom_prenom:nomComplet,montant_du:du,versement:verse,solde:solde,tel1:nTel(iTel1>=0?row[iTel1]||'':''),tel2:nTel(iTel2>=0?row[iTel2]||'':''),tel3:nTel(iTel3>=0?row[iTel3]||'':''),statut:solde<=0?'SOLDE':verse===0?'IMPAYE':'PARTIEL'};});
 }
 
-async function listerOnglets(sheetsId){try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'?key='+API_KEY+'&fields=sheets.properties.title';var r=await fetch(url);var data=await r.json();if(!data.sheets)return[];var isPRIM=currentStaff&&currentStaff.type==='PRIM';var tous=data.sheets.map(function(s){return s.properties.title;}).filter(estOngletValide);if(isPRIM){return tous.filter(function(t){return/^(CP|CE|CM|GS|MS|PS|TPS|SIL|CI|MATERNELLE)/i.test(t);});}return tous.filter(function(t){return/^(6|5|4|3|2NDE|1ERE|TLE|BT)/i.test(t);});}catch(e){return[];}}
+async function listerOnglets(sheetsId){
+  try{
+    var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'?key='+API_KEY+'&fields=sheets.properties.title';
+    var r=await fetch(url);
+    var data=await r.json();
+    if(!data.sheets)return[];
+    var tous=data.sheets.map(function(s){return s.properties.title;}).filter(estOngletValide);
+    var regexSEC=/^(6|5|4|3|2NDE|1ERE|TLE|BT)/i;
+    var regexPRIM=/^(CP|CE|CM|GS|MS|PS|TPS|SIL|CI|MATERNELLE)/i;
+    var classesSEC=tous.filter(function(t){return regexSEC.test(t);});
+    var classesPRIM=tous.filter(function(t){return regexPRIM.test(t);});
+    var isPRIM=currentStaff&&currentStaff.type==='PRIM';
+    var isSEC=currentStaff&&currentStaff.type==='SEC';
+    if(isPRIM&&classesPRIM.length)return classesPRIM;
+    if(isSEC&&classesSEC.length)return classesSEC;
+    if(classesSEC.length&&classesPRIM.length)return classesSEC.concat(classesPRIM);
+    if(classesSEC.length)return classesSEC;
+    if(classesPRIM.length)return classesPRIM;
+    return tous;
+  }catch(e){return[];}
+}
 
 async function ouvrirListesV9(profil){
   var ecole=currentStaff?currentStaff.ecole:null;var label=currentStaff?currentStaff.label:'';
@@ -2658,16 +2574,42 @@ async function ouvrirListesV9(profil){
 
 function afficherModaleListesV9(ctx){
   var old=document.getElementById('modaleListesV9');if(old)old.remove();
-  var TC={c:{lb:'Scolarite complete',cd:'SCOLARITE'},r:{lb:'En retard',cd:'ENRETARD'},a:{lb:'A jour / Soldes',cd:'AJOUR'},l:{lb:'Liste + contacts',cd:'SIMPLE'},v:{lb:'Liste vierge',cd:'VIERGE'},b:{lb:'Absences + contacts',cd:'ABSENCES'}};
+  var TC={c:{lb:'Scolarite complete',cd:'SCOLARITE'},r:{lb:'En retard',cd:'ENRETARD'},a:{lb:'A jour / Soldes',cd:'AJOUR'},s:{lb:'Sans acces',cd:'SANSACCES'},l:{lb:'Liste + contacts',cd:'SIMPLE'},v:{lb:'Liste vierge',cd:'VIERGE'},b:{lb:'Absences + contacts',cd:'ABSENCES'}};
   var m=document.createElement('div');m.id='modaleListesV9';m.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9990;display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;padding:10px';
-  var types_html='';Object.keys(TC).forEach(function(k){var colors={c:'#1F4E79',r:'#C62828',a:'#2E7D32',l:'#4A148C',v:'#00695C',b:'#37474F'};types_html+='<label style="display:flex;align-items:center;gap:6px;padding:7px 10px;border:2px solid #D6E4F0;border-radius:6px;cursor:pointer;font-size:0.78em;font-weight:700;background:#fff"><input type="checkbox" id="lt_'+k+'" '+(k==='c'||k==='r'?'checked':'')+'> <span style="color:'+colors[k]+'">'+TC[k].lb+'</span></label>';});
-  var niveaux_html='';ctx.keys.forEach(function(niv){var nb=ctx.niveaux[niv].length;var nid='niv_'+niv.replace(/[^A-Z0-9]/gi,'_');niveaux_html+='<label style="display:flex;align-items:center;gap:6px;padding:7px 10px;border:2px solid #C8E6C9;border-radius:6px;cursor:pointer;font-size:0.78em;font-weight:700;background:#fff" id="'+nid+'"><input type="checkbox" id="cb_'+nid+'"> <span>'+niv+' ('+nb+')</span></label>';});
-  var classes_html='';ctx.onglets.forEach(function(cl){classes_html+='<button id="btn_cl_'+cl.replace(/[^A-Z0-9]/gi,'_')+'" data-classe="'+cl+'" onclick="genPDFClasseBtn(this)" style="padding:8px 6px;border:2px solid #D6E4F0;border-radius:6px;font-size:0.74em;font-weight:700;cursor:pointer;background:#fff;text-align:left"><b>'+cl+'</b><br><small style="color:#888">PDF</small></button>';});
-  m.innerHTML='<div style="background:#fff;border-radius:12px;width:100%;max-width:600px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.3)"><div style="background:#1F4E79;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center"><span style="font-weight:700;font-size:0.95em">Listes — '+ctx.label+'</span><button onclick="fermerModale()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:20px;padding:4px 10px;cursor:pointer">✕</button></div><div style="padding:12px;border-bottom:1px solid #E0E4EF"><p style="font-size:0.74em;font-weight:700;color:var(--bleu);margin-bottom:8px;text-transform:uppercase">Types de listes</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'+types_html+'</div></div><div style="padding:12px;border-bottom:1px solid #E0E4EF"><p style="font-size:0.74em;font-weight:700;color:var(--bleu);margin-bottom:6px;text-transform:uppercase">PDF par classe</p><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">'+classes_html+'</div></div><div style="padding:12px"><p style="font-size:0.74em;font-weight:700;color:#2E7D32;margin-bottom:6px;text-transform:uppercase">PDF groupe par niveau</p><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">'+niveaux_html+'</div><div style="display:flex;gap:6px;margin-bottom:8px"><button onclick="toutCocherNiv(true)" style="flex:1;padding:7px;border:1.5px solid #2E7D32;background:#fff;color:#2E7D32;border-radius:6px;font-size:0.76em;font-weight:700;cursor:pointer">Tout cocher</button><button onclick="toutCocherNiv(false)" style="flex:1;padding:7px;border:1.5px solid #C62828;background:#fff;color:#C62828;border-radius:6px;font-size:0.76em;font-weight:700;cursor:pointer">Tout decocher</button></div><div id="progListes" style="display:none;padding:8px;background:#E3F2FD;border-radius:6px;font-size:0.78em;color:var(--bleu);font-weight:700;margin-bottom:8px">Chargement...</div><button onclick="genPDFGroupe()" style="width:100%;padding:11px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.84em;cursor:pointer">Generer PDF groupe par niveau</button></div></div>';
+  var colors={c:'#1F4E79',r:'#C62828',a:'#2E7D32',s:'#B8860B',l:'#4A148C',v:'#00695C',b:'#37474F'};
+  var types_html='';Object.keys(TC).forEach(function(k){types_html+='<label style="display:flex;align-items:center;gap:6px;padding:7px 10px;border:2px solid #D6E4F0;border-radius:6px;cursor:pointer;font-size:0.78em;font-weight:700;background:#fff"><input type="checkbox" id="lt_'+k+'" '+(k==='c'||k==='r'?'checked':'')+'> <span style="color:'+colors[k]+'">'+TC[k].lb+'</span></label>';});
+  var opts='<option value="ALL">Toute l\'ecole ('+ctx.onglets.length+' classes)</option>';
+  ctx.keys.forEach(function(niv){var nb=ctx.niveaux[niv].length;opts+='<option value="'+niv+'">'+niv+' ('+nb+' classe'+(nb>1?'s':'')+')</option>';});
+  var classes_cb_html='';ctx.onglets.forEach(function(cl){var id=cl.replace(/[^A-Z0-9]/gi,'_');classes_cb_html+='<label id="ni_'+id+'" style="display:flex;align-items:center;gap:6px;padding:8px;border:2px solid #C8E6C9;border-radius:6px;cursor:pointer;font-size:0.76em;font-weight:700;background:#fff"><input type="checkbox" id="cb_'+id+'" onchange="toggleClasseM2(this,\''+id+'\')"> <span><b>'+cl+'</b></span></label>';});
+  m.innerHTML='<div style="background:#fff;border-radius:12px;width:100%;max-width:620px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-height:92vh;display:flex;flex-direction:column"><div style="background:#1F4E79;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0"><span style="font-weight:700;font-size:0.95em">Listes par niveau — '+ctx.label+'</span><button onclick="fermerModale()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:20px;padding:4px 10px;cursor:pointer">✕</button></div><div style="overflow-y:auto;padding:0">'
+    +'<div style="padding:12px;border-bottom:1px solid #E0E4EF"><p style="font-size:0.74em;font-weight:700;color:var(--bleu);margin-bottom:8px;text-transform:uppercase">Types de listes</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'+types_html+'</div></div>'
+    +'<div style="padding:12px;border-bottom:1px solid #E0E4EF"><p style="font-size:0.74em;font-weight:700;color:var(--bleu);margin-bottom:6px;text-transform:uppercase">Mode 1 — PDF par classe individuelle</p><div style="font-size:0.74em;color:#555;margin-bottom:8px">Choisir le niveau puis cliquer sur chaque classe pour son PDF</div><select id="modeUnFiltre" onchange="majInfoModeUn()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;margin-bottom:8px">'+opts+'</select><div id="modeUnInfo" style="background:#E3F2FD;color:var(--bleu);border-radius:6px;padding:7px 10px;font-size:0.76em;font-weight:700;margin-bottom:8px">Toute l\'ecole — '+ctx.onglets.length+' classes</div><button onclick="afficherClassesModeUn()" style="width:100%;padding:10px;background:#1F4E79;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.82em;cursor:pointer">Afficher les classes</button><div id="modeUnGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px"></div></div>'
+    +'<div style="padding:12px"><p style="font-size:0.74em;font-weight:700;color:#2E7D32;margin-bottom:6px;text-transform:uppercase">Mode 2 — PDF groupe par classe</p><div style="font-size:0.74em;color:#555;margin-bottom:8px">Cochez les classes a inclure dans le PDF groupe</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:220px;overflow-y:auto;padding-right:4px">'+classes_cb_html+'</div><div style="display:flex;gap:6px;margin:8px 0"><button onclick="toutCocherClasses(true)" style="flex:1;padding:7px;border:1.5px solid #2E7D32;background:#fff;color:#2E7D32;border-radius:6px;font-size:0.76em;font-weight:700;cursor:pointer">Tout cocher</button><button onclick="toutCocherClasses(false)" style="flex:1;padding:7px;border:1.5px solid #C62828;background:#fff;color:#C62828;border-radius:6px;font-size:0.76em;font-weight:700;cursor:pointer">Tout decocher</button></div><div id="progListes" style="display:none;padding:8px;background:#E3F2FD;border-radius:6px;font-size:0.78em;color:var(--bleu);font-weight:700;margin-bottom:8px">Chargement...</div><button onclick="genPDFGroupe()" style="width:100%;padding:11px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.84em;cursor:pointer">Generer PDF groupe</button></div>'
+    +'</div></div>';
   document.body.appendChild(m);window._listesCtx=ctx;window._listesTC=TC;window._listesCACHE=window._listesCACHE||{};
 }
 
-function toutCocherNiv(val){if(!window._listesCtx)return;window._listesCtx.keys.forEach(function(niv){var nid='niv_'+niv.replace(/[^A-Z0-9]/gi,'_');var cb=document.getElementById('cb_'+nid);var lbl=document.getElementById(nid);if(cb)cb.checked=val;if(lbl)lbl.style.background=val?'#E8F5E9':'#fff';});}
+function majInfoModeUn(){
+  var ctx=window._listesCtx;if(!ctx)return;
+  var v=document.getElementById('modeUnFiltre').value;
+  var cl=v==='ALL'?ctx.onglets:(ctx.niveaux[v]||[]);
+  document.getElementById('modeUnInfo').textContent=v==='ALL'?("Toute l'ecole — "+cl.length+" classes"):("Niveau "+v+" — "+cl.join(', '));
+  document.getElementById('modeUnGrid').innerHTML='';
+}
+
+function afficherClassesModeUn(){
+  var ctx=window._listesCtx;if(!ctx)return;
+  var v=document.getElementById('modeUnFiltre').value;
+  var classes=v==='ALL'?ctx.onglets:(ctx.niveaux[v]||[]);
+  var grid=document.getElementById('modeUnGrid');
+  grid.innerHTML=classes.map(function(cl){return '<button id="btn_cl_'+cl.replace(/[^A-Z0-9]/gi,'_')+'" data-classe="'+cl+'" onclick="genPDFClasseBtn(this)" style="padding:8px 6px;border:2px solid #D6E4F0;border-radius:6px;font-size:0.74em;font-weight:700;cursor:pointer;background:#fff;text-align:left"><b>'+cl+'</b><br><small style="color:#888">PDF</small></button>';}).join('');
+}
+
+function toggleClasseM2(cb,id){var lbl=document.getElementById('ni_'+id);if(lbl)lbl.style.background=cb.checked?'#E8F5E9':'#fff';}
+function toutCocherClasses(val){
+  var ctx=window._listesCtx;if(!ctx)return;
+  ctx.onglets.forEach(function(cl){var id=cl.replace(/[^A-Z0-9]/gi,'_');var cb=document.getElementById('cb_'+id);var lbl=document.getElementById('ni_'+id);if(cb)cb.checked=val;if(lbl)lbl.style.background=val?'#E8F5E9':'#fff';});
+}
 function getTypesCoches(){var TC=window._listesTC||{};return Object.keys(TC).filter(function(k){var el=document.getElementById('lt_'+k);return el&&el.checked;});}
 function fermerModale(){var m=document.getElementById('modaleListesV9');if(m)m.remove();}
 function genPDFClasseBtn(btn){var nomClasse=btn.getAttribute('data-classe');if(nomClasse)genPDFClasse(nomClasse);}
@@ -2684,17 +2626,18 @@ async function genPDFClasse(nomClasse){
 
 async function genPDFGroupe(){
   var ctx=window._listesCtx;if(!ctx)return;var types=getTypesCoches();if(!types.length){showToast('Cochez au moins un type','error');return;}
-  var niveaux_coches=ctx.keys.filter(function(niv){var cb=document.getElementById('cb_niv_'+niv.replace(/[^A-Z0-9]/gi,'_'));return cb&&cb.checked;});if(!niveaux_coches.length){showToast('Cochez au moins un niveau','error');return;}
-  var a_charger=[];niveaux_coches.forEach(function(niv){(ctx.niveaux[niv]||[]).forEach(function(cl){if(a_charger.indexOf(cl)===-1)a_charger.push(cl);});});
+  var classes_cochees=ctx.onglets.filter(function(cl){var cb=document.getElementById('cb_'+cl.replace(/[^A-Z0-9]/gi,'_'));return cb&&cb.checked;});
+  if(!classes_cochees.length){showToast('Cochez au moins une classe','error');return;}
   var prog=document.getElementById('progListes');if(prog)prog.style.display='block';
-  for(var i=0;i<a_charger.length;i++){var cl=a_charger[i];if(prog)prog.textContent='Chargement '+(i+1)+'/'+a_charger.length+'...';if(!window._listesCACHE[cl])window._listesCACHE[cl]=await lireOngletClasse(ctx.sheetsId,cl);}
+  for(var i=0;i<classes_cochees.length;i++){var cl=classes_cochees[i];if(prog)prog.textContent='Chargement '+(i+1)+'/'+classes_cochees.length+'...';if(!window._listesCACHE[cl])window._listesCACHE[cl]=await lireOngletClasse(ctx.sheetsId,cl);}
   if(prog)prog.style.display='none';
   var d=new Date(),dd=String(d.getDate()).padStart(2,'0')+String(d.getMonth()+1).padStart(2,'0')+d.getFullYear();var ne=ctx.label.replace(/[^A-Z0-9]/gi,'_').toUpperCase().substring(0,15);
-  types.forEach(function(k){var classes_chargees=[];niveaux_coches.forEach(function(niv){(ctx.niveaux[niv]||[]).forEach(function(cl){if(window._listesCACHE[cl])classes_chargees.push(cl);});});var nf=ne+'_'+window._listesTC[k].cd+'_GROUPE_'+dd;var html=mkDocGroupeV9(classes_chargees,k,nf,ctx.label);var blob=new Blob([html],{type:'text/html'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},5000);});
+  types.forEach(function(k){var nf=ne+'_'+window._listesTC[k].cd+'_GROUPE_'+dd;var html=mkDocGroupeV9(classes_cochees,k,nf,ctx.label);var blob=new Blob([html],{type:'text/html'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},5000);});
 }
 
 var SV9={c:"text-align:center;font-size:12px;border:1.5px solid #333;padding:4px;",m:"font-weight:bold;font-size:12px;border:1.5px solid #333;padding:4px;color:#1F4E79;",b:"font-weight:bold;font-size:12px;border:1.5px solid #333;padding:4px;",r:"text-align:right;font-weight:bold;font-size:12px;border:1.5px solid #333;padding:4px;",e:"border:1.5px solid #333;padding:4px;height:18px;"};
-function fltV9(el,k){if(!el)return[];if(k==='c'||k==='l'||k==='v'||k==='b')return el;if(k==='r')return el.filter(function(e){return Number(e.solde)>0;});if(k==='a')return el.filter(function(e){return Number(e.solde)<=0;});return el;}
+var SEUIL_ACCES_RATIO=0.3; // seuil minimum de versement (30% du montant du) pour l'acces "Sans acces" -- ajustez si besoin
+function fltV9(el,k){if(!el)return[];if(k==='c'||k==='l'||k==='v'||k==='b')return el;if(k==='r')return el.filter(function(e){return Number(e.solde)>0;});if(k==='a')return el.filter(function(e){return Number(e.solde)<=0;});if(k==='s')return el.filter(function(e){var du=Number(e.montant_du)||0;return du>0&&Number(e.versement)<du*SEUIL_ACCES_RATIO;});return el;}
 function fnV9(n){return Number(n||0).toLocaleString('fr-FR')+' F';}
 function smV9(el,f){return el.reduce(function(s,e){return s+Number(e[f]||0);},0);}
 function ctV9(e){var n=[];if(e.tel1)n.push(e.tel1);if(e.tel2)n.push(e.tel2);if(e.tel3)n.push(e.tel3);return n.join(' / ')||'-';}
@@ -3541,7 +3484,6 @@ function afficherListeContactsManquants(liste){
 }
 // ══ MATRICULES PRIMAIRE ══
 const SHEETS_IDS_PRIMAIRE = {
-  'GUINGLO VILLE':  '1B_ynuBLsVJbTzjtyezraayR813stEuPQm3GGtatuRD8',
   'GS RITA ROSANE': '1DARvq_r4K3ttj5c51y1M6M4wxSTsADP7kGcq1fTPpZQ',
   'GNONTINROU':     '1izyFW1pksAY5tHc-Y6TqsvcH3GMb29dz6NGyctW9M1M',
   'CPP DABOU':          '1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA',
@@ -3633,7 +3575,7 @@ async function attribuerMatriculeDir() {
   msgDiv.textContent='⏳ Attribution en cours...';
 
 const cbName='mat_attr_'+Date.now();
-  const params=new URLSearchParams({callback:cbName,action:'attribuerMatricule',ecoleCode:currentStaff.ecole,matricule,nom,prenom,classe,ddn,telPere:tel,telMere});
+  const params=new URLSearchParams({callback:cbName,action:'attribuerMatricule',ecoleCode:currentStaff.ecole,matricule,nom,prenom,classe,ddn,tel});
   return new Promise(resolve=>{
     const script=document.createElement('script');
     window[cbName]=result=>{
@@ -3658,315 +3600,6 @@ const cbName='mat_attr_'+Date.now();
     setTimeout(()=>{if(window[cbName]){delete window[cbName];msgDiv.textContent='❌ Délai dépassé.';resolve({success:false});}},15000);
     script.src=APPS_SCRIPT_URL+'?'+params.toString();
     document.body.appendChild(script);
- // COLLER CE CODE DANS administration.html
-// JUSTE AVANT la dernière ligne : document.addEventListener('keypress'...)
-
-// URL du script CHANGER_ENSEIGNANT déployé
-// REMPLACER par l'URL réelle après déploiement
-const CHANGER_ENS_URL = 'https://script.google.com/macros/s/AKfycbxbNmzHoZEsPcx5ZJcnn0AlZ4K5rGcakVcldzSMaDGXi_bhJGPmGnXzI0U26D2ZXXc8/exec';
-
-var _cens_edtData = [];
-var _cens_enseignants = [];
-
-// ── Charger les classes EDT de l'école ──
-function cens_chargerClasses() {
-  var ecole = document.getElementById('cens_ecole').value;
-  if (!ecole) return;
-  var sel = document.getElementById('cens_classe');
-  sel.innerHTML = '<option value="">⏳ Chargement...</option>';
-  document.getElementById('cens_edtZone').style.display = 'none';
-  document.getElementById('cens_formZone').style.display = 'none';
-
-  var cbName = 'cens_classes_' + Date.now();
-  var script = document.createElement('script');
-  window[cbName] = function(data) {
-    delete window[cbName];
-    try { document.body.removeChild(script); } catch(e) {}
-    sel.innerHTML = '<option value="">-- Choisir une classe --</option>';
-    if (data.ok && data.classes.length) {
-      data.classes.sort().forEach(function(cl) {
-        sel.innerHTML += '<option value="' + cl + '">' + cl + '</option>';
-      });
-    } else {
-      sel.innerHTML = '<option value="">Aucun EDT trouvé</option>';
-    }
-  };
-  script.onerror = function() {
-    sel.innerHTML = '<option value="">Erreur chargement</option>';
-  };
-  script.src = CHANGER_ENS_URL + '?callback=' + cbName +
-    '&action=LISTER_CLASSES_EDT&ecole=' + encodeURIComponent(ecole);
-  document.body.appendChild(script);
-
-  // Charger aussi les enseignants de l'école
-  cens_chargerEnseignants(ecole);
-}
-
-// ── Charger les enseignants ──
-function cens_chargerEnseignants(ecole) {
-  var cbName = 'cens_ens_' + Date.now();
-  var script = document.createElement('script');
-  window[cbName] = function(data) {
-    delete window[cbName];
-    try { document.body.removeChild(script); } catch(e) {}
-    _cens_enseignants = data.ok ? data.enseignants : [];
-  };
-  script.onerror = function() { _cens_enseignants = []; };
-  script.src = CHANGER_ENS_URL + '?callback=' + cbName +
-    '&action=LIRE_ENSEIGNANTS&ecole=' + encodeURIComponent(ecole);
-  document.body.appendChild(script);
-}
-
-// ── Charger et afficher l'EDT de la classe ──
-function cens_chargerEDT() {
-  var ecole = document.getElementById('cens_ecole').value;
-  var classe = document.getElementById('cens_classe').value;
-  if (!ecole || !classe) return;
-
-  document.getElementById('cens_edtZone').style.display = 'none';
-  document.getElementById('cens_formZone').style.display = 'none';
-  document.getElementById('cens_edtBody').innerHTML =
-    '<tr><td colspan="6" style="text-align:center;padding:16px;color:var(--gris)">⏳ Chargement...</td></tr>';
-  document.getElementById('cens_edtZone').style.display = 'block';
-
-  var cbName = 'cens_edt_' + Date.now();
-  var script = document.createElement('script');
-  window[cbName] = function(data) {
-    delete window[cbName];
-    try { document.body.removeChild(script); } catch(e) {}
-    if (!data.ok) {
-      document.getElementById('cens_edtBody').innerHTML =
-        '<tr><td colspan="6" style="text-align:center;padding:12px;color:var(--rouge)">EDT introuvable</td></tr>';
-      return;
-    }
-    _cens_edtData = data.lignes;
-    cens_afficherEDT(data.lignes);
-    cens_peuplerSelects(data.lignes);
-    document.getElementById('cens_formZone').style.display = 'block';
-  };
-  script.onerror = function() {
-    document.getElementById('cens_edtBody').innerHTML =
-      '<tr><td colspan="6" style="text-align:center;padding:12px;color:var(--rouge)">Erreur réseau</td></tr>';
-  };
-  script.src = CHANGER_ENS_URL + '?callback=' + cbName +
-    '&action=LIRE_EDT&ecole=' + encodeURIComponent(ecole) +
-    '&classe=' + encodeURIComponent(classe);
-  document.body.appendChild(script);
-}
-
-// ── Afficher l'EDT dans le tableau ──
-function cens_afficherEDT(lignes) {
-  var tbody = document.getElementById('cens_edtBody');
-  tbody.innerHTML = '';
-  var COULEURS = {
-    'MATHS':'#E3F2FD','FRS':'#F3E5F5','ANG':'#E8F5E9','HG':'#FFF8E1',
-    'PC':'#FCE4EC','SVT':'#E0F2F1','LV2':'#FFF3E0','PHILO':'#EDE7F6',
-    'EPS':'#E8EAF6','EDHC':'#F9FBE7'
-  };
-  function getBg(val) {
-    if (!val) return '#fff';
-    var v = val.toUpperCase();
-    for (var k in COULEURS) {
-      if (v.indexOf(k) === 0) return COULEURS[k];
-    }
-    return '#F5F5F5';
-  }
-  lignes.forEach(function(l, idx) {
-    var isPause = l.creneau.indexOf('RÉCR') >= 0 || l.creneau.indexOf('DÉJEUNER') >= 0;
-    var tr = document.createElement('tr');
-    if (isPause) {
-      tr.innerHTML = '<td colspan="6" style="background:#F5F5F5;color:#757575;font-style:italic;padding:4px 8px;font-size:0.72em;text-align:center">' + l.creneau + '</td>';
-    } else {
-      var bg = idx % 2 === 0 ? '#fff' : '#F8FAFD';
-      tr.style.background = bg;
-      var jours = [l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi];
-      var cells = '<td style="padding:5px 8px;font-weight:700;font-size:0.72em;color:var(--bleu);white-space:nowrap">' + l.creneau + '</td>';
-      jours.forEach(function(val) {
-        var cbg = getBg(val);
-        cells += '<td style="padding:5px 6px;text-align:center;font-size:0.72em;background:' + cbg + ';cursor:pointer" onclick="cens_selectionnerCours(\'' + val.replace(/'/g, "\\'") + '\')">' + (val || '<span style="color:#ccc">—</span>') + '</td>';
-      });
-      tr.innerHTML = cells;
-    }
-    tbody.appendChild(tr);
-  });
-}
-
-// ── Clic sur un cours → pré-sélectionner l'enseignant ──
-function cens_selectionnerCours(val) {
-  if (!val) return;
-  var parts = val.split('-');
-  if (parts.length < 2) return;
-  var nomProf = parts.slice(1).join('-').trim();
-  var sel = document.getElementById('cens_ancien');
-  for (var i = 0; i < sel.options.length; i++) {
-    if (sel.options[i].value.toUpperCase() === nomProf.toUpperCase()) {
-      sel.selectedIndex = i;
-      cens_majResume();
-      return;
-    }
-  }
-  // Si pas trouvé, sélectionner la valeur partielle
-  for (var i = 0; i < sel.options.length; i++) {
-    if (sel.options[i].value.toUpperCase().indexOf(nomProf.toUpperCase()) >= 0) {
-      sel.selectedIndex = i;
-      cens_majResume();
-      return;
-    }
-  }
-}
-
-// ── Peupler les selects enseignants ──
-function cens_peuplerSelects(lignes) {
-  // Extraire les profs depuis l'EDT
-  var profsEDT = new Set();
-  lignes.forEach(function(l) {
-    [l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi].forEach(function(val) {
-      if (val && val.indexOf('-') >= 0) {
-        var nom = val.split('-').slice(1).join('-').trim();
-        if (nom) profsEDT.add(nom);
-      }
-    });
-  });
-
-  var selAncien = document.getElementById('cens_ancien');
-  var selNouveau = document.getElementById('cens_nouveau');
-  selAncien.innerHTML = '<option value="">-- Sélectionner --</option>';
-  selNouveau.innerHTML = '<option value="">-- Sélectionner --</option>';
-
-  // Profs dans l'EDT → dans le select ancien
-  Array.from(profsEDT).sort().forEach(function(nom) {
-    selAncien.innerHTML += '<option value="' + nom + '">' + nom + '</option>';
-  });
-
-  // Tous les enseignants de l'école → dans le select nouveau
-  if (_cens_enseignants.length) {
-    _cens_enseignants.sort(function(a,b){return a.nom.localeCompare(b.nom);}).forEach(function(ens) {
-      selNouveau.innerHTML += '<option value="' + ens.nom + '">' + ens.nom + ' (' + ens.matiere + ')</option>';
-    });
-  } else {
-    // Fallback : même liste que l'ancien
-    Array.from(profsEDT).sort().forEach(function(nom) {
-      selNouveau.innerHTML += '<option value="' + nom + '">' + nom + '</option>';
-    });
-  }
-
-  selAncien.addEventListener('change', cens_majResume);
-  selNouveau.addEventListener('change', cens_majResume);
-  document.getElementById('cens_nouveauManuel').addEventListener('input', cens_majResume);
-
-  // Date par défaut = aujourd'hui
-  var today = new Date();
-  document.getElementById('cens_dateEffet').value =
-    today.getFullYear() + '-' +
-    String(today.getMonth()+1).padStart(2,'0') + '-' +
-    String(today.getDate()).padStart(2,'0');
-}
-
-// ── Mettre à jour le résumé ──
-function cens_majResume() {
-  var ancien  = document.getElementById('cens_ancien').value;
-  var nouveau = document.getElementById('cens_nouveauManuel').value.trim() ||
-                document.getElementById('cens_nouveau').value;
-  var ecole   = document.getElementById('cens_ecole').value;
-  var classe  = document.getElementById('cens_classe').value;
-  var resumeDiv = document.getElementById('cens_resume');
-  if (!ancien || !nouveau || !classe) { resumeDiv.style.display='none'; return; }
-  resumeDiv.style.display = 'block';
-  document.getElementById('cens_resumeContent').innerHTML =
-    '🏫 <b>' + ecole + '</b><br>' +
-    '📚 Classe : <b>' + classe + '</b><br>' +
-    '❌ Remplacer : <b style="color:#C62828">' + ancien + '</b><br>' +
-    '✅ Par : <b style="color:#2E7D32">' + nouveau + '</b>';
-}
-
-// ── Confirmer et appliquer ──
-async function cens_confirmer() {
-  var ecole   = document.getElementById('cens_ecole').value;
-  var classe  = document.getElementById('cens_classe').value;
-  var ancien  = document.getElementById('cens_ancien').value;
-  var nouveau = document.getElementById('cens_nouveauManuel').value.trim() ||
-                document.getElementById('cens_nouveau').value;
-  var motif   = document.getElementById('cens_motif').value;
-
-  if (!ecole || !classe || !ancien || !nouveau) {
-    showToast('Remplissez tous les champs obligatoires', 'error');
-    return;
-  }
-  if (!motif) { showToast('Sélectionnez un motif', 'error'); return; }
-
-  var resultatDiv = document.getElementById('cens_resultat');
-  resultatDiv.style.display = 'block';
-  resultatDiv.innerHTML = '<div style="text-align:center;padding:14px;color:var(--bleu)">⏳ Application du changement...</div>';
-
-  try {
-    var resp = await fetch(CHANGER_ENS_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'CHANGER_ENSEIGNANT',
-        ecole: ecole, classe: classe,
-        ancienNom: ancien, nouveauNom: nouveau,
-        motif: motif
-      })
-    });
-
-    // no-cors → réponse opaque, on suppose succès
-    resultatDiv.innerHTML =
-      '<div style="background:#E8F5E9;border-left:3px solid #2E7D32;border-radius:8px;padding:12px;font-size:0.82em">' +
-      '<div style="font-weight:700;color:#2E7D32;margin-bottom:6px">✅ Changement appliqué !</div>' +
-      '<div>🏫 ' + ecole + ' — 📚 ' + classe + '</div>' +
-      '<div>❌ <b>' + ancien + '</b> → ✅ <b>' + nouveau + '</b></div>' +
-      '<div style="margin-top:6px;font-size:0.78em;color:var(--gris)">Motif : ' + motif + '</div>' +
-      '<div style="margin-top:8px;font-size:0.76em;color:var(--orange)">⚠️ Informez les deux enseignants du changement.</div>' +
-      '</div>';
-
-    showToast('✅ ' + ancien + ' remplacé par ' + nouveau, 'success');
-
-    // Recharger l'EDT
-    setTimeout(cens_chargerEDT, 2000);
-
-  } catch(e) {
-    resultatDiv.innerHTML =
-      '<div style="background:#FFEBEE;border-left:3px solid #C62828;border-radius:8px;padding:12px;font-size:0.82em;color:#C62828">' +
-      '❌ Erreur : ' + e.message + '</div>';
-  }
-}
-
-// ── Voir l'historique ──
-function cens_voirHistorique() {
-  var div = document.getElementById('cens_historique');
-  if (div.style.display === 'block') { div.style.display='none'; return; }
-  div.style.display = 'block';
-  div.innerHTML = '<div style="text-align:center;padding:10px;color:var(--gris);font-size:0.82em">⏳ Chargement...</div>';
-
-  // Lire depuis la Centrale (HISTORIQUE_CHANGEMENTS_EDT)
-  var cbName = 'cens_hist_' + Date.now();
-  var script = document.createElement('script');
-  window[cbName] = function(data) {
-    delete window[cbName];
-    try { document.body.removeChild(script); } catch(e) {}
-    if (!data.ok || !data.historique || !data.historique.length) {
-      div.innerHTML = '<p style="padding:10px;font-size:0.78em;color:var(--gris)">Aucun changement enregistré.</p>';
-      return;
-    }
-    var html = '';
-    data.historique.slice(-10).reverse().forEach(function(h) {
-      html += '<div style="padding:8px 10px;border-bottom:1px solid var(--border);font-size:0.76em">' +
-        '<div style="font-weight:700;color:var(--bleu)">' + h.ecole + ' — ' + h.classe + '</div>' +
-        '<div>❌ ' + h.ancien + ' → ✅ ' + h.nouveau + '</div>' +
-        '<div style="color:var(--gris);margin-top:2px">' + h.date + ' · ' + (h.motif||'') + '</div>' +
-        '</div>';
-    });
-    div.innerHTML = html;
-  };
-  script.onerror = function() { div.innerHTML = '<p style="color:var(--rouge);padding:10px;font-size:0.78em">Erreur chargement</p>'; };
-  script.src = CHANGER_ENS_URL + '?callback=' + cbName + '&action=HISTORIQUE';
-  document.body.appendChild(script);
-}
-
-// FIN CODE CHANGER ENSEIGNANT
-
   });
 } document.addEventListener('keypress',e=>{if(e.key==='Enter'&&document.getElementById('loginPage').style.display!=='none')login();});
 </script>
