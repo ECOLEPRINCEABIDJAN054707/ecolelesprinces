@@ -206,7 +206,7 @@ table tr:nth-child(even){background:#F8FAFD}
   <div class="login-logo">
     <span class="ico">&#127963;</span>
     <h1>PRINCES SMART SCHOOL</h1>
-    <p>ESPACE ADMINISTRATION &middot; 2025-2026</p>
+    <p>ESPACE ADMINISTRATION &middot; 2026-2027</p>
   </div>
   <div class="login-card">
     <h2>Acc&egrave;s S&eacute;curis&eacute;</h2>
@@ -587,7 +587,7 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 
-  <div class="footer">R&eacute;seau CPP Les Princes d'Abidjan &middot; Espace Direction &middot; 2025-2026</div>
+  <div class="footer">R&eacute;seau CPP Les Princes d'Abidjan &middot; Espace Direction &middot; 2026-2027</div>
 </div>
 
 <!-- ESPACE FONDATEUR -->
@@ -675,7 +675,7 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 
-  <div class="footer">R&eacute;seau CPP Les Princes d'Abidjan &middot; Espace Fondateur &middot; 2025-2026</div>
+  <div class="footer">R&eacute;seau CPP Les Princes d'Abidjan &middot; Espace Fondateur &middot; 2026-2027</div>
 </div>
 
 <!-- ESPACE COMPTABLE -->
@@ -706,7 +706,7 @@ table tr:nth-child(even){background:#F8FAFD}
   </div>
   <div class="section">
     <div class="sec-head sec-vert" onclick="toggleSec(this)">
-      <h3>&#128203; Inscriptions 2025-2026</h3><span class="arr">&#9660;</span>
+      <h3>&#128203; Inscriptions 2026-2027</h3><span class="arr">&#9660;</span>
     </div>
     <div class="sec-body" id="comInscBody"></div>
   </div>
@@ -748,7 +748,7 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
     <div class="sec-body" id="comTachesBody"></div>
   </div>
-  <div class="footer">Princes Smart School &middot; Espace Comptable &middot; 2025-2026</div>
+  <div class="footer">Princes Smart School &middot; Espace Comptable &middot; 2026-2027</div>
 </div>
 
 <!-- ESPACE EDUCATEUR -->
@@ -1024,7 +1024,7 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 
-  <div class="footer">Princes Smart School &middot; Espace Educateur &middot; 2025-2026</div>
+  <div class="footer">Princes Smart School &middot; Espace Educateur &middot; 2026-2027</div>
 </div>
 
 <!-- MODALS -->
@@ -1159,7 +1159,7 @@ const CHARTE=[
   {titre:"Je construis l'Afrique de demain",desc:"Chaque eleve que j'accompagne contribue a une Cote d'Ivoire plus forte."}
 ];
 const KPI_ECOLES=[{nom:"CPP Les Princes d'Abidjan",eleves:842,ens:38,impaye:45,taux:78,sal:985000},{nom:'GS Rita Rosane',eleves:187,ens:12,impaye:22,taux:82,sal:400000},{nom:'CPP Gnontinrou',eleves:210,ens:14,impaye:18,taux:85,sal:440000},{nom:'CPP Koutouan',eleves:280,ens:16,impaye:31,taux:75,sal:590000},{nom:'Guinglo Ville',eleves:156,ens:9,impaye:12,taux:88,sal:295000},{nom:'CPP Soakpe',eleves:145,ens:8,impaye:15,taux:80,sal:350000}];
-const AGENDA_DEMO=[{jour:'26',mois:'MAI',titre:'Reunion direction - Bilan T3',detail:'09h00',col:'#1F4E79'},{jour:'31',mois:'MAI',titre:'Cloture inscriptions 2026-2027',detail:'Date limite',col:'#C62828'},{jour:'05',mois:'JUN',titre:'Paiement salaires',detail:'Wave + Orange Money',col:'#2E7D32'},{jour:'15',mois:'JUN',titre:'Archivage dossiers 2025-2026',detail:'Numerisation',col:'#E65100'}];
+const AGENDA_DEMO=[{jour:'26',mois:'MAI',titre:'Reunion direction - Bilan T3',detail:'09h00',col:'#1F4E79'},{jour:'31',mois:'MAI',titre:'Cloture inscriptions 2026-2027',detail:'Date limite',col:'#C62828'},{jour:'05',mois:'JUN',titre:'Paiement salaires',detail:'Wave + Orange Money',col:'#2E7D32'},{jour:'15',mois:'JUN',titre:'Archivage dossiers 2026-2027',detail:'Numerisation',col:'#E65100'}];
 const SALAIRES_ADMIN=[{nom:'GONDO TOKPA Gervais',fonction:'Educateur',salaire:225000},{nom:'NIOULLE Severain',fonction:'Educateur',salaire:100000},{nom:'LAMIEN Bernadette',fonction:'Educatrice',salaire:100000},{nom:'YAO Abraham',fonction:'Educateur',salaire:75000},{nom:'KOUACO Robine',fonction:'Secretaire',salaire:50000}];
 const TACHES_DEMO=[{titre:'Preparer recus de paiement mai 2026',prio:'haute',heure:'09h00',done:false},{titre:'Envoyer liste impayes a la direction',prio:'haute',heure:'11h00',done:false},{titre:'Mettre a jour fiches inscription CP1',prio:'normale',heure:'14h00',done:false},{titre:'Commander fournitures de bureau',prio:'basse',heure:'15h00',done:false}];
 const ENSEIGNANTS_APPEL_DEMO=[];
@@ -1402,7 +1402,7 @@ function confirmerValidationBulletin(){
   const cbName='bul_val_'+Date.now();const script=document.createElement('script');
   window[cbName]=data=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(data&&data.ok){showToast('Bulletin valide !','success');document.getElementById('modalBulletin').style.display='none';bulletinEnCours=null;setTimeout(chargerBulletinsPrimaire,1500);}else showToast('Erreur','error');};
   script.onerror=()=>{delete window[cbName];showToast('Erreur reseau','error');};
-  script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type=VALIDER_BULLETIN_PRIMAIRE&ecole='+encodeURIComponent(currentStaff.ecole||'')+'&classe='+encodeURIComponent(b.classe||'')+'&mois='+encodeURIComponent(b.mois||'')+'&annee=2025-2026';
+  script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type=VALIDER_BULLETIN_PRIMAIRE&ecole='+encodeURIComponent(currentStaff.ecole||'')+'&classe='+encodeURIComponent(b.classe||'')+'&mois='+encodeURIComponent(b.mois||'')+'&annee=2026-2027';
   document.body.appendChild(script);showToast('Validation en cours...','');
 }
 async function syncEnseignants(){
@@ -1673,7 +1673,7 @@ function mkListeNotesPDF(type,classe,matieres,eleves,nomEcole,de){
   const ent='<div style="text-align:center;margin-bottom:8px"><div style="font-size:11px">Ministere de l\'Education Nationale et de l\'Alphabetisation</div><div style="font-size:16px;font-weight:bold">'+nomEcole+'</div><hr style="border:none;border-top:2px solid #000;margin:4px 0"></div>';
   let corps=ent;
   if(type==='emargement'){
-    corps+='<div style="background:#000;color:white;text-align:center;padding:7px;margin-bottom:5px"><b>LISTE D\'EMARGEMENT — '+classe+' — 2025-2026</b></div>';
+    corps+='<div style="background:#000;color:white;text-align:center;padding:7px;margin-bottom:5px"><b>LISTE D\'EMARGEMENT — '+classe+' — 2026-2027</b></div>';
     corps+='<div style="background:#eee;padding:5px 8px;font-size:12px;border:1px solid #333;margin-bottom:5px">Enseignant: ___________________________ | Matiere: ___________________________ | Date: ____________</div>';
     corps+='<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#000;color:white"><th style="padding:7px;text-align:center;width:40px">N</th><th style="padding:7px;text-align:left;width:120px">MATRICULE</th><th style="padding:7px;text-align:left">NOM ET PRENOMS</th><th style="padding:7px;text-align:center;width:120px">SIGNATURE</th></tr></thead><tbody>';
     eleves.forEach((e,i)=>{corps+='<tr style="background:'+(i%2===0?'#fff':'#f5f5f5')+'"><td style="padding:8px;text-align:center;border:1px solid #ccc">'+(i+1)+'</td><td style="padding:8px;border:1px solid #ccc;font-weight:bold;color:#1F4E79">'+e.matricule+'</td><td style="padding:8px;border:1px solid #ccc;font-weight:bold">'+e.nom+'</td><td style="padding:8px;border:1px solid #ccc;height:30px"></td></tr>';});
@@ -1681,7 +1681,7 @@ function mkListeNotesPDF(type,classe,matieres,eleves,nomEcole,de){
   }else if(type==='notes_d1'||type==='notes_d2'){
     const numDev=type==='notes_d1'?'1':'2';
     matieres.forEach(mat=>{
-      corps+='<div style="background:#000;color:white;text-align:center;padding:7px;margin-bottom:5px"><b>DEVOIR N°'+numDev+' — '+mat.toUpperCase()+' — '+classe+' — 2025-2026</b></div>';
+      corps+='<div style="background:#000;color:white;text-align:center;padding:7px;margin-bottom:5px"><b>DEVOIR N°'+numDev+' — '+mat.toUpperCase()+' — '+classe+' — 2026-2027</b></div>';
       corps+='<div style="background:#eee;padding:5px 8px;font-size:12px;border:1px solid #333;margin-bottom:5px">Enseignant: ___________________________ | Date: ____________</div>';
       corps+='<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#000;color:white"><th style="padding:7px;text-align:center;width:40px">N</th><th style="padding:7px;text-align:left;width:110px">MATRICULE</th><th style="padding:7px;text-align:left">NOM ET PRENOMS</th><th style="padding:7px;text-align:center;width:60px">NOTE /20</th><th style="padding:7px;text-align:center;width:60px">RANG</th></tr></thead><tbody>';
       eleves.forEach((e,i)=>{corps+='<tr style="background:'+(i%2===0?'#fff':'#f5f5f5')+'"><td style="padding:7px;text-align:center;border:1px solid #ccc">'+(i+1)+'</td><td style="padding:7px;border:1px solid #ccc;font-weight:bold;color:#1F4E79">'+e.matricule+'</td><td style="padding:7px;border:1px solid #ccc;font-weight:bold">'+e.nom+'</td><td style="padding:7px;border:1px solid #ccc;height:24px"></td><td style="padding:7px;border:1px solid #ccc"></td></tr>';});
@@ -1689,14 +1689,14 @@ function mkListeNotesPDF(type,classe,matieres,eleves,nomEcole,de){
     });
   }else if(type==='notes_compo'){
     matieres.forEach(mat=>{
-      corps+='<div style="background:#000;color:white;text-align:center;padding:7px;margin-bottom:5px"><b>COMPOSITION — '+mat.toUpperCase()+' — '+classe+' — 2025-2026</b></div>';
+      corps+='<div style="background:#000;color:white;text-align:center;padding:7px;margin-bottom:5px"><b>COMPOSITION — '+mat.toUpperCase()+' — '+classe+' — 2026-2027</b></div>';
       corps+='<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#000;color:white"><th style="padding:7px;text-align:center;width:40px">N</th><th style="padding:7px;text-align:left;width:110px">MATRICULE</th><th style="padding:7px;text-align:left">NOM ET PRENOMS</th><th style="padding:7px;text-align:center;width:60px">NOTE /20</th><th style="padding:7px;text-align:center;width:50px">RANG</th><th style="padding:7px;text-align:center;width:100px">APPRECIATION</th></tr></thead><tbody>';
       eleves.forEach((e,i)=>{corps+='<tr style="background:'+(i%2===0?'#fff':'#f5f5f5')+'"><td style="padding:7px;text-align:center;border:1px solid #ccc">'+(i+1)+'</td><td style="padding:7px;border:1px solid #ccc;font-weight:bold;color:#1F4E79">'+e.matricule+'</td><td style="padding:7px;border:1px solid #ccc;font-weight:bold">'+e.nom+'</td><td style="padding:7px;border:1px solid #ccc;height:24px"></td><td style="padding:7px;border:1px solid #ccc"></td><td style="padding:7px;border:1px solid #ccc"></td></tr>';});
       corps+='</tbody></table><br>';
     });
   }else if(type==='recap_trimestre'){
     const matsUsed=matieres.length?matieres:getMatieres(classe);
-    corps+='<div style="background:#000;color:white;text-align:center;padding:7px;margin-bottom:5px"><b>RECAPITULATIF TRIMESTRIEL — '+classe+' — 2025-2026</b></div>';
+    corps+='<div style="background:#000;color:white;text-align:center;padding:7px;margin-bottom:5px"><b>RECAPITULATIF TRIMESTRIEL — '+classe+' — 2026-2027</b></div>';
     corps+='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#000;color:white"><th style="padding:5px;text-align:center;width:30px">N</th><th style="padding:5px;text-align:left;min-width:140px">NOM ET PRENOMS</th>';
     matsUsed.forEach(m=>{corps+='<th style="padding:4px;text-align:center;max-width:60px;font-size:10px">'+m+'</th>';});
     corps+='<th style="padding:5px;text-align:center;width:45px">MOY</th><th style="padding:5px;text-align:center;width:35px">RANG</th></tr></thead><tbody>';
@@ -1704,7 +1704,7 @@ function mkListeNotesPDF(type,classe,matieres,eleves,nomEcole,de){
     corps+='</tbody></table>';
   }else if(type==='presence'){
     const dates=Array.from({length:14},(_,i)=>'J'+(i+1));
-    corps+='<div style="background:#000;color:white;text-align:center;padding:7px;margin-bottom:5px"><b>REGISTRE DES PRESENCES — '+classe+' — 2025-2026</b></div>';
+    corps+='<div style="background:#000;color:white;text-align:center;padding:7px;margin-bottom:5px"><b>REGISTRE DES PRESENCES — '+classe+' — 2026-2027</b></div>';
     corps+='<div style="background:#eee;padding:5px 8px;font-size:12px;border:1px solid #333;margin-bottom:5px">Periode: du ___________ au ___________ | Matiere: ___________________________</div>';
     corps+='<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#000;color:white"><th style="padding:4px;text-align:center;width:25px">N</th><th style="padding:4px;text-align:left;min-width:140px">NOM ET PRENOMS</th>';
     dates.forEach(d=>{corps+='<th style="padding:3px;text-align:center;width:22px">'+d+'</th>';});
@@ -2497,9 +2497,45 @@ async function diagColonnes(sheetsId,nomClasse){
 async function lireOngletClasse(sheetsId,nomClasse){
   // Essayer d'abord l'onglet individuel, sinon lire SYNTHESE et filtrer
   var result = await _lireOngletDirect(sheetsId,nomClasse);
-  if(result && result.length > 0) return result;
+  if(result && result.length > 0){
+    // Meme si des eleves sont trouves, l'onglet individuel n'a pas toujours
+    // les colonnes telephone dans le meme format que SYNTHESE -> on complete
+    // systematiquement les contacts manquants en croisant avec SYNTHESE.
+    var manquants=result.filter(function(e){return !e.tel1&&!e.tel2&&!e.tel3;});
+    if(manquants.length>0){
+      try{
+        var contacts=await _getContactsSynthese(sheetsId);
+        result.forEach(function(e){
+          if(e.tel1||e.tel2||e.tel3)return;
+          var c=contacts[normaliserMatriculeListes(e.matricule)];
+          if(c){e.tel1=c.tel1;e.tel2=c.tel2;e.tel3=c.tel3;}
+        });
+      }catch(err){}
+    }
+    return result;
+  }
   // Fallback : lire depuis SYNTHESE et filtrer par classe
   return await _lireDepuisSynthese(sheetsId,nomClasse);
+}
+function normaliserMatriculeListes(m){return String(m||'').toUpperCase().replace(/\s/g,'');}
+var _cacheContactsSynthese={};
+async function _getContactsSynthese(sheetsId){
+  if(_cacheContactsSynthese[sheetsId])return _cacheContactsSynthese[sheetsId];
+  var map={};
+  try{
+    var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    var r=await fetch(url);var data=await r.json();
+    if(data.values){
+      data.values.slice(1).forEach(function(row){
+        var mat=normaliserMatriculeListes(row[1]);
+        if(!mat)return;
+        function nTel(t){t=(t+'').replace(/[^0-9+]/g,'');return t.length>=8?t:'';}
+        map[mat]={tel1:nTel(row[6]),tel2:nTel(row[7]),tel3:nTel(row[8])};
+      });
+    }
+  }catch(e){}
+  _cacheContactsSynthese[sheetsId]=map;
+  return map;
 }
 async function _lireOngletDirect(sheetsId,nomClasse){
   try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(nomClasse)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';var r=await fetch(url);if(!r.ok)return[];var data=await r.json();if(!data.values||data.values.length<2)return[];
@@ -2649,9 +2685,9 @@ function mkEntetePDF(nomEcole){return'<div style="text-align:center;margin-botto
 
 var TH_V9={v:'<th>N</th><th>MATRICULE</th><th>NOM ET PRENOMS</th><th>N1</th><th>N2</th><th>N3</th><th>N4</th><th>N5</th>',b:'<th>N</th><th>MATRICULE</th><th>NOM ET PRENOMS</th><th>CONTACTS PARENTS</th>',l:'<th>N</th><th>MATRICULE</th><th>NOM ET PRENOMS</th><th>CONTACTS PARENTS</th>',def:'<th>N</th><th>MATRICULE</th><th>NOM ET PRENOMS</th><th>MONTANT DU</th><th>VERSEMENT</th><th>SOLDE</th><th>STATUT</th><th>CONTACTS PARENTS</th>'};
 
-function mkDocSimpleV9(data,k,nf,nomEcole){var TC=window._listesTC;var tc=TC[k];var d=new Date(),de=d.toLocaleDateString('fr-FR');var el=fltV9(data.eleves,k);var rows=mkRowsV9(el,k);var th=TH_V9[k]||TH_V9.def;var tv=smV9(el,'montant_du'),vv=smV9(el,'versement'),sv=smV9(el,'solde');var nbs=el.filter(function(e){return Number(e.solde)<=0;}).length;var nbi=el.filter(function(e){return Number(e.versement)===0;}).length;var nbp=el.length-nbs-nbi;var corps=mkEntetePDF(nomEcole)+'<div style="background:#000;color:white;text-align:center;padding:7px"><b>'+tc.lb.toUpperCase()+' — '+data.nom+' — 2025-2026</b></div><div style="display:flex;justify-content:space-between;background:#eee;padding:5px 8px;font-size:12px;border:1.5px solid #333;margin-bottom:3px"><b>'+el.length+' eleve(s)</b><span>'+de+'</span></div><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#000;color:white">'+th+'</tr></thead><tbody>'+rows+'</tbody></table>';if(k!=='v'&&k!=='b'&&k!=='l'){corps+='<div style="background:#000;color:white;display:flex;justify-content:space-between;padding:5px 8px;font-size:13px;font-weight:bold;margin-top:2px"><span>TOTAUX</span><span>Du:'+fnV9(tv)+'</span><span>Verse:'+fnV9(vv)+'</span><span>Solde:'+fnV9(sv)+'</span></div>';}if(k==='c'){corps+='<div style="display:flex;gap:3px;margin-top:3px"><div style="flex:1;padding:4px;text-align:center;background:#eee;border:1.5px solid #333;font-weight:bold">Soldes:'+nbs+'</div><div style="flex:1;padding:4px;text-align:center;background:#eee;border:1.5px solid #333;font-weight:bold">Partiels:'+nbp+'</div><div style="flex:1;padding:4px;text-align:center;background:#eee;border:1.5px solid #333;font-weight:bold">Impayes:'+nbi+'</div></div>';}corps+='<div style="text-align:center;font-size:11px;margin-top:4px;border-top:2px solid #000;padding-top:3px;font-weight:bold">'+nomEcole+' — '+data.nom+' — '+de+'</div>';return'<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+nf+'</title><style>body{font-family:Arial,sans-serif;font-size:13px;margin:0;padding:8px;color:#000}@media print{body{margin:0;padding:0} .np{display:none!important} @page{size:A4 portrait;margin:8mm}}table{width:100%;border-collapse:collapse}th{background:#000;color:#fff;padding:6px 4px;text-align:center;font-weight:bold;font-size:12px}tbody tr:nth-child(even){background:#f5f5f5}</style></head><body><div class="np" style="background:#f5f5f5;padding:10px;border-bottom:3px solid #000;margin-bottom:10px"><b>'+nf+'</b><br><br><button onclick="window.print()" style="background:#000;color:#fff;border:none;padding:9px 18px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-right:8px">Imprimer</button><button onclick="window.close()" style="background:#555;color:#fff;border:none;padding:9px 14px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px">Fermer</button></div>'+corps+'</body></html>';}
+function mkDocSimpleV9(data,k,nf,nomEcole){var TC=window._listesTC;var tc=TC[k];var d=new Date(),de=d.toLocaleDateString('fr-FR');var el=fltV9(data.eleves,k);var rows=mkRowsV9(el,k);var th=TH_V9[k]||TH_V9.def;var tv=smV9(el,'montant_du'),vv=smV9(el,'versement'),sv=smV9(el,'solde');var nbs=el.filter(function(e){return Number(e.solde)<=0;}).length;var nbi=el.filter(function(e){return Number(e.versement)===0;}).length;var nbp=el.length-nbs-nbi;var corps=mkEntetePDF(nomEcole)+'<div style="background:#000;color:white;text-align:center;padding:7px"><b>'+tc.lb.toUpperCase()+' — '+data.nom+' — 2026-2027</b></div><div style="display:flex;justify-content:space-between;background:#eee;padding:5px 8px;font-size:12px;border:1.5px solid #333;margin-bottom:3px"><b>'+el.length+' eleve(s)</b><span>'+de+'</span></div><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#000;color:white">'+th+'</tr></thead><tbody>'+rows+'</tbody></table>';if(k!=='v'&&k!=='b'&&k!=='l'){corps+='<div style="background:#000;color:white;display:flex;justify-content:space-between;padding:5px 8px;font-size:13px;font-weight:bold;margin-top:2px"><span>TOTAUX</span><span>Du:'+fnV9(tv)+'</span><span>Verse:'+fnV9(vv)+'</span><span>Solde:'+fnV9(sv)+'</span></div>';}if(k==='c'){corps+='<div style="display:flex;gap:3px;margin-top:3px"><div style="flex:1;padding:4px;text-align:center;background:#eee;border:1.5px solid #333;font-weight:bold">Soldes:'+nbs+'</div><div style="flex:1;padding:4px;text-align:center;background:#eee;border:1.5px solid #333;font-weight:bold">Partiels:'+nbp+'</div><div style="flex:1;padding:4px;text-align:center;background:#eee;border:1.5px solid #333;font-weight:bold">Impayes:'+nbi+'</div></div>';}corps+='<div style="text-align:center;font-size:11px;margin-top:4px;border-top:2px solid #000;padding-top:3px;font-weight:bold">'+nomEcole+' — '+data.nom+' — '+de+'</div>';return'<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+nf+'</title><style>body{font-family:Arial,sans-serif;font-size:13px;margin:0;padding:8px;color:#000}@media print{body{margin:0;padding:0} .np{display:none!important} @page{size:A4 portrait;margin:8mm}}table{width:100%;border-collapse:collapse}th{background:#000;color:#fff;padding:6px 4px;text-align:center;font-weight:bold;font-size:12px}tbody tr:nth-child(even){background:#f5f5f5}</style></head><body><div class="np" style="background:#f5f5f5;padding:10px;border-bottom:3px solid #000;margin-bottom:10px"><b>'+nf+'</b><br><br><button onclick="window.print()" style="background:#000;color:#fff;border:none;padding:9px 18px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-right:8px">Imprimer</button><button onclick="window.close()" style="background:#555;color:#fff;border:none;padding:9px 14px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px">Fermer</button></div>'+corps+'</body></html>';}
 
-function mkDocGroupeV9(classes,k,nf,nomEcole){var TC=window._listesTC;var tc=TC[k];var d=new Date(),de=d.toLocaleDateString('fr-FR');var th=TH_V9[k]||TH_V9.def;var corps='';var cl_index=0;classes.forEach(function(cl){var eleves=window._listesCACHE[cl]||[];var el=fltV9(eleves,k);if(!el.length)return;var rows=mkRowsV9(el,k);var pb=cl_index>0?'page-break-before:always;':'';corps+='<div style="'+pb+'">'+mkEntetePDF(nomEcole)+'<div style="background:#000;color:white;text-align:center;padding:5px;margin-bottom:5px"><b>'+tc.lb.toUpperCase()+' — 2025-2026</b></div><table style="width:100%;border-collapse:collapse"><thead><tr><td colspan="8" style="padding:6px 8px;font-weight:bold;font-size:14px;background:#eee;border-top:2px solid #000;border-bottom:1px solid #333">'+cl+' ('+el.length+' eleves)</td></tr><tr style="background:#000;color:white">'+th+'</tr></thead><tbody>'+rows+'</tbody>';if(k!=='v'&&k!=='b'&&k!=='l'){var tv=smV9(el,'montant_du'),vv=smV9(el,'versement'),sv=smV9(el,'solde');corps+='<tfoot><tr style="background:#000;color:white"><td colspan="3" style="padding:4px 8px;font-size:12px;font-weight:bold">TOTAUX '+cl+'</td><td style="padding:4px;font-size:12px;font-weight:bold;text-align:right">'+fnV9(tv)+'</td><td style="padding:4px;font-size:12px;font-weight:bold;text-align:right">'+fnV9(vv)+'</td><td style="padding:4px;font-size:12px;font-weight:bold;text-align:right">'+fnV9(sv)+'</td><td colspan="2"></td></tr></tfoot>';}corps+='</table><div style="text-align:center;font-size:11px;margin-top:4px;border-top:2px solid #000;padding-top:3px;font-weight:bold">'+nomEcole+' — '+cl+' — '+de+'</div></div>';cl_index++;});return'<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+nf+'</title><style>body{font-family:Arial,sans-serif;font-size:13px;margin:0;padding:8px;color:#000}@media print{body{margin:0;padding:0} .np{display:none!important} @page{size:A4 portrait;margin:8mm}}table{width:100%;border-collapse:collapse}thead{display:table-header-group}th{background:#000;color:#fff;padding:6px 4px;text-align:center;font-weight:bold;font-size:12px}tbody tr:nth-child(even){background:#f5f5f5}</style></head><body><div class="np" style="background:#f5f5f5;padding:10px;border-bottom:3px solid #000;margin-bottom:10px;text-align:center"><b>'+nf+'</b><br><br><button onclick="window.print()" style="background:#000;color:#fff;border:none;padding:9px 18px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-right:8px">Imprimer</button><button onclick="window.close()" style="background:#555;color:#fff;border:none;padding:9px 14px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px">Fermer</button></div>'+corps+'</body></html>';}
+function mkDocGroupeV9(classes,k,nf,nomEcole){var TC=window._listesTC;var tc=TC[k];var d=new Date(),de=d.toLocaleDateString('fr-FR');var th=TH_V9[k]||TH_V9.def;var corps='';var cl_index=0;classes.forEach(function(cl){var eleves=window._listesCACHE[cl]||[];var el=fltV9(eleves,k);if(!el.length)return;var rows=mkRowsV9(el,k);var pb=cl_index>0?'page-break-before:always;':'';corps+='<div style="'+pb+'">'+mkEntetePDF(nomEcole)+'<div style="background:#000;color:white;text-align:center;padding:5px;margin-bottom:5px"><b>'+tc.lb.toUpperCase()+' — 2026-2027</b></div><table style="width:100%;border-collapse:collapse"><thead><tr><td colspan="8" style="padding:6px 8px;font-weight:bold;font-size:14px;background:#eee;border-top:2px solid #000;border-bottom:1px solid #333">'+cl+' ('+el.length+' eleves)</td></tr><tr style="background:#000;color:white">'+th+'</tr></thead><tbody>'+rows+'</tbody>';if(k!=='v'&&k!=='b'&&k!=='l'){var tv=smV9(el,'montant_du'),vv=smV9(el,'versement'),sv=smV9(el,'solde');corps+='<tfoot><tr style="background:#000;color:white"><td colspan="3" style="padding:4px 8px;font-size:12px;font-weight:bold">TOTAUX '+cl+'</td><td style="padding:4px;font-size:12px;font-weight:bold;text-align:right">'+fnV9(tv)+'</td><td style="padding:4px;font-size:12px;font-weight:bold;text-align:right">'+fnV9(vv)+'</td><td style="padding:4px;font-size:12px;font-weight:bold;text-align:right">'+fnV9(sv)+'</td><td colspan="2"></td></tr></tfoot>';}corps+='</table><div style="text-align:center;font-size:11px;margin-top:4px;border-top:2px solid #000;padding-top:3px;font-weight:bold">'+nomEcole+' — '+cl+' — '+de+'</div></div>';cl_index++;});return'<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+nf+'</title><style>body{font-family:Arial,sans-serif;font-size:13px;margin:0;padding:8px;color:#000}@media print{body{margin:0;padding:0} .np{display:none!important} @page{size:A4 portrait;margin:8mm}}table{width:100%;border-collapse:collapse}thead{display:table-header-group}th{background:#000;color:#fff;padding:6px 4px;text-align:center;font-weight:bold;font-size:12px}tbody tr:nth-child(even){background:#f5f5f5}</style></head><body><div class="np" style="background:#f5f5f5;padding:10px;border-bottom:3px solid #000;margin-bottom:10px;text-align:center"><b>'+nf+'</b><br><br><button onclick="window.print()" style="background:#000;color:#fff;border:none;padding:9px 18px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-right:8px">Imprimer</button><button onclick="window.close()" style="background:#555;color:#fff;border:none;padding:9px 14px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px">Fermer</button></div>'+corps+'</body></html>';}
 
 // ══ HELPERS ══
 // ══ POINTAGE ENSEIGNANTS (ESPACE EDU) ══
@@ -2962,7 +2998,7 @@ async function _analyserClaudeDirecte(base64,mimeType){
   // Appel direct à l'API Claude (fonctionne si CORS autorisé par Anthropic)
   var cle=CLAUDE_API_KEY_DIR||'';
   if(!cle)throw new Error('Cle Claude non configuree. Utilisez la saisie manuelle.');
-  var prompt='Ce document est un recu inscription MENA de Cote d Ivoire. Le MATRICULE ELEVE est en ROUGE et GROS (ex: 20475663D). Nom sur ligne Nom, Prenom sur Prenom(s), Niveau sur Niveau 2025-2026, Statut sur Statut. Reponds avec ce JSON sans markdown: {"matricule":null,"nom_prenoms":null,"date_naissance":null,"lieu_naissance":null,"sexe":null,"niveau":null,"niveau_suivant":null,"decision":null,"statut":null,"ecole_origine":null,"nom_pere":null,"nom_mere":null,"annee_scolaire":null}. statut=AFF si AFFECTE(E) sinon NAFF. Si absent laisse null.';
+  var prompt='Ce document est un recu inscription MENA de Cote d Ivoire. Le MATRICULE ELEVE est en ROUGE et GROS (ex: 20475663D). Nom sur ligne Nom, Prenom sur Prenom(s), Niveau sur Niveau 2026-2027, Statut sur Statut. Reponds avec ce JSON sans markdown: {"matricule":null,"nom_prenoms":null,"date_naissance":null,"lieu_naissance":null,"sexe":null,"niveau":null,"niveau_suivant":null,"decision":null,"statut":null,"ecole_origine":null,"nom_pere":null,"nom_mere":null,"annee_scolaire":null}. statut=AFF si AFFECTE(E) sinon NAFF. Si absent laisse null.';
   var resp=await fetch('https://api.anthropic.com/v1/messages',{
     method:'POST',
     headers:{'Content-Type':'application/json','x-api-key':cle,'anthropic-version':'2023-06-01'},
@@ -3032,7 +3068,7 @@ function afficherResultatDir(data){
   var st=String(data.statut||data.statut_norm||'').toUpperCase();
   data.statut_norm=(st.includes('AFF')&&!st.includes('NON')&&!st.includes('NAFF'))?'AFF':'NAFF';
   // Détecter année sur le document
-  var anneeDoc=data.annee_scolaire||'2025-2026';
+  var anneeDoc=data.annee_scolaire||'2026-2027';
   var anneeLabel='Inscription valable pour 2026-2027';
   // Vérifier cohérence niveau
   var alerte='';
@@ -3304,7 +3340,7 @@ async function analyserFichierFond(){
 function afficherResultatFond(data){
   hideImportLoadingFond();
   // Détecter l'année sur le document et calculer la base cible
-  var anneeDoc=data.annee_scolaire||'2025-2026';
+  var anneeDoc=data.annee_scolaire||'2026-2027';
   var parts=anneeDoc.split('-');
   var anneeBase=parts.length>1?parseInt(parts[1])||2026:2026;
   var baseTarget='BASE_'+anneeBase; // BASE_2026 = 2026-2027
