@@ -2093,6 +2093,23 @@ async function chargerResultats(ecole){
       }));
     }catch(e){}
   }
+  // Dernier recours : les resultats sont parfois directement dans SYNTHESE
+  // (colonnes fixes connues : A=classe, B=matricule, C=nom, O=decision, P=moy_annuelle)
+  try{
+    const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r=await fetch(url);const data=await r.json();
+    if(data.values&&data.values.length>=2){
+      const rows=data.values.slice(1).filter(row=>row[2]&&String(row[2]).trim()&&row[14]&&String(row[14]).trim());
+      if(rows.length)return rows.map(row=>({
+        niveau:String(row[0]||'').trim(),
+        matricule:String(row[1]||'').trim(),
+        nom:String(row[2]||'').trim(),
+        moy:parseFloat(row[15])||0,
+        decision:String(row[14]||'').trim().toUpperCase(),
+        classeSup:''
+      }));
+    }
+  }catch(e){}
   return[];
 }
 async function chargerMessages(ecole){
