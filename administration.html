@@ -2069,7 +2069,7 @@ function renderTableResultats(data,tableId,filtreClasseId,filtreDecId,filtreNomI
   const sel=document.getElementById(filtreClasseId);
   if(sel&&sel.options.length<=1){const classes=[...new Set(data.map(r=>r.niveau))].sort();classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});}
   const fc=(document.getElementById(filtreClasseId)||{}).value||'',fd=(document.getElementById(filtreDecId)||{}).value||'',fn=((document.getElementById(filtreNomId)||{}).value||'').toLowerCase();
-  const filtered=data.filter(r=>(!fc||r.niveau===fc)&&(!fd||r.decision===fd)&&(!fn||r.nom.toLowerCase().includes(fn)));
+  const filtered=data.filter(r=>(!fc||r.niveau===fc)&&(!fd||(r.decision||'').indexOf(fd)>=0)&&(!fn||r.nom.toLowerCase().includes(fn)));
   const tbl=document.getElementById(tableId);if(!tbl)return;
   if(!filtered.length){tbl.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun resultat</p>';return;}
   let h='<table><thead><tr><th>Niveau</th><th>Matricule</th><th>Nom et Prenoms</th><th>Moy.</th><th>Decision</th><th>Classe sup.</th></tr></thead><tbody>';
