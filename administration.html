@@ -1258,6 +1258,7 @@ function procederLogin(s){
   document.getElementById('loginPage').style.display='none';
   showLoader('Chargement de votre espace...');
   currentStaff=s;
+  try{sessionStorage.setItem('staffConnecte',JSON.stringify(s));}catch(e){}
   peuplerNiveaux(s.ecole);
   setTimeout(()=>{hideLoader();if(s.profil==='DIR')afficherDir(s);else if(s.profil==='FOND')afficherFond(s);else if(s.profil==='COM')afficherCom(s);else if(s.profil==='EDU')afficherEdu(s);},900);
 }
@@ -1323,8 +1324,18 @@ function afficherDir(s){
   else if(isSEC)stats='<div class="stats-row s5"><div class="stat-box"><div class="stat-val" id="statEns">-</div><div class="stat-lbl">Enseignants</div></div><div class="stat-box vert"><div class="stat-val" id="statHeures">-</div><div class="stat-lbl">Heures mois</div></div><div class="stat-box or"><div class="stat-val" id="statSalaire">-</div><div class="stat-lbl">Masse sal.</div></div><div class="stat-box rouge"><div class="stat-val" id="statPerm">-</div><div class="stat-lbl">Permanents</div></div><div class="stat-box orange"><div class="stat-val" id="statAttente">-</div><div class="stat-lbl">En attente</div><div class="stat-lbl" id="statAttenteSub" style="font-size:0.55em"></div></div></div>';
   else stats='<div class="stats-row s6"><div class="stat-box"><div class="stat-val" id="statEns">-</div><div class="stat-lbl">Ens.</div></div><div class="stat-box or"><div class="stat-val" id="statSalaire">-</div><div class="stat-lbl">Masse sal.</div></div><div class="stat-box orange"><div class="stat-val" id="statAttente">-</div><div class="stat-lbl">Attente</div></div><div class="stat-box emeraude"><div class="stat-val" id="statBulletins">-</div><div class="stat-lbl">Bulletins</div></div><div class="stat-box rouge"><div class="stat-val" id="dStatAlert">0</div><div class="stat-lbl">Alertes</div></div><div class="stat-box vert"><div class="stat-val" id="statPerm">-</div><div class="stat-lbl">Perm.</div></div></div>';
   document.getElementById('dirStatsZone').innerHTML=stats;
-  if(!isPRIM){document.getElementById('dirFiltresZone').style.display='block';document.getElementById('dirSecAttente').style.display='block';document.getElementById('dirSecSalaires').style.display='block';remplirMois();}
-  if(!isSEC){document.getElementById('dirSecBulletins').style.display='block';document.getElementById('dirBtnBulZone').style.display='block';if(s.type==='PRIM'||s.type==='BOTH') setTimeout(chargerMatriculesPrimaire, 1200);} 
+  document.getElementById('dirFiltresZone').style.display=!isPRIM?'block':'none';
+  document.getElementById('dirSecAttente').style.display=!isPRIM?'block':'none';
+  document.getElementById('dirSecSalaires').style.display=!isPRIM?'block':'none';
+  if(!isPRIM)remplirMois();
+  document.getElementById('dirSecBulletins').style.display=!isSEC?'block':'none';
+  document.getElementById('dirBtnBulZone').style.display=!isSEC?'block':'none';
+  const zoneMat=document.getElementById('dirSecMatricules');
+  if(zoneMat){
+    zoneMat.style.display='none'; // masquee par defaut, reaffichee par chargerMatriculesPrimaire() si applicable
+    ['matStatDispo','matStatAttrib','matStatTotal','dirMatCount'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=id==='dirMatCount'?'':'-';});
+  }
+  if(!isSEC && (s.type==='PRIM'||s.type==='BOTH')) setTimeout(chargerMatriculesPrimaire, 1200);
   const alertes=[];
   let ha=alertes.length?'':'<p style="padding:14px;text-align:center;color:var(--gris)">Aucune alerte</p>';
   alertes.forEach(a=>{ha+='<div class="alerte-item"><div class="alerte-ico">'+a.ico+'</div><div><div class="alerte-nom">'+a.nom+'</div><div class="alerte-detail">'+a.detail+'</div></div></div>';});
@@ -2085,6 +2096,9 @@ async function chargerResultatsEtMessages(ecole,profil){
   const[resultats,messages]=await Promise.all([chargerResultats(ecole),chargerMessages(ecole)]);
   donneesResultats=resultats;donneesMessages=messages;
   const cRes=resultats.length,cMsg=messages.filter(m=>m.message).length,cCon=messages.filter(m=>m.statut==='CONNEXION'&&!m.message).length;
+  // ★ Vider les menus deroulants de classe AVANT de les repeupler -- sinon les
+  // classes d'une ecole precedente (connexion sans recharger la page) restent affichees.
+  ['dirResFiltreClasse','comResFiltreClasse'].forEach(id=>{const s=document.getElementById(id);if(s)s.innerHTML='<option value="">Toutes les classes</option>';});
   if(profil==='DIR'){const el=document.getElementById('dirResCount');if(el)el.textContent='('+cRes+' eleves)';const em=document.getElementById('dirMsgCount');if(em)em.textContent='('+cMsg+' msg · '+cCon+' connexions)';renderTableResultats(resultats,'dirResTable','dirResFiltreClasse','dirResFiltreDecision','dirResFiltreNom');renderMessages(messages,'dirMsgBody',true);}
   else if(profil==='COM'){const el=document.getElementById('comResCount');if(el)el.textContent='('+cRes+' eleves)';const em=document.getElementById('comMsgCount');if(em)em.textContent='('+cMsg+' msg · '+cCon+' connexions)';renderTableResultats(resultats,'comResTable','comResFiltreClasse','comResFiltreDecision','comResFiltreNom');renderMessages(messages,'comMsgBody',true);}
   else if(profil==='EDU'){const em=document.getElementById('eduMsgCount');if(em)em.textContent='('+cMsg+' msg)';renderMessages(messages,'eduMsgBody',false);}
@@ -2951,7 +2965,7 @@ async function chargerPointageEdu(periode) {
   var next = el.nextElementSibling;
   if(next) next.style.display = next.style.display === 'none' ? 'block' : 'none';
 }
-function logout(){['espaceDir','espaceFond','espaceCom','espaceEdu'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('loginPage').style.display='flex';document.getElementById('inputMat').value='';document.getElementById('inputCode').value='';currentStaff=null;donneesPointage=[];coursEnAttente=[];tentativesPin=0;donneesDevoirs=[];notesElevesCache={};const sel=document.getElementById('filtreMois');if(sel)sel.innerHTML='';}
+function logout(){try{sessionStorage.removeItem('staffConnecte');}catch(e){}['espaceDir','espaceFond','espaceCom','espaceEdu'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('loginPage').style.display='flex';document.getElementById('inputMat').value='';document.getElementById('inputCode').value='';currentStaff=null;donneesPointage=[];coursEnAttente=[];tentativesPin=0;donneesDevoirs=[];notesElevesCache={};const sel=document.getElementById('filtreMois');if(sel)sel.innerHTML='';}
 
 // ============================================================
 // IMPORT NOUVEL ÉLÈVE — Espace Directeur
@@ -3717,6 +3731,18 @@ const cbName='mat_attr_'+Date.now();
     document.body.appendChild(script);
   });
 } document.addEventListener('keypress',e=>{if(e.key==='Enter'&&document.getElementById('loginPage').style.display!=='none')login();});
+
+// ★★★ NOUVEAU — restaure la session si l'utilisateur recharge la page (F5)
+// au lieu de le renvoyer a l'ecran de connexion et tout remettre a zero.
+window.addEventListener('load', ()=>{
+  try{
+    const saved = sessionStorage.getItem('staffConnecte');
+    if(saved){
+      const s = JSON.parse(saved);
+      if(s && s.profil && s.ecole){ procederLogin(s); return; }
+    }
+  }catch(e){}
+});
 </script>
 </body>
 </html>
