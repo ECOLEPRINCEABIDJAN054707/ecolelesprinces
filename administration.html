@@ -1149,7 +1149,7 @@ const STAFF={
   'DIRAKK2001':{code:'541576',nom:'Directeur Akekoi 2',ecole:'AKEIKOI 2',profil:'DIR',type:'PRIM',label:'EPV Les Princes Akekoi 2'},
   'DIRCPP001':{code:'155812',nom:'Directeur CPP Les Princes',ecole:'CPP LES PRINCES',profil:'DIR',type:'SEC',label:"CPP Les Princes d'Abidjan"},
   'DIRSOAK001':{code:'352487',nom:'Directeur CPP Soakpe',ecole:'SOAKPE',profil:'DIR',type:'SEC',label:'CPP Les Princes de Soakpe'},
-  'DIRGUINGLO01':{code:'752618',nom:'Directeur Guinglo Ville',ecole:'GUINGLO VILLE',profil:'DIR',type:'SEC',label:'CPP Les Princes de Guinglo Ville'},
+  'DIRGUINGLO01':{code:'752618',nom:'Directeur Guinglo Ville',ecole:'GUINGLO VILLE',profil:'DIR',type:'BOTH',label:'CPP Les Princes de Guinglo Ville'},
   'DIRPRO001':{code:'492494',nom:'Directeur CPP Pro',ecole:'CPP PRO',profil:'DIR',type:'SEC',label:'CPP Professionnel'},
   'DIRTECH001':{code:'502107',nom:'Directeur CPP Tech',ecole:'CPP TECH',profil:'DIR',type:'SEC',label:'CPP Technique'},
   'DIRKOUIBLY01':{code:'816442',nom:'Directeur ETL Kouibly',ecole:'ETL PRINCES KOUIBLY',profil:'DIR',type:'SEC',label:'ETL Les Princes de Kouibly'},
@@ -1161,7 +1161,7 @@ const STAFF={
   'FONDCPP001':{code:'000001',nom:'Fondateur Reseau Princes',ecole:'CPP LES PRINCES',profil:'FOND',type:'ALL',label:'Reseau CPP Les Princes - 15 ecoles'},
   'COMCPP001':{code:'684845',nom:'Comptable',ecole:'CPP LES PRINCES',profil:'COM',type:'SEC',label:"CPP Les Princes d'Abidjan"},
   'COMGNONT01':{code:'186719',nom:'Comptable',ecole:'GNONTINROU',profil:'COM',type:'BOTH',label:'CPP Gnontinrou'},
-  'COMGUINGLO01':{code:'777217',nom:'Comptable',ecole:'GUINGLO VILLE',profil:'COM',type:'SEC',label:'CPP Les Princes de Guinglo Ville'},
+  'COMGUINGLO01':{code:'777217',nom:'Comptable',ecole:'GUINGLO VILLE',profil:'COM',type:'BOTH',label:'CPP Les Princes de Guinglo Ville'},
   'COMKOUT01':{code:'978216',nom:'Comptable',ecole:'KOUTOUAN',profil:'COM',type:'BOTH',label:'CPP Les Princes de Koutouan'},
   'COMSOAK01':{code:'600806',nom:'Comptable',ecole:'SOAKPE',profil:'COM',type:'SEC',label:'CPP Les Princes de Soakpe'},
   'COMRITA01':{code:'281702',nom:'Comptable',ecole:'GS RITA ROSANE',profil:'COM',type:'BOTH',label:'GS Rita Rosane'},
@@ -1297,7 +1297,7 @@ function peuplerNiveaux(ecole) {
   }
 
   // PRIMAIRE — écoles avec primaire
-  var ecolesPrim = ['GS RITA ROSANE','GNONTINROU','AKEIKOI 1','AKEIKOI 2','ACADEMIE','KOUTOUAN','CPP DABOU','CPP ANYAMA'];
+  var ecolesPrim = ['GS RITA ROSANE','GNONTINROU','AKEIKOI 1','AKEIKOI 2','ACADEMIE','KOUTOUAN','CPP DABOU','CPP ANYAMA','GUINGLO VILLE'];
   if(ecolesPrim.indexOf(ecole) >= 0) {
     sel.innerHTML += '<optgroup label="─── Maternelle / Primaire ───">';
     ['PSA','MSA','GSA','CP1A','CP2A','CE1A','CE2A','CM1A','CM2A'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
