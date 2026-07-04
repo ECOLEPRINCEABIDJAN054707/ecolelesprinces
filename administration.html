@@ -374,6 +374,13 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
     <div class="sec-body" id="dirMsgBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement...</p></div>
   </div>
+  <div style="margin:0 14px 10px;background:#fff;border-radius:10px;box-shadow:var(--shadow);padding:10px 14px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:0.8em;font-weight:700;color:var(--bleu)">📅 Année scolaire :</span>
+    <select id="dirSelectAnnee" onchange="changerAnneeDir()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;font-weight:700;color:var(--bleu)">
+      <option value="2025-2026">2025-2026 (archives)</option>
+      <option value="2026-2027">2026-2027 (en cours)</option>
+    </select>
+  </div>
   <div class="section">
     <div class="sec-head sec-emeraude open" onclick="toggleSec(this)">
       <h3>&#128269; Rechercher un &eacute;l&egrave;ve</h3><span class="arr">&#9660;</span>
@@ -697,6 +704,13 @@ table tr:nth-child(even){background:#F8FAFD}
     <div class="stat-box rouge"><div class="stat-val" id="cStatImpaye">0</div><div class="stat-lbl">Soldes impay&eacute;s</div></div>
     <div class="stat-box or"><div class="stat-val" id="cStatInsc">0</div><div class="stat-lbl">El&egrave;ves inscrits</div></div>
     <div class="stat-box vert"><div class="stat-val" id="cStatTaches">0</div><div class="stat-lbl">T&acirc;ches du jour</div></div>
+  </div>
+  <div style="margin:0 14px 10px;background:#fff;border-radius:10px;box-shadow:var(--shadow);padding:10px 14px;display:flex;align-items:center;gap:10px">
+    <span style="font-size:0.8em;font-weight:700;color:var(--bleu)">📅 Année scolaire :</span>
+    <select id="comSelectAnnee" onchange="changerAnneeCom()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;font-weight:700;color:var(--bleu)">
+      <option value="2025-2026">2025-2026 (archives)</option>
+      <option value="2026-2027">2026-2027 (en cours)</option>
+    </select>
   </div>
   <div class="section">
     <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
@@ -1098,6 +1112,32 @@ const SHEETS_IDS = {
   'CPP DABOU':               '1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA',
   'CPP ANYAMA':       '1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE',
 };
+
+// ★★★ NOUVEAU — bases 2026-2027, memes cles que SHEETS_IDS ci-dessus,
+// pour permettre au Directeur de basculer d'annee dans la recherche et les listes.
+const SHEETS_IDS_2026_2027 = {
+  'CPP LES PRINCES':     '1e37v34kcYXh0etsPjGo7rF7SyH0i1Xpj20azcirDUEY',
+  'ACADEMIE':            '17EuXU4ej_brSwDhTJV1c_TtmhxI3YkPI053YJAE9Es',
+  'GUINGLO VILLE':       '1B_ynuBLsVJbTzjtyezraayR813stEuPQm3GGtatuRD8',
+  'GNONTINROU':          '1izyFW1pksAY5tHc-Y6TqsvcH3GMb29dz6NGyctW9M1M',
+  'KOUTOUAN':            '15pnAjnfC7UKD-pxMwk8Nw4fbOZQX39KRnXSZMcNeYSc',
+  'SOAKPE':              '1Ge8j-YcvKBFBITuqmIHv0eBMDbsLNmcTln3-xzyrdD0',
+  'AKEIKOI 1':           '1I_Htuvo3g_LuLscOhWIHI2s1MIvQcV2q_H1zvQwKk5M',
+  'AKEIKOI 2':           '1EXVB5n654SSgp8xet3k8b89jghqNa6iX4tgeZ3u_KrU',
+  'CPP PRO':             '1Ok2B0vIs5mgTsS6YrKPvuYL2gEYHfCdjf5NQjT5UbC8',
+  'CPP TECH':            '1TWZKUMINGnYMEjm1ik5Vg_Mikpfc_u47eziuiCWZHW4',
+  'ETL PRINCES KOUIBLY': '1vzAsfcwVwRCS9di9cfRRyGMuEXuio1zXStOb2d65UIE',
+  'GS RITA ROSANE':      '1DARvq_r4K3ttj5c51y1M6M4wxSTsADP7kGcq1fTPpZQ',
+  'CPP DABOU':           '1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA',
+  'CPP ANYAMA':          '1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE',
+};
+
+// Renvoie l'ID de base correct selon l'annee actuellement selectionnee par le Directeur
+function getSheetsIdPourEcole(ecole) {
+  var annee = window._anneeSelectionnee || '2025-2026';
+  if (annee === '2026-2027') return SHEETS_IDS_2026_2027[ecole] || SHEETS_IDS[ecole];
+  return SHEETS_IDS[ecole];
+}
 const TARIFS={'CPP LES PRINCES':{college:1200,lycee:1500},'CPP PRO':{college:1200,lycee:1500},'CPP TECH':{college:1200,lycee:1500},'ETL PRINCES KOUIBLY':{college:1000,lycee:1200}};
 const TARIF_DEFAUT={college:1000,lycee:1200};
 const ECOLE_LABELS={'CPP LES PRINCES':"CPP Les Princes d'Abidjan",'GUINGLO VILLE':'CPP Les Princes de Guinglo Ville','GNONTINROU':'CPP Gnontinrou','KOUTOUAN':'CPP Les Princes de Koutouan','SOAKPE':'CPP Les Princes de Soakpe','CPP PRO':'CPP Professionnel','CPP TECH':'CPP Technique','ETL PRINCES KOUIBLY':'ETL Les Princes de Kouibly','GS RITA ROSANE':'GS Rita Rosane','CPP DABOU':'CPP Dabou','CPP ANYAMA':'CPP Anyama'};
@@ -1475,7 +1515,7 @@ function afficherFond(s){
   setTimeout(peuplerSelectEcoleFond,200);
 }
 async function chargerSynthese(ecole){
-  const sheetsId=SHEETS_IDS[ecole];if(!sheetsId)return null;
+  const sheetsId=getSheetsIdPourEcole(ecole);if(!sheetsId)return null;
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
     const r=await fetch(url);const data=await r.json();
@@ -1488,6 +1528,31 @@ async function chargerSynthese(ecole){
   }catch(e){return null;}
 }
 function _normRechDir(s){return String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
+
+// ★★★ NOUVEAU — change l'annee active et recharge les donnees affichees
+async function changerAnneeDir(){
+  window._anneeSelectionnee = document.getElementById('dirSelectAnnee').value;
+  window._dirEleves = null; // vider le cache pour forcer un rechargement avec la bonne base
+  document.getElementById('dirSearchResults').innerHTML = '';
+  document.getElementById('dirSearchInput').value = '';
+  showLoader('Chargement ' + window._anneeSelectionnee + '...');
+  const eleves = await chargerSynthese(currentStaff.ecole);
+  window._dirEleves = eleves || [];
+  document.getElementById('dStatEleves').textContent = window._dirEleves.length;
+  const impaye = window._dirEleves.filter(e=>e.statut!=='SOLDE').length;
+  document.getElementById('dStatImpaye').textContent = impaye;
+  document.getElementById('dStatTaux').textContent = window._dirEleves.length ? Math.round((window._dirEleves.length-impaye)/window._dirEleves.length*100)+'%' : '—';
+  donneesResultats = window._dirEleves.map(e=>({classe:e.classe,matricule:e.matricule,nom:e.nom,moy:e.moy,decision:e.decision}));
+  document.getElementById('dirResCount').textContent = '('+donneesResultats.length+' élèves)';
+  // reinitialiser les filtres classe (ils dependent de l'annee)
+  const selClasse = document.getElementById('dirResFiltreClasse');
+  if (selClasse) selClasse.innerHTML = '<option value="">Toutes les classes</option>';
+  renderTableResultats(donneesResultats,'dirResTable','dirResFiltreClasse','dirResFiltreDecision','dirResFiltreNom');
+  hideLoader();
+  const badge = window._anneeSelectionnee === '2026-2027' ? '2026-2027 (en cours)' : '2025-2026 (archives)';
+  showToast ? showToast('Année ' + badge + ' chargée') : null;
+}
+
 async function rechercherEleveDir(){
   const input=document.getElementById('dirSearchInput');
   const zone=document.getElementById('dirSearchResults');
@@ -1513,6 +1578,11 @@ async function rechercherEleveDir(){
   });
   if(resultats.length>30)h+='<p style="padding:8px 14px;font-size:0.72em;color:var(--gris);text-align:center">+'+(resultats.length-30)+' autre(s) resultat(s) - affinez votre recherche</p>';
   zone.innerHTML=h;
+}
+// ★★★ NOUVEAU — change l'annee active et recharge l'espace Comptable
+function changerAnneeCom(){
+  window._anneeSelectionnee = document.getElementById('comSelectAnnee').value;
+  afficherCom(currentStaff);
 }
 function afficherCom(s){
   document.getElementById('comAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
@@ -2593,7 +2663,7 @@ async function listerOnglets(sheetsId){
 
 async function ouvrirListesV9(profil){
   var ecole=currentStaff?currentStaff.ecole:null;var label=currentStaff?currentStaff.label:'';
-  if(!ecole){showToast('Non connecte','error');return;}var sheetsId=SHEETS_IDS[ecole];if(!sheetsId){showToast('Ecole non configuree','error');return;}
+  if(!ecole){showToast('Non connecte','error');return;}var sheetsId=getSheetsIdPourEcole(ecole);if(!sheetsId){showToast('Ecole non configuree','error');return;}
   showToast('Chargement des classes...','');
   var onglets=[];
   // Pour un éducateur, utiliser uniquement ses classes STAFF
@@ -2617,7 +2687,7 @@ function afficherModaleListesV9(ctx){
   var opts='<option value="ALL">Toute l\'ecole ('+ctx.onglets.length+' classes)</option>';
   ctx.keys.forEach(function(niv){var nb=ctx.niveaux[niv].length;opts+='<option value="'+niv+'">'+niv+' ('+nb+' classe'+(nb>1?'s':'')+')</option>';});
   var classes_cb_html='';ctx.onglets.forEach(function(cl){var id=cl.replace(/[^A-Z0-9]/gi,'_');classes_cb_html+='<label id="ni_'+id+'" style="display:flex;align-items:center;gap:6px;padding:8px;border:2px solid #C8E6C9;border-radius:6px;cursor:pointer;font-size:0.76em;font-weight:700;background:#fff"><input type="checkbox" id="cb_'+id+'" onchange="toggleClasseM2(this,\''+id+'\')"> <span><b>'+cl+'</b></span></label>';});
-  m.innerHTML='<div style="background:#fff;border-radius:12px;width:100%;max-width:620px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-height:92vh;display:flex;flex-direction:column"><div style="background:#1F4E79;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0"><span style="font-weight:700;font-size:0.95em">Listes par niveau — '+ctx.label+'</span><button onclick="fermerModale()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:20px;padding:4px 10px;cursor:pointer">✕</button></div><div style="overflow-y:auto;padding:0">'
+  m.innerHTML='<div style="background:#fff;border-radius:12px;width:100%;max-width:620px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-height:92vh;display:flex;flex-direction:column"><div style="background:#1F4E79;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0"><span style="font-weight:700;font-size:0.95em">Listes par niveau — '+ctx.label+' <span style="opacity:0.75;font-size:0.85em">('+(window._anneeSelectionnee||'2025-2026')+')</span></span><button onclick="fermerModale()" style="background:rgba(255,255,255,0.2);border:none;color:#fff;border-radius:20px;padding:4px 10px;cursor:pointer">✕</button></div><div style="overflow-y:auto;padding:0">'
     +'<div style="padding:12px;border-bottom:1px solid #E0E4EF"><p style="font-size:0.74em;font-weight:700;color:var(--bleu);margin-bottom:8px;text-transform:uppercase">Types de listes</p><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'+types_html+'</div></div>'
     +'<div style="padding:12px;border-bottom:1px solid #E0E4EF"><p style="font-size:0.74em;font-weight:700;color:var(--bleu);margin-bottom:6px;text-transform:uppercase">Mode 1 — PDF par classe individuelle</p><div style="font-size:0.74em;color:#555;margin-bottom:8px">Choisir le niveau puis cliquer sur chaque classe pour son PDF</div><select id="modeUnFiltre" onchange="majInfoModeUn()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;margin-bottom:8px">'+opts+'</select><div id="modeUnInfo" style="background:#E3F2FD;color:var(--bleu);border-radius:6px;padding:7px 10px;font-size:0.76em;font-weight:700;margin-bottom:8px">Toute l\'ecole — '+ctx.onglets.length+' classes</div><button onclick="afficherClassesModeUn()" style="width:100%;padding:10px;background:#1F4E79;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.82em;cursor:pointer">Afficher les classes</button><div id="modeUnGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px"></div></div>'
     +'<div style="padding:12px"><p style="font-size:0.74em;font-weight:700;color:#2E7D32;margin-bottom:6px;text-transform:uppercase">Mode 2 — PDF groupe par classe</p><div style="font-size:0.74em;color:#555;margin-bottom:8px">Cochez les classes a inclure dans le PDF groupe</div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;max-height:220px;overflow-y:auto;padding-right:4px">'+classes_cb_html+'</div><div style="display:flex;gap:6px;margin:8px 0"><button onclick="toutCocherClasses(true)" style="flex:1;padding:7px;border:1.5px solid #2E7D32;background:#fff;color:#2E7D32;border-radius:6px;font-size:0.76em;font-weight:700;cursor:pointer">Tout cocher</button><button onclick="toutCocherClasses(false)" style="flex:1;padding:7px;border:1.5px solid #C62828;background:#fff;color:#C62828;border-radius:6px;font-size:0.76em;font-weight:700;cursor:pointer">Tout decocher</button></div><div id="progListes" style="display:none;padding:8px;background:#E3F2FD;border-radius:6px;font-size:0.78em;color:var(--bleu);font-weight:700;margin-bottom:8px">Chargement...</div><button onclick="genPDFGroupe()" style="width:100%;padding:11px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.84em;cursor:pointer">Generer PDF groupe</button></div>'
