@@ -2057,33 +2057,31 @@ async function chargerPresencesEnseignants(ecole){
 }
 async function chargerResultats(ecole){
   const sheetsId=getSheetsIdPourEcole(ecole);if(!sheetsId)return[];
-  function normEntete(h){return String(h||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z_]/g,'');}
+  function normEntete(h){return String(h||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z]/g,'');}
   function trouverCol(entetes,motsClefs){
     for(const m of motsClefs){const idx=entetes.findIndex(h=>normEntete(h)===m);if(idx>=0)return idx;}
     for(const m of motsClefs){const idx=entetes.findIndex(h=>normEntete(h).indexOf(m)>=0);if(idx>=0)return idx;}
     return -1;
   }
+  let resultatsOnglet=[];
   for(const sn of['RESULTATS_2025_2026','RESULTATS','DELIBERATIONS','RESULTAT']){
     try{
       const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
       const r=await fetch(url);const data=await r.json();
       if(!data.values||data.values.length<2)continue;
       const entetes=data.values[0];
-      // Colonnes reperees par leur TITRE, pas par leur position -- tolere un ordre different selon les ecoles
       const iNiv=trouverCol(entetes,['NIVEAU','CLASSE']);
       const iMat=trouverCol(entetes,['MATRICULE']);
       const iNom=trouverCol(entetes,['NOM']);
-      const iMoy=trouverCol(entetes,['MOY_ANNUELLE','MOYENNE_ANNUELLE','MOYANNUELLE','MOYENNE','MOY']);
+      const iMoy=trouverCol(entetes,['MOYANNUELLE','MOYENNEANNUELLE','MOYENNE','MOY']);
       const iDec=trouverCol(entetes,['DECISION']);
-      const iSup=trouverCol(entetes,['NIVEAU_SUIVANT','CLASSE_SUPERIEURE','CLASSESUP','CLASSE_SUP']);
-      // Si ni Moyenne ni Decision ne sont reperables, ce n'est probablement pas
-      // le bon onglet (ex: un onglet de paiement nomme par erreur RESULTATS) -> on l'ignore
+      let iSup=entetes.findIndex(h=>/CLASSE.*\d{4}/.test(String(h||'').toUpperCase()));
+      if(iSup<0)iSup=trouverCol(entetes,['NIVEAUSUIVANT','CLASSESUPERIEURE','CLASSESUP']);
       if(iMoy<0 && iDec<0) continue;
-      // Repli sur position fixe si aucune entete reconnue (comportement precedent, compatibilite)
       const gI=(i,def)=>i>=0?i:def;
       const rows=data.values.slice(1).filter(row=>String(row[gI(iNom,2)]||'').trim());
       if(!rows.length)continue;
-      return rows.map(row=>({
+      resultatsOnglet=rows.map(row=>({
         niveau:String(row[gI(iNiv,0)]||'').trim(),
         matricule:String(row[gI(iMat,1)]||'').trim(),
         nom:String(row[gI(iNom,2)]||'').trim(),
@@ -2091,26 +2089,32 @@ async function chargerResultats(ecole){
         decision:String(row[gI(iDec,4)]||'').trim().toUpperCase(),
         classeSup:String(row[gI(iSup,5)]||'').trim()
       }));
+      break; // un onglet valide trouve, on arrete de chercher parmi les noms d'onglets candidats
     }catch(e){}
   }
-  // Dernier recours : les resultats sont parfois directement dans SYNTHESE
-  // (colonnes fixes connues : A=classe, B=matricule, C=nom, O=decision, P=moy_annuelle)
+  // ★ On complete TOUJOURS avec SYNTHESE en plus (pas a la place) --
+  // certaines ecoles ont le secondaire dans RESULTATS_2025_2026 et le
+  // primaire directement dans SYNTHESE (colonnes fixes O=decision, P=moy).
+  let resultatsSynthese=[];
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
     const r=await fetch(url);const data=await r.json();
     if(data.values&&data.values.length>=2){
       const rows=data.values.slice(1).filter(row=>row[2]&&String(row[2]).trim()&&row[14]&&String(row[14]).trim());
-      if(rows.length)return rows.map(row=>({
+      resultatsSynthese=rows.map(row=>({
         niveau:String(row[0]||'').trim(),
         matricule:String(row[1]||'').trim(),
         nom:String(row[2]||'').trim(),
         moy:parseFloat(row[15])||0,
         decision:String(row[14]||'').trim().toUpperCase(),
-        classeSup:''
+        classeSup:String(row[16]||'').trim()
       }));
     }
   }catch(e){}
-  return[];
+  // Fusion sans doublons (par matricule) -- priorite a l'onglet RESULTATS si le meme eleve existe des 2 cotes
+  const matriculesVus=new Set(resultatsOnglet.map(e=>e.matricule).filter(Boolean));
+  const fusion=resultatsOnglet.concat(resultatsSynthese.filter(e=>!e.matricule||!matriculesVus.has(e.matricule)));
+  return fusion;
 }
 async function chargerMessages(ecole){
   const sheetsId=SHEETS_IDS[ecole];if(!sheetsId)return[];
