@@ -1536,21 +1536,22 @@ async function changerAnneeDir(){
   document.getElementById('dirSearchResults').innerHTML = '';
   document.getElementById('dirSearchInput').value = '';
   showLoader('Chargement ' + window._anneeSelectionnee + '...');
-  const eleves = await chargerSynthese(currentStaff.ecole);
-  window._dirEleves = eleves || [];
-  document.getElementById('dStatEleves').textContent = window._dirEleves.length;
-  const impaye = window._dirEleves.filter(e=>e.statut!=='SOLDE').length;
-  document.getElementById('dStatImpaye').textContent = impaye;
-  document.getElementById('dStatTaux').textContent = window._dirEleves.length ? Math.round((window._dirEleves.length-impaye)/window._dirEleves.length*100)+'%' : '—';
-  donneesResultats = window._dirEleves.map(e=>({classe:e.classe,matricule:e.matricule,nom:e.nom,moy:e.moy,decision:e.decision}));
-  document.getElementById('dirResCount').textContent = '('+donneesResultats.length+' élèves)';
-  // reinitialiser les filtres classe (ils dependent de l'annee)
-  const selClasse = document.getElementById('dirResFiltreClasse');
-  if (selClasse) selClasse.innerHTML = '<option value="">Toutes les classes</option>';
-  renderTableResultats(donneesResultats,'dirResTable','dirResFiltreClasse','dirResFiltreDecision','dirResFiltreNom');
-  hideLoader();
-  const badge = window._anneeSelectionnee === '2026-2027' ? '2026-2027 (en cours)' : '2025-2026 (archives)';
-  showToast ? showToast('Année ' + badge + ' chargée') : null;
+  try {
+    const eleves = await chargerSynthese(currentStaff.ecole);
+    window._dirEleves = eleves || [];
+    document.getElementById('dStatEleves').textContent = window._dirEleves.length;
+    const impaye = window._dirEleves.filter(e=>e.statut!=='SOLDE').length;
+    document.getElementById('dStatImpaye').textContent = impaye;
+    document.getElementById('dStatTaux').textContent = window._dirEleves.length ? Math.round((window._dirEleves.length-impaye)/window._dirEleves.length*100)+'%' : '—';
+    document.getElementById('dirResCount').textContent = '('+window._dirEleves.length+' élèves)';
+    const badge = window._anneeSelectionnee === '2026-2027' ? '2026-2027 (en cours)' : '2025-2026 (archives)';
+    if (typeof showToast === 'function') showToast('Année ' + badge + ' chargée');
+  } catch(err) {
+    console.error('Erreur changement annee:', err);
+    if (typeof showToast === 'function') showToast('Erreur de chargement — reessayez', 'error');
+  } finally {
+    hideLoader(); // ★ toujours execute, meme en cas d'erreur -> plus jamais bloque
+  }
 }
 
 async function rechercherEleveDir(){
