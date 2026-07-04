@@ -1539,13 +1539,20 @@ async function changerAnneeDir(){
   try {
     const eleves = await chargerSynthese(currentStaff.ecole);
     window._dirEleves = eleves || [];
-    document.getElementById('dStatEleves').textContent = window._dirEleves.length;
+    const nb = window._dirEleves.length;
     const impaye = window._dirEleves.filter(e=>e.statut!=='SOLDE').length;
-    document.getElementById('dStatImpaye').textContent = impaye;
-    document.getElementById('dStatTaux').textContent = window._dirEleves.length ? Math.round((window._dirEleves.length-impaye)/window._dirEleves.length*100)+'%' : '—';
-    document.getElementById('dirResCount').textContent = '('+window._dirEleves.length+' élèves)';
+    // Mise a jour defensive : on ne touche que les elements qui existent vraiment
+    // (la mise en page change selon le type de directeur : PRIM / SEC / BOTH)
+    const elEleves = document.getElementById('statEleves') || document.getElementById('dStatEleves');
+    if (elEleves) elEleves.textContent = nb;
+    const elImpaye = document.getElementById('dStatImpaye');
+    if (elImpaye) elImpaye.textContent = impaye;
+    const elTaux = document.getElementById('dStatTaux');
+    if (elTaux) elTaux.textContent = nb ? Math.round((nb-impaye)/nb*100)+'%' : '—';
+    const elResCount = document.getElementById('dirResCount');
+    if (elResCount) elResCount.textContent = '('+nb+' élèves)';
     const badge = window._anneeSelectionnee === '2026-2027' ? '2026-2027 (en cours)' : '2025-2026 (archives)';
-    if (typeof showToast === 'function') showToast('Année ' + badge + ' chargée');
+    if (typeof showToast === 'function') showToast('Année ' + badge + ' chargée — ' + nb + ' élève(s)');
   } catch(err) {
     console.error('Erreur changement annee:', err);
     if (typeof showToast === 'function') showToast('Erreur de chargement — reessayez', 'error');
