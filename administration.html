@@ -2045,8 +2045,8 @@ async function chargerPresencesEnseignants(ecole){
   liste.innerHTML=h;
 }
 async function chargerResultats(ecole){
-  const sheetsId=SHEETS_IDS[ecole];if(!sheetsId)return[];
-  for(const sn of['RESULTATS','DELIBERATIONS','RESULTAT']){try{const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';const r=await fetch(url);const data=await r.json();if(data.values&&data.values.length>=2)return data.values.slice(1).filter(row=>row[2]&&String(row[2]).trim()).map(row=>({niveau:String(row[0]||'').trim(),matricule:String(row[1]||'').trim(),nom:String(row[2]||'').trim(),moy:parseFloat(row[3])||0,decision:String(row[4]||'').trim().toUpperCase(),classeSup:String(row[5]||'').trim()}));}catch(e){}}
+  const sheetsId=getSheetsIdPourEcole(ecole);if(!sheetsId)return[];
+  for(const sn of['RESULTATS_2025_2026','RESULTATS','DELIBERATIONS','RESULTAT']){try{const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';const r=await fetch(url);const data=await r.json();if(data.values&&data.values.length>=2)return data.values.slice(1).filter(row=>row[2]&&String(row[2]).trim()).map(row=>({niveau:String(row[0]||'').trim(),matricule:String(row[1]||'').trim(),nom:String(row[2]||'').trim(),moy:parseFloat(row[3])||0,decision:String(row[4]||'').trim().toUpperCase(),classeSup:String(row[5]||'').trim()}));}catch(e){}}
   return[];
 }
 async function chargerMessages(ecole){
