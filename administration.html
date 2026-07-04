@@ -2057,7 +2057,42 @@ async function chargerPresencesEnseignants(ecole){
 }
 async function chargerResultats(ecole){
   const sheetsId=getSheetsIdPourEcole(ecole);if(!sheetsId)return[];
-  for(const sn of['RESULTATS_2025_2026','RESULTATS','DELIBERATIONS','RESULTAT']){try{const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';const r=await fetch(url);const data=await r.json();if(data.values&&data.values.length>=2)return data.values.slice(1).filter(row=>row[2]&&String(row[2]).trim()).map(row=>({niveau:String(row[0]||'').trim(),matricule:String(row[1]||'').trim(),nom:String(row[2]||'').trim(),moy:parseFloat(row[3])||0,decision:String(row[4]||'').trim().toUpperCase(),classeSup:String(row[5]||'').trim()}));}catch(e){}}
+  function normEntete(h){return String(h||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z_]/g,'');}
+  function trouverCol(entetes,motsClefs){
+    for(const m of motsClefs){const idx=entetes.findIndex(h=>normEntete(h)===m);if(idx>=0)return idx;}
+    for(const m of motsClefs){const idx=entetes.findIndex(h=>normEntete(h).indexOf(m)>=0);if(idx>=0)return idx;}
+    return -1;
+  }
+  for(const sn of['RESULTATS_2025_2026','RESULTATS','DELIBERATIONS','RESULTAT']){
+    try{
+      const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+      const r=await fetch(url);const data=await r.json();
+      if(!data.values||data.values.length<2)continue;
+      const entetes=data.values[0];
+      // Colonnes reperees par leur TITRE, pas par leur position -- tolere un ordre different selon les ecoles
+      const iNiv=trouverCol(entetes,['NIVEAU','CLASSE']);
+      const iMat=trouverCol(entetes,['MATRICULE']);
+      const iNom=trouverCol(entetes,['NOM']);
+      const iMoy=trouverCol(entetes,['MOY_ANNUELLE','MOYENNE_ANNUELLE','MOYANNUELLE','MOYENNE','MOY']);
+      const iDec=trouverCol(entetes,['DECISION']);
+      const iSup=trouverCol(entetes,['NIVEAU_SUIVANT','CLASSE_SUPERIEURE','CLASSESUP','CLASSE_SUP']);
+      // Si ni Moyenne ni Decision ne sont reperables, ce n'est probablement pas
+      // le bon onglet (ex: un onglet de paiement nomme par erreur RESULTATS) -> on l'ignore
+      if(iMoy<0 && iDec<0) continue;
+      // Repli sur position fixe si aucune entete reconnue (comportement precedent, compatibilite)
+      const gI=(i,def)=>i>=0?i:def;
+      const rows=data.values.slice(1).filter(row=>String(row[gI(iNom,2)]||'').trim());
+      if(!rows.length)continue;
+      return rows.map(row=>({
+        niveau:String(row[gI(iNiv,0)]||'').trim(),
+        matricule:String(row[gI(iMat,1)]||'').trim(),
+        nom:String(row[gI(iNom,2)]||'').trim(),
+        moy:parseFloat(row[gI(iMoy,3)])||0,
+        decision:String(row[gI(iDec,4)]||'').trim().toUpperCase(),
+        classeSup:String(row[gI(iSup,5)]||'').trim()
+      }));
+    }catch(e){}
+  }
   return[];
 }
 async function chargerMessages(ecole){
