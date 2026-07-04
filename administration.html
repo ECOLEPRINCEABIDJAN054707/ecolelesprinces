@@ -2094,20 +2094,31 @@ async function chargerResultats(ecole){
   }
   // ★ On complete TOUJOURS avec SYNTHESE en plus (pas a la place) --
   // certaines ecoles ont le secondaire dans RESULTATS_2025_2026 et le
-  // primaire directement dans SYNTHESE (colonnes fixes O=decision, P=moy).
+  // primaire directement dans SYNTHESE. Colonnes reperees par leur TITRE
+  // (comme pour RESULTATS_2025_2026), avec repli sur position fixe O/P/Q si aucun titre trouve.
   let resultatsSynthese=[];
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
     const r=await fetch(url);const data=await r.json();
     if(data.values&&data.values.length>=2){
-      const rows=data.values.slice(1).filter(row=>row[2]&&String(row[2]).trim()&&row[14]&&String(row[14]).trim());
+      const entetesS=data.values[0];
+      const sNiv=trouverCol(entetesS,['NIVEAU','CLASSE']);
+      const sMat=trouverCol(entetesS,['MATRICULE']);
+      const sNom=trouverCol(entetesS,['NOM']);
+      const sMoy=trouverCol(entetesS,['MOYANNUELLE','MOYENNEANNUELLE','MOYENNE','MOY']);
+      const sDec=trouverCol(entetesS,['DECISION']);
+      let sSup=entetesS.findIndex(h=>/CLASSE.*\d{4}/.test(String(h||'').toUpperCase()));
+      if(sSup<0)sSup=trouverCol(entetesS,['NIVEAUSUIVANT','CLASSESUPERIEURE','CLASSESUP']);
+      const gS=(i,def)=>i>=0?i:def;
+      const iDecFinal=gS(sDec,14),iMoyFinal=gS(sMoy,15),iSupFinal=gS(sSup,16);
+      const rows=data.values.slice(1).filter(row=>String(row[gS(sNom,2)]||'').trim()&&row[iDecFinal]&&String(row[iDecFinal]).trim());
       resultatsSynthese=rows.map(row=>({
-        niveau:String(row[0]||'').trim(),
-        matricule:String(row[1]||'').trim(),
-        nom:String(row[2]||'').trim(),
-        moy:parseFloat(row[15])||0,
-        decision:String(row[14]||'').trim().toUpperCase(),
-        classeSup:String(row[16]||'').trim()
+        niveau:String(row[gS(sNiv,0)]||'').trim(),
+        matricule:String(row[gS(sMat,1)]||'').trim(),
+        nom:String(row[gS(sNom,2)]||'').trim(),
+        moy:parseFloat(row[iMoyFinal])||0,
+        decision:String(row[iDecFinal]||'').trim().toUpperCase(),
+        classeSup:String(row[iSupFinal]||'').trim()
       }));
     }
   }catch(e){}
