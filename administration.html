@@ -392,15 +392,15 @@ table tr:nth-child(even){background:#F8FAFD}
       <div id="dirSearchResults"></div>
     </div>
   </div>
-  <div class="section">
+  <div class="section" id="dirSecAffectation">
     <div class="sec-head sec-rouge" onclick="toggleSec(this)">
-      <h3>🎓 Statut Affectation — Tous les élèves <span id="affCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+      <h3>🎓 Statut AFF/NAFF — Collégiens (6EME→TLE) <span id="affCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="dirAffBody">
       <div style="display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
         <select id="affFiltreClasse" onchange="filtrerAffectation()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:DM Sans,sans-serif;outline:none"><option value="">Toutes les classes</option></select>
         <select id="affFiltreStatut" onchange="filtrerAffectation()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:DM Sans,sans-serif;outline:none">
-          <option value="">Tous statuts</option><option value="AFF">Affecté(e)</option><option value="NAFF">Non affecté(e)</option><option value="NON RENSEIGNE">Non renseigné</option>
+          <option value="">Tous statuts</option><option value="AFF">AFF</option><option value="NAFF">NAFF</option><option value="NON RENSEIGNE">Non renseigné</option>
         </select>
         <button onclick="chargerAffectationTous()" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">🔄 Charger / Actualiser</button>
       </div>
@@ -1348,6 +1348,8 @@ function afficherDir(s){
   document.getElementById('dirFiltresZone').style.display=!isPRIM?'block':'none';
   document.getElementById('dirSecAttente').style.display=!isPRIM?'block':'none';
   document.getElementById('dirSecSalaires').style.display=!isPRIM?'block':'none';
+  const secAff=document.getElementById('dirSecAffectation');
+  if(secAff) secAff.style.display=isPRIM?'none':'block'; // AFF/NAFF ne concerne que les collegiens
   if(!isPRIM)remplirMois();
   document.getElementById('dirSecBulletins').style.display=!isSEC?'block':'none';
   document.getElementById('dirBtnBulZone').style.display=!isSEC?'block':'none';
@@ -1572,13 +1574,16 @@ async function chargerAffectationTous(){
     const r=await fetch(url);const data=await r.json();
     if(!data.values||data.values.length<2){zone.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Aucune donnee</td></tr>';return;}
     const rows=[];
+    const regexSEC=/^(6|5|4|3|2NDE|1ERE|TLE)/i;
     for(let i=1;i<data.values.length;i++){
       const row=data.values[i];
       const matricule=String(row[1]||'').trim();
       if(!matricule) continue;
+      const classe=String(row[0]||'').trim();
+      if(!regexSEC.test(classe)) continue; // exclure le primaire — statut AFF/NAFF concerne uniquement les collegiens
       rows.push({
         ligne:i+1,
-        classe:String(row[0]||'').trim(),
+        classe:classe,
         matricule:matricule,
         nom:String(row[2]||'').trim(),
         tel1:String(row[6]||'').trim(),
