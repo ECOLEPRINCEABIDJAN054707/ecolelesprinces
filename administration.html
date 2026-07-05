@@ -2366,11 +2366,57 @@ function renderMessages(data,bodyId,canReply){
   else if(!connexions.length)h='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun message parent</p>';
   body.innerHTML=h;
 }
+// ============================================================
+// DANS administration.html — cherche cette fonction (Ctrl+F : "envoyerReponse")
+// ============================================================
+//
+// ANCIENNE VERSION (à remplacer ENTIÈREMENT) :
+//
+// async function envoyerReponse(btn){
+//   const matricule=btn.getAttribute('data-mat');const inp=document.getElementById(btn.getAttribute('data-rep'));
+//   if(!inp||!inp.value.trim()){showToast('Ecrivez une reponse','error');return;}
+//   try{await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({type:'REPONDRE_MESSAGE',matricule,reponse:inp.value.trim(),ecole:currentStaff.ecole})});showToast('Reponse envoyee','success');inp.value='';}catch(e){showToast('Erreur envoi','error');}
+// }
+//
+// ============================================================
+// NOUVELLE VERSION — remplace-la par celle-ci :
+// ============================================================
+
 async function envoyerReponse(btn){
-  const matricule=btn.getAttribute('data-mat');const inp=document.getElementById(btn.getAttribute('data-rep'));
+  const matricule=btn.getAttribute('data-mat');
+  const inp=document.getElementById(btn.getAttribute('data-rep'));
   if(!inp||!inp.value.trim()){showToast('Ecrivez une reponse','error');return;}
-  try{await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({type:'REPONDRE_MESSAGE',matricule,reponse:inp.value.trim(),ecole:currentStaff.ecole})});showToast('Reponse envoyee','success');inp.value='';}catch(e){showToast('Erreur envoi','error');}
+  const reponse=inp.value.trim();
+  const sheetsId=SHEETS_IDS[currentStaff.ecole];
+  if(!sheetsId){showToast('Ecole non configuree','error');return;}
+  return new Promise(function(resolve){
+    const cbName='rep_'+Date.now();
+    const script=document.createElement('script');
+    window[cbName]=function(data){
+      delete window[cbName];
+      try{document.body.removeChild(script);}catch(e){}
+      if(data&&data.ok){showToast('Reponse envoyee','success');inp.value='';}
+      else{showToast('Erreur : '+(data&&data.error||'echec envoi'),'error');}
+      resolve(data);
+    };
+    script.onerror=function(){
+      delete window[cbName];
+      try{document.body.removeChild(script);}catch(e){}
+      showToast('Erreur reseau','error');
+      resolve({ok:false});
+    };
+    const url=APP_SCRIPT_URL_ADMIN+'?callback='+cbName+'&action=repondreMessageParent'
+      +'&sheetsId='+encodeURIComponent(sheetsId)
+      +'&matricule='+encodeURIComponent(matricule)
+      +'&reponse='+encodeURIComponent(reponse);
+    script.src=url;
+    document.body.appendChild(script);
+    setTimeout(function(){
+      if(window[cbName]){delete window[cbName];showToast('Delai depasse','error');resolve({ok:false});}
+    },10000);
+  });
 }
+
 async function chargerResultatsEtMessages(ecole,profil){
   const[resultats,messages]=await Promise.all([chargerResultats(ecole),chargerMessages(ecole)]);
   donneesResultats=resultats;donneesMessages=messages;
