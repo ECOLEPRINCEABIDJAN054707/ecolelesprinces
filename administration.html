@@ -1115,6 +1115,9 @@ table tr:nth-child(even){background:#F8FAFD}
 <script>
 const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbzwGgqVP502S65OKM_rPVnA5CSpokZ9Btmmg_mEzh_SNC56Z5yXvQxdMVjD_-VyIcx2/exec';
 const APP_SCRIPT_URL_ADMIN='https://script.google.com/macros/s/AKfycbzwGgqVP502S65OKM_rPVnA5CSpokZ9Btmmg_mEzh_SNC56Z5yXvQxdMVjD_-VyIcx2/exec';
+// ★ NOUVEAU — projet "CPP Pointage API" (validation salaires + bulletins primaire)
+// Different de APPS_SCRIPT_URL/APP_SCRIPT_URL_ADMIN qui pointent vers CENTRALE_DOPOST (statuts/contacts/messages)
+const APPS_SCRIPT_POINTAGE='https://script.google.com/macros/s/AKfycbx7nBhAMxM_zAMAHCPfPQPkktJ9avtOXm2igfzgOuw9PF1jW0Y7ElUApPoeHvw_F-pT/exec';
 const APPS_SCRIPT_PEDA='https://script.google.com/macros/s/AKfycbwp27cGwqXrYZXDjcpl-Io_gtNKcczIdxMJ974NUrDHxmR46JgY0F7FRXhsMtuatDhM/exec';
 const API_KEY='AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA';
 const SHEETS_IDS = {
@@ -1364,7 +1367,7 @@ function afficherDir(s){
   alertes.forEach(a=>{ha+='<div class="alerte-item"><div class="alerte-ico">'+a.ico+'</div><div><div class="alerte-nom">'+a.nom+'</div><div class="alerte-detail">'+a.detail+'</div></div></div>';});
   document.getElementById('dirAlertesBody').innerHTML=ha;
   const dsa=document.getElementById('dStatAlert');if(dsa)dsa.textContent=alertes.length;
-  useDemoPeda(getSemActuelle());setTimeout(initSaisiePedago,500);setTimeout(initAppelDir,600);
+  chargerSuiviPedagogique();setTimeout(initSaisiePedago,500);setTimeout(initAppelDir,600);
   let hag='';AGENDA_DEMO.forEach(a=>{hag+='<div class="agenda-item"><div class="agenda-date" style="background:'+a.col+'"><div class="jour">'+a.jour+'</div><div class="mois">'+a.mois+'</div></div><div><div class="agenda-titre">'+a.titre+'</div><div class="agenda-detail">'+a.detail+'</div></div></div>';});
   document.getElementById('dirAgendaBody').innerHTML=hag;
   if(!isPRIM)chargerPointage();
@@ -1452,7 +1455,7 @@ async function traiterAttente(decision){
     const script=document.createElement('script');
     window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(res&&res.ok){showToast('Decision: '+salaire.toLocaleString('fr-FR')+' F','success');fermerModalAttente();setTimeout(()=>chargerPointage(),2000);}else showToast('Erreur','error');resolve(res);};
     script.onerror=()=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}showToast('Erreur connexion','error');resolve({ok:false});};
-    script.src=APPS_SCRIPT_URL+'?'+params.toString();document.body.appendChild(script);
+    script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();document.body.appendChild(script);
     setTimeout(()=>{if(window[cbName]){delete window[cbName];showToast('Delai depasse','error');resolve({ok:false});}},10000);
   });
 }
@@ -1464,7 +1467,7 @@ function chargerBulletinsPrimaire(){
   window[cbName]=data=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(!data||!data.ok){body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur</p>';return;}const bulletins=data.bulletins||data.enAttente||[];const bc=document.getElementById('bulletinCompteur');if(bc)bc.textContent=bulletins.length;const bs=document.getElementById('statBulletins');if(bs)bs.textContent=bulletins.length;if(!bulletins.length){body.innerHTML='<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun bulletin en attente</p>';return;}let html='';bulletins.forEach((b,idx)=>{html+='<div class="bul-card"><div class="bul-info"><div class="bul-classe">'+b.classe+' — '+b.mois+'</div><div class="bul-meta">'+(b.nb||0)+' eleve(s)</div></div><span class="bul-nb">'+(b.nb||0)+'</span><button class="btn-val-bul" onclick="ouvrirModalBulletin('+idx+')">Valider</button></div>';});body.innerHTML=html;window._bulletinsEnAttente=bulletins;};
   script.onerror=()=>{delete window[cbName];body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur reseau</p>';};
   setTimeout(()=>{if(window[cbName]){delete window[cbName];body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Delai depasse</p>';}},10000);
-  script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type=GET_ATTENTE_PRIMAIRE&ecole='+encodeURIComponent(currentStaff.ecole||'');document.body.appendChild(script);
+  script.src=APPS_SCRIPT_POINTAGE+'?callback='+cbName+'&type=GET_ATTENTE_PRIMAIRE&ecole='+encodeURIComponent(currentStaff.ecole||'');document.body.appendChild(script);
 }
 function ouvrirModalBulletin(idx){
   bulletinEnCours=window._bulletinsEnAttente[idx];const b=bulletinEnCours;
@@ -1476,7 +1479,7 @@ function confirmerValidationBulletin(){
   const cbName='bul_val_'+Date.now();const script=document.createElement('script');
   window[cbName]=data=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(data&&data.ok){showToast('Bulletin valide !','success');document.getElementById('modalBulletin').style.display='none';bulletinEnCours=null;setTimeout(chargerBulletinsPrimaire,1500);}else showToast('Erreur','error');};
   script.onerror=()=>{delete window[cbName];showToast('Erreur reseau','error');};
-  script.src=APPS_SCRIPT_URL+'?callback='+cbName+'&type=VALIDER_BULLETIN_PRIMAIRE&ecole='+encodeURIComponent(currentStaff.ecole||'')+'&classe='+encodeURIComponent(b.classe||'')+'&mois='+encodeURIComponent(b.mois||'')+'&annee=2026-2027';
+  script.src=APPS_SCRIPT_POINTAGE+'?callback='+cbName+'&type=VALIDER_BULLETIN_PRIMAIRE&ecole='+encodeURIComponent(currentStaff.ecole||'')+'&classe='+encodeURIComponent(b.classe||'')+'&mois='+encodeURIComponent(b.mois||'')+'&annee=2026-2027';
   document.body.appendChild(script);showToast('Validation en cours...','');
 }
 async function syncEnseignants(){
@@ -1505,8 +1508,39 @@ function showPedaPage(id,el){
   if(pg){pg.style.display='block';pg.classList.add('active');}
   if(id==='alertes')renderAlertesDir();
 }
-function useDemoPeda(sem){
-  donneesDevoirs=[];
+// ══ SUIVI PÉDAGOGIQUE — lecture reelle depuis CAHIER_TEXTES de la bonne ecole ══
+async function chargerSuiviPedagogique(){
+  const s=currentStaff; if(!s) return;
+  const sheetsId=getSheetsIdPourEcole(s.ecole);
+  if(!sheetsId){donneesSheetPeda=[];renderDashboardPeda();return;}
+  try{
+    const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent('CAHIER_TEXTES!A2:N5000')+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const res=await fetch(url);
+    const data=await res.json();
+    const rows=data.values||[];
+    // On garde uniquement la DERNIERE entree par (enseignant + classe + matiere)
+    // Colonnes CAHIER_TEXTES : DATE,HEURE,CLASSE,MATIERE,ENSEIGNANT,LECON,CONTENU,AVANCEMENT,DEVOIR,DOCUMENTS,OBSERVATION,ECOLE,SemTheo,SemReelle
+    const map={};
+    rows.forEach(function(row){
+      const classe=String(row[2]||'').trim();
+      const matiere=String(row[3]||'').trim();
+      const enseignant=String(row[4]||'').trim();
+      const avancementTxt=String(row[7]||'').trim().toLowerCase();
+      const semReel=parseFloat(row[13])||0;
+      if(!enseignant||!classe) return;
+      const cle=enseignant+'|'+classe+'|'+matiere;
+      if(!map[cle]||semReel>=map[cle]._semReelBrut){
+        // Conversion approximative texte -> pourcentage, juste pour la barre visuelle
+        const avPct=avancementTxt==='en avance'?90:avancementTxt==='en retard'?30:70;
+        map[cle]={enseignant:enseignant,classe:classe,matiere:matiere,semReel:semReel,avancement:avPct,_semReelBrut:semReel,avancementTxt:avancementTxt};
+      }
+    });
+    donneesSheetPeda=Object.values(map);
+  }catch(e){
+    console.warn('chargerSuiviPedagogique erreur:',e);
+    donneesSheetPeda=[];
+  }
+  renderDashboardPeda();
 }
 function renderDashboardPeda(){
   const sem=getSemActuelle();let ok=0,att=0,ret=0;
@@ -1768,6 +1802,7 @@ async function changerAnneeDir(){
     if (elTaux) elTaux.textContent = nb ? Math.round((nb-impaye)/nb*100)+'%' : '—';
     const elResCount = document.getElementById('dirResCount');
     if (elResCount) elResCount.textContent = '('+nb+' élèves)';
+    chargerSuiviPedagogique(); // ★ recharger le suivi pedagogique avec la bonne annee
     const badge = window._anneeSelectionnee === '2026-2027' ? '2026-2027 (en cours)' : '2025-2026 (archives)';
     if (typeof showToast === 'function') showToast('Année ' + badge + ' chargée — ' + nb + ' élève(s)');
   } catch(err) {
@@ -2366,57 +2401,11 @@ function renderMessages(data,bodyId,canReply){
   else if(!connexions.length)h='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun message parent</p>';
   body.innerHTML=h;
 }
-// ============================================================
-// DANS administration.html — cherche cette fonction (Ctrl+F : "envoyerReponse")
-// ============================================================
-//
-// ANCIENNE VERSION (à remplacer ENTIÈREMENT) :
-//
-// async function envoyerReponse(btn){
-//   const matricule=btn.getAttribute('data-mat');const inp=document.getElementById(btn.getAttribute('data-rep'));
-//   if(!inp||!inp.value.trim()){showToast('Ecrivez une reponse','error');return;}
-//   try{await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({type:'REPONDRE_MESSAGE',matricule,reponse:inp.value.trim(),ecole:currentStaff.ecole})});showToast('Reponse envoyee','success');inp.value='';}catch(e){showToast('Erreur envoi','error');}
-// }
-//
-// ============================================================
-// NOUVELLE VERSION — remplace-la par celle-ci :
-// ============================================================
-
 async function envoyerReponse(btn){
-  const matricule=btn.getAttribute('data-mat');
-  const inp=document.getElementById(btn.getAttribute('data-rep'));
+  const matricule=btn.getAttribute('data-mat');const inp=document.getElementById(btn.getAttribute('data-rep'));
   if(!inp||!inp.value.trim()){showToast('Ecrivez une reponse','error');return;}
-  const reponse=inp.value.trim();
-  const sheetsId=SHEETS_IDS[currentStaff.ecole];
-  if(!sheetsId){showToast('Ecole non configuree','error');return;}
-  return new Promise(function(resolve){
-    const cbName='rep_'+Date.now();
-    const script=document.createElement('script');
-    window[cbName]=function(data){
-      delete window[cbName];
-      try{document.body.removeChild(script);}catch(e){}
-      if(data&&data.ok){showToast('Reponse envoyee','success');inp.value='';}
-      else{showToast('Erreur : '+(data&&data.error||'echec envoi'),'error');}
-      resolve(data);
-    };
-    script.onerror=function(){
-      delete window[cbName];
-      try{document.body.removeChild(script);}catch(e){}
-      showToast('Erreur reseau','error');
-      resolve({ok:false});
-    };
-    const url=APP_SCRIPT_URL_ADMIN+'?callback='+cbName+'&action=repondreMessageParent'
-      +'&sheetsId='+encodeURIComponent(sheetsId)
-      +'&matricule='+encodeURIComponent(matricule)
-      +'&reponse='+encodeURIComponent(reponse);
-    script.src=url;
-    document.body.appendChild(script);
-    setTimeout(function(){
-      if(window[cbName]){delete window[cbName];showToast('Delai depasse','error');resolve({ok:false});}
-    },10000);
-  });
+  try{await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({type:'REPONDRE_MESSAGE',matricule,reponse:inp.value.trim(),ecole:currentStaff.ecole})});showToast('Reponse envoyee','success');inp.value='';}catch(e){showToast('Erreur envoi','error');}
 }
-
 async function chargerResultatsEtMessages(ecole,profil){
   const[resultats,messages]=await Promise.all([chargerResultats(ecole),chargerMessages(ecole)]);
   donneesResultats=resultats;donneesMessages=messages;
