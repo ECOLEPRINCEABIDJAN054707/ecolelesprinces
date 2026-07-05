@@ -393,6 +393,27 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
   <div class="section">
+    <div class="sec-head sec-rouge" onclick="toggleSec(this)">
+      <h3>🎓 Statut Affectation — Tous les élèves <span id="affCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="dirAffBody">
+      <div style="display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+        <select id="affFiltreClasse" onchange="filtrerAffectation()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:DM Sans,sans-serif;outline:none"><option value="">Toutes les classes</option></select>
+        <select id="affFiltreStatut" onchange="filtrerAffectation()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:DM Sans,sans-serif;outline:none">
+          <option value="">Tous statuts</option><option value="AFF">Affecté(e)</option><option value="NAFF">Non affecté(e)</option><option value="NON RENSEIGNE">Non renseigné</option>
+        </select>
+        <button onclick="chargerAffectationTous()" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">🔄 Charger / Actualiser</button>
+      </div>
+      <div id="affResume" style="padding:8px 14px;font-size:0.8em"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Matricule</th><th>Nom</th><th>Classe</th><th>Statut</th><th>Tél. Père</th><th>Tél. Mère</th><th>Tél. Tuteur</th><th></th></tr></thead>
+          <tbody id="affTbody"><tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Cliquez sur "Charger" pour voir vos élèves</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
       <h3>&#128424; Listes par niveau</h3><span class="arr">&#9660;</span>
     </div>
@@ -1539,6 +1560,135 @@ async function chargerSynthese(ecole){
   }catch(e){return null;}
 }
 function _normRechDir(s){return String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
+
+// ══ STATUT AFFECTATION — Tous les élèves (colonnes R/S de SYNTHESE) ══
+async function chargerAffectationTous(){
+  const s=currentStaff; if(!s) return;
+  const sheetsId=SHEETS_IDS[s.ecole]; if(!sheetsId){showToast('Ecole non configuree','error');return;}
+  const zone=document.getElementById('affTbody');
+  zone.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Chargement...</td></tr>';
+  try{
+    const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r=await fetch(url);const data=await r.json();
+    if(!data.values||data.values.length<2){zone.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Aucune donnee</td></tr>';return;}
+    const rows=[];
+    for(let i=1;i<data.values.length;i++){
+      const row=data.values[i];
+      const matricule=String(row[1]||'').trim();
+      if(!matricule) continue;
+      rows.push({
+        ligne:i+1,
+        classe:String(row[0]||'').trim(),
+        matricule:matricule,
+        nom:String(row[2]||'').trim(),
+        tel1:String(row[6]||'').trim(),
+        tel2:String(row[7]||'').trim(),
+        tel3:String(row[8]||'').trim(),
+        classe2026:String(row[17]||'').trim(),
+        statut:String(row[18]||'').trim().toUpperCase()
+      });
+    }
+    window._affListe=rows;
+    const selCl=document.getElementById('affFiltreClasse');
+    if(selCl){
+      selCl.innerHTML='<option value="">Toutes les classes</option>';
+      const classes=[...new Set(rows.map(r=>r.classe))].filter(Boolean).sort();
+      classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCl.appendChild(o);});
+    }
+    const cnt=document.getElementById('affCount'); if(cnt)cnt.textContent='('+rows.length+' eleves)';
+    filtrerAffectation();
+  }catch(e){zone.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--rouge)">Erreur chargement</td></tr>';}
+}
+
+function filtrerAffectation(){
+  const rows=window._affListe||[];
+  const fc=(document.getElementById('affFiltreClasse')||{}).value||'';
+  const fs=(document.getElementById('affFiltreStatut')||{}).value||'';
+  const filtered=rows.filter(r=>{
+    const st=r.statut||'NON RENSEIGNE';
+    return (!fc||r.classe===fc)&&(!fs||st===fs);
+  });
+  renderAffectation(filtered);
+}
+
+function renderAffectation(rows){
+  const tbody=document.getElementById('affTbody');
+  const nbAff=rows.filter(r=>r.statut==='AFF').length;
+  const nbNaff=rows.filter(r=>r.statut==='NAFF').length;
+  const nbVide=rows.length-nbAff-nbNaff;
+  const nbSansContact=rows.filter(r=>!r.tel1&&!r.tel2&&!r.tel3).length;
+  const resume=document.getElementById('affResume');
+  if(resume)resume.innerHTML=
+    '<span class="bdg bg-bleu">'+rows.length+' eleve(s)</span> &nbsp;'
+    +'<span class="bdg bg-vert">'+nbAff+' Affecte(s)</span> &nbsp;'
+    +'<span class="bdg bg-rouge">'+nbNaff+' Non affecte(s)</span> &nbsp;'
+    +'<span class="bdg" style="background:#eee;color:#666">'+nbVide+' Non renseigne</span>'
+    +(nbSansContact>0?' &nbsp;<span class="bdg bg-orange">'+nbSansContact+' sans aucun contact</span>':'');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Aucun eleve pour ce filtre</td></tr>';return;}
+  let h='';
+  rows.forEach((r,idx)=>{
+    const telInput=(champ,val,label)=>'<input type="tel" id="'+champ+'_'+idx+'" value="'+(val||'')+'" placeholder="'+label+'" maxlength="15" '
+      +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')" '
+      +'onblur="sauvegarderContact('+idx+')" '
+      +'style="width:100%;padding:5px;border-radius:6px;border:1.5px solid var(--border);font-size:0.78em">';
+    h+='<tr>'
+      +'<td style="font-size:0.75em;color:var(--gris)">'+r.matricule+'</td>'
+      +'<td style="font-weight:600">'+r.nom+'</td>'
+      +'<td>'+r.classe+'</td>'
+      +'<td><select id="affSel_'+idx+'" onchange="sauvegarderAffectation('+idx+',this)" style="width:100%;padding:5px;border-radius:6px;border:1.5px solid var(--border);font-size:0.8em">'
+      +'<option value=""'+(r.statut===''?' selected':'')+'>-- Non renseigne --</option>'
+      +'<option value="AFF"'+(r.statut==='AFF'?' selected':'')+'>Affecte(e)</option>'
+      +'<option value="NAFF"'+(r.statut==='NAFF'?' selected':'')+'>Non affecte(e)</option>'
+      +'</select></td>'
+      +'<td>'+telInput('affTel1',r.tel1,'Père')+'</td>'
+      +'<td>'+telInput('affTel2',r.tel2,'Mère')+'</td>'
+      +'<td>'+telInput('affTel3',r.tel3,'Tuteur')+'</td>'
+      +'<td id="affStatut_'+idx+'" style="font-size:0.7em;color:var(--gris)">—</td>'
+      +'</tr>';
+  });
+  tbody.innerHTML=h;
+  window._affListeCourante=rows;
+}
+
+async function sauvegarderAffectation(idx,sel){
+  const r=window._affListeCourante[idx];
+  const statutCell=document.getElementById('affStatut_'+idx);
+  if(statutCell)statutCell.textContent='...';
+  try{
+    const sheetsId=SHEETS_IDS[currentStaff.ecole];
+    const payload={action:'majStatutEleve',sheetsId:sheetsId,ligne:r.ligne,
+      classe2026:r.classe2026||r.classe,statutEleve:sel.value,matricule:r.matricule,nom:r.nom};
+    const resp=await fetch(APP_SCRIPT_URL_ADMIN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const result=await resp.json();
+    if(result&&result.succes){r.statut=sel.value;if(statutCell)statutCell.textContent='✓ enregistré';showToast('Statut enregistre','success');}
+    else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement','error');}
+  }catch(e){if(statutCell)statutCell.textContent='Erreur';showToast('Erreur reseau','error');}
+}
+
+async function sauvegarderContact(idx){
+  const r=window._affListeCourante[idx];
+  const tel1=(document.getElementById('affTel1_'+idx)||{}).value||'';
+  const tel2=(document.getElementById('affTel2_'+idx)||{}).value||'';
+  const tel3=(document.getElementById('affTel3_'+idx)||{}).value||'';
+  const statutCell=document.getElementById('affStatut_'+idx);
+  // Validation : 8 chiffres minimum si un numero est renseigne (champ vide = OK, pas obligatoire ici)
+  if((tel1&&tel1.length<8)||(tel2&&tel2.length<8)||(tel3&&tel3.length<8)){
+    showToast('Numero incomplet (8 chiffres minimum)','error');
+    return;
+  }
+  // Ne rien envoyer si rien n'a change
+  if(tel1===r.tel1&&tel2===r.tel2&&tel3===r.tel3) return;
+  if(statutCell)statutCell.textContent='...';
+  try{
+    const sheetsId=SHEETS_IDS[currentStaff.ecole];
+    const payload={action:'majContactsEleve',sheetsId:sheetsId,ligne:r.ligne,
+      telPere:tel1,telMere:tel2,telTuteur:tel3,matricule:r.matricule};
+    const resp=await fetch(APP_SCRIPT_URL_ADMIN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const result=await resp.json();
+    if(result&&result.succes){r.tel1=tel1;r.tel2=tel2;r.tel3=tel3;if(statutCell)statutCell.textContent='✓ contact maj';showToast('Contact enregistre','success');}
+    else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement contact','error');}
+  }catch(e){if(statutCell)statutCell.textContent='Erreur';showToast('Erreur reseau','error');}
+}
 
 // ★★★ NOUVEAU — change l'annee active et recharge les donnees affichees
 async function changerAnneeDir(){
