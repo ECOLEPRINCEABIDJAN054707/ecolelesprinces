@@ -1699,19 +1699,31 @@ function renderAffectation(rows){
   window._affListeCourante=rows;
 }
 
+// ══ Helper JSONP commun — evite le blocage CORS des navigateurs ══
+function appelJSONP(url, params, timeoutMs){
+  return new Promise(resolve=>{
+    const cbName='jp_'+Date.now()+'_'+Math.floor(Math.random()*10000);
+    const script=document.createElement('script');
+    const qs=new URLSearchParams(Object.assign({callback:cbName}, params));
+    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+    script.onerror=()=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:false,succes:false,error:'reseau'});};
+    script.src=url+'?'+qs.toString();
+    document.body.appendChild(script);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve({ok:false,succes:false,error:'timeout'});}},timeoutMs||10000);
+  });
+}
+
 async function sauvegarderAffectation(idx,sel){
   const r=window._affListeCourante[idx];
   const statutCell=document.getElementById('affStatut_'+idx);
   if(statutCell)statutCell.textContent='...';
-  try{
-    const sheetsId=SHEETS_IDS[currentStaff.ecole];
-    const payload={action:'majStatutEleve',sheetsId:sheetsId,ligne:r.ligne,
-      classe2026:r.classe2026||r.classe,statutEleve:sel.value,matricule:r.matricule,nom:r.nom};
-    const resp=await fetch(APP_SCRIPT_URL_ADMIN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    const result=await resp.json();
-    if(result&&result.succes){r.statut=sel.value;if(statutCell)statutCell.textContent='✓ enregistré';showToast('Statut enregistre','success');}
-    else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement','error');}
-  }catch(e){if(statutCell)statutCell.textContent='Erreur';showToast('Erreur reseau','error');}
+  const sheetsId=SHEETS_IDS[currentStaff.ecole];
+  const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
+    action:'majStatutEleve',sheetsId:sheetsId,ligne:r.ligne,
+    classe2026:r.classe2026||r.classe,statutEleve:sel.value,matricule:r.matricule,nom:r.nom
+  });
+  if(result&&result.succes){r.statut=sel.value;if(statutCell)statutCell.textContent='✓ enregistré';showToast('Statut enregistre','success');}
+  else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement','error');}
 }
 
 async function sauvegarderContact(idx){
@@ -1728,15 +1740,13 @@ async function sauvegarderContact(idx){
   // Ne rien envoyer si rien n'a change
   if(tel1===r.tel1&&tel2===r.tel2&&tel3===r.tel3) return;
   if(statutCell)statutCell.textContent='...';
-  try{
-    const sheetsId=SHEETS_IDS[currentStaff.ecole];
-    const payload={action:'majContactsEleve',sheetsId:sheetsId,ligne:r.ligne,
-      telPere:tel1,telMere:tel2,telTuteur:tel3,matricule:r.matricule};
-    const resp=await fetch(APP_SCRIPT_URL_ADMIN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    const result=await resp.json();
-    if(result&&result.succes){r.tel1=tel1;r.tel2=tel2;r.tel3=tel3;if(statutCell)statutCell.textContent='✓ contact maj';showToast('Contact enregistre','success');}
-    else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement contact','error');}
-  }catch(e){if(statutCell)statutCell.textContent='Erreur';showToast('Erreur reseau','error');}
+  const sheetsId=SHEETS_IDS[currentStaff.ecole];
+  const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
+    action:'majContactsEleve',sheetsId:sheetsId,ligne:r.ligne,
+    telPere:tel1,telMere:tel2,telTuteur:tel3,matricule:r.matricule
+  });
+  if(result&&result.succes){r.tel1=tel1;r.tel2=tel2;r.tel3=tel3;if(statutCell)statutCell.textContent='✓ contact maj';showToast('Contact enregistre','success');}
+  else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement contact','error');}
 }
 
 // ══ MODIFICATION NOM — avec confirmation + traçabilité ══
@@ -1756,27 +1766,21 @@ async function confirmerModifNom(idx){
 
   const statutCell=document.getElementById('affStatut_'+idx);
   if(statutCell)statutCell.textContent='...';
-  try{
-    const sheetsId=SHEETS_IDS[currentStaff.ecole];
-    const payload={action:'majFicheEleve',sheetsId:sheetsId,ligne:r.ligne,
-      champ:'nom',ancienneValeur:ancienneValeur,nouvelleValeur:nouvelleValeur,
-      matricule:r.matricule,ecole:currentStaff.ecole,
-      directeur:(currentStaff.nom||currentStaff.matricule||'inconnu')};
-    const resp=await fetch(APP_SCRIPT_URL_ADMIN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    const result=await resp.json();
-    if(result&&result.succes){
-      r.nom=nouvelleValeur;
-      if(statutCell)statutCell.textContent='✓ modifié';
-      showToast('Nom mis a jour (historise)','success');
-    }else{
-      if(statutCell)statutCell.textContent='Erreur';
-      input.value=ancienneValeur;
-      showToast('Erreur : '+(result&&result.message||'echec'),'error');
-    }
-  }catch(e){
+  const sheetsId=SHEETS_IDS[currentStaff.ecole];
+  const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
+    action:'majFicheEleve',sheetsId:sheetsId,ligne:r.ligne,
+    champ:'nom',ancienneValeur:ancienneValeur,nouvelleValeur:nouvelleValeur,
+    matricule:r.matricule,ecole:currentStaff.ecole,
+    directeur:(currentStaff.nom||currentStaff.matricule||'inconnu')
+  });
+  if(result&&result.succes){
+    r.nom=nouvelleValeur;
+    if(statutCell)statutCell.textContent='✓ modifié';
+    showToast('Nom mis a jour (historise)','success');
+  }else{
     if(statutCell)statutCell.textContent='Erreur';
     input.value=ancienneValeur;
-    showToast('Erreur reseau','error');
+    showToast('Erreur : '+(result&&result.message||'echec'),'error');
   }
 }
 
