@@ -394,21 +394,21 @@ table tr:nth-child(even){background:#F8FAFD}
   </div>
   <div class="section" id="dirSecAffectation">
     <div class="sec-head sec-rouge" onclick="toggleSec(this)">
-      <h3>🎓 Contacts parents & Statut Affecté(e) / Non affecté(e) (collège) <span id="affCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+      <h3>🎓 Contacts parents & Statut Affecté(e) / Non affecté(e) (collège) <span id="affCount" style="font-size:0.9em;opacity:0.85"></span></h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="dirAffBody">
       <div style="display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
-        <select id="affFiltreClasse" onchange="filtrerAffectation()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:DM Sans,sans-serif;outline:none"><option value="">Toutes les classes</option></select>
-        <select id="affFiltreStatut" onchange="filtrerAffectation()" style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;font-family:DM Sans,sans-serif;outline:none">
+        <select id="affFiltreClasse" onchange="filtrerAffectation()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;font-family:DM Sans,sans-serif;outline:none"><option value="">Toutes les classes</option></select>
+        <select id="affFiltreStatut" onchange="filtrerAffectation()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;font-family:DM Sans,sans-serif;outline:none">
           <option value="">Tous statuts</option><option value="AFF">Affecté(e)</option><option value="NAFF">Non affecté(e)</option><option value="NON RENSEIGNE">Non renseigné</option>
         </select>
-        <button onclick="chargerAffectationTous()" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">🔄 Charger / Actualiser</button>
+        <button onclick="chargerAffectationTous()" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.92em;font-weight:600;cursor:pointer">🔄 Charger / Actualiser</button>
       </div>
-      <div id="affResume" style="padding:8px 14px;font-size:0.8em"></div>
+      <div id="affResume" style="padding:10px 14px;font-size:0.95em"></div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th>Matricule</th><th>Nom</th><th>Classe</th><th>Statut</th><th>Tél. Père</th><th>Tél. Mère</th><th>Tél. Tuteur</th><th></th></tr></thead>
-          <tbody id="affTbody"><tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Cliquez sur "Charger" pour voir vos élèves</td></tr></tbody>
+          <thead><tr><th style="font-size:0.9em">Matricule</th><th style="font-size:0.9em">Nom</th><th style="font-size:0.9em">Classe</th><th style="font-size:0.9em">Statut</th><th style="font-size:0.9em">Tél. Père</th><th style="font-size:0.9em">Tél. Mère</th><th style="font-size:0.9em">Tél. Tuteur</th><th></th></tr></thead>
+          <tbody id="affTbody"><tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris);font-size:0.95em">Cliquez sur "Charger" pour voir vos élèves</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -1626,39 +1626,39 @@ function renderAffectation(rows){
   const nbSansContact=rows.filter(r=>!r.tel1&&!r.tel2&&!r.tel3).length;
   const resume=document.getElementById('affResume');
   if(resume)resume.innerHTML=
-    '<span class="bdg bg-bleu">'+rows.length+' eleve(s)</span> &nbsp;'
-    +'<span class="bdg bg-vert">'+nbAff+' Affecte(s)</span> &nbsp;'
-    +'<span class="bdg bg-rouge">'+nbNaff+' Non affecte(s)</span> &nbsp;'
-    +'<span class="bdg" style="background:#eee;color:#666">'+nbVide+' Non renseigne (college)</span>'
-    +(nbPrim>0?' &nbsp;<span class="bdg bg-bleu" style="background:#E3F2FD;color:#1565C0">'+nbPrim+' primaire (contacts seulement)</span>':'')
-    +(nbSansContact>0?' &nbsp;<span class="bdg bg-orange">'+nbSansContact+' sans aucun contact</span>':'');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Aucun eleve pour ce filtre</td></tr>';return;}
+    '<span class="bdg bg-bleu" style="font-size:0.95em">'+rows.length+' eleve(s)</span> &nbsp;'
+    +'<span class="bdg bg-vert" style="font-size:0.95em">'+nbAff+' Affecte(s)</span> &nbsp;'
+    +'<span class="bdg bg-rouge" style="font-size:0.95em">'+nbNaff+' Non affecte(s)</span> &nbsp;'
+    +'<span class="bdg" style="background:#eee;color:#666;font-size:0.95em">'+nbVide+' Non renseigne (college)</span>'
+    +(nbPrim>0?' &nbsp;<span class="bdg bg-bleu" style="background:#E3F2FD;color:#1565C0;font-size:0.95em">'+nbPrim+' primaire (contacts seulement)</span>':'')
+    +(nbSansContact>0?' &nbsp;<span class="bdg bg-orange" style="font-size:0.95em">'+nbSansContact+' sans aucun contact</span>':'');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris);font-size:0.95em">Aucun eleve pour ce filtre</td></tr>';return;}
   let h='';
   rows.forEach((r,idx)=>{
     const telInput=(champ,val,label)=>'<input type="tel" id="'+champ+'_'+idx+'" value="'+(val||'')+'" placeholder="'+label+'" maxlength="15" '
       +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')" '
       +'onblur="sauvegarderContact('+idx+')" '
-      +'style="width:100%;padding:5px;border-radius:6px;border:1.5px solid var(--border);font-size:0.78em">';
+      +'style="width:100%;padding:7px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em">';
     const statutCol=r.estCollege
-      ? '<select id="affSel_'+idx+'" onchange="sauvegarderAffectation('+idx+',this)" style="width:100%;padding:5px;border-radius:6px;border:1.5px solid var(--border);font-size:0.8em">'
+      ? '<select id="affSel_'+idx+'" onchange="sauvegarderAffectation('+idx+',this)" style="width:100%;padding:7px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em">'
         +'<option value=""'+(r.statut===''?' selected':'')+'>-- Non renseigne --</option>'
         +'<option value="AFF"'+(r.statut==='AFF'?' selected':'')+'>Affecté(e)</option>'
         +'<option value="NAFF"'+(r.statut==='NAFF'?' selected':'')+'>Non affecté(e)</option>'
         +'</select>'
-      : '<span style="font-size:0.72em;color:var(--gris);font-style:italic">— (Primaire)</span>';
+      : '<span style="font-size:0.9em;color:var(--gris);font-style:italic">— (Primaire)</span>';
     const nomInput='<input type="text" id="affNom_'+idx+'" value="'+r.nom.replace(/"/g,'&quot;')+'" '
       +'onblur="confirmerModifNom('+idx+')" '
-      +'style="width:100%;padding:5px;border-radius:6px;border:1.5px solid var(--border);font-size:0.8em;font-weight:600">';
+      +'style="width:100%;padding:7px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em;font-weight:600">';
     // Classe : affichage simple, non modifiable (necessite un vrai transfert d'onglet, hors scope)
     h+='<tr>'
-      +'<td style="font-size:0.75em;color:var(--gris)">'+r.matricule+'</td>'
+      +'<td style="font-size:0.9em;color:var(--gris)">'+r.matricule+'</td>'
       +'<td>'+nomInput+'</td>'
-      +'<td>'+r.classe+'</td>'
+      +'<td style="font-size:0.95em">'+r.classe+'</td>'
       +'<td>'+statutCol+'</td>'
       +'<td>'+telInput('affTel1',r.tel1,'Père')+'</td>'
       +'<td>'+telInput('affTel2',r.tel2,'Mère')+'</td>'
       +'<td>'+telInput('affTel3',r.tel3,'Tuteur')+'</td>'
-      +'<td id="affStatut_'+idx+'" style="font-size:0.7em;color:var(--gris)">—</td>'
+      +'<td id="affStatut_'+idx+'" style="font-size:0.85em;color:var(--gris)">—</td>'
       +'</tr>';
   });
   tbody.innerHTML=h;
