@@ -1184,7 +1184,7 @@ async function validerAppel() {
   }));
   const taux = Math.round(nbP / Math.max(eleves.length,1) * 100);
   try {
-    await envoyerDonnees('APPEL', {
+    const res = await envoyerDonnees('APPEL', {
       date:formatDate(maintenant), heure:horodatage, classe:coursActuel.classe,
       matiere:coursActuel.matiere, enseignant:user.nom, ecole:user.ecole,
       heureDebutEDT:coursActuel.heureDebutEDT, heureFinEDT:coursActuel.heureFinEDT,
@@ -1192,6 +1192,11 @@ async function validerAppel() {
       signature:document.getElementById('sigCanvas').toDataURL('image/png')
     });
     hideLoader();
+    if (res && res.ok === false) {
+      showToast(`❌ Erreur serveur : ${res.error||'echec inconnu'}`,'error');
+      console.error('APPEL refuse par le serveur:', res);
+      return;
+    }
     if (taux < 90) showToast(`⚠️ Taux présence ${taux}% — Direction notifiée`,'warn');
     else showToast(`✅ Appel validé — ${nbP}/${eleves.length} (${taux}%)`,'success');
   } catch(e) {
