@@ -2624,7 +2624,7 @@ async function chargerEDT() {
         const iClasse  = headers.findIndex(h => h.includes('CLASS'));
         const iMat     = headers.findIndex(h => h.includes('MAT'));
         const iEns     = headers.findIndex(h => h.includes('ENS') || h.includes('PROF'));
-        const iHeures  = headers.findIndex(h => h.includes('HEURE') || h === 'H');
+        const iHeures  = headers.findIndex(h => h==='HEURES' || (h.includes('HEURE') && !h.includes('DEBUT') && !h.includes('FIN')));
         const iStatut  = headers.findIndex(h => h.includes('STAT'));
         const iSalaire = headers.findIndex(h => h.includes('SAL'));
         const iHdebut  = headers.findIndex(h => h.includes('DEB'));
@@ -3189,7 +3189,7 @@ async function chargerPointageEdu(periode) {
       const iC=h.findIndex(x=>x.includes('CLASS'));
       const iM=h.findIndex(x=>x.includes('MAT'));
       const iE=h.findIndex(x=>x.includes('ENS')||x.includes('PROF'));
-      const iH=h.findIndex(x=>x.includes('HEURE')||x==='H');
+      const iH=h.findIndex(x=>x==='HEURES'||(x.includes('HEURE')&&!x.includes('DEBUT')&&!x.includes('FIN')));
       const iS=h.findIndex(x=>x.includes('STAT'));
       const iSal=h.findIndex(x=>x.includes('SAL'));
       coursValides = dPM.values.slice(1).map(row=>({
