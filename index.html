@@ -968,12 +968,55 @@ function afficherEspaceProspect(eleve) {
     '</div>';
 }
 
-function afficherEspaceParent(eleve) {
+async function afficherEspaceParent(eleve) {
   // Cas prospect : élève CEPE d'une autre école courtisé
   if (eleve.estProspect) {
     afficherEspaceProspect(eleve);
     return;
   }
+
+  // ★ NOUVEAU — Vérifier et basculer vers 2026-2027 AVANT tout affichage
+  // Si une inscription 2026-2027 existe, on met à jour eleve.sheetsId/classe/du/verse/solde
+  // ICI, une seule fois, pour que TOUTES les fonctions suivantes (chargerEDT,
+  // chargerHistoriquePaiements, chargerFicheRenseignement...) utilisent directement
+  // la bonne base — sans qu'on ait besoin de modifier chacune d'elles.
+  try {
+    const infoBasc = window.SHEETS_IDS_COMPLET[eleve.sheetsId] || {};
+    const base2026 = infoBasc.base2026;
+    if (base2026 && eleve.ecoleCode !== 'CPP_PRO') {
+      const rangeBasc = encodeURIComponent('SYNTHESE!A2:J5000');
+      const urlBasc = 'https://sheets.googleapis.com/v4/spreadsheets/' + base2026 +
+        '/values/' + rangeBasc + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+      const resBasc = await fetch(urlBasc);
+      if (resBasc.ok) {
+        const dataBasc = await resBasc.json();
+        const rowsBasc = dataBasc.values || [];
+        const eleveMBasc = String(eleve.matricule || '').trim().toUpperCase().replace(/\s+/g, '');
+        for (const row of rowsBasc) {
+          const matBasc = String(row[1] || '').trim().toUpperCase().replace(/\s+/g, '');
+          if (matBasc === eleveMBasc) {
+            eleve.sheetsId = base2026;
+            eleve.classe   = String(row[0] || '').trim();
+            eleve.du       = parseFloat(row[3]) || 0;
+            eleve.verse    = parseFloat(row[4]) || 0;
+            eleve.solde    = parseFloat(String(row[5] || '0').replace(/\s/g, '').replace(/,(\d{3})/g, '$1').replace(',', '.')) || 0;
+            window._classe2026  = eleve.classe;
+            window._inscrit2026 = {
+              classe: eleve.classe, nom: String(row[2] || '').trim(),
+              du: eleve.du, verse: eleve.verse, solde: eleve.solde,
+              statut: String(row[9] || '').trim().toUpperCase()
+            };
+            break;
+          }
+        }
+      }
+    }
+  } catch (eBasculement) {
+    // Filet de securite : si la verification echoue, on continue simplement
+    // avec les donnees d'origine — jamais de page bloquee a cause de ça.
+    console.warn('Verification 2026-2027 echouee, poursuite avec donnees actuelles:', eBasculement);
+  }
+
   const ecole = eleve.ecole;
   const couleur = (ecole && ecole.couleur) ? ecole.couleur : "#1F4E79";
   const nomEcole = (ecole && ecole.nom) ? ecole.nom : "Reseau Les Princes";
@@ -1143,7 +1186,7 @@ async function dlBulletin(onglet,btn){var eleve=window._eleveActuel;if(!eleve)re
 
 var EDT_HORAIRES=[{type:"cours",h:"07h45 - 08h55"},{type:"cours",h:"08h55 - 09h50"},{type:"pause",h:"&#9208; Recreation  09h50 - 10h10"},{type:"cours",h:"10h10 - 11h05"},{type:"cours",h:"11h05 - 12h00"},{type:"pause",h:"&#127860; Dejeuner  12h00 - 13h05"},{type:"cours",h:"13h05 - 14h00"},{type:"cours",h:"14h00 - 14h55"},{type:"cours",h:"14h55 - 15h50"},{type:"cours",h:"15h50 - 16h45"},{type:"cours",h:"16h45 - 17h40"}];
 
-async function chargerEDT(eleve){var div=document.getElementById("edtBody");var titre=document.getElementById("titreEDT");if(!div)return;var parts=ANNEE_SCOLAIRE_ACTIVE.split("-");var anneeEDT=parts.length===2?(parseInt(parts[0])+1)+"-"+(parseInt(parts[1])+1):ANNEE_SCOLAIRE_ACTIVE;if(titre)titre.innerHTML="&#128336; EMPLOI DU TEMPS "+anneeEDT+" <span>v</span>";var classeRaw=(eleve.classe||"").trim().toUpperCase().replace(/[ÈÉÊË]/g,"E").replace(/[ÀÂÄ]/g,"A").replace(/[ÎÏ]/g,"I").replace(/[ÔÖ]/g,"O").replace(/[ÛÙÜ]/g,"U").replace(/Ç/g,"C").replace(/ /g,"_").replace(/[^A-Z0-9_]/g,"").replace(/_+/g,"_").replace(/^_|_$/g,"");var onglet="EDT_"+classeRaw;try{var sid=eleve.sheetsId||CONFIG.SHEETS_ID;var urlBase="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/";var urlParams="?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";var res=await fetch(urlBase+encodeURIComponent(onglet+"!A1:G15")+urlParams);if(!res.ok){edtVide(div,eleve.classe,anneeEDT);return;}var data=await res.json();if(!data.values||data.values.length<2){edtVide(div,eleve.classe,anneeEDT);return;}var rows=data.values.slice(1);var html="<div style='font-size:12px;color:#2E7D32;margin-bottom:8px'>Classe : <strong>"+eleve.classe+"</strong> | Annee : <strong>"+anneeEDT+"</strong></div>";html+="<div style='overflow-x:auto;-webkit-overflow-scrolling:touch'><table style='width:100%;min-width:420px;border-collapse:collapse'>";var thStyle="padding:9px 6px;color:#fff;font-size:12px;font-weight:700;border:1px solid #2a5298;text-align:center";html+="<tr style='background:#1F4E79'><th style='"+thStyle+"'>HORAIRE</th><th style='"+thStyle+"'>LUN</th><th style='"+thStyle+"'>MAR</th><th style='"+thStyle+"'>MER</th><th style='"+thStyle+"'>JEU</th><th style='"+thStyle+"'>VEN</th><th style='"+thStyle+"'>SAM</th></tr>";var rowIdx=0;for(var i=0;i<EDT_HORAIRES.length;i++){var slot=EDT_HORAIRES[i];if(slot.type==="pause"){html+="<tr style='background:#FFFDE7'><td colspan='7' style='text-align:center;font-weight:bold;color:#B8860B;font-size:12px;padding:6px;border:1px solid #FFE082'>"+slot.h+"</td></tr>";}else{var row=rows[rowIdx]||[];rowIdx++;var bgRow=rowIdx%2===0?"#ffffff":"#f4f6fa";html+="<tr style='background:"+bgRow+"'><td style='font-weight:600;font-size:12px;white-space:nowrap;color:#1F4E79;padding:7px 8px;border:1px solid #e0e6f0'>"+slot.h+"</td>";for(var j=1;j<=6;j++)html+="<td style='font-size:12px;color:#222;padding:7px 4px;border:1px solid #e0e6f0;text-align:center'>"+String(row[j]||"").trim()+"</td>";html+="</tr>";}}html+="</table></div>";div.innerHTML=html;}catch(e){edtVide(div,eleve.classe,anneeEDT);}}
+async function chargerEDT(eleve){var div=document.getElementById("edtBody");var titre=document.getElementById("titreEDT");if(!div)return;var anneeEDT=ANNEE_SCOLAIRE_ACTIVE;if(titre)titre.innerHTML="&#128336; EMPLOI DU TEMPS "+anneeEDT+" <span>v</span>";var classeRaw=(eleve.classe||"").trim().toUpperCase().replace(/[ÈÉÊË]/g,"E").replace(/[ÀÂÄ]/g,"A").replace(/[ÎÏ]/g,"I").replace(/[ÔÖ]/g,"O").replace(/[ÛÙÜ]/g,"U").replace(/Ç/g,"C").replace(/ /g,"_").replace(/[^A-Z0-9_]/g,"").replace(/_+/g,"_").replace(/^_|_$/g,"");var onglet="EDT_"+classeRaw;try{var sid=eleve.sheetsId||CONFIG.SHEETS_ID;var urlBase="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/";var urlParams="?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";var res=await fetch(urlBase+encodeURIComponent(onglet+"!A1:G15")+urlParams);if(!res.ok){edtVide(div,eleve.classe,anneeEDT);return;}var data=await res.json();if(!data.values||data.values.length<2){edtVide(div,eleve.classe,anneeEDT);return;}var rows=data.values.slice(1);var html="<div style='font-size:12px;color:#2E7D32;margin-bottom:8px'>Classe : <strong>"+eleve.classe+"</strong> | Annee : <strong>"+anneeEDT+"</strong></div>";html+="<div style='overflow-x:auto;-webkit-overflow-scrolling:touch'><table style='width:100%;min-width:420px;border-collapse:collapse'>";var thStyle="padding:9px 6px;color:#fff;font-size:12px;font-weight:700;border:1px solid #2a5298;text-align:center";html+="<tr style='background:#1F4E79'><th style='"+thStyle+"'>HORAIRE</th><th style='"+thStyle+"'>LUN</th><th style='"+thStyle+"'>MAR</th><th style='"+thStyle+"'>MER</th><th style='"+thStyle+"'>JEU</th><th style='"+thStyle+"'>VEN</th><th style='"+thStyle+"'>SAM</th></tr>";var rowIdx=0;for(var i=0;i<EDT_HORAIRES.length;i++){var slot=EDT_HORAIRES[i];if(slot.type==="pause"){html+="<tr style='background:#FFFDE7'><td colspan='7' style='text-align:center;font-weight:bold;color:#B8860B;font-size:12px;padding:6px;border:1px solid #FFE082'>"+slot.h+"</td></tr>";}else{var row=rows[rowIdx]||[];rowIdx++;var bgRow=rowIdx%2===0?"#ffffff":"#f4f6fa";html+="<tr style='background:"+bgRow+"'><td style='font-weight:600;font-size:12px;white-space:nowrap;color:#1F4E79;padding:7px 8px;border:1px solid #e0e6f0'>"+slot.h+"</td>";for(var j=1;j<=6;j++)html+="<td style='font-size:12px;color:#222;padding:7px 4px;border:1px solid #e0e6f0;text-align:center'>"+String(row[j]||"").trim()+"</td>";html+="</tr>";}}html+="</table></div>";div.innerHTML=html;}catch(e){edtVide(div,eleve.classe,anneeEDT);}}
 function edtVide(div,classe,annee){div.innerHTML="<div style='text-align:center;padding:24px;background:#F1F8E9;border-radius:10px'><div style='font-size:36px;margin-bottom:10px'>&#128197;</div><p style='font-weight:bold;color:#2E7D32;font-size:15px;margin-bottom:6px'>Emploi du temps "+annee+"</p><p style='font-size:13px;color:#666;margin-bottom:4px'>Pas encore disponible pour la classe <strong>"+classe+"</strong></p></div>";}
 
 async function chargerNotes(eleve){const div=document.getElementById("notesBody");div.innerHTML="<div style='text-align:center;padding:20px;color:#1F4E79;'><div class='spinner' style='width:24px;height:24px;border:3px solid #D6E4F0;border-top-color:#1F4E79;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;'></div><p style='font-size:0.82em;'>Chargement des notes...</p></div>";try{const mat=eleve.matricule;const trimestres=['NOTES_T3','NOTES_T2','NOTES_T1'];const trimNoms=['3eme Trimestre','2eme Trimestre','1er Trimestre'];let rowTrouve=null,trimNom="",toutesLesRows=null;for(let t=0;t<trimestres.length;t++){const range=encodeURIComponent(trimestres[t]+"!A1:V2000");const sheetsId=eleve.sheetsId||CONFIG.SHEETS_ID;const url="https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";try{const res=await fetch(url);const data=await res.json();if(!data.values)continue;for(const row of data.values){if(String(row[1]||"").trim().toUpperCase()===mat.toUpperCase()){rowTrouve=row;trimNom=trimNoms[t];break;}}if(rowTrouve){toutesLesRows=data.values;break;}}catch(e){}}if(!rowTrouve){afficherNotesVides(div);return;}const row=rowTrouve;let groupes=[{titre:"&#128218; FRANCAIS",couleur:"#1565C0",matieres:[{nom:"Comp. Française",val:row[5],col:5},{nom:"Oral Français",val:row[6],col:6},{nom:"Orthographe",val:row[7],col:7}]},{titre:"&#127757; LETTRES & SCIENCES HUMAINES",couleur:"#2E7D32",matieres:[{nom:"Anglais",val:row[8],col:8},{nom:"Histoire-Geographie",val:row[11],col:11}]},{titre:"&#128300; SCIENCES",couleur:"#C62828",matieres:[{nom:"Mathematiques",val:row[12],col:12},{nom:"Sciences Physiques",val:row[13],col:13},{nom:"SVT",val:row[14],col:14}]},{titre:"&#11088; AUTRES MATIERES",couleur:"#E65100",matieres:[{nom:"EPS",val:row[15],col:15},{nom:"EDHC",val:row[16],col:16},{nom:"Conduite",val:row[17],col:17}]}];let html="<div style='background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;border-left:4px solid #1F4E79;'><p style='font-size:0.82em;color:#1F4E79;font-weight:bold;margin-bottom:2px;'>&#128203; RELEVE DE NOTES - "+trimNom+" 2025-2026</p><p style='font-size:0.76em;color:#666;'>Classe : <strong>"+eleve.classe+"</strong> - Matricule : <strong>"+mat+"</strong></p></div>";groupes.forEach(g=>{const aDesNotes=g.matieres.some(m=>{const f=parseFloat(String(m.val||"").replace(",","."));return !isNaN(f)&&f!==22;});if(!aDesNotes)return;html+="<div style='margin-bottom:14px;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);'><div style='background:"+g.couleur+";padding:9px 12px;'><span style='font-weight:bold;color:white;font-size:0.88em;'>"+g.titre+"</span></div>";g.matieres.forEach(m=>{const f=parseFloat(String(m.val||"").replace(",","."));if(isNaN(f)||f===22)return;const cn=f>=14?"#2E7D32":f>=10?"#B8860B":"#C62828";const bn=f>=14?"#E8F5E9":f>=10?"#FFFDE7":"#FFEBEE";html+="<div style='display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid #f0f0f0;'><div style='flex:1;font-size:0.86em;font-weight:bold;color:#333;'>"+m.nom+"</div><div style='text-align:center;min-width:54px;background:"+bn+";border-radius:8px;padding:6px 8px;'><div style='font-size:1.1em;font-weight:bold;color:"+cn+";'>"+f.toFixed(2)+"</div><div style='font-size:0.65em;color:"+cn+";'>/20</div></div></div>";});html+="</div>";});div.innerHTML=html;}catch(e){afficherNotesVides(div);}}
