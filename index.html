@@ -1212,25 +1212,33 @@ async function dlBulletin(onglet,btn){var eleve=window._eleveActuel;if(!eleve)re
 
 var EDT_HORAIRES=[{type:"cours",h:"07h45 - 08h55"},{type:"cours",h:"08h55 - 09h50"},{type:"pause",h:"&#9208; Recreation  09h50 - 10h10"},{type:"cours",h:"10h10 - 11h05"},{type:"cours",h:"11h05 - 12h00"},{type:"pause",h:"&#127860; Dejeuner  12h00 - 13h05"},{type:"cours",h:"13h05 - 14h00"},{type:"cours",h:"14h00 - 14h55"},{type:"cours",h:"14h55 - 15h50"},{type:"cours",h:"15h50 - 16h45"},{type:"cours",h:"16h45 - 17h40"}];
 
-async function chargerEDT(eleve){var div=document.getElementById("edtBody");var titre=document.getElementById("titreEDT");if(!div)return;var anneeEDT="2026-2027";if(titre)titre.innerHTML="&#128336; EMPLOI DU TEMPS "+anneeEDT+" <span>v</span>";var classeRaw=(eleve.classe||"").trim().toUpperCase().replace(/[ÈÉÊË]/g,"E").replace(/[ÀÂÄ]/g,"A").replace(/[ÎÏ]/g,"I").replace(/[ÔÖ]/g,"O").replace(/[ÛÙÜ]/g,"U").replace(/Ç/g,"C").replace(/ /g,"_").replace(/[^A-Z0-9_]/g,"").replace(/_+/g,"_").replace(/^_|_$/g,"");var onglet="EDT_"+classeRaw;
-  async function tenter(sid){
+async function chargerEDT(eleve){var div=document.getElementById("edtBody");var titre=document.getElementById("titreEDT");if(!div)return;var anneeEDT="2026-2027";if(titre)titre.innerHTML="&#128336; EMPLOI DU TEMPS "+anneeEDT+" <span>v</span>";
+  function nettoyerClasse(c){return String(c||"").trim().toUpperCase().replace(/[ÈÉÊË]/g,"E").replace(/[ÀÂÄ]/g,"A").replace(/[ÎÏ]/g,"I").replace(/[ÔÖ]/g,"O").replace(/[ÛÙÜ]/g,"U").replace(/Ç/g,"C").replace(/ /g,"_").replace(/[^A-Z0-9_]/g,"").replace(/_+/g,"_").replace(/^_|_$/g,"");}
+  var classeAncienne=nettoyerClasse(eleve.classe);
+  var classeNouvelle=nettoyerClasse(window._classe2026);
+  async function tenter(sid,ongletNom){
     try{
       var urlBase="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/";
       var urlParams="?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
-      var res=await fetch(urlBase+encodeURIComponent(onglet+"!A1:G15")+urlParams);
+      var res=await fetch(urlBase+encodeURIComponent(ongletNom+"!A1:G15")+urlParams);
       if(!res.ok) return null;
       var data=await res.json();
       if(!data.values||data.values.length<2) return null;
       return data.values.slice(1);
     }catch(e){ return null; }
   }
-  // EDT = uniquement la base 2026-2027 (l'ancienne annee n'est plus "actuelle")
+  // EDT = uniquement la base 2026-2027. On essaie le nom de la classe ACTUELLE
+  // d'abord, puis le nom de la classe 2026-2027 si le premier ne donne rien
+  // (certaines ecoles nomment leurs onglets EDT avec l'ancien nom, d'autres avec le nouveau)
   var rows = null;
   if (window._sheetsId2026) {
-    rows = await tenter(window._sheetsId2026);
+    rows = await tenter(window._sheetsId2026, "EDT_"+classeAncienne);
+    if(!rows && classeNouvelle && classeNouvelle!==classeAncienne){
+      rows = await tenter(window._sheetsId2026, "EDT_"+classeNouvelle);
+    }
   }
-  if(!rows){ edtVide(div,eleve.classe,anneeEDT); return; }
-  var html="<div style='font-size:12px;color:#2E7D32;margin-bottom:8px'>Classe : <strong>"+eleve.classe+"</strong> | Annee : <strong>"+anneeEDT+"</strong></div>";html+="<div style='overflow-x:auto;-webkit-overflow-scrolling:touch'><table style='width:100%;min-width:420px;border-collapse:collapse'>";var thStyle="padding:9px 6px;color:#fff;font-size:12px;font-weight:700;border:1px solid #2a5298;text-align:center";html+="<tr style='background:#1F4E79'><th style='"+thStyle+"'>HORAIRE</th><th style='"+thStyle+"'>LUN</th><th style='"+thStyle+"'>MAR</th><th style='"+thStyle+"'>MER</th><th style='"+thStyle+"'>JEU</th><th style='"+thStyle+"'>VEN</th><th style='"+thStyle+"'>SAM</th></tr>";var rowIdx=0;for(var i=0;i<EDT_HORAIRES.length;i++){var slot=EDT_HORAIRES[i];if(slot.type==="pause"){html+="<tr style='background:#FFFDE7'><td colspan='7' style='text-align:center;font-weight:bold;color:#B8860B;font-size:12px;padding:6px;border:1px solid #FFE082'>"+slot.h+"</td></tr>";}else{var row=rows[rowIdx]||[];rowIdx++;var bgRow=rowIdx%2===0?"#ffffff":"#f4f6fa";html+="<tr style='background:"+bgRow+"'><td style='font-weight:600;font-size:12px;white-space:nowrap;color:#1F4E79;padding:7px 8px;border:1px solid #e0e6f0'>"+slot.h+"</td>";for(var j=1;j<=6;j++)html+="<td style='font-size:12px;color:#222;padding:7px 4px;border:1px solid #e0e6f0;text-align:center'>"+String(row[j]||"").trim()+"</td>";html+="</tr>";}}html+="</table></div>";div.innerHTML=html;
+  if(!rows){ edtVide(div,window._classe2026||eleve.classe,anneeEDT); return; }
+  var html="<div style='font-size:12px;color:#2E7D32;margin-bottom:8px'>Classe : <strong>"+(window._classe2026||eleve.classe)+"</strong> | Annee : <strong>"+anneeEDT+"</strong></div>";html+="<div style='overflow-x:auto;-webkit-overflow-scrolling:touch'><table style='width:100%;min-width:420px;border-collapse:collapse'>";var thStyle="padding:9px 6px;color:#fff;font-size:12px;font-weight:700;border:1px solid #2a5298;text-align:center";html+="<tr style='background:#1F4E79'><th style='"+thStyle+"'>HORAIRE</th><th style='"+thStyle+"'>LUN</th><th style='"+thStyle+"'>MAR</th><th style='"+thStyle+"'>MER</th><th style='"+thStyle+"'>JEU</th><th style='"+thStyle+"'>VEN</th><th style='"+thStyle+"'>SAM</th></tr>";var rowIdx=0;for(var i=0;i<EDT_HORAIRES.length;i++){var slot=EDT_HORAIRES[i];if(slot.type==="pause"){html+="<tr style='background:#FFFDE7'><td colspan='7' style='text-align:center;font-weight:bold;color:#B8860B;font-size:12px;padding:6px;border:1px solid #FFE082'>"+slot.h+"</td></tr>";}else{var row=rows[rowIdx]||[];rowIdx++;var bgRow=rowIdx%2===0?"#ffffff":"#f4f6fa";html+="<tr style='background:"+bgRow+"'><td style='font-weight:600;font-size:12px;white-space:nowrap;color:#1F4E79;padding:7px 8px;border:1px solid #e0e6f0'>"+slot.h+"</td>";for(var j=1;j<=6;j++)html+="<td style='font-size:12px;color:#222;padding:7px 4px;border:1px solid #e0e6f0;text-align:center'>"+String(row[j]||"").trim()+"</td>";html+="</tr>";}}html+="</table></div>";div.innerHTML=html;
 }
 function edtVide(div,classe,annee){div.innerHTML="<div style='text-align:center;padding:24px;background:#F1F8E9;border-radius:10px'><div style='font-size:36px;margin-bottom:10px'>&#128197;</div><p style='font-weight:bold;color:#2E7D32;font-size:15px;margin-bottom:6px'>Emploi du temps "+annee+"</p><p style='font-size:13px;color:#666;margin-bottom:4px'>Pas encore disponible pour la classe <strong>"+classe+"</strong></p></div>";}
 
