@@ -1680,8 +1680,7 @@ window._classe2026 = inscrit.classe;
         window._historique2026 = historique;
          const anneeHeader = document.getElementById('anneeHeader');
 if (anneeHeader) anneeHeader.textContent = '📅 Annee scolaire 2026-2027';
-          const sectionResultats = document.getElementById('sectionResultats');
-          if (sectionResultats) sectionResultats.style.display = 'none';
+          // (masquage de sectionResultats retire -- les bulletins/EDT de l'annee precedente restent visibles meme apres inscription 2026-2027)
 
           const payBand = document.getElementById('statutPay');
           if (payBand) {
