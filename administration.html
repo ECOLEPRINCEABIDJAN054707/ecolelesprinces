@@ -2308,7 +2308,7 @@ async function chargerPresencesEnseignants(ecole){
 }
 async function chargerResultats(ecole){
   const sheetsId=getSheetsIdPourEcole(ecole);if(!sheetsId)return[];
-  function normEntete(h){return String(h||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z]/g,'');}
+  function normEntete(h){return String(h||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]/g,'');}
   function trouverCol(entetes,motsClefs){
     for(const m of motsClefs){const idx=entetes.findIndex(h=>normEntete(h)===m);if(idx>=0)return idx;}
     for(const m of motsClefs){const idx=entetes.findIndex(h=>normEntete(h).indexOf(m)>=0);if(idx>=0)return idx;}
@@ -2330,15 +2330,16 @@ async function chargerResultats(ecole){
       if(iSup<0)iSup=trouverCol(entetes,['NIVEAUSUIVANT','CLASSESUPERIEURE','CLASSESUP']);
       if(iMoy<0 && iDec<0) continue;
       const gI=(i,def)=>i>=0?i:def;
-      const rows=data.values.slice(1).filter(row=>String(row[gI(iNom,2)]||'').trim());
+      const rows=data.values.slice(1).map((row,i)=>({row,i})).filter(o=>String(o.row[gI(iNom,2)]||'').trim());
       if(!rows.length)continue;
-      resultatsOnglet=rows.map(row=>({
-        niveau:String(row[gI(iNiv,0)]||'').trim(),
-        matricule:String(row[gI(iMat,1)]||'').trim(),
-        nom:String(row[gI(iNom,2)]||'').trim(),
-        moy:parseFloat(row[gI(iMoy,3)])||0,
-        decision:String(row[gI(iDec,4)]||'').trim().toUpperCase(),
-        classeSup:String(row[gI(iSup,5)]||'').trim()
+      resultatsOnglet=rows.map(o=>({
+        niveau:String(o.row[gI(iNiv,0)]||'').trim(),
+        matricule:String(o.row[gI(iMat,1)]||'').trim(),
+        nom:String(o.row[gI(iNom,2)]||'').trim(),
+        moy:parseFloat(o.row[gI(iMoy,3)])||0,
+        decision:String(o.row[gI(iDec,4)]||'').trim().toUpperCase(),
+        classeSup:String(o.row[gI(iSup,5)]||'').trim(),
+        _sheetsId:sheetsId,_onglet:sn,_ligne:o.i+2,_colSup:iSup+1
       }));
       break; // un onglet valide trouve, on arrete de chercher parmi les noms d'onglets candidats
     }catch(e){}
@@ -2362,14 +2363,15 @@ async function chargerResultats(ecole){
       if(sSup<0)sSup=trouverCol(entetesS,['NIVEAUSUIVANT','CLASSESUPERIEURE','CLASSESUP']);
       const gS=(i,def)=>i>=0?i:def;
       const iDecFinal=gS(sDec,14),iMoyFinal=gS(sMoy,15),iSupFinal=gS(sSup,16);
-      const rows=data.values.slice(1).filter(row=>String(row[gS(sNom,2)]||'').trim()&&row[iDecFinal]&&String(row[iDecFinal]).trim());
-      resultatsSynthese=rows.map(row=>({
-        niveau:String(row[gS(sNiv,0)]||'').trim(),
-        matricule:String(row[gS(sMat,1)]||'').trim(),
-        nom:String(row[gS(sNom,2)]||'').trim(),
-        moy:parseFloat(row[iMoyFinal])||0,
-        decision:String(row[iDecFinal]||'').trim().toUpperCase(),
-        classeSup:String(row[iSupFinal]||'').trim()
+      const rows=data.values.slice(1).map((row,i)=>({row,i})).filter(o=>String(o.row[gS(sNom,2)]||'').trim()&&o.row[iDecFinal]&&String(o.row[iDecFinal]).trim());
+      resultatsSynthese=rows.map(o=>({
+        niveau:String(o.row[gS(sNiv,0)]||'').trim(),
+        matricule:String(o.row[gS(sMat,1)]||'').trim(),
+        nom:String(o.row[gS(sNom,2)]||'').trim(),
+        moy:parseFloat(o.row[iMoyFinal])||0,
+        decision:String(o.row[iDecFinal]||'').trim().toUpperCase(),
+        classeSup:String(o.row[iSupFinal]||'').trim(),
+        _sheetsId:sheetsId,_onglet:'SYNTHESE',_ligne:o.i+2,_colSup:iSupFinal+1
       }));
     }
   }catch(e){}
@@ -2383,6 +2385,7 @@ async function chargerMessages(ecole){
   for(const sn of['MESSAGES','CONTACTS','JOURNAL']){try{const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';const r=await fetch(url);const data=await r.json();if(data.values&&data.values.length>=2)return data.values.slice(1).filter(row=>row[0]).map(row=>({date:String(row[0]||'').trim(),message:String(row[3]||'').trim(),nom:String(row[4]||'').trim(),matricule:String(row[5]||'').trim(),classe:String(row[6]||'').trim(),statut:String(row[8]||'').trim()||'CONNEXION',reponse:String(row[9]||'').trim()}));}catch(e){}}
   return[];
 }
+function _niveauSeulDir(classe){var c=String(classe||'').trim().toUpperCase();var m=c.match(/^(MATERNELLE|PS|MS|GS|CP1|CP2|CP|CE1|CE2|CE|CM1|CM2|CM|6EME|5EME|4EME|3EME|2NDE|1ERE|1ÈRE|TLE)/);return m?m[1].replace('È','E'):c;}
 function renderTableResultats(data,tableId,filtreClasseId,filtreDecId,filtreNomId){
   const sel=document.getElementById(filtreClasseId);
   if(sel&&sel.options.length<=1){const classes=[...new Set(data.map(r=>r.niveau))].sort();classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});}
@@ -2390,9 +2393,39 @@ function renderTableResultats(data,tableId,filtreClasseId,filtreDecId,filtreNomI
   const filtered=data.filter(r=>(!fc||r.niveau===fc)&&(!fd||(r.decision||'').indexOf(fd)>=0)&&(!fn||r.nom.toLowerCase().includes(fn)));
   const tbl=document.getElementById(tableId);if(!tbl)return;
   if(!filtered.length){tbl.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun resultat</p>';return;}
+  window._resultatsCourants=window._resultatsCourants||{};window._resultatsCourants[tableId]=filtered;
+  const DECISIONS_PROMU_DIR=['ADMIS',"ADMIS(E)",'PASSE','ORIENTE',"ORIENTE(E)"];
+  const NIVEAUX_FIN_CYCLE=['CM2','3EME','TLE'];
   let h='<table><thead><tr><th>Niveau</th><th>Matricule</th><th>Nom et Prenoms</th><th>Moy.</th><th>Decision</th><th>Classe sup.</th></tr></thead><tbody>';
-  filtered.forEach(r=>{const dbg=r.decision==='ADMIS'?'bg-vert':r.decision==='EXCLU'?'bg-rouge':r.decision==='REDOUBLANT'?'bg-orange':'bg-bleu';const mc=r.moy>=10?'var(--vert)':r.moy>=5?'var(--orange)':'var(--rouge)';h+='<tr><td>'+r.niveau+'</td><td style="font-size:0.72em;color:var(--gris)">'+r.matricule+'</td><td><strong>'+r.nom+'</strong></td><td style="font-weight:700;color:'+mc+'">'+r.moy.toFixed(2)+'</td><td><span class="bdg '+dbg+'">'+r.decision+'</span></td><td style="font-size:0.8em">'+r.classeSup+'</td></tr>';});
+  filtered.forEach((r,idx)=>{
+    const dbg=r.decision==='ADMIS'?'bg-vert':r.decision==='EXCLU'?'bg-rouge':r.decision==='REDOUBLANT'?'bg-orange':'bg-bleu';
+    const mc=r.moy>=10?'var(--vert)':r.moy>=5?'var(--orange)':'var(--rouge)';
+    const niveauSeul=_niveauSeulDir(r.niveau);
+    const niveauSupSeul=_niveauSeulDir(r.classeSup);
+    const estBloque=DECISIONS_PROMU_DIR.indexOf(r.decision)>=0 && NIVEAUX_FIN_CYCLE.indexOf(niveauSeul)>=0 && (!r.classeSup || niveauSupSeul===niveauSeul);
+    const celluleSup=estBloque
+      ? '<input type="text" id="classeSupInput_'+tableId+'_'+idx+'" value="'+(r.classeSup||'')+'" placeholder="Ex: 6EME 1, 2NDE A, SORTI(E)" onblur="confirmerClasseSuivanteDir('+idx+',\''+tableId+'\')" style="width:100%;padding:5px;border:1.5px solid var(--orange);border-radius:6px;font-size:0.78em;background:#FFF8E1">'
+      : '<span style="font-size:0.8em">'+r.classeSup+'</span>';
+    h+='<tr><td>'+r.niveau+'</td><td style="font-size:0.72em;color:var(--gris)">'+r.matricule+'</td><td><strong>'+r.nom+'</strong></td><td style="font-weight:700;color:'+mc+'">'+r.moy.toFixed(2)+'</td><td><span class="bdg '+dbg+'">'+r.decision+'</span></td><td>'+celluleSup+(estBloque?' <span id="statutMaj_'+tableId+'_'+idx+'" style="font-size:0.65em;color:var(--gris)"></span>':'')+'</td></tr>';
+  });
   h+='</tbody></table>';tbl.innerHTML=h;
+}
+async function confirmerClasseSuivanteDir(idx,tableId){
+  const r=(window._resultatsCourants&&window._resultatsCourants[tableId])?window._resultatsCourants[tableId][idx]:null;
+  if(!r||!r._sheetsId||!r._ligne||!r._colSup){showToast('Impossible d\'enregistrer (donnee incomplete)','error');return;}
+  const input=document.getElementById('classeSupInput_'+tableId+'_'+idx);
+  const statut=document.getElementById('statutMaj_'+tableId+'_'+idx);
+  if(!input)return;
+  const nouvelleValeur=input.value.trim();
+  if(nouvelleValeur===r.classeSup)return;
+  if(!nouvelleValeur){showToast('La classe suivante ne peut pas etre vide','error');input.value=r.classeSup;return;}
+  if(statut)statut.textContent='...';
+  const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
+    action:'majClasseSuivante',sheetsId:r._sheetsId,onglet:r._onglet,ligne:r._ligne,colonne:r._colSup,
+    matricule:r.matricule,nouvelleValeur:nouvelleValeur
+  });
+  if(result&&result.succes){r.classeSup=nouvelleValeur;if(statut)statut.textContent='✓ enregistre';showToast('Classe suivante mise a jour','success');}
+  else{if(statut)statut.textContent='Erreur';showToast('Erreur : '+(result&&result.message||'echec'),'error');}
 }
 function filtrerResultatsDir(){renderTableResultats(donneesResultats,'dirResTable','dirResFiltreClasse','dirResFiltreDecision','dirResFiltreNom');}
 function filtrerResultatsCom(){renderTableResultats(donneesResultats,'comResTable','comResFiltreClasse','comResFiltreDecision','comResFiltreNom');}
