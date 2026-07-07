@@ -1608,7 +1608,7 @@ async function chargerAffectationTous(){
     const r=await fetch(url);const data=await r.json();
     if(!data.values||data.values.length<2){zone.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Aucune donnee</td></tr>';return;}
     const rows=[];
-    const regexSEC=/^(6|5|4|3|2NDE|1ERE|TLE)/i;
+    const regexSEC=/^(6|5|4|3|2NDE|1[EÈ]RE|TLE)/i;
     for(let i=1;i<data.values.length;i++){
       const row=data.values[i];
       const matricule=String(row[1]||'').trim();
@@ -1965,7 +1965,7 @@ async function ouvrirModalNotesProf(type){
       const sheetsId=SHEETS_IDS[s.ecole];
       const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'?key='+API_KEY+'&fields=sheets.properties.title';
       const r=await fetch(url);const data=await r.json();
-      if(data.sheets){const excl=['SYNTHESE','ENSEIGNANTS','ABSENCES','POINTAGE','RESULTATS','MESSAGES','CAHIER','EDUCATEURS','NOTES_T'];const isPRIM=currentStaff&&currentStaff.type==='PRIM';const regexSEC=/^(6|5|4|3|2NDE|1ERE|TLE|2NDE|BT)/i;const regexPRIM=/^(CP|CE|CM|GS|MS|PS|TPS|SIL|CI|CP1|CP2|CE1|CE2|CM1|CM2|MATERNELLE)/i;const regex=isPRIM?regexPRIM:regexSEC;classes=data.sheets.map(sh=>sh.properties.title).filter(t=>!excl.some(ex=>t.toUpperCase().includes(ex))&&regex.test(t));}
+      if(data.sheets){const excl=['SYNTHESE','ENSEIGNANTS','ABSENCES','POINTAGE','RESULTATS','MESSAGES','CAHIER','EDUCATEURS','NOTES_T'];const isPRIM=currentStaff&&currentStaff.type==='PRIM';const regexSEC=/^(6|5|4|3|2NDE|1[EÈ]RE|TLE|2NDE|BT)/i;const regexPRIM=/^(CP|CE|CM|GS|MS|PS|TPS|SIL|CI|CP1|CP2|CE1|CE2|CM1|CM2|MATERNELLE)/i;const regex=isPRIM?regexPRIM:regexSEC;classes=data.sheets.map(sh=>sh.properties.title).filter(t=>!excl.some(ex=>t.toUpperCase().includes(ex))&&regex.test(t));}
     }catch(e){}
   }
   const container=document.getElementById('modalNotesClasses');
@@ -2986,7 +2986,7 @@ async function listerOnglets(sheetsId){
     var data=await r.json();
     if(!data.sheets)return[];
     var tous=data.sheets.map(function(s){return s.properties.title;}).filter(estOngletValide);
-    var regexSEC=/^(6|5|4|3|2NDE|1ERE|TLE|BT)/i;
+    var regexSEC=/^(6|5|4|3|2NDE|1[EÈ]RE|TLE|BT)/i;
     var regexPRIM=/^(CP|CE|CM|GS|MS|PS|TPS|SIL|CI|MATERNELLE)/i;
     var classesSEC=tous.filter(function(t){return regexSEC.test(t);});
     var classesPRIM=tous.filter(function(t){return regexPRIM.test(t);});
