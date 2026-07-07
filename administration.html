@@ -2402,7 +2402,7 @@ function renderTableResultats(data,tableId,filtreClasseId,filtreDecId,filtreNomI
     const mc=r.moy>=10?'var(--vert)':r.moy>=5?'var(--orange)':'var(--rouge)';
     const niveauSeul=_niveauSeulDir(r.niveau);
     const niveauSupSeul=_niveauSeulDir(r.classeSup);
-    const estBloque=DECISIONS_PROMU_DIR.indexOf(r.decision)>=0 && NIVEAUX_FIN_CYCLE.indexOf(niveauSeul)>=0 && (!r.classeSup || niveauSupSeul===niveauSeul);
+    const estBloque=NIVEAUX_FIN_CYCLE.indexOf(niveauSeul)>=0;
     const celluleSup=estBloque
       ? '<input type="text" id="classeSupInput_'+tableId+'_'+idx+'" value="'+(r.classeSup||'')+'" placeholder="Ex: 6EME 1, 2NDE A, SORTI(E)" onblur="confirmerClasseSuivanteDir('+idx+',\''+tableId+'\')" style="width:100%;padding:5px;border:1.5px solid var(--orange);border-radius:6px;font-size:0.78em;background:#FFF8E1">'
       : '<span style="font-size:0.8em">'+r.classeSup+'</span>';
