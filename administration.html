@@ -344,15 +344,15 @@ table tr:nth-child(even){background:#F8FAFD}
       </div>
     </div>
   </div>
-  <div class="section" id="dirSecAppel">
+<div class="section" id="dirSecAppel">
     <div class="sec-head sec-vert" onclick="toggleSec(this)">
-      <h3>&#128203; Appel enseignants &mdash; Pr&eacute;sences du jour</h3><span class="arr">&#9660;</span>
+      <h3>&#128203; Appels enseignants &mdash; Aujourd'hui <span id="dirAppelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
     </div>
     <div class="sec-body" id="dirAppelBody">
-      <div style="padding:14px">
-        <div id="dirAppelListe"></div>
-        <button onclick="validerAppelDir()" style="width:100%;margin-top:12px;padding:10px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.82em;cursor:pointer">Valider l'appel du jour</button>
+      <div style="padding:8px 14px;text-align:right">
+        <button onclick="chargerAppelsDir(currentStaff.ecole)" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">&#128260; Actualiser</button>
       </div>
+      <div id="dirAppelListe"><div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div></div>
     </div>
   </div>
   <div class="section">
@@ -1367,7 +1367,7 @@ function afficherDir(s){
   alertes.forEach(a=>{ha+='<div class="alerte-item"><div class="alerte-ico">'+a.ico+'</div><div><div class="alerte-nom">'+a.nom+'</div><div class="alerte-detail">'+a.detail+'</div></div></div>';});
   document.getElementById('dirAlertesBody').innerHTML=ha;
   const dsa=document.getElementById('dStatAlert');if(dsa)dsa.textContent=alertes.length;
-  chargerSuiviPedagogique();setTimeout(initSaisiePedago,500);setTimeout(initAppelDir,600);
+  chargerSuiviPedagogique();setTimeout(initSaisiePedago,500);setTimeout(function(){chargerAppelsDir(s.ecole);},600);
   let hag='';AGENDA_DEMO.forEach(a=>{hag+='<div class="agenda-item"><div class="agenda-date" style="background:'+a.col+'"><div class="jour">'+a.jour+'</div><div class="mois">'+a.mois+'</div></div><div><div class="agenda-titre">'+a.titre+'</div><div class="agenda-detail">'+a.detail+'</div></div></div>';});
   document.getElementById('dirAgendaBody').innerHTML=hag;
   if(!isPRIM)chargerPointage();
@@ -2074,7 +2074,76 @@ function validerAppelDir(){
   const p=Object.values(appelDir).filter(v=>v).length,a=Object.values(appelDir).filter(v=>!v).length;
   showToast('Appel valide — '+p+' present(s)'+(a?' · '+a+' absent(s)':''),'success');
 }
-async function chargerAbsencesElevesSigne(ecole, classesEdu){
+// ⚠️ NOUVEAU — Appels enseignants réels pour l'espace Directeur
+async function chargerAppelsDir(ecole) {
+  const liste = document.getElementById('dirAppelListe');
+  if (!liste || !ecole) return;
+  liste.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+  const sheetsId = getSheetsIdPourEcole(ecole);
+  if (!sheetsId) { liste.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">École non configurée.</p>'; return; }
+
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2,'0');
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const yyyy = today.getFullYear();
+  const dateFormats = [dd+'/'+mm+'/'+yyyy, yyyy+'-'+mm+'-'+dd, dd+'-'+mm+'-'+yyyy];
+
+  let appels = [];
+  try {
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/APPELS?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r = await fetch(url); const data = await r.json();
+    if (data.values && data.values.length >= 2) {
+      const headers = data.values[0].map(h => String(h||'').toUpperCase().trim());
+      const iDate = headers.findIndex(h => h.includes('DATE'));
+      const iHeure = headers.findIndex(h => h.includes('HEURE'));
+      const iEns = headers.findIndex(h => h.includes('ENS'));
+      const iClasse = headers.findIndex(h => h.includes('CLASS'));
+      const iMatiere = headers.findIndex(h => h.includes('MAT') && !h.includes('CULE'));
+      const iPresents = headers.findIndex(h => h.includes('PRES'));
+      const iAbsents = headers.findIndex(h => h.includes('ABS'));
+      const iTotal = headers.findIndex(h => h.includes('TOTAL'));
+      const iTaux = headers.findIndex(h => h.includes('TAUX'));
+      appels = data.values.slice(1).filter(row => {
+        const dateVal = String(row[iDate>=0?iDate:0]||'').trim();
+        const n = parseFloat(dateVal);
+        if (!isNaN(n) && n > 40000) {
+          const d = new Date(Math.round((n-25569)*86400*1000));
+          const dStr = String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0')+'/'+d.getUTCFullYear();
+          return dStr === dd+'/'+mm+'/'+yyyy;
+        }
+        return dateFormats.some(f => dateVal.startsWith(f) || dateVal === f);
+      }).map(row => ({
+        heure: iHeure>=0 ? String(row[iHeure]||'').trim() : '',
+        enseignant: iEns>=0 ? String(row[iEns]||'').trim() : '',
+        classe: iClasse>=0 ? String(row[iClasse]||'').trim() : '',
+        matiere: iMatiere>=0 ? String(row[iMatiere]||'').trim() : '',
+        presents: iPresents>=0 ? parseInt(row[iPresents])||0 : 0,
+        total: iTotal>=0 ? parseInt(row[iTotal])||0 : 0,
+        taux: iTaux>=0 ? parseFloat(row[iTaux])||0 : 0
+      })).filter(a => a.enseignant || a.classe);
+    }
+  } catch(e) {}
+
+  const compteEl = document.getElementById('dirAppelCount');
+  if (compteEl) compteEl.textContent = '(' + appels.length + ' appel(s))';
+
+  if (!appels.length) {
+    liste.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.84em">Aucun appel enregistré aujourd\'hui</div>';
+    return;
+  }
+
+  let h = '';
+  appels.forEach(a => {
+    const tauxCours = a.total>0 ? Math.round(a.presents/a.total*100) : (a.presents>0?100:0);
+    const tc = tauxCours>=85 ? 'var(--vert)' : tauxCours>=70 ? 'var(--orange)' : 'var(--rouge)';
+    h += '<div class="item"><div class="item-av" style="background:rgba(31,78,121,0.1);color:var(--bleu)">'+(a.enseignant.charAt(0)||'?')+'</div>';
+    h += '<div class="item-info"><div class="item-nom">'+a.enseignant+'</div><div class="item-meta">'+a.classe+(a.matiere?' · '+a.matiere:'')+(a.heure?' · '+a.heure:'')+'</div></div>';
+    h += '<div class="item-val"><div class="val" style="color:'+tc+'">'+tauxCours+'%</div><div class="lbl">'+a.presents+'/'+(a.total||a.presents)+'</div></div></div>';
+  });
+  liste.innerHTML = h;
+}
+  async function chargerAbsencesElevesSigne(ecole, classesEdu){
   classesEdu=classesEdu||[];
   const today=new Date();
   const todayStr=today.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
