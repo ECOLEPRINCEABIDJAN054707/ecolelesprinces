@@ -48,6 +48,23 @@ self.addEventListener('activate', function(event) {
 
 // ─── FETCH — RÉSEAU EN PRIORITÉ ───────────────────────────
 self.addEventListener('fetch', function(event) {
+  var url = event.request.url;
+
+  // ⚠️ CORRECTIF DU 08/07/2026 — NE JAMAIS INTERCEPTER GOOGLE APPS SCRIPT / SHEETS
+  // Ces domaines servent les requêtes JSONP de l'app enseignant (appels,
+  // cahier de textes, notes) via <script src="...">. Le service worker
+  // interceptait ces requêtes et, en cas d'échec réseau transitoire
+  // (redirection cross-origin script.google.com -> script.googleusercontent.com),
+  // renvoyait index.html en remplacement — ce qui cassait silencieusement
+  // le script JSONP attendu et empêchait tout enregistrement des appels.
+  // On laisse donc ces domaines passer directement au réseau, sans
+  // interception ni mise en cache par le service worker.
+  if (url.indexOf('script.google.com') !== -1 ||
+      url.indexOf('script.googleusercontent.com') !== -1 ||
+      url.indexOf('sheets.googleapis.com') !== -1) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request).then(function(response) {
       if (response && response.status === 200) {
