@@ -1391,7 +1391,20 @@ function afficherDir(s){
 function remplirMois(){
   const sel=document.getElementById('filtreMois');if(!sel||sel.options.length>1)return;
   const now=new Date();
-  for(let i=0;i<6;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);const val=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');const opt=document.createElement('option');opt.value=val;opt.textContent=d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});if(i===0)opt.selected=true;sel.appendChild(opt);}
+  // ⚠️ CORRIGÉ — couvre toute l'année scolaire (septembre → mois actuel), pas juste 6 mois
+  const anneeDebut = now.getMonth()>=8 ? now.getFullYear() : now.getFullYear()-1;
+  const debut = new Date(anneeDebut, 8, 1);
+  const mois = [];
+  let d = new Date(debut);
+  while (d <= now) { mois.push(new Date(d)); d = new Date(d.getFullYear(), d.getMonth()+1, 1); }
+  mois.reverse();
+  mois.forEach((d,i)=>{
+    const val=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const opt=document.createElement('option');
+    opt.value=val; opt.textContent=d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    if(i===0)opt.selected=true;
+    sel.appendChild(opt);
+  });
 }
 async function chargerPointage(){
   const moisSel=document.getElementById('filtreMois');if(!moisSel)return;
