@@ -1402,10 +1402,12 @@ async function chargerPointage(){
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL!A2:P2000?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
     const res=await fetch(url);const data=await res.json();
     if(!data.values||!data.values.length){afficherTableauVide();return;}
-    const valides=data.values.filter(row=>{const st=String(row[9]||'').trim().toUpperCase();const mr=serielVersMois(row[6]);return(st==='VALIDE'||st==='VALID\u00C9'||st==='PARTIEL')&&mr===mois;});
-    const recap={};
-    valides.forEach(row=>{const nom=String(row[4]||'').trim();const h=parseFloat(row[8])||0;const sal=parseFloat(row[11])||0;const cl=String(row[2]||'').trim();if(!recap[nom])recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[]};recap[nom].totalHeures+=h;recap[nom].totalSalaire+=sal;recap[nom].nbCours++;if(!recap[nom].classes.includes(cl))recap[nom].classes.push(cl);});
-    donneesPointage=Object.values(recap);
+    const lignesDuMois=data.values.filter(row=>{const mr=serielVersMois(row[6]);return mr===mois;});
+        const valides=lignesDuMois.filter(row=>{const st=String(row[9]||'').trim().toUpperCase();return st==='VALIDE'||st==='VALID\u00C9'||st==='PARTIEL';});
+        const recap={};
+        valides.forEach(row=>{const nom=String(row[4]||'').trim();const h=parseFloat(row[8])||0;const sal=parseFloat(row[11])||0;const cl=String(row[2]||'').trim();if(!recap[nom])recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],details:[]};recap[nom].totalHeures+=h;recap[nom].totalSalaire+=sal;recap[nom].nbCours++;if(!recap[nom].classes.includes(cl))recap[nom].classes.push(cl);});
+        lignesDuMois.forEach(row=>{const nom=String(row[4]||'').trim();if(!nom)return;if(!recap[nom])recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],details:[]};if(!recap[nom].details)recap[nom].details=[];const st=String(row[9]||'').trim().toUpperCase();recap[nom].details.push({date:toDate(row[0]),classe:String(row[2]||'').trim(),matiere:String(row[3]||'').trim(),heures:parseFloat(row[8])||0,salaire:parseFloat(row[11])||0,statut:st});});
+        donneesPointage=Object.values(recap);
     afficherAttente(data.values,mois);await chargerPermanents(recap);afficherTableau();
   }catch(e){if(tb)tb.innerHTML='<p style="text-align:center;padding:20px;color:var(--rouge);font-size:0.82em">Erreur: '+e.message+'</p>';}
 }
@@ -1424,9 +1426,31 @@ function afficherTableau(){
   const se=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   se('statEns',donneesPointage.length);se('statHeures',tH.toFixed(1)+'h');se('statSalaire',tS.toLocaleString('fr-FR')+' F');se('statPerm',nP);
   let h='<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Enseignant</th><th>Type</th><th>Classes</th><th>Cours</th><th>Heures</th><th>Salaire</th></tr></thead><tbody>';
-  donneesPointage.forEach((e,i)=>{const isP=e.type==='PERMANENT';h+='<tr><td>'+(i+1)+'</td><td><strong>'+e.nom+'</strong></td><td><span class="badge-v '+(isP?'badge-perm':'badge-vac')+'">'+(isP?'PERM':'VAC')+'</span></td><td style="font-size:0.72em;color:var(--gris)">'+(e.classes||[]).join(', ')+'</td><td style="text-align:center">'+e.nbCours+'</td><td style="text-align:center;font-weight:600">'+(isP?'—':e.totalHeures.toFixed(1)+'h')+'</td><td style="text-align:right;font-weight:700;color:var(--bleu)">'+e.totalSalaire.toLocaleString('fr-FR')+' F</td></tr>';});
+donneesPointage.forEach((e,i)=>{const isP=e.type==='PERMANENT';const idDet='det_dir_'+i;h+='<tr onclick="toggleDetailSalaire(\''+idDet+'\')" style="cursor:pointer"><td>'+(i+1)+'</td><td><strong>'+e.nom+'</strong> <span style="font-size:0.7em;opacity:0.5">▼</span></td><td><span class="badge-v '+(isP?'badge-perm':'badge-vac')+'">'+(isP?'PERM':'VAC')+'</span></td><td style="font-size:0.72em;color:var(--gris)">'+(e.classes||[]).join(', ')+'</td><td style="text-align:center">'+e.nbCours+'</td><td style="text-align:center;font-weight:600">'+(isP?'—':e.totalHeures.toFixed(1)+'h')+'</td><td style="text-align:right;font-weight:700;color:var(--bleu)">'+e.totalSalaire.toLocaleString('fr-FR')+' F</td></tr>';h+='<tr id="'+idDet+'" style="display:none"><td colspan="7" style="padding:0;background:#F8FAFD">'+mkDetailSalaireHTML(e.details||[])+'</td></tr>';});
   h+='</tbody><tfoot><tr class="total-row"><td colspan="5" style="text-align:right">TOTAL</td><td style="text-align:center">'+tH.toFixed(1)+'h</td><td style="text-align:right">'+tS.toLocaleString('fr-FR')+' F CFA</td></tr></tfoot></table></div>';
   const tb=document.getElementById('tableBody');if(tb)tb.innerHTML=h;
+} 
+  // ⚠️ NOUVEAU — Détail jour par jour, dépliable, par enseignant
+function toggleDetailSalaire(id){
+  const el=document.getElementById(id);if(!el)return;
+  el.style.display=el.style.display==='none'?'table-row':'none';
+}
+function mkDetailSalaireHTML(details){
+  if(!details||!details.length)return '<p style="padding:10px 16px;color:var(--gris);font-size:0.78em">Aucun détail disponible</p>';
+  const tries=details.slice().sort((a,b)=>String(a.date).localeCompare(String(b.date)));
+  let h='<div style="padding:8px 16px">';
+  tries.forEach(d=>{
+    const estValide=d.statut==='VALIDE'||d.statut==='VALID\u00C9'||d.statut==='PARTIEL';
+    const coul=estValide?'var(--vert)':'var(--orange)';
+    const fond=estValide?'#E8F5E9':'#FFF3E0';
+    const badge=estValide?'✅':'⏰';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;background:'+fond+';border-radius:8px;padding:7px 12px;margin-bottom:5px">';
+    h+='<div><span style="font-size:0.78em;font-weight:700">'+badge+' '+(d.date||'—')+'</span> <span style="font-size:0.74em;color:var(--gris)">'+d.classe+(d.matiere?' · '+d.matiere:'')+'</span></div>';
+    h+='<span style="font-size:0.8em;font-weight:700;color:'+coul+'">'+(d.salaire||0).toLocaleString('fr-FR')+' F</span>';
+    h+='</div>';
+  });
+  h+='</div>';
+  return h;
 }
 function afficherTableauVide(){
   ['statEns','statHeures','statSalaire','statPerm'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='0';});
