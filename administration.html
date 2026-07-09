@@ -3968,7 +3968,7 @@ async function _inscrireNouvelEleveDir(data){
         matricule:data.matricule,nom:data.nom_prenoms};
       try{
         var resp=await fetch(urlScript,{method:'POST',
-          headers:{'Content-Type':'application/json'},
+          headers:{'Content-Type':'text/plain'},
           body:JSON.stringify(payload)});
         var result=await resp.json();
         if(result&&result.succes){
@@ -3989,7 +3989,7 @@ async function _inscrireNouvelEleveDir(data){
         ecoleNom:s.label,sheetsId:sheetsId,source:data.source||'IMPORT'};
       try{
         var resp2=await fetch(urlScript2,{method:'POST',
-          headers:{'Content-Type':'application/json'},
+          headers:{'Content-Type':'text/plain'},
           body:JSON.stringify(payload2)});
         var result2=await resp2.json();
         return result2;
