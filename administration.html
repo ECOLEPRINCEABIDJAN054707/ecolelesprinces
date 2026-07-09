@@ -782,6 +782,18 @@ table tr:nth-child(even){background:#F8FAFD}
       <h3>&#10003; T&acirc;ches administratives</h3><span class="arr">&#9660;</span>
     </div>
     <div class="sec-body" id="comTachesBody"></div>
+  </div> 
+  <div class="section" id="comSecSalaires">
+    <div class="sec-head sec-or" onclick="toggleSec(this)">
+      <h3>&#128176; Salaires &amp; Pointage enseignants</h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body">
+      <div class="filters-bar">
+        <select id="filtreMoisCom" onchange="chargerPointageCom()"></select>
+        <button class="btn-f btn-f-bleu" onclick="chargerPointageCom()">&#128260; Actualiser</button>
+      </div>
+      <div id="tableBodyCom" style="padding:8px"><div style="text-align:center;padding:30px;color:var(--gris)">S&eacute;lectionnez un mois et cliquez Actualiser</div></div>
+    </div>
   </div>
   <div class="section" id="comSecAppel">
     <div class="sec-head sec-vert" onclick="toggleSec(this)">
@@ -1405,6 +1417,23 @@ function remplirMois(){
     if(i===0)opt.selected=true;
     sel.appendChild(opt);
   });
+} 
+  function remplirMoisCom(){
+  const sel=document.getElementById('filtreMoisCom');if(!sel||sel.options.length>1)return;
+  const now=new Date();
+  const anneeDebut = now.getMonth()>=8 ? now.getFullYear() : now.getFullYear()-1;
+  const debut = new Date(anneeDebut, 8, 1);
+  const mois = [];
+  let d = new Date(debut);
+  while (d <= now) { mois.push(new Date(d)); d = new Date(d.getFullYear(), d.getMonth()+1, 1); }
+  mois.reverse();
+  mois.forEach((d,i)=>{
+    const val=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    const opt=document.createElement('option');
+    opt.value=val; opt.textContent=d.toLocaleDateString('fr-FR',{month:'long',year:'numeric'});
+    if(i===0)opt.selected=true;
+    sel.appendChild(opt);
+  });
 }
 async function chargerPointage(){
   const moisSel=document.getElementById('filtreMois');if(!moisSel)return;
@@ -1468,6 +1497,45 @@ function mkDetailSalaireHTML(details){
 function afficherTableauVide(){
   ['statEns','statHeures','statSalaire','statPerm'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='0';});
   const tb=document.getElementById('tableBody');if(tb)tb.innerHTML='<p style="text-align:center;padding:30px;color:var(--gris);font-size:0.82em">Aucun pointage valide ce mois</p>';
+} // ⚠️ NOUVEAU — Salaires & Pointage pour l'espace Comptable (lecture seule)
+async function chargerPointageCom(){
+  const moisSel=document.getElementById('filtreMoisCom');if(!moisSel)return;
+  const mois=moisSel.value;const tb=document.getElementById('tableBodyCom');
+  if(tb)tb.innerHTML='<div style="text-align:center;padding:24px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  try{
+    const sheetsId=getSheetsIdPourEcole(currentStaff.ecole);if(!sheetsId)return;
+    const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL!A2:P2000?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const res=await fetch(url);const data=await res.json();
+    if(!data.values||!data.values.length){afficherTableauVideCom();return;}
+    const lignesDuMois=data.values.filter(row=>{const mr=serielVersMois(row[6]);return mr===mois;});
+    const valides=lignesDuMois.filter(row=>{const st=String(row[9]||'').trim().toUpperCase();return st==='VALIDE'||st==='VALID\u00C9'||st==='PARTIEL';});
+    const recap={};
+    valides.forEach(row=>{const nom=String(row[4]||'').trim();const h=parseFloat(row[8])||0;const sal=parseFloat(row[11])||0;const cl=String(row[2]||'').trim();if(!recap[nom])recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],details:[]};recap[nom].totalHeures+=h;recap[nom].totalSalaire+=sal;recap[nom].nbCours++;if(!recap[nom].classes.includes(cl))recap[nom].classes.push(cl);});
+    lignesDuMois.forEach(row=>{const nom=String(row[4]||'').trim();if(!nom)return;if(!recap[nom])recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],details:[]};if(!recap[nom].details)recap[nom].details=[];const st=String(row[9]||'').trim().toUpperCase();recap[nom].details.push({date:toDate(row[0]),classe:String(row[2]||'').trim(),matiere:String(row[3]||'').trim(),heures:parseFloat(row[8])||0,salaire:parseFloat(row[11])||0,statut:st});});
+    let donneesPointageCom=Object.values(recap);
+    await chargerPermanentsCom(recap,donneesPointageCom);
+    afficherTableauCom(donneesPointageCom);
+  }catch(e){if(tb)tb.innerHTML='<p style="text-align:center;padding:20px;color:var(--rouge);font-size:0.82em">Erreur: '+e.message+'</p>';}
+}
+async function chargerPermanentsCom(recap,donneesPointageCom){
+  try{
+    const sheetsId=getSheetsIdPourEcole(currentStaff.ecole);
+    const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const res=await fetch(url);const data=await res.json();if(!data.values)return;
+    data.values.forEach(row=>{const nom=String(row[0]||'').trim();const actif=String(row[3]||'').trim().toUpperCase();const type=String(row[4]||'').trim().toUpperCase();const fixe=parseFloat(row[5])||0;if(actif!=='OUI'||type!=='PERMANENT'||fixe<=0)return;if(!recap[nom]){recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],details:[],type:'PERMANENT'};donneesPointageCom.push(recap[nom]);}recap[nom].totalSalaire=fixe;recap[nom].type='PERMANENT';});
+  }catch(e){}
+}
+function afficherTableauCom(donneesPointageCom){
+  if(!donneesPointageCom.length){afficherTableauVideCom();return;}
+  donneesPointageCom.sort((a,b)=>b.totalSalaire-a.totalSalaire);
+  const tS=donneesPointageCom.reduce((s,e)=>s+e.totalSalaire,0),tH=donneesPointageCom.reduce((s,e)=>s+e.totalHeures,0);
+  let h='<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Enseignant</th><th>Type</th><th>Classes</th><th>Cours</th><th>Heures</th><th>Salaire</th></tr></thead><tbody>';
+  donneesPointageCom.forEach((e,i)=>{const isP=e.type==='PERMANENT';const idDet='det_com_'+i;h+='<tr onclick="toggleDetailSalaire(\''+idDet+'\')" style="cursor:pointer"><td>'+(i+1)+'</td><td><strong>'+e.nom+'</strong> <span style="font-size:0.7em;opacity:0.5">▼</span></td><td><span class="badge-v '+(isP?'badge-perm':'badge-vac')+'">'+(isP?'PERM':'VAC')+'</span></td><td style="font-size:0.72em;color:var(--gris)">'+(e.classes||[]).join(', ')+'</td><td style="text-align:center">'+e.nbCours+'</td><td style="text-align:center;font-weight:600">'+(isP?'—':e.totalHeures.toFixed(1)+'h')+'</td><td style="text-align:right;font-weight:700;color:var(--bleu)">'+e.totalSalaire.toLocaleString('fr-FR')+' F</td></tr>';h+='<tr id="'+idDet+'" style="display:none"><td colspan="7" style="padding:0;background:#F8FAFD">'+mkDetailSalaireHTML(e.details||[])+'</td></tr>';});
+  h+='</tbody><tfoot><tr class="total-row"><td colspan="5" style="text-align:right">TOTAL</td><td style="text-align:center">'+tH.toFixed(1)+'h</td><td style="text-align:right">'+tS.toLocaleString('fr-FR')+' F CFA</td></tr></tfoot></table></div>';
+  const tb=document.getElementById('tableBodyCom');if(tb)tb.innerHTML=h;
+}
+function afficherTableauVideCom(){
+  const tb=document.getElementById('tableBodyCom');if(tb)tb.innerHTML='<p style="text-align:center;padding:30px;color:var(--gris);font-size:0.82em">Aucun pointage valide ce mois</p>';
 }
 function afficherAttente(lignes,mois){
   coursEnAttente=lignes.filter(row=>{const st=String(row[9]||'').trim().toUpperCase();const mr=serielVersMois(row[6]);return st==='EN ATTENTE'&&mr===mois;});
@@ -1906,7 +1974,8 @@ function afficherCom(s){
   document.getElementById('comAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
   document.getElementById('comNom').textContent=s.nom;document.getElementById('comEcole').textContent=s.label;
   document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;
- chargerAppelsCom(s.ecole);
+ chargerAppelsCom(s.ecole); 
+  remplirMoisCom();
   const cPai=document.getElementById('comPaiBody');if(cPai)cPai.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement...</p>';
   chargerSynthese(s.ecole).then(eleves=>{
     const data=eleves&&eleves.length?eleves:[];donneesElevesSheets=data;
