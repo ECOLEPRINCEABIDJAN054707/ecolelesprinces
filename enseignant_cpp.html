@@ -902,7 +902,27 @@ async function chargerMesCoursDuJour() {
 function demarrerCoursDepuisEDT(idx) {
   const c = window._mesCoursJour[idx];
   if (!c) return;
-  document.getElementById('modalClasse').value = c.classe;
+
+  // ⚠️ CORRIGÉ — recherche la bonne option même si l'écriture diffère
+  // légèrement (accents, espaces, majuscules) entre l'EDT et la liste des classes
+  function normaliser(s) {
+    return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+  }
+  const sel = document.getElementById('modalClasse');
+  const cible = normaliser(c.classe);
+  let trouve = false;
+  for (let i = 0; i < sel.options.length; i++) {
+    if (normaliser(sel.options[i].value) === cible) {
+      sel.selectedIndex = i;
+      trouve = true;
+      break;
+    }
+  }
+  if (!trouve) {
+    alert('Classe "' + c.classe + '" introuvable dans la liste. Contactez la Direction pour vérifier le nom exact de cette classe.');
+    return;
+  }
+
   document.getElementById('modalMatiere').value = c.matiere;
   document.getElementById('modalHeureDebut').value = c.heureDebut;
   document.getElementById('modalHeureFin').value = c.heureFin;
