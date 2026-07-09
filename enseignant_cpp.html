@@ -321,8 +321,8 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
     <button class="quick-btn" onclick="goTo('bilan')"><div class="quick-icon">📊</div><div class="quick-label">Mon bilan</div><div class="quick-sub" id="bilanMoisLabel">—</div></button>
     <button class="quick-btn" onclick="goTo('moyennes')"><div class="quick-icon">📈</div><div class="quick-label">Moyennes</div><div class="quick-sub" id="moyennesSubLabel">—</div></button>
   </div>
-  <div class="section-label">▶ Démarrer un cours</div>
-  <div style="padding:0 16px 16px">
+  <div class="section-label" style="display:none">▶ Démarrer un cours</div>
+ <div style="padding:0 16px 16px;display:none">
     <div class="card"><div class="card-body">
       <div class="form-group"><label class="label">Classe</label><select class="select" id="modalClasse" onchange="calculerEstim()"><option value="">— Sélectionner —</option></select></div>
       <div class="form-group"><label class="label">Matière</label><input class="input" type="text" id="modalMatiere" placeholder="Ex: Mathématiques" oninput="calculerEstim()"></div>
