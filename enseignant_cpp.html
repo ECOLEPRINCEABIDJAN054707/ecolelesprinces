@@ -871,7 +871,7 @@ async function chargerMesCoursDuJour() {
       window[cbName] = (data) => { resolve(data); delete window[cbName]; document.body.removeChild(script); };
       script.onerror = () => { resolve({ ok: false }); delete window[cbName]; };
     });
-    script.src = url.replace('type=', 'callback=' + cbName + '&type=');
+    script.src = url + '&callback=' + cbName;
     document.body.appendChild(script);
     const data = await Promise.race([promise, new Promise(r => setTimeout(() => r({ok:false}), 10000))]);
 
