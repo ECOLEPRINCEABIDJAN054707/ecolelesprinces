@@ -821,6 +821,7 @@ function demarrerSession() {
   chargerClasses();
   chargerBilan();
   initOngletsTrimestre();
+  chargerMesCoursDuJour();
   goToScreen('accueil');
 }
 
@@ -848,8 +849,72 @@ async function chargerClasses() {
       if (current) sel.value = current; // conserver la sélection
     });
   } catch(e) { console.warn('chargerClasses:', e); }
+} 
+  // ⚠️ NOUVEAU — Mes cours du jour, avec créneaux cliquables uniquement à mon nom
+async function chargerMesCoursDuJour() {
+  const zone = document.getElementById('modalClasse').closest('.card') || document.getElementById('modalClasse').parentElement.parentElement;
+  const container = document.createElement('div');
+  container.id = 'mesCoursJourZone';
+  container.style.cssText = 'padding:0 16px 16px';
+  container.innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:20px"><div class="loader-ring" style="width:28px;height:28px;margin:0 auto 10px"></div><p style="font-size:12px;color:var(--text2)">Chargement de vos cours du jour...</p></div></div>';
+
+  const heroDiv = document.querySelector('.accueil-hero');
+  if (heroDiv && heroDiv.nextSibling) {
+    heroDiv.parentNode.insertBefore(container, heroDiv.nextSibling);
+  }
+
+  try {
+    const url = APPS_SCRIPT_URL + '?type=MES_COURS_JOUR&ecole=' + encodeURIComponent(user.ecole) + '&enseignant=' + encodeURIComponent(user.nom);
+    const cbName = 'mcj_' + Date.now();
+    const script = document.createElement('script');
+    const promise = new Promise((resolve) => {
+      window[cbName] = (data) => { resolve(data); delete window[cbName]; document.body.removeChild(script); };
+      script.onerror = () => { resolve({ ok: false }); delete window[cbName]; };
+    });
+    script.src = url.replace('type=', 'callback=' + cbName + '&type=');
+    document.body.appendChild(script);
+    const data = await Promise.race([promise, new Promise(r => setTimeout(() => r({ok:false}), 10000))]);
+
+    if (!data || !data.ok || !data.cours || !data.cours.length) {
+      container.innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:20px">' +
+        '<p style="font-size:13px;color:var(--text2);margin-bottom:10px">Aucun cours trouvé à votre nom dans l\'EDT aujourd\'hui.</p>' +
+        '<button class="btn btn-outline" onclick="signalerProblemeEDT()">🚩 Je ne trouve pas mon cours</button>' +
+        '</div></div>';
+      return;
+    }
+
+    let html = '<div class="card"><div class="card-title">📅 Mes cours aujourd\'hui</div><div class="card-body" style="padding:12px">';
+    data.cours.forEach((c, i) => {
+      html += '<button onclick="demarrerCoursDepuisEDT(' + i + ')" style="width:100%;text-align:left;padding:12px;margin-bottom:8px;background:var(--blue-lt);border:1.5px solid #90CAF9;border-radius:10px;font-family:inherit;cursor:pointer">' +
+        '<div style="font-weight:700;font-size:14px;color:var(--navy)">' + esc(c.classe) + '</div>' +
+        '<div style="font-size:12px;color:var(--text2);margin-top:2px">' + esc(c.matiere) + ' · ' + esc(c.heureDebut) + ' → ' + esc(c.heureFin) + '</div>' +
+        '</button>';
+    });
+    html += '<button class="btn btn-ghost" style="margin-top:4px" onclick="signalerProblemeEDT()">🚩 Je ne trouve pas mon cours</button>';
+    html += '</div></div>';
+    container.innerHTML = html;
+    window._mesCoursJour = data.cours;
+  } catch(e) {
+    container.innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:20px"><p style="font-size:13px;color:var(--text2)">Erreur de chargement.</p></div></div>';
+  }
 }
 
+function demarrerCoursDepuisEDT(idx) {
+  const c = window._mesCoursJour[idx];
+  if (!c) return;
+  document.getElementById('modalClasse').value = c.classe;
+  document.getElementById('modalMatiere').value = c.matiere;
+  document.getElementById('modalHeureDebut').value = c.heureDebut;
+  document.getElementById('modalHeureFin').value = c.heureFin;
+  calculerEstim();
+  confirmerCours();
+}
+
+function signalerProblemeEDT() {
+  const msg = 'Bonjour, je ne trouve pas mon cours du jour dans l\'EDT.\n' +
+    'Enseignant : ' + user.nom + '\nÉcole : ' + user.ecole + '\nDate : ' + formatDate(new Date());
+  window.open('https://wa.me/2250708111269?text=' + encodeURIComponent(msg), '_blank');
+}
 // ══════════════════════════════════════════════
 // BILAN — FIX NaN
 // ══════════════════════════════════════════════
