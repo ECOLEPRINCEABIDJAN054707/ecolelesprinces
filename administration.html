@@ -343,6 +343,20 @@ table tr:nth-child(even){background:#F8FAFD}
         <div id="peda-alertes-content"><div style="text-align:center;padding:20px;color:var(--gris);font-size:0.82em">Chargement...</div></div>
       </div>
     </div>
+  </div> 
+  <div class="section" id="dirSecChangerEns">
+    <div class="sec-head sec-violet" onclick="toggleSec(this)">
+      <h3>&#128260; Remplacer un enseignant dans l'EDT</h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body">
+      <div style="padding:14px">
+        <div class="form-group"><label class="label">Classe</label><input class="input" type="text" id="ceClasse" placeholder="Ex: 1ERE D2 (sans le préfixe EDT_)" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box"></div>
+        <div class="form-group" style="margin-top:10px"><label class="label">Nom actuel dans l'EDT (à remplacer)</label><input class="input" type="text" id="ceAncien" placeholder="Ex: CAMARA" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box"></div>
+        <div class="form-group" style="margin-top:10px"><label class="label">Nouveau nom (remplaçant)</label><input class="input" type="text" id="ceNouveau" placeholder="Ex: KOUASSI" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box"></div>
+        <button onclick="confirmerChangerEnseignant()" style="width:100%;margin-top:14px;padding:12px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.85em;cursor:pointer">Remplacer dans l'EDT</button>
+        <div id="ceMessage" style="display:none;margin-top:10px;padding:10px;border-radius:6px;font-size:0.82em"></div>
+      </div>
+    </div>
   </div>
 <div class="section" id="dirSecAppel">
     <div class="sec-head sec-vert" onclick="toggleSec(this)">
@@ -2261,7 +2275,59 @@ async function chargerAppelsDir(ecole) {
   });
   liste.innerHTML = h;
 } 
+// ⚠️ NOUVEAU — Remplacer un enseignant dans l'EDT (espace Directeur)
+async function confirmerChangerEnseignant() {
+  const classe = document.getElementById('ceClasse').value.trim();
+  const ancien = document.getElementById('ceAncien').value.trim();
+  const nouveau = document.getElementById('ceNouveau').value.trim();
+  const msgDiv = document.getElementById('ceMessage');
 
+  if (!classe || !ancien || !nouveau) {
+    msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em';
+    msgDiv.textContent = '⚠️ Remplissez les 3 champs.';
+    return;
+  }
+
+  const confirme = window.confirm(
+    'Confirmer le remplacement ?\n\n' +
+    'Classe : ' + classe + '\n' +
+    'Ancien : ' + ancien + '\n' +
+    'Nouveau : ' + nouveau + '\n\n' +
+    'Ça va modifier tous les créneaux de ' + ancien + ' dans cette classe.'
+  );
+  if (!confirme) return;
+
+  msgDiv.style.cssText = 'display:block;background:#E3F2FD;color:var(--bleu);border:1px solid #90CAF9;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em';
+  msgDiv.textContent = '⏳ Modification en cours...';
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'CHANGER_ENSEIGNANT',
+        ecole: currentStaff.ecole,
+        classe: classe,
+        ancienNom: ancien,
+        nouveauNom: nouveau
+      })
+    });
+    const result = await resp.json();
+    if (result && result.ok) {
+      msgDiv.style.cssText = 'display:block;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em';
+      msgDiv.textContent = '✅ ' + (result.message || 'Remplacement effectué');
+      document.getElementById('ceClasse').value = '';
+      document.getElementById('ceAncien').value = '';
+      document.getElementById('ceNouveau').value = '';
+    } else {
+      msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em';
+      msgDiv.textContent = '❌ ' + (result && result.message ? result.message : 'Erreur inconnue');
+    }
+  } catch(e) {
+    msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em';
+    msgDiv.textContent = '❌ Erreur réseau : ' + e.message;
+  }
+}
   // ⚠️ NOUVEAU — Appels enseignants réels pour l'espace Comptable
 async function chargerAppelsCom(ecole) {
   const liste = document.getElementById('comAppelListe');
