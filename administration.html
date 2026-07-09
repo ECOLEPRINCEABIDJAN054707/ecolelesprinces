@@ -1398,7 +1398,7 @@ async function chargerPointage(){
   const mois=moisSel.value;const tb=document.getElementById('tableBody');
   if(tb)tb.innerHTML='<div style="text-align:center;padding:24px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try{
-    const sheetsId=SHEETS_IDS[currentStaff.ecole];if(!sheetsId)return;
+    const sheetsId=getSheetsIdPourEcole(currentStaff.ecole);if(!sheetsId)return;
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL!A2:P2000?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
     const res=await fetch(url);const data=await res.json();
     if(!data.values||!data.values.length){afficherTableauVide();return;}
@@ -1411,7 +1411,7 @@ async function chargerPointage(){
 }
 async function chargerPermanents(recap){
   try{
-    const sheetsId=SHEETS_IDS[currentStaff.ecole];
+    const sheetsId=getSheetsIdPourEcole(currentStaff.ecole);
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
     const res=await fetch(url);const data=await res.json();if(!data.values)return;
     data.values.forEach(row=>{const nom=String(row[0]||'').trim();const actif=String(row[3]||'').trim().toUpperCase();const type=String(row[4]||'').trim().toUpperCase();const fixe=parseFloat(row[5])||0;if(actif!=='OUI'||type!=='PERMANENT'||fixe<=0)return;if(!recap[nom]){recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],type:'PERMANENT'};donneesPointage.push(recap[nom]);}recap[nom].totalSalaire=fixe;recap[nom].type='PERMANENT';});
