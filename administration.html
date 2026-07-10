@@ -3650,7 +3650,24 @@ async function chargerPointageEdu(periode) {
   var next = el.nextElementSibling;
   if(next) next.style.display = next.style.display === 'none' ? 'block' : 'none';
 }
-function logout(){try{sessionStorage.removeItem('staffConnecte');}catch(e){}['espaceDir','espaceFond','espaceCom','espaceEdu'].forEach(id=>{document.getElementById(id).style.display='none';});document.getElementById('loginPage').style.display='flex';document.getElementById('inputMat').value='';document.getElementById('inputCode').value='';currentStaff=null;donneesPointage=[];coursEnAttente=[];tentativesPin=0;donneesDevoirs=[];notesElevesCache={};const sel=document.getElementById('filtreMois');if(sel)sel.innerHTML='';}
+function logout(){
+  // ⚠️ NOUVEAU — enregistrer l'heure de déconnexion avant de tout effacer
+  if(currentStaff && currentStaff.profil && currentStaff.profil !== 'FOND'){
+    var roleLabel = currentStaff.profil==='DIR'?'Directeur':currentStaff.profil==='COM'?'Comptable':currentStaff.profil==='EDU'?'Educateur':currentStaff.profil;
+    fetch(APPS_SCRIPT_POINTAGE, {
+      method: 'POST',
+      headers: {'Content-Type':'text/plain'},
+      body: JSON.stringify({ action:'DECONNEXION_STAFF', nom: currentStaff.nom || roleLabel, role: roleLabel, ecole: currentStaff.ecole })
+    }).catch(function(e){ console.warn('deconnexion staff non enregistree:', e); });
+  }
+  try{sessionStorage.removeItem('staffConnecte');}catch(e){}
+  ['espaceDir','espaceFond','espaceCom','espaceEdu'].forEach(id=>{document.getElementById(id).style.display='none';});
+  document.getElementById('loginPage').style.display='flex';
+  document.getElementById('inputMat').value='';
+  document.getElementById('inputCode').value='';
+  currentStaff=null;donneesPointage=[];coursEnAttente=[];tentativesPin=0;donneesDevoirs=[];notesElevesCache={};
+  const sel=document.getElementById('filtreMois');if(sel)sel.innerHTML='';
+}
 
 // ============================================================
 // IMPORT NOUVEL ÉLÈVE — Espace Directeur
