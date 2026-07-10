@@ -1374,7 +1374,8 @@ function peuplerNiveaux(ecole) {
   ['2NDE A','2NDE C','1ERE A','1ERE C','1ERE D','TLE A','TLE C','TLE D'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
   sel.innerHTML += '</optgroup>';
 }
-function afficherDir(s){
+function afficherDir(s){ 
+  enregistrerConnexionStaff('Directeur', s.ecole);
   document.getElementById('dirAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
   document.getElementById('dirNom').textContent=s.nom;
   document.getElementById('dirEcole').textContent=s.label;
@@ -1984,7 +1985,8 @@ function changerAnneeCom(){
   window._anneeSelectionnee = document.getElementById('comSelectAnnee').value;
   afficherCom(currentStaff);
 }
-function afficherCom(s){
+function afficherCom(s){ 
+  enregistrerConnexionStaff('Comptable', s.ecole);
   document.getElementById('comAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
   document.getElementById('comNom').textContent=s.nom;document.getElementById('comEcole').textContent=s.label;
   document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;
@@ -2011,7 +2013,8 @@ function afficherCom(s){
   document.getElementById('espaceCom').style.display='block';
 }
 function toggleTache(idx,el){TACHES_DEMO[idx].done=!TACHES_DEMO[idx].done;el.classList.toggle('done');el.textContent=TACHES_DEMO[idx].done?'✓':'';el.nextElementSibling.classList.toggle('done');document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;showToast(TACHES_DEMO[idx].done?'Accomplie !':'Remise en cours',TACHES_DEMO[idx].done?'success':'');}
-function afficherEdu(s){
+function afficherEdu(s){ 
+  enregistrerConnexionStaff('Educateur', s.ecole);
   document.getElementById('eduAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
   document.getElementById('eduNom').textContent=s.nom;
   document.getElementById('eduEcole').textContent=s.label+(s.role?' · '+s.role:'');
@@ -2207,7 +2210,15 @@ function validerAppelDir(){
   showToast('Appel valide — '+p+' present(s)'+(a?' · '+a+' absent(s)':''),'success');
 }
 // ⚠️ NOUVEAU — Appels enseignants réels pour l'espace Directeur
-async function chargerAppelsDir(ecole) {
+// ⚠️ NOUVEAU — Journal de connexion staff (Directeur/Comptable/Éducateur)
+function enregistrerConnexionStaff(role, ecole) {
+  fetch(APP_SCRIPT_URL_ADMIN, {
+    method: 'POST',
+    headers: {'Content-Type':'text/plain'},
+    body: JSON.stringify({ action:'CONNEXION_STAFF', nom: currentStaff.nom || role, role: role, ecole: ecole })
+  }).catch(function(e){ console.warn('connexion staff non enregistrée:', e); });
+}
+  async function chargerAppelsDir(ecole) {
   const liste = document.getElementById('dirAppelListe');
   if (!liste || !ecole) return;
   liste.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
