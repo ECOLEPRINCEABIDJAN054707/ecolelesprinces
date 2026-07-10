@@ -2212,7 +2212,7 @@ function validerAppelDir(){
 // ⚠️ NOUVEAU — Appels enseignants réels pour l'espace Directeur
 // ⚠️ NOUVEAU — Journal de connexion staff (Directeur/Comptable/Éducateur)
 function enregistrerConnexionStaff(role, ecole) {
-  fetch(APP_SCRIPT_URL_ADMIN, {
+  fetch(APPS_SCRIPT_POINTAGE, {
     method: 'POST',
     headers: {'Content-Type':'text/plain'},
     body: JSON.stringify({ action:'CONNEXION_STAFF', nom: currentStaff.nom || role, role: role, ecole: ecole })
