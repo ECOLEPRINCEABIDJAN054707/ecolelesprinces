@@ -1701,6 +1701,65 @@ function resetCahierDir(){['pf-classe','pf-matiere','pf-enseignant','pf-lecon','
 function initSaisiePedago(){
   const now=new Date();const pfd=document.getElementById('pf-date');if(pfd)pfd.value=now.toISOString().split('T')[0];const pfh=document.getElementById('pf-heure');if(pfh)pfh.value=now.toTimeString().slice(0,5);const sem=getSemActuelle();const pst=document.getElementById('pf-sem-theo');if(pst)pst.value=sem;const psr=document.getElementById('pf-sem-reel');if(psr)psr.value=sem;
 }
+  // ⚠️ NOUVEAU — Vue réseau complète des connexions staff, pour le Fondateur
+async function chargerVueReseauConnexionsStaff() {
+  const zone = document.getElementById('fondConnexionsBody');
+  if (!zone) return;
+  zone.innerHTML = '<p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement...</p>';
+  try {
+    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+      method: 'POST',
+      headers: {'Content-Type':'text/plain'},
+      body: JSON.stringify({ action:'GET_VUE_RESEAU_CONNEXIONS' })
+    });
+    const data = await resp.json();
+    if (!data.ok) {
+      zone.innerHTML = '<p style="padding:14px;font-size:0.82em;color:var(--rouge)">Erreur de chargement.</p>';
+      return;
+    }
+    const badgeCouleur = r => r==='Directeur'?'#1F4E79':r==='Comptable'?'#BF360C':'#4A148C';
+
+    let h = '<div style="display:flex;gap:4px;padding:8px 14px 0"><div id="fondTabRecentes" onclick="fondSwitchTabConnexions(\'recentes\')" style="flex:1;padding:7px;text-align:center;font-size:0.76em;font-weight:700;border-radius:8px 8px 0 0;background:#1F4E79;color:#fff;cursor:pointer">Récentes</div><div id="fondTabParPersonne" onclick="fondSwitchTabConnexions(\'parPersonne\')" style="flex:1;padding:7px;text-align:center;font-size:0.76em;font-weight:700;border-radius:8px 8px 0 0;background:#eee;color:var(--gris);cursor:pointer">Par personne</div></div>';
+
+    h += '<div id="fondVueRecentes">';
+    if (!data.recentes.length) {
+      h += '<p style="padding:14px;font-size:0.8em;color:var(--gris)">Aucune connexion enregistrée.</p>';
+    } else {
+      data.recentes.forEach(c => {
+        h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid #f0f4f8">';
+        h += '<div><span style="font-size:0.78em;font-weight:700">'+c.nom+'</span> <span style="font-size:0.64em;padding:2px 7px;border-radius:10px;background:'+badgeCouleur(c.role)+';color:#fff;margin-left:4px">'+c.role+'</span><div style="font-size:0.68em;color:var(--gris)">'+c.ecole+'</div></div>';
+        h += '<div style="font-size:0.72em;color:var(--gris);text-align:right">'+c.date+' '+c.heure+(c.heureDeco?'<br>→ '+c.heureDeco:'<br>(en cours)')+'</div>';
+        h += '</div>';
+      });
+    }
+    h += '</div>';
+
+    h += '<div id="fondVueParPersonne" style="display:none">';
+    if (!data.parPersonne.length) {
+      h += '<p style="padding:14px;font-size:0.8em;color:var(--gris)">Aucune donnée.</p>';
+    } else {
+      data.parPersonne.forEach(c => {
+        h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid #f0f4f8">';
+        h += '<div><span style="font-size:0.78em;font-weight:700">'+c.nom+'</span> <span style="font-size:0.64em;padding:2px 7px;border-radius:10px;background:'+badgeCouleur(c.role)+';color:#fff;margin-left:4px">'+c.role+'</span><div style="font-size:0.68em;color:var(--gris)">'+c.ecole+'</div></div>';
+        h += '<div style="font-size:0.72em;color:var(--gris);text-align:right">Dernière: '+c.date+' '+c.heure+'</div>';
+        h += '</div>';
+      });
+    }
+    h += '</div>';
+
+    zone.innerHTML = h;
+  } catch(e) {
+    zone.innerHTML = '<p style="padding:14px;font-size:0.82em;color:var(--rouge)">Erreur réseau.</p>';
+  }
+}
+function fondSwitchTabConnexions(vue) {
+  document.getElementById('fondVueRecentes').style.display = vue==='recentes'?'block':'none';
+  document.getElementById('fondVueParPersonne').style.display = vue==='parPersonne'?'block':'none';
+  document.getElementById('fondTabRecentes').style.background = vue==='recentes'?'#1F4E79':'#eee';
+  document.getElementById('fondTabRecentes').style.color = vue==='recentes'?'#fff':'var(--gris)';
+  document.getElementById('fondTabParPersonne').style.background = vue==='parPersonne'?'#1F4E79':'#eee';
+  document.getElementById('fondTabParPersonne').style.color = vue==='parPersonne'?'#fff':'var(--gris)';
+}
 function afficherFond(s){
   document.getElementById('fondAvatar').textContent='F';document.getElementById('fondNom').textContent=s.nom;
   let h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px">';
