@@ -837,9 +837,32 @@ async function chargerClasses() {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (!data.sheets) return;
-    const classes = data.sheets
+    let classes = data.sheets
       .map(s => s.properties.title)
       .filter(t => !estOngletSysteme(t) && t.length > 1);
+
+    // ⚠️ NOUVEAU — restreindre aux seules classes de ce prof (toute la semaine)
+    try {
+      const urlMC = APPS_SCRIPT_URL + '?type=MES_CLASSES_SEMAINE&ecole=' + encodeURIComponent(user.ecole) + '&enseignant=' + encodeURIComponent(user.nom);
+      const cbName2 = 'mcs_' + Date.now();
+      const script2 = document.createElement('script');
+      const promise2 = new Promise((resolve) => {
+        window[cbName2] = (data2) => { resolve(data2); delete window[cbName2]; document.body.removeChild(script2); };
+        script2.onerror = () => { resolve({ ok: false }); delete window[cbName2]; };
+      });
+      script2.src = urlMC + '&callback=' + cbName2;
+      document.body.appendChild(script2);
+      const dataMC = await Promise.race([promise2, new Promise(r => setTimeout(() => r({ok:false}), 15000))]);
+
+      if (dataMC && dataMC.ok && dataMC.classes && dataMC.classes.length) {
+        function normaliser(s) {
+          return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+        }
+        const mesClassesNorm = dataMC.classes.map(normaliser);
+        classes = classes.filter(c => mesClassesNorm.includes(normaliser(c)));
+      }
+    } catch(e2) { console.warn('filtre classes prof:', e2); }
+
     sels.forEach(id => {
       const sel = document.getElementById(id);
       if (!sel) return;
