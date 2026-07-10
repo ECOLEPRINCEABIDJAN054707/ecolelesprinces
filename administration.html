@@ -653,7 +653,12 @@ table tr:nth-child(even){background:#F8FAFD}
     <div class="stat-box or"><div class="stat-val">200+</div><div class="stat-lbl">Enseignants</div></div>
     <div class="stat-box rouge"><div class="stat-val">&#8212;</div><div class="stat-lbl">Impay&eacute;s r&eacute;seau</div></div>
   </div>
-  <div class="section">
+ <div class="section">
+    <div class="sec-head sec-violet open" onclick="toggleSec(this)">
+      <h3>&#128272; Connexions du personnel</h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body open" id="fondConnexionsBody"></div>
+  </div> <div class="section">
     <div class="sec-head sec-fonce open" onclick="toggleSec(this)">
       <h3>&#128202; KPIs r&eacute;seau</h3><span class="arr">&#9660;</span>
     </div>
@@ -1769,7 +1774,7 @@ function afficherFond(s){
   document.getElementById('fondSoldesBody').innerHTML=h2;
   let h3='';SALAIRES_ADMIN.forEach(e=>{h3+='<div class="rap-ligne"><span class="rap-label">'+e.nom+' <span style="color:var(--gris);font-size:0.8em">'+e.fonction+'</span></span><span class="rap-val">'+e.salaire.toLocaleString('fr-FR')+' F</span></div>';});
   const total=SALAIRES_ADMIN.reduce((s,e)=>s+(e.salaire||0),0);h3+='<div class="rap-ligne total"><span class="rap-label">TOTAL</span><span class="rap-val">'+total.toLocaleString('fr-FR')+' F CFA</span></div>';
-  document.getElementById('fondSalBody').innerHTML=h3;document.getElementById('espaceFond').style.display='block';
+  document.getElementById('fondSalBody').innerHTML=h3;setTimeout(chargerVueReseauConnexionsStaff, 300);document.getElementById('espaceFond').style.display='block';
   setTimeout(peuplerSelectEcoleFond,200);
 }
 async function chargerSynthese(ecole){
