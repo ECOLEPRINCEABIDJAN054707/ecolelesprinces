@@ -4672,6 +4672,20 @@ function validerManuelDir(){
   });
 }
 
+// ============================================================
+// CORRECTIF — Traçabilité : savoir QUI a inscrit chaque élève
+// PARTIE CLIENT (administration.html)
+// ============================================================
+// INSTRUCTIONS D'INSTALLATION :
+// 1. Ouvrir administration.html dans l'éditeur GitHub
+// 2. Chercher (Ctrl+F) : async function _inscrireNouvelEleve(data, ecoleCible, labelEcole){
+// 3. Sélectionner TOUTE cette fonction, depuis le "async function _inscrireNouvelEleve"
+//    jusqu'à son dernier "}" fermant (juste avant "async function _inscrireNouvelEleveDir")
+// 4. Remplacer la sélection par le contenu ci-dessous
+// 5. Vérifier qu'aucune ligne n'a été coupée après le collage
+// 6. Commit changes
+// ============================================================
+
 async function _inscrireNouvelEleve(data, ecoleCible, labelEcole){
   try{
     var sheetsId=SHEETS_IDS[ecoleCible];
@@ -4685,6 +4699,11 @@ async function _inscrireNouvelEleve(data, ecoleCible, labelEcole){
 
     // Vérifier que le matricule est présent
     if(!matricule){return{succes:false,message:'Matricule non detecte. Utilisez la saisie manuelle pour saisir le matricule de l\'eleve.'};}
+
+    // ⚠️ NOUVEAU — Identifier qui fait l'inscription (nom + rôle)
+    var roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+    var roleLabel=(currentStaff&&currentStaff.profil)?(roleLabels[currentStaff.profil]||currentStaff.profil):'Inconnu';
+    var inscritPar=(currentStaff&&currentStaff.nom?currentStaff.nom:'Inconnu')+' ('+roleLabel+')';
 
     // Chercher l'eleve dans la SYNTHESE par matricule
     var urlSyn='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
@@ -4725,7 +4744,8 @@ async function _inscrireNouvelEleve(data, ecoleCible, labelEcole){
         lieuNaissance:data.lieu_naissance||'',sexe:data.sexe||'',
         nomPere:data.nom_pere||'',nomMere:data.nom_mere||'',
         telPere:data.tel_pere||'',telMere:data.tel_mere||'',telTuteur:data.tel_tuteur||'',
-        ecoleNom:labelEcole,sheetsId:sheetsId,source:data.source||'IMPORT'};
+        ecoleNom:labelEcole,sheetsId:sheetsId,source:data.source||'IMPORT',
+        inscritPar:inscritPar};
       try{
         var resp2=await fetch(urlScript2,{method:'POST',
           headers:{'Content-Type':'text/plain'},
@@ -4740,6 +4760,7 @@ async function _inscrireNouvelEleve(data, ecoleCible, labelEcole){
     return{succes:false,message:'Erreur: '+e.message};
   }
 }
+
 
 async function _inscrireNouvelEleveDir(data){
   return _inscrireNouvelEleve(data, currentStaff.ecole, currentStaff.label);
