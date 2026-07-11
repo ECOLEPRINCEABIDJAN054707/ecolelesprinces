@@ -502,59 +502,41 @@ table tr:nth-child(even){background:#F8FAFD}
           <input type="date" id="matDDN" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
         </div>
         <div>
-          <label style="font-size:0.7em;font-weight:700;color:#C62828;display:block;margin-bottom:3px">TÉL PÈRE *</label>
-          <input type="tel" id="matTelPere" placeholder="07XXXXXXXX" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
-        </div>
-        <div>
-          <label style="font-size:0.7em;font-weight:700;color:#C62828;display:block;margin-bottom:3px">TÉL MÈRE *</label>
-          <input type="tel" id="matTelMere" placeholder="05XXXXXXXX" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
-        </div>
-      </div>
-      <button onclick="attribuerMatriculeDir()" style="width:100%;padding:11px;background:#00897B;color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">✅ Attribuer ce matricule</button>
-      <div id="matMessage" style="display:none;margin-top:10px;padding:10px;border-radius:6px;font-size:0.82em"></div>
-    </div>
-    <!-- LISTE ATTRIBUÉS -->
-    <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center">
-      <span style="font-size:0.78em;font-weight:700;color:var(--bleu)">📋 Matricules attribués</span>
-      <input type="text" id="matSearch" placeholder="🔍 Nom / matricule..." oninput="filtrerTableauMatricules()"
-        style="padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.74em;outline:none;width:160px">
-    </div>
-    <div class="tbl-wrap" id="matTableWrapper">
-      <table style="min-width:400px">
-        <thead><tr><th>Matricule</th><th>Nom & Prénom</th><th>Classe</th><th>Naissance</th><th>Attribué le</th></tr></thead>
-        <tbody id="matTbody"><tr><td colspan="5" style="text-align:center;padding:20px;color:var(--gris)">Cliquez sur la section pour charger</td></tr></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-  <!-- IMPORT NOUVEL ELEVE -->
- <!-- ============================================================
-     HTML — Section "Programme trimestriel de devoirs", ESPACE DIRECTEUR
+<!-- ============================================================
+     REMPLACEMENT COMPLET — Section "Programme trimestriel de devoirs
+     surveillés/compositions", ESPACE DIRECTEUR
+     ============================================================
+     Cette nouvelle version remplace ENTIÈREMENT la section installée
+     précédemment (celle avec Contenu prévu / Devoir prévu / Date devoir),
+     par une version adaptée aux devoirs surveillés : Date, Heure début,
+     Heure fin, Salle, Sujet.
      ============================================================
      INSTRUCTIONS D'INSTALLATION :
      1. Ouvrir administration.html dans l'éditeur GitHub
-     2. Chercher (Ctrl+F) : Inscrire un nouvel &eacute;l&egrave;ve 2026-2027
-        (dans l'espace Directeur — PAS celui de l'espace Fondateur/Educateur/Comptable,
-        c'est le premier trouvé normalement, celui avec id="dirImportBody" juste après)
-     3. Cette recherche va te montrer une ligne comme :
-          <div class="sec-head sec-or" onclick="toggleSec(this)">
-            <h3>&#127891; Inscrire un nouvel &eacute;l&egrave;ve 2026-2027</h3><span class="arr">&#9660;</span>
-          </div>
-        Remonte de UNE ligne au-dessus : tu dois trouver la ligne
+     2. Chercher (Ctrl+F) : peuplerClassesProgrammeOnce();toggleSec(this)
+        (cette recherche doit donner UN SEUL résultat)
+     3. Juste au-dessus de cette ligne, tu dois voir :
           <div class="section">
-        qui OUVRE cette section (juste avant le sec-head).
-     4. Clique tout au DÉBUT de cette ligne <div class="section"> (avant le "<")
-     5. Colle TOUT le contenu ci-dessous à cet endroit précis
-        (il s'insère juste avant la section Inscription élève, sans rien supprimer)
-     6. Commit changes
+        C'est le DÉBUT du bloc à remplacer.
+     4. Fais défiler vers le bas jusqu'à trouver ce commentaire :
+          <!-- IMPORT NOUVEL ELEVE -->
+        C'est la ligne qui suit IMMÉDIATEMENT la FIN du bloc à remplacer
+        (ne touche pas à ce commentaire, ni à ce qui suit).
+     5. Sélectionne TOUT le texte depuis le <div class="section"> (étape 3)
+        jusqu'à la ligne JUSTE AVANT <!-- IMPORT NOUVEL ELEVE --> (étape 4),
+        c'est-à-dire jusqu'au dernier </div> qui ferme la section
+        "Programme trimestriel" (il y a exactement 2 </div> de fermeture
+        à la fin : un pour sec-body, un pour section).
+     6. Remplace toute cette sélection par le contenu ci-dessous
+     7. Commit changes
      ============================================================ -->
 <div class="section">
     <div class="sec-head sec-violet" onclick="peuplerClassesProgrammeOnce();toggleSec(this)">
-      <h3>&#128197; Programme trimestriel de devoirs 2026-2027</h3><span class="arr">&#9660;</span>
+      <h3>&#128197; Programme trimestriel &mdash; Devoirs surveilles 2026-2027</h3><span class="arr">&#9660;</span>
     </div>
     <div class="sec-body" id="dirProgBody">
       <div style="padding:10px 14px 6px;background:#F3E5F5;border-bottom:1px solid #CE93D8">
-        <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">&#128221; Planning connu des &eacute;ducateurs et visible par les parents (annee 2026-2027 uniquement)</span>
+        <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">&#128221; Planning des devoirs surveilles / compositions, etabli par la Direction &mdash; visible par les educateurs et les parents (annee 2026-2027 uniquement)</span>
       </div>
       <div style="padding:12px 14px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
@@ -579,15 +561,15 @@ table tr:nth-child(even){background:#F8FAFD}
 
         <div id="progTableWrap" style="display:none">
           <div class="tbl-wrap">
-            <table style="min-width:520px">
+            <table style="min-width:560px">
               <thead>
                 <tr>
-                  <th style="width:40px">Sem.</th>
+                  <th style="width:36px">Sem.</th>
+                  <th>Date</th>
                   <th>Debut</th>
                   <th>Fin</th>
-                  <th>Contenu prevu</th>
-                  <th>Devoir prevu</th>
-                  <th>Date devoir</th>
+                  <th>Salle</th>
+                  <th>Sujet / Chapitre</th>
                   <th style="width:30px"></th>
                 </tr>
               </thead>
@@ -595,7 +577,7 @@ table tr:nth-child(even){background:#F8FAFD}
             </table>
           </div>
           <div style="display:flex;gap:8px;margin-top:10px">
-            <button onclick="ajouterLigneProgramme()" style="flex:1;padding:9px;background:var(--bg);border:1.5px solid var(--violet);color:var(--violet);border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer">&#10133; Ajouter une semaine</button>
+            <button onclick="ajouterLigneProgramme()" style="flex:1;padding:9px;background:var(--bg);border:1.5px solid var(--violet);color:var(--violet);border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer">&#10133; Ajouter un devoir</button>
             <button onclick="enregistrerProgrammeDir()" style="flex:1;padding:9px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer">&#10003; Enregistrer le programme</button>
           </div>
         </div>
@@ -603,6 +585,7 @@ table tr:nth-child(even){background:#F8FAFD}
       </div>
     </div>
   </div>
+
 
   <div class="section">
     <div class="sec-head sec-or" onclick="toggleSec(this)">
