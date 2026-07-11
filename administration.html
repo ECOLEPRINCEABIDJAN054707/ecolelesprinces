@@ -726,7 +726,14 @@ table tr:nth-child(even){background:#F8FAFD}
       </select>
     </div>
   </div>
-  <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">DATE NAISSANCE</label><input type="text" id="mf-nais" placeholder="JJ/MM/AAAA" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+<div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">DATE NAISSANCE</label><input type="text" id="mf-nais" placeholder="JJ/MM/AAAA" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+<div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">LIEU NAISSANCE</label><input type="text" id="mf-lieu" placeholder="Ex: ABIDJAN" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+<div style="background:#E3F2FD;border-left:3px solid #1F4E79;padding:7px 10px;border-radius:6px;margin:10px 0 8px;font-size:0.75em;color:#1F4E79;font-weight:700">📞 CONTACTS PARENTS — Obligatoires</div>
+<div style="display:flex;gap:6px;margin-bottom:8px">
+  <div style="flex:1"><label style="font-size:0.72em;font-weight:700;color:#C62828">📱 TEL PÈRE *</label><input type="tel" id="mf-tel-pere" placeholder="Ex: 0701234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+  <div style="flex:1"><label style="font-size:0.72em;font-weight:700;color:#C62828">📱 TEL MÈRE *</label><input type="tel" id="mf-tel-mere" placeholder="Ex: 0507654321" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+</div>
+<div style="margin-bottom:10px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">📱 TEL TUTEUR (optionnel)</label><input type="tel" id="mf-tel-tuteur" placeholder="Ex: 0101234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
   <button onclick="validerManuelFond()" style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:700;cursor:pointer;margin-top:4px">&#10003; Inscrire cet &eacute;l&egrave;ve</button>
 </div>
         <div id="zoneResultatFond" style="display:none;margin-top:12px">
@@ -4147,11 +4154,18 @@ async function validerManuelFond(){
   var mat=document.getElementById('mf-mat').value.trim();
   var nom=document.getElementById('mf-nom').value.trim();
   var niv=document.getElementById('mf-niveau').value.trim();
+  var telPere=document.getElementById('mf-tel-pere').value.trim();
+  var telMere=document.getElementById('mf-tel-mere').value.trim();
+  var telTuteur=document.getElementById('mf-tel-tuteur').value.trim();
   if(!mat||!nom||!niv){affImportErrFond('Matricule, nom et niveau sont obligatoires');return;}
+  if(!telPere||telPere.length<8){affImportErrFond('Le telephone du pere est obligatoire (min 8 chiffres)');return;}
+  if(!telMere||telMere.length<8){affImportErrFond('Le telephone de la mere est obligatoire (min 8 chiffres)');return;}
   var data={matricule:mat,nom_prenoms:nom,niveau_suivant:niv,
     statut:document.getElementById('mf-statut').value,
     date_naissance:document.getElementById('mf-nais').value,
+    lieu_naissance:document.getElementById('mf-lieu').value,
     sexe:document.getElementById('mf-sexe').value,
+    tel_pere:telPere,tel_mere:telMere,tel_tuteur:telTuteur,
     source:'MANUEL'};
   affImportLoadingFond('Inscription en cours...');
   var selEcole=document.getElementById('fondImportEcole');
@@ -4160,7 +4174,7 @@ async function validerManuelFond(){
   hideImportLoadingFond();
   if(res.succes){
     affImportSuccesFond(res.message);
-    ['mf-mat','mf-nom','mf-niveau','mf-nais'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+    ['mf-mat','mf-nom','mf-niveau','mf-nais','mf-lieu','mf-tel-pere','mf-tel-mere','mf-tel-tuteur'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   }else{
     affImportErrFond(res.message);
   }
