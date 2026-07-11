@@ -4463,6 +4463,24 @@ function affImportErrCom(t){hideImportLoadingCom();var el=document.getElementByI
 // 6. Commit changes
 // ============================================================
 
+// ============================================================
+// REMPLACEMENT COMPLET — Fonctions JS Programme trimestriel
+// (devoirs surveilles : Date, Heure debut, Heure fin, Salle, Sujet)
+// ============================================================
+// INSTRUCTIONS D'INSTALLATION :
+// 1. Ouvrir administration.html dans l'éditeur GitHub
+// 2. Chercher (Ctrl+F) : var _progLignes
+//    (cette recherche doit donner UN SEUL résultat)
+// 3. Sélectionne TOUT depuis cette ligne "var _progLignes = []..."
+//    jusqu'à la ligne JUSTE AVANT "async function peuplerClassesProgrammeOnce"
+//    (donc jusqu'au dernier "}" qui ferme la fonction enregistrerProgrammeDir,
+//    sans toucher au commentaire ni à la fonction peuplerClassesProgrammeOnce
+//    qui vient juste après)
+// 4. Remplace toute cette sélection par le contenu ci-dessous
+// 5. Vérifier qu'aucune ligne n'a été coupée après le collage
+// 6. Commit changes
+// ============================================================
+
 var _progLignes = []; // tableau en mémoire des lignes du programme en cours d'édition
 
 function _progGetSheetsId2026() {
@@ -4503,17 +4521,17 @@ async function chargerProgrammeDir() {
         if (rClasse === classe && rMatiere === matiere.toUpperCase() && rTrim === trimestre) {
           _progLignes.push({
             semaine: row[3] || '',
-            dateDebut: row[4] || '',
-            dateFin: row[5] || '',
-            contenu: row[6] || '',
-            devoir: row[7] || '',
-            dateDevoir: row[8] || ''
+            date: row[4] || '',
+            heureDebut: row[5] || '',
+            heureFin: row[6] || '',
+            salle: row[7] || '',
+            sujet: row[8] || ''
           });
         }
       }
     }
     if (_progLignes.length === 0) {
-      _progLignes.push({ semaine: 1, dateDebut: '', dateFin: '', contenu: '', devoir: '', dateDevoir: '' });
+      _progLignes.push({ semaine: 1, date: '', heureDebut: '', heureFin: '', salle: '', sujet: '' });
     }
     _progRenderTable();
     document.getElementById('progTableWrap').style.display = 'block';
@@ -4529,12 +4547,12 @@ function _progRenderTable() {
   var html = '';
   _progLignes.forEach(function(l, idx) {
     html += '<tr>'
-      + '<td><input type="number" min="1" value="' + (l.semaine || idx + 1) + '" onchange="_progMajLigne(' + idx + ',\'semaine\',this.value)" style="width:44px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.78em"></td>'
-      + '<td><input type="date" value="' + _progDateISO(l.dateDebut) + '" onchange="_progMajLigne(' + idx + ',\'dateDebut\',this.value)" style="width:120px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em"></td>'
-      + '<td><input type="date" value="' + _progDateISO(l.dateFin) + '" onchange="_progMajLigne(' + idx + ',\'dateFin\',this.value)" style="width:120px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em"></td>'
-      + '<td><textarea onchange="_progMajLigne(' + idx + ',\'contenu\',this.value)" style="width:160px;min-height:36px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em;resize:vertical">' + (l.contenu || '') + '</textarea></td>'
-      + '<td><textarea onchange="_progMajLigne(' + idx + ',\'devoir\',this.value)" style="width:160px;min-height:36px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em;resize:vertical">' + (l.devoir || '') + '</textarea></td>'
-      + '<td><input type="date" value="' + _progDateISO(l.dateDevoir) + '" onchange="_progMajLigne(' + idx + ',\'dateDevoir\',this.value)" style="width:120px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em"></td>'
+      + '<td><input type="number" min="1" value="' + (l.semaine || idx + 1) + '" onchange="_progMajLigne(' + idx + ',\'semaine\',this.value)" style="width:40px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.78em"></td>'
+      + '<td><input type="date" value="' + _progDateISO(l.date) + '" onchange="_progMajLigne(' + idx + ',\'date\',this.value)" style="width:130px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em"></td>'
+      + '<td><input type="time" value="' + (l.heureDebut || '') + '" onchange="_progMajLigne(' + idx + ',\'heureDebut\',this.value)" style="width:90px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em"></td>'
+      + '<td><input type="time" value="' + (l.heureFin || '') + '" onchange="_progMajLigne(' + idx + ',\'heureFin\',this.value)" style="width:90px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em"></td>'
+      + '<td><input type="text" value="' + (l.salle || '') + '" placeholder="Ex: Salle 7" onchange="_progMajLigne(' + idx + ',\'salle\',this.value)" style="width:90px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em"></td>'
+      + '<td><input type="text" value="' + (l.sujet || '') + '" placeholder="Ex: Chapitre 3 : fractions" onchange="_progMajLigne(' + idx + ',\'sujet\',this.value)" style="width:180px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em"></td>'
       + '<td><button onclick="_progSupprimerLigne(' + idx + ')" style="background:#FFEBEE;color:var(--rouge);border:none;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:0.76em">&#10005;</button></td>'
       + '</tr>';
   });
@@ -4560,7 +4578,7 @@ function _progDateAffiche(d) {
 
 function _progMajLigne(idx, champ, valeur) {
   if (!_progLignes[idx]) return;
-  if (champ === 'dateDebut' || champ === 'dateFin' || champ === 'dateDevoir') {
+  if (champ === 'date') {
     _progLignes[idx][champ] = _progDateAffiche(valeur);
   } else {
     _progLignes[idx][champ] = valeur;
@@ -4569,7 +4587,7 @@ function _progMajLigne(idx, champ, valeur) {
 
 function ajouterLigneProgramme() {
   var derniereSemaine = _progLignes.length ? (parseInt(_progLignes[_progLignes.length - 1].semaine) || _progLignes.length) : 0;
-  _progLignes.push({ semaine: derniereSemaine + 1, dateDebut: '', dateFin: '', contenu: '', devoir: '', dateDevoir: '' });
+  _progLignes.push({ semaine: derniereSemaine + 1, date: '', heureDebut: '', heureFin: '', salle: '', sujet: '' });
   _progRenderTable();
 }
 
@@ -4577,6 +4595,47 @@ function _progSupprimerLigne(idx) {
   _progLignes.splice(idx, 1);
   _progRenderTable();
 }
+
+async function enregistrerProgrammeDir() {
+  var classe = document.getElementById('progClasse').value.trim().toUpperCase();
+  var matiere = document.getElementById('progMatiere').value.trim();
+  var trimestre = document.getElementById('progTrimestre').value;
+  var msgDiv = document.getElementById('progMessage');
+  var sheetsId = _progGetSheetsId2026();
+  if (!sheetsId) {
+    msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
+    msgDiv.textContent = '⚠️ Base 2026-2027 non configurée';
+    return;
+  }
+  msgDiv.style.cssText = 'display:block;background:#E3F2FD;color:var(--bleu);border:1px solid #90CAF9;padding:10px;border-radius:6px';
+  msgDiv.textContent = '⏳ Enregistrement...';
+  try {
+    var resp = await fetch(APPS_SCRIPT_POINTAGE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'sauvegarderProgrammeTrimestre',
+        sheetsId: sheetsId,
+        classe: classe,
+        matiere: matiere,
+        trimestre: trimestre,
+        lignes: _progLignes
+      })
+    });
+    var result = await resp.json();
+    if (result && result.ok) {
+      msgDiv.style.cssText = 'display:block;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;padding:10px;border-radius:6px';
+      msgDiv.textContent = '✅ ' + (result.message || 'Programme enregistré');
+    } else {
+      msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
+      msgDiv.textContent = '❌ ' + (result && result.message ? result.message : 'Erreur inconnue');
+    }
+  } catch (e) {
+    msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
+    msgDiv.textContent = '❌ Erreur réseau : ' + e.message;
+  }
+}
+
 
 async function enregistrerProgrammeDir() {
   var classe = document.getElementById('progClasse').value.trim().toUpperCase();
