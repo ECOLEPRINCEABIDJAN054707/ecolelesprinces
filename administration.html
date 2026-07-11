@@ -4024,10 +4024,9 @@ function validerManuelDir(){
   });
 }
 
-async function _inscrireNouvelEleveDir(data){
+async function _inscrireNouvelEleve(data, ecoleCible, labelEcole){
   try{
-    var s=currentStaff;
-    var sheetsId=SHEETS_IDS[s.ecole];
+    var sheetsId=SHEETS_IDS[ecoleCible];
     if(!sheetsId)return{succes:false,message:'Base non configuree pour cette ecole'};
     var niveau=(data.niveau_suivant||data.niveau||'').toUpperCase().trim();
     var matricule=String(data.matricule||'').trim().toUpperCase();
@@ -4078,7 +4077,7 @@ async function _inscrireNouvelEleveDir(data){
         lieuNaissance:data.lieu_naissance||'',sexe:data.sexe||'',
         nomPere:data.nom_pere||'',nomMere:data.nom_mere||'',
         telPere:data.tel_pere||'',telMere:data.tel_mere||'',telTuteur:data.tel_tuteur||'',
-        ecoleNom:s.label,sheetsId:sheetsId,source:data.source||'IMPORT'};
+        ecoleNom:labelEcole,sheetsId:sheetsId,source:data.source||'IMPORT'};
       try{
         var resp2=await fetch(urlScript2,{method:'POST',
           headers:{'Content-Type':'text/plain'},
@@ -4094,7 +4093,10 @@ async function _inscrireNouvelEleveDir(data){
   }
 }
 
-function annulerResultatDir(){document.getElementById('zoneResultatDir').style.display='none';_eleveDatasDir=null;}
+async function _inscrireNouvelEleveDir(data){
+  return _inscrireNouvelEleve(data, currentStaff.ecole, currentStaff.label);
+}
+  function annulerResultatDir(){document.getElementById('zoneResultatDir').style.display='none';_eleveDatasDir=null;}
 function affImportLoading(t){document.getElementById('importLoadingTxt').textContent=t;document.getElementById('importLoadingDir').style.display='block';document.getElementById('importSuccessDir').style.display='none';document.getElementById('importErrorDir').style.display='none';}
 function hideImportLoading(){document.getElementById('importLoadingDir').style.display='none';}
 function affImportSuccess(t){hideImportLoading();var el=document.getElementById('importSuccessDir');el.innerHTML=t;el.style.display='block';}
@@ -4195,36 +4197,17 @@ function afficherResultatFond(data){
 async function confirmerInscriptionFond(){
   if(!_eleveDatasFond)return;
   affImportLoadingFond('Mise a jour en cours...');
-  // Utiliser la même logique que le directeur mais avec l'école sélectionnée
   var ecole=_eleveDatasFond.ecoleSelectionnee;
-  var sheetsId=SHEETS_IDS[ecole];
-  if(!sheetsId){affImportErrFond('Base non configuree pour '+ecole);return;}
-  var niveau=(_eleveDatasFond.niveau_suivant||_eleveDatasFond.niveau||'').toUpperCase().trim();
-  var st=String(_eleveDatasFond.statut||'').toUpperCase();
-  var statut=(st.includes('AFF')&&!st.includes('NON')&&!st.includes('NAFF'))?'AFF':'NAFF';
-  // Chercher dans SYNTHESE
-  try{
-    var urlSyn='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    var rSyn=await fetch(urlSyn);
-    var dSyn=await rSyn.json();
-    var ligneEleve=-1;
-    if(dSyn.values){
-      for(var i=1;i<dSyn.values.length;i++){
-        if(String(dSyn.values[i][1]||'').trim().toUpperCase()===_eleveDatasFond.matricule.toUpperCase()){
-          ligneEleve=i+1;break;
-        }
-      }
-    }
-    hideImportLoadingFond();
-    if(ligneEleve>0){
-      affImportSuccesFond('Eleve trouve ligne '+ligneEleve+' — Mettez a jour Col S: '+statut+' Col R: '+niveau+' dans la base '+ecole);
-    }else{
-      affImportSuccesFond('Nouvel eleve: '+_eleveDatasFond.matricule+' — '+_eleveDatasFond.nom_prenoms+' — Niveau: '+niveau+' — Statut: '+statut);
-    }
+  var selEcole=document.getElementById('fondImportEcole');
+  var labelEcole=selEcole.selectedOptions[0]?selEcole.selectedOptions[0].textContent:ecole;
+  var res=await _inscrireNouvelEleve(_eleveDatasFond, ecole, labelEcole);
+  hideImportLoadingFond();
+  if(res.succes){
     document.getElementById('zoneResultatFond').style.display='none';
+    affImportSuccesFond(res.message);
     _eleveDatasFond=null;_fileBase64Fond='';
-  }catch(e){
-    affImportErrFond('Erreur: '+e.message);
+  }else{
+    affImportErrFond(res.message);
   }
 }
 
