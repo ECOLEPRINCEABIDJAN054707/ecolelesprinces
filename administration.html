@@ -549,7 +549,7 @@ table tr:nth-child(even){background:#F8FAFD}
      6. Commit changes
      ============================================================ -->
 <div class="section">
-    <div class="sec-head sec-violet" onclick="toggleSec(this)">
+    <div class="sec-head sec-violet" onclick="peuplerClassesProgrammeOnce();toggleSec(this)">
       <h3>&#128197; Programme trimestriel de devoirs 2026-2027</h3><span class="arr">&#9660;</span>
     </div>
     <div class="sec-body" id="dirProgBody">
@@ -560,11 +560,11 @@ table tr:nth-child(even){background:#F8FAFD}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
           <div>
             <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">CLASSE *</label>
-            <input type="text" id="progClasse" placeholder="Ex: 6EME 3, 2NDE A-1..." oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;box-sizing:border-box">
+            <select id="progClasse" onchange="peuplerMatieresProgramme()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em"><option value="">-- Chargement... --</option></select>
           </div>
           <div>
             <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">MATIERE *</label>
-            <input type="text" id="progMatiere" placeholder="Ex: Mathematiques" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;box-sizing:border-box">
+            <select id="progMatiere" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em"><option value="">-- Choisir une classe d'abord --</option></select>
           </div>
         </div>
         <div style="margin-bottom:10px">
