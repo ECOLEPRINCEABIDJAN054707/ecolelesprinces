@@ -528,6 +528,82 @@ table tr:nth-child(even){background:#F8FAFD}
   </div>
 </div>
   <!-- IMPORT NOUVEL ELEVE -->
+ <!-- ============================================================
+     HTML — Section "Programme trimestriel de devoirs", ESPACE DIRECTEUR
+     ============================================================
+     INSTRUCTIONS D'INSTALLATION :
+     1. Ouvrir administration.html dans l'éditeur GitHub
+     2. Chercher (Ctrl+F) : Inscrire un nouvel &eacute;l&egrave;ve 2026-2027
+        (dans l'espace Directeur — PAS celui de l'espace Fondateur/Educateur/Comptable,
+        c'est le premier trouvé normalement, celui avec id="dirImportBody" juste après)
+     3. Cette recherche va te montrer une ligne comme :
+          <div class="sec-head sec-or" onclick="toggleSec(this)">
+            <h3>&#127891; Inscrire un nouvel &eacute;l&egrave;ve 2026-2027</h3><span class="arr">&#9660;</span>
+          </div>
+        Remonte de UNE ligne au-dessus : tu dois trouver la ligne
+          <div class="section">
+        qui OUVRE cette section (juste avant le sec-head).
+     4. Clique tout au DÉBUT de cette ligne <div class="section"> (avant le "<")
+     5. Colle TOUT le contenu ci-dessous à cet endroit précis
+        (il s'insère juste avant la section Inscription élève, sans rien supprimer)
+     6. Commit changes
+     ============================================================ -->
+<div class="section">
+    <div class="sec-head sec-violet" onclick="toggleSec(this)">
+      <h3>&#128197; Programme trimestriel de devoirs 2026-2027</h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="dirProgBody">
+      <div style="padding:10px 14px 6px;background:#F3E5F5;border-bottom:1px solid #CE93D8">
+        <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">&#128221; Planning connu des &eacute;ducateurs et visible par les parents (annee 2026-2027 uniquement)</span>
+      </div>
+      <div style="padding:12px 14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">CLASSE *</label>
+            <input type="text" id="progClasse" placeholder="Ex: 6EME 3, 2NDE A-1..." oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">MATIERE *</label>
+            <input type="text" id="progMatiere" placeholder="Ex: Mathematiques" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;box-sizing:border-box">
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">TRIMESTRE *</label>
+          <select id="progTrimestre" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+            <option value="T1">Trimestre 1</option>
+            <option value="T2">Trimestre 2</option>
+            <option value="T3">Trimestre 3</option>
+          </select>
+        </div>
+        <button onclick="chargerProgrammeDir()" style="width:100%;padding:10px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer;margin-bottom:12px">&#128269; Charger le programme</button>
+
+        <div id="progTableWrap" style="display:none">
+          <div class="tbl-wrap">
+            <table style="min-width:520px">
+              <thead>
+                <tr>
+                  <th style="width:40px">Sem.</th>
+                  <th>Debut</th>
+                  <th>Fin</th>
+                  <th>Contenu prevu</th>
+                  <th>Devoir prevu</th>
+                  <th>Date devoir</th>
+                  <th style="width:30px"></th>
+                </tr>
+              </thead>
+              <tbody id="progTbody"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button onclick="ajouterLigneProgramme()" style="flex:1;padding:9px;background:var(--bg);border:1.5px solid var(--violet);color:var(--violet);border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer">&#10133; Ajouter une semaine</button>
+            <button onclick="enregistrerProgrammeDir()" style="flex:1;padding:9px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer">&#10003; Enregistrer le programme</button>
+          </div>
+        </div>
+        <div id="progMessage" style="display:none;margin-top:10px;padding:10px;border-radius:6px;font-size:0.82em"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="section">
     <div class="sec-head sec-or" onclick="toggleSec(this)">
       <h3>&#127891; Inscrire un nouvel &eacute;l&egrave;ve 2026-2027</h3><span class="arr">&#9660;</span>
