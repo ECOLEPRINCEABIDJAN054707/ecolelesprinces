@@ -4189,6 +4189,207 @@ function hideImportLoadingEdu(){document.getElementById('importLoadingEdu').styl
 function affImportSuccessEdu(t){hideImportLoadingEdu();var el=document.getElementById('importSuccessEdu');el.innerHTML=t;el.style.display='block';}
 function affImportErrEdu(t){hideImportLoadingEdu();var el=document.getElementById('importErrorEdu');el.innerHTML=t;el.style.display='block';}
 
+ // ============================================================
+// FONCTIONS JS — Inscription nouvel élève, ESPACE COMPTABLE
+// ============================================================
+// INSTRUCTIONS D'INSTALLATION :
+// 1. Ouvrir administration.html dans l'éditeur GitHub
+// 2. Chercher (Ctrl+F) : function setMoteurDir(m,el){
+// 3. Cliquer tout au début de cette ligne (avant le mot "function")
+// 4. Copier-coller TOUT le contenu ci-dessous à cet endroit précis
+//    (juste avant setMoteurDir — peu importe si les fonctions Educateur
+//    sont déjà collées là aussi, on empile simplement les blocs)
+// 5. Vérifier que chaque fonction commence bien par "function" en entier
+//    (pas de lettres manquantes après le collage)
+// 6. Commit changes
+// ============================================================
+
+var _moteurCom='claude', _fileBase64Com='', _fileTypeCom='', _eleveDatasCom=null;
+
+function setMoteurCom(m,el){
+  _moteurCom=m;
+  ['moteurClaudeBtnCom','moteurVisionBtnCom'].forEach(function(id){
+    var b=document.getElementById(id);
+    if(b){b.style.background='#fff';b.style.color='var(--gris)';b.style.borderColor='var(--border)';}
+  });
+  if(el){el.style.background='#E3F2FD';el.style.color='#1F4E79';el.style.borderColor='#1F4E79';}
+}
+
+function showImportTabCom(t){
+  document.getElementById('panelPhotoCom').style.display=t==='photo'?'block':'none';
+  document.getElementById('panelManuelCom').style.display=t==='manuel'?'block':'none';
+  var tP=document.getElementById('tabPhotoCom'),tM=document.getElementById('tabManuelCom');
+  if(t==='photo'){tP.style.background='#1F4E79';tP.style.color='#fff';tP.style.borderColor='#1F4E79';tM.style.background='#fff';tM.style.color='var(--gris)';tM.style.borderColor='var(--border)';}
+  else{tM.style.background='#1F4E79';tM.style.color='#fff';tM.style.borderColor='#1F4E79';tP.style.background='#fff';tP.style.color='var(--gris)';tP.style.borderColor='var(--border)';}
+}
+
+function handleDropCom(e){
+  e.preventDefault();
+  document.getElementById('dropZoneCom').style.borderColor='#dee2e6';
+  if(e.dataTransfer.files.length>0)processFileCom(e.dataTransfer.files[0]);
+}
+
+function chargerFichierCom(input){
+  if(input.files.length>0)processFileCom(input.files[0]);
+}
+
+function processFileCom(file){
+  document.getElementById('infosFichierCom').textContent=file.name+' ('+Math.round(file.size/1024)+' Ko)';
+  document.getElementById('infosFichierCom').style.display='block';
+  document.getElementById('btnAnalyserCom').style.display='block';
+  document.getElementById('contactsAvantAnalyseCom').style.display='block';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    _fileBase64Com=e.target.result.split(',')[1];
+    var raw=atob(_fileBase64Com.substring(0,20));
+    var arr=new Uint8Array(raw.length);
+    for(var b=0;b<raw.length;b++)arr[b]=raw.charCodeAt(b);
+    if(arr[0]===0xFF&&arr[1]===0xD8)_fileTypeCom='image/jpeg';
+    else if(arr[0]===0x89&&arr[1]===0x50)_fileTypeCom='image/png';
+    else if(arr[0]===0x52&&arr[1]===0x49)_fileTypeCom='image/webp';
+    else _fileTypeCom=file.type||'image/jpeg';
+    if(file.type.startsWith('image/')||_fileTypeCom.startsWith('image/')){
+      var prev=document.getElementById('previewCom');
+      prev.src=e.target.result;prev.style.display='block';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyserFichierCom(){
+  if(!_fileBase64Com){affImportErrCom('Selectionnez un fichier d\'abord');return;}
+  affImportLoadingCom('Analyse en cours...');
+  try{
+    var tailleKo=Math.round(_fileBase64Com.length*0.75/1024);
+    if(tailleKo>800){
+      hideImportLoadingCom();
+      affImportErrCom('Fichier trop lourd ('+tailleKo+' Ko). Prenez une photo de la page ou compressez le PDF. Ou utilisez la saisie manuelle.');
+      return;
+    }
+    var result;
+    if(_moteurCom==='claude'){
+      result=await _analyserAvecClaude(_fileBase64Com,_fileTypeCom);
+    }else{
+      result=await _analyserAvecVision(_fileBase64Com,_fileTypeCom);
+    }
+    if(document.getElementById('telPereCom2'))result._tel_pere=document.getElementById('telPereCom2').value.trim();
+    if(document.getElementById('telMereCom2'))result._tel_mere=document.getElementById('telMereCom2').value.trim();
+    if(document.getElementById('telTuteurCom2'))result._tel_tuteur=document.getElementById('telTuteurCom2').value.trim();
+    afficherResultatCom(result);
+  }catch(e){
+    affImportErrCom('Erreur analyse: '+e.message);
+  }
+}
+
+function afficherResultatCom(data){
+  hideImportLoadingCom();
+  if(!data){affImportErrCom('Impossible de lire le document. Utilisez la saisie manuelle.');return;}
+  _eleveDatasCom=data;
+  var mapNiv={'CM2A':'6EME','6EME':'5EME','5EME':'4EME','4EME':'3EME','3EME':'2NDE','2NDE':'1ERE','1ERE':'TLE',
+    'CP1A':'CP2A','CP2A':'CE1A','CE1A':'CE2A','CE2A':'CM1A','CM1A':'CM2A','PSA':'MSA','MSA':'GSA','GSA':'CP1A'};
+  if(!data.niveau_suivant&&data.niveau){
+    var nk=String(data.niveau||'').toUpperCase().replace(/\s+\d+.*$/,'').replace(/EX.*/,'').trim();
+    data.niveau_suivant=mapNiv[nk]||data.niveau;
+  }
+  var st=String(data.statut||data.statut_norm||'').toUpperCase();
+  data.statut_norm=(st.includes('AFF')&&!st.includes('NON')&&!st.includes('NAFF'))?'AFF':'NAFF';
+
+  if(!data.matricule||!data.nom_prenoms){
+    hideImportLoadingCom();
+    showImportTabCom('manuel');
+    if(data.statut_norm){var sel=document.getElementById('mc-statut');if(sel)sel.value=data.statut_norm;}
+    if(data.niveau_suivant){var sel2=document.getElementById('mc-niveau');if(sel2)sel2.value=data.niveau_suivant;}
+    if(data.date_naissance){var el=document.getElementById('mc-nais');if(el)el.value=data.date_naissance;}
+    if(data.lieu_naissance){var el2=document.getElementById('mc-lieu');if(el2)el2.value=data.lieu_naissance;}
+    if(data.sexe){var sel3=document.getElementById('mc-sexe');if(sel3)sel3.value=data.sexe;}
+    affImportErrCom('Photo insuffisante pour lire le matricule. Formulaire pré-rempli avec les infos détectées — Complétez le matricule et le nom.');
+    return;
+  }
+  var champs=[['Matricule',data.matricule||'⚠️ Non detecte'],['Nom et Prenoms',data.nom_prenoms||'⚠️ Non detecte'],
+    ['Niveau MENA',data.niveau||'⚠️ Non detecte'],['Niveau 2026-2027',data.niveau_suivant||''],
+    ['Statut',data.statut_norm],['Date naissance',data.date_naissance||''],
+    ['Lieu naissance',data.lieu_naissance||''],['Sexe',data.sexe||'']];
+  var h='';
+  champs.forEach(function(c){
+    if(c[1])h+='<div style="margin-bottom:6px"><div style="font-size:0.7em;font-weight:700;color:var(--gris)">'+c[0]+'</div><div style="font-size:0.84em;font-weight:700;color:#1A1A1A">'+c[1]+'</div></div>';
+  });
+  h+='<div style="background:#E3F2FD;border-left:3px solid #1F4E79;padding:8px 10px;border-radius:6px;margin-bottom:10px;font-size:0.75em;color:#1F4E79;font-weight:700">📞 CONTACTS PARENTS — Obligatoires avant inscription</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px">'
+    +'<div style="flex:1"><div style="font-size:0.7em;font-weight:700;color:#C62828">📱 TEL PÈRE *</div>'
+    +'<input type="tel" id="telPereCom" placeholder="Ex: 0701234567" maxlength="15" '
+    +'style="width:100%;padding:7px;border:2px solid #C62828;border-radius:6px;font-size:0.85em;margin-top:2px" '
+    +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')"></div>'
+    +'<div style="flex:1"><div style="font-size:0.7em;font-weight:700;color:#C62828">📱 TEL MÈRE *</div>'
+    +'<input type="tel" id="telMereCom" placeholder="Ex: 0507654321" maxlength="15" '
+    +'style="width:100%;padding:7px;border:2px solid #C62828;border-radius:6px;font-size:0.85em;margin-top:2px" '
+    +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')"></div>'
+    +'</div>'
+    +'<div style="margin-bottom:10px"><div style="font-size:0.7em;font-weight:700;color:var(--gris)">📱 TEL TUTEUR (optionnel)</div>'
+    +'<input type="tel" id="telTuteurCom" placeholder="Ex: 0101234567" maxlength="15" '
+    +'style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;margin-top:2px" '
+    +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')"></div>';
+  document.getElementById('resultChampsCom').innerHTML=h;
+  if(data._tel_pere){var tp=document.getElementById('telPereCom');if(tp)tp.value=data._tel_pere;_eleveDatasCom.tel_pere=data._tel_pere;}
+  if(data._tel_mere){var tm=document.getElementById('telMereCom');if(tm)tm.value=data._tel_mere;_eleveDatasCom.tel_mere=data._tel_mere;}
+  if(data._tel_tuteur){var tt=document.getElementById('telTuteurCom');if(tt)tt.value=data._tel_tuteur;_eleveDatasCom.tel_tuteur=data._tel_tuteur;}
+  document.getElementById('zoneResultatCom').style.display='block';
+}
+
+async function confirmerInscriptionCom(){
+  if(!_eleveDatasCom){return;}
+  var telPere=document.getElementById('telPereCom')?document.getElementById('telPereCom').value.trim():'';
+  var telMere=document.getElementById('telMereCom')?document.getElementById('telMereCom').value.trim():'';
+  var telTuteur=document.getElementById('telTuteurCom')?document.getElementById('telTuteurCom').value.trim():'';
+  if(!telPere||telPere.length<8){affImportErrCom('⚠️ Le téléphone du père est obligatoire (min 8 chiffres)');return;}
+  if(!telMere||telMere.length<8){affImportErrCom('⚠️ Le téléphone de la mère est obligatoire (min 8 chiffres)');return;}
+  _eleveDatasCom.tel_pere=telPere;
+  _eleveDatasCom.tel_mere=telMere;
+  _eleveDatasCom.tel_tuteur=telTuteur;
+  affImportLoadingCom('Inscription en cours...');
+  var res=await _inscrireNouvelEleve(_eleveDatasCom, currentStaff.ecole, currentStaff.label);
+  hideImportLoadingCom();
+  if(res.succes){
+    document.getElementById('zoneResultatCom').style.display='none';
+    affImportSuccessCom(res.message);
+    _eleveDatasCom=null;_fileBase64Com='';
+    ['telPereCom','telMereCom','telTuteurCom'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  }else{
+    affImportErrCom(res.message);
+  }
+}
+
+async function validerManuelCom(){
+  var mat=document.getElementById('mc-mat').value.trim();
+  var nom=document.getElementById('mc-nom').value.trim();
+  var niv=document.getElementById('mc-niveau').value.trim();
+  var telPere=document.getElementById('mc-tel-pere').value.trim();
+  var telMere=document.getElementById('mc-tel-mere').value.trim();
+  var telTuteur=document.getElementById('mc-tel-tuteur').value.trim();
+  if(!mat||!nom||!niv){affImportErrCom('Matricule, nom et niveau sont obligatoires');return;}
+  if(!telPere||telPere.length<8){affImportErrCom('Le telephone du pere est obligatoire (min 8 chiffres)');return;}
+  if(!telMere||telMere.length<8){affImportErrCom('Le telephone de la mere est obligatoire (min 8 chiffres)');return;}
+  var data={matricule:mat,nom_prenoms:nom,niveau_suivant:niv,
+    statut:document.getElementById('mc-statut').value,
+    date_naissance:document.getElementById('mc-nais').value,
+    lieu_naissance:document.getElementById('mc-lieu').value,
+    sexe:document.getElementById('mc-sexe').value,
+    tel_pere:telPere,tel_mere:telMere,tel_tuteur:telTuteur,
+    source:'MANUEL'};
+  affImportLoadingCom('Inscription en cours...');
+  var res=await _inscrireNouvelEleve(data, currentStaff.ecole, currentStaff.label);
+  hideImportLoadingCom();
+  if(res.succes){
+    affImportSuccessCom(res.message);
+    ['mc-mat','mc-nom','mc-niveau','mc-nais','mc-lieu','mc-tel-pere','mc-tel-mere','mc-tel-tuteur'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  }else affImportErrCom(res.message);
+}
+
+function annulerResultatCom(){document.getElementById('zoneResultatCom').style.display='none';_eleveDatasCom=null;}
+function affImportLoadingCom(t){document.getElementById('importLoadingTxtCom').textContent=t;document.getElementById('importLoadingCom').style.display='block';document.getElementById('importSuccessCom').style.display='none';document.getElementById('importErrorCom').style.display='none';}
+function hideImportLoadingCom(){document.getElementById('importLoadingCom').style.display='none';}
+function affImportSuccessCom(t){hideImportLoadingCom();var el=document.getElementById('importSuccessCom');el.innerHTML=t;el.style.display='block';}
+function affImportErrCom(t){hideImportLoadingCom();var el=document.getElementById('importErrorCom');el.innerHTML=t;el.style.display='block';}
+
   function setMoteurDir(m,el){
   _moteurDir=m;
   document.querySelectorAll('.moteur-btn').forEach(function(b){
