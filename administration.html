@@ -858,6 +858,114 @@ table tr:nth-child(even){background:#F8FAFD}
       <div id="comAppelListe"><div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div></div>
     </div>
   </div>
+ <!-- ============================================================
+     HTML — Section "Inscrire un nouvel élève", ESPACE COMPTABLE
+     ============================================================
+     INSTRUCTIONS D'INSTALLATION :
+     1. Ouvrir administration.html dans l'éditeur GitHub
+     2. Chercher (Ctrl+F) : Princes Smart School &middot; Espace Comptable
+     3. Cette recherche doit te montrer une ligne comme :
+          <div class="footer">Princes Smart School &middot; Espace Comptable &middot; 2026-2027</div>
+        C'est la ligne du FOOTER de l'espace Comptable, juste avant le
+        </div> qui ferme la balise <div id="espaceCom" ...>
+     4. Clique tout au DÉBUT de la ligne du footer (avant "<div class="footer">")
+     5. Colle TOUT le contenu ci-dessous à cet endroit précis
+        (il s'insère juste avant le footer, sans rien supprimer)
+     6. Vérifie que la structure reste bien : 
+          ...notre nouvelle section...
+          <div class="footer">...</div>
+        </div>   <-- ce dernier </div> doit rester après le footer, pas avant
+     7. Commit changes
+     ============================================================ -->
+<div class="section">
+    <div class="sec-head sec-or" onclick="toggleSec(this)">
+      <h3>&#127891; Inscrire un nouvel &eacute;l&egrave;ve 2026-2027</h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="comImportBody">
+      <div style="padding:10px 14px 6px;background:#FFF8E1;border-bottom:1px solid #FFE082">
+        <span style="font-size:0.72em;color:#F57F17;font-weight:600">&#128247; Scannez ou importez le recu MENA ou la fiche cursus de l'eleve</span>
+      </div>
+      <div style="padding:12px 14px 0">
+        <div style="font-size:0.75em;font-weight:700;color:var(--gris);margin-bottom:6px">MOTEUR DE LECTURE</div>
+        <div style="display:flex;gap:6px;margin-bottom:12px">
+          <div id="moteurClaudeBtnCom" class="moteur-btn active" onclick="setMoteurCom('claude',this)" style="flex:1;padding:8px;border:2px solid #1F4E79;border-radius:8px;font-size:0.75em;font-weight:700;cursor:pointer;text-align:center;background:#E3F2FD;color:#1F4E79">
+            &#129302; Claude AI<br><span style="font-size:0.8em;opacity:0.7">Recommandé</span>
+          </div>
+          <div id="moteurVisionBtnCom" class="moteur-btn" onclick="setMoteurCom('vision',this)" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;font-size:0.75em;font-weight:700;cursor:pointer;text-align:center;background:#fff;color:var(--gris)">
+            &#128065;&#65039; Google Vision<br><span style="font-size:0.8em;opacity:0.7">OCR standard</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px;margin-bottom:12px">
+          <div id="tabPhotoCom" onclick="showImportTabCom('photo')" style="flex:1;padding:8px;border:2px solid #1F4E79;border-radius:8px;font-size:0.75em;font-weight:700;cursor:pointer;text-align:center;background:#1F4E79;color:#fff">&#128247; Photo / PDF</div>
+          <div id="tabManuelCom" onclick="showImportTabCom('manuel')" style="flex:1;padding:8px;border:2px solid var(--border);border-radius:8px;font-size:0.75em;font-weight:700;cursor:pointer;text-align:center;background:#fff;color:var(--gris)">&#9000;&#65039; Saisie manuelle</div>
+        </div>
+        <div id="panelPhotoCom">
+          <div id="dropZoneCom" onclick="document.getElementById('fileInputCom').click()" ondragover="event.preventDefault();this.style.borderColor='#1F4E79'" ondragleave="this.style.borderColor='#dee2e6'" ondrop="handleDropCom(event)" style="border:2px dashed #dee2e6;border-radius:8px;padding:20px;text-align:center;cursor:pointer;color:var(--gris);font-size:0.82em;transition:all 0.2s">
+            <div style="font-size:28px;margin-bottom:6px">&#128247;</div>
+            <div>Cliquez ou d&eacute;posez le fichier ici</div>
+            <div style="font-size:0.75em;margin-top:4px;opacity:0.7">PDF, JPG, PNG, WEBP accept&eacute;s</div>
+          </div>
+          <input type="file" id="fileInputCom" accept=".pdf,.jpg,.jpeg,.png,.webp" style="display:none" onchange="chargerFichierCom(this)">
+          <img id="previewCom" src="" style="max-width:100%;max-height:120px;border-radius:6px;margin-top:8px;display:none">
+          <div id="infosFichierCom" style="display:none;margin-top:8px;padding:8px;background:#f8f9fa;border-radius:6px;font-size:0.78em;color:#333"></div>
+          <div id="contactsAvantAnalyseCom" style="display:none;margin-top:10px">
+            <div style="background:#E3F2FD;border-left:3px solid #1F4E79;padding:7px 10px;border-radius:6px;margin-bottom:8px;font-size:0.75em;color:#1F4E79;font-weight:700">📞 Contacts parents — à renseigner maintenant</div>
+            <div style="display:flex;gap:6px;margin-bottom:6px">
+              <div style="flex:1"><label style="font-size:0.7em;font-weight:700;color:#C62828">📱 TEL PÈRE *</label>
+              <input type="tel" id="telPereCom2" placeholder="0701234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:7px;border:2px solid #C62828;border-radius:6px;font-size:0.85em;margin-top:2px"></div>
+              <div style="flex:1"><label style="font-size:0.7em;font-weight:700;color:#C62828">📱 TEL MÈRE *</label>
+              <input type="tel" id="telMereCom2" placeholder="0507654321" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:7px;border:2px solid #C62828;border-radius:6px;font-size:0.85em;margin-top:2px"></div>
+            </div>
+            <div style="margin-bottom:8px"><label style="font-size:0.7em;font-weight:700;color:var(--gris)">📱 TEL TUTEUR (optionnel)</label>
+            <input type="tel" id="telTuteurCom2" placeholder="0101234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;margin-top:2px"></div>
+          </div>
+          <button id="btnAnalyserCom" onclick="analyserFichierCom()" style="display:none;width:100%;margin-top:10px;padding:10px;background:#1F4E79;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:700;cursor:pointer">&#128269; Analyser le document</button>
+        </div>
+        <div id="panelManuelCom" style="display:none">
+          <div style="background:#E3F2FD;border-left:3px solid #1F4E79;padding:8px;font-size:0.75em;border-radius:4px;margin-bottom:10px;color:#1F4E79">Remplissez les informations du document manuellement</div>
+          <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">MATRICULE *</label><input type="text" id="mc-mat" placeholder="Ex: 24188737C" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+          <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">NOM ET PRENOMS *</label><input type="text" id="mc-nom" placeholder="NOM PRENOM" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+          <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">NIVEAU 2026-2027 *</label><input type="text" id="mc-niveau" placeholder="Ex: 6EME, 2NDE A, CP1A..." oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <div style="flex:1"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">STATUT</label>
+              <select id="mc-statut" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px">
+                <option value="AFF">AFF (Affecté État)</option><option value="NAFF">NAFF (Non Affecté)</option>
+              </select>
+            </div>
+            <div style="flex:1"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">SEXE</label>
+              <select id="mc-sexe" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px">
+                <option value="">--</option><option value="MASCULIN">MASCULIN</option><option value="FEMININ">FEMININ</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">DATE NAISSANCE</label><input type="text" id="mc-nais" placeholder="JJ/MM/AAAA" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+          <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">LIEU NAISSANCE</label><input type="text" id="mc-lieu" placeholder="Ex: ABIDJAN" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+          <div style="background:#E3F2FD;border-left:3px solid #1F4E79;padding:7px 10px;border-radius:6px;margin:10px 0 8px;font-size:0.75em;color:#1F4E79;font-weight:700">📞 CONTACTS PARENTS — Obligatoires</div>
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <div style="flex:1"><label style="font-size:0.72em;font-weight:700;color:#C62828">📱 TEL PÈRE *</label><input type="tel" id="mc-tel-pere" placeholder="Ex: 0701234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+            <div style="flex:1"><label style="font-size:0.72em;font-weight:700;color:#C62828">📱 TEL MÈRE *</label><input type="tel" id="mc-tel-mere" placeholder="Ex: 0507654321" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+          </div>
+          <div style="margin-bottom:10px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">📱 TEL TUTEUR (optionnel)</label><input type="tel" id="mc-tel-tuteur" placeholder="Ex: 0101234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+          <button onclick="validerManuelCom()" style="width:100%;padding:10px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:700;cursor:pointer;margin-top:4px">&#10003; Inscrire cet &eacute;l&egrave;ve</button>
+        </div>
+        <div id="zoneResultatCom" style="display:none;margin-top:12px">
+          <div style="font-weight:700;color:#2E7D32;margin-bottom:8px;font-size:0.82em">&#10003; Informations extraites — V&eacute;rifiez et confirmez :</div>
+          <div id="resultChampsCom" style="background:#f8f9fa;border-radius:8px;padding:10px;font-size:0.78em;margin-bottom:10px"></div>
+          <div style="display:flex;gap:6px">
+            <button onclick="confirmerInscriptionCom()" style="flex:1;padding:9px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer">&#10003; Confirmer inscription</button>
+            <button onclick="annulerResultatCom()" style="flex:1;padding:9px;background:#e0e0e0;color:#555;border:none;border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer">&#10007; Annuler</button>
+          </div>
+        </div>
+        <div id="importLoadingCom" style="display:none;text-align:center;padding:14px;color:#1F4E79;font-size:0.82em">
+          <div style="display:inline-block;width:18px;height:18px;border:3px solid #f3f3f3;border-top:3px solid #1F4E79;border-radius:50%;animation:spin 1s linear infinite;margin-right:8px;vertical-align:middle"></div>
+          <span id="importLoadingTxtCom">Analyse en cours...</span>
+        </div>
+        <div id="importSuccessCom" style="display:none;background:#E8F5E9;border-left:3px solid #2E7D32;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em;color:#2E7D32"></div>
+        <div id="importErrorCom" style="display:none;background:#FFEBEE;border-left:3px solid #C62828;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em;color:#C62828"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="footer">Princes Smart School &middot; Espace Comptable &middot; 2026-2027</div>
 </div>
 
