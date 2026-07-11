@@ -3775,7 +3775,206 @@ var _moteurDir='claude', _fileBase64Dir='', _fileTypeDir='', _eleveDatasDir=null
 var CLAUDE_API_KEY_DIR='';// Clé gérée via Apps Script uniquement
 var VISION_API_KEY_DIR='AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA'; // Google Cloud Vision API
 
-function setMoteurDir(m,el){
+// ============================================================
+// FONCTIONS JS — Inscription nouvel élève, ESPACE ÉDUCATEUR
+// ============================================================
+// INSTRUCTIONS D'INSTALLATION :
+// 1. Ouvrir administration.html dans l'éditeur GitHub
+// 2. Chercher (Ctrl+F) : function setMoteurDir(m,el){
+// 3. Cliquer tout au début de cette ligne (avant le mot "function")
+// 4. Copier-coller TOUT le contenu ci-dessous à cet endroit précis
+// 5. Vérifier que chaque fonction commence bien par "function" en entier
+//    (pas de lettres manquantes après le collage)
+// 6. Commit changes
+// ============================================================
+
+var _moteurEdu='claude', _fileBase64Edu='', _fileTypeEdu='', _eleveDatasEdu=null;
+
+function setMoteurEdu(m,el){
+  _moteurEdu=m;
+  ['moteurClaudeBtnEdu','moteurVisionBtnEdu'].forEach(function(id){
+    var b=document.getElementById(id);
+    if(b){b.style.background='#fff';b.style.color='var(--gris)';b.style.borderColor='var(--border)';}
+  });
+  if(el){el.style.background='#E3F2FD';el.style.color='#1F4E79';el.style.borderColor='#1F4E79';}
+}
+
+function showImportTabEdu(t){
+  document.getElementById('panelPhotoEdu').style.display=t==='photo'?'block':'none';
+  document.getElementById('panelManuelEdu').style.display=t==='manuel'?'block':'none';
+  var tP=document.getElementById('tabPhotoEdu'),tM=document.getElementById('tabManuelEdu');
+  if(t==='photo'){tP.style.background='#1F4E79';tP.style.color='#fff';tP.style.borderColor='#1F4E79';tM.style.background='#fff';tM.style.color='var(--gris)';tM.style.borderColor='var(--border)';}
+  else{tM.style.background='#1F4E79';tM.style.color='#fff';tM.style.borderColor='#1F4E79';tP.style.background='#fff';tP.style.color='var(--gris)';tP.style.borderColor='var(--border)';}
+}
+
+function handleDropEdu(e){
+  e.preventDefault();
+  document.getElementById('dropZoneEdu').style.borderColor='#dee2e6';
+  if(e.dataTransfer.files.length>0)processFileEdu(e.dataTransfer.files[0]);
+}
+
+function chargerFichierEdu(input){
+  if(input.files.length>0)processFileEdu(input.files[0]);
+}
+
+function processFileEdu(file){
+  document.getElementById('infosFichierEdu').textContent=file.name+' ('+Math.round(file.size/1024)+' Ko)';
+  document.getElementById('infosFichierEdu').style.display='block';
+  document.getElementById('btnAnalyserEdu').style.display='block';
+  document.getElementById('contactsAvantAnalyseEdu').style.display='block';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    _fileBase64Edu=e.target.result.split(',')[1];
+    var raw=atob(_fileBase64Edu.substring(0,20));
+    var arr=new Uint8Array(raw.length);
+    for(var b=0;b<raw.length;b++)arr[b]=raw.charCodeAt(b);
+    if(arr[0]===0xFF&&arr[1]===0xD8)_fileTypeEdu='image/jpeg';
+    else if(arr[0]===0x89&&arr[1]===0x50)_fileTypeEdu='image/png';
+    else if(arr[0]===0x52&&arr[1]===0x49)_fileTypeEdu='image/webp';
+    else _fileTypeEdu=file.type||'image/jpeg';
+    if(file.type.startsWith('image/')||_fileTypeEdu.startsWith('image/')){
+      var prev=document.getElementById('previewEdu');
+      prev.src=e.target.result;prev.style.display='block';
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function analyserFichierEdu(){
+  if(!_fileBase64Edu){affImportErrEdu('Selectionnez un fichier d\'abord');return;}
+  affImportLoadingEdu('Analyse en cours...');
+  try{
+    var tailleKo=Math.round(_fileBase64Edu.length*0.75/1024);
+    if(tailleKo>800){
+      hideImportLoadingEdu();
+      affImportErrEdu('Fichier trop lourd ('+tailleKo+' Ko). Prenez une photo de la page ou compressez le PDF. Ou utilisez la saisie manuelle.');
+      return;
+    }
+    var result;
+    if(_moteurEdu==='claude'){
+      result=await _analyserAvecClaude(_fileBase64Edu,_fileTypeEdu);
+    }else{
+      result=await _analyserAvecVision(_fileBase64Edu,_fileTypeEdu);
+    }
+    if(document.getElementById('telPereEdu2'))result._tel_pere=document.getElementById('telPereEdu2').value.trim();
+    if(document.getElementById('telMereEdu2'))result._tel_mere=document.getElementById('telMereEdu2').value.trim();
+    if(document.getElementById('telTuteurEdu2'))result._tel_tuteur=document.getElementById('telTuteurEdu2').value.trim();
+    afficherResultatEdu(result);
+  }catch(e){
+    affImportErrEdu('Erreur analyse: '+e.message);
+  }
+}
+
+function afficherResultatEdu(data){
+  hideImportLoadingEdu();
+  if(!data){affImportErrEdu('Impossible de lire le document. Utilisez la saisie manuelle.');return;}
+  _eleveDatasEdu=data;
+  var mapNiv={'CM2A':'6EME','6EME':'5EME','5EME':'4EME','4EME':'3EME','3EME':'2NDE','2NDE':'1ERE','1ERE':'TLE',
+    'CP1A':'CP2A','CP2A':'CE1A','CE1A':'CE2A','CE2A':'CM1A','CM1A':'CM2A','PSA':'MSA','MSA':'GSA','GSA':'CP1A'};
+  if(!data.niveau_suivant&&data.niveau){
+    var nk=String(data.niveau||'').toUpperCase().replace(/\s+\d+.*$/,'').replace(/EX.*/,'').trim();
+    data.niveau_suivant=mapNiv[nk]||data.niveau;
+  }
+  var st=String(data.statut||data.statut_norm||'').toUpperCase();
+  data.statut_norm=(st.includes('AFF')&&!st.includes('NON')&&!st.includes('NAFF'))?'AFF':'NAFF';
+
+  if(!data.matricule||!data.nom_prenoms){
+    hideImportLoadingEdu();
+    showImportTabEdu('manuel');
+    if(data.statut_norm){var sel=document.getElementById('me-statut');if(sel)sel.value=data.statut_norm;}
+    if(data.niveau_suivant){var sel2=document.getElementById('me-niveau');if(sel2)sel2.value=data.niveau_suivant;}
+    if(data.date_naissance){var el=document.getElementById('me-nais');if(el)el.value=data.date_naissance;}
+    if(data.lieu_naissance){var el2=document.getElementById('me-lieu');if(el2)el2.value=data.lieu_naissance;}
+    if(data.sexe){var sel3=document.getElementById('me-sexe');if(sel3)sel3.value=data.sexe;}
+    affImportErrEdu('Photo insuffisante pour lire le matricule. Formulaire pré-rempli avec les infos détectées — Complétez le matricule et le nom.');
+    return;
+  }
+  var champs=[['Matricule',data.matricule||'⚠️ Non detecte'],['Nom et Prenoms',data.nom_prenoms||'⚠️ Non detecte'],
+    ['Niveau MENA',data.niveau||'⚠️ Non detecte'],['Niveau 2026-2027',data.niveau_suivant||''],
+    ['Statut',data.statut_norm],['Date naissance',data.date_naissance||''],
+    ['Lieu naissance',data.lieu_naissance||''],['Sexe',data.sexe||'']];
+  var h='';
+  champs.forEach(function(c){
+    if(c[1])h+='<div style="margin-bottom:6px"><div style="font-size:0.7em;font-weight:700;color:var(--gris)">'+c[0]+'</div><div style="font-size:0.84em;font-weight:700;color:#1A1A1A">'+c[1]+'</div></div>';
+  });
+  h+='<div style="background:#E3F2FD;border-left:3px solid #1F4E79;padding:8px 10px;border-radius:6px;margin-bottom:10px;font-size:0.75em;color:#1F4E79;font-weight:700">📞 CONTACTS PARENTS — Obligatoires avant inscription</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px">'
+    +'<div style="flex:1"><div style="font-size:0.7em;font-weight:700;color:#C62828">📱 TEL PÈRE *</div>'
+    +'<input type="tel" id="telPereEdu" placeholder="Ex: 0701234567" maxlength="15" '
+    +'style="width:100%;padding:7px;border:2px solid #C62828;border-radius:6px;font-size:0.85em;margin-top:2px" '
+    +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')"></div>'
+    +'<div style="flex:1"><div style="font-size:0.7em;font-weight:700;color:#C62828">📱 TEL MÈRE *</div>'
+    +'<input type="tel" id="telMereEdu" placeholder="Ex: 0507654321" maxlength="15" '
+    +'style="width:100%;padding:7px;border:2px solid #C62828;border-radius:6px;font-size:0.85em;margin-top:2px" '
+    +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')"></div>'
+    +'</div>'
+    +'<div style="margin-bottom:10px"><div style="font-size:0.7em;font-weight:700;color:var(--gris)">📱 TEL TUTEUR (optionnel)</div>'
+    +'<input type="tel" id="telTuteurEdu" placeholder="Ex: 0101234567" maxlength="15" '
+    +'style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;margin-top:2px" '
+    +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')"></div>';
+  document.getElementById('resultChampsEdu').innerHTML=h;
+  if(data._tel_pere){var tp=document.getElementById('telPereEdu');if(tp)tp.value=data._tel_pere;_eleveDatasEdu.tel_pere=data._tel_pere;}
+  if(data._tel_mere){var tm=document.getElementById('telMereEdu');if(tm)tm.value=data._tel_mere;_eleveDatasEdu.tel_mere=data._tel_mere;}
+  if(data._tel_tuteur){var tt=document.getElementById('telTuteurEdu');if(tt)tt.value=data._tel_tuteur;_eleveDatasEdu.tel_tuteur=data._tel_tuteur;}
+  document.getElementById('zoneResultatEdu').style.display='block';
+}
+
+async function confirmerInscriptionEdu(){
+  if(!_eleveDatasEdu){return;}
+  var telPere=document.getElementById('telPereEdu')?document.getElementById('telPereEdu').value.trim():'';
+  var telMere=document.getElementById('telMereEdu')?document.getElementById('telMereEdu').value.trim():'';
+  var telTuteur=document.getElementById('telTuteurEdu')?document.getElementById('telTuteurEdu').value.trim():'';
+  if(!telPere||telPere.length<8){affImportErrEdu('⚠️ Le téléphone du père est obligatoire (min 8 chiffres)');return;}
+  if(!telMere||telMere.length<8){affImportErrEdu('⚠️ Le téléphone de la mère est obligatoire (min 8 chiffres)');return;}
+  _eleveDatasEdu.tel_pere=telPere;
+  _eleveDatasEdu.tel_mere=telMere;
+  _eleveDatasEdu.tel_tuteur=telTuteur;
+  affImportLoadingEdu('Inscription en cours...');
+  var res=await _inscrireNouvelEleve(_eleveDatasEdu, currentStaff.ecole, currentStaff.label);
+  hideImportLoadingEdu();
+  if(res.succes){
+    document.getElementById('zoneResultatEdu').style.display='none';
+    affImportSuccessEdu(res.message);
+    _eleveDatasEdu=null;_fileBase64Edu='';
+    ['telPereEdu','telMereEdu','telTuteurEdu'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  }else{
+    affImportErrEdu(res.message);
+  }
+}
+
+async function validerManuelEdu(){
+  var mat=document.getElementById('me-mat').value.trim();
+  var nom=document.getElementById('me-nom').value.trim();
+  var niv=document.getElementById('me-niveau').value.trim();
+  var telPere=document.getElementById('me-tel-pere').value.trim();
+  var telMere=document.getElementById('me-tel-mere').value.trim();
+  var telTuteur=document.getElementById('me-tel-tuteur').value.trim();
+  if(!mat||!nom||!niv){affImportErrEdu('Matricule, nom et niveau sont obligatoires');return;}
+  if(!telPere||telPere.length<8){affImportErrEdu('Le telephone du pere est obligatoire (min 8 chiffres)');return;}
+  if(!telMere||telMere.length<8){affImportErrEdu('Le telephone de la mere est obligatoire (min 8 chiffres)');return;}
+  var data={matricule:mat,nom_prenoms:nom,niveau_suivant:niv,
+    statut:document.getElementById('me-statut').value,
+    date_naissance:document.getElementById('me-nais').value,
+    lieu_naissance:document.getElementById('me-lieu').value,
+    sexe:document.getElementById('me-sexe').value,
+    tel_pere:telPere,tel_mere:telMere,tel_tuteur:telTuteur,
+    source:'MANUEL'};
+  affImportLoadingEdu('Inscription en cours...');
+  var res=await _inscrireNouvelEleve(data, currentStaff.ecole, currentStaff.label);
+  hideImportLoadingEdu();
+  if(res.succes){
+    affImportSuccessEdu(res.message);
+    ['me-mat','me-nom','me-niveau','me-nais','me-lieu','me-tel-pere','me-tel-mere','me-tel-tuteur'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  }else affImportErrEdu(res.message);
+}
+
+function annulerResultatEdu(){document.getElementById('zoneResultatEdu').style.display='none';_eleveDatasEdu=null;}
+function affImportLoadingEdu(t){document.getElementById('importLoadingTxtEdu').textContent=t;document.getElementById('importLoadingEdu').style.display='block';document.getElementById('importSuccessEdu').style.display='none';document.getElementById('importErrorEdu').style.display='none';}
+function hideImportLoadingEdu(){document.getElementById('importLoadingEdu').style.display='none';}
+function affImportSuccessEdu(t){hideImportLoadingEdu();var el=document.getElementById('importSuccessEdu');el.innerHTML=t;el.style.display='block';}
+function affImportErrEdu(t){hideImportLoadingEdu();var el=document.getElementById('importErrorEdu');el.innerHTML=t;el.style.display='block';}
+
+  function setMoteurDir(m,el){
   _moteurDir=m;
   document.querySelectorAll('.moteur-btn').forEach(function(b){
     b.style.background='#fff';b.style.color='var(--gris)';b.style.borderColor='var(--border)';
