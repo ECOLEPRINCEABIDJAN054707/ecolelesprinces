@@ -4635,6 +4635,53 @@ async function enregistrerProgrammeDir() {
   }
 }
 
+ // ============================================================
+// CORRECTIF — Menus déroulants Classe/Matière pour le
+// Programme trimestriel, ESPACE DIRECTEUR
+// ============================================================
+// INSTRUCTIONS D'INSTALLATION :
+// 1. Ouvrir administration.html dans l'éditeur GitHub
+// 2. Chercher (Ctrl+F) : function setMoteurDir(m,el){
+// 3. Cliquer tout au début de cette ligne (avant le mot "function")
+// 4. Copier-coller TOUT le contenu ci-dessous à cet endroit précis
+//    (peu importe si d'autres blocs sont déjà là, on empile un bloc de plus)
+// 5. Vérifier que chaque fonction commence bien par "function" en entier
+// 6. Commit changes
+// ============================================================
+
+async function peuplerClassesProgrammeOnce() {
+  var sel = document.getElementById('progClasse');
+  if (!sel || sel.getAttribute('data-loaded') === '1') return;
+  sel.setAttribute('data-loaded', '1');
+  var sheetsId = _progGetSheetsId2026();
+  if (!sheetsId) {
+    sel.innerHTML = '<option value="">-- Base 2026-2027 indisponible --</option>';
+    return;
+  }
+  try {
+    var classes = await listerOnglets(sheetsId);
+    if (!classes || !classes.length) {
+      sel.innerHTML = '<option value="">-- Aucune classe trouvee --</option>';
+      return;
+    }
+    sel.innerHTML = '<option value="">-- Selectionner une classe --</option>'
+      + classes.sort().map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+  } catch (e) {
+    sel.innerHTML = '<option value="">-- Erreur de chargement --</option>';
+  }
+}
+
+function peuplerMatieresProgramme() {
+  var classe = document.getElementById('progClasse').value;
+  var selM = document.getElementById('progMatiere');
+  if (!classe) {
+    selM.innerHTML = '<option value="">-- Choisir une classe d\'abord --</option>';
+    return;
+  }
+  var mats = getMatieres(classe);
+  selM.innerHTML = mats.map(function(m) { return '<option value="' + m + '">' + m + '</option>'; }).join('');
+}
+
   function setMoteurDir(m,el){
   _moteurDir=m;
   document.querySelectorAll('.moteur-btn').forEach(function(b){
