@@ -1649,6 +1649,7 @@ function _corrigerDateAppsScript(v) {
   }
   return s;
 }
+
 async function chargerProgrammeTrimestrielParent(eleve) {
   var section = document.getElementById('sectionProgrammeTrim');
   var body = document.getElementById('progTrimBody');
@@ -1658,8 +1659,23 @@ async function chargerProgrammeTrimestrielParent(eleve) {
   if (!base2026) return;
   var classeRecherche = (window._classe2026 || eleve.classe || '').trim().toUpperCase();
   if (!classeRecherche) return;
+
+  function heureFromValue(v) {
+    if (v === null || v === undefined || v === '') return '';
+    if (typeof v === 'string' && /^\d{1,2}:\d{2}/.test(v.trim())) return v.trim();
+    var n = typeof v === 'number' ? v : parseFloat(v);
+    if (isNaN(n)) return String(v);
+    if (n >= 0 && n < 1) {
+      var totalMin = Math.round(n * 24 * 60);
+      var hh = Math.floor(totalMin / 60);
+      var mm = totalMin % 60;
+      return String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+    }
+    return String(v);
+  }
+
   try {
-    var range = encodeURIComponent('PROGRAMME_TRIMESTRE!A2:I5000');
+    var range = encodeURIComponent('PROGRAMME_TRIMESTRE!A2:L5000');
     var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + base2026 + '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
     var res = await fetch(url);
     if (!res.ok) return;
@@ -1675,13 +1691,14 @@ async function chargerProgrammeTrimestrielParent(eleve) {
     var parMatiere = {};
     lignes.forEach(function(r){
       var mat = String(r[1]||'').trim() || 'Matiere';
-      var date = serialToDate(r[4]);
-      var heureDebut = String(r[5]||'').trim();
-      var heureFin = String(r[6]||'').trim();
+      var date = String(r[4]||'');
+      var heureDebut = heureFromValue(r[5]);
+      var heureFin = heureFromValue(r[6]);
       var salle = String(r[7]||'').trim();
       var sujet = String(r[8]||'').trim();
-      // Ligne totalement vide (aucune info exploitable) -> on l'ignore
-      if (!date && !heureDebut && !heureFin && !salle && !sujet) return;
+      var surveillant = String(r[9]||'').trim();
+      var dateRendu = String(r[10]||'').trim();
+      if (!date && !heureDebut && !heureFin && !salle && !sujet && !surveillant && !dateRendu) return;
       if (!parMatiere[mat]) parMatiere[mat] = [];
       parMatiere[mat].push({
         trimestre: String(r[2]||'').trim(),
@@ -1689,7 +1706,9 @@ async function chargerProgrammeTrimestrielParent(eleve) {
         heureDebut: heureDebut,
         heureFin: heureFin,
         salle: salle,
-        sujet: sujet
+        sujet: sujet,
+        surveillant: surveillant,
+        dateRendu: dateRendu
       });
     });
     var matieresAvecContenu = Object.keys(parMatiere).filter(function(m){ return parMatiere[m].length > 0; });
@@ -1711,6 +1730,8 @@ async function chargerProgrammeTrimestrielParent(eleve) {
         html += '</div>';
         if (it.salle) html += '<div style="font-size:0.76em;color:#666;">Salle : ' + it.salle + '</div>';
         if (it.sujet) html += '<div style="font-size:0.82em;color:#333;margin-top:4px;">' + it.sujet + '</div>';
+        if (it.surveillant) html += '<div style="font-size:0.76em;color:#666;margin-top:2px;">Surveillant : ' + it.surveillant + '</div>';
+        if (it.dateRendu) html += '<div style="font-size:0.76em;color:#C62828;font-weight:600;margin-top:2px;">A rendre le : ' + it.dateRendu + '</div>';
         if (!it.salle && !it.sujet) html += '<div style="font-size:0.76em;color:#aaa;font-style:italic;margin-top:4px;">Details a venir</div>';
         html += '</div>';
       });
@@ -1720,6 +1741,7 @@ async function chargerProgrammeTrimestrielParent(eleve) {
     section.style.display = 'block';
   } catch(e) {}
 }
+
 
 
   async function chargerInscription2026(eleve) {
