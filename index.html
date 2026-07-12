@@ -1674,6 +1674,21 @@ async function chargerProgrammeTrimestrielParent(eleve) {
     return String(v);
   }
 
+  function jourSemaineFR(dateStr) {
+    if (!dateStr) return '';
+    var m = String(dateStr).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (!m) return '';
+    var d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+    var jours = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    return jours[d.getDay()] || '';
+  }
+
+  function dateAvecJour(dateStr) {
+    if (!dateStr) return '';
+    var j = jourSemaineFR(dateStr);
+    return j ? (j + ' ' + dateStr) : dateStr;
+  }
+
   try {
     var range = encodeURIComponent('PROGRAMME_TRIMESTRE!A2:L5000');
     var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + base2026 + '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
@@ -1723,7 +1738,7 @@ async function chargerProgrammeTrimestrielParent(eleve) {
       items.forEach(function(it){
         html += '<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;background:white;">';
         html += '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">';
-        html += '<span style="font-size:0.82em;font-weight:bold;color:#4A148C;">' + (it.date||'Date non renseignee') + '</span>';
+        html += '<span style="font-size:0.82em;font-weight:bold;color:#4A148C;">' + (dateAvecJour(it.date)||'Date non renseignee') + '</span>';
         if (it.heureDebut || it.heureFin) {
           html += '<span style="font-size:0.76em;color:#888;">' + it.heureDebut + (it.heureFin? ' - '+it.heureFin:'') + '</span>';
         }
@@ -1731,7 +1746,7 @@ async function chargerProgrammeTrimestrielParent(eleve) {
         if (it.salle) html += '<div style="font-size:0.76em;color:#666;">Salle : ' + it.salle + '</div>';
         if (it.sujet) html += '<div style="font-size:0.82em;color:#333;margin-top:4px;">' + it.sujet + '</div>';
         if (it.surveillant) html += '<div style="font-size:0.76em;color:#666;margin-top:2px;">Surveillant : ' + it.surveillant + '</div>';
-        if (it.dateRendu) html += '<div style="font-size:0.76em;color:#C62828;font-weight:600;margin-top:2px;">A rendre le : ' + it.dateRendu + '</div>';
+        if (it.dateRendu) html += '<div style="font-size:0.76em;color:#C62828;font-weight:600;margin-top:2px;">A rendre le : ' + dateAvecJour(it.dateRendu) + '</div>';
         if (!it.salle && !it.sujet) html += '<div style="font-size:0.76em;color:#aaa;font-style:italic;margin-top:4px;">Details a venir</div>';
         html += '</div>';
       });
@@ -1741,6 +1756,7 @@ async function chargerProgrammeTrimestrielParent(eleve) {
     section.style.display = 'block';
   } catch(e) {}
 }
+
 
 
 
