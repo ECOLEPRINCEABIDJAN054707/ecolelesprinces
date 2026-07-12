@@ -2930,9 +2930,9 @@ async function chargerProgrammeTrimestrielEdu(s) {
         items.forEach(function(it) {
           html += '<div style="padding:8px 12px;border-bottom:1px solid #f0f0f0;background:#fff">';
           html += '<div style="display:flex;justify-content:space-between;margin-bottom:2px">';
-          html += '<span style="font-size:0.78em;font-weight:700;color:#4A148C">' + (dateAvecJour(it.date) || 'Date non renseignee') + '</span>';
+          html += '<span style="font-size:0.78em;font-weight:700;color:#4A148C">Devoir le : ' + (dateAvecJour(it.date) || 'Date non renseignee') + '</span>';
           if (it.heureDebut || it.heureFin) {
-            html += '<span style="font-size:0.72em;color:var(--gris)">' + it.heureDebut + (it.heureFin ? ' - ' + it.heureFin : '') + '</span>';
+            html += '<span style="font-size:0.72em;color:var(--gris)">Horaire : ' + it.heureDebut + (it.heureFin ? ' - ' + it.heureFin : '') + '</span>';
           }
           html += '</div>';
           if (it.salle) html += '<div style="font-size:0.72em;color:var(--gris)">Salle : ' + it.salle + '</div>';
@@ -2950,8 +2950,6 @@ async function chargerProgrammeTrimestrielEdu(s) {
     container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement.</p>';
   }
 }
-
-
 
   async function chargerAbsencesElevesSigne(ecole, classesEdu){
   classesEdu=classesEdu||[];
