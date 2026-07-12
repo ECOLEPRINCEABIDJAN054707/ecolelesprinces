@@ -532,34 +532,6 @@ table tr:nth-child(even){background:#F8FAFD}
   </div>
 </div>
 
-<!-- ============================================================
-     REMPLACEMENT COMPLET — Section "Programme trimestriel de devoirs
-     surveillés/compositions", ESPACE DIRECTEUR
-     ============================================================
-     Cette nouvelle version remplace ENTIÈREMENT la section installée
-     précédemment (celle avec Contenu prévu / Devoir prévu / Date devoir),
-     par une version adaptée aux devoirs surveillés : Date, Heure début,
-     Heure fin, Salle, Sujet.
-     ============================================================
-     INSTRUCTIONS D'INSTALLATION :
-     1. Ouvrir administration.html dans l'éditeur GitHub
-     2. Chercher (Ctrl+F) : peuplerClassesProgrammeOnce();toggleSec(this)
-        (cette recherche doit donner UN SEUL résultat)
-     3. Juste au-dessus de cette ligne, tu dois voir :
-          <div class="section">
-        C'est le DÉBUT du bloc à remplacer.
-     4. Fais défiler vers le bas jusqu'à trouver ce commentaire :
-          <!-- IMPORT NOUVEL ELEVE -->
-        C'est la ligne qui suit IMMÉDIATEMENT la FIN du bloc à remplacer
-        (ne touche pas à ce commentaire, ni à ce qui suit).
-     5. Sélectionne TOUT le texte depuis le <div class="section"> (étape 3)
-        jusqu'à la ligne JUSTE AVANT <!-- IMPORT NOUVEL ELEVE --> (étape 4),
-        c'est-à-dire jusqu'au dernier </div> qui ferme la section
-        "Programme trimestriel" (il y a exactement 2 </div> de fermeture
-        à la fin : un pour sec-body, un pour section).
-     6. Remplace toute cette sélection par le contenu ci-dessous
-     7. Commit changes
-     ============================================================ -->
 <div class="section">
     <div class="sec-head sec-violet" onclick="peuplerClassesProgrammeOnce();toggleSec(this)">
       <h3>&#128197; Programme trimestriel &mdash; Devoirs surveilles 2026-2027</h3><span class="arr">&#9660;</span>
