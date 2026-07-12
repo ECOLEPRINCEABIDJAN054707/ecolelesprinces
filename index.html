@@ -264,6 +264,16 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
       <div style="text-align:center;padding:20px;color:#2E7D32"><p style="font-size:13px">Emploi du temps en cours de chargement...</p></div>
     </div>
   </div>
+   <div class="section" id="sectionProgrammeTrim" style="display:none">
+    <div class="sec-header violet" onclick="toggleSec(this)">&#128197; PROGRAMME TRIMESTRIEL — DEVOIRS SURVEILLES <span>v</span></div>
+    <div class="sec-body" id="progTrimBody">
+      <div style="text-align:center;padding:20px;color:#4A148C">
+        <div class="spinner" style="width:24px;height:24px;border:3px solid #D6E4F0;border-top-color:#4A148C;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;"></div>
+        <p style="font-size:0.82em;">Chargement du programme...</p>
+      </div>
+    </div>
+  </div>
+
   <div class="section">
     <div class="sec-header violet" onclick="toggleSec(this)">&#128227; ANNONCES <span>v</span></div>
     <div class="sec-body open">
@@ -1102,7 +1112,7 @@ async function afficherEspaceParent(eleve) {
     document.getElementById("sectionBulletinsMensuels").style.display = "none";
     afficherSectionBloquee(eleve, soldeAccesParsed, verseParsed);
   }
-  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);
+  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerProgrammeTrimestrielParent(eleve);
   window._eleveActuel = eleve;
   document.getElementById("loginWrapper").style.display = "none";
   document.getElementById("parentSpace").style.display = "block";
@@ -1639,7 +1649,70 @@ function _corrigerDateAppsScript(v) {
   }
   return s;
 }
-async function chargerInscription2026(eleve) {
+async function chargerProgrammeTrimestrielParent(eleve) {
+  var section = document.getElementById('sectionProgrammeTrim');
+  var body = document.getElementById('progTrimBody');
+  if (!section || !body) return;
+  var info = window.SHEETS_IDS_COMPLET[eleve.sheetsId] || {};
+  var base2026 = info.base2026 || window._sheetsId2026;
+  if (!base2026) return;
+  var classeRecherche = (window._classe2026 || eleve.classe || '').trim().toUpperCase();
+  if (!classeRecherche) return;
+  try {
+    var range = encodeURIComponent('PROGRAMME_TRIMESTRE!A2:I5000');
+    var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + base2026 + '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    var res = await fetch(url);
+    if (!res.ok) return;
+    var data = await res.json();
+    var rows = data.values || [];
+    function norm(s){ return String(s||'').trim().toUpperCase().replace(/[ÈÉÊË]/g,'E').replace(/[ÀÂÄ]/g,'A').replace(/\s+/g,' '); }
+    var nc = norm(classeRecherche);
+    var lignes = rows.filter(function(r){
+      var rc = norm(r[0]);
+      return rc === nc || rc.indexOf(nc) === 0 || nc.indexOf(rc) === 0;
+    });
+    if (!lignes.length) return;
+    var parMatiere = {};
+    lignes.forEach(function(r){
+      var mat = String(r[1]||'').trim() || 'Matiere';
+      if (!parMatiere[mat]) parMatiere[mat] = [];
+      parMatiere[mat].push({
+        trimestre: String(r[2]||'').trim(),
+        date: serialToDate(r[4]),
+        heureDebut: r[5],
+        heureFin: r[6],
+        salle: r[7],
+        sujet: r[8]
+      });
+    });
+    var html = '';
+    Object.keys(parMatiere).sort().forEach(function(mat){
+      var items = parMatiere[mat].slice().sort(function(a,b){
+        return String(a.date).localeCompare(String(b.date));
+      });
+      html += '<div style="margin-bottom:14px;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">';
+      html += '<div style="background:#4A148C;padding:9px 12px;"><span style="font-weight:bold;color:white;font-size:0.88em;">' + mat + '</span></div>';
+      items.forEach(function(it){
+        if (!it.date && !it.sujet) return;
+        html += '<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;background:white;">';
+        html += '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">';
+        html += '<span style="font-size:0.82em;font-weight:bold;color:#4A148C;">' + (it.date||'-') + '</span>';
+        html += '<span style="font-size:0.76em;color:#888;">' + (it.heureDebut||'') + (it.heureFin? ' - '+it.heureFin:'') + '</span>';
+        html += '</div>';
+        if (it.salle) html += '<div style="font-size:0.76em;color:#666;">Salle : ' + it.salle + '</div>';
+        if (it.sujet) html += '<div style="font-size:0.82em;color:#333;margin-top:4px;">' + it.sujet + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    });
+    if (html) {
+      body.innerHTML = html;
+      section.style.display = 'block';
+    }
+  } catch(e) {}
+}
+
+  async function chargerInscription2026(eleve) {
   const section = document.getElementById('sectionInscription2026');
   const body    = document.getElementById('inscription2026Body');
   if (!section || !body) return;
