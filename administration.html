@@ -4830,47 +4830,6 @@ async function enregistrerProgrammeDir() {
   }
 }
 
-
-async function enregistrerProgrammeDir() {
-  var classe = document.getElementById('progClasse').value.trim().toUpperCase();
-  var matiere = document.getElementById('progMatiere').value.trim();
-  var trimestre = document.getElementById('progTrimestre').value;
-  var msgDiv = document.getElementById('progMessage');
-  var sheetsId = _progGetSheetsId2026();
-  if (!sheetsId) {
-    msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
-    msgDiv.textContent = '⚠️ Base 2026-2027 non configurée';
-    return;
-  }
-  msgDiv.style.cssText = 'display:block;background:#E3F2FD;color:var(--bleu);border:1px solid #90CAF9;padding:10px;border-radius:6px';
-  msgDiv.textContent = '⏳ Enregistrement...';
-  try {
-    var resp = await fetch(APPS_SCRIPT_POINTAGE, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({
-        action: 'sauvegarderProgrammeTrimestre',
-        sheetsId: sheetsId,
-        classe: classe,
-        matiere: matiere,
-        trimestre: trimestre,
-        lignes: _progLignes
-      })
-    });
-    var result = await resp.json();
-    if (result && result.ok) {
-      msgDiv.style.cssText = 'display:block;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;padding:10px;border-radius:6px';
-      msgDiv.textContent = '✅ ' + (result.message || 'Programme enregistré');
-    } else {
-      msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
-      msgDiv.textContent = '❌ ' + (result && result.message ? result.message : 'Erreur inconnue');
-    }
-  } catch (e) {
-    msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
-    msgDiv.textContent = '❌ Erreur réseau : ' + e.message;
-  }
-}
-
  // ============================================================
 // CORRECTIF — Menus déroulants Classe/Matière pour le
 // Programme trimestriel, ESPACE DIRECTEUR
