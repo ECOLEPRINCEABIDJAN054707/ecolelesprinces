@@ -1674,6 +1674,20 @@ async function chargerProgrammeTrimestrielParent(eleve) {
     return String(v);
   }
 
+  function dateFromValue(v) {
+    if (v === null || v === undefined || v === '') return '';
+    if (typeof v === 'string' && /^\d{1,2}\/\d{1,2}\/\d{4}/.test(v.trim())) return v.trim();
+    var n = typeof v === 'number' ? v : parseFloat(v);
+    if (isNaN(n) || n < 1000) return String(v || '');
+    var ms = Math.round(n * 86400000);
+    var epoch = Date.UTC(1899, 11, 30);
+    var d = new Date(epoch + ms);
+    var dd = String(d.getUTCDate()).padStart(2, '0');
+    var mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+    var yyyy = d.getUTCFullYear();
+    return dd + '/' + mm + '/' + yyyy;
+  }
+
   function jourSemaineFR(dateStr) {
     if (!dateStr) return '';
     var m = String(dateStr).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
@@ -1706,13 +1720,13 @@ async function chargerProgrammeTrimestrielParent(eleve) {
     var parMatiere = {};
     lignes.forEach(function(r){
       var mat = String(r[1]||'').trim() || 'Matiere';
-      var date = String(r[4]||'');
+      var date = dateFromValue(r[4]);
       var heureDebut = heureFromValue(r[5]);
       var heureFin = heureFromValue(r[6]);
       var salle = String(r[7]||'').trim();
       var sujet = String(r[8]||'').trim();
       var surveillant = String(r[9]||'').trim();
-      var dateRendu = String(r[10]||'').trim();
+      var dateRendu = dateFromValue(r[10]);
       if (!date && !heureDebut && !heureFin && !salle && !sujet && !surveillant && !dateRendu) return;
       if (!parMatiere[mat]) parMatiere[mat] = [];
       parMatiere[mat].push({
@@ -1738,15 +1752,15 @@ async function chargerProgrammeTrimestrielParent(eleve) {
       items.forEach(function(it){
         html += '<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;background:white;">';
         html += '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">';
-        html += '<span style="font-size:0.82em;font-weight:bold;color:#4A148C;">' + (dateAvecJour(it.date)||'Date non renseignee') + '</span>';
+        html += '<span style="font-size:0.82em;font-weight:bold;color:#4A148C;">Devoir le : ' + (dateAvecJour(it.date)||'Date non renseignee') + '</span>';
         if (it.heureDebut || it.heureFin) {
-          html += '<span style="font-size:0.76em;color:#888;">' + it.heureDebut + (it.heureFin? ' - '+it.heureFin:'') + '</span>';
+          html += '<span style="font-size:0.76em;color:#888;">Horaire : ' + it.heureDebut + (it.heureFin? ' - '+it.heureFin:'') + '</span>';
         }
         html += '</div>';
         if (it.salle) html += '<div style="font-size:0.76em;color:#666;">Salle : ' + it.salle + '</div>';
         if (it.sujet) html += '<div style="font-size:0.82em;color:#333;margin-top:4px;">' + it.sujet + '</div>';
         if (it.surveillant) html += '<div style="font-size:0.76em;color:#666;margin-top:2px;">Surveillant : ' + it.surveillant + '</div>';
-        if (it.dateRendu) html += '<div style="font-size:0.76em;color:#C62828;font-weight:600;margin-top:2px;">A rendre le : ' + dateAvecJour(it.dateRendu) + '</div>';
+        if (it.dateRendu) html += '<div style="font-size:0.76em;color:#C62828;font-weight:600;margin-top:2px;">Copies corrigees remises aux eleves le : ' + dateAvecJour(it.dateRendu) + '</div>';
         if (!it.salle && !it.sujet) html += '<div style="font-size:0.76em;color:#aaa;font-style:italic;margin-top:4px;">Details a venir</div>';
         html += '</div>';
       });
@@ -1756,9 +1770,6 @@ async function chargerProgrammeTrimestrielParent(eleve) {
     section.style.display = 'block';
   } catch(e) {}
 }
-
-
-
 
   async function chargerInscription2026(eleve) {
   const section = document.getElementById('sectionInscription2026');
