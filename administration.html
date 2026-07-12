@@ -448,8 +448,7 @@ table tr:nth-child(even){background:#F8FAFD}
       <h3>&#128197; Agenda</h3><span class="arr">&#9660;</span>
     </div>
     <div class="sec-body" id="dirAgendaBody"></div>
-  </div>
- <!-- MATRICULES PRIMAIRE -->
+  </div> <!-- MATRICULES PRIMAIRE -->
 <div class="section" id="dirSecMatricules" style="display:none">
   <div class="sec-head sec-emeraude" onclick="toggleSec(this)">
     <h3>🎫 Matricules Primaire 2026-2027 <span id="dirMatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -484,7 +483,7 @@ table tr:nth-child(even){background:#F8FAFD}
           <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">CLASSE *</label>
           <select id="matClasse" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none">
             <option value="">-- Choisir --</option>
-            <option>PSA</option><option>MSA</option><option>GSA</option> <option>CP1</option><option>CP2</option>
+            <option>PSA</option><option>MSA</option><option>GSA</option><option>CP1</option><option>CP2</option>
             <option>CE1</option><option>CE2</option>
             <option>CM1</option><option>CM2</option>
           </select>
@@ -502,6 +501,37 @@ table tr:nth-child(even){background:#F8FAFD}
           <input type="date" id="matDDN" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
         </div>
         <div>
+          <label style="font-size:0.7em;font-weight:700;color:#C62828;display:block;margin-bottom:3px">📱 TEL PÈRE *</label>
+          <input type="tel" id="matTelPere" placeholder="0701234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:#C62828;display:block;margin-bottom:3px">📱 TEL MÈRE *</label>
+          <input type="tel" id="matTelMere" placeholder="0507654321" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">📱 TEL TUTEUR (optionnel)</label>
+          <input type="tel" id="matTelTuteur" placeholder="0101234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+        </div>
+      </div>
+      <button onclick="attribuerMatriculeDir()" style="width:100%;padding:10px;background:#00897B;color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">✓ Attribuer ce matricule</button>
+      <div id="matMessage" style="display:none;margin-top:10px;padding:10px;border-radius:6px;font-size:0.82em"></div>
+    </div>
+    <!-- RECHERCHE / TABLEAU DES DEJA ATTRIBUES -->
+    <div style="padding:12px 14px">
+      <div style="font-size:0.78em;font-weight:700;color:var(--bleu);margin-bottom:8px">📋 Matricules déjà attribués</div>
+      <input type="text" id="matSearch" oninput="filtrerTableauMatricules()" placeholder="Rechercher un nom, prénom ou matricule..." style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box;margin-bottom:10px">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Matricule</th><th>Nom &amp; Prénom</th><th>Classe</th><th>DDN</th><th>Attribué le</th></tr></thead>
+          <tbody id="matTbody"><tr><td colspan="5" style="text-align:center;padding:16px;color:var(--gris)">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ============================================================
      REMPLACEMENT COMPLET — Section "Programme trimestriel de devoirs
      surveillés/compositions", ESPACE DIRECTEUR
@@ -5448,19 +5478,26 @@ async function attribuerMatriculeDir() {
   const prenom    = document.getElementById('matPrenom').value.trim();
   const classe    = document.getElementById('matClasse').value;
   const ddn       = document.getElementById('matDDN').value;
-  const tel       = document.getElementById('matTelPere').value.trim();
+  const telPere   = document.getElementById('matTelPere').value.trim();
+  const telMere   = document.getElementById('matTelMere').value.trim();
+  const telTuteur = document.getElementById('matTelTuteur') ? document.getElementById('matTelTuteur').value.trim() : '';
   const msgDiv    = document.getElementById('matMessage');
 
-  const telMere=document.getElementById('matTelMere')?document.getElementById('matTelMere').value.trim():'';if(!matricule||!nom||!prenom||!classe||!ddn||!tel||tel.length<8||!telMere||telMere.length<8){msgDiv.style.cssText='display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';msgDiv.textContent='⚠️ Tél père ET mère obligatoires';return;}if(!matricule||!nom||!prenom||!classe||!ddn) {
+  if(!matricule||!nom||!prenom||!classe||!ddn) {
     msgDiv.style.cssText='display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
     msgDiv.textContent='⚠️ Remplissez tous les champs obligatoires (*)';
+    return;
+  }
+  if(!telPere||telPere.length<8||!telMere||telMere.length<8) {
+    msgDiv.style.cssText='display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
+    msgDiv.textContent='⚠️ Tél père ET mère obligatoires (8 chiffres minimum)';
     return;
   }
   msgDiv.style.cssText='display:block;background:#E3F2FD;color:var(--bleu);border:1px solid #90CAF9;padding:10px;border-radius:6px';
   msgDiv.textContent='⏳ Attribution en cours...';
 
-const cbName='mat_attr_'+Date.now();
-  const params=new URLSearchParams({callback:cbName,action:'attribuerMatricule',ecoleCode:currentStaff.ecole,matricule,nom,prenom,classe,ddn,tel});
+  const cbName='mat_attr_'+Date.now();
+  const params=new URLSearchParams({callback:cbName,action:'attribuerMatricule',ecoleCode:currentStaff.ecole,matricule,nom,prenom,classe,ddn,telPere,telMere,telTuteur});
   return new Promise(resolve=>{
     const script=document.createElement('script');
     window[cbName]=result=>{
@@ -5471,7 +5508,9 @@ const cbName='mat_attr_'+Date.now();
         document.getElementById('matNom').value='';
         document.getElementById('matPrenom').value='';
         document.getElementById('matDDN').value='';
-        document.getElementById('matTelPere').value='';document.getElementById('matTelMere').value='';
+        document.getElementById('matTelPere').value='';
+        document.getElementById('matTelMere').value='';
+        if(document.getElementById('matTelTuteur'))document.getElementById('matTelTuteur').value='';
         document.getElementById('matSelect').value='';
         document.getElementById('matClasse').value='';
         setTimeout(chargerMatriculesPrimaire,1500);
@@ -5486,7 +5525,8 @@ const cbName='mat_attr_'+Date.now();
     script.src=APPS_SCRIPT_URL+'?'+params.toString();
     document.body.appendChild(script);
   });
-} document.addEventListener('keypress',e=>{if(e.key==='Enter'&&document.getElementById('loginPage').style.display!=='none')login();});
+}
+ document.addEventListener('keypress',e=>{if(e.key==='Enter'&&document.getElementById('loginPage').style.display!=='none')login();});
 
 // ★★★ NOUVEAU — restaure la session si l'utilisateur recharge la page (F5)
 // au lieu de le renvoyer a l'ecran de connexion et tout remettre a zero.
