@@ -564,7 +564,7 @@ table tr:nth-child(even){background:#F8FAFD}
         <div id="progTableWrap" style="display:none">
           <div class="tbl-wrap">
             <table style="min-width:560px">
-              <thead>
+                           <thead>
                 <tr>
                   <th style="width:36px">Sem.</th>
                   <th>Date</th>
@@ -572,9 +572,12 @@ table tr:nth-child(even){background:#F8FAFD}
                   <th>Fin</th>
                   <th>Salle</th>
                   <th>Sujet / Chapitre</th>
+                  <th>Surveillant</th>
+                  <th>Date de rendu</th>
                   <th style="width:30px"></th>
                 </tr>
               </thead>
+
               <tbody id="progTbody"></tbody>
             </table>
           </div>
@@ -2801,7 +2804,7 @@ async function chargerAppelsCom(ecole) {
   });
   liste.innerHTML = h;
 }
- async function chargerProgrammeTrimestrielEdu(s) {
+async function chargerProgrammeTrimestrielEdu(s) {
   var container = document.getElementById('eduProgListe');
   var countEl = document.getElementById('eduProgCount');
   if (!container) return;
@@ -2811,6 +2814,21 @@ async function chargerAppelsCom(ecole) {
     container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configuree pour cette ecole.</p>';
     return;
   }
+
+  function heureFromValue(v) {
+    if (v === null || v === undefined || v === '') return '';
+    if (typeof v === 'string' && /^\d{1,2}:\d{2}/.test(v.trim())) return v.trim();
+    var n = typeof v === 'number' ? v : parseFloat(v);
+    if (isNaN(n)) return String(v);
+    if (n >= 0 && n < 1) {
+      var totalMin = Math.round(n * 24 * 60);
+      var hh = Math.floor(totalMin / 60);
+      var mm = totalMin % 60;
+      return String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+    }
+    return String(v);
+  }
+
   try {
     var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/PROGRAMME_TRIMESTRE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
     var res = await fetch(url);
@@ -2838,20 +2856,24 @@ async function chargerAppelsCom(ecole) {
       });
       if (!appartient) continue;
       var date = row[4] || '';
-      var heureDebut = row[5] || '';
-      var heureFin = row[6] || '';
+      var heureDebut = row[5];
+      var heureFin = row[6];
       var salle = row[7] || '';
       var sujet = row[8] || '';
-      if (!date && !heureDebut && !heureFin && !salle && !sujet) continue;
+      var surveillant = row[9] || '';
+      var dateRendu = row[10] || '';
+      if (!date && !heureDebut && !heureFin && !salle && !sujet && !surveillant && !dateRendu) continue;
       lignes.push({
         classe: classeRow,
         matiere: String(row[1] || '').trim() || 'Matiere',
         trimestre: String(row[2] || '').trim(),
         date: String(date),
-        heureDebut: String(heureDebut),
-        heureFin: String(heureFin),
+        heureDebut: heureFromValue(heureDebut),
+        heureFin: heureFromValue(heureFin),
         salle: String(salle),
-        sujet: String(sujet)
+        sujet: String(sujet),
+        surveillant: String(surveillant),
+        dateRendu: String(dateRendu)
       });
     }
     if (!lignes.length) {
@@ -2886,6 +2908,8 @@ async function chargerAppelsCom(ecole) {
           html += '</div>';
           if (it.salle) html += '<div style="font-size:0.72em;color:var(--gris)">Salle : ' + it.salle + '</div>';
           if (it.sujet) html += '<div style="font-size:0.78em;color:#333;margin-top:2px">' + it.sujet + '</div>';
+          if (it.surveillant) html += '<div style="font-size:0.72em;color:var(--gris);margin-top:2px">Surveillant : ' + it.surveillant + '</div>';
+          if (it.dateRendu) html += '<div style="font-size:0.72em;color:#C62828;font-weight:600;margin-top:2px">A rendre le : ' + it.dateRendu + '</div>';
           if (!it.salle && !it.sujet) html += '<div style="font-size:0.72em;color:#aaa;font-style:italic;margin-top:2px">Details a venir</div>';
           html += '</div>';
         });
@@ -4644,13 +4668,15 @@ async function chargerProgrammeDir() {
             heureDebut: row[5] || '',
             heureFin: row[6] || '',
             salle: row[7] || '',
-            sujet: row[8] || ''
+            sujet: row[8] || '',
+            surveillant: row[9] || '',
+            dateRendu: row[10] || ''
           });
         }
       }
     }
     if (_progLignes.length === 0) {
-      _progLignes.push({ semaine: 1, date: '', heureDebut: '', heureFin: '', salle: '', sujet: '' });
+      _progLignes.push({ semaine: 1, date: '', heureDebut: '', heureFin: '', salle: '', sujet: '', surveillant: '', dateRendu: '' });
     }
     _progRenderTable();
     document.getElementById('progTableWrap').style.display = 'block';
@@ -4672,11 +4698,14 @@ function _progRenderTable() {
       + '<td><input type="time" value="' + (l.heureFin || '') + '" onchange="_progMajLigne(' + idx + ',\'heureFin\',this.value)" style="width:90px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em"></td>'
       + '<td><input type="text" value="' + (l.salle || '') + '" placeholder="Ex: Salle 7" onchange="_progMajLigne(' + idx + ',\'salle\',this.value)" style="width:90px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em"></td>'
       + '<td><input type="text" value="' + (l.sujet || '') + '" placeholder="Ex: Chapitre 3 : fractions" onchange="_progMajLigne(' + idx + ',\'sujet\',this.value)" style="width:180px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em"></td>'
+      + '<td><input type="text" value="' + (l.surveillant || '') + '" placeholder="Ex: M. Kouassi" onchange="_progMajLigne(' + idx + ',\'surveillant\',this.value)" style="width:110px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em"></td>'
+      + '<td><input type="date" value="' + _progDateISO(l.dateRendu) + '" onchange="_progMajLigne(' + idx + ',\'dateRendu\',this.value)" style="width:130px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em"></td>'
       + '<td><button onclick="_progSupprimerLigne(' + idx + ')" style="background:#FFEBEE;color:var(--rouge);border:none;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:0.76em">&#10005;</button></td>'
       + '</tr>';
   });
   tbody.innerHTML = html;
 }
+
 
 // Convertit une date affichée (jj/mm/aaaa ou vide) en format ISO (aaaa-mm-jj) pour un input date
 function _progDateISO(d) {
@@ -4706,9 +4735,10 @@ function _progMajLigne(idx, champ, valeur) {
 
 function ajouterLigneProgramme() {
   var derniereSemaine = _progLignes.length ? (parseInt(_progLignes[_progLignes.length - 1].semaine) || _progLignes.length) : 0;
-  _progLignes.push({ semaine: derniereSemaine + 1, date: '', heureDebut: '', heureFin: '', salle: '', sujet: '' });
+  _progLignes.push({ semaine: derniereSemaine + 1, date: '', heureDebut: '', heureFin: '', salle: '', sujet: '', surveillant: '', dateRendu: '' });
   _progRenderTable();
 }
+
 
 function _progSupprimerLigne(idx) {
   _progLignes.splice(idx, 1);
