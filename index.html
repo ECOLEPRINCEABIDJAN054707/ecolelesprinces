@@ -1675,42 +1675,52 @@ async function chargerProgrammeTrimestrielParent(eleve) {
     var parMatiere = {};
     lignes.forEach(function(r){
       var mat = String(r[1]||'').trim() || 'Matiere';
+      var date = serialToDate(r[4]);
+      var heureDebut = String(r[5]||'').trim();
+      var heureFin = String(r[6]||'').trim();
+      var salle = String(r[7]||'').trim();
+      var sujet = String(r[8]||'').trim();
+      // Ligne totalement vide (aucune info exploitable) -> on l'ignore
+      if (!date && !heureDebut && !heureFin && !salle && !sujet) return;
       if (!parMatiere[mat]) parMatiere[mat] = [];
       parMatiere[mat].push({
         trimestre: String(r[2]||'').trim(),
-        date: serialToDate(r[4]),
-        heureDebut: r[5],
-        heureFin: r[6],
-        salle: r[7],
-        sujet: r[8]
+        date: date,
+        heureDebut: heureDebut,
+        heureFin: heureFin,
+        salle: salle,
+        sujet: sujet
       });
     });
+    var matieresAvecContenu = Object.keys(parMatiere).filter(function(m){ return parMatiere[m].length > 0; });
+    if (!matieresAvecContenu.length) return;
     var html = '';
-    Object.keys(parMatiere).sort().forEach(function(mat){
+    matieresAvecContenu.sort().forEach(function(mat){
       var items = parMatiere[mat].slice().sort(function(a,b){
         return String(a.date).localeCompare(String(b.date));
       });
       html += '<div style="margin-bottom:14px;border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">';
       html += '<div style="background:#4A148C;padding:9px 12px;"><span style="font-weight:bold;color:white;font-size:0.88em;">' + mat + '</span></div>';
       items.forEach(function(it){
-        if (!it.date && !it.sujet) return;
         html += '<div style="padding:10px 12px;border-bottom:1px solid #f0f0f0;background:white;">';
         html += '<div style="display:flex;justify-content:space-between;margin-bottom:3px;">';
-        html += '<span style="font-size:0.82em;font-weight:bold;color:#4A148C;">' + (it.date||'-') + '</span>';
-        html += '<span style="font-size:0.76em;color:#888;">' + (it.heureDebut||'') + (it.heureFin? ' - '+it.heureFin:'') + '</span>';
+        html += '<span style="font-size:0.82em;font-weight:bold;color:#4A148C;">' + (it.date||'Date non renseignee') + '</span>';
+        if (it.heureDebut || it.heureFin) {
+          html += '<span style="font-size:0.76em;color:#888;">' + it.heureDebut + (it.heureFin? ' - '+it.heureFin:'') + '</span>';
+        }
         html += '</div>';
         if (it.salle) html += '<div style="font-size:0.76em;color:#666;">Salle : ' + it.salle + '</div>';
         if (it.sujet) html += '<div style="font-size:0.82em;color:#333;margin-top:4px;">' + it.sujet + '</div>';
+        if (!it.salle && !it.sujet) html += '<div style="font-size:0.76em;color:#aaa;font-style:italic;margin-top:4px;">Details a venir</div>';
         html += '</div>';
       });
       html += '</div>';
     });
-    if (html) {
-      body.innerHTML = html;
-      section.style.display = 'block';
-    }
+    body.innerHTML = html;
+    section.style.display = 'block';
   } catch(e) {}
 }
+
 
   async function chargerInscription2026(eleve) {
   const section = document.getElementById('sectionInscription2026');
