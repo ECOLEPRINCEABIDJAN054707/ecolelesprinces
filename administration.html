@@ -2924,7 +2924,7 @@ async function chargerProgrammeTrimestrielEdu(s) {
           if (it.salle) html += '<div style="font-size:0.72em;color:var(--gris)">Salle : ' + it.salle + '</div>';
           if (it.sujet) html += '<div style="font-size:0.78em;color:#333;margin-top:2px">' + it.sujet + '</div>';
           if (it.surveillant) html += '<div style="font-size:0.72em;color:var(--gris);margin-top:2px">Surveillant : ' + it.surveillant + '</div>';
-          if (it.dateRendu) html += '<div style="font-size:0.72em;color:#C62828;font-weight:600;margin-top:2px">A rendre le : ' + dateAvecJour(it.dateRendu) + '</div>';
+          if (it.dateRendu) html += '<div style="font-size:0.72em;color:#C62828;font-weight:600;margin-top:2px">Copies rendues le : ' + dateAvecJour(it.dateRendu) + '</div>';
           if (!it.salle && !it.sujet) html += '<div style="font-size:0.72em;color:#aaa;font-style:italic;margin-top:2px">Details a venir</div>';
           html += '</div>';
         });
@@ -2936,6 +2936,7 @@ async function chargerProgrammeTrimestrielEdu(s) {
     container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement.</p>';
   }
 }
+
 
 
   async function chargerAbsencesElevesSigne(ecole, classesEdu){
