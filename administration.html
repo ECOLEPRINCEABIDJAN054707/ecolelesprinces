@@ -828,6 +828,15 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 
+<div class="section">
+    <div class="sec-head sec-violet" onclick="verifierEtMajConfigTarifReseau();toggleSec(this)">
+      <h3>&#128203; Mettre &agrave; jour CONFIGURATION_TARIF &mdash; 7 &eacute;coles (bases 2026-2027)</h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="fondConfigTarifBody">
+      <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez sur cette section pour voir la liste des &eacute;coles concern&eacute;es et lancer la mise &agrave; jour de leur grille tarifaire officielle dans la base 2026-2027.</p>
+    </div>
+  </div>
+
 
   <div class="footer">R&eacute;seau CPP Les Princes d'Abidjan &middot; Espace Fondateur &middot; 2026-2027</div>
 </div>
@@ -5867,6 +5876,260 @@ async function corrigerMontantsDuReseau() {
 
 
 
+// ============================================================
+// GRILLES COMPLÈTES (avec tranches) — 7 écoles à réécrire
+// dans CONFIGURATION_TARIF de leur base 2026-2027
+// Structure ligne : [Niveau, Total, Tranche1, Tranche2, Tranche3, Tranche4]
+// (Tranche4 = '' si non applicable)
+// ============================================================
+
+const GRILLES_A_ECRIRE = {
+
+  'GNONTINROU': {
+    primaire: [
+      ['CP1 / CP2 / CE1 / CE2', 30000, 20000, 5000, 5000, ''],
+      ['CM1 / CM2', 35000, 20000, 10000, 5000, ''],
+    ],
+    secAff: [
+      ['6ème / 5ème / 4ème (Affectés)', 36000, 21000, 10000, 5000, ''],
+      ['3ème (Affectés)', 48000, 30000, 10000, 8000, ''],
+      ['2nde A/C / 1ère A/C/D (Affectés)', 42000, 22000, 10000, 10000, ''],
+      ['Terminale (Affectés)', 56000, 30000, 16000, 10000, ''],
+    ],
+    secNaff: [
+      ['6ème / 5ème / 4ème (Non Affectés)', 56000, 30000, 16000, 10000, ''],
+      ['3ème (Non Affectés)', 69000, 30000, 20000, 19000, ''],
+      ['2nde A/C / 1ère A/C/D (Non Affectés)', 69000, 30000, 20000, 19000, ''],
+      ['Terminale A/C/D (Non Affectés)', 80000, 50000, 20000, 10000, ''],
+    ]
+  },
+
+  'GS RITA ROSANE': {
+    primaire: [
+      ['Maternelle', 55000, 40000, 15000, 10000, 10000],
+      ['CP1 – CP2', 60000, 40000, 15000, 15000, 10000],
+      ['CE1 – CE2', 65000, 40000, 20000, 15000, 10000],
+      ['CM1', 70000, 40000, 20000, 15000, 15000],
+      ['CM2', 70000, 40000, 20000, 15000, 15000],
+    ],
+    secAff: [
+      ['6e, 5e et 4e (Affectés)', 40000, 20000, 10000, 10000, ''],
+      ['3e (Affectés)', 55000, 30000, 15000, 10000, ''],
+      ['2nde et 1ère (Affectés)', 45000, 25000, 10000, 10000, ''],
+      ['Tle (Affectés)', 65000, 40000, 15000, 10000, ''],
+    ],
+    secNaff: [
+      ['6e et 5e (Non Affectés)', 75000, 40000, 20000, 20000, 10000],
+      ['2nde et 1ère (Non Affectés)', 110000, 50000, 25000, 25000, 25000],
+      ['3e (Non Affectés)', 115000, 50000, 40000, 20000, 20000],
+      ['Tle A et D (Non Affectés)', 130000, 50000, 40000, 30000, 25000],
+    ]
+  },
+
+  'KOUTOUAN': {
+    primaire: [
+      ['Maternelle P / M / G section', 50000, 25000, 10000, 10000, 5000],
+      ['CP1 / CP2', 52000, 25000, 12000, 10000, 5000],
+      ['CE1 / CE2', 55000, 25000, 10000, 10000, 10000],
+      ['CM1', 65000, 30000, 20000, 15000, 10000],
+      ['CM2', 70000, 30000, 15000, 15000, 10000],
+    ],
+    secAff: [
+      ['6ème / 5ème / 4ème (Affectés)', 45000, 30000, 10000, 5000, ''],
+      ['3ème (Affectés)', 56000, 31000, 15000, 10000, ''],
+      ['2nde / 1ère (Affectés)', 50000, 35000, 10000, 5000, ''],
+      ['Terminale (Affectés)', 68000, 38000, 20000, 10000, ''],
+    ],
+    secNaff: [
+      ['6ème / 5ème / 4ème (Non Affectés)', 70000, 50000, 10000, 10000, ''],
+      ['3ème (Non Affectés)', 90000, 50000, 20000, 20000, ''],
+      ['2nde A/C / 1ère A/C/D (Non Affectés)', 90000, 50000, 20000, 20000, ''],
+      ['Terminale A/C/D (Non Affectés)', 110000, 50000, 30000, 30000, ''],
+    ]
+  },
+
+  'ETL PRINCES KOUIBLY': {
+    secAff: [
+      ['2nde G1 / G2', 50000, 25000, 15000, 10000, ''],
+      ['SMS 1A', 50000, 25000, 15000, 10000, ''],
+      ['1ère G1 / G2', 50000, 25000, 15000, 10000, ''],
+    ],
+    secNaff: [
+      ['2nde G1 / G2 / F2 (Non Affectés)', 120000, 60000, 30000, 30000, ''],
+      ['1ère G1 / G2 / F2 (Non Affectés)', 120000, 60000, 30000, 30000, ''],
+    ]
+  },
+
+  'CPP TECH': {
+    secAff: [
+      ['2nde F2', 60000, 30000, 15000, 15000, ''],
+      ['1ère F2', 70000, 30000, 20000, 20000, ''],
+      ['2nde G1/G2', 56500, 30000, 15000, 11500, ''],
+      ['1ère G1 / G2', 56500, 30000, 15000, 11500, ''],
+    ],
+    secNaff: [
+      ['2nde G1 / G2 / F2 (Non Affectés)', 120000, 60000, 30000, 30000, ''],
+      ['1ère G1 / G2 / F2 (Non Affectés)', 120000, 60000, 30000, 30000, ''],
+    ]
+  },
+
+  'SOAKPE': {
+    secAff: [
+      ['6ème / 5ème / 4ème (Affectés)', 36000, 21000, 10000, 5000, ''],
+      ['3ème (Affectés)', 50000, 31000, 10000, 8000, ''],
+      ['2nde A/C / 1ère A/C/D (Affectés)', 42000, 22000, 10000, 10000, ''],
+      ['Terminale (Affectés)', 56000, 30000, 16000, 10000, ''],
+      ['2nde G1 / G2 (Affectés)', 50000, 30000, 10000, 10000, ''],
+    ],
+    secNaff: [
+      ['6ème / 5ème / 4ème (Non Affectés)', 56000, 30000, 16000, 10000, ''],
+      ['3ème (Non Affectés)', 69000, 30000, 20000, 19000, ''],
+      ['2nde A/C / 1ère A/C/D (Non Affectés)', 69000, 30000, 20000, 19000, ''],
+      ['Terminale A/C/D (Non Affectés)', 80000, 50000, 20000, 10000, ''],
+    ]
+  },
+
+  // CPP PRO — structure BT par filière (1ère/2ème année, Affectés/Non affectés)
+  'CPP PRO': {
+    proBT: [
+      ['BT Secrétariat Bureautique 1ère année', 60000, 40000, 10000, 10000, ''],
+      ['BT Comptabilité 1ère année', 60000, 40000, 10000, 10000, ''],
+      ['BT Techniques Hôtelières 1ère année', 80000, 50000, 20000, 10000, ''],
+      ['BT Sciences Médico-Sociales 1ère année', 70000, 50000, 10000, 10000, ''],
+      ['BT Bâtiment Gros Œuvres 1ère année', 80000, 50000, 20000, 10000, ''],
+      ['BT Electricité Bâtiment 1ère année', 80000, 50000, 20000, 10000, ''],
+      ['BT Topographie 1ère année', 100000, 60000, 20000, 20000, ''],
+      ['BT Electronique Robotique 1ère année', 80000, 50000, 20000, 10000, ''],
+      ['BT Comptabilité 2ème année', 60000, 40000, 10000, 10000, ''],
+      ['BT Techniques Hôtelières 2ème année', 90000, 50000, 20000, 20000, ''],
+      ['BT Sciences Médico-Sociales 2ème année', 80000, 50000, 20000, 10000, ''],
+      ['BT Bâtiment Gros Œuvres 2ème année', 90000, 50000, 20000, 20000, ''],
+      ['BT Electricité Bâtiment 2ème année', 90000, 50000, 20000, 20000, ''],
+      ['BT Topographie 2ème année', 110000, 60000, 25000, 25000, ''],
+      ['BT Electronique Robotique 2ème année', 90000, 50000, 20000, 20000, ''],
+      ['BT Secrétariat Bureautique NA 1ère année', 120000, 60000, 30000, 30000, ''],
+      ['BT Comptabilité NA 1ère année', 120000, 60000, 30000, 30000, ''],
+      ['BT Techniques Hôtelières NA 1ère année', 150000, 80000, 40000, 30000, ''],
+      ['BT Sciences Médico-Sociales NA 1ère année', 150000, 80000, 40000, 30000, ''],
+      ['BT Bâtiment Gros Œuvres NA 1ère année', 150000, 80000, 40000, 30000, ''],
+      ['BT Electricité Bâtiment NA 1ère année', 150000, 80000, 40000, 30000, ''],
+      ['BT Topographie NA 1ère année', 150000, 80000, 40000, 30000, ''],
+      ['BT Electronique Robotique NA 1ère année', 150000, 80000, 40000, 30000, ''],
+      ['BT Secrétariat Bureautique NA 2ème année', 130000, 70000, 30000, 30000, ''],
+      ['BT Comptabilité NA 2ème année', 130000, 70000, 30000, 30000, ''],
+      ['BT Techniques Hôtelières NA 2ème année', 160000, 80000, 50000, 30000, ''],
+      ['BT Sciences Médico-Sociales NA 2ème année', 160000, 80000, 50000, 30000, ''],
+      ['BT Bâtiment Gros Œuvres NA 2ème année', 160000, 80000, 50000, 30000, ''],
+      ['BT Electricité Bâtiment NA 2ème année', 160000, 80000, 50000, 30000, ''],
+      ['BT Topographie NA 2ème année', 160000, 80000, 50000, 30000, ''],
+      ['BT Electronique Robotique NA 2ème année', 160000, 80000, 50000, 30000, ''],
+    ]
+  }
+
+};
+
+window.GRILLES_A_ECRIRE = GRILLES_A_ECRIRE;
+// ============================================================
+// MISE À JOUR CONFIGURATION_TARIF — 7 écoles vers bases 2026-2027
+// ============================================================
+// Réécrit l'onglet CONFIGURATION_TARIF (structure standard :
+// Niveau | Total | Tranche1-4) dans la base 2026-2027 de chaque
+// école listée dans GRILLES_A_ECRIRE (grilles_a_ecrire.js —
+// doit être installé AVANT ce fichier).
+// Demande confirmation avant toute écriture.
+// ============================================================
+
+async function verifierEtMajConfigTarifReseau() {
+  const zone = document.getElementById('fondConfigTarifBody');
+  if (!zone) return;
+  zone.innerHTML = '<p style="padding:14px;font-size:0.82em;color:var(--gris)">Préparation de la liste des écoles à mettre à jour...</p>';
+
+  const ecolesACouvrir = Object.keys(GRILLES_A_ECRIRE);
+  let h = '<div style="padding:10px 14px;background:#FFF3E0;border-bottom:1px solid #FFB74D;font-size:0.82em;color:var(--orange)">'
+    + '⚠️ Cette action va <strong>REMPLACER ENTIÈREMENT</strong> l\'onglet CONFIGURATION_TARIF dans la base 2026-2027 des écoles suivantes :</div>';
+  h += '<ul style="padding:14px 30px;font-size:0.82em;color:#333">';
+  ecolesACouvrir.forEach(function(code) {
+    h += '<li>' + (ECOLE_LABELS[code] || code) + '</li>';
+  });
+  h += '</ul>';
+  h += '<div style="padding:10px 14px"><button onclick="majConfigTarifReseau()" style="width:100%;padding:11px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">&#9888; Remplacer CONFIGURATION_TARIF pour ces ' + ecolesACouvrir.length + ' école(s)</button>'
+    + '<div id="majConfigTarifStatut" style="margin-top:8px;font-size:0.78em"></div></div>';
+
+  zone.innerHTML = h;
+}
+
+async function majConfigTarifReseau() {
+  const ecolesACouvrir = Object.keys(GRILLES_A_ECRIRE);
+  const ok = window.confirm(
+    'Confirmer le remplacement COMPLET de l\'onglet CONFIGURATION_TARIF\n'
+    + 'dans la base 2026-2027 de ces ' + ecolesACouvrir.length + ' école(s) :\n\n'
+    + ecolesACouvrir.map(function(c) { return '- ' + (ECOLE_LABELS[c] || c); }).join('\n')
+    + '\n\nCette action écrase tout contenu existant dans cet onglet.'
+  );
+  if (!ok) return;
+
+  const statutDiv = document.getElementById('majConfigTarifStatut');
+  let succes = 0, echecs = 0;
+  const details = [];
+
+  for (let i = 0; i < ecolesACouvrir.length; i++) {
+    const codeEcole = ecolesACouvrir[i];
+    const sheetsId = SHEETS_IDS_2026_2027[codeEcole];
+    if (!sheetsId) { echecs++; details.push(codeEcole + ': base 2026-2027 introuvable'); continue; }
+
+    if (statutDiv) statutDiv.textContent = 'Mise à jour ' + (i + 1) + '/' + ecolesACouvrir.length + ' — ' + (ECOLE_LABELS[codeEcole] || codeEcole) + '...';
+
+    // Construire les lignes à écrire (avec en-têtes de section)
+    const grille = GRILLES_A_ECRIRE[codeEcole];
+    const lignes = [];
+
+    if (grille.primaire) {
+      lignes.push(['CYCLE PRIMAIRE', '', '', '', '', '']);
+      lignes.push(['Niveau', 'Total', 'Tranche 1', 'Tranche 2', 'Tranche 3', 'Tranche 4']);
+      grille.primaire.forEach(function(l) { lignes.push(l); });
+    }
+    if (grille.secAff) {
+      lignes.push(['SECONDAIRE — AFFECTÉS', '', '', '', '', '']);
+      lignes.push(['Niveau', 'Total', 'Tranche 1', 'Tranche 2', 'Tranche 3', 'Tranche 4']);
+      grille.secAff.forEach(function(l) { lignes.push(l); });
+    }
+    if (grille.secNaff) {
+      lignes.push(['SECONDAIRE — NON AFFECTÉS', '', '', '', '', '']);
+      lignes.push(['Niveau', 'Total', 'Tranche 1', 'Tranche 2', 'Tranche 3', 'Tranche 4']);
+      grille.secNaff.forEach(function(l) { lignes.push(l); });
+    }
+    if (grille.proBT) {
+      lignes.push(['GRILLE BT — TOUTES FILIÈRES', '', '', '', '', '']);
+      lignes.push(['Niveau / Classe', 'Total', 'Tranche 1', 'Tranche 2', 'Tranche 3', 'Tranche 4']);
+      grille.proBT.forEach(function(l) { lignes.push(l); });
+    }
+
+    try {
+      const result = await appelJSONP(APP_SCRIPT_URL_ADMIN, {
+        action: 'ecrireConfigTarif',
+        sheetsId: sheetsId,
+        lignesJson: JSON.stringify(lignes)
+      });
+      if (result && result.succes) {
+        succes++;
+        details.push('✓ ' + (ECOLE_LABELS[codeEcole] || codeEcole) + ' — ' + lignes.length + ' ligne(s) écrite(s)');
+      } else {
+        echecs++;
+        details.push('✗ ' + (ECOLE_LABELS[codeEcole] || codeEcole) + ' — ' + (result && result.message || 'échec inconnu'));
+      }
+    } catch (err) {
+      echecs++;
+      details.push('✗ ' + (ECOLE_LABELS[codeEcole] || codeEcole) + ' — erreur réseau');
+    }
+  }
+
+  if (statutDiv) {
+    let h = '<strong style="color:' + (echecs ? 'var(--rouge)' : 'var(--vert)') + '">' + succes + ' école(s) mise(s) à jour, ' + echecs + ' échec(s)</strong>';
+    h += '<div style="margin-top:8px">' + details.map(function(d) { return '<div style="padding:2px 0">' + d + '</div>'; }).join('') + '</div>';
+    statutDiv.innerHTML = h;
+  }
+  showToast(succes + ' école(s) mise(s) à jour' + (echecs ? ', ' + echecs + ' échec(s)' : ''), echecs ? 'error' : 'success');
+}
 
   function peuplerSelectEcoleFond(){
   var sel=document.getElementById('fondImportEcole');
