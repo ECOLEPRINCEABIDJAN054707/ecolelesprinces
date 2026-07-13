@@ -6131,6 +6131,94 @@ async function majConfigTarifReseau() {
   showToast(succes + ' école(s) mise(s) à jour' + (echecs ? ', ' + echecs + ' échec(s)' : ''), echecs ? 'error' : 'success');
 }
 
+ // ============================================================
+// COMPARAISON ONGLETS 2025-2026 vs 2026-2027 — RÉSEAU
+// ============================================================
+// Liste, pour chaque école, les onglets présents dans la base
+// 2025-2026 mais absents de la base 2026-2027.
+// Ignore les onglets "de classe" (ex: 6EME 3, 1ERE D-1...) qui sont
+// normaux à recréer selon les effectifs — se concentre sur les
+// onglets STRUCTURELS (ENSEIGNANTS, CONFIGURATION_TARIF, etc.)
+// Lecture seule.
+// ============================================================
+
+// Onglets structurels à vérifier en priorité (pas les onglets de classe)
+var ONGLETS_STRUCTURELS_A_VERIFIER = [
+  'ENSEIGNANTS', 'SYNTHESE', 'CONFIGURATION_TARIF', 'CAHIER_TEXTES',
+  'ABSENCES', 'POINTAGE_MENSUEL', 'PROGRAMME_TRIMESTRE', 'MESSAGES',
+  'ANNONCES', 'HISTORIQUE_MAJ', 'HISTORIQUE_PAIEMENTS', 'FCM_TOKENS',
+  'RESULTATS_2025_2026', 'NOTES_T1', 'NOTES_T2', 'NOTES_T3',
+  'MATRICULES_RESERVE', 'NOUVEAUX_ELEVES'
+];
+
+async function comparerOngletsReseau() {
+  const zone = document.getElementById('fondComparaisonOngletsBody');
+  if (!zone) return;
+  zone.innerHTML = '<p style="padding:14px;font-size:0.82em;color:var(--gris)">Comparaison des onglets en cours sur les 14 écoles...</p>';
+
+  const codesEcoles = Object.keys(SHEETS_IDS);
+  const resultats = [];
+
+  for (const codeEcole of codesEcoles) {
+    const idAncien = SHEETS_IDS[codeEcole];
+    const idNouveau = SHEETS_IDS_2026_2027[codeEcole];
+    const diag = { ecole: ECOLE_LABELS[codeEcole] || codeEcole, manquants: [], erreur: null };
+
+    if (!idAncien || !idNouveau) {
+      diag.erreur = !idNouveau ? 'Base 2026-2027 non configurée' : 'Base 2025-2026 introuvable';
+      resultats.push(diag);
+      continue;
+    }
+
+    try {
+      const [onglets2025, onglets2026] = await Promise.all([
+        _listerOngletsSheet(idAncien),
+        _listerOngletsSheet(idNouveau)
+      ]);
+
+      const set2026 = new Set(onglets2026.map(function(n) { return n.toUpperCase().trim(); }));
+
+      ONGLETS_STRUCTURELS_A_VERIFIER.forEach(function(nomStructurel) {
+        const existeDans2025 = onglets2025.some(function(n) { return n.toUpperCase().trim() === nomStructurel; });
+        const existeDans2026 = set2026.has(nomStructurel);
+        if (existeDans2025 && !existeDans2026) {
+          diag.manquants.push(nomStructurel);
+        }
+      });
+
+      resultats.push(diag);
+    } catch (e) {
+      diag.erreur = 'Erreur: ' + e.message;
+      resultats.push(diag);
+    }
+  }
+
+  let h = '<div class="tbl-wrap"><table><thead><tr><th>École</th><th>Onglets manquants en 2026-2027</th></tr></thead><tbody>';
+  resultats.forEach(function(d) {
+    let contenu;
+    if (d.erreur) {
+      contenu = '<span style="color:var(--gris);font-style:italic">' + d.erreur + '</span>';
+    } else if (d.manquants.length === 0) {
+      contenu = '<span class="bdg bg-vert">✓ Tout est présent</span>';
+    } else {
+      contenu = d.manquants.map(function(m) { return '<span class="bdg bg-rouge" style="margin:2px">' + m + '</span>'; }).join(' ');
+    }
+    h += '<tr><td><strong>' + d.ecole + '</strong></td><td>' + contenu + '</td></tr>';
+  });
+  h += '</tbody></table></div>';
+
+  zone.innerHTML = h;
+}
+
+async function _listerOngletsSheet(sheetsId) {
+  const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '?key=' + API_KEY + '&fields=sheets.properties.title';
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  const data = await r.json();
+  if (!data.sheets) return [];
+  return data.sheets.map(function(s) { return s.properties.title; });
+}
+
   function peuplerSelectEcoleFond(){
   var sel=document.getElementById('fondImportEcole');
   if(!sel)return;
