@@ -5699,6 +5699,15 @@ function trouverTarifAttendu(codeEcole, classeRaw, statutEleve) {
 // AUCUNE ÉCRITURE — rapport uniquement, à valider manuellement.
 // ============================================================
 
+// ============================================================
+// VÉRIFICATION MONTANT_DU vs GRILLE TARIFAIRE — RÉSEAU (RAPPORT SEUL)
+// ============================================================
+// Scanne SYNTHESE de la base 2026-2027 de chaque école, compare
+// MONTANT_DU au Total attendu de GRILLES_TARIFAIRES (voir fichier
+// grilles_tarifaires.js — doit être installé AVANT ce fichier).
+// AUCUNE ÉCRITURE — rapport uniquement, à valider manuellement.
+// ============================================================
+
 async function verifierMontantsDuReseau() {
   const zone = document.getElementById('fondMontantsDuBody');
   if (!zone) return;
@@ -5721,14 +5730,16 @@ async function verifierMontantsDuReseau() {
       const data = await r.json();
       if (!data.values || data.values.length < 2) continue;
 
-      data.values.slice(1).forEach(function(row) {
+      data.values.slice(1).forEach(function(row, idx) {
         const classe = String(row[0] || '').trim();
         const matricule = String(row[1] || '').trim();
         const nom = String(row[2] || '').trim();
         if (!matricule || !nom || !classe) return;
 
         const montantDu = parseFloat(row[3]) || 0;
-        const statutEleve = String(row[9] || '').trim(); // colonne STATUT_ELEVE (AFF/NAFF)
+        const verse = parseFloat(row[4]) || 0;
+        const statutEleve = String(row[18] || '').trim(); // colonne S (18) = STATUT_ELEVE (AFF/NAFF)
+        const ligneReelle = idx + 2; // +1 pour l'en-tête sautée, +1 pour index 1-based
 
         totalElevesAnalyses++;
 
@@ -5744,9 +5755,11 @@ async function verifierMontantsDuReseau() {
 
         if (montantDu !== attendu.total) {
           ecarts.push({
+            codeEcole: codeEcole, sheetsId: sheetsId, ligne: ligneReelle,
             ecole: ECOLE_LABELS[codeEcole] || codeEcole,
             classe: classe, matricule: matricule, nom: nom,
             montantActuel: montantDu, montantAttendu: attendu.total,
+            verse: verse, nouveauSolde: Math.max(0, attendu.total - verse),
             source: attendu.source,
             manquant: montantDu === 0
           });
@@ -5761,16 +5774,20 @@ async function verifierMontantsDuReseau() {
     + totalElevesAnalyses + ' élève(s) analysé(s) sur le réseau (base 2026-2027)</div>';
 
   if (ecarts.length) {
+    window._ecartsMontantsDu = ecarts; // stocké pour la correction
     h += '<div style="padding:10px 14px;background:#FFEBEE;border-bottom:1px solid #EF9A9A;font-size:0.82em;color:var(--rouge);font-weight:700">'
       + '⚠️ ' + ecarts.length + ' écart(s) de montant détecté(s)</div>';
+    h += '<div style="padding:10px 14px"><button onclick="corrigerMontantsDuReseau()" style="width:100%;padding:11px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">&#10003; Corriger automatiquement les ' + ecarts.length + ' ligne(s) (bases 2026-2027)</button>'
+      + '<div id="correctionMontantsStatut" style="margin-top:8px;font-size:0.78em"></div></div>';
     h += '<div class="tbl-wrap"><table><thead><tr><th>École</th><th>Classe</th><th>Matricule</th><th>Nom</th>'
-      + '<th>Montant actuel</th><th>Montant attendu</th><th>Référence grille</th></tr></thead><tbody>';
-    ecarts.forEach(function(e) {
+      + '<th>Montant actuel</th><th>Montant attendu</th><th>Nouveau solde</th><th>Référence grille</th></tr></thead><tbody>';
+    ecarts.forEach(function(e, i) {
       const bg = e.manquant ? 'background:#FFF3E0' : '';
-      h += '<tr style="' + bg + '"><td style="font-size:0.75em">' + e.ecole + '</td><td>' + e.classe + '</td>'
+      h += '<tr id="ecartRow_' + i + '" style="' + bg + '"><td style="font-size:0.75em">' + e.ecole + '</td><td>' + e.classe + '</td>'
         + '<td style="font-size:0.72em;color:var(--gris)">' + e.matricule + '</td><td><strong>' + e.nom + '</strong></td>'
         + '<td style="text-align:right;color:var(--rouge);font-weight:700">' + (e.manquant ? 'Non renseigné' : e.montantActuel.toLocaleString('fr-FR') + ' F') + '</td>'
         + '<td style="text-align:right;color:var(--vert);font-weight:700">' + e.montantAttendu.toLocaleString('fr-FR') + ' F</td>'
+        + '<td style="text-align:right;color:var(--bleu)">' + e.nouveauSolde.toLocaleString('fr-FR') + ' F</td>'
         + '<td style="font-size:0.72em;color:var(--gris)">' + e.source + '</td></tr>';
     });
     h += '</tbody></table></div>';
@@ -5792,6 +5809,63 @@ async function verifierMontantsDuReseau() {
 
   zone.innerHTML = h;
 }
+
+// ============================================================
+// CORRECTION AUTOMATIQUE — écrit MONTANT_DU et SOLDE corrigés
+// dans la base 2026-2027 de chaque école, ligne par ligne.
+// Demande confirmation avant toute écriture.
+// ============================================================
+async function corrigerMontantsDuReseau() {
+  const ecarts = window._ecartsMontantsDu || [];
+  if (!ecarts.length) { showToast('Aucune correction en attente', 'error'); return; }
+
+  let recap = 'Confirmer la correction de ' + ecarts.length + ' ligne(s) dans les bases 2026-2027 ?\n\n';
+  ecarts.forEach(function(e) {
+    recap += e.ecole + ' — ' + e.nom + ' (' + e.matricule + ')\n';
+    recap += '  MONTANT_DU: ' + e.montantActuel + ' → ' + e.montantAttendu + '\n';
+    recap += '  SOLDE: → ' + e.nouveauSolde + '\n\n';
+  });
+  const ok = window.confirm(recap);
+  if (!ok) return;
+
+  const statutDiv = document.getElementById('correctionMontantsStatut');
+  let succes = 0, echecs = 0;
+
+  for (let i = 0; i < ecarts.length; i++) {
+    const e = ecarts[i];
+    const row = document.getElementById('ecartRow_' + i);
+    if (statutDiv) statutDiv.textContent = 'Correction ' + (i + 1) + '/' + ecarts.length + '...';
+    try {
+      const result = await appelJSONP(APP_SCRIPT_URL_ADMIN, {
+        action: 'majMontantDuSolde',
+        sheetsId: e.sheetsId,
+        ligne: e.ligne,
+        nouveauMontantDu: e.montantAttendu,
+        nouveauSolde: e.nouveauSolde,
+        matricule: e.matricule
+      });
+      if (result && result.succes) {
+        succes++;
+        if (row) row.style.background = '#E8F5E9';
+      } else {
+        echecs++;
+        if (row) row.style.background = '#FFEBEE';
+      }
+    } catch (err) {
+      echecs++;
+      if (row) row.style.background = '#FFEBEE';
+    }
+  }
+
+  if (statutDiv) {
+    statutDiv.innerHTML = '<strong style="color:' + (echecs ? 'var(--rouge)' : 'var(--vert)') + '">'
+      + succes + ' corrigée(s), ' + echecs + ' échec(s)</strong>';
+  }
+  showToast(succes + ' ligne(s) corrigée(s)' + (echecs ? ', ' + echecs + ' échec(s)' : ''), echecs ? 'error' : 'success');
+}
+
+
+
 
 
   function peuplerSelectEcoleFond(){
