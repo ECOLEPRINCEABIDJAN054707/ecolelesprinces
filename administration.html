@@ -5600,7 +5600,7 @@ primaire: [
     ]
   },
 
-  'CPP ANYAMA': {
+'CPP ANYAMA': {
     primaire: [
       { niveaux: ['MATERNELLE', 'PSA', 'MSA', 'GSA'], total: 45000 },
       { niveaux: ['CP1'], total: 45000 },
@@ -5608,11 +5608,13 @@ primaire: [
       { niveaux: ['CE1'], total: 50000 },
       { niveaux: ['CE2'], total: 50000 },
       { niveaux: ['CM1'], total: 55000 },
-      { niveaux: ['CM2'], total: 60000 },
+      { niveaux: ['CM2'], total: 70000 },
     ],
     secondaire: [
-      { niveaux: ['6EME', '5EME', '4EME'], aff: 42000, naff: 65000, },
-      { niveaux: ['3EME'], aff: 50000, naff: 73000, },
+      { niveaux: ['6EME', '5EME', '4EME'], aff: 42000, naff: 65000 },
+      { niveaux: ['3EME'], aff: 50000, naff: 73000 },
+      { niveaux: ['2NDE', '1ERE'], aff: 47000, naff: 75000 },
+      { niveaux: ['TLE', 'TERMINALE'], aff: 55000, naff: 93000 },
     ]
   },
 
@@ -6034,8 +6036,30 @@ primaire: [
       ['BT Topographie NA 2ème année', 160000, 80000, 50000, 30000, ''],
       ['BT Electronique Robotique NA 2ème année', 160000, 80000, 50000, 30000, ''],
     ]
+  },
+  'CPP ANYAMA': {
+    primaire: [
+      ['Maternelle (PS/MS/GS)', 45000, 20000, 10000, 10000, 5000],
+      ['CP1', 45000, 20000, 10000, 10000, 5000],
+      ['CP2', 45000, 20000, 10000, 10000, 5000],
+      ['CE1', 50000, 20000, 10000, 10000, 10000],
+      ['CE2', 50000, 20000, 10000, 10000, 10000],
+      ['CM1', 55000, 20000, 15000, 10000, 10000],
+      ['CM2', 70000, 20000, 20000, 15000, 15000],
+    ],
+    secAff: [
+      ['6ème / 5ème / 4ème (Affectés)', 42000, 22000, 10000, 10000, ''],
+      ['3ème (Affectés)', 50000, 25000, 15000, 10000, ''],
+      ['2nde / 1ère (Affectés)', 47000, 22000, 15000, 10000, ''],
+      ['Terminale (Affectés)', 55000, 25000, 15000, 15000, ''],
+    ],
+    secNaff: [
+      ['6ème / 5ème / 4ème (Non Affectés)', 65000, 15000, 50000, '', ''],
+      ['3ème (Non Affectés)', 73000, 15000, 58000, '', ''],
+      ['2nde / 1ère (Non Affectés)', 75000, 15000, 60000, '', ''],
+      ['Terminale (Non Affectés)', 93000, 15000, 78000, '', ''],
+    ]
   }
-
 };
 
 window.GRILLES_A_ECRIRE = GRILLES_A_ECRIRE;
