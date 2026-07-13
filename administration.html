@@ -819,6 +819,16 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 
+ <div class="section">
+    <div class="sec-head sec-rouge" onclick="verifierMontantsDuReseau();toggleSec(this)">
+      <h3>&#128176; V&eacute;rifier MONTANT_DU vs grille tarifaire &mdash; R&eacute;seau</h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="fondMontantsDuBody">
+      <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez sur cette section pour comparer le MONTANT_DU de chaque &eacute;l&egrave;ve (base 2026-2027) avec le Total officiel de la grille tarifaire de son &eacute;cole. Rapport uniquement &mdash; aucune &eacute;criture automatique.</p>
+    </div>
+  </div>
+
+
   <div class="footer">R&eacute;seau CPP Les Princes d'Abidjan &middot; Espace Fondateur &middot; 2026-2027</div>
 </div>
 
@@ -5406,7 +5416,385 @@ async function confirmerInscriptionFond(){
 }
 
 // Peupler le select école du fondateur au login
-function peuplerSelectEcoleFond(){
+// ============================================================
+// GRILLES TARIFAIRES DE RÉFÉRENCE — RÉSEAU CPP LES PRINCES
+// Année scolaire 2026-2027 (montants TOTAL uniquement)
+// ============================================================
+// Structure : GRILLES_TARIFAIRES[codeEcole] = {
+//   primaire: [ {niveaux:[...], total: N}, ... ],
+//   secondaire: [ {niveaux:[...], aff: N, naff: N|null}, ... ],
+//   proFilieres: { "1A": {filiere: {aff,naff}}, "2A": {...} }  // CPP PRO uniquement
+// }
+// Un niveau peut avoir aff=null si l'école ne distingue pas Affecté/Non affecté
+// (ex: Dabou primaire, ou écoles 100% primaires)
+// ============================================================
+
+const GRILLES_TARIFAIRES = {
+
+  'CPP LES PRINCES': {
+    secondaire: [
+      { niveaux: ['6EME', '5EME', '4EME'], aff: 52000, naff: 105000 },
+      { niveaux: ['3EME'], aff: 67000, naff: 120000 },
+      { niveaux: ['2NDE', '1ERE'], aff: 57000, naff: 120000 },
+      { niveaux: ['TLE', 'TERMINALE'], aff: 77000, naff: 140000 },
+    ]
+  },
+
+  'ACADEMIE': {
+    primaire: [
+      { niveaux: ['PSA'], total: 61000 },
+      { niveaux: ['MSA'], total: 61000 },
+      { niveaux: ['GSA'], total: 61000 },
+      { niveaux: ['CP1'], total: 60000 },
+      { niveaux: ['CP2'], total: 60000 },
+      { niveaux: ['CE1'], total: 63000 },
+      { niveaux: ['CE2'], total: 70000 },
+      { niveaux: ['CM1'], total: 67000 },
+      { niveaux: ['CM2'], total: 75000 },
+    ]
+  },
+
+  'GUINGLO VILLE': {
+    primaire: [
+      { niveaux: ['CP1', 'CP2'], total: 25000 },
+      { niveaux: ['CE1', 'CE2'], total: 27000 },
+      { niveaux: ['CM1', 'CM2'], total: 30000 },
+    ],
+    secondaire: [
+      { niveaux: ['6EME'], aff: 38000, naff: 50000 },
+      { niveaux: ['5EME'], aff: 38000, naff: 50000 },
+      { niveaux: ['4EME'], aff: 38000, naff: 50000 },
+      { niveaux: ['3EME'], aff: 48000, naff: 68000 },
+      { niveaux: ['2NDE'], aff: 41000, naff: 75000 },
+      { niveaux: ['1ERE'], aff: 41000, naff: 75000 },
+    ]
+  },
+
+  'GNONTINROU': {
+    primaire: [
+      { niveaux: ['CP1', 'CP2', 'CE1', 'CE2'], total: 30000 },
+      { niveaux: ['CM1', 'CM2'], total: 35000 },
+    ],
+    secondaire: [
+      { niveaux: ['6EME', '5EME', '4EME'], aff: 36000, naff: 56000 },
+      { niveaux: ['3EME'], aff: 48000, naff: 69000 },
+      { niveaux: ['2NDE', '1ERE'], aff: 42000, naff: 69000 },
+      { niveaux: ['TLE', 'TERMINALE'], aff: 56000, naff: 80000 },
+    ]
+  },
+
+  'KOUTOUAN': {
+    primaire: [
+      { niveaux: ['MATERNELLE', 'PSA', 'MSA', 'GSA'], total: 50000 },
+      { niveaux: ['CP1', 'CP2'], total: 52000 },
+      { niveaux: ['CE1', 'CE2'], total: 55000 },
+      { niveaux: ['CM1'], total: 65000 },
+      { niveaux: ['CM2'], total: 70000 },
+    ],
+    secondaire: [
+      { niveaux: ['6EME', '5EME', '4EME'], aff: 45000, naff: 70000 },
+      { niveaux: ['3EME'], aff: 56000, naff: 90000 },
+      { niveaux: ['2NDE', '1ERE'], aff: 50000, naff: 90000 },
+      { niveaux: ['TLE', 'TERMINALE'], aff: 68000, naff: 110000 },
+    ]
+  },
+
+  'SOAKPE': {
+    secondaire: [
+      { niveaux: ['6EME', '5EME', '4EME'], aff: 36000, naff: 56000 },
+      { niveaux: ['3EME'], aff: 50000, naff: 69000 },
+      { niveaux: ['2NDE', '1ERE'], aff: 42000, naff: 69000 },
+      { niveaux: ['TLE', 'TERMINALE'], aff: 56000, naff: 80000 },
+      { niveaux: ['2NDE G1', '2NDE G2'], aff: 50000, naff: null },
+    ]
+  },
+
+  'AKEIKOI 1': {
+    primaire: [
+      { niveaux: ['MATERNELLE P', 'MATERNELLE M', 'PSA', 'MSA'], total: 60000 },
+      { niveaux: ['MATERNELLE GRANDE', 'GSA'], total: 63000 },
+      { niveaux: ['CP1', 'CP2'], total: 65000 },
+      { niveaux: ['CE1', 'CE2'], total: 67000 },
+      { niveaux: ['CM1'], total: 70000 },
+      { niveaux: ['CM2'], total: 75000 },
+    ]
+  },
+
+  'AKEIKOI 2': {
+    primaire: [
+      { niveaux: ['MATERNELLE P', 'MATERNELLE M', 'PSA', 'MSA'], total: 60000 },
+      { niveaux: ['MATERNELLE GRANDE', 'GSA'], total: 63000 },
+      { niveaux: ['CP1', 'CP2'], total: 65000 },
+      { niveaux: ['CE1', 'CE2'], total: 67000 },
+      { niveaux: ['CM1'], total: 70000 },
+      { niveaux: ['CM2'], total: 75000 },
+    ]
+  },
+
+  'CPP TECH': {
+    secondaire: [
+      { niveaux: ['2NDE F2'], aff: 60000, naff: 120000 },
+      { niveaux: ['1ERE F2'], aff: 70000, naff: 120000 },
+      { niveaux: ['2NDE G1', '2NDE G2'], aff: 56500, naff: 120000 },
+      { niveaux: ['1ERE G1', '1ERE G2'], aff: 56500, naff: 120000 },
+    ]
+  },
+
+  'ETL PRINCES KOUIBLY': {
+    secondaire: [
+      { niveaux: ['2NDE G1', '2NDE G2'], aff: 50000, naff: 120000 },
+      { niveaux: ['1ERE G1', '1ERE G2'], aff: 50000, naff: 120000 },
+      { niveaux: ['SMS 1A', 'SMS'], aff: 50000, naff: null },
+    ]
+  },
+
+  'GS RITA ROSANE': {
+    primaire: [
+      { niveaux: ['MATERNELLE', 'PSA', 'MSA', 'GSA'], total: 55000 },
+      { niveaux: ['CP1', 'CP2'], total: 60000 },
+      { niveaux: ['CE1', 'CE2'], total: 65000 },
+      { niveaux: ['CM1'], total: 70000 },
+      { niveaux: ['CM2'], total: 70000 },
+    ],
+    secondaire: [
+      { niveaux: ['6EME', '5EME', '4EME'], aff: 40000, naff: 75000 },
+      { niveaux: ['3EME'], aff: 55000, naff: 115000 },
+      { niveaux: ['2NDE', '1ERE'], aff: 45000, naff: 110000 },
+      { niveaux: ['TLE', 'TERMINALE'], aff: 65000, naff: 130000 },
+    ]
+  },
+
+  'CPP DABOU': {
+    primaire: [
+      { niveaux: ['CP1'], total: 60000 },
+      { niveaux: ['CP2'], total: 60000 },
+      { niveaux: ['CE1'], total: 65000 },
+      { niveaux: ['CE2'], total: 65000 },
+      { niveaux: ['CM1'], total: 75000 },
+      { niveaux: ['CM2'], total: 75000 },
+    ],
+    secondaire: [
+      { niveaux: ['6EME'], aff: 50000, naff: 80000 },
+      { niveaux: ['5EME'], aff: 50000, naff: 80000 },
+      { niveaux: ['4EME'], aff: 50000, naff: 80000 },
+      { niveaux: ['3EME'], aff: 65000, naff: 100000 },
+    ]
+  },
+
+  'CPP ANYAMA': {
+    primaire: [
+      { niveaux: ['MATERNELLE', 'PSA', 'MSA', 'GSA'], total: 45000 },
+      { niveaux: ['CP1'], total: 45000 },
+      { niveaux: ['CP2'], total: 45000 },
+      { niveaux: ['CE1'], total: 50000 },
+      { niveaux: ['CE2'], total: 50000 },
+      { niveaux: ['CM1'], total: 55000 },
+      { niveaux: ['CM2'], total: 60000 },
+    ],
+    secondaire: [
+      { niveaux: ['6EME', '5EME', '4EME'], aff: 84000, naff: 65000 },
+      { niveaux: ['3EME'], aff: 100000, naff: 73000 },
+    ]
+  },
+
+  // CPP PRO — structure spéciale par filière BT (1ère/2ème année)
+  'CPP PRO': {
+    proFilieres: {
+      '1A': {
+        'SECRETARIAT': { aff: 60000, naff: 120000 },
+        'COMPTA': { aff: 60000, naff: 120000 },
+        'TH': { aff: 80000, naff: 150000 },
+        'SMS': { aff: 70000, naff: 150000 },
+        'BATIMENT': { aff: 80000, naff: 150000 },
+        'ELT BAT': { aff: 80000, naff: 150000 },
+        'TOPO': { aff: 100000, naff: 150000 },
+        'ELN': { aff: 80000, naff: 150000 },
+      },
+      '2A': {
+        'SECRETARIAT': { aff: 60000, naff: 130000 },
+        'COMPTA': { aff: 60000, naff: 130000 },
+        'TH': { aff: 90000, naff: 160000 },
+        'SMS': { aff: 80000, naff: 160000 },
+        'BATIMENT': { aff: 90000, naff: 160000 },
+        'ELT BAT': { aff: 90000, naff: 160000 },
+        'TOPO': { aff: 110000, naff: 160000 },
+        'ELN': { aff: 90000, naff: 160000 },
+      }
+    }
+  }
+
+};
+
+window.GRILLES_TARIFAIRES = GRILLES_TARIFAIRES;
+
+// ============================================================
+// Normalisation d'une chaîne (accents, espaces, casse)
+// ============================================================
+function _normNiveauStr(s) {
+  return String(s || '').toUpperCase().trim()
+    .replace(/[ÈÉÊË]/g, 'E').replace(/[ÀÂÄ]/g, 'A')
+    .replace(/[ÎÏ]/g, 'I').replace(/[ÔÖ]/g, 'O').replace(/[ÛÙÜ]/g, 'U')
+    .replace(/Ç/g, 'C').replace(/\s+/g, ' ');
+}
+
+// ============================================================
+// Trouve le tarif attendu pour une classe + statut donné, dans une école donnée
+// Retourne {total, source} ou null si aucune correspondance trouvée
+// ============================================================
+function trouverTarifAttendu(codeEcole, classeRaw, statutEleve) {
+  const grille = GRILLES_TARIFAIRES[codeEcole];
+  if (!grille) return null;
+  const classeNorm = _normNiveauStr(classeRaw);
+  const isAff = String(statutEleve || '').toUpperCase().indexOf('NAFF') < 0
+             && String(statutEleve || '').toUpperCase().indexOf('AFF') >= 0;
+  const isNaff = String(statutEleve || '').toUpperCase().indexOf('NAFF') >= 0;
+
+  // CPP PRO — cas spécial par filière
+  if (grille.proFilieres) {
+    const annee = classeNorm.indexOf('1A') === 0 ? '1A' : classeNorm.indexOf('2A') === 0 ? '2A' : null;
+    if (!annee) return null;
+    const filieres = grille.proFilieres[annee];
+    for (const fKey in filieres) {
+      if (classeNorm.indexOf(fKey) >= 0) {
+        const t = filieres[fKey];
+        const total = isNaff ? t.naff : t.aff;
+        return { total: total, source: annee + ' ' + fKey + (isNaff ? ' (NON AFF)' : ' (AFF)') };
+      }
+    }
+    return null;
+  }
+
+  // Primaire — pas de distinction affecté/non affecté
+  if (grille.primaire) {
+    for (const ligne of grille.primaire) {
+      if (ligne.niveaux.some(function(n) { return classeNorm.indexOf(n) === 0 || classeNorm.indexOf(n) >= 0; })) {
+        return { total: ligne.total, source: 'Primaire' };
+      }
+    }
+  }
+
+  // Secondaire — avec distinction affecté/non affecté
+  if (grille.secondaire) {
+    for (const ligne of grille.secondaire) {
+      if (ligne.niveaux.some(function(n) { return classeNorm.indexOf(n) === 0 || classeNorm.indexOf(n) >= 0; })) {
+        if (isNaff && ligne.naff !== null && ligne.naff !== undefined) {
+          return { total: ligne.naff, source: 'Secondaire (NON AFF)' };
+        }
+        if (isAff || !isNaff) {
+          return { total: ligne.aff, source: 'Secondaire (AFF)' };
+        }
+      }
+    }
+  }
+
+  return null; // aucune correspondance — niveau non reconnu dans la grille
+}
+
+// ============================================================
+// VÉRIFICATION MONTANT_DU vs GRILLE TARIFAIRE — RÉSEAU (RAPPORT SEUL)
+// ============================================================
+// Scanne SYNTHESE de la base 2026-2027 de chaque école, compare
+// MONTANT_DU au Total attendu de GRILLES_TARIFAIRES (voir fichier
+// grilles_tarifaires.js — doit être installé AVANT ce fichier).
+// AUCUNE ÉCRITURE — rapport uniquement, à valider manuellement.
+// ============================================================
+
+async function verifierMontantsDuReseau() {
+  const zone = document.getElementById('fondMontantsDuBody');
+  if (!zone) return;
+  zone.innerHTML = '<p style="padding:14px;font-size:0.82em;color:var(--gris)">Analyse en cours — comparaison MONTANT_DU vs grille tarifaire officielle sur toutes les écoles (base 2026-2027)...</p>';
+
+  const ecarts = [];
+  const nonReconnus = [];
+  let totalElevesAnalyses = 0;
+
+  const codesEcoles = Object.keys(SHEETS_IDS_2026_2027);
+
+  for (const codeEcole of codesEcoles) {
+    const sheetsId = SHEETS_IDS_2026_2027[codeEcole];
+    if (!sheetsId) continue;
+    if (!GRILLES_TARIFAIRES[codeEcole]) continue; // pas de grille encodée pour cette école
+
+    try {
+      const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+      const r = await fetch(url);
+      const data = await r.json();
+      if (!data.values || data.values.length < 2) continue;
+
+      data.values.slice(1).forEach(function(row) {
+        const classe = String(row[0] || '').trim();
+        const matricule = String(row[1] || '').trim();
+        const nom = String(row[2] || '').trim();
+        if (!matricule || !nom || !classe) return;
+
+        const montantDu = parseFloat(row[3]) || 0;
+        const statutEleve = String(row[9] || '').trim(); // colonne STATUT_ELEVE (AFF/NAFF)
+
+        totalElevesAnalyses++;
+
+        const attendu = trouverTarifAttendu(codeEcole, classe, statutEleve);
+
+        if (!attendu) {
+          nonReconnus.push({
+            ecole: ECOLE_LABELS[codeEcole] || codeEcole,
+            classe: classe, matricule: matricule, nom: nom, montantDu: montantDu
+          });
+          return;
+        }
+
+        if (montantDu !== attendu.total) {
+          ecarts.push({
+            ecole: ECOLE_LABELS[codeEcole] || codeEcole,
+            classe: classe, matricule: matricule, nom: nom,
+            montantActuel: montantDu, montantAttendu: attendu.total,
+            source: attendu.source,
+            manquant: montantDu === 0
+          });
+        }
+      });
+    } catch (e) {
+      console.warn('Erreur analyse école ' + codeEcole + ':', e.message);
+    }
+  }
+
+  let h = '<div style="padding:10px 14px;background:#E3F2FD;border-bottom:1px solid #90CAF9;font-size:0.8em;color:var(--bleu)">'
+    + totalElevesAnalyses + ' élève(s) analysé(s) sur le réseau (base 2026-2027)</div>';
+
+  if (ecarts.length) {
+    h += '<div style="padding:10px 14px;background:#FFEBEE;border-bottom:1px solid #EF9A9A;font-size:0.82em;color:var(--rouge);font-weight:700">'
+      + '⚠️ ' + ecarts.length + ' écart(s) de montant détecté(s)</div>';
+    h += '<div class="tbl-wrap"><table><thead><tr><th>École</th><th>Classe</th><th>Matricule</th><th>Nom</th>'
+      + '<th>Montant actuel</th><th>Montant attendu</th><th>Référence grille</th></tr></thead><tbody>';
+    ecarts.forEach(function(e) {
+      const bg = e.manquant ? 'background:#FFF3E0' : '';
+      h += '<tr style="' + bg + '"><td style="font-size:0.75em">' + e.ecole + '</td><td>' + e.classe + '</td>'
+        + '<td style="font-size:0.72em;color:var(--gris)">' + e.matricule + '</td><td><strong>' + e.nom + '</strong></td>'
+        + '<td style="text-align:right;color:var(--rouge);font-weight:700">' + (e.manquant ? 'Non renseigné' : e.montantActuel.toLocaleString('fr-FR') + ' F') + '</td>'
+        + '<td style="text-align:right;color:var(--vert);font-weight:700">' + e.montantAttendu.toLocaleString('fr-FR') + ' F</td>'
+        + '<td style="font-size:0.72em;color:var(--gris)">' + e.source + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+  } else {
+    h += '<p style="padding:14px;text-align:center;color:var(--vert);font-size:0.85em;font-weight:700">✅ Aucun écart détecté sur les écoles couvertes</p>';
+  }
+
+  if (nonReconnus.length) {
+    h += '<div style="padding:10px 14px;background:#F5F5F5;border-top:1px solid var(--border);font-size:0.78em;color:var(--gris);margin-top:10px">'
+      + '&#8505; ' + nonReconnus.length + ' élève(s) avec un niveau non reconnu dans la grille (à vérifier manuellement) — '
+      + '<span style="cursor:pointer;text-decoration:underline" onclick="this.nextElementSibling.style.display=\'block\';this.style.display=\'none\'">Afficher</span>'
+      + '<div style="display:none;margin-top:6px">';
+    nonReconnus.slice(0, 50).forEach(function(n) {
+      h += '<div style="padding:3px 0">' + n.ecole + ' — ' + n.classe + ' — ' + n.matricule + ' — ' + n.nom + '</div>';
+    });
+    if (nonReconnus.length > 50) h += '<div style="padding:3px 0;font-style:italic">... et ' + (nonReconnus.length - 50) + ' de plus</div>';
+    h += '</div></div>';
+  }
+
+  zone.innerHTML = h;
+}
+
+
+  function peuplerSelectEcoleFond(){
   var sel=document.getElementById('fondImportEcole');
   if(!sel)return;
   sel.innerHTML='<option value="">-- Selectionner l\'ecole --</option>';
