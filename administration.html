@@ -5084,7 +5084,13 @@ function _verifierRappelReception(ctx, callback) {
     var precision = document.getElementById('recepMotifAutre').value.trim();
     if (precision) motif = 'Autre : ' + precision;
   }
-  var errDiv = document.getElementById('recepErrMsg');
+var rdvIso = document.getElementById('recepRdvDate').value;
+var rdvAffiche = '';
+if (rdvIso) {
+  var pDate = rdvIso.split('-');
+  rdvAffiche = pDate[2] + '/' + pDate[1] + '/' + pDate[0];
+}
+    var errDiv = document.getElementById('recepErrMsg');
 
   if (!parent || !contact || !eleve || !motif) {
     errDiv.textContent = '⚠️ Nom du parent, contact, élève et motif sont obligatoires.';
