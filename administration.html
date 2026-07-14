@@ -957,8 +957,8 @@ table tr:nth-child(even){background:#F8FAFD}
      INSTRUCTIONS D'INSTALLATION :
      1. Ouvrir administration.html dans l'éditeur GitHub
      2. Chercher (Ctrl+F) : Princes Smart School &middot; Espace Comptable
-     3. Cette recherche doit te montrer une ligne comme :
-          <div class="footer">Princes Smart School &middot; Espace Comptable &middot; 2026-2027</div>
+     3. Cette recherche doit te montrer une ligne comme :  
+  <div class="footer">Princes Smart School &middot; Espace Comptable &middot; 2026-2027</div>
         C'est la ligne du FOOTER de l'espace Comptable, juste avant le
         </div> qui ferme la balise <div id="espaceCom" ...>
      4. Clique tout au DÉBUT de la ligne du footer (avant "<div class="footer">")
@@ -1057,8 +1057,18 @@ table tr:nth-child(even){background:#F8FAFD}
         <div id="importErrorCom" style="display:none;background:#FFEBEE;border-left:3px solid #C62828;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em;color:#C62828"></div>
       </div>
     </div>
+  </div> 
+  
+<div class="section">
+  <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
+    <h3>&#128100; Cahier de r&eacute;ception des parents</h3><span class="arr">&#9660;</span>
   </div>
-
+  <div class="sec-body open">
+    <div style="padding:12px 14px">
+      <button onclick="ouvrirModalReception('Com')" style="width:100%;padding:12px;background:linear-gradient(135deg,#C62828,#E57373);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.86em;cursor:pointer">&#10133; Nouvelle r&eacute;ception parent</button>
+    </div>
+  </div>
+</div>
   <div class="footer">Princes Smart School &middot; Espace Comptable &middot; 2026-2027</div>
 </div>
 
