@@ -5004,6 +5004,35 @@ async function _rechargerListeReception(ctx) {
     listeEl.innerHTML = '<p style="text-align:center;color:var(--rouge);font-size:0.8em;padding:10px">Erreur de chargement</p>';
   }
 }
+function ouvrirModalReceptionDepuisRappel() {
+  document.getElementById('modalRappelRecep').style.display = 'none';
+  ouvrirModalReception(_recepCtxActuel || 'Edu');
+}
+
+function confirmerAucuneReception() {
+  try {
+    var maintenant = new Date();
+    var cle = 'recep_' + currentStaff.ecole + '_' + maintenant.toLocaleDateString('fr-FR');
+    localStorage.setItem(cle, 'oui');
+  } catch(e) {}
+  document.getElementById('modalRappelRecep').style.display = 'none';
+  if (window._logoutCallbackApresRappel) {
+    window._logoutCallbackApresRappel();
+    window._logoutCallbackApresRappel = null;
+  }
+}
+
+function _verifierRappelReception(ctx, callback) {
+  var maintenant = new Date();
+  var dateStr = maintenant.toLocaleDateString('fr-FR');
+  var cle = 'recep_' + currentStaff.ecole + '_' + dateStr;
+  var dejaRepondu = false;
+  try { dejaRepondu = !!localStorage.getItem(cle); } catch(e) {}
+  if (dejaRepondu) { callback(); return; }
+  _recepCtxActuel = ctx;
+  document.getElementById('modalRappelRecep').style.display = 'flex';
+  window._logoutCallbackApresRappel = callback;
+}
   async function confirmerReception() {
   var parent = document.getElementById('recepParent').value.trim();
   var contact = document.getElementById('recepContact').value.trim();
