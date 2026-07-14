@@ -358,7 +358,15 @@ table tr:nth-child(even){background:#F8FAFD}
       </div>
     </div>
   </div>
-<div class="section" id="dirSecAppel">
+<div class="section" id="dirSecRecepParents">
+  <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
+    <h3>&#128100; Cahier de r&eacute;ception des parents <span id="dirRecepCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body open" id="dirRecepListe">
+    <p style="text-align:center;color:var(--gris);font-size:0.82em;padding:14px">Chargement...</p>
+  </div>
+</div>
+  <div class="section" id="dirSecAppel">
     <div class="sec-head sec-vert" onclick="toggleSec(this)">
       <h3>&#128203; Appels enseignants &mdash; Aujourd'hui <span id="dirAppelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
     </div>
