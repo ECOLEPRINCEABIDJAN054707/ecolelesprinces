@@ -1061,11 +1061,14 @@ table tr:nth-child(even){background:#F8FAFD}
   
 <div class="section">
   <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
-    <h3>&#128100; Cahier de r&eacute;ception des parents</h3><span class="arr">&#9660;</span>
+    <h3>&#128100; Cahier de r&eacute;ception des parents <span id="comRecepCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
   </div>
   <div class="sec-body open">
     <div style="padding:12px 14px">
       <button onclick="ouvrirModalReception('Com')" style="width:100%;padding:12px;background:linear-gradient(135deg,#C62828,#E57373);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.86em;cursor:pointer">&#10133; Nouvelle r&eacute;ception parent</button>
+    </div>
+    <div id="comRecepListe" style="padding:0 14px 12px">
+      <p style="text-align:center;color:var(--gris);font-size:0.8em;padding:10px">Chargement...</p>
     </div>
   </div>
 </div>
@@ -1471,15 +1474,19 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 
- <div class="section">
+<div class="section">
   <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
-    <h3>&#128100; Cahier de r&eacute;ception des parents</h3><span class="arr">&#9660;</span>
+    <h3>&#128100; Cahier de r&eacute;ception des parents <span id="eduRecepCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
   </div>
   <div class="sec-body open">
     <div style="padding:12px 14px">
       <button onclick="ouvrirModalReception('Edu')" style="width:100%;padding:12px;background:linear-gradient(135deg,#C62828,#E57373);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.86em;cursor:pointer">&#10133; Nouvelle r&eacute;ception parent</button>
     </div>
+    <div id="eduRecepListe" style="padding:0 14px 12px">
+      <p style="text-align:center;color:var(--gris);font-size:0.8em;padding:10px">Chargement...</p>
+    </div>
   </div>
+</div>
 </div>
   <div class="footer">Princes Smart School &middot; Espace Educateur &middot; 2026-2027</div>
 </div>
