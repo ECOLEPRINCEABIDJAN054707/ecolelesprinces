@@ -1849,6 +1849,7 @@ function afficherDir(s){
   document.getElementById('dirAlertesBody').innerHTML=ha;
   const dsa=document.getElementById('dStatAlert');if(dsa)dsa.textContent=alertes.length;
   chargerSuiviPedagogique();setTimeout(initSaisiePedago,500);setTimeout(function(){chargerAppelsDir(s.ecole);},600);
+ setTimeout(function(){chargerRecepParentsDir(s.ecole);},700);
   let hag='';AGENDA_DEMO.forEach(a=>{hag+='<div class="agenda-item"><div class="agenda-date" style="background:'+a.col+'"><div class="jour">'+a.jour+'</div><div class="mois">'+a.mois+'</div></div><div><div class="agenda-titre">'+a.titre+'</div><div class="agenda-detail">'+a.detail+'</div></div></div>';});
   document.getElementById('dirAgendaBody').innerHTML=hag;
   if(!isPRIM)chargerPointage();
