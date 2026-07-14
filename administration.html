@@ -4966,8 +4966,31 @@ async function confirmerReception() {
   }
   errDiv.style.display = 'none';
 
-  showToast('Test : toutes les données sont valides ✅', 'success');
-  console.log('Données prêtes à envoyer :', {parent, contact, matricule, eleve, classe, motif});
+var maintenant = new Date();
+  var payload = {
+    action: 'ENREGISTRER_RECEPTION_PARENT',
+    ecole: currentStaff.ecole,
+    recuPar: currentStaff.nom,
+    role: currentStaff.profil === 'EDU' ? 'Educateur' : 'Comptable',
+    date: maintenant.toLocaleDateString('fr-FR'),
+    heure: maintenant.toTimeString().slice(0,5),
+    parent: parent, contact: contact, matricule: matricule,
+    eleve: eleve, classe: classe, motif: motif
+  };
+
+  try {
+    await fetch(APPS_SCRIPT_POINTAGE, {
+      method: 'POST',
+      headers: {'Content-Type':'text/plain'},
+      body: JSON.stringify(payload)
+    });
+    document.getElementById('modalReception').style.display = 'none';
+    showToast('✅ Réception enregistrée', 'success');
+  } catch(e) {
+    errDiv.textContent = '❌ Erreur réseau, réessayez.';
+    errDiv.style.display = 'block';
+  }
+}
 }
   async function rechercherEleveReception() {
   var mat = document.getElementById('recepMatricule').value.trim().toUpperCase();
