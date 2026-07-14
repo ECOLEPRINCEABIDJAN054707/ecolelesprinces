@@ -2493,6 +2493,7 @@ function afficherCom(s){
   chargerResultatsEtMessages(s.ecole,'COM');
   let h4='';TACHES_DEMO.forEach((t,i)=>{const ps={haute:'prio-h',normale:'prio-n',basse:'prio-b'};const pl={haute:'Urgent',normale:'Normal',basse:'Faible'};h4+='<div class="tache"><div class="tache-check '+(t.done?'done':'')+'" onclick="toggleTache('+i+',this)">'+(t.done?'✓':'')+'</div><div class="tache-titre '+(t.done?'done':'')+'">'+t.titre+'<br><small style="color:var(--gris)">'+t.heure+'</small></div><span class="prio '+ps[t.prio]+'">'+pl[t.prio]+'</span></div>';});
   document.getElementById('comTachesBody').innerHTML=h4;
+setTimeout(function(){ _rechargerListeReception('Com'); }, 700);
   document.getElementById('espaceCom').style.display='block';
 }
 function toggleTache(idx,el){TACHES_DEMO[idx].done=!TACHES_DEMO[idx].done;el.classList.toggle('done');el.textContent=TACHES_DEMO[idx].done?'✓':'';el.nextElementSibling.classList.toggle('done');document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;showToast(TACHES_DEMO[idx].done?'Accomplie !':'Remise en cours',TACHES_DEMO[idx].done?'success':'');}
@@ -2511,6 +2512,7 @@ function afficherEdu(s){
   setTimeout(() => chargerEDT(), 500);
   setTimeout(() => chargerProgrammeTrimestrielEdu(s), 600);
   setTimeout(() => chargerPointageEdu('jour'), 800);
+ setTimeout(function(){ _rechargerListeReception('Edu'); }, 700);
   document.getElementById('espaceEdu').style.display='block';
 }
 async function chargerClassesEdu(s){
