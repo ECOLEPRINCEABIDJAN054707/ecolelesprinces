@@ -1524,6 +1524,17 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div> 
+ <div class="modal" id="modalRappelRecep">
+  <div class="modal-card" style="max-width:420px;text-align:center">
+    <div style="font-size:36px;margin-bottom:8px">&#128100;</div>
+    <h3>V&eacute;rification obligatoire</h3>
+    <p style="font-size:0.84em;color:#555;margin:10px 0">Avez-vous re&ccedil;u des parents aujourd'hui qui ne sont pas encore enregistr&eacute;s dans le cahier de r&eacute;ception ?</p>
+    <div class="modal-btns">
+      <button onclick="ouvrirModalReceptionDepuisRappel()" style="background:var(--orange);color:#fff">Oui, ajouter maintenant</button>
+      <button onclick="confirmerAucuneReception()" style="background:var(--vert);color:#fff">Non, aucun parent re&ccedil;u</button>
+    </div>
+  </div>
+</div>
   <div class="modal" id="modalAttente">
   <div class="modal-card">
     <h3>Cours en attente de validation</h3>
