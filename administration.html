@@ -5107,8 +5107,8 @@ var maintenant = new Date();
     role: currentStaff.profil === 'EDU' ? 'Educateur' : 'Comptable',
     date: maintenant.toLocaleDateString('fr-FR'),
     heure: maintenant.toTimeString().slice(0,5),
-    parent: parent, contact: contact, matricule: matricule,
-    eleve: eleve, classe: classe, motif: motif
+parent: parent, contact: contact, matricule: matricule,
+eleve: eleve, classe: classe, motif: motif, rdvDate: rdvAffiche
   };
 
   try {
