@@ -1498,16 +1498,17 @@ table tr:nth-child(even){background:#F8FAFD}
 <div class="inp-grp"><label>Nom de l'&eacute;l&egrave;ve *</label><input type="text" id="recepEleve" placeholder="Nom et pr&eacute;noms de l'&eacute;l&egrave;ve"></div>
     <div class="inp-grp"><label>Classe</label><input type="text" id="recepClasse" placeholder="Ex: 5EME 3"></div>
     <div class="inp-grp"><label>Motif *</label>
-      <select id="recepMotif">
-        <option value="">-- S&eacute;lectionner --</option>
-        <option>Paiement / Scolarit&eacute;</option>
-        <option>R&eacute;clamation</option>
-        <option>Discipline</option>
-        <option>Information p&eacute;dagogique</option>
-        <option>Retrait de l'&eacute;l&egrave;ve</option>
-        <option>Certificat / Document</option>
-        <option>Autre</option>
-      </select>
+<select id="recepMotif" onchange="document.getElementById('recepMotifAutre').style.display = this.value==='Autre' ? 'block' : 'none'">
+  <option value="">-- S&eacute;lectionner --</option>
+  <option>Paiement / Scolarit&eacute;</option>
+  <option>R&eacute;clamation</option>
+  <option>Discipline</option>
+  <option>Information p&eacute;dagogique</option>
+  <option>Retrait de l'&eacute;l&egrave;ve</option>
+  <option>Certificat / Document</option>
+  <option>Autre</option>
+</select>
+<input type="text" id="recepMotifAutre" placeholder="Pr&eacute;cisez le motif..." style="display:none;margin-top:8px;width:100%;padding:11px 13px;border:1.5px solid var(--border);border-radius:10px;font-size:0.95em">
     </div>
     <p class="err-msg" id="recepErrMsg"></p>
     <div class="modal-btns">
