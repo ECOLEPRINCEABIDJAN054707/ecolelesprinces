@@ -1461,11 +1461,46 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 
+ <div class="section">
+  <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
+    <h3>&#128100; Cahier de r&eacute;ception des parents</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body open">
+    <div style="padding:12px 14px">
+      <button onclick="ouvrirModalReception('Edu')" style="width:100%;padding:12px;background:linear-gradient(135deg,#C62828,#E57373);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:0.86em;cursor:pointer">&#10133; Nouvelle r&eacute;ception parent</button>
+    </div>
+  </div>
+</div>
   <div class="footer">Princes Smart School &middot; Espace Educateur &middot; 2026-2027</div>
 </div>
 
 <!-- MODALS -->
-<div class="modal" id="modalAttente">
+<div class="modal" id="modalReception">
+  <div class="modal-card" style="max-width:480px">
+    <h3>&#128100; R&eacute;ception d'un parent</h3>
+    <div class="inp-grp"><label>Nom du parent *</label><input type="text" id="recepParent" placeholder="Ex: KOUASSI Marie"></div>
+    <div class="inp-grp"><label>Nom de l'&eacute;l&egrave;ve *</label><input type="text" id="recepEleve" placeholder="Nom et pr&eacute;noms de l'&eacute;l&egrave;ve"></div>
+    <div class="inp-grp"><label>Classe</label><input type="text" id="recepClasse" placeholder="Ex: 5EME 3"></div>
+    <div class="inp-grp"><label>Motif *</label>
+      <select id="recepMotif">
+        <option value="">-- S&eacute;lectionner --</option>
+        <option>Paiement / Scolarit&eacute;</option>
+        <option>R&eacute;clamation</option>
+        <option>Discipline</option>
+        <option>Information p&eacute;dagogique</option>
+        <option>Retrait de l'&eacute;l&egrave;ve</option>
+        <option>Certificat / Document</option>
+        <option>Autre</option>
+      </select>
+    </div>
+    <p class="err-msg" id="recepErrMsg"></p>
+    <div class="modal-btns">
+      <button onclick="document.getElementById('modalReception').style.display='none'; alert('Formulaire OK — étape 2 à venir')" style="background:var(--vert);color:#fff">Enregistrer</button>
+      <button onclick="document.getElementById('modalReception').style.display='none'" style="background:#E0E4EF">Annuler</button>
+    </div>
+  </div>
+</div> 
+  <div class="modal" id="modalAttente">
   <div class="modal-card">
     <h3>Cours en attente de validation</h3>
     <div id="modalAttenteInfo"></div>
@@ -4906,6 +4941,9 @@ function peuplerMatieresProgramme() {
   selM.innerHTML = mats.map(function(m) { return '<option value="' + m + '">' + m + '</option>'; }).join('');
 }
 
+ function ouvrirModalReception(ctx) {
+  document.getElementById('modalReception').style.display = 'flex';
+}
   function setMoteurDir(m,el){
   _moteurDir=m;
   document.querySelectorAll('.moteur-btn').forEach(function(b){
