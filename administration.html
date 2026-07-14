@@ -4950,7 +4950,26 @@ function peuplerMatieresProgramme() {
  function ouvrirModalReception(ctx) {
   document.getElementById('modalReception').style.display = 'flex';
 } 
-async function rechercherEleveReception() {
+async function confirmerReception() {
+  var parent = document.getElementById('recepParent').value.trim();
+  var contact = document.getElementById('recepContact').value.trim();
+  var matricule = document.getElementById('recepMatricule').value.trim().toUpperCase();
+  var eleve = document.getElementById('recepEleve').value.trim();
+  var classe = document.getElementById('recepClasse').value.trim();
+  var motif = document.getElementById('recepMotif').value;
+  var errDiv = document.getElementById('recepErrMsg');
+
+  if (!parent || !contact || !eleve || !motif) {
+    errDiv.textContent = '⚠️ Nom du parent, contact, élève et motif sont obligatoires.';
+    errDiv.style.display = 'block';
+    return;
+  }
+  errDiv.style.display = 'none';
+
+  showToast('Test : toutes les données sont valides ✅', 'success');
+  console.log('Données prêtes à envoyer :', {parent, contact, matricule, eleve, classe, motif});
+}
+  async function rechercherEleveReception() {
   var mat = document.getElementById('recepMatricule').value.trim().toUpperCase();
   var statutDiv = document.getElementById('recepStatutRecherche');
   if (!mat) { statutDiv.textContent = ''; return; }
