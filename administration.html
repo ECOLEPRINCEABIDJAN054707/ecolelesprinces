@@ -4968,7 +4968,30 @@ function peuplerMatieresProgramme() {
  function ouvrirModalReception(ctx) {
   document.getElementById('modalReception').style.display = 'flex';
 } 
-async function confirmerReception() {
+async function _rechargerListeReception(ctx) {
+  var listeEl = document.getElementById((ctx==='Edu'?'edu':'com') + 'RecepListe');
+  var countEl = document.getElementById((ctx==='Edu'?'edu':'com') + 'RecepCount');
+  if (!listeEl || !currentStaff) return;
+  try {
+    var url = APPS_SCRIPT_POINTAGE + '?type=GET_RECEPTIONS_JOUR&ecole=' + encodeURIComponent(currentStaff.ecole);
+    var r = await fetch(url);
+    var data = await r.json();
+    var liste = (data && data.receptions) || [];
+    if (countEl) countEl.textContent = '(' + liste.length + ' aujourd\'hui)';
+    if (!liste.length) {
+      listeEl.innerHTML = '<p style="text-align:center;color:var(--gris);font-size:0.8em;padding:10px">Aucune réception enregistrée aujourd\'hui</p>';
+      return;
+    }
+    listeEl.innerHTML = liste.map(function(r) {
+      return '<div style="padding:8px 10px;border-bottom:1px solid #f0f4f8;font-size:0.8em">'
+        + '<b>' + r.parent + '</b> — ' + r.eleve + (r.classe ? ' (' + r.classe + ')' : '')
+        + '<br><span style="color:var(--gris)">' + r.heure + ' · ' + r.motif + ' · reçu par ' + r.recuPar + '</span></div>';
+    }).join('');
+  } catch(e) {
+    listeEl.innerHTML = '<p style="text-align:center;color:var(--rouge);font-size:0.8em;padding:10px">Erreur de chargement</p>';
+  }
+}
+  async function confirmerReception() {
   var parent = document.getElementById('recepParent').value.trim();
   var contact = document.getElementById('recepContact').value.trim();
   var matricule = document.getElementById('recepMatricule').value.trim().toUpperCase();
