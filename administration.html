@@ -4950,31 +4950,29 @@ function peuplerMatieresProgramme() {
  function ouvrirModalReception(ctx) {
   document.getElementById('modalReception').style.display = 'flex';
 } 
-  async function rechercherEleveReception() {
+async function rechercherEleveReception() {
   var mat = document.getElementById('recepMatricule').value.trim().toUpperCase();
   var statutDiv = document.getElementById('recepStatutRecherche');
   if (!mat) { statutDiv.textContent = ''; return; }
   statutDiv.style.color = 'var(--gris)';
   statutDiv.textContent = '🔍 Recherche...';
   try {
-    var sheetsId = SHEETS_IDS[currentStaff.ecole];
-    var url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    var r = await fetch(url);
-    var data = await r.json();
-    var trouve = null;
-    if (data.values) {
-      for (var i = 1; i < data.values.length; i++) {
-        if (String(data.values[i][1]||'').trim().toUpperCase() === mat) {
-          trouve = { nom: data.values[i][2]||'', classe: data.values[i][0]||'' };
-          break;
-        }
-      }
+    var ecole = currentStaff.ecole;
+    var idActuel = SHEETS_IDS[ecole];
+    var idNouveau = SHEETS_IDS_2026_2027[ecole];
+
+    var trouve = await _chercherMatriculeDansBase(idNouveau, mat);
+    var anneeTrouvee = '2026-2027';
+    if (!trouve && idActuel !== idNouveau) {
+      trouve = await _chercherMatriculeDansBase(idActuel, mat);
+      anneeTrouvee = '2025-2026';
     }
+
     if (trouve) {
       document.getElementById('recepEleve').value = trouve.nom;
-      document.getElementById('recepClasse').value = trouve.classe;
+      document.getElementById('recepClasse').value = trouve.classe + ' (' + anneeTrouvee + ')';
       statutDiv.style.color = 'var(--vert)';
-      statutDiv.textContent = '✅ Élève trouvé — nom et classe remplis automatiquement';
+      statutDiv.textContent = '✅ Élève trouvé — ' + anneeTrouvee;
     } else {
       statutDiv.style.color = 'var(--orange)';
       statutDiv.textContent = '⚠️ Élève non trouvé — entrez le nom manuellement (nouvel élève ou matricule à vérifier)';
@@ -4983,6 +4981,23 @@ function peuplerMatieresProgramme() {
     statutDiv.style.color = 'var(--gris)';
     statutDiv.textContent = '';
   }
+}
+
+async function _chercherMatriculeDansBase(sheetsId, mat) {
+  if (!sheetsId) return null;
+  try {
+    var url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    var r = await fetch(url);
+    var data = await r.json();
+    if (data.values) {
+      for (var i = 1; i < data.values.length; i++) {
+        if (String(data.values[i][1]||'').trim().toUpperCase() === mat) {
+          return { nom: data.values[i][2]||'', classe: data.values[i][0]||'' };
+        }
+      }
+    }
+  } catch(e) {}
+  return null;
 } 
   
   function setMoteurDir(m,el){
