@@ -4967,7 +4967,11 @@ async function confirmerReception() {
   var matricule = document.getElementById('recepMatricule').value.trim().toUpperCase();
   var eleve = document.getElementById('recepEleve').value.trim();
   var classe = document.getElementById('recepClasse').value.trim();
-  var motif = document.getElementById('recepMotif').value;
+ var motif = document.getElementById('recepMotif').value;
+  if (motif === 'Autre') {
+    var precision = document.getElementById('recepMotifAutre').value.trim();
+    if (precision) motif = 'Autre : ' + precision;
+  }
   var errDiv = document.getElementById('recepErrMsg');
 
   if (!parent || !contact || !eleve || !motif) {
