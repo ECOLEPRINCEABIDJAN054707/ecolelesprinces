@@ -701,6 +701,123 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 
+<!-- ============================================================
+     AJOUT — Section "Ajouter un enseignant/personnel", ESPACE DIRECTEUR
+     ============================================================
+     INSTRUCTIONS D'INSTALLATION :
+     1. Ouvrir administration.html dans l'éditeur GitHub
+     2. Chercher (Ctrl+F) : Réseau CPP Les Princes d'Abidjan &middot; Espace Direction
+     3. Cliquer tout au DÉBUT de cette ligne (avant "<div class="footer">")
+     4. Coller TOUT le bloc ci-dessous à cet endroit précis
+     5. Commit changes
+     ============================================================ -->
+<div class="section" id="dirSecAjoutPersonnel">
+  <div class="sec-head sec-violet" onclick="toggleSec(this)">
+    <h3>➕ Ajouter un enseignant / personnel</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:10px 14px 6px;background:#F3E5F5;border-bottom:1px solid #CE93D8">
+      <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">Ajoute automatiquement la personne dans ENSEIGNANTS (pointage/salaires actuel) et dans PERSONNEL_SALAIRES (2026-2027)</span>
+    </div>
+    <div style="padding:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">NOM ET PRÉNOMS *</label>
+          <input type="text" id="apNom" placeholder="Ex: KOUASSI JEAN" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">POSTE / FONCTION *</label>
+          <input type="text" id="apPoste" placeholder="Ex: Enseignant Mathématiques" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">TYPE *</label>
+          <select id="apType" onchange="document.getElementById('apSalaireWrap').style.display=this.value==='PERMANENT'?'block':'none'" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em">
+            <option value="VACATAIRE">Vacataire</option>
+            <option value="PERMANENT">Permanent</option>
+          </select>
+        </div>
+        <div id="apSalaireWrap" style="display:none">
+          <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">SALAIRE DE BASE (F CFA)</label>
+          <input type="number" id="apSalaire" placeholder="Ex: 100000" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">CATÉGORIE</label>
+          <input type="number" id="apCategorie" value="6" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">NATIONALITÉ</label>
+          <input type="text" id="apNationalite" value="Ivoirienne" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">N° CNPS (si connu)</label>
+          <input type="text" id="apCnps" placeholder="Optionnel" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">DATE D'EMBAUCHE (si connue)</label>
+          <input type="date" id="apEmbauche" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.72em;font-weight:700;color:var(--gris);display:block;margin-bottom:4px">TÉLÉPHONE (optionnel)</label>
+          <input type="tel" id="apTel" placeholder="0701234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box">
+        </div>
+      </div>
+      <button onclick="ajouterPersonnelDir()" style="width:100%;padding:11px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.85em;cursor:pointer">✓ Ajouter cette personne</button>
+      <div id="apMessage" style="display:none;margin-top:10px;padding:10px;border-radius:6px;font-size:0.82em"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function ajouterPersonnelDir() {
+  const nom = document.getElementById('apNom').value.trim();
+  const poste = document.getElementById('apPoste').value.trim();
+  const type = document.getElementById('apType').value;
+  const salaireFixe = document.getElementById('apSalaire').value || 0;
+  const categorie = document.getElementById('apCategorie').value || 6;
+  const nationalite = document.getElementById('apNationalite').value.trim() || 'Ivoirienne';
+  const cnps = document.getElementById('apCnps').value.trim();
+  const embaucheIso = document.getElementById('apEmbauche').value; // aaaa-mm-jj
+  let embauche = '';
+  if (embaucheIso) {
+    const p = embaucheIso.split('-');
+    embauche = p[2] + '/' + p[1] + '/' + p[0]; // jj/mm/aaaa
+  }
+  const tel = document.getElementById('apTel').value.trim();
+  const msgDiv = document.getElementById('apMessage');
+
+  if (!nom || !poste) {
+    msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
+    msgDiv.textContent = '⚠️ Nom et poste sont obligatoires';
+    return;
+  }
+
+  msgDiv.style.cssText = 'display:block;background:#E3F2FD;color:var(--bleu);border:1px solid #90CAF9;padding:10px;border-radius:6px';
+  msgDiv.textContent = '⏳ Ajout en cours...';
+
+  const cbName = 'ap_' + Date.now();
+  const params = new URLSearchParams({
+    callback: cbName, action: 'ajouterPersonnel', ecole: currentStaff.ecole,
+    nom, poste, type, salaireFixe, categorie, nationalite, cnps, embauche, tel
+  });
+  const script = document.createElement('script');
+  window[cbName] = result => {
+    delete window[cbName]; try { document.body.removeChild(script); } catch (e) {}
+    if (result && result.succes) {
+      msgDiv.style.cssText = 'display:block;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;padding:10px;border-radius:6px';
+      msgDiv.textContent = '✅ ' + result.message;
+      ['apNom','apPoste','apSalaire','apCnps','apEmbauche','apTel'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    } else {
+      msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
+      msgDiv.textContent = '❌ ' + (result && result.message ? result.message : 'Erreur inconnue');
+    }
+  };
+  script.onerror = () => { delete window[cbName]; msgDiv.textContent = '❌ Erreur réseau.'; };
+  setTimeout(() => { if (window[cbName]) { delete window[cbName]; msgDiv.textContent = '❌ Délai dépassé.'; } }, 15000);
+  script.src = APPS_SCRIPT_URL_ADMIN + '?' + params.toString();
+  document.body.appendChild(script);
+}
+</script>
+
   <div class="footer">R&eacute;seau CPP Les Princes d'Abidjan &middot; Espace Direction &middot; 2026-2027</div>
 </div>
 
