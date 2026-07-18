@@ -813,7 +813,7 @@ async function ajouterPersonnelDir() {
   };
   script.onerror = () => { delete window[cbName]; msgDiv.textContent = '❌ Erreur réseau.'; };
   setTimeout(() => { if (window[cbName]) { delete window[cbName]; msgDiv.textContent = '❌ Délai dépassé.'; } }, 15000);
-  script.src = APPS_SCRIPT_URL_ADMIN + '?' + params.toString();
+  script.src = APP_SCRIPT_URL_ADMIN + '?' + params.toString();
   document.body.appendChild(script);
 }
 </script>
