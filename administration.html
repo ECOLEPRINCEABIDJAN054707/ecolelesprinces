@@ -1080,6 +1080,231 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div>
+<!-- ============================================================
+     AJOUT — Section "Matricules Primaire" pour ESPACE COMPTABLE
+     ============================================================
+     INSTRUCTIONS D'INSTALLATION :
+     1. Ouvrir administration.html dans l'éditeur GitHub
+     2. Chercher (Ctrl+F) : <div class="footer">Princes Smart School &middot; Espace Comptable
+     3. Cliquer tout au DÉBUT de cette ligne (avant "<div class="footer">")
+     4. Coller TOUT le bloc HTML ci-dessous à cet endroit précis
+        (il s'insère juste avant le footer, sans rien supprimer)
+     5. Commit changes
+     ============================================================ -->
+<div class="section" id="comSecMatricules" style="display:none">
+  <div class="sec-head sec-emeraude" onclick="toggleSec(this)">
+    <h3>🎫 Matricules Primaire 2026-2027 <span id="comMatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)">
+      <div style="background:#E8F5E9;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:1.4em;font-weight:700;color:#2E7D32" id="comMatStatDispo">—</div>
+        <div style="font-size:0.62em;color:#2E7D32;font-weight:600">Disponibles</div>
+      </div>
+      <div style="background:#FFF9C4;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:1.4em;font-weight:700;color:#E65100" id="comMatStatAttrib">—</div>
+        <div style="font-size:0.62em;color:#E65100;font-weight:600">Attribués</div>
+      </div>
+      <div style="background:#E3F2FD;border-radius:8px;padding:10px;text-align:center">
+        <div style="font-size:1.4em;font-weight:700;color:var(--bleu)" id="comMatStatTotal">—</div>
+        <div style="font-size:0.62em;color:var(--bleu);font-weight:600">Total</div>
+      </div>
+    </div>
+    <div style="padding:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:0.78em;font-weight:700;color:var(--bleu);margin-bottom:10px">➕ Attribuer un matricule à un nouvel élève</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">MATRICULE *</label>
+          <select id="comMatSelect" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none">
+            <option value="">-- Chargement... --</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">CLASSE *</label>
+          <select id="comMatClasse" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none">
+            <option value="">-- Choisir --</option>
+            <option>PSA</option><option>MSA</option><option>GSA</option><option>CP1</option><option>CP2</option>
+            <option>CE1</option><option>CE2</option>
+            <option>CM1</option><option>CM2</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">NOM *</label>
+          <input type="text" id="comMatNom" placeholder="NOM DE FAMILLE" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">PRÉNOM *</label>
+          <input type="text" id="comMatPrenom" placeholder="Prénom(s)" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">DATE NAISSANCE *</label>
+          <input type="date" id="comMatDDN" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:#C62828;display:block;margin-bottom:3px">📱 TEL PÈRE *</label>
+          <input type="tel" id="comMatTelPere" placeholder="0701234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:#C62828;display:block;margin-bottom:3px">📱 TEL MÈRE *</label>
+          <input type="tel" id="comMatTelMere" placeholder="0507654321" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:2px solid #C62828;border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="font-size:0.7em;font-weight:700;color:var(--gris);display:block;margin-bottom:3px">📱 TEL TUTEUR (optionnel)</label>
+          <input type="tel" id="comMatTelTuteur" placeholder="0101234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,'')" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box">
+        </div>
+      </div>
+      <button onclick="attribuerMatriculeCom()" style="width:100%;padding:10px;background:#00897B;color:#fff;border:none;border-radius:8px;font-size:0.84em;font-weight:700;cursor:pointer">✓ Attribuer ce matricule</button>
+      <div id="comMatMessage" style="display:none;margin-top:10px;padding:10px;border-radius:6px;font-size:0.82em"></div>
+    </div>
+    <div style="padding:12px 14px">
+      <div style="font-size:0.78em;font-weight:700;color:var(--bleu);margin-bottom:8px">📋 Matricules déjà attribués</div>
+      <input type="text" id="comMatSearch" oninput="filtrerTableauMatriculesCom()" placeholder="Rechercher un nom, prénom ou matricule..." style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;outline:none;box-sizing:border-box;margin-bottom:10px">
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Matricule</th><th>Nom &amp; Prénom</th><th>Classe</th><th>DDN</th><th>Attribué le</th></tr></thead>
+          <tbody id="comMatTbody"><tr><td colspan="5" style="text-align:center;padding:16px;color:var(--gris)">Chargement...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// AJOUT JS — Matricules Primaire, ESPACE COMPTABLE
+// Reprend la meme logique que chargerMatriculesPrimaire (Directeur),
+// meme backend (SHEETS_IDS_PRIMAIRE, action attribuerMatricule)
+// ============================================================
+let _comMatCache = [];
+
+function _getSheetIdPrimaireCom() {
+  if (!currentStaff) return null;
+  return SHEETS_IDS_PRIMAIRE[currentStaff.ecole] || null;
+}
+
+async function chargerMatriculesPrimaireCom() {
+  const sheetId = _getSheetIdPrimaireCom();
+  if (!sheetId) return;
+  const sec = document.getElementById('comSecMatricules');
+  if (sec) sec.style.display = 'block';
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/MATRICULES_RESERVE!A4:G1000?key=${API_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const rows = (data.values || []).filter(r => r[0]);
+    _comMatCache = rows;
+    let dispo = 0, attrib = 0;
+    rows.forEach(r => { if (r[1] === 'ATTRIBUE') attrib++; else dispo++; });
+    document.getElementById('comMatStatDispo').textContent = dispo;
+    document.getElementById('comMatStatAttrib').textContent = attrib;
+    document.getElementById('comMatStatTotal').textContent = rows.length;
+    const count = document.getElementById('comMatCount');
+    if (count) count.textContent = '(' + dispo + ' dispo · ' + attrib + ' attribués)';
+    const sel = document.getElementById('comMatSelect');
+    sel.innerHTML = '<option value="">-- Choisir un matricule --</option>';
+    rows.filter(r => r[1] === 'DISPONIBLE').forEach(r => {
+      sel.innerHTML += `<option value="${r[0]}">${r[0]}</option>`;
+    });
+    _afficherTableauMatriculesCom(rows.filter(r => r[1] === 'ATTRIBUE'));
+  } catch (e) {
+    showToast('Erreur chargement matricules', 'error');
+  }
+}
+
+function _afficherTableauMatriculesCom(rows) {
+  const tbody = document.getElementById('comMatTbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:16px;color:var(--gris)">Aucun matricule attribué pour l\'instant</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
+    <tr>
+      <td style="font-weight:700;color:#00897B">${r[0]||''}</td>
+      <td>${(r[2]||'').toUpperCase()} ${r[3]||''}</td>
+      <td style="text-align:center">${r[4]||''}</td>
+      <td style="text-align:center">${r[5]||''}</td>
+      <td style="text-align:center;color:var(--gris)">${r[6]||''}</td>
+    </tr>`).join('');
+}
+
+function filtrerTableauMatriculesCom() {
+  const q = document.getElementById('comMatSearch').value.toLowerCase();
+  const filtered = _comMatCache.filter(r =>
+    r[1] === 'ATTRIBUE' && (
+      (r[0]||'').toLowerCase().includes(q) ||
+      (r[2]||'').toLowerCase().includes(q) ||
+      (r[3]||'').toLowerCase().includes(q)
+    )
+  );
+  _afficherTableauMatriculesCom(filtered);
+}
+
+async function attribuerMatriculeCom() {
+  const matricule = document.getElementById('comMatSelect').value;
+  const nom       = document.getElementById('comMatNom').value.trim();
+  const prenom    = document.getElementById('comMatPrenom').value.trim();
+  const classe    = document.getElementById('comMatClasse').value;
+  const ddn       = document.getElementById('comMatDDN').value;
+  const telPere   = document.getElementById('comMatTelPere').value.trim();
+  const telMere   = document.getElementById('comMatTelMere').value.trim();
+  const telTuteur = document.getElementById('comMatTelTuteur') ? document.getElementById('comMatTelTuteur').value.trim() : '';
+  const msgDiv    = document.getElementById('comMatMessage');
+
+  if (!matricule || !nom || !prenom || !classe || !ddn) {
+    msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
+    msgDiv.textContent = '⚠️ Remplissez tous les champs obligatoires (*)';
+    return;
+  }
+  if (!telPere || telPere.length < 8 || !telMere || telMere.length < 8) {
+    msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
+    msgDiv.textContent = '⚠️ Tél père ET mère obligatoires (8 chiffres minimum)';
+    return;
+  }
+  msgDiv.style.cssText = 'display:block;background:#E3F2FD;color:var(--bleu);border:1px solid #90CAF9;padding:10px;border-radius:6px';
+  msgDiv.textContent = '⏳ Attribution en cours...';
+
+  const cbName = 'mat_attr_com_' + Date.now();
+  const params = new URLSearchParams({ callback: cbName, action: 'attribuerMatricule', ecoleCode: currentStaff.ecole, matricule, nom, prenom, classe, ddn, telPere, telMere, telTuteur });
+  return new Promise(resolve => {
+    const script = document.createElement('script');
+    window[cbName] = result => {
+      delete window[cbName]; try { document.body.removeChild(script); } catch (e) {}
+      if (result.success) {
+        msgDiv.style.cssText = 'display:block;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;padding:10px;border-radius:6px';
+        msgDiv.textContent = '✅ ' + result.message;
+        document.getElementById('comMatNom').value = '';
+        document.getElementById('comMatPrenom').value = '';
+        document.getElementById('comMatDDN').value = '';
+        document.getElementById('comMatTelPere').value = '';
+        document.getElementById('comMatTelMere').value = '';
+        if (document.getElementById('comMatTelTuteur')) document.getElementById('comMatTelTuteur').value = '';
+        document.getElementById('comMatSelect').value = '';
+        document.getElementById('comMatClasse').value = '';
+        setTimeout(chargerMatriculesPrimaireCom, 1500);
+      } else {
+        msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px';
+        msgDiv.textContent = '❌ ' + result.message;
+      }
+      resolve(result);
+    };
+    script.onerror = () => { delete window[cbName]; msgDiv.textContent = '❌ Erreur réseau.'; resolve({ success: false }); };
+    setTimeout(() => { if (window[cbName]) { delete window[cbName]; msgDiv.textContent = '❌ Délai dépassé.'; resolve({ success: false }); } }, 15000);
+    script.src = APPS_SCRIPT_URL + '?' + params.toString();
+    document.body.appendChild(script);
+  });
+}
+</script>
+
+<!-- ============================================================
+     AJOUT — Declencher l'affichage pour les Comptables des ecoles
+     primaires. Dans afficherCom(s), juste avant la ligne :
+       document.getElementById('espaceCom').style.display='block';
+     ajouter cette ligne :
+       if (s.type==='PRIM' || s.type==='BOTH') setTimeout(chargerMatriculesPrimaireCom, 1200);
+     ============================================================ -->
+
   <div class="footer">Princes Smart School &middot; Espace Comptable &middot; 2026-2027</div>
 </div>
 
@@ -2515,6 +2740,7 @@ function afficherCom(s){
   let h4='';TACHES_DEMO.forEach((t,i)=>{const ps={haute:'prio-h',normale:'prio-n',basse:'prio-b'};const pl={haute:'Urgent',normale:'Normal',basse:'Faible'};h4+='<div class="tache"><div class="tache-check '+(t.done?'done':'')+'" onclick="toggleTache('+i+',this)">'+(t.done?'✓':'')+'</div><div class="tache-titre '+(t.done?'done':'')+'">'+t.titre+'<br><small style="color:var(--gris)">'+t.heure+'</small></div><span class="prio '+ps[t.prio]+'">'+pl[t.prio]+'</span></div>';});
   document.getElementById('comTachesBody').innerHTML=h4;
 setTimeout(function(){ _rechargerListeReception('Com'); }, 700);
+ if (s.type==='PRIM' || s.type==='BOTH') setTimeout(chargerMatriculesPrimaireCom, 1200);
   document.getElementById('espaceCom').style.display='block';
 }
 function toggleTache(idx,el){TACHES_DEMO[idx].done=!TACHES_DEMO[idx].done;el.classList.toggle('done');el.textContent=TACHES_DEMO[idx].done?'✓':'';el.nextElementSibling.classList.toggle('done');document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;showToast(TACHES_DEMO[idx].done?'Accomplie !':'Remise en cours',TACHES_DEMO[idx].done?'success':'');}
