@@ -796,8 +796,9 @@ async function ajouterPersonnelDir() {
 
   const cbName = 'ap_' + Date.now();
   const params = new URLSearchParams({
-    callback: cbName, action: 'ajouterPersonnel', ecole: currentStaff.ecole,
-    nom, poste, type, salaireFixe, categorie, nationalite, cnps, embauche, tel
+callback: cbName, action: 'ajouterPersonnel', ecole: currentStaff.ecole,
+sheetsId2026: SHEETS_IDS_2026_2027[currentStaff.ecole] || '',
+nom, poste, type, salaireFixe, categorie, nationalite, cnps, embauche, tel
   });
   const script = document.createElement('script');
   window[cbName] = result => {
