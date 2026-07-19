@@ -5816,7 +5816,7 @@ function validerManuelDir(){
 
 async function _inscrireNouvelEleve(data, ecoleCible, labelEcole){
   try{
-    var sheetsId=SHEETS_IDS[ecoleCible];
+    var sheetsId=SHEETS_IDS_2026_2027[ecoleCible];
     if(!sheetsId)return{succes:false,message:'Base non configuree pour cette ecole'};
     var niveau=(data.niveau_suivant||data.niveau||'').toUpperCase().trim();
     var matricule=String(data.matricule||'').trim().toUpperCase();
