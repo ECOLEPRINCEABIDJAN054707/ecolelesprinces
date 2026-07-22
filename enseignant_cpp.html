@@ -576,6 +576,22 @@ const SHEETS_IDS = {
   'CPP DABOU':            '1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA',
   'CPP ANYAMA':           '1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE'
 };
+  const SHEETS_IDS_2026_2027 = {
+  'CPP LES PRINCES':     '1e37v34kcYXh0etsPjGo7rF7SyH0i1Xpj20azcirDUEY',
+  'ACADEMIE':            '17EuXUJ4ej_brSwDhTJV1c_Ttmhxl3YkPI053YJAE9Es',
+  'GUINGLO VILLE':       '1B_ynuBLsVJbTzjtyezraayR813stEuPQm3GGtatuRD8',
+  'GNONTINROU':          '1izyFW1pksAY5tHc-Y6TqsvcH3GMb29dz6NGyctW9M1M',
+  'KOUTOUAN':            '15pnAjnfC7UKD-pxMwk8Nw4fbOZQX39KRnXSZMcNeYSc',
+  'SOAKPE':              '1Ge8j-YcvKBFBlTuqmIHv0eBMDbsLNmcTln3-xzyrdD0',
+  'AKEIKOI 1':           '1I_Htuvo3g_LuLscOhWIHI2s1MIvQcV2q_H1zvQwKk5M',
+  'AKEIKOI 2':           '1EXVB5n654SSgp8xet3k8b89jghqNa6iX4tgeZ3u_KrU',
+  'CPP PRO':             '1Ok2B0vIs5mgTsS6YrKPvuYL2gEYHfCdjf5NQjT5UbC8',
+  'CPP TECH':            '1TWZKUMINGnYMEjm1ik5Vg_Mikpfc_u47eziuiCWZHW4',
+  'ETL PRINCES KOUIBLY': '1vzAsfcwVwRCS9di9cfRRyGMuEXuio1zXStOb2d65UIE',
+  'GS RITA ROSANE':      '1DARvq_r4K3ttj5c51y1M6M4wxSTsADP7kGcq1fTPpZQ',
+  'CPP DABOU':           '1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA',
+  'CPP ANYAMA':          '1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE'
+};
 const ECOLE_CODES = {
   'cpp':'CPP LES PRINCES','academie':'ACADEMIE','guinglo':'GUINGLO VILLE',
   'gnont':'GNONTINROU','koutouan':'KOUTOUAN','soakpe':'SOAKPE',
@@ -764,7 +780,7 @@ function seConnecter() {
     if (data && data.ok) {
       user = {
         ecole: ecoleURL, nom, matiere: data.matiere || matiere,
-        code, sheetsId: SHEETS_IDS[ecoleURL], niveau,
+        code, sheetsId: SHEETS_IDS_2026_2027[ecoleURL], niveau,
         classeDefaut: classePrimaire, type: data.type || 'VACATAIRE'
       };
       localStorage.setItem('pss_ens_v3', JSON.stringify(user));
@@ -832,7 +848,7 @@ async function chargerClasses() {
   if (!user) return;
   const sels = ['modalClasse','notesClasse','moyennesClasse'];
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS[user.ecole]}?key=${API_KEY}&fields=sheets.properties.title`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS_2026_2027[user.ecole]}?key=${API_KEY}&fields=sheets.properties.title`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
@@ -1811,7 +1827,7 @@ async function soumettreNotesBulletin() {
         + '&ecole=' + encodeURIComponent(user.ecole)
         + '&classe=' + encodeURIComponent(classeEnvoi)
         + '&mois=' + encodeURIComponent(bulletinMoisActuel)
-        + '&annee=2025-2026'
+        + '&annee=2026-2027'
         + '&eleves=' + encodeURIComponent(JSON.stringify(lot));
       document.body.appendChild(script);
       setTimeout(() => { if(window[cbName]){delete window[cbName];resolve({ok:false});} }, 15000);
