@@ -1043,7 +1043,7 @@ async function afficherEspaceParent(eleve) {
   const ecole = eleve.ecole;
   const couleur = (ecole && ecole.couleur) ? ecole.couleur : "#1F4E79";
   const nomEcole = (ecole && ecole.nom) ? ecole.nom : "Reseau Les Princes";
-  const typeClasse = detecterTypeClasse(eleve.classe, eleve.ecoleCode);
+  const typeClasse = detecterTypeClasse(window._classe2026 || eleve.classe, eleve.ecoleCode);
   document.getElementById("mainHeader").style.background = "linear-gradient(135deg,#1F4E79,#1565C0)";
   document.getElementById("headerTitle").textContent = nomEcole;
   document.getElementById("headerSub").textContent = "Espace Parents - Suivi Scolaire";
