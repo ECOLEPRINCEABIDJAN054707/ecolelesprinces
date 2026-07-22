@@ -2884,7 +2884,7 @@ async function chargerClassesEdu(s){
   const container=document.getElementById('eduClassesListe');
   const classesEdu=s.classes||[];
   try{
-    const sheetsId=SHEETS_IDS[s.ecole];if(!sheetsId){container.innerHTML='<p style="padding:14px;color:var(--gris);font-size:0.82em">Ecole non configuree.</p>';return;}
+    const sheetsId=SHEETS_IDS_2026_2027[s.ecole];if(!sheetsId){container.innerHTML='<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configuree pour cette ecole.</p>';return;}
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
     const r=await fetch(url);const data=await r.json();
     let eleves=[];
@@ -2948,7 +2948,7 @@ async function ouvrirModalNotesProf(type){
   let classes=[...classesEdu];
   if(!classes.length){
     try{
-      const sheetsId=SHEETS_IDS[s.ecole];
+      const sheetsId=SHEETS_IDS_2026_2027[s.ecole];
       const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'?key='+API_KEY+'&fields=sheets.properties.title';
       const r=await fetch(url);const data=await r.json();
       if(data.sheets){const excl=['SYNTHESE','ENSEIGNANTS','ABSENCES','POINTAGE','RESULTATS','MESSAGES','CAHIER','EDUCATEURS','NOTES_T'];const isPRIM=currentStaff&&currentStaff.type==='PRIM';const regexSEC=/^(6|5|4|3|2NDE|1[EÈ]RE|TLE|2NDE|BT)/i;const regexPRIM=/^(CP|CE|CM|GS|MS|PS|TPS|SIL|CI|CP1|CP2|CE1|CE2|CM1|CM2|MATERNELLE)/i;const regex=isPRIM?regexPRIM:regexSEC;classes=data.sheets.map(sh=>sh.properties.title).filter(t=>!excl.some(ex=>t.toUpperCase().includes(ex))&&regex.test(t));}
@@ -2981,7 +2981,7 @@ async function genererListeNotesPDF(){
   let eleves=notesElevesCache[classe];
   if(!eleves){
     try{
-      const sheetsId=SHEETS_IDS[currentStaff.ecole];
+      const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
       const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
       const r=await fetch(url);const data=await r.json();
       if(data.values&&data.values.length>1){const normCl=s=>s.toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U').replace(/[ÔÖÓÒÕ]/g,'O').replace(/[ÎÏÍÌ]/g,'I'); eleves=data.values.slice(1).filter(row=>normCl(String(row[0]||'').trim())===normCl(classe)&&row[2]&&String(row[2]).trim()).map((row,i)=>({num:i+1,matricule:String(row[1]||'').trim(),nom:String(row[2]||'').trim()}));notesElevesCache[classe]=eleves;}
@@ -3412,8 +3412,8 @@ async function chargerProgrammeTrimestrielEdu(s) {
   const todayStr=today.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
   const dateEl=document.getElementById('eduAbsDate');if(dateEl)dateEl.textContent=todayStr;
   const liste=document.getElementById('eduAbsListe');if(!liste)return;
-  const sheetsId=SHEETS_IDS[ecole];
-  if(!sheetsId){liste.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">École non configurée.</p>';return;}
+ const sheetsId=SHEETS_IDS_2026_2027[ecole];
+  if(!sheetsId){liste.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Base 2026-2027 non configurée pour cette école.</p>';return;}
   const dd=String(today.getDate()).padStart(2,'0');
   const mm=String(today.getMonth()+1).padStart(2,'0');
   const yyyy=today.getFullYear();
@@ -3531,8 +3531,8 @@ async function chargerPresencesEnseignants(ecole){
   const todayStr=today.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
   const dateEl=document.getElementById('eduEnsDate');if(dateEl)dateEl.textContent=todayStr;
   const liste=document.getElementById('eduEnsListe');if(!liste)return;
-  const sheetsId=SHEETS_IDS[ecole];
-  if(!sheetsId){liste.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">École non configurée.</p>';return;}
+  const sheetsId=SHEETS_IDS_2026_2027[ecole];
+ if(!sheetsId){liste.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Base 2026-2027 non configurée pour cette école.</p>';return;}
   const dd=String(today.getDate()).padStart(2,'0');
   const mm=String(today.getMonth()+1).padStart(2,'0');
   const yyyy=today.getFullYear();
@@ -3799,8 +3799,8 @@ async function chargerNotesDevoir() {
   if(container) container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div><p style="font-size:0.82em">Chargement...</p></div>';
 
   const classesEdu = s.classes || [];
-  const sheetsId = SHEETS_IDS[s.ecole];
-  if(!sheetsId) { if(container) container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Ecole non configuree.</p>'; return; }
+  const sheetsId = SHEETS_IDS_2026_2027[s.ecole];
+  if(!sheetsId) { if(container) container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configuree pour cette ecole.</p>'; return; }
 
   let data = [];
   // Essayer plusieurs feuilles : CAHIER_TEXTES, NOTES_T, DEVOIRS, CAHIER
@@ -3967,8 +3967,8 @@ async function chargerEDT() {
   const statsDiv  = document.getElementById('eduEdtStats');
   if(container) container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div><p style="font-size:0.82em">Chargement...</p></div>';
   const classesEdu = s.classes || [];
-  const sheetsId = SHEETS_IDS[s.ecole];
-  if(!sheetsId) { if(container) container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Ecole non configuree.</p>'; return; }
+  const sheetsId = SHEETS_IDS_2026_2027[s.ecole];
+  if(!sheetsId) { if(container) container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configuree pour cette ecole.</p>'; return; }
   const today = new Date();
   const joursSemaine = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
   const jourAujourdhui = joursSemaine[today.getDay()];
