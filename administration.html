@@ -4368,7 +4368,7 @@ async function listerOnglets(sheetsId){
 
 async function ouvrirListesV9(profil){
   var ecole=currentStaff?currentStaff.ecole:null;var label=currentStaff?currentStaff.label:'';
-  if(!ecole){showToast('Non connecte','error');return;}var sheetsId=getSheetsIdPourEcole(ecole);if(!sheetsId){showToast('Ecole non configuree','error');return;}
+  if(!ecole){showToast('Non connecte','error');return;}var sheetsId=(profil==='EDU')?SHEETS_IDS_2026_2027[ecole]:getSheetsIdPourEcole(ecole);if(!sheetsId){showToast('Ecole non configuree','error');return;}
   showToast('Chargement des classes...','');
   var onglets=[];
   // Pour un éducateur, utiliser uniquement ses classes STAFF
