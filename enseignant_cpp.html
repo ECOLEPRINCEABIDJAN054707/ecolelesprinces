@@ -873,7 +873,7 @@ async function chargerClasses() {
 
       if (dataMC && dataMC.ok && dataMC.classes && dataMC.classes.length) {
         function normaliser(s) {
-          return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+        return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().replace(/\b([CD])1\b/g, '$1');
         }
         const mesClassesNorm = dataMC.classes.map(normaliser);
         classes = classes.filter(c => mesClassesNorm.includes(normaliser(c)));
