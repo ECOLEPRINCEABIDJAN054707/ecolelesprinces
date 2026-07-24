@@ -2593,14 +2593,16 @@ function fondSwitchTabConnexions(vue) {
     if(!res||!res.ok){body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur de chargement</p>';return;}
     const ecoles=res.ecoles||[];
     let h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px">';
-    ecoles.forEach(function(e){
-      h+='<div class="kpi-card"><div class="kpi-ecole">'+(ECOLE_LABELS[e.ecole]||e.ecole)+'</div>'
-        +'<div class="kpi-row"><span>Eleves</span><span>'+e.eleves+'</span></div>'
-        +'<div class="kpi-row"><span>Enseignants</span><span>'+e.enseignants+'</span></div>'
-        +'<div class="kpi-row"><span>Impayes</span><span style="color:var(--rouge)">'+e.impayes+'</span></div>'
-        +'<div class="kpi-row"><span>Recouvrement</span><span style="color:var(--vert)">'+e.taux+'%</span></div>'
-        +'</div>';
-    });
+ecoles.forEach(function(e){
+        h+='<div class="kpi-card"><div class="kpi-ecole">'+(ECOLE_LABELS[e.ecole]||e.ecole)+'</div>'
+          +'<div class="kpi-row"><span>Primaire</span><span>'+e.elevesPrimaire+'</span></div>'
+          +'<div class="kpi-row"><span>Secondaire</span><span>'+e.elevesSecondaire+'</span></div>'
+          +'<div class="kpi-row"><span>Total élèves</span><span style="font-weight:700">'+e.eleves+'</span></div>'
+          +'<div class="kpi-row"><span>Enseignants</span><span>'+e.enseignants+'</span></div>'
+          +'<div class="kpi-row"><span>Impayes</span><span style="color:var(--rouge)">'+e.impayes+'</span></div>'
+          +'<div class="kpi-row"><span>Recouvrement</span><span style="color:var(--vert)">'+e.taux+'%</span></div>'
+          +'</div>';
+      });
     h+='</div>';
     if(ecoles.length){
       h+='<div style="padding:6px 14px;font-size:0.7em;color:var(--gris)">Dernière mise à jour : '+(ecoles[0].maj||'')+'</div>';
