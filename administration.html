@@ -2177,12 +2177,13 @@ function peuplerNiveaux(ecole, selectId) {
     return;
   }
 
-  // PRIMAIRE — écoles avec primaire
+var ecolesPurementPrimaires = ['AKEIKOI 1','AKEIKOI 2','ACADEMIE'];
   var ecolesPrim = ['GS RITA ROSANE','GNONTINROU','AKEIKOI 1','AKEIKOI 2','ACADEMIE','KOUTOUAN','CPP DABOU','CPP ANYAMA','GUINGLO VILLE'];
   if(ecolesPrim.indexOf(ecole) >= 0) {
     sel.innerHTML += '<optgroup label="─── Maternelle / Primaire ───">';
     ['PSA','MSA','GSA','CP1A','CP2A','CE1A','CE2A','CM1A','CM2A'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
     sel.innerHTML += '</optgroup>';
+    if(ecolesPurementPrimaires.indexOf(ecole) >= 0) return;
   }
 
   // SECONDAIRE GENERAL — toutes les écoles secondaires
