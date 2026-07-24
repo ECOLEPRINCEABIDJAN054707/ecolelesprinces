@@ -2581,11 +2581,39 @@ function fondSwitchTabConnexions(vue) {
   document.getElementById('fondTabParPersonne').style.background = vue==='parPersonne'?'#1F4E79':'#eee';
   document.getElementById('fondTabParPersonne').style.color = vue==='parPersonne'?'#fff':'var(--gris)';
 }
+  function chargerKpiReseauFond(){
+  const body=document.getElementById('fondKpiBody');
+  if(!body)return;
+  body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  const cbName='kpi_fond_'+Date.now();
+  const params=new URLSearchParams({callback:cbName,action:'getKpiReseau'});
+  const script=document.createElement('script');
+  window[cbName]=function(res){
+    delete window[cbName];try{document.body.removeChild(script);}catch(e){}
+    if(!res||!res.ok){body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur de chargement</p>';return;}
+    const ecoles=res.ecoles||[];
+    let h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px">';
+    ecoles.forEach(function(e){
+      h+='<div class="kpi-card"><div class="kpi-ecole">'+(ECOLE_LABELS[e.ecole]||e.ecole)+'</div>'
+        +'<div class="kpi-row"><span>Eleves</span><span>'+e.eleves+'</span></div>'
+        +'<div class="kpi-row"><span>Enseignants</span><span>'+e.enseignants+'</span></div>'
+        +'<div class="kpi-row"><span>Impayes</span><span style="color:var(--rouge)">'+e.impayes+'</span></div>'
+        +'<div class="kpi-row"><span>Recouvrement</span><span style="color:var(--vert)">'+e.taux+'%</span></div>'
+        +'</div>';
+    });
+    h+='</div>';
+    if(ecoles.length){
+      h+='<div style="padding:6px 14px;font-size:0.7em;color:var(--gris)">Dernière mise à jour : '+(ecoles[0].maj||'')+'</div>';
+    }
+    body.innerHTML=h;
+  };
+  script.onerror=function(){delete window[cbName];body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur réseau</p>';};
+  script.src=APP_SCRIPT_URL_ADMIN+'?'+params.toString();
+  document.body.appendChild(script);
+}
 function afficherFond(s){
   document.getElementById('fondAvatar').textContent='F';document.getElementById('fondNom').textContent=s.nom;
-  let h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px">';
-  KPI_ECOLES.forEach(e=>{h+='<div class="kpi-card"><div class="kpi-ecole">'+e.nom+'</div><div class="kpi-row"><span>Eleves</span><span>'+e.eleves+'</span></div><div class="kpi-row"><span>Enseignants</span><span>'+e.ens+'</span></div><div class="kpi-row"><span>Impayes</span><span style="color:var(--rouge)">'+e.impaye+'</span></div><div class="kpi-row"><span>Recouvrement</span><span style="color:var(--vert)">'+e.taux+'%</span></div></div>';});h+='</div>';
-  document.getElementById('fondKpiBody').innerHTML=h;
+chargerKpiReseauFond();
   let h2='';KPI_ECOLES.forEach(e=>{h2+='<div class="rap-ligne"><span class="rap-label">'+e.nom+'</span><span class="rap-val vert">'+(e.eleves*e.taux*0.01*55000).toLocaleString('fr-FR')+' F</span></div>';});
   document.getElementById('fondSoldesBody').innerHTML=h2;
   let h3='';SALAIRES_ADMIN.forEach(e=>{h3+='<div class="rap-ligne"><span class="rap-label">'+e.nom+' <span style="color:var(--gris);font-size:0.8em">'+e.fonction+'</span></span><span class="rap-val">'+e.salaire.toLocaleString('fr-FR')+' F</span></div>';});
