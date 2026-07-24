@@ -1152,7 +1152,11 @@ nom, poste, type, salaireFixe, categorie, nationalite, cnps, embauche, tel
           <div style="background:#E3F2FD;border-left:3px solid #1F4E79;padding:8px;font-size:0.75em;border-radius:4px;margin-bottom:10px;color:#1F4E79">Remplissez les informations du document manuellement</div>
           <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">MATRICULE *</label><input type="text" id="mc-mat" placeholder="Ex: 24188737C" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
           <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">NOM ET PRENOMS *</label><input type="text" id="mc-nom" placeholder="NOM PRENOM" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
-          <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">NIVEAU 2026-2027 *</label><input type="text" id="mc-niveau" placeholder="Ex: 6EME, 2NDE A, CP1A..." oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+      <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">NIVEAU 2026-2027 *</label>
+  <select id="mc-niveau" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px">
+    <option value="">-- Sélectionner --</option>
+  </select>
+</div>
           <div style="display:flex;gap:6px;margin-bottom:8px">
             <div style="flex:1"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">STATUT</label>
               <select id="mc-statut" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px">
@@ -1800,7 +1804,11 @@ async function attribuerMatriculeCom() {
           <div style="background:#E3F2FD;border-left:3px solid #1F4E79;padding:8px;font-size:0.75em;border-radius:4px;margin-bottom:10px;color:#1F4E79">Remplissez les informations du document manuellement</div>
           <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">MATRICULE *</label><input type="text" id="me-mat" placeholder="Ex: 24188737C" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
           <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">NOM ET PRENOMS *</label><input type="text" id="me-nom" placeholder="NOM PRENOM" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
-          <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">NIVEAU 2026-2027 *</label><input type="text" id="me-niveau" placeholder="Ex: 6EME, 2NDE A, CP1A..." oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px;box-sizing:border-box"></div>
+<div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">NIVEAU 2026-2027 *</label>
+  <select id="me-niveau" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px">
+    <option value="">-- Sélectionner --</option>
+  </select>
+</div>
           <div style="display:flex;gap:6px;margin-bottom:8px">
             <div style="flex:1"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">STATUT</label>
               <select id="me-statut" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px">
@@ -2135,8 +2143,8 @@ function procederLogin(s){
   setTimeout(()=>{hideLoader();if(s.profil==='DIR')afficherDir(s);else if(s.profil==='FOND')afficherFond(s);else if(s.profil==='COM')afficherCom(s);else if(s.profil==='EDU')afficherEdu(s);},900);
 }
 
-function peuplerNiveaux(ecole) {
-  var sel = document.getElementById('m-niveau');
+function peuplerNiveaux(ecole, selectId) {
+  var sel = document.getElementById(selectId || 'm-niveau');
   if(!sel) return;
   sel.innerHTML = '<option value="">-- Sélectionner --</option>';
 
@@ -2858,6 +2866,7 @@ function changerAnneeCom(){
 }
 function afficherCom(s){ 
   enregistrerConnexionStaff('Comptable', s.ecole);
+  peuplerNiveaux(s.ecole, 'mc-niveau');
   document.getElementById('comAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
   document.getElementById('comNom').textContent=s.nom;document.getElementById('comEcole').textContent=s.label;
   document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;
@@ -2888,6 +2897,7 @@ setTimeout(function(){ _rechargerListeReception('Com'); }, 700);
 function toggleTache(idx,el){TACHES_DEMO[idx].done=!TACHES_DEMO[idx].done;el.classList.toggle('done');el.textContent=TACHES_DEMO[idx].done?'✓':'';el.nextElementSibling.classList.toggle('done');document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;showToast(TACHES_DEMO[idx].done?'Accomplie !':'Remise en cours',TACHES_DEMO[idx].done?'success':'');}
 function afficherEdu(s){ 
   enregistrerConnexionStaff('Educateur', s.ecole);
+ peuplerNiveaux(s.ecole, 'me-niveau');
   document.getElementById('eduAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
   document.getElementById('eduNom').textContent=s.nom;
   document.getElementById('eduEcole').textContent=s.label+(s.role?' · '+s.role:'');
