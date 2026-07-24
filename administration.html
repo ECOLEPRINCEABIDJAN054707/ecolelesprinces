@@ -819,6 +819,14 @@ nom, poste, type, salaireFixe, categorie, nationalite, cnps, embauche, tel
 }
 </script>
 
+ <div class="section" id="dirSecSansResultat">
+  <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('dir');toggleSec(this)">
+    <h3>&#9888;&#65039; &Eacute;l&egrave;ves sans r&eacute;sultat 2025-2026 <span id="dirSansResultatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body" id="dirSansResultatBody">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour charger la liste des &eacute;l&egrave;ves avec dossier incomplet (avant transfert 2026-2027).</p>
+  </div>
+</div>
   <div class="footer">R&eacute;seau CPP Les Princes d'Abidjan &middot; Espace Direction &middot; 2026-2027</div>
 </div>
 
@@ -1423,6 +1431,14 @@ async function attribuerMatriculeCom() {
        if (s.type==='PRIM' || s.type==='BOTH') setTimeout(chargerMatriculesPrimaireCom, 1200);
      ============================================================ -->
 
+ <div class="section" id="comSecSansResultat">
+  <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('com');toggleSec(this)">
+    <h3>&#9888;&#65039; &Eacute;l&egrave;ves sans r&eacute;sultat 2025-2026 <span id="comSansResultatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body" id="comSansResultatBody">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour charger la liste des &eacute;l&egrave;ves avec dossier incomplet (avant transfert 2026-2027).</p>
+  </div>
+</div>
   <div class="footer">Princes Smart School &middot; Espace Comptable &middot; 2026-2027</div>
 </div>
 
@@ -1838,6 +1854,14 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
 </div>
+</div>
+<div class="section">
+  <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('edu');toggleSec(this)">
+    <h3>&#9888;&#65039; &Eacute;l&egrave;ves sans r&eacute;sultat 2025-2026 <span id="eduSansResultatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body" id="eduSansResultatBody">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour charger la liste de vos &eacute;l&egrave;ves avec dossier incomplet (avant transfert 2026-2027).</p>
+  </div>
 </div>
   <div class="footer">Princes Smart School &middot; Espace Educateur &middot; 2026-2027</div>
 </div>
@@ -5518,6 +5542,41 @@ async function _chercherMatriculeDansBase(sheetsId, mat) {
   return null;
 } 
   
+  function chargerElevesSansResultat(prefix){
+  var body=document.getElementById(prefix+'SansResultatBody');
+  var cnt=document.getElementById(prefix+'SansResultatCount');
+  if(!body||!currentStaff)return;
+  body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  var ecole=currentStaff.ecole;
+  var cbName='esr_'+prefix+'_'+Date.now();
+  var params=new URLSearchParams({callback:cbName,action:'getElevesSansResultat',ecole:ecole});
+  var script=document.createElement('script');
+  window[cbName]=function(res){
+    delete window[cbName];try{document.body.removeChild(script);}catch(e){}
+    if(!res||!res.ok){body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur de chargement</p>';return;}
+    var eleves=res.eleves||[];
+    if(prefix==='edu'&&currentStaff.classes&&currentStaff.classes.length){
+      var norm=function(s){return String(s||'').toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[-_]/g,' ').replace(/\s+/g,' ');};
+      eleves=eleves.filter(function(e){
+        return currentStaff.classes.some(function(cl){
+          var nc=norm(e.classe),ncl=norm(cl);
+          return nc===ncl||nc.indexOf(ncl+' ')===0||nc.indexOf(' '+ncl)>=0||ncl.indexOf(nc+' ')===0;
+        });
+      });
+    }
+    if(cnt)cnt.textContent='('+eleves.length+')';
+    if(!eleves.length){body.innerHTML='<p style="padding:14px;text-align:center;color:var(--vert);font-size:0.85em;font-weight:700">&#9989; Aucun &eacute;l&egrave;ve sans r&eacute;sultat</p>';return;}
+    var h='<div class="tbl-wrap"><table><thead><tr><th>Matricule</th><th>Nom</th><th>Classe</th><th>Manque</th></tr></thead><tbody>';
+    eleves.forEach(function(e){
+      h+='<tr><td style="font-size:0.72em;color:var(--gris)">'+e.matricule+'</td><td><strong>'+e.nom+'</strong></td><td>'+e.classe+'</td><td><span class="bdg bg-rouge" style="font-size:0.68em">'+e.manque+'</span></td></tr>';
+    });
+    h+='</tbody></table></div>';
+    body.innerHTML=h;
+  };
+  script.onerror=function(){delete window[cbName];body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur r&eacute;seau</p>';};
+  script.src=APP_SCRIPT_URL_ADMIN+'?'+params.toString();
+  document.body.appendChild(script);
+}
   function setMoteurDir(m,el){
   _moteurDir=m;
   document.querySelectorAll('.moteur-btn').forEach(function(b){
