@@ -1579,6 +1579,23 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
 
+<!-- COURS DU JOUR — PRÉSENCE ENSEIGNANTS -->
+  <div class="section">
+    <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
+      <h3>&#128680; Cours du jour — présence enseignants <span id="eduCoursJourCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body open" id="eduCoursJourBody">
+      <div style="padding:8px 14px 6px;background:#FFEBEE;border-bottom:1px solid #FFCDD2">
+        <span style="font-size:0.72em;color:var(--rouge);font-weight:600">Planning EDT du jour croisé avec les cours réellement enregistrés — repère les enseignants absents sans appel</span>
+      </div>
+      <div id="eduCoursJourListe">
+        <div style="text-align:center;padding:20px;color:var(--gris)">
+          <div class="spinner-sm" style="margin:0 auto 10px"></div>
+          <p style="font-size:0.82em">Chargement...</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
 
   <!-- EDT EMPLOI DU TEMPS -->
@@ -2939,6 +2956,7 @@ function afficherEdu(s){
   chargerPresencesEnseignants(s.ecole);
   chargerClassesEdu(s);
   chargerNotesDevoir();
+  setTimeout(() => chargerCoursJourEdu(s), 400);
   setTimeout(() => chargerEDT(), 500);
   setTimeout(() => chargerProgrammeTrimestrielEdu(s), 600);
   setTimeout(() => chargerPointageEdu('jour'), 800);
@@ -4026,6 +4044,137 @@ function renderNotesDevoirs(data) {
 let donneesEDT = [];
 let donneesEDT_filtrees = [];
 
+ async function chargerCoursJourEdu(s) {
+  const container = document.getElementById('eduCoursJourListe');
+  const countEl = document.getElementById('eduCoursJourCount');
+  if (!container || !s) return;
+  const classesEdu = s.classes || [];
+  const sheetsId = SHEETS_IDS_2026_2027[s.ecole];
+  if (!sheetsId) { container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configurée pour cette école.</p>'; return; }
+
+  const joursFR = ['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
+  const today = new Date();
+  const jourAuj = joursFR[today.getDay()];
+  const dd = String(today.getDate()).padStart(2,'0');
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const yyyy = today.getFullYear();
+  const dateFormats = [dd+'/'+mm+'/'+yyyy, yyyy+'-'+mm+'-'+dd];
+  const maintenantMin = today.getHours()*60 + today.getMinutes();
+
+  const norm = str => String(str||'').toUpperCase().trim()
+    .replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U')
+    .replace(/[ÔÖÓÒÕ]/g,'O').replace(/[ÎÏÍÌ]/g,'I')
+    .replace(/[-_]/g,' ').replace(/\s+/g,' ');
+
+  function appartientAMesClasses(classeRow) {
+    if (!classesEdu.length) return true;
+    return classesEdu.some(cl => {
+      const nr = norm(classeRow), nc = norm(cl);
+      return nr===nc || nr.startsWith(nc+' ') || nr.endsWith(' '+nc) || nc.startsWith(nr+' ');
+    });
+  }
+
+  try {
+    // 1. Lire EDT_PAR_PROF, filtrer sur le jour + classes de l'éducateur
+    const urlEdt = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/EDT_PAR_PROF?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const rEdt = await fetch(urlEdt); const dEdt = await rEdt.json();
+    let creneaux = [];
+    if (dEdt.values && dEdt.values.length > 1) {
+      creneaux = dEdt.values.slice(1).filter(row => {
+        const classe = String(row[2]||'').trim().toUpperCase();
+        const jour = String(row[1]||'').trim().toUpperCase();
+        const hDebut = String(row[4]||'').trim();
+        return classe && classe !== 'ENSEIGNANTS' && jour === jourAuj && hDebut;
+      }).map(row => ({
+        enseignant: String(row[0]||'').trim(),
+        classe: String(row[2]||'').trim(),
+        matiere: String(row[3]||'').trim(),
+        heureDebut: toHeure(row[4]),
+        heureFin: toHeure(row[5])
+      })).filter(c => appartientAMesClasses(c.classe));
+    }
+
+    if (!creneaux.length) {
+      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.84em">Aucun cours prévu aujourd\'hui ('+jourAuj+') pour vos classes.</div>';
+      if (countEl) countEl.textContent = '(0)';
+      return;
+    }
+
+    // 2. Lire CAHIER_TEXTES et POINTAGE_MENSUEL du jour — pour savoir ce qui a été fait
+    const faits = new Set();
+    for (const sn of ['CAHIER_TEXTES', 'POINTAGE_MENSUEL']) {
+      try {
+        const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+        const r = await fetch(url); const d = await r.json();
+        if (!d.values || d.values.length < 2) continue;
+        const headers = d.values[0].map(h => String(h||'').toUpperCase().trim());
+        const iDate = headers.findIndex(h => h.includes('DATE'));
+        const iClasse = headers.findIndex(h => h.includes('CLASS'));
+        const iMat = headers.findIndex(h => h.includes('MAT') && !h.includes('CULE'));
+        const iEns = headers.findIndex(h => h.includes('ENS') || h.includes('PROF'));
+        d.values.slice(1).forEach(row => {
+          const dateVal = String(row[iDate>=0?iDate:0]||'').trim();
+          const n = parseFloat(dateVal);
+          let estAuj = false;
+          if (!isNaN(n) && n > 40000) {
+            const dd2 = new Date(Math.round((n-25569)*86400000));
+            estAuj = dd2.getUTCDate()==parseInt(dd) && (dd2.getUTCMonth()+1)==parseInt(mm) && dd2.getUTCFullYear()==parseInt(yyyy);
+          } else {
+            estAuj = dateFormats.some(f => dateVal.startsWith(f) || dateVal === f);
+          }
+          if (!estAuj) return;
+          const classe = iClasse>=0 ? String(row[iClasse]||'').trim() : '';
+          const matiere = iMat>=0 ? String(row[iMat]||'').trim() : '';
+          const ens = iEns>=0 ? String(row[iEns]||'').trim() : '';
+          if (classe && ens) faits.add(norm(classe)+'|'+norm(matiere)+'|'+norm(ens));
+        });
+      } catch(e) {}
+    }
+
+    // 3. Croiser et déterminer le statut de chaque créneau
+    creneaux.forEach(c => {
+      const cle = norm(c.classe)+'|'+norm(c.matiere)+'|'+norm(c.enseignant);
+      c.fait = faits.has(cle);
+      const finMin = parseH(c.heureFin);
+      const debutMin = parseH(c.heureDebut);
+      if (c.fait) c.statut = 'FAIT';
+      else if (maintenantMin < debutMin) c.statut = 'A_VENIR';
+      else if (maintenantMin >= debutMin && maintenantMin <= finMin) c.statut = 'EN_COURS';
+      else c.statut = 'MANQUANT';
+    });
+
+    creneaux.sort((a,b) => parseH(a.heureDebut) - parseH(b.heureDebut));
+
+    const nbManquants = creneaux.filter(c => c.statut==='MANQUANT').length;
+    const nbFaits = creneaux.filter(c => c.fait).length;
+    if (countEl) countEl.textContent = '('+creneaux.length+' cours · '+nbManquants+' manquant(s))';
+
+    let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)">';
+    html += '<div style="background:#E8F5E9;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:#2E7D32">'+nbFaits+'</div><div style="font-size:0.62em;color:#2E7D32;font-weight:600">✅ Faits</div></div>';
+    html += '<div style="background:'+(nbManquants>0?'#FFEBEE':'#F5F5F5')+';border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:'+(nbManquants>0?'var(--rouge)':'var(--gris)')+'">'+nbManquants+'</div><div style="font-size:0.62em;color:'+(nbManquants>0?'var(--rouge)':'var(--gris)')+';font-weight:600">🔴 Manquants</div></div>';
+    html += '<div style="background:#E3F2FD;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:var(--bleu)">'+creneaux.length+'</div><div style="font-size:0.62em;color:var(--bleu);font-weight:600">Total ('+jourAuj+')</div></div>';
+    html += '</div>';
+
+    creneaux.forEach(c => {
+      let icone, bg, label, couleur;
+      if (c.statut==='FAIT') { icone='✅'; bg='#F8FFF8'; label='Fait'; couleur='var(--vert)'; }
+      else if (c.statut==='EN_COURS') { icone='⏱️'; bg='#FFFDE7'; label='En cours — rien saisi'; couleur='#F9A825'; }
+      else if (c.statut==='A_VENIR') { icone='🕓'; bg='#fff'; label='À venir'; couleur='var(--gris)'; }
+      else { icone='🔴'; bg='#FFF8F8'; label='Rien enregistré'; couleur='var(--rouge)'; }
+      const ini = c.enseignant.split(' ').slice(0,2).map(w=>w[0]||'').join('');
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid #f0f4f8;background:'+bg+'">';
+      html += '<div style="width:32px;height:32px;border-radius:50%;background:'+bg+';border:1.5px solid '+couleur+';color:'+couleur+';display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.72em;flex-shrink:0">'+ini+'</div>';
+      html += '<div style="flex:1"><div style="font-size:0.82em;font-weight:700">'+c.enseignant+'</div>';
+      html += '<div style="font-size:0.72em;color:var(--gris)">'+c.classe+' · '+c.matiere+' · '+c.heureDebut+'-'+c.heureFin+'</div></div>';
+      html += '<span style="font-size:0.68em;font-weight:700;padding:3px 8px;border-radius:10px;background:'+bg+';border:1px solid '+couleur+';color:'+couleur+'">'+icone+' '+label+'</span>';
+      html += '</div>';
+    });
+
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur: '+e.message+'</p>';
+  }
+} 
 async function chargerEDT() {
   const s = currentStaff; if(!s) return;
   const container = document.getElementById('edtListe');
