@@ -545,7 +545,7 @@ input[type=text]{padding-right:14px;}
         </div>
       </div>
       <div class="result-actions">
-        <button class="btn-action btn-print" onclick="window.print()">🖨 Imprimer</button>
+        <button class="btn-action btn-print" onclick="imprimerComposition()">🖨 Imprimer</button>
         <button class="btn-action btn-regen" onclick="generer()">↻ Régénérer</button>
         <button class="btn-action btn-copy" onclick="copierTexte()">📋 Copier</button>
       </div>
@@ -1118,7 +1118,24 @@ function afficherDemo(examen, matiere, filiere, classe, trimestre, lecon) {
   afficherComposition(demo, false, examen, matiere, filiere, classe, trimestre);
 }
 
-
+function imprimerComposition() {
+  var contenu = document.getElementById('resultZone').innerHTML;
+  var logo = document.getElementById('printLogo') ? document.getElementById('printLogo').src : '';
+  var w = window.open('', '_blank');
+  w.document.write(
+    '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Composition</title>' +
+    '<style>' +
+    'body{font-family:"Times New Roman",serif;color:#000;padding:20px;max-width:800px;margin:0 auto;}' +
+    'img{max-width:80px;}' +
+    '.print-header,.print-entete,.print-identite{display:flex;align-items:center;gap:10px;margin-bottom:15px;}' +
+    '.result-header,.result-actions,.loader-overlay,.toast,.proba-bar,.conseil-box,.section-title,.ex-arrow,.ex-dot{display:none!important;}' +
+    '.ex-body{display:block!important;}' +
+    '.exercice{margin-bottom:14px;page-break-inside:avoid;}' +
+    '</style></head><body>' + contenu + '</body></html>'
+  );
+  w.document.close();
+  setTimeout(function(){ w.print(); }, 400);
+}
 function togglePartie(header) {
   var body = header.nextElementSibling;
   var arrow = header.querySelector('.partie-arrow');
