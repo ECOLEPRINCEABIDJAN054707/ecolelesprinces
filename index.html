@@ -1845,11 +1845,40 @@ async function chargerProgrammeTrimestrielParent(eleve) {
       });
       html += '</div>';
     });
-    body.innerHTML = html;
+    window._progTrimHtmlActuel = html;
+var btnPdfPT = "<div style='margin-top:12px;'><button onclick='genererProgTrimPDF()' style='width:100%;padding:11px;background:linear-gradient(135deg,#4A148C,#6A1B9A);color:#fff;border:none;border-radius:8px;font-size:0.88em;font-weight:bold;cursor:pointer;'>🖨 Télécharger le programme trimestriel en PDF</button></div>";
+body.innerHTML = html + btnPdfPT;
     section.style.display = 'block';
   } catch(e) {}
 }
-
+function genererProgTrimPDF() {
+  var eleve = window._eleveActuel;
+  var html  = window._progTrimHtmlActuel;
+  if (!eleve || !html) { alert('Programme trimestriel non disponible'); return; }
+  var nomEcole = (eleve.ecole && eleve.ecole.nom) ? eleve.ecole.nom : "Ecole Les Princes";
+  var classeAffichee = window._classe2026 || eleve.classe;
+  var anneeAffichee = "2026-2027";
+  var w = window.open('', '_blank');
+  if (!w) { alert('Autorisez les popups'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8">');
+  w.document.write('<title>Programme trimestriel — ' + eleve.nom + '</title>');
+  w.document.write('<style>');
+  w.document.write('*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;background:#fff;padding:16px;}');
+  w.document.write('.header{background:linear-gradient(135deg,#4A148C,#6A1B9A);color:#fff;padding:16px;border-radius:8px;margin-bottom:16px;text-align:center;}');
+  w.document.write('.header h2{font-size:16px;margin-bottom:4px;}.header p{font-size:12px;opacity:0.85;}');
+  w.document.write('.infos{background:#F0F4F8;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#333;}');
+  w.document.write('@media print{button{display:none!important;}body{padding:0;}}');
+  w.document.write('</style></head><body>');
+  w.document.write('<div style="text-align:center;margin-bottom:12px" class="no-print">');
+  w.document.write('<button onclick="window.print()" style="background:#4A148C;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:bold;margin-right:8px">🖨 Imprimer / PDF</button>');
+  w.document.write('<button onclick="window.close()" style="background:#888;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-size:13px;">Fermer</button>');
+  w.document.write('</div>');
+  w.document.write('<div class="header"><h2>🏫 ' + nomEcole + '</h2><p>Réseau CPP Les Princes d\'Abidjan — Programme trimestriel</p></div>');
+  w.document.write('<div class="infos"><strong>Élève :</strong> ' + eleve.nom + ' &nbsp;|&nbsp; <strong>Classe :</strong> ' + classeAffichee + ' &nbsp;|&nbsp; <strong>Année :</strong> ' + anneeAffichee + '</div>');
+  w.document.write(html);
+  w.document.write('</body></html>');
+  w.document.close();
+}
   async function chargerInscription2026(eleve) {
   const section = document.getElementById('sectionInscription2026');
   const body    = document.getElementById('inscription2026Body');
