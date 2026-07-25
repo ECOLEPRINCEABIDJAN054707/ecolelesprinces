@@ -742,12 +742,37 @@ async function login() {
     {code:"DABOU",id:"1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA"},
     {code:"ANYAMA",id:"1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE"},
   ];
+  const TOUTES_ECOLES_2026 = [
+  {code:"CPP",id:"1e37v34kcYXh0etsPjGo7rF7SyH0i1Xpj20azcirDUEY"},
+  {code:"ACADEMIE",id:"17EuXUJ4ej_brSwDhTJV1c_Ttmhxl3YkPI053YJAE9Es"},
+  {code:"GNONTINROU",id:"1izyFW1pksAY5tHc-Y6TqsvcH3GMb29dz6NGyctW9M1M"},
+  {code:"GUINGLO_V",id:"1B_ynuBLsVJbTzjtyezraayR813stEuPQm3GGtatuRD8"},
+  {code:"KOUTOUAN",id:"15pnAjnfC7UKD-pxMwk8Nw4fbOZQX39KRnXSZMcNeYSc"},
+  {code:"SOAKPE",id:"1Ge8j-YcvKBFBlTuqmIHv0eBMDbsLNmcTln3-xzyrdD0"},
+  {code:"AKEIKOI_1",id:"1I_Htuvo3g_LuLscOhWIHI2s1MIvQcV2q_H1zvQwKk5M"},
+  {code:"AKEIKOI_2",id:"1EXVB5n654SSgp8xet3k8b89jghqNa6iX4tgeZ3u_KrU"},
+  {code:"CPP_PRO",id:"1Ok2B0vIs5mgTsS6YrKPvuYL2gEYHfCdjf5NQjT5UbC8"},
+  {code:"CPP_TECH",id:"1TWZKUMINGnYMEjm1ik5Vg_Mikpfc_u47eziuiCWZHW4"},
+  {code:"KOUIBLY_TEC",id:"1vzAsfcwVwRCS9di9cfRRyGMuEXuio1zXStOb2d65UIE"},
+  {code:"RITA",id:"1DARvq_r4K3ttj5c51y1M6M4wxSTsADP7kGcq1fTPpZQ"},
+  {code:"DABOU",id:"1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA"},
+  {code:"ANYAMA",id:"1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE"},
+];
   for (let i = 0; i < TOUTES_ECOLES.length; i++) {
-    const ec = TOUTES_ECOLES[i];
-    document.getElementById("loadingEtape").textContent = "Recherche ecole " + (i+1) + "/" + TOUTES_ECOLES.length + "...";
+  const ec = TOUTES_ECOLES[i];
+  document.getElementById("loadingEtape").textContent = "Recherche ecole " + (i+1) + "/" + TOUTES_ECOLES.length + "...";
+  eleve = await chercherDansEcoleDirecte(mat, ec.code, ec.id);
+  if (eleve) break;
+}
+// Repli — nouvel élève 2026-2027, pas encore présent dans la base 2025-2026
+if (!eleve) {
+  for (let i = 0; i < TOUTES_ECOLES_2026.length; i++) {
+    const ec = TOUTES_ECOLES_2026[i];
+    document.getElementById("loadingEtape").textContent = "Recherche ecole (2026-2027) " + (i+1) + "/" + TOUTES_ECOLES_2026.length + "...";
     eleve = await chercherDansEcoleDirecte(mat, ec.code, ec.id);
     if (eleve) break;
   }
+}
   document.getElementById("loadingDiv").style.display = "none";
   if (!eleve) {
     tentatives++;
