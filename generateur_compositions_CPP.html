@@ -709,9 +709,9 @@ function changerExamen() {
 
   // Stats
   var stats = STATS_EXAMEN[examen] || STATS_EXAMEN['BEPC'];
-  document.getElementById('statsBar').innerHTML = stats.map(function(s) {
-    return '<div class="stat-item"><div class="stat-n">' + s.n + '</div><div class="stat-l">' + s.l + '</div></div>';
-  }).join('');
+document.getElementById('statsBar').innerHTML = stats.map(function(s) {
+    return '<div class="hstat"><div class="hstat-n">' + s.n + '</div><div class="hstat-l">' + s.l + '</div></div>';
+}).join('');
 
   // Filiere
   document.getElementById('groupFiliere').style.display = isTech ? 'block' : 'none';
@@ -895,10 +895,11 @@ function afficherComposition(d, isIA, examen, matiere, filiere, classe, trimestr
   var _mo = ['janv','fevr','mars','avr','mai','juin','juil','aout','sept','oct','nov','dec'];
   var _dd = new Date();
   if (document.getElementById('printEcoleNom')) document.getElementById('printEcoleNom').textContent = ECOLE_NOMS[ecoleCode] || 'COLLEGE LES PRINCES';
+  document.getElementById('printLogo').src = 'logo_cpp.png';
   if (document.getElementById('printMatiere')) document.getElementById('printMatiere').textContent = nomMat;
   if (document.getElementById('printSerie')) document.getElementById('printSerie').textContent = (d.serie||'Serie D') + ' — ' + classe + ' — Devoir ' + periodeLabel + ' — ' + _mo[_dd.getMonth()] + ' ' + _dd.getFullYear();
-  if (document.getElementById('printCoef')) document.getElementById('printCoef').textContent = _cm[matiere] || d.coefficient || '';
-  if (document.getElementById('printDuree')) document.getElementById('printDuree').textContent = _dm[examen] || d.duree || '2h';
+if (document.getElementById('printCoef')) document.getElementById('printCoef').textContent = 'Coefficient : ' + (_cm[matiere] || d.coefficient || '');
+if (document.getElementById('printDuree')) document.getElementById('printDuree').textContent = 'Durée : ' + (_dm[examen] || d.duree || '2h');
 
   // Remplir les 6 cases distinctes
   function fillEx(bodyId, titreId, sousId, ptsId, exData, defaultTitre, defaultPts) {
