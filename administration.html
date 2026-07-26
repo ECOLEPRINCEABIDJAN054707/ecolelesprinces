@@ -2675,14 +2675,55 @@ ecoles.forEach(function(e){
   script.src=APP_SCRIPT_URL_ADMIN+'?'+params.toString();
   document.body.appendChild(script);
 }
+  // ══ MASSE SALARIALE RÉSEAU (Fondateur) ══
+const ECOLE_LABELS_ALIAS = {
+  'ETL KOUIBLY': 'ETL PRINCES KOUIBLY',
+  'ANYAMA ADJAME': 'CPP ANYAMA'
+};
+function labelEcoleMasseSalariale(nomBrut){
+  const cle = ECOLE_LABELS_ALIAS[nomBrut] || nomBrut;
+  return ECOLE_LABELS[cle] || nomBrut;
+}
+function chargerMasseSalarialeReseauFond(){
+  const body=document.getElementById('fondSalBody');
+  if(body)body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  const cbName='msr_fond_'+Date.now();
+  const params=new URLSearchParams({callback:cbName,action:'getMasseSalarialeReseau'});
+  const script=document.createElement('script');
+  window[cbName]=function(res){
+    delete window[cbName];try{document.body.removeChild(script);}catch(e){}
+    if(!res||!res.ok){if(body)body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">'+(res&&res.error?res.error:'Erreur de chargement')+'</p>';return;}
+    let h='<div class="tbl-wrap"><table><thead><tr><th>&Eacute;cole</th><th>Permanents</th><th>Vacataires</th><th>Masse salariale</th></tr></thead><tbody>';
+    (res.ecoles||[]).forEach(function(e){
+      h+='<tr><td>'+labelEcoleMasseSalariale(e.ecole)+'</td>'
+        +'<td style="text-align:center">'+e.permanentsCount+'</td>'
+        +'<td style="text-align:center">'+e.vacatairesCount+'</td>'
+        +'<td style="text-align:right;font-weight:700">'+Math.round(e.masse).toLocaleString('fr-FR')+' F</td></tr>';
+    });
+    if(res.total){
+      h+='<tr class="total-row"><td>TOTAL R&Eacute;SEAU</td>'
+        +'<td style="text-align:center">'+res.total.permanentsCount+'</td>'
+        +'<td style="text-align:center">'+res.total.vacatairesCount+'</td>'
+        +'<td style="text-align:right">'+Math.round(res.total.masse).toLocaleString('fr-FR')+' F CFA</td></tr>';
+    }
+    h+='</tbody></table></div>';
+    if(res.total&&res.total.maj){
+      h+='<div style="padding:6px 14px;font-size:0.7em;color:var(--gris)">Derni&egrave;re mise &agrave; jour : '+res.total.maj+'</div>';
+    }
+    if(body)body.innerHTML=h;
+  };
+  script.onerror=function(){delete window[cbName];if(body)body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur r&eacute;seau</p>';};
+  setTimeout(function(){if(window[cbName]){delete window[cbName];if(body)body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">D&eacute;lai d&eacute;pass&eacute;</p>';}},10000);
+  script.src=APP_SCRIPT_URL_ADMIN+'?'+params.toString();
+  document.body.appendChild(script);
+}
 function afficherFond(s){
   document.getElementById('fondAvatar').textContent='F';document.getElementById('fondNom').textContent=s.nom;
 chargerKpiReseauFond();
   let h2='';KPI_ECOLES.forEach(e=>{h2+='<div class="rap-ligne"><span class="rap-label">'+e.nom+'</span><span class="rap-val vert">'+(e.eleves*e.taux*0.01*55000).toLocaleString('fr-FR')+' F</span></div>';});
   document.getElementById('fondSoldesBody').innerHTML=h2;
-  let h3='';SALAIRES_ADMIN.forEach(e=>{h3+='<div class="rap-ligne"><span class="rap-label">'+e.nom+' <span style="color:var(--gris);font-size:0.8em">'+e.fonction+'</span></span><span class="rap-val">'+e.salaire.toLocaleString('fr-FR')+' F</span></div>';});
-  const total=SALAIRES_ADMIN.reduce((s,e)=>s+(e.salaire||0),0);h3+='<div class="rap-ligne total"><span class="rap-label">TOTAL</span><span class="rap-val">'+total.toLocaleString('fr-FR')+' F CFA</span></div>';
-  document.getElementById('fondSalBody').innerHTML=h3;setTimeout(chargerVueReseauConnexionsStaff, 300);document.getElementById('espaceFond').style.display='block';
+chargerMasseSalarialeReseauFond();
+setTimeout(chargerVueReseauConnexionsStaff, 300);document.getElementById('espaceFond').style.display='block';
   setTimeout(peuplerSelectEcoleFond,200);
 }
 async function chargerSynthese(ecole){
