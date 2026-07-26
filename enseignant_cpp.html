@@ -632,8 +632,9 @@ const ONGLETS_SYSTEME = [
   'SALLES','BULLETINS_PUBLIES_PRIM','SYNTHESE_BACKUP','NOUVEAUX_ELEVES',
   'ALERTES_INSCRIPTION','CONTACTS_MANQUANTS','HISTORIQUE_MAJ',
   'HISTORIQUE_IDS','NON_ATTRIBUES','HIST_','EMARG_','RECUS','MESSAGES',
-  'RICF','PERSONNEL_SALAIRES','PROGRAMME_TRIMESTRE','IMPORT_TEMP'
-];
+'RICF','PERSONNEL_SALAIRES','PROGRAMME_TRIMESTRE','IMPORT_TEMP',
+   'FCM_TOKENS','CAHIER_RECEPTION_PARENTS','JOURNAL_CONNEXIONS_STAFF'
+   ];
 
 // ══════════════════════════════════════════════
 // ÉTAT GLOBAL
@@ -879,7 +880,7 @@ async function chargerClasses() {
         classes = classes.filter(c => mesClassesNorm.includes(normaliser(c)));
       }
     } catch(e2) { console.warn('filtre classes prof:', e2); }
-
+classes.sort((a, b) => a.localeCompare(b, 'fr'));
     sels.forEach(id => {
       const sel = document.getElementById(id);
       if (!sel) return;
