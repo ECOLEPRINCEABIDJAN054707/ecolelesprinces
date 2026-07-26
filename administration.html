@@ -301,6 +301,17 @@ table tr:nth-child(even){background:#F8FAFD}
     <div class="sec-body">
       <div id="tableBody" style="padding:8px"><div style="text-align:center;padding:30px;color:var(--gris)">S&eacute;lectionnez un mois et cliquez Actualiser</div></div>
     </div>
+ </div>
+<div class="section" id="dirSecMasseSalariale">
+  <div class="sec-head sec-or" onclick="toggleSec(this)">
+    <h3>&#128176; Masse salariale</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div id="dirMasseSalarialeBody" style="padding:8px">
+      <div style="text-align:center;padding:30px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>
+    </div>
+  </div>
+</div>
   </div>
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
@@ -1086,6 +1097,16 @@ nom, poste, type, salaireFixe, categorie, nationalite, cnps, embauche, tel
       <div id="tableBodyCom" style="padding:8px"><div style="text-align:center;padding:30px;color:var(--gris)">S&eacute;lectionnez un mois et cliquez Actualiser</div></div>
     </div>
   </div>
+ <div class="section" id="comSecMasseSalariale">
+  <div class="sec-head sec-or" onclick="toggleSec(this)">
+    <h3>&#128176; Masse salariale</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div id="comMasseSalarialeBody" style="padding:8px">
+      <div style="text-align:center;padding:30px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>
+    </div>
+  </div>
+</div>
   <div class="section" id="comSecAppel">
     <div class="sec-head sec-vert" onclick="toggleSec(this)">
       <h3>&#128203; Appels enseignants &mdash; Aujourd'hui <span id="comAppelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -2266,7 +2287,8 @@ function afficherDir(s){
   document.getElementById('dirAlertesBody').innerHTML=ha;
   const dsa=document.getElementById('dStatAlert');if(dsa)dsa.textContent=alertes.length;
   chargerSuiviPedagogique();setTimeout(initSaisiePedago,500);setTimeout(function(){chargerAppelsDir(s.ecole);},600);
- setTimeout(function(){chargerRecepParentsDir(s.ecole);},700);
+setTimeout(function(){chargerMasseSalarialeDir(s.ecole);},600);
+  setTimeout(function(){chargerRecepParentsDir(s.ecole);},700);
   let hag='';AGENDA_DEMO.forEach(a=>{hag+='<div class="agenda-item"><div class="agenda-date" style="background:'+a.col+'"><div class="jour">'+a.jour+'</div><div class="mois">'+a.mois+'</div></div><div><div class="agenda-titre">'+a.titre+'</div><div class="agenda-detail">'+a.detail+'</div></div></div>';});
   document.getElementById('dirAgendaBody').innerHTML=hag;
   if(!isPRIM)chargerPointage();
@@ -2942,6 +2964,7 @@ function afficherCom(s){
   document.getElementById('comNom').textContent=s.nom;document.getElementById('comEcole').textContent=s.label;
   document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;
  chargerAppelsCom(s.ecole); 
+ setTimeout(function(){chargerMasseSalarialeCom(s.ecole);},600);
   remplirMoisCom();
   const cPai=document.getElementById('comPaiBody');if(cPai)cPai.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement...</p>';
   chargerSynthese(s.ecole).then(eleves=>{
@@ -4885,7 +4908,43 @@ async function chargerPointageEdu(periode) {
   var next = el.nextElementSibling;
   if(next) next.style.display = next.style.display === 'none' ? 'block' : 'none';
 }
-function logout(){
+// ══ MASSE SALARIALE ══
+function _renderMasseSalariale(bodyId, data){
+  const body=document.getElementById(bodyId);if(!body)return;
+  if(!data||data.erreur){body.innerHTML='<p style="text-align:center;padding:20px;color:var(--rouge);font-size:0.82em">'+(data&&data.erreur?data.erreur:'Erreur de chargement')+'</p>';return;}
+  let h='<div class="tbl-wrap"><table><thead><tr><th>Cat&eacute;gorie</th><th>Effectif</th><th>Montant</th></tr></thead><tbody>';
+  h+='<tr><td>Permanents</td><td style="text-align:center">'+data.permanents.count+'</td><td style="text-align:right;font-weight:700">'+Math.round(data.permanents.total).toLocaleString('fr-FR')+' F</td></tr>';
+  h+='<tr><td>Vacataires</td><td style="text-align:center">'+data.vacataires.count+'</td><td style="text-align:right;font-weight:700">'+Math.round(data.vacataires.total).toLocaleString('fr-FR')+' F</td></tr>';
+  h+='</tbody><tfoot><tr class="total-row"><td colspan="2" style="text-align:right">MASSE SALARIALE</td><td style="text-align:right">'+Math.round(data.masse).toLocaleString('fr-FR')+' F CFA</td></tr></tfoot></table></div>';
+  body.innerHTML=h;
+}
+function chargerMasseSalarialeDir(ecole){
+  const sheetsId=SHEETS_IDS_2026_2027[ecole];
+  const body=document.getElementById('dirMasseSalarialeBody');
+  if(!sheetsId){if(body)body.innerHTML='<p style="text-align:center;padding:20px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configur&eacute;e</p>';return;}
+  const cbName='ms_dir_'+Date.now();
+  const params=new URLSearchParams({callback:cbName,action:'getMasseSalariale',sheetsId:sheetsId});
+  const script=document.createElement('script');
+  window[cbName]=function(res){delete window[cbName];try{document.body.removeChild(script);}catch(e){}_renderMasseSalariale('dirMasseSalarialeBody',res);};
+  script.onerror=function(){delete window[cbName];if(body)body.innerHTML='<p style="text-align:center;padding:20px;color:var(--rouge);font-size:0.82em">Erreur r&eacute;seau</p>';};
+  setTimeout(function(){if(window[cbName]){delete window[cbName];if(body)body.innerHTML='<p style="text-align:center;padding:20px;color:var(--rouge);font-size:0.82em">D&eacute;lai d&eacute;pass&eacute;</p>';}},10000);
+  script.src=APP_SCRIPT_URL_ADMIN+'?'+params.toString();
+  document.body.appendChild(script);
+}
+function chargerMasseSalarialeCom(ecole){
+  const sheetsId=SHEETS_IDS_2026_2027[ecole];
+  const body=document.getElementById('comMasseSalarialeBody');
+  if(!sheetsId){if(body)body.innerHTML='<p style="text-align:center;padding:20px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configur&eacute;e</p>';return;}
+  const cbName='ms_com_'+Date.now();
+  const params=new URLSearchParams({callback:cbName,action:'getMasseSalariale',sheetsId:sheetsId});
+  const script=document.createElement('script');
+  window[cbName]=function(res){delete window[cbName];try{document.body.removeChild(script);}catch(e){}_renderMasseSalariale('comMasseSalarialeBody',res);};
+  script.onerror=function(){delete window[cbName];if(body)body.innerHTML='<p style="text-align:center;padding:20px;color:var(--rouge);font-size:0.82em">Erreur r&eacute;seau</p>';};
+  setTimeout(function(){if(window[cbName]){delete window[cbName];if(body)body.innerHTML='<p style="text-align:center;padding:20px;color:var(--rouge);font-size:0.82em">D&eacute;lai d&eacute;pass&eacute;</p>';}},10000);
+  script.src=APP_SCRIPT_URL_ADMIN+'?'+params.toString();
+  document.body.appendChild(script);
+}
+  function logout(){
   if(currentStaff && (currentStaff.profil==='EDU' || currentStaff.profil==='COM')){
     _verifierRappelReception(currentStaff.profil==='EDU'?'Edu':'Com', _logoutReel);
     return;
