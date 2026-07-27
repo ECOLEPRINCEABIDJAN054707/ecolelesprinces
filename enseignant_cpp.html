@@ -927,7 +927,8 @@ async function chargerMesCoursDuJour() {
 let html = '<div class="card"><div class="card-title">📅 Mes cours aujourd\'hui</div><div class="card-body" style="padding:12px">';
 const maintenant = new Date();
 const minMaintenant = maintenant.getHours() * 60 + maintenant.getMinutes();
-data.cours.forEach((c, i) => {
+data.cours.sort((a, b) => parseH(a.heureDebut) - parseH(b.heureDebut));
+    data.cours.forEach((c, i) => {
   const [hF, mF] = (c.heureFin || '00:00').split(':').map(Number);
   const minFin = (hF||0) * 60 + (mF||0);
   const estTermine = minFin > 0 && minMaintenant > minFin;
