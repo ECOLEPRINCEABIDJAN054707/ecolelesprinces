@@ -948,9 +948,10 @@ data.cours.sort((a, b) => parseH(a.heureDebut) - parseH(b.heureDebut));
     html += '</div></div>';
     container.innerHTML = html;
     window._mesCoursJour = data.cours;
-  } catch(e) {
-    container.innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:20px"><p style="font-size:13px;color:var(--text2)">Erreur de chargement.</p></div></div>';
-  }
+} catch(e) {
+     console.error('DEBUG chargerMesCoursDuJour:', e);
+     container.innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:20px"><p style="font-size:13px;color:var(--text2)">Erreur de chargement.</p></div></div>';
+   }
 }
 
 function demarrerCoursDepuisEDT(idx) {
