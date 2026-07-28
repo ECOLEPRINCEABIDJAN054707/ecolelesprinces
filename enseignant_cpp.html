@@ -1408,6 +1408,7 @@ async function publierCahier() {
       enseignant:user.nom, ecole:user.ecole,
       lecon, contenu, avancement,
       devoir:document.getElementById('cahierDevoir').value.trim(),
+     dateRemise:document.getElementById('cahierDateRemise').value||'',
       docs:document.getElementById('cahierDocs').value.trim(),
       obs:document.getElementById('cahierObs').value.trim(),
       horodatageAppel:coursActuel?.horodatageAppel||'',
