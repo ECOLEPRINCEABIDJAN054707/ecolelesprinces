@@ -1619,6 +1619,7 @@ function afficherMoyennes(elevesListe, classe) {
         <span style="font-size:11px;color:var(--text2)">/20</span>
       </div></div>`;
   }).join('');
+ document.getElementById('btnRecalculerMoyennes').style.display = 'block';
   document.getElementById('btnPublierMoyennes').style.display = 'block';
 }
 
@@ -1669,7 +1670,28 @@ const CONFIG_BULLETIN = {
   CM2:{matieres:['EXPLOITATION_TEXTE','DICTEE','AEM','MATHEMATIQUE','LECTURE','ANGLAIS','INFORMATIQUE'],labels:['Exploitation de texte','Dictée','AEM','Mathématique','Lecture','Anglais','Informatique'],bareme:[50,20,50,50,10,10,10],sur:20}
 };
 let bulletinMoisActuel = '', bulletinElevesData = [], bulletinNiveauActuel = '';
-
+function recalculerMoyennes() {
+  const classe = document.getElementById('moyennesClasse').value;
+  if (!classe || !trimestreActif) { showToast('Sélectionnez une classe', 'error'); return; }
+  showLoader('Recalcul en cours...');
+  const url = APPS_SCRIPT_URL + '?type=RECALCULER_MOYENNES'
+    + '&ecole=' + encodeURIComponent(user.ecole)
+    + '&classe=' + encodeURIComponent(classe)
+    + '&matiere=' + encodeURIComponent(user.matiere)
+    + '&trimestre=' + encodeURIComponent(trimestreActif);
+  const cbName = 'recalc_' + Date.now();
+  const script = document.createElement('script');
+  window[cbName] = (data) => {
+    hideLoader();
+    delete window[cbName];
+    document.body.removeChild(script);
+    if (data && data.ok) { showToast('✅ Moyennes recalculées', 'success'); chargerMoyennes(); }
+    else showToast('❌ Erreur recalcul', 'error');
+  };
+  script.onerror = () => { hideLoader(); showToast('Erreur réseau', 'error'); };
+  script.src = url + '&callback=' + cbName;
+  document.body.appendChild(script);
+}
 function getBulletinNiveau(classe) {
   const c = (classe||'').trim().toUpperCase();
   if (c.includes('MAT')||c==='PSA'||c==='MSA'||c==='GSA') return 'MAT';
