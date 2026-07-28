@@ -192,6 +192,10 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
     <div class="sec-header" style="background:linear-gradient(135deg,#D4AF37,#B8860B);color:#fff" onclick="toggleSec(this)" id="titreResultats">&#127942; RESULTATS DE FIN D'ANNEE <span>v</span></div>
     <div class="sec-body open" id="resultatsBody"></div>
   </div>
+ <div class="section" id="sectionCarnetNotes" style="display:none">
+  <div class="sec-header" style="background:#1565C0" onclick="toggleSec(this)">&#128202; MES NOTES DU TRIMESTRE (Suivi provisoire) <span>v</span></div>
+  <div class="sec-body open" id="carnetNotesBody"></div>
+</div>
   <div class="section" id="sectionInscription2026" style="display:none;">
     <div class="sec-header" style="background:linear-gradient(135deg,#1A3A5C,#1565C0);color:#D4AF37;" onclick="toggleSection('inscription2026Body','arInscription2026')">
       <span>🏫 INSCRIPTION ANNÉE SCOLAIRE 2026-2027</span>
@@ -1137,7 +1141,7 @@ async function afficherEspaceParent(eleve) {
     document.getElementById("sectionBulletinsMensuels").style.display = "none";
     afficherSectionBloquee(eleve, soldeAccesParsed, verseParsed);
   }
-  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerProgrammeTrimestrielParent(eleve);
+  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerProgrammeTrimestrielParent(eleve);chargerCarnetNotes(eleve);
   window._eleveActuel = eleve;
   document.getElementById("loginWrapper").style.display = "none";
   document.getElementById("parentSpace").style.display = "block";
@@ -1319,7 +1323,68 @@ function genererEdtPDF() {
   w.document.close();
 }
   async function chargerNotes(eleve){const div=document.getElementById("notesBody");div.innerHTML="<div style='text-align:center;padding:20px;color:#1F4E79;'><div class='spinner' style='width:24px;height:24px;border:3px solid #D6E4F0;border-top-color:#1F4E79;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;'></div><p style='font-size:0.82em;'>Chargement des notes...</p></div>";try{const mat=eleve.matricule;const trimestres=['NOTES_T3','NOTES_T2','NOTES_T1'];const trimNoms=['3eme Trimestre','2eme Trimestre','1er Trimestre'];let rowTrouve=null,trimNom="",toutesLesRows=null;for(let t=0;t<trimestres.length;t++){const range=encodeURIComponent(trimestres[t]+"!A1:V2000");const sheetsId=eleve.sheetsId||CONFIG.SHEETS_ID;const url="https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";try{const res=await fetch(url);const data=await res.json();if(!data.values)continue;for(const row of data.values){if(String(row[1]||"").trim().toUpperCase()===mat.toUpperCase()){rowTrouve=row;trimNom=trimNoms[t];break;}}if(rowTrouve){toutesLesRows=data.values;break;}}catch(e){}}if(!rowTrouve){afficherNotesVides(div);return;}const row=rowTrouve;let groupes=[{titre:"&#128218; FRANCAIS",couleur:"#1565C0",matieres:[{nom:"Comp. Française",val:row[5],col:5},{nom:"Oral Français",val:row[6],col:6},{nom:"Orthographe",val:row[7],col:7}]},{titre:"&#127757; LETTRES & SCIENCES HUMAINES",couleur:"#2E7D32",matieres:[{nom:"Anglais",val:row[8],col:8},{nom:"Histoire-Geographie",val:row[11],col:11}]},{titre:"&#128300; SCIENCES",couleur:"#C62828",matieres:[{nom:"Mathematiques",val:row[12],col:12},{nom:"Sciences Physiques",val:row[13],col:13},{nom:"SVT",val:row[14],col:14}]},{titre:"&#11088; AUTRES MATIERES",couleur:"#E65100",matieres:[{nom:"EPS",val:row[15],col:15},{nom:"EDHC",val:row[16],col:16},{nom:"Conduite",val:row[17],col:17}]}];let html="<div style='background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;border-left:4px solid #1F4E79;'><p style='font-size:0.82em;color:#1F4E79;font-weight:bold;margin-bottom:2px;'>&#128203; RELEVE DE NOTES - "+trimNom+" 2025-2026</p><p style='font-size:0.76em;color:#666;'>Classe : <strong>"+eleve.classe+"</strong> - Matricule : <strong>"+mat+"</strong></p></div>";groupes.forEach(g=>{const aDesNotes=g.matieres.some(m=>{const f=parseFloat(String(m.val||"").replace(",","."));return !isNaN(f)&&f!==22;});if(!aDesNotes)return;html+="<div style='margin-bottom:14px;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);'><div style='background:"+g.couleur+";padding:9px 12px;'><span style='font-weight:bold;color:white;font-size:0.88em;'>"+g.titre+"</span></div>";g.matieres.forEach(m=>{const f=parseFloat(String(m.val||"").replace(",","."));if(isNaN(f)||f===22)return;const cn=f>=14?"#2E7D32":f>=10?"#B8860B":"#C62828";const bn=f>=14?"#E8F5E9":f>=10?"#FFFDE7":"#FFEBEE";html+="<div style='display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid #f0f0f0;'><div style='flex:1;font-size:0.86em;font-weight:bold;color:#333;'>"+m.nom+"</div><div style='text-align:center;min-width:54px;background:"+bn+";border-radius:8px;padding:6px 8px;'><div style='font-size:1.1em;font-weight:bold;color:"+cn+";'>"+f.toFixed(2)+"</div><div style='font-size:0.65em;color:"+cn+";'>/20</div></div></div>";});html+="</div>";});window._notesHtmlActuel=html;var btnPdfN="<div style='margin-top:12px;'><button onclick='genererNotesPDF()' style='width:100%;padding:11px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;border:none;border-radius:8px;font-size:0.88em;font-weight:bold;cursor:pointer;'>🖨 Télécharger le relevé de notes en PDF</button></div>";div.innerHTML=html+btnPdfN;}catch(e){afficherNotesVides(div);}}
-function afficherNotesVides(div){div.innerHTML="<div style='text-align:center;padding:30px 20px;'><div style='font-size:2.5em;margin-bottom:12px;'>&#128203;</div><p style='font-size:0.86em;color:#666;margin-bottom:8px;font-weight:bold;'>Notes non encore disponibles.</p><p style='font-size:0.78em;color:#aaa;line-height:1.6;'>Contactez l'ecole au <strong>07 08 11 12 69</strong></p></div>";}
+async function chargerCarnetNotes(eleve) {
+  var section = document.getElementById('sectionCarnetNotes');
+  var body = document.getElementById('carnetNotesBody');
+  if (!section || !body) return;
+  var sid = window._sheetsId2026;
+  if (!sid) { section.style.display = 'none'; return; }
+  var mat = eleve.matricule.trim().toUpperCase();
+  var trimestres = ['NOTES_T3','NOTES_T2','NOTES_T1'];
+  var html = '';
+  try {
+    for (var t = 0; t < trimestres.length; t++) {
+      var trim = trimestres[t];
+      var range = encodeURIComponent(trim + '!A2:H5000');
+      var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sid + '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+      var res = await fetch(url);
+      if (!res.ok) continue;
+      var data = await res.json();
+      var rows = (data.values || []).filter(function(r) {
+        return String(r[0]||'').trim().toUpperCase() === mat;
+      });
+      if (!rows.length) continue;
+
+      var parMatiere = {};
+      rows.forEach(function(r) {
+        var matiere = String(r[3]||'').trim() || 'Matière';
+        if (!parMatiere[matiere]) parMatiere[matiere] = [];
+        parMatiere[matiere].push({ devoir: r[4], note: r[5] });
+      });
+
+      var trimLabel = trim === 'NOTES_T1' ? '1er Trimestre' : trim === 'NOTES_T2' ? '2ème Trimestre' : '3ème Trimestre';
+      html += '<div style="margin-bottom:16px;">';
+      html += '<div style="font-size:0.85em;font-weight:700;color:#1F4E79;margin-bottom:8px;">' + trimLabel + '</div>';
+      Object.keys(parMatiere).sort().forEach(function(matiere) {
+        var devoirs = parMatiere[matiere];
+        var notesVal = devoirs.map(function(d){ return parseFloat(d.note); }).filter(function(n){ return !isNaN(n); });
+        var moyenne = notesVal.length ? (notesVal.reduce(function(a,b){return a+b;},0)/notesVal.length) : null;
+        html += '<div style="margin-bottom:10px;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">';
+        html += '<div style="background:#1565C0;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">';
+        html += '<span style="font-weight:bold;color:white;font-size:0.85em;">' + matiere + '</span>';
+        if (moyenne !== null) html += '<span style="background:rgba(255,255,255,0.2);color:white;font-size:0.8em;font-weight:bold;padding:2px 10px;border-radius:12px;">' + moyenne.toFixed(2) + '/20</span>';
+        html += '</div>';
+        html += '<div style="background:white;padding:8px 12px;display:flex;flex-wrap:wrap;gap:6px;">';
+        devoirs.forEach(function(d) {
+          var n = parseFloat(d.note);
+          var color = isNaN(n) ? '#999' : n>=14 ? '#2E7D32' : n>=10 ? '#B8860B' : '#C62828';
+          var bg = isNaN(n) ? '#F5F5F5' : n>=14 ? '#E8F5E9' : n>=10 ? '#FFFDE7' : '#FFEBEE';
+          html += '<div style="background:'+bg+';border-radius:6px;padding:4px 10px;text-align:center;">';
+          html += '<div style="font-size:0.65em;color:#888;">Devoir '+(d.devoir||'')+'</div>';
+          html += '<div style="font-size:0.9em;font-weight:bold;color:'+color+';">'+(isNaN(n)?'—':n)+'</div>';
+          html += '</div>';
+        });
+        html += '</div></div>';
+      });
+      html += '</div>';
+    }
+  } catch(e) {}
+
+  if (!html) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  body.innerHTML = '<div style="background:#FFF3E0;border-left:4px solid #E65100;padding:8px 12px;margin-bottom:12px;border-radius:0 8px 8px 0;"><p style="font-size:0.78em;color:#E65100;">&#9888; Suivi provisoire — ces notes sont indicatives, le bulletin officiel fait foi.</p></div>' + html;
+}
+  function afficherNotesVides(div){div.innerHTML="<div style='text-align:center;padding:30px 20px;'><div style='font-size:2.5em;margin-bottom:12px;'>&#128203;</div><p style='font-size:0.86em;color:#666;margin-bottom:8px;font-weight:bold;'>Notes non encore disponibles.</p><p style='font-size:0.78em;color:#aaa;line-height:1.6;'>Contactez l'ecole au <strong>07 08 11 12 69</strong></p></div>";}
 
   function genererNotesPDF() {
   var eleve = window._eleveActuel;
