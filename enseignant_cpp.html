@@ -1674,11 +1674,12 @@ function recalculerMoyennes() {
   const classe = document.getElementById('moyennesClasse').value;
   if (!classe || !trimestreActif) { showToast('Sélectionnez une classe', 'error'); return; }
   showLoader('Recalcul en cours...');
-  const url = APPS_SCRIPT_URL + '?type=RECALCULER_MOYENNES'
+const url = APPS_SCRIPT_URL + '?type=RECALCULER_MOYENNES'
     + '&ecole=' + encodeURIComponent(user.ecole)
     + '&classe=' + encodeURIComponent(classe)
     + '&matiere=' + encodeURIComponent(user.matiere)
-    + '&trimestre=' + encodeURIComponent(trimestreActif);
+    + '&trimestre=' + encodeURIComponent(trimestreActif)
+    + '&enseignant=' + encodeURIComponent(user.nom);
   const cbName = 'recalc_' + Date.now();
   const script = document.createElement('script');
   window[cbName] = (data) => {
@@ -1692,7 +1693,8 @@ function recalculerMoyennes() {
   script.src = url + '&callback=' + cbName;
   document.body.appendChild(script);
 }
-function getBulletinNiveau(classe) {
+
+  function getBulletinNiveau(classe) {
   const c = (classe||'').trim().toUpperCase();
   if (c.includes('MAT')||c==='PSA'||c==='MSA'||c==='GSA') return 'MAT';
   if (c.includes('CP1')) return 'CP1';
