@@ -463,7 +463,9 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
         <button class="av-btn" onclick="setAv('en avance')" id="avAv">🚀 En avance</button>
       </div>
     </div>
-    <div class="field-block"><div class="field-header">📋 Devoir donné</div><textarea class="textarea" id="cahierDevoir" placeholder="Énoncé du devoir..." style="border:none;border-radius:0;background:var(--surface);min-height:56px"></textarea></div>
+    <div class="field-block"><div class="field-header">📋 Devoir donné</div><textarea class="textarea" id="cahierDevoir" placeholder="Énoncé du devoir..." style="border:none;border-radius:0;background:var(--surface);min-height:56px"></textarea>
+  <div style="padding:10px 14px;border-top:1px solid var(--border)"><label class="label">Date de remise</label><input class="input" type="date" id="cahierDateRemise"></div>
+</div>
     <div class="field-block"><div class="field-header">📦 Documents à apporter</div><input class="input" id="cahierDocs" placeholder="Ex: Manuel page 45..." style="border:none;border-radius:0;background:var(--surface)"></div>
     <div class="field-block"><div class="field-header">💬 Observation</div><textarea class="textarea" id="cahierObs" placeholder="Remarques..." style="border:none;border-radius:0;background:var(--surface);min-height:56px"></textarea></div>
     <button class="toggle-btn" onclick="togglePanel('panelEstimCahier','arrowEstimCahier')"><span>💰 Estimation rémunération finale</span><span id="arrowEstimCahier" style="font-size:11px;color:var(--text2)">▼ Voir</span></button>
