@@ -426,7 +426,7 @@ table tr:nth-child(even){background:#F8FAFD}
   </div>
   <div class="section" id="dirSecAffectation">
     <div class="sec-head sec-rouge" onclick="toggleSec(this)">
-      <h3>🎓 Contacts parents & Statut Affecté(e) / Non affecté(e) (collège) <span id="affCount" style="font-size:0.9em;opacity:0.85"></span></h3><span class="arr">▼</span>
+      <h3>🎓 Contacts parents & Statut Affecté(e) / Non affecté(e) (collège & lycée) <span id="affCount" style="font-size:0.9em;opacity:0.85"></span></h3><span class="arr">▼</span>
     </div>
     <div class="sec-body" id="dirAffBody">
       <div style="display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
@@ -2743,7 +2743,7 @@ function _normRechDir(s){return String(s||'').toUpperCase().normalize('NFD').rep
 // ══ STATUT AFFECTATION — Tous les élèves (colonnes R/S de SYNTHESE) ══
 async function chargerAffectationTous(){
   const s=currentStaff; if(!s) return;
-  const sheetsId=SHEETS_IDS[s.ecole]; if(!sheetsId){showToast('Ecole non configuree','error');return;}
+  const sheetsId=SHEETS_IDS_2026_2027[s.ecole]; if(!sheetsId){showToast('Ecole non configuree','error');return;}
   const zone=document.getElementById('affTbody');
   zone.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Chargement...</td></tr>';
   try{
@@ -2860,7 +2860,7 @@ async function sauvegarderAffectation(idx,sel){
   const r=window._affListeCourante[idx];
   const statutCell=document.getElementById('affStatut_'+idx);
   if(statutCell)statutCell.textContent='...';
-  const sheetsId=SHEETS_IDS[currentStaff.ecole];
+  const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
   const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
     action:'majStatutEleve',sheetsId:sheetsId,ligne:r.ligne,
     classe2026:r.classe2026||r.classe,statutEleve:sel.value,matricule:r.matricule,nom:r.nom
@@ -2883,7 +2883,7 @@ async function sauvegarderContact(idx){
   // Ne rien envoyer si rien n'a change
   if(tel1===r.tel1&&tel2===r.tel2&&tel3===r.tel3) return;
   if(statutCell)statutCell.textContent='...';
-  const sheetsId=SHEETS_IDS[currentStaff.ecole];
+  const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
   const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
     action:'majContactsEleve',sheetsId:sheetsId,ligne:r.ligne,
     telPere:tel1,telMere:tel2,telTuteur:tel3,matricule:r.matricule
@@ -2909,7 +2909,7 @@ async function confirmerModifNom(idx){
 
   const statutCell=document.getElementById('affStatut_'+idx);
   if(statutCell)statutCell.textContent='...';
-  const sheetsId=SHEETS_IDS[currentStaff.ecole];
+  const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
   const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
     action:'majFicheEleve',sheetsId:sheetsId,ligne:r.ligne,
     champ:'nom',ancienneValeur:ancienneValeur,nouvelleValeur:nouvelleValeur,
