@@ -509,8 +509,8 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
     </div>
     <div class="form-group"><label class="label">Date de remise</label><input class="input" type="date" id="notesDate"></div>
     <div class="grid2">
-  <div class="form-group"><label class="label">⏰ Début du devoir</label><input class="input" type="time" id="notesHeureDebut"></div>
-  <div class="form-group"><label class="label">🏁 Fin du devoir</label><input class="input" type="time" id="notesHeureFin"></div>
+  <div class="form-group"><label class="label">⏰ Début du devoir</label><input class="input" type="time" id="notesHeureDebut" onchange="chargerElevesNotes()"></div>
+  <div class="form-group"><label class="label">🏁 Fin du devoir</label><input class="input" type="time" id="notesHeureFin" onchange="chargerElevesNotes()"></div>
 </div>
 <div id="notesBandeauManquants" style="display:none;background:var(--red-lt);border:1.5px solid #EF9A9A;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--red);font-weight:600"></div>
     <div id="notesListe"><p style="text-align:center;color:var(--text2);padding:24px">Sélectionnez une classe</p></div>
