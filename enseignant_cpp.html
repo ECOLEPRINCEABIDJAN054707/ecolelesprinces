@@ -508,6 +508,11 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
       <div class="form-group"><label class="label">Trimestre</label><select class="select" id="notesTrimestre"></select></div>
     </div>
     <div class="form-group"><label class="label">Date de remise</label><input class="input" type="date" id="notesDate"></div>
+    <div class="grid2">
+  <div class="form-group"><label class="label">⏰ Début du devoir</label><input class="input" type="time" id="notesHeureDebut"></div>
+  <div class="form-group"><label class="label">🏁 Fin du devoir</label><input class="input" type="time" id="notesHeureFin"></div>
+</div>
+<div id="notesBandeauManquants" style="display:none;background:var(--red-lt);border:1.5px solid #EF9A9A;border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:12px;font-size:12px;color:var(--red);font-weight:600"></div>
     <div id="notesListe"><p style="text-align:center;color:var(--text2);padding:24px">Sélectionnez une classe</p></div>
     <button class="btn btn-primary" id="btnPublierNotes" style="display:none;margin-bottom:20px" onclick="publierNotes()">📤 Publier les notes</button>
   </div>
@@ -1489,6 +1494,7 @@ async function chargerElevesNotes() {
   if (!classe) return;
   document.getElementById('notesSousTitre').textContent = (user.matiere||'') + ' · ' + classe;
   document.getElementById('btnPublierNotes').style.display = 'none';
+  document.getElementById('notesBandeauManquants').style.display = 'none';
   document.getElementById('notesListe').innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px">⏳ Chargement...</p>';
   try {
     showLoader('Chargement des élèves...');
@@ -1497,30 +1503,86 @@ async function chargerElevesNotes() {
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
-    hideLoader();
     if (!data.values || !data.values.length) {
+      hideLoader();
       document.getElementById('notesListe').innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px">Aucun élève dans cette classe</p>';
       return;
     }
-    elevesNotes = data.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({ matricule:(r[0]||'').toString().trim(), nom:(r[1]||'').toString().trim(), note:'' }));
+    elevesNotes = data.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({
+      matricule:(r[0]||'').toString().trim(), nom:(r[1]||'').toString().trim(),
+      note:'', statutAbsence:''
+    }));
+
+    // ── Pré-remplissage des absences pendant le créneau du devoir ──
+    const dateVal = document.getElementById('notesDate').value; // yyyy-mm-dd
+    const hD = document.getElementById('notesHeureDebut').value;
+    const hF = document.getElementById('notesHeureFin').value;
+    let avertissementHeures = '';
+    if (!hD || !hF) {
+      avertissementHeures = '<div style="background:var(--amber-lt);border:1.5px solid #FFD54F;border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:10px;font-size:11px;color:var(--amber)">⚠️ Heures non renseignées — les absences ne seront pas pré-remplies automatiquement, vérifiez chaque élève manuellement</div>';
+    }
+    if (dateVal) {
+      const [y,m,d] = dateVal.split('-');
+      const dateFr = `${d}/${m}/${y}`;
+      try {
+        const absences = await fetchAbsencesDevoir(classe, dateFr, hD, hF);
+        absences.forEach(ab => {
+          const el = elevesNotes.find(e => e.matricule.toUpperCase() === ab.matricule);
+          if (el) el.statutAbsence = ab.statutAbsence;
+        });
+      } catch(eAbs) { console.warn('fetchAbsencesDevoir:', eAbs); }
+    }
+
+    hideLoader();
     afficherElevesNotes();
+    if (avertissementHeures) {
+      document.getElementById('notesListe').insertAdjacentHTML('beforebegin', avertissementHeures);
+    }
     if (elevesNotes.length) document.getElementById('btnPublierNotes').style.display = 'block';
   } catch(e) { hideLoader(); showToast('Erreur chargement élèves','error'); }
 }
 
 function afficherElevesNotes() {
-  document.getElementById('notesListe').innerHTML = elevesNotes.map((el,i) => `
-    <div class="note-row">
+  document.getElementById('notesListe').innerHTML = elevesNotes.map((el,i) => {
+    const estAbsent = el.statutAbsence === 'JUSTIFIEE' || el.statutAbsence === 'NON_JUSTIFIEE';
+    const bordure = estAbsent ? 'border-color:var(--amber)' : '';
+    let contenu;
+    if (estAbsent) {
+      contenu = `
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
+          <button onclick="annulerAbsence(${i})" class="btn btn-sm btn-ghost" style="padding:4px 8px;min-height:auto">🚫 Absent — annuler</button>
+          <div style="display:flex;gap:4px">
+            <button onclick="setStatutAbsence(${i},'JUSTIFIEE')" class="btn btn-sm" style="min-height:auto;padding:4px 8px;${el.statutAbsence==='JUSTIFIEE'?'background:var(--green);color:#fff':'background:var(--bg)'}">✅ Justifiée</button>
+            <button onclick="setStatutAbsence(${i},'NON_JUSTIFIEE')" class="btn btn-sm" style="min-height:auto;padding:4px 8px;${el.statutAbsence==='NON_JUSTIFIEE'?'background:var(--red);color:#fff':'background:var(--bg)'}">❌ Non justifiée</button>
+          </div>
+        </div>`;
+    } else {
+      contenu = `
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" min="0" max="20" step="0.5" placeholder="—" value="${esc(el.note)}" class="note-input" oninput="majNoteInput(this,${i})">
+          <span style="font-size:11px;color:var(--text2)">/20</span>
+          <button onclick="setStatutAbsence(${i},'NON_JUSTIFIEE')" class="btn btn-sm btn-ghost" style="min-height:auto;padding:6px 8px" title="Marquer absent">🚫</button>
+        </div>`;
+    }
+    return `<div class="note-row" style="${bordure};align-items:flex-start">
       <div class="eleve-avatar" style="width:36px;height:36px;font-size:13px">${esc(el.nom.charAt(0))}</div>
       <div class="eleve-info">
         <div class="eleve-nom">${esc(el.nom)}</div>
         <div class="eleve-mat">${esc(el.matricule)}</div>
       </div>
-      <div style="display:flex;align-items:center;gap:4px">
-        <input type="number" min="0" max="20" step="0.5" placeholder="—" value="${esc(el.note)}" class="note-input" oninput="majNoteInput(this,${i})">
-        <span style="font-size:11px;color:var(--text2)">/20</span>
-      </div>
-    </div>`).join('');
+      ${contenu}
+    </div>`;
+  }).join('');
+}
+
+function setStatutAbsence(i, statut) {
+  elevesNotes[i].statutAbsence = statut;
+  elevesNotes[i].note = '';
+  afficherElevesNotes();
+}
+function annulerAbsence(i) {
+  elevesNotes[i].statutAbsence = '';
+  afficherElevesNotes();
 }
 
 function majNoteInput(el, i) {
@@ -1536,25 +1598,49 @@ async function publierNotes() {
   const trimestre = document.getElementById('notesTrimestre').value;
   const dateRemise = document.getElementById('notesDate').value;
   if (!classe || !dateRemise) { showToast('Classe et date requis','error'); return; }
-  const vals = elevesNotes.map(e=>parseFloat(e.note)).filter(n=>!isNaN(n));
-  if (!vals.length) { showToast('Saisissez au moins une note','error'); return; }
-  const moyenne = (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2);
+
+  const manquants = elevesNotes.filter(e => {
+    const aNote = e.note !== '' && !isNaN(parseFloat(e.note));
+    const aStatut = e.statutAbsence === 'JUSTIFIEE' || e.statutAbsence === 'NON_JUSTIFIEE';
+    return !aNote && !aStatut;
+  });
+  if (manquants.length) {
+    afficherBandeauManquants(manquants.map(e => e.nom));
+    showToast(`${manquants.length} élève(s) sans note ni statut d'absence`,'error');
+    return;
+  }
+  document.getElementById('notesBandeauManquants').style.display = 'none';
+
   showLoader('Publication des notes...');
   const data = {
     date:formatDate(new Date()), dateRemise, classe,
     matiere:user.matiere, enseignant:user.nom, ecole:user.ecole,
-    numeroDevoir:numero, trimestre, moyenne,
-    notes:elevesNotes.map(e=>({matricule:e.matricule,nom:e.nom,note:e.note||'ABS'}))
+    numeroDevoir:numero, trimestre,
+    notes:elevesNotes.map(e=>({matricule:e.matricule,nom:e.nom,note:e.note,statutAbsence:e.statutAbsence||''}))
   };
   try {
-    await envoyerDonnees('NOTES', data);
-    hideLoader(); showToast(`✅ Notes publiées — Moyenne: ${moyenne}/20`,'success');
+    const res = await envoyerDonnees('NOTES', data);
+    hideLoader();
+    if (res && res.ok === false && res.error === 'ELEVES_MANQUANTS') {
+      afficherBandeauManquants(res.manquants || []);
+      showToast('Élèves manquants signalés par le serveur','error');
+      return;
+    }
+    let msg = '✅ Notes publiées';
+    if (res && res.alertesEnvoyees > 0) msg += ` — ${res.alertesEnvoyees} parent(s) notifié(s) (absence non justifiée)`;
+    showToast(msg,'success');
     setTimeout(()=>goTo('accueil'),1500);
   } catch(e) {
     hideLoader(); sauvegarderHorsLigne('NOTES', data);
-    showToast(`📝 Notes sauvegardées — Moy: ${moyenne}/20`,'success');
+    showToast('📝 Notes sauvegardées localement (hors ligne)','success');
     setTimeout(()=>goTo('accueil'),1500);
   }
+}
+
+function afficherBandeauManquants(noms) {
+  const bandeau = document.getElementById('notesBandeauManquants');
+  bandeau.style.display = 'block';
+  bandeau.textContent = `⚠️ ${noms.length} élève(s) sans note ni statut d'absence : ${noms.join(', ')} — renseignez leur note ou marquez-les absents avant de publier.`;
 }
 
 // ══════════════════════════════════════════════
@@ -2000,6 +2086,8 @@ function initNotes() {
   document.getElementById('notesDate').value = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
   if (coursActuel && coursActuel.classe) {
     document.getElementById('notesClasse').value = coursActuel.classe;
+    document.getElementById('notesHeureDebut').value = coursActuel.heureDebutEDT || '';
+    document.getElementById('notesHeureFin').value = coursActuel.heureFinEDT || '';
     chargerElevesNotes();
   }
 }
