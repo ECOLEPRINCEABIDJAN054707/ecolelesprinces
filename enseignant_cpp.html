@@ -1545,6 +1545,25 @@ async function chargerElevesNotes() {
   } catch(e) { hideLoader(); showToast('Erreur chargement élèves','error'); }
 }
 
+function fetchAbsencesDevoir(classe, dateFr, heureDebut, heureFin) {
+  return new Promise((resolve) => {
+    const cbName = 'absdev_' + Date.now();
+    const script = document.createElement('script');
+    const params = new URLSearchParams({
+      callback: cbName, type: 'GET_ABSENCES_DEVOIR',
+      ecole: user.ecole, classe, date: dateFr,
+      heureDebut: heureDebut || '', heureFin: heureFin || ''
+    });
+    window[cbName] = (data) => {
+      delete window[cbName]; try{document.body.removeChild(script);}catch(e){}
+      resolve(data && data.ok ? data.absences : []);
+    };
+    script.onerror = () => { delete window[cbName]; resolve([]); };
+    script.src = APPS_SCRIPT_URL + '?' + params.toString();
+    document.body.appendChild(script);
+    setTimeout(() => { if (window[cbName]) { delete window[cbName]; resolve([]); } }, 10000);
+  });
+}  
 function afficherElevesNotes() {
   document.getElementById('notesListe').innerHTML = elevesNotes.map((el,i) => {
     const estAbsent = el.statutAbsence === 'JUSTIFIEE' || el.statutAbsence === 'NON_JUSTIFIEE';
