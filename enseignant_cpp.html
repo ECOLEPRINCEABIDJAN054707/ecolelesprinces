@@ -1495,6 +1495,9 @@ async function chargerElevesNotes() {
   document.getElementById('notesSousTitre').textContent = (user.matiere||'') + ' · ' + classe;
   document.getElementById('btnPublierNotes').style.display = 'none';
   document.getElementById('notesBandeauManquants').style.display = 'none';
+  // ── Nettoyer un éventuel avertissement heures laissé par un appel précédent ──
+  const ancienAvert = document.getElementById('notesAvertHeures');
+  if (ancienAvert) ancienAvert.remove();
   document.getElementById('notesListe').innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px">⏳ Chargement...</p>';
   try {
     showLoader('Chargement des élèves...');
@@ -1513,13 +1516,13 @@ async function chargerElevesNotes() {
       note:'', statutAbsence:''
     }));
 
-    // ── Pré-remplissage des absences pendant le créneau du devoir ──
-    const dateVal = document.getElementById('notesDate').value; // yyyy-mm-dd
+    const dateVal = document.getElementById('notesDate').value;
     const hD = document.getElementById('notesHeureDebut').value;
     const hF = document.getElementById('notesHeureFin').value;
+    console.log('DEBUG heures au moment du chargement — hD:', JSON.stringify(hD), 'hF:', JSON.stringify(hF));
     let avertissementHeures = '';
     if (!hD || !hF) {
-      avertissementHeures = '<div style="background:var(--amber-lt);border:1.5px solid #FFD54F;border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:10px;font-size:11px;color:var(--amber)">⚠️ Heures non renseignées — les absences ne seront pas pré-remplies automatiquement, vérifiez chaque élève manuellement</div>';
+      avertissementHeures = '<div id="notesAvertHeures" style="background:var(--amber-lt);border:1.5px solid #FFD54F;border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:10px;font-size:11px;color:var(--amber)">⚠️ Heures non renseignées — les absences ne seront pas pré-remplies automatiquement, vérifiez chaque élève manuellement</div>';
     }
     if (dateVal) {
       const [y,m,d] = dateVal.split('-');
