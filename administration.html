@@ -2861,9 +2861,12 @@ async function sauvegarderAffectation(idx,sel){
   const statutCell=document.getElementById('affStatut_'+idx);
   if(statutCell)statutCell.textContent='...';
   const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
   const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
     action:'majStatutEleve',sheetsId:sheetsId,ligne:r.ligne,
-    classe2026:r.classe2026||r.classe,statutEleve:sel.value,matricule:r.matricule,nom:r.nom
+    classe2026:r.classe2026||r.classe,statutEleve:sel.value,matricule:r.matricule,nom:r.nom,
+    modifiePar:modifiePar
   });
   if(result&&result.succes){r.statut=sel.value;if(statutCell)statutCell.textContent='✓ enregistré';showToast('Statut enregistre','success');}
   else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement','error');}
@@ -2875,23 +2878,23 @@ async function sauvegarderContact(idx){
   const tel2=(document.getElementById('affTel2_'+idx)||{}).value||'';
   const tel3=(document.getElementById('affTel3_'+idx)||{}).value||'';
   const statutCell=document.getElementById('affStatut_'+idx);
-  // Validation : 8 chiffres minimum si un numero est renseigne (champ vide = OK, pas obligatoire ici)
   if((tel1&&tel1.length<8)||(tel2&&tel2.length<8)||(tel3&&tel3.length<8)){
     showToast('Numero incomplet (8 chiffres minimum)','error');
     return;
   }
-  // Ne rien envoyer si rien n'a change
   if(tel1===r.tel1&&tel2===r.tel2&&tel3===r.tel3) return;
   if(statutCell)statutCell.textContent='...';
   const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
   const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
     action:'majContactsEleve',sheetsId:sheetsId,ligne:r.ligne,
-    telPere:tel1,telMere:tel2,telTuteur:tel3,matricule:r.matricule
+    telPere:tel1,telMere:tel2,telTuteur:tel3,matricule:r.matricule,
+    modifiePar:modifiePar
   });
   if(result&&result.succes){r.tel1=tel1;r.tel2=tel2;r.tel3=tel3;if(statutCell)statutCell.textContent='✓ contact maj';showToast('Contact enregistre','success');}
   else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement contact','error');}
 }
-
 // ══ MODIFICATION NOM — avec confirmation + traçabilité ══
 async function confirmerModifNom(idx){
   const r=window._affListeCourante[idx];
