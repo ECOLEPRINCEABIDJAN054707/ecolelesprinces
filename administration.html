@@ -1476,6 +1476,27 @@ async function attribuerMatriculeCom() {
   </div>
 </div>
   <div class="footer">Princes Smart School &middot; Espace Comptable &middot; 2026-2027</div>
+<div class="section" id="comSecAffectation">
+  <div class="sec-head sec-rouge" onclick="toggleSec(this)">
+    <h3>🎓 Contacts parents & Statut Affecté(e) / Non affecté(e) (collège & lycée) <span id="comAffCount" style="font-size:0.9em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="comAffBody">
+    <div style="display:flex;gap:8px;padding:10px 12px;flex-wrap:wrap;border-bottom:1px solid var(--border)">
+      <select id="comAffFiltreClasse" onchange="filtrerAffectationCom()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;font-family:DM Sans,sans-serif;outline:none"><option value="">Toutes les classes</option></select>
+      <select id="comAffFiltreStatut" onchange="filtrerAffectationCom()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;font-family:DM Sans,sans-serif;outline:none">
+        <option value="">Tous statuts</option><option value="AFF">Affecté(e)</option><option value="NAFF">Non affecté(e)</option><option value="NON RENSEIGNE">Non renseigné</option>
+      </select>
+      <button onclick="chargerAffectationTousCom()" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.92em;font-weight:600;cursor:pointer">🔄 Charger / Actualiser</button>
+    </div>
+    <div id="comAffResume" style="padding:10px 14px;font-size:0.95em"></div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th style="font-size:0.9em">Matricule</th><th style="font-size:0.9em">Nom</th><th style="font-size:0.9em">Classe</th><th style="font-size:0.9em">Statut</th><th style="font-size:0.9em">Tél. Père</th><th style="font-size:0.9em">Tél. Mère</th><th style="font-size:0.9em">Tél. Tuteur</th><th></th></tr></thead>
+        <tbody id="comAffTbody"><tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris);font-size:0.95em">Cliquez sur "Charger" pour voir vos élèves</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 </div>
 
 <!-- ESPACE EDUCATEUR -->
@@ -2929,8 +2950,173 @@ async function confirmerModifNom(idx){
     showToast('Erreur : '+(result&&result.message||'echec'),'error');
   }
 }
+// ══ STATUT AFFECTATION — Version Comptable (modifiable) ══
+async function chargerAffectationTousCom(){
+  const s=currentStaff; if(!s) return;
+  const sheetsId=SHEETS_IDS_2026_2027[s.ecole]; if(!sheetsId){showToast('Ecole non configuree','error');return;}
+  const zone=document.getElementById('comAffTbody');
+  zone.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Chargement...</td></tr>';
+  try{
+    const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r=await fetch(url);const data=await r.json();
+    if(!data.values||data.values.length<2){zone.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Aucune donnee</td></tr>';return;}
+    const rows=[];
+    const regexSEC=/^(6|5|4|3|2NDE|1[EÈ]RE|TLE)/i;
+    for(let i=1;i<data.values.length;i++){
+      const row=data.values[i];
+      const matricule=String(row[1]||'').trim();
+      if(!matricule) continue;
+      const classe=String(row[0]||'').trim();
+      rows.push({
+        ligne:i+1, classe:classe, matricule:matricule, nom:String(row[2]||'').trim(),
+        tel1:String(row[6]||'').trim(), tel2:String(row[7]||'').trim(), tel3:String(row[8]||'').trim(),
+        classe2026:String(row[17]||'').trim(), statut:String(row[18]||'').trim().toUpperCase(),
+        estCollege:regexSEC.test(classe)
+      });
+    }
+    window._affListeCom=rows;
+    const selCl=document.getElementById('comAffFiltreClasse');
+    if(selCl){
+      selCl.innerHTML='<option value="">Toutes les classes</option>';
+      const classes=[...new Set(rows.map(r=>r.classe))].filter(Boolean).sort();
+      classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCl.appendChild(o);});
+    }
+    const cnt=document.getElementById('comAffCount'); if(cnt)cnt.textContent='('+rows.length+' eleves)';
+    filtrerAffectationCom();
+  }catch(e){zone.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--rouge)">Erreur chargement</td></tr>';}
+}
 
-// ★★★ NOUVEAU — change l'annee active et recharge les donnees affichees
+function filtrerAffectationCom(){
+  const rows=window._affListeCom||[];
+  const fc=(document.getElementById('comAffFiltreClasse')||{}).value||'';
+  const fs=(document.getElementById('comAffFiltreStatut')||{}).value||'';
+  const filtered=rows.filter(r=>{
+    const st=r.statut||'NON RENSEIGNE';
+    return (!fc||r.classe===fc)&&(!fs||st===fs);
+  });
+  renderAffectationCom(filtered);
+}
+function renderAffectationCom(rows){
+  const tbody=document.getElementById('comAffTbody');
+  const collegiens=rows.filter(r=>r.estCollege);
+  const nbAff=collegiens.filter(r=>r.statut==='AFF').length;
+  const nbNaff=collegiens.filter(r=>r.statut==='NAFF').length;
+  const nbVide=collegiens.length-nbAff-nbNaff;
+  const nbPrim=rows.length-collegiens.length;
+  const nbSansContact=rows.filter(r=>!r.tel1&&!r.tel2&&!r.tel3).length;
+  const resume=document.getElementById('comAffResume');
+  if(resume)resume.innerHTML=
+    '<span class="bdg bg-bleu" style="font-size:0.95em">'+rows.length+' eleve(s)</span> &nbsp;'
+    +'<span class="bdg bg-vert" style="font-size:0.95em">'+nbAff+' Affecte(s)</span> &nbsp;'
+    +'<span class="bdg bg-rouge" style="font-size:0.95em">'+nbNaff+' Non affecte(s)</span> &nbsp;'
+    +'<span class="bdg" style="background:#eee;color:#666;font-size:0.95em">'+nbVide+' Non renseigne (college)</span>'
+    +(nbPrim>0?' &nbsp;<span class="bdg bg-bleu" style="background:#E3F2FD;color:#1565C0;font-size:0.95em">'+nbPrim+' primaire (contacts seulement)</span>':'')
+    +(nbSansContact>0?' &nbsp;<span class="bdg bg-orange" style="font-size:0.95em">'+nbSansContact+' sans aucun contact</span>':'');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris);font-size:0.95em">Aucun eleve pour ce filtre</td></tr>';return;}
+  let h='';
+  rows.forEach((r,idx)=>{
+    const telInput=(champ,val,label)=>'<input type="tel" id="'+champ+'Com_'+idx+'" value="'+(val||'')+'" placeholder="'+label+'" maxlength="15" '
+      +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')" '
+      +'onblur="sauvegarderContactCom('+idx+')" '
+      +'style="width:100%;padding:7px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em">';
+    const statutCol=r.estCollege
+      ? '<select id="comAffSel_'+idx+'" onchange="sauvegarderAffectationCom('+idx+',this)" style="width:100%;padding:7px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em">'
+        +'<option value=""'+(r.statut===''?' selected':'')+'>-- Non renseigne --</option>'
+        +'<option value="AFF"'+(r.statut==='AFF'?' selected':'')+'>Affecté(e)</option>'
+        +'<option value="NAFF"'+(r.statut==='NAFF'?' selected':'')+'>Non affecté(e)</option>'
+        +'</select>'
+      : '<span style="font-size:0.9em;color:var(--gris);font-style:italic">— (Primaire)</span>';
+    const nomInput='<input type="text" id="comAffNom_'+idx+'" value="'+r.nom.replace(/"/g,'&quot;')+'" '
+      +'onblur="confirmerModifNomCom('+idx+')" '
+      +'style="width:100%;padding:7px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em;font-weight:600">';
+    h+='<tr>'
+      +'<td style="font-size:0.9em;color:var(--gris)">'+r.matricule+'</td>'
+      +'<td>'+nomInput+'</td>'
+      +'<td style="font-size:0.95em">'+r.classe+'</td>'
+      +'<td>'+statutCol+'</td>'
+      +'<td>'+telInput('comAffTel1',r.tel1,'Père')+'</td>'
+      +'<td>'+telInput('comAffTel2',r.tel2,'Mère')+'</td>'
+      +'<td>'+telInput('comAffTel3',r.tel3,'Tuteur')+'</td>'
+      +'<td id="comAffStatut_'+idx+'" style="font-size:0.85em;color:var(--gris)">—</td>'
+      +'</tr>';
+  });
+  tbody.innerHTML=h;
+  window._affListeCouranteCom=rows;
+}
+ async function sauvegarderAffectationCom(idx,sel){
+  const r=window._affListeCouranteCom[idx];
+  const statutCell=document.getElementById('comAffStatut_'+idx);
+  if(statutCell)statutCell.textContent='...';
+  const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+  const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
+    action:'majStatutEleve',sheetsId:sheetsId,ligne:r.ligne,
+    classe2026:r.classe2026||r.classe,statutEleve:sel.value,matricule:r.matricule,nom:r.nom,
+    modifiePar:modifiePar
+  });
+  if(result&&result.succes){r.statut=sel.value;if(statutCell)statutCell.textContent='✓ enregistré';showToast('Statut enregistre','success');}
+  else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement','error');}
+}
+
+async function sauvegarderContactCom(idx){
+  const r=window._affListeCouranteCom[idx];
+  const tel1=(document.getElementById('comAffTel1Com_'+idx)||{}).value||'';
+  const tel2=(document.getElementById('comAffTel2Com_'+idx)||{}).value||'';
+  const tel3=(document.getElementById('comAffTel3Com_'+idx)||{}).value||'';
+  const statutCell=document.getElementById('comAffStatut_'+idx);
+  if((tel1&&tel1.length<8)||(tel2&&tel2.length<8)||(tel3&&tel3.length<8)){
+    showToast('Numero incomplet (8 chiffres minimum)','error');
+    return;
+  }
+  if(tel1===r.tel1&&tel2===r.tel2&&tel3===r.tel3) return;
+  if(statutCell)statutCell.textContent='...';
+  const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+  const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
+    action:'majContactsEleve',sheetsId:sheetsId,ligne:r.ligne,
+    telPere:tel1,telMere:tel2,telTuteur:tel3,matricule:r.matricule,
+    modifiePar:modifiePar
+  });
+  if(result&&result.succes){r.tel1=tel1;r.tel2=tel2;r.tel3=tel3;if(statutCell)statutCell.textContent='✓ contact maj';showToast('Contact enregistre','success');}
+  else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement contact','error');}
+}
+
+async function confirmerModifNomCom(idx){
+  const r=window._affListeCouranteCom[idx];
+  const input=document.getElementById('comAffNom_'+idx);
+  if(!input) return;
+  const nouvelleValeur=input.value.trim();
+  const ancienneValeur=r.nom;
+  if(nouvelleValeur===ancienneValeur) return;
+  if(!nouvelleValeur){ showToast('Le nom ne peut pas etre vide','error'); input.value=ancienneValeur; return; }
+
+  const ok=window.confirm('Confirmer le changement de nom ?\n\n'
+    +'Ancien : '+ancienneValeur+'\nNouveau : '+nouvelleValeur+'\n\n'
+    +'Matricule : '+r.matricule);
+  if(!ok){ input.value=ancienneValeur; return; }
+
+  const statutCell=document.getElementById('comAffStatut_'+idx);
+  if(statutCell)statutCell.textContent='...';
+  const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
+  const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
+    action:'majFicheEleve',sheetsId:sheetsId,ligne:r.ligne,
+    champ:'nom',ancienneValeur:ancienneValeur,nouvelleValeur:nouvelleValeur,
+    matricule:r.matricule,ecole:currentStaff.ecole,
+    directeur:(currentStaff.nom||currentStaff.matricule||'inconnu')+' (Comptable)'
+  });
+  if(result&&result.succes){
+    r.nom=nouvelleValeur;
+    if(statutCell)statutCell.textContent='✓ modifié';
+    showToast('Nom mis a jour (historise)','success');
+  }else{
+    if(statutCell)statutCell.textContent='Erreur';
+    input.value=ancienneValeur;
+    showToast('Erreur : '+(result&&result.message||'echec'),'error');
+  }
+}
+  // ★★★ NOUVEAU — change l'annee active et recharge les donnees affichees
 async function changerAnneeDir(){
   window._anneeSelectionnee = document.getElementById('dirSelectAnnee').value;
   window._dirEleves = null; // vider le cache pour forcer un rechargement avec la bonne base
@@ -3007,7 +3193,8 @@ function afficherCom(s){
   document.getElementById('comNom').textContent=s.nom;document.getElementById('comEcole').textContent=s.label;
   document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;
  chargerAppelsCom(s.ecole); 
- setTimeout(function(){chargerMasseSalarialeCom(s.ecole);},600);
+setTimeout(function(){chargerAffectationTousCom();},700);
+  setTimeout(function(){chargerMasseSalarialeCom(s.ecole);},600);
   remplirMoisCom();
   const cPai=document.getElementById('comPaiBody');if(cPai)cPai.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement...</p>';
   chargerSynthese(s.ecole).then(eleves=>{
