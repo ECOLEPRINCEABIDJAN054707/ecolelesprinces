@@ -4176,8 +4176,8 @@ async function chargerResultats(ecole){
   return fusion;
 }
 async function chargerMessages(ecole){
-  const sheetsId=SHEETS_IDS[ecole];if(!sheetsId)return[];
-  for(const sn of['MESSAGES','CONTACTS','JOURNAL']){try{const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';const r=await fetch(url);const data=await r.json();if(data.values&&data.values.length>=2)return data.values.slice(1).filter(row=>row[0]).map(row=>({date:String(row[0]||'').trim(),message:String(row[3]||'').trim(),nom:String(row[4]||'').trim(),matricule:String(row[5]||'').trim(),classe:String(row[6]||'').trim(),statut:String(row[8]||'').trim()||'CONNEXION',reponse:String(row[9]||'').trim()}));}catch(e){}}
+ const sheetsId=SHEETS_IDS_2026_2027[ecole];if(!sheetsId)return[];
+  for(const sn of['MESSAGES','CONTACTS','JOURNAL']){try{const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';const r=await fetch(url);const data=await r.json();if(data.values&&data.values.length>=2)return data.values.slice(1).filter(row=>row[0]).map(row=>({date:String(row[0]||'').trim(),message:String(row[3]||'').trim(),nom:String(row[4]||'').trim(),matricule:String(row[5]||'').trim(),classe:String(row[6]||'').trim(),statut:String(row[8]||'').trim()||'CONNEXION',reponse:String(row[9]||'').trim(),idMessage:String(row[10]||'').trim()}));}catch(e){}}
   return[];
 }
 function _niveauSeulDir(classe){var c=String(classe||'').trim().toUpperCase();var m=c.match(/^(MATERNELLE|PS|MS|GS|CP1|CP2|CP|CE1|CE2|CE|CM1|CM2|CM|6EME|5EME|4EME|3EME|2NDE|1ERE|1ÈRE|TLE)/);return m?m[1].replace('È','E'):c;}
@@ -4229,14 +4229,30 @@ function renderMessages(data,bodyId,canReply){
   if(!data.length){body.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun message</p>';return;}
   const msgs=data.filter(m=>m.message);const connexions=data.filter(m=>m.statut==='CONNEXION'&&!m.message);
   let h='';if(connexions.length)h+='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">'+connexions.length+' connexion(s) parent recente(s)</div>';
-  if(msgs.length){msgs.forEach((m,i)=>{const nonLu=!m.reponse;const repId='rep-msg-'+i;h+='<div style="padding:12px 16px;border-bottom:1px solid var(--border);background:'+(nonLu?'#FFF8E1':'#fff')+'"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><div style="font-size:0.82em;font-weight:700">'+m.nom+' <span style="font-size:0.8em;color:var(--gris)">· '+m.classe+'</span></div><div style="font-size:0.7em;color:var(--gris)">'+m.date+(nonLu?' <span style="color:var(--orange);font-weight:700">Non lu</span>':'')+'</div></div><div style="font-size:0.8em;margin-bottom:6px">'+m.message+'</div>';if(m.reponse){h+='<div style="background:#E8F5E9;border-radius:6px;padding:6px 10px;font-size:0.76em;color:var(--vert)">Reponse: '+m.reponse+'</div>';}else if(canReply){h+='<div style="display:flex;gap:6px;margin-top:6px"><input id="'+repId+'" type="text" placeholder="Votre reponse..." style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;outline:none"><button onclick="envoyerReponse(this)" data-mat="'+m.matricule+'" data-rep="'+repId+'" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">Repondre</button></div>';}h+='</div>';});}
+  if(msgs.length){msgs.forEach((m,i)=>{const nonLu=!m.reponse;const repId='rep-msg-'+i;h+='<div style="padding:12px 16px;border-bottom:1px solid var(--border);background:'+(nonLu?'#FFF8E1':'#fff')+'"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><div style="font-size:0.82em;font-weight:700">'+m.nom+' <span style="font-size:0.8em;color:var(--gris)">· '+m.classe+'</span></div><div style="font-size:0.7em;color:var(--gris)">'+m.date+(nonLu?' <span style="color:var(--orange);font-weight:700">Non lu</span>':'')+'</div></div><div style="font-size:0.8em;margin-bottom:6px">'+m.message+'</div>';if(m.reponse){h+='<div style="background:#E8F5E9;border-radius:6px;padding:6px 10px;font-size:0.76em;color:var(--vert)">Reponse: '+m.reponse+'</div>';}else if(canReply){h+='<div style="display:flex;gap:6px;margin-top:6px"><input id="'+repId+'" type="text" placeholder="Votre reponse..." style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;outline:none"><button onclick="envoyerReponse(this)" data-mat="'+m.matricule+'" data-id="'+(m.idMessage||'')+'" data-rep="'+repId+'" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">Repondre</button></div>';}h+='</div>';});}
   else if(!connexions.length)h='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun message parent</p>';
   body.innerHTML=h;
 }
 async function envoyerReponse(btn){
-  const matricule=btn.getAttribute('data-mat');const inp=document.getElementById(btn.getAttribute('data-rep'));
+  const matricule=btn.getAttribute('data-mat');
+  const idMessage=btn.getAttribute('data-id')||'';
+  const inp=document.getElementById(btn.getAttribute('data-rep'));
   if(!inp||!inp.value.trim()){showToast('Ecrivez une reponse','error');return;}
-  try{await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({type:'REPONDRE_MESSAGE',matricule,reponse:inp.value.trim(),ecole:currentStaff.ecole})});showToast('Reponse envoyee','success');inp.value='';}catch(e){showToast('Erreur envoi','error');}
+  const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
+  if(!sheetsId){showToast('Base 2026-2027 non configuree pour cette ecole','error');return;}
+  btn.disabled=true;const txtOrig=btn.textContent;btn.textContent='Envoi...';
+  const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
+    action:'repondreMessageParent',sheetsId:sheetsId,matricule:matricule,
+    reponse:inp.value.trim(),idMessage:idMessage
+  });
+  btn.disabled=false;btn.textContent=txtOrig;
+  if(result&&result.ok){
+    showToast('Reponse envoyee','success');
+    inp.value='';
+    chargerResultatsEtMessages(currentStaff.ecole, currentStaff.profil);
+  }else{
+    showToast('Erreur envoi — reessayez','error');
+  }
 }
 async function chargerResultatsEtMessages(ecole,profil){
   const[resultats,messages]=await Promise.all([chargerResultats(ecole),chargerMessages(ecole)]);
