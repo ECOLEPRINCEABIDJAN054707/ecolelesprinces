@@ -2206,21 +2206,53 @@ function login(){
   const code=document.getElementById('inputCode').value.trim();
   document.getElementById('errMsg').style.display='none';
   if(!mat||!code){affErr('Veuillez remplir tous les champs.');return;}
-  const s=STAFF[mat];
-  if(s&&s.code===code){
-    const PRIM=['ACADEMIE','AKEIKOI 1','AKEIKOI 2'];
-    if(s.profil==='EDU'&&PRIM.includes(s.ecole)){affErr("Les ecoles primaires n'ont pas d'espace Educateur.");return;}
-    tentativesPin=0;procederLogin(s);return;
-  }
-  if(mat.startsWith('EDU-')){
-    const ecole=document.getElementById('inputEcoleEdu').value;
-    if(!ecole){affErr('Selectionnez votre ecole.');document.getElementById('grpEcoleEdu').style.display='block';return;}
-    verifierEducateurSheets(mat,code,ecole);return;
-  }
-  tentativesPin++;
   if(tentativesPin>=3){affErr('Acces bloque - Contactez le fondateur.');return;}
-  affErr('Matricule ou code incorrect. ('+tentativesPin+'/3)');
-  document.getElementById('inputCode').value='';
+
+  const btn=document.getElementById('btnConnecter')||document.querySelector('.btn-login');
+  const texteOrig=btn?btn.textContent:'';
+  if(btn){btn.disabled=true;btn.textContent='⏳ Verification...';}
+
+  const cbName='vs_'+Date.now();
+  const script=document.createElement('script');
+  let reponseRecue=false;
+  const timeout=setTimeout(()=>{
+    if(reponseRecue)return;
+    cleanup();
+    if(btn){btn.disabled=false;btn.textContent=texteOrig;}
+    affErr('Serveur inaccessible - verifiez votre connexion.');
+  },15000);
+  function cleanup(){delete window[cbName];try{document.body.removeChild(script);}catch(e){}clearTimeout(timeout);}
+
+  window[cbName]=function(data){
+    reponseRecue=true;cleanup();
+    if(btn){btn.disabled=false;btn.textContent=texteOrig;}
+    if(data&&data.ok){
+      const PRIM=['ACADEMIE','AKEIKOI 1','AKEIKOI 2'];
+      if(data.profil==='EDU'&&PRIM.includes(data.ecole)){affErr("Les ecoles primaires n'ont pas d'espace Educateur.");return;}
+      const s={matricule:data.matricule,code,nom:data.nom,ecole:data.ecole,profil:data.profil,type:data.type,label:data.label,classes:data.classes||[]};
+      tentativesPin=0;
+      procederLogin(s);
+      return;
+    }
+    // Repli — ancien flux Educateur par ecole (si le matricule n'est pas dans STAFF)
+    if(mat.startsWith('EDU-')){
+      const ecole=document.getElementById('inputEcoleEdu').value;
+      if(!ecole){affErr('Selectionnez votre ecole.');document.getElementById('grpEcoleEdu').style.display='block';return;}
+      verifierEducateurSheets(mat,code,ecole);
+      return;
+    }
+    tentativesPin++;
+    if(tentativesPin>=3){affErr('Acces bloque - Contactez le fondateur.');return;}
+    affErr((data&&data.message?data.message:'Matricule ou code incorrect')+' ('+tentativesPin+'/3)');
+    document.getElementById('inputCode').value='';
+  };
+  script.onerror=function(){
+    reponseRecue=true;cleanup();
+    if(btn){btn.disabled=false;btn.textContent=texteOrig;}
+    affErr('Erreur de connexion au serveur.');
+  };
+  script.src=APPS_SCRIPT_POINTAGE+'?callback='+cbName+'&type=VERIFIER_STAFF&matricule='+encodeURIComponent(mat)+'&code='+encodeURIComponent(code);
+  document.body.appendChild(script);
 }
   function loginStaffServeur() {
   const mat = document.getElementById('inputMat').value.trim().toUpperCase();
