@@ -2116,9 +2116,9 @@ const SHEETS_IDS_2026_2027 = {
 
 // Renvoie l'ID de base correct selon l'annee actuellement selectionnee par le Directeur
 function getSheetsIdPourEcole(ecole) {
-  var annee = window._anneeSelectionnee || '2025-2026';
-  if (annee === '2026-2027') return SHEETS_IDS_2026_2027[ecole] || SHEETS_IDS[ecole];
-  return SHEETS_IDS[ecole];
+  var annee = window._anneeSelectionnee || '2026-2027';
+  if (annee === '2025-2026') return SHEETS_IDS[ecole];
+  return SHEETS_IDS_2026_2027[ecole] || SHEETS_IDS[ecole];
 }
 const TARIFS={'CPP LES PRINCES':{college:1200,lycee:1500},'CPP PRO':{college:1200,lycee:1500},'CPP TECH':{college:1200,lycee:1500},'ETL PRINCES KOUIBLY':{college:1000,lycee:1200}};
 const TARIF_DEFAUT={college:1000,lycee:1200};
