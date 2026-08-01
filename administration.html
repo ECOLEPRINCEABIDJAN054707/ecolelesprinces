@@ -2222,6 +2222,59 @@ function login(){
   affErr('Matricule ou code incorrect. ('+tentativesPin+'/3)');
   document.getElementById('inputCode').value='';
 }
+  function loginStaffServeur() {
+  const mat = document.getElementById('inputMat').value.trim().toUpperCase();
+  const code = document.getElementById('inputCode').value.trim();
+  document.getElementById('errMsg').style.display = 'none';
+
+  if (!mat || !code) { affErr('Veuillez remplir tous les champs.'); return; }
+
+  const btn = document.querySelector('.btn-login');
+  const texteOrig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '⏳ Vérification...';
+
+  const cbName = 'vs_' + Date.now();
+  const script = document.createElement('script');
+  let reponseRecue = false;
+  const timeout = setTimeout(() => {
+    if (reponseRecue) return;
+    cleanup();
+    btn.disabled = false; btn.textContent = texteOrig;
+    affErr('Serveur inaccessible — vérifiez votre connexion.');
+  }, 15000);
+
+  function cleanup() { delete window[cbName]; try { document.body.removeChild(script); } catch(e){} clearTimeout(timeout); }
+
+  window[cbName] = function(data) {
+    reponseRecue = true; cleanup();
+    btn.disabled = false; btn.textContent = texteOrig;
+    if (data && data.ok) {
+      const s = {
+        matricule: data.matricule, code: code, nom: data.nom,
+        ecole: data.ecole, profil: data.profil, type: data.type,
+        label: data.label, classes: data.classes || []
+      };
+      tentativesPin = 0;
+      procederLogin(s);
+    } else {
+      tentativesPin++;
+      if (tentativesPin >= 3) { affErr('Acces bloque - Contactez le fondateur.'); return; }
+      affErr((data && data.message ? data.message : 'Matricule ou code incorrect') + ' (' + tentativesPin + '/3)');
+      document.getElementById('inputCode').value = '';
+    }
+  };
+  script.onerror = function() {
+    reponseRecue = true; cleanup();
+    btn.disabled = false; btn.textContent = texteOrig;
+    affErr('Erreur de connexion au serveur.');
+  };
+  script.src = APPS_SCRIPT_POINTAGE + '?callback=' + cbName
+    + '&type=VERIFIER_STAFF'
+    + '&matricule=' + encodeURIComponent(mat)
+    + '&code=' + encodeURIComponent(code);
+  document.body.appendChild(script);
+}
 async function verifierEducateurSheets(mat,code,ecole){
   showLoader('Verification...');
   try{
