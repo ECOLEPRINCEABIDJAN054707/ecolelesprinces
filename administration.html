@@ -2767,7 +2767,28 @@ chargerMasseSalarialeReseauFond();
 setTimeout(chargerVueReseauConnexionsStaff, 300);document.getElementById('espaceFond').style.display='block';
   setTimeout(peuplerSelectEcoleFond,200);
 }
-async function chargerSynthese(ecole){
+// ============================================================
+// CACHE SYNTHESE — évite de relire Google Sheets à chaque section
+// TTL court (60s) + invalidation immédiate sur toute écriture
+// ============================================================
+const _CACHE_SYNTHESE = {}; // { ecole: { data, timestamp } }
+const CACHE_SYNTHESE_TTL_MS = 60000; // 60 secondes
+
+async function chargerSyntheseAvecCache(ecole, forcerRafraichissement){
+  const entree = _CACHE_SYNTHESE[ecole];
+  const maintenant = Date.now();
+  if(!forcerRafraichissement && entree && (maintenant - entree.timestamp) < CACHE_SYNTHESE_TTL_MS){
+    return entree.data;
+  }
+  const data = await chargerSynthese(ecole);
+  _CACHE_SYNTHESE[ecole] = { data: data, timestamp: maintenant };
+  return data;
+}
+
+function invaliderCacheSynthese(ecole){
+  delete _CACHE_SYNTHESE[ecole];
+}
+  async function chargerSynthese(ecole){
   const sheetsId=getSheetsIdPourEcole(ecole);if(!sheetsId)return null;
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
