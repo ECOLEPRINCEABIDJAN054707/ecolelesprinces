@@ -2200,7 +2200,7 @@ function hideLoader(){document.getElementById('loadingPage').style.display='none
 function affErr(m){const e=document.getElementById('errMsg');e.textContent=m;e.style.display='block';}
 let tt;function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(type||'')+' show';clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),3500);}
 function toggleSec(hdr){const body=hdr.nextElementSibling;hdr.classList.toggle('open');body.classList.toggle('open');}
-function detecterEdu(val){const inStaff=STAFF[val]&&STAFF[val].profil==='EDU';const needsEcole=val.startsWith('EDU-')&&!inStaff;document.getElementById('grpEcoleEdu').style.display=needsEcole?'block':'none';document.getElementById('eduHint').style.display=needsEcole?'block':'none';}
+function detecterEdu(val){const needsEcole=val.trim().toUpperCase().startsWith('EDU-');document.getElementById('grpEcoleEdu').style.display=needsEcole?'block':'none';document.getElementById('eduHint').style.display=needsEcole?'block':'none';}
 function login(){
   const mat=document.getElementById('inputMat').value.trim().toUpperCase();
   const code=document.getElementById('inputCode').value.trim();
