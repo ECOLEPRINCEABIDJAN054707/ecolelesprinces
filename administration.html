@@ -367,8 +367,34 @@ table tr:nth-child(even){background:#F8FAFD}
         <div id="ceMessage" style="display:none;margin-top:10px;padding:10px;border-radius:6px;font-size:0.82em"></div>
       </div>
     </div>
+ <div class="sec-head sec-violet" onclick="toggleSec(this)">
+  <h3>📝 Saisir un cours manuel</h3><span class="arr">▼</span>
+</div>
+<div class="sec-body" style="display:none">
+  <div style="padding:14px">
+    <p style="font-size:0.78em;color:var(--gris);margin:0 0 12px">Pour un enseignant qui n'a pas pu faire son appel via l'EDT (remplacement, EDT non saisi...). Le cours sera enregistré comme validé.</p>
+    <div class="form-group"><label class="label">Enseignant (nom complet)</label><input class="input" type="text" id="scmEnseignant" placeholder="Ex: KOUAME JEAN" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box"></div>
+    <div class="form-group" style="margin-top:10px"><label class="label">Classe</label><input class="input" type="text" id="scmClasse" placeholder="Ex: 6EME 3" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box"></div>
+    <div class="form-group" style="margin-top:10px"><label class="label">Matière</label><input class="input" type="text" id="scmMatiere" placeholder="Ex: Mathematiques" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box"></div>
+    <div class="form-group" style="margin-top:10px"><label class="label">Date</label><input class="input" type="date" id="scmDate" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box"></div>
+    <div style="display:flex;gap:10px;margin-top:10px">
+      <div class="form-group" style="flex:1"><label class="label">Heure début</label><input class="input" type="time" id="scmHeureDebut" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box"></div>
+      <div class="form-group" style="flex:1"><label class="label">Heure fin</label><input class="input" type="time" id="scmHeureFin" style="width:100%;padding:10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box"></div>
+    </div>
+    <button onclick="confirmerSaisieCoursManuel()" style="width:100%;margin-top:14px;padding:12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.9em;font-weight:600;cursor:pointer">Enregistrer le cours</button>
+    <div id="scmMessage" style="display:none"></div>
+
+    <hr style="margin:20px 0;border:none;border-top:1px solid var(--border)">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <label class="label" style="margin:0">Cours du jour (annuler une erreur)</label>
+      <button onclick="chargerCoursDuJourAnnulation()" style="padding:6px 12px;background:#F5F5F5;border:1px solid var(--border);border-radius:6px;font-size:0.78em;cursor:pointer">🔄 Charger</button>
+    </div>
+    <div id="scmListeCours" style="font-size:0.82em;color:var(--gris)">Cliquez sur "Charger" pour voir les cours du jour.</div>
   </div>
-<div class="section" id="dirSecRecepParents">
+</div>
+  </div>
+  <div class="section" id="dirSecRecepParents">
   <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
     <h3>&#128100; Cahier de r&eacute;ception des parents <span id="dirRecepCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
   </div>
@@ -3715,6 +3741,143 @@ async function confirmerChangerEnseignant() {
     msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em';
     msgDiv.textContent = '❌ Erreur réseau : ' + e.message;
   }
+}
+  // ⚠️ NOUVEAU — Saisir un cours manuel (espace Directeur)
+async function confirmerSaisieCoursManuel() {
+  const enseignant = document.getElementById('scmEnseignant').value.trim();
+  const classe = document.getElementById('scmClasse').value.trim();
+  const matiere = document.getElementById('scmMatiere').value.trim();
+  const dateVal = document.getElementById('scmDate').value;
+  const heureDebut = document.getElementById('scmHeureDebut').value;
+  const heureFin = document.getElementById('scmHeureFin').value;
+  const msgDiv = document.getElementById('scmMessage');
+
+  if (!enseignant || !classe || !matiere || !dateVal || !heureDebut || !heureFin) {
+    msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em';
+    msgDiv.textContent = '⚠️ Remplissez tous les champs.';
+    return;
+  }
+
+  const dateFr = dateVal.split('-').reverse().join('/');
+  const confirme = window.confirm(
+    'Confirmer la saisie de ce cours ?\n\n' +
+    'Enseignant : ' + enseignant + '\n' +
+    'Classe : ' + classe + '\n' +
+    'Matière : ' + matiere + '\n' +
+    'Date : ' + dateFr + '\n' +
+    'Horaire : ' + heureDebut + ' → ' + heureFin
+  );
+  if (!confirme) return;
+
+  msgDiv.style.cssText = 'display:block;background:#E3F2FD;color:var(--bleu);border:1px solid #90CAF9;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em';
+  msgDiv.textContent = '⏳ Enregistrement...';
+
+  const cbName = 'scm_' + Date.now();
+  const script = document.createElement('script');
+  window[cbName] = function(data) {
+    delete window[cbName]; document.body.removeChild(script);
+    if (data && data.ok) {
+      msgDiv.style.cssText = 'display:block;background:#E8F5E9;color:#2E7D32;border:1px solid #A5D6A7;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em';
+      msgDiv.textContent = '✅ ' + data.message;
+      document.getElementById('scmEnseignant').value = '';
+      document.getElementById('scmClasse').value = '';
+      document.getElementById('scmMatiere').value = '';
+      document.getElementById('scmDate').value = '';
+      document.getElementById('scmHeureDebut').value = '';
+      document.getElementById('scmHeureFin').value = '';
+    } else {
+      msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em';
+      msgDiv.textContent = '❌ ' + (data && data.message ? data.message : 'Erreur inconnue');
+    }
+  };
+  script.onerror = function() {
+    delete window[cbName]; document.body.removeChild(script);
+    msgDiv.style.cssText = 'display:block;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;padding:10px;border-radius:6px;margin-top:10px;font-size:0.82em';
+    msgDiv.textContent = '❌ Erreur de connexion au serveur.';
+  };
+  script.src = APPS_SCRIPT_POINTAGE + '?callback=' + cbName
+    + '&type=SAISIR_COURS_MANUEL'
+    + '&ecole=' + encodeURIComponent(currentStaff.ecole)
+    + '&enseignant=' + encodeURIComponent(enseignant)
+    + '&classe=' + encodeURIComponent(classe)
+    + '&matiere=' + encodeURIComponent(matiere)
+    + '&date=' + encodeURIComponent(dateFr)
+    + '&heureDebut=' + encodeURIComponent(heureDebut)
+    + '&heureFin=' + encodeURIComponent(heureFin)
+    + '&directeur=' + encodeURIComponent(currentStaff.nom || currentStaff.matricule);
+  document.body.appendChild(script);
+}
+
+// ⚠️ NOUVEAU — Charger les cours du jour pour permettre l'annulation
+async function chargerCoursDuJourAnnulation() {
+  const div = document.getElementById('scmListeCours');
+  div.innerHTML = 'Chargement...';
+  try {
+    const sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole];
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2,'0');
+    const mm = String(today.getMonth()+1).padStart(2,'0');
+    const yyyy = today.getFullYear();
+    const dateAuj = dd + '/' + mm + '/' + yyyy;
+
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/POINTAGE_MENSUEL?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    const r = await fetch(url);
+    const data = await r.json();
+    if (!data.values || data.values.length < 2) { div.innerHTML = 'Aucun cours trouvé.'; return; }
+
+    let html = '';
+    let trouve = 0;
+    for (let i = 1; i < data.values.length; i++) {
+      const row = data.values[i];
+      const dateLigne = String(row[0] || '');
+      if (dateLigne.indexOf(dateAuj) === -1 && dateLigne !== dateAuj) continue;
+      const statut = String(row[9] || '');
+      const estAnnule = statut.indexOf('ANNULÉ') >= 0;
+      trouve++;
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid var(--border);' + (estAnnule ? 'opacity:0.5' : '') + '">';
+      html += '<div><b>' + (row[4]||'') + '</b> — ' + (row[2]||'') + ' (' + (row[3]||'') + ') ' + (row[1]||'') + '-' + (row[7]||'') + '<br><span style="font-size:0.85em;color:' + (estAnnule?'#C62828':'#2E7D32') + '">' + statut + '</span></div>';
+      if (!estAnnule) {
+        html += '<button onclick="demanderAnnulationCours(' + (i+1) + ',\'' + (row[4]||'').replace(/'/g,"") + '\',\'' + (row[2]||'').replace(/'/g,"") + '\')" style="padding:6px 10px;background:#FFEBEE;color:#C62828;border:1px solid #EF9A9A;border-radius:6px;font-size:0.78em;cursor:pointer">Annuler</button>';
+      }
+      html += '</div>';
+    }
+    div.innerHTML = trouve > 0 ? html : 'Aucun cours aujourd\'hui (' + dateAuj + ').';
+  } catch (e) {
+    div.innerHTML = '❌ Erreur de chargement.';
+  }
+}
+
+// ⚠️ NOUVEAU — Demander confirmation puis annuler un cours
+async function demanderAnnulationCours(ligne, enseignant, classe) {
+  const confirme = window.confirm(
+    'Annuler ce cours ?\n\n' +
+    'Enseignant : ' + enseignant + '\n' +
+    'Classe : ' + classe + '\n\n' +
+    'Le salaire correspondant sera remis à 0. Cette action est tracée.'
+  );
+  if (!confirme) return;
+
+  const cbName = 'ac_' + Date.now();
+  const script = document.createElement('script');
+  window[cbName] = function(data) {
+    delete window[cbName]; document.body.removeChild(script);
+    if (data && data.ok) {
+      showToast(data.message, 'success');
+      chargerCoursDuJourAnnulation();
+    } else {
+      showToast(data && data.message ? data.message : 'Erreur', 'error');
+    }
+  };
+  script.onerror = function() {
+    delete window[cbName]; document.body.removeChild(script);
+    showToast('Erreur de connexion', 'error');
+  };
+  script.src = APPS_SCRIPT_POINTAGE + '?callback=' + cbName
+    + '&type=ANNULER_COURS'
+    + '&ecole=' + encodeURIComponent(currentStaff.ecole)
+    + '&ligne=' + ligne
+    + '&directeur=' + encodeURIComponent(currentStaff.nom || currentStaff.matricule);
+  document.body.appendChild(script);
 }
   // ⚠️ NOUVEAU — Appels enseignants réels pour l'espace Comptable
 async function chargerAppelsCom(ecole) {
