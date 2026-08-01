@@ -2334,7 +2334,7 @@ setTimeout(function(){chargerMasseSalarialeDir(s.ecole);},600);
   document.getElementById('dirAgendaBody').innerHTML=hag;
   if(!isPRIM)chargerPointage();
   chargerResultatsEtMessages(s.ecole,'DIR');
-  chargerSynthese(s.ecole).then(function(eleves){window._dirEleves=eleves||[];});
+  chargerSyntheseAvecCache(s.ecole).then(function(eleves){window._dirEleves=eleves||[];});
   document.getElementById('espaceDir').style.display='block';
   // Vérifier contacts manquants en arrière-plan
   setTimeout(function(){verifierContactsManquantsDir(s);}, 1500);
@@ -2910,7 +2910,7 @@ async function sauvegarderAffectation(idx,sel){
     classe2026:r.classe2026||r.classe,statutEleve:sel.value,matricule:r.matricule,nom:r.nom,
     modifiePar:modifiePar
   });
-  if(result&&result.succes){r.statut=sel.value;if(statutCell)statutCell.textContent='✓ enregistré';showToast('Statut enregistre','success');}
+  if(result&&result.succes){r.statut=sel.value;invaliderCacheSynthese(currentStaff.ecole);if(statutCell)statutCell.textContent='✓ enregistré';showToast('Statut enregistre','success');}
   else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement','error');}
 }
 
@@ -2934,7 +2934,7 @@ async function sauvegarderContact(idx){
     telPere:tel1,telMere:tel2,telTuteur:tel3,matricule:r.matricule,
     modifiePar:modifiePar
   });
-  if(result&&result.succes){r.tel1=tel1;r.tel2=tel2;r.tel3=tel3;if(statutCell)statutCell.textContent='✓ contact maj';showToast('Contact enregistre','success');}
+  if(result&&result.succes){r.tel1=tel1;r.tel2=tel2;r.tel3=tel3;invaliderCacheSynthese(currentStaff.ecole);if(statutCell)statutCell.textContent='✓ contact maj';showToast('Contact enregistre','success');}
   else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement contact','error');}
 }
 // ══ MODIFICATION NOM — avec confirmation + traçabilité ══
@@ -2961,8 +2961,9 @@ async function confirmerModifNom(idx){
     matricule:r.matricule,ecole:currentStaff.ecole,
     directeur:(currentStaff.nom||currentStaff.matricule||'inconnu')
   });
-  if(result&&result.succes){
+ if(result&&result.succes){
     r.nom=nouvelleValeur;
+    invaliderCacheSynthese(currentStaff.ecole);
     if(statutCell)statutCell.textContent='✓ modifié';
     showToast('Nom mis a jour (historise)','success');
   }else{
@@ -3076,7 +3077,7 @@ function renderAffectationCom(rows){
     classe2026:r.classe2026||r.classe,statutEleve:sel.value,matricule:r.matricule,nom:r.nom,
     modifiePar:modifiePar
   });
-  if(result&&result.succes){r.statut=sel.value;if(statutCell)statutCell.textContent='✓ enregistré';showToast('Statut enregistre','success');}
+  if(result&&result.succes){r.statut=sel.value;invaliderCacheSynthese(currentStaff.ecole);if(statutCell)statutCell.textContent='✓ enregistré';showToast('Statut enregistre','success');}
   else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement','error');}
 }
 
@@ -3100,7 +3101,7 @@ async function sauvegarderContactCom(idx){
     telPere:tel1,telMere:tel2,telTuteur:tel3,matricule:r.matricule,
     modifiePar:modifiePar
   });
-  if(result&&result.succes){r.tel1=tel1;r.tel2=tel2;r.tel3=tel3;if(statutCell)statutCell.textContent='✓ contact maj';showToast('Contact enregistre','success');}
+  if(result&&result.succes){r.tel1=tel1;r.tel2=tel2;r.tel3=tel3;invaliderCacheSynthese(currentStaff.ecole);if(statutCell)statutCell.textContent='✓ contact maj';showToast('Contact enregistre','success');}
   else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement contact','error');}
 }
 
@@ -3129,6 +3130,7 @@ async function confirmerModifNomCom(idx){
   });
   if(result&&result.succes){
     r.nom=nouvelleValeur;
+    invaliderCacheSynthese(currentStaff.ecole);
     if(statutCell)statutCell.textContent='✓ modifié';
     showToast('Nom mis a jour (historise)','success');
   }else{
@@ -3260,7 +3262,7 @@ async function rechercherEleveDir(){
   // Si les données ne sont pas encore chargées (ecole pas encore repondu), on les charge a la volee
   if(!window._dirEleves){
     zone.innerHTML='<p style="padding:12px 14px;font-size:0.8em;color:var(--gris)">Chargement des donn&eacute;es...</p>';
-    window._dirEleves=await chargerSynthese(currentStaff.ecole)||[];
+    window._dirEleves=await chargerSyntheseAvecCache(currentStaff.ecole)||[];
   }
   const resultats=window._dirEleves.filter(e=>_normRechDir(e.nom).includes(q)||_normRechDir(e.matricule).includes(q));
   if(!resultats.length){zone.innerHTML='<p style="padding:12px 14px;font-size:0.82em;color:var(--gris)">Aucun &eacute;l&egrave;ve trouv&eacute;.</p>';return;}
