@@ -379,13 +379,66 @@ const SHEETS_IDS_COMPLET = {
   "1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA": { nom:"College Les Princes de Dabou",tel:"0505286960",wave:"0505286960",base2026:"1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA" },
   "1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE": { nom:"Les Princes d'Anyama-Adjame",tel:"0799228524",wave:"0799228524",base2026:"1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE" },
 };
+  
 window.SHEETS_IDS_COMPLET = SHEETS_IDS_COMPLET;
 window.ECOLES_LIST = ECOLES;
 
 const DESTINATIONS_CEPE = {"AKEIKOI_1":"College Prive Les Princes d'Abidjan","AKEIKOI_2":"College Prive Les Princes d'Abidjan","ACADEMIE":"College Prive Les Princes d'Abidjan","KOUTOUAN":"College Koutouan Nangui","GNONTINROU":"College Gnontinrou Therese de Guinglo-Guezon","RITA":"Groupe Scolaire Rita Rosane Abobo","CPP":"College Prive Les Princes d'Abidjan"};
 const DESTINATIONS_BEPC = {"CPP":"CPP Les Princes d'Abidjan","KOUTOUAN":"College Koutouan Nangui","GNONTINROU":"College Gnontinrou Therese de Guinglo-Guezon","GUINGLO_V":"College Les Princes de Guinglo Ville","SOAKPE":"College Les Princes de Soakpe","RITA":"Groupe Scolaire Rita Rosane Abobo","AKEIKOI_1":"College Prive Les Princes d'Abidjan","AKEIKOI_2":"College Prive Les Princes d'Abidjan","ACADEMIE":"College Prive Les Princes d'Abidjan"};
 
-// ═══════════════════════════════════════════════════════
+// ============================================================
+// ✅ CONFIG ÉCOLES CENTRALISÉE — chargée depuis le serveur au
+// démarrage. Repli automatique sur SHEETS_IDS_COMPLET si l'appel
+// échoue ou si une école n'y est pas encore présente.
+// ============================================================
+window._configEcolesParent = null;
+
+function chargerConfigEcolesParent() {
+  return new Promise(function(resolve) {
+    const CENTRALE_URL_CFG = "https://script.google.com/macros/s/AKfycbx7nBhAMxM_zAMAHCPfPQPkktJ9avtOXm2igfzgOuw9PF1jW0Y7ElUApPoeHvw_F-pT/exec";
+    const cbName = 'cfgp_' + Date.now();
+    const script = document.createElement('script');
+    const timeout = setTimeout(function() {
+      if (window[cbName]) { delete window[cbName]; try{document.body.removeChild(script);}catch(e){} }
+      resolve(null);
+    }, 8000);
+    window[cbName] = function(data) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      try { document.body.removeChild(script); } catch(e) {}
+      if (data && data.ok) { window._configEcolesParent = data.config; resolve(data.config); }
+      else resolve(null);
+    };
+    script.onerror = function() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      try { document.body.removeChild(script); } catch(e) {}
+      resolve(null);
+    };
+    script.src = CENTRALE_URL_CFG + '?callback=' + cbName + '&type=GET_CONFIG_ECOLES';
+    document.body.appendChild(script);
+  });
+}
+
+function getIdEcoleCentralParent(ecoleId, annee) {
+  const entreeLocale = SHEETS_IDS_COMPLET[ecoleId];
+  if (!entreeLocale) return null;
+  if (window._configEcolesParent) {
+    for (const code in window._configEcolesParent) {
+      const entree = window._configEcolesParent[code];
+      if (entree.id2025 === ecoleId) {
+        const id = (annee === '2025-2026') ? entree.id2025 : entree.id2026;
+        if (id) return id;
+      }
+    }
+  }
+  // Repli — dictionnaire local existant
+  return (annee === '2026-2027') ? (entreeLocale.base2026 || ecoleId) : ecoleId;
+}
+
+// Charge la config dès l'ouverture de la page, en arrière-plan
+chargerConfigEcolesParent();
+  // ═══════════════════════════════════════════════════════
 // BULLETINS MENSUELS PRIMAIRE
 // ═══════════════════════════════════════════════════════
 var ECOLES_PRIMAIRES_EP = ['AKEIKOI_1','AKEIKOI_2','ACADEMIE','RITA','GNONTINROU','KOUTOUAN'];
