@@ -2139,12 +2139,57 @@ const SHEETS_IDS_2026_2027 = {
   'CPP DABOU':           '1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA',
   'CPP ANYAMA':          '1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE',
 };
+// ============================================================
+// ✅ CONFIG ÉCOLES CENTRALISÉE — chargée depuis le serveur au
+// démarrage. Repli automatique sur les dictionnaires en dur si
+// l'appel échoue ou si une école n'y est pas encore présente.
+// ============================================================
+window._configEcoles = null;
 
+function chargerConfigEcolesFront() {
+  return new Promise(function(resolve) {
+    const cbName = 'cfg_' + Date.now();
+    const script = document.createElement('script');
+    const timeout = setTimeout(function() {
+      if (window[cbName]) { delete window[cbName]; document.body.removeChild(script); }
+      resolve(null);
+    }, 8000);
+    window[cbName] = function(data) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      try { document.body.removeChild(script); } catch(e) {}
+      if (data && data.ok) { window._configEcoles = data.config; resolve(data.config); }
+      else resolve(null);
+    };
+    script.onerror = function() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      try { document.body.removeChild(script); } catch(e) {}
+      resolve(null);
+    };
+    script.src = APPS_SCRIPT_POINTAGE + '?callback=' + cbName + '&type=GET_CONFIG_ECOLES';
+    document.body.appendChild(script);
+  });
+}
+
+function getIdEcoleCentral(ecole, annee) {
+  const code = (ecole || '').trim().toUpperCase();
+  if (window._configEcoles && window._configEcoles[code]) {
+    const entree = window._configEcoles[code];
+    const id = (annee === '2025-2026') ? entree.id2025 : entree.id2026;
+    if (id) return id;
+  }
+  // Repli — anciens dictionnaires en dur
+  if (annee === '2025-2026') return SHEETS_IDS[ecole];
+  return SHEETS_IDS_2026_2027[ecole] || SHEETS_IDS[ecole];
+}
+
+// Charge la config dès l'ouverture de la page, en arrière-plan
+chargerConfigEcolesFront();
 // Renvoie l'ID de base correct selon l'annee actuellement selectionnee par le Directeur
 function getSheetsIdPourEcole(ecole) {
   var annee = window._anneeSelectionnee || '2026-2027';
-  if (annee === '2025-2026') return SHEETS_IDS[ecole];
-  return SHEETS_IDS_2026_2027[ecole] || SHEETS_IDS[ecole];
+  return getIdEcoleCentral(ecole, annee);
 }
 const TARIFS={'CPP LES PRINCES':{college:1200,lycee:1500},'CPP PRO':{college:1200,lycee:1500},'CPP TECH':{college:1200,lycee:1500},'ETL PRINCES KOUIBLY':{college:1000,lycee:1200}};
 const TARIF_DEFAUT={college:1000,lycee:1200};
