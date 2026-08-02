@@ -600,6 +600,52 @@ const SHEETS_IDS = {
   'CPP DABOU':           '1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA',
   'CPP ANYAMA':          '1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE'
 };
+  // ============================================================
+// ✅ CONFIG ÉCOLES CENTRALISÉE — chargée depuis le serveur au
+// démarrage. Repli automatique sur SHEETS_IDS_2026_2027 si
+// l'appel échoue ou si une école n'y est pas encore présente.
+// ============================================================
+window._configEcoles = null;
+
+function chargerConfigEcolesFront() {
+  return new Promise(function(resolve) {
+    const cbName = 'cfg_' + Date.now();
+    const script = document.createElement('script');
+    const timeout = setTimeout(function() {
+      if (window[cbName]) { delete window[cbName]; document.body.removeChild(script); }
+      resolve(null);
+    }, 8000);
+    window[cbName] = function(data) {
+      clearTimeout(timeout);
+      delete window[cbName];
+      try { document.body.removeChild(script); } catch(e) {}
+      if (data && data.ok) { window._configEcoles = data.config; resolve(data.config); }
+      else resolve(null);
+    };
+    script.onerror = function() {
+      clearTimeout(timeout);
+      delete window[cbName];
+      try { document.body.removeChild(script); } catch(e) {}
+      resolve(null);
+    };
+    script.src = APPS_SCRIPT_URL + '?callback=' + cbName + '&type=GET_CONFIG_ECOLES';
+    document.body.appendChild(script);
+  });
+}
+
+function getIdEcole(ecole, annee) {
+  const code = (ecole || '').trim().toUpperCase();
+  if (window._configEcoles && window._configEcoles[code]) {
+    const entree = window._configEcoles[code];
+    const id = (annee === '2025-2026') ? entree.id2025 : entree.id2026;
+    if (id) return id;
+  }
+  // Repli — ancien dictionnaire en dur
+  return SHEETS_IDS_2026_2027[ecole];
+}
+
+// Charge la config dès l'ouverture de la page, en arrière-plan
+chargerConfigEcolesFront();
 const ECOLE_CODES = {
   'cpp':'CPP LES PRINCES','academie':'ACADEMIE','guinglo':'GUINGLO VILLE',
   'gnont':'GNONTINROU','koutouan':'KOUTOUAN','soakpe':'SOAKPE',
