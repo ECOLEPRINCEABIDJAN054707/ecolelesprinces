@@ -3202,11 +3202,65 @@ function renderAffectationCom(rows){
   window._affListeCouranteCom=rows;
 }
 
-function toggleChecklistMenaCom(idx){
+window._verifMenaCacheCom = null;
+
+async function toggleChecklistMenaCom(idx){
   const row=document.getElementById('menaDetailCom_'+idx);
   if(!row)return;
   const estOuvert=row.style.display!=='none';
   row.style.display=estOuvert?'none':'table-row';
+  if(!estOuvert){
+    await chargerChecklistMenaCom(idx);
+  }
+}
+
+async function chargerChecklistMenaCom(idx){
+  const contentDiv=document.getElementById('menaContentCom_'+idx);
+  if(!contentDiv)return;
+  const r=window._affListeCouranteCom[idx];
+  if(!window._verifMenaCacheCom){
+    contentDiv.innerHTML='Chargement des données MENA...';
+    const cbName='vm_com_'+Date.now();
+    const script=document.createElement('script');
+    const params=new URLSearchParams({callback:cbName,type:'GET_VERIFICATION_MENA',ecole:currentStaff.ecole});
+    const data=await new Promise(resolve=>{
+      window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+      script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+      script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+      document.body.appendChild(script);
+      setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},10000);
+    });
+    if(data&&data.ok){
+      window._verifMenaCacheCom={};
+      (data.eleves||[]).forEach(e=>{window._verifMenaCacheCom[e.matricule]=e;});
+    }else{
+      contentDiv.innerHTML='<span style="color:var(--rouge)">Erreur de chargement</span>';
+      return;
+    }
+  }
+  const v=window._verifMenaCacheCom[r.matricule]||{};
+  renderChecklistMenaCom(idx,r,v);
+}
+
+function renderChecklistMenaCom(idx,r,v){
+  const contentDiv=document.getElementById('menaContentCom_'+idx);
+  if(!contentDiv)return;
+  const champ=(label,val)=>'<div style="margin-bottom:6px"><span style="font-size:0.7em;font-weight:700;color:var(--gris);text-transform:uppercase">'+label+'</span><br><span style="font-size:0.85em;font-weight:600">'+(val||'—')+'</span></div>';
+  let h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
+  h+=champ('Inscription en ligne',v.inscriptionLigne);
+  h+=champ('Photo',v.photo);
+  h+=champ('Actualisé',v.actualise);
+  h+=champ('Trans. DECO',v.transDeco);
+  h+=champ('DFA OK',v.dfaOk);
+  h+=champ('Année scolaire',v.anneeScolaire);
+  h+=champ('Classe MENA',v.classeMena);
+  h+=champ('Moy T1 / OK',v.moyT1+' / '+(v.okT1||'—'));
+  h+=champ('Moy T2 / OK',v.moyT2+' / '+(v.okT2||'—'));
+  h+=champ('Moy T3 / OK',v.moyT3+' / '+(v.okT3||'—'));
+  h+='</div>';
+  if(v.observation)h+='<div style="margin-top:8px;padding:8px;background:#FFF3E0;border-radius:6px;font-size:0.8em"><b>Observation :</b> '+v.observation+'</div>';
+  if(v.modifiePar)h+='<div style="margin-top:6px;font-size:0.68em;color:var(--gris)">Dernière modif : '+v.modifiePar+' — '+v.dateMaj+'</div>';
+  contentDiv.innerHTML=h;
 }
  async function sauvegarderAffectationCom(idx,sel){
   const r=window._affListeCouranteCom[idx];
