@@ -3245,22 +3245,66 @@ async function chargerChecklistMenaCom(idx){
 function renderChecklistMenaCom(idx,r,v){
   const contentDiv=document.getElementById('menaContentCom_'+idx);
   if(!contentDiv)return;
-  const champ=(label,val)=>'<div style="margin-bottom:8px"><span style="font-size:0.85em;font-weight:700;color:var(--gris);text-transform:uppercase">'+label+'</span><br><span style="font-size:1.05em;font-weight:600">'+(val||'—')+'</span></div>';
+  const inputTxt=(champLabel,champKey,val)=>
+    '<div style="margin-bottom:8px">'
+    +'<span style="font-size:0.85em;font-weight:700;color:var(--gris);text-transform:uppercase">'+champLabel+'</span><br>'
+    +'<input type="text" id="mena_'+champKey+'_'+idx+'" value="'+(val||'').toString().replace(/"/g,'&quot;')+'" '
+    +'onblur="sauvegarderChampMenaCom('+idx+',\''+champKey+'\',this.value)" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;margin-top:2px">'
+    +'</div>';
   let h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
-  h+=champ('Inscription en ligne',v.inscriptionLigne);
-  h+=champ('Photo',v.photo);
-  h+=champ('Actualisé',v.actualise);
-  h+=champ('Trans. DECO',v.transDeco);
-  h+=champ('DFA OK',v.dfaOk);
-  h+=champ('Année scolaire',v.anneeScolaire);
-  h+=champ('Classe MENA',v.classeMena);
-  h+=champ('Moy T1 / OK',v.moyT1+' / '+(v.okT1||'—'));
-  h+=champ('Moy T2 / OK',v.moyT2+' / '+(v.okT2||'—'));
-  h+=champ('Moy T3 / OK',v.moyT3+' / '+(v.okT3||'—'));
+  h+=inputTxt('Inscription en ligne','inscriptionLigne',v.inscriptionLigne);
+  h+=inputTxt('Photo','photo',v.photo);
+  h+=inputTxt('Actualisé','actualise',v.actualise);
+  h+=inputTxt('Trans. DECO','transDeco',v.transDeco);
+  h+=inputTxt('DFA OK','dfaOk',v.dfaOk);
+  h+=inputTxt('Année scolaire','anneeScolaire',v.anneeScolaire);
+  h+=inputTxt('Classe MENA','classeMena',v.classeMena);
+  h+=inputTxt('Moy T1','moyT1',v.moyT1);
+  h+=inputTxt('OK T1','okT1',v.okT1);
+  h+=inputTxt('Moy T2','moyT2',v.moyT2);
+  h+=inputTxt('OK T2','okT2',v.okT2);
+  h+=inputTxt('Moy T3','moyT3',v.moyT3);
+  h+=inputTxt('OK T3','okT3',v.okT3);
   h+='</div>';
-  if(v.observation)h+='<div style="margin-top:8px;padding:8px;background:#FFF3E0;border-radius:6px;font-size:0.95em"><b>Observation :</b> '+v.observation+'</div>';
-  if(v.modifiePar)h+='<div style="margin-top:6px;font-size:0.8em;color:var(--gris)">Dernière modif : '+v.modifiePar+' — '+v.dateMaj+'</div>';
+  h+='<div style="margin-top:10px">'
+    +'<span style="font-size:0.85em;font-weight:700;color:var(--gris);text-transform:uppercase">Observation</span><br>'
+    +'<textarea id="mena_observation_'+idx+'" onblur="sauvegarderChampMenaCom('+idx+',\'observation\',this.value)" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;margin-top:2px;min-height:50px">'+(v.observation||'')+'</textarea>'
+    +'</div>';
+  h+='<div id="menaStatut_'+idx+'" style="margin-top:8px;font-size:0.8em;color:var(--gris)">'+(v.modifiePar?('Dernière modif : '+v.modifiePar+' — '+v.dateMaj):'')+'</div>';
   contentDiv.innerHTML=h;
+}
+  async function sauvegarderChampMenaCom(idx,champ,valeur){
+  const r=window._affListeCouranteCom[idx];
+  const statutDiv=document.getElementById('menaStatut_'+idx);
+  if(statutDiv)statutDiv.textContent='Enregistrement...';
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+  const cbName='svm_com_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({
+    callback:cbName,type:'SAUVEGARDER_VERIFICATION_MENA',
+    ecole:currentStaff.ecole,matricule:r.matricule,nom:r.nom,classe:r.classe,
+    champ:champ,valeur:valeur,modifiePar:modifiePar
+  });
+  const result=await new Promise(resolve=>{
+    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+    script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+    script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+    document.body.appendChild(script);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},10000);
+  });
+  if(result&&result.ok){
+    if(statutDiv)statutDiv.textContent='✓ Enregistré — '+modifiePar;
+    if(window._verifMenaCacheCom&&window._verifMenaCacheCom[r.matricule]){
+      window._verifMenaCacheCom[r.matricule][champ]=valeur;
+    }
+    showToast('Champ enregistré','success');
+  }else{
+    if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement';
+    showToast('Erreur enregistrement','error');
+  }
 }
  async function sauvegarderAffectationCom(idx,sel){
   const r=window._affListeCouranteCom[idx];
