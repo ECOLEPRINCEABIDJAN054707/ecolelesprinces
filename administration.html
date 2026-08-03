@@ -3019,11 +3019,14 @@ function renderAffectation(rows){
   window._affListeCourante=rows;
 }
 
-function toggleChecklistMenaDir(idx){
+async function toggleChecklistMenaDir(idx){
   const row=document.getElementById('menaDetailDir_'+idx);
   if(!row)return;
   const estOuvert=row.style.display!=='none';
   row.style.display=estOuvert?'none':'table-row';
+  if(!estOuvert){
+    await chargerChecklistMenaDir(idx);
+  }
 }
 window._verifMenaCacheDir = null;
 
