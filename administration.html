@@ -3273,6 +3273,10 @@ h+='<div style="margin-top:10px">'
     +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px;min-height:50px">'+(v.observation||'')+'</textarea>'
     +'</div>';
   h+='<div id="menaStatut_'+idx+'" style="margin-top:8px;font-size:0.8em;color:var(--gris)">'+(v.modifiePar?('Dernière modif : '+v.modifiePar+' — '+v.dateMaj):'')+'</div>';
+ h+='<div style="margin-top:12px;padding-top:10px;border-top:1.5px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">'
+    +'<button onclick="signalerAnomalieCom('+idx+',\'ECOLE_DIFFERENTE\')" style="padding:8px 14px;background:#FFF3E0;color:#E65100;border:1.5px solid #FFB74D;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🚩 Signaler École différente</button>'
+    +'<button onclick="signalerAnomalieCom('+idx+',\'ABSENCE_PHYSIQUE\')" style="padding:8px 14px;background:#FFEBEE;color:#C62828;border:1.5px solid #EF9A9A;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🚩 Signaler Absence physique</button>'
+    +'</div>';
   contentDiv.innerHTML=h;
 }
   async function sauvegarderChampMenaCom(idx,champ,valeur){
@@ -3304,6 +3308,36 @@ h+='<div style="margin-top:10px">'
   }else{
     if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement';
     showToast('Erreur enregistrement','error');
+  }
+}
+  async function signalerAnomalieCom(idx,typeAnomalie){
+  const r=window._affListeCouranteCom[idx];
+  const libelle=typeAnomalie==='ECOLE_DIFFERENTE'?'École MENA différente':'Absence physique';
+  const ok=window.confirm('Confirmer le signalement "'+libelle+'" pour '+r.nom+' ('+r.matricule+') ?\n\nCe signalement sera transmis au Directeur pour investigation.');
+  if(!ok)return;
+
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const signalePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+
+  const cbName='sig_com_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({
+    callback:cbName,type:'SIGNALER_ANOMALIE_MENA',
+    ecole:currentStaff.ecole,matricule:r.matricule,nom:r.nom,classe:r.classe,
+    typeAnomalie:typeAnomalie,signalePar:signalePar
+  });
+  const result=await new Promise(resolve=>{
+    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+    script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+    script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+    document.body.appendChild(script);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},10000);
+  });
+
+  if(result&&result.ok){
+    showToast('Anomalie signalée — '+libelle,'success');
+  }else{
+    showToast('Erreur lors du signalement','error');
   }
 }
  async function sauvegarderAffectationCom(idx,sel){
