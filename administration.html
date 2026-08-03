@@ -3025,7 +3025,83 @@ function toggleChecklistMenaDir(idx){
   const estOuvert=row.style.display!=='none';
   row.style.display=estOuvert?'none':'table-row';
 }
+window._verifMenaCacheDir = null;
 
+async function chargerChecklistMenaDir(idx){
+  const contentDiv=document.getElementById('menaContentDir_'+idx);
+  if(!contentDiv)return;
+  const r=window._affListeCourante[idx];
+  if(!window._verifMenaCacheDir){
+    contentDiv.innerHTML='Chargement des données MENA...';
+    const cbName='vm_dir_'+Date.now();
+    const script=document.createElement('script');
+    const params=new URLSearchParams({callback:cbName,type:'GET_VERIFICATION_MENA',ecole:currentStaff.ecole});
+    const data=await new Promise(resolve=>{
+      window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+      script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+      script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+      document.body.appendChild(script);
+      setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},10000);
+    });
+    if(data&&data.ok){
+      window._verifMenaCacheDir={};
+      (data.eleves||[]).forEach(e=>{window._verifMenaCacheDir[e.matricule]=e;});
+    }else{
+      contentDiv.innerHTML='<span style="color:var(--rouge)">Erreur de chargement</span>';
+      return;
+    }
+  }
+  const v=window._verifMenaCacheDir[r.matricule]||{};
+  renderChecklistMenaDir(idx,r,v);
+}
+  function renderChecklistMenaDir(idx,r,v){
+  const contentDiv=document.getElementById('menaContentDir_'+idx);
+  if(!contentDiv)return;
+  const inputTxt=(champLabel,champKey,val)=>
+    '<div style="margin-bottom:8px">'
+    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">'+champLabel+'</span><br>'
+    +'<input type="text" id="mena_'+champKey+'_'+idx+'_dir" value="'+(val||'').toString().replace(/"/g,'&quot;')+'" '
+    +'onblur="sauvegarderChampMenaDir('+idx+',\''+champKey+'\',this.value)" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px">'
+    +'</div>';
+  const selectOuiNon=(champLabel,champKey,val)=>
+    '<div style="margin-bottom:8px">'
+    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">'+champLabel+'</span><br>'
+    +'<select id="mena_'+champKey+'_'+idx+'_dir" '
+    +'onchange="sauvegarderChampMenaDir('+idx+',\''+champKey+'\',this.value)" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px">'
+    +'<option value=""'+(!val?' selected':'')+'>-- Non vérifié --</option>'
+    +'<option value="OUI"'+(val==='OUI'?' selected':'')+'>OUI</option>'
+    +'<option value="NON"'+(val==='NON'?' selected':'')+'>NON</option>'
+    +'</select>'
+    +'</div>';
+  let h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
+  h+=selectOuiNon('Inscription en ligne','inscriptionLigne',v.inscriptionLigne);
+  h+=selectOuiNon('Photo','photo',v.photo);
+  h+=selectOuiNon('Actualisé','actualise',v.actualise);
+  h+=selectOuiNon('Trans. DECO','transDeco',v.transDeco);
+  h+=selectOuiNon('DFA OK','dfaOk',v.dfaOk);
+  h+=inputTxt('Année scolaire','anneeScolaire',v.anneeScolaire);
+  h+=inputTxt('Classe MENA','classeMena',v.classeMena);
+  h+=inputTxt('Moy T1','moyT1',v.moyT1);
+  h+=selectOuiNon('OK T1','okT1',v.okT1);
+  h+=inputTxt('Moy T2','moyT2',v.moyT2);
+  h+=selectOuiNon('OK T2','okT2',v.okT2);
+  h+=inputTxt('Moy T3','moyT3',v.moyT3);
+  h+=selectOuiNon('OK T3','okT3',v.okT3);
+  h+='</div>';
+  h+='<div style="margin-top:10px">'
+    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">Observation</span><br>'
+    +'<textarea id="mena_observation_'+idx+'_dir" onblur="sauvegarderChampMenaDir('+idx+',\'observation\',this.value)" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px;min-height:50px">'+(v.observation||'')+'</textarea>'
+    +'</div>';
+  h+='<div id="menaStatutDir_'+idx+'" style="margin-top:8px;font-size:0.8em;color:var(--gris)">'+(v.modifiePar?('Dernière modif : '+v.modifiePar+' — '+v.dateMaj):'')+'</div>';
+  h+='<div style="margin-top:12px;padding-top:10px;border-top:1.5px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">'
+    +'<button onclick="signalerAnomalieDir('+idx+',\'ECOLE_DIFFERENTE\')" style="padding:8px 14px;background:#FFF3E0;color:#E65100;border:1.5px solid #FFB74D;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🚩 Signaler École différente</button>'
+    +'<button onclick="signalerAnomalieDir('+idx+',\'ABSENCE_PHYSIQUE\')" style="padding:8px 14px;background:#FFEBEE;color:#C62828;border:1.5px solid #EF9A9A;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🚩 Signaler Absence physique</button>'
+    +'</div>';
+  contentDiv.innerHTML=h;
+}
 // ══ Helper JSONP commun — evite le blocage CORS des navigateurs ══
 function appelJSONP(url, params, timeoutMs){
   return new Promise(resolve=>{
