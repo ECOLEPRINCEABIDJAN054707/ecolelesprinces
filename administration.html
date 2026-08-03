@@ -1512,7 +1512,7 @@ async function attribuerMatriculeCom() {
       <select id="comAffFiltreStatut" onchange="filtrerAffectationCom()" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;font-family:DM Sans,sans-serif;outline:none">
         <option value="">Tous statuts</option><option value="AFF">Affecté(e)</option><option value="NAFF">Non affecté(e)</option><option value="NON RENSEIGNE">Non renseigné</option>
       </select>
-     <button onclick="chargerAffectationTousCom();setTimeout(precargarMenaCacheEtColorerBoutonsCom,800);" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.92em;font-weight:600;cursor:pointer">🔄 Charger / Actualiser</button>
+    <button onclick="chargerAffectationTousCom()" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.92em;font-weight:600;cursor:pointer">🔄 Charger / Actualiser</button>
     </div>
     <div id="comAffResume" style="padding:10px 14px;font-size:0.95em"></div>
     <div class="tbl-wrap">
@@ -3288,7 +3288,7 @@ async function chargerAffectationTousCom(){
       classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCl.appendChild(o);});
     }
     const cnt=document.getElementById('comAffCount'); if(cnt)cnt.textContent='('+rows.length+' eleves)';
-    filtrerAffectationCom();
+    filtrerAffectationCom();     setTimeout(precargarMenaCacheEtColorerBoutonsCom, 300);
   }catch(e){zone.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--rouge)">Erreur chargement</td></tr>';}
 }
 
