@@ -465,7 +465,7 @@ table tr:nth-child(even){background:#F8FAFD}
       <div id="affResume" style="padding:10px 14px;font-size:0.95em"></div>
       <div class="tbl-wrap">
         <table>
-          <thead><tr><th style="font-size:0.9em">Matricule</th><th style="font-size:0.9em">Nom</th><th style="font-size:0.9em">Classe</th><th style="font-size:0.9em">Statut</th><th style="font-size:0.9em">Tél. Père</th><th style="font-size:0.9em">Tél. Mère</th><th style="font-size:0.9em">Tél. Tuteur</th><th></th></tr></thead>
+          <thead><tr><th style="font-size:0.9em">Matricule</th><th style="font-size:0.9em">Nom</th><th style="font-size:0.9em">Classe</th><th style="font-size:0.9em">Statut</th><th style="font-size:0.9em">Tél. Père</th><th style="font-size:0.9em">Tél. Mère</th><th style="font-size:0.9em">Tél. Tuteur</th><th></th><th></th></tr></thead>
           <tbody id="affTbody"><tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris);font-size:0.95em">Cliquez sur "Charger" pour voir vos élèves</td></tr></tbody>
         </table>
       </div>
@@ -2983,7 +2983,7 @@ function renderAffectation(rows){
     +'<span class="bdg" style="background:#eee;color:#666;font-size:0.95em">'+nbVide+' Non renseigne (college)</span>'
     +(nbPrim>0?' &nbsp;<span class="bdg bg-bleu" style="background:#E3F2FD;color:#1565C0;font-size:0.95em">'+nbPrim+' primaire (contacts seulement)</span>':'')
     +(nbSansContact>0?' &nbsp;<span class="bdg bg-orange" style="font-size:0.95em">'+nbSansContact+' sans aucun contact</span>':'');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris);font-size:0.95em">Aucun eleve pour ce filtre</td></tr>';return;}
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:16px;color:var(--gris);font-size:0.95em">Aucun eleve pour ce filtre</td></tr>';return;}
   let h='';
   rows.forEach((r,idx)=>{
     const telInput=(champ,val,label)=>'<input type="tel" id="'+champ+'_'+idx+'" value="'+(val||'')+'" placeholder="'+label+'" maxlength="15" '
@@ -3000,7 +3000,6 @@ function renderAffectation(rows){
     const nomInput='<input type="text" id="affNom_'+idx+'" value="'+r.nom.replace(/"/g,'&quot;')+'" '
       +'onblur="confirmerModifNom('+idx+')" '
       +'style="width:100%;padding:7px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em;font-weight:600">';
-    // Classe : affichage simple, non modifiable (necessite un vrai transfert d'onglet, hors scope)
     h+='<tr>'
       +'<td style="font-size:0.9em;color:var(--gris)">'+r.matricule+'</td>'
       +'<td>'+nomInput+'</td>'
@@ -3010,10 +3009,21 @@ function renderAffectation(rows){
       +'<td>'+telInput('affTel2',r.tel2,'Mère')+'</td>'
       +'<td>'+telInput('affTel3',r.tel3,'Tuteur')+'</td>'
       +'<td id="affStatut_'+idx+'" style="font-size:0.85em;color:var(--gris)">—</td>'
+      +'<td><button onclick="toggleChecklistMenaDir('+idx+')" style="padding:6px 10px;background:#4A148C;color:#fff;border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer;white-space:nowrap">🔍 Checklist</button></td>'
       +'</tr>';
+    h+='<tr id="menaDetailDir_'+idx+'" style="display:none"><td colspan="9" style="padding:0;background:#F8FAFD">'
+      +'<div id="menaContentDir_'+idx+'" style="padding:14px;font-size:0.85em;color:var(--gris)">Chargement...</div>'
+      +'</td></tr>';
   });
   tbody.innerHTML=h;
   window._affListeCourante=rows;
+}
+
+function toggleChecklistMenaDir(idx){
+  const row=document.getElementById('menaDetailDir_'+idx);
+  if(!row)return;
+  const estOuvert=row.style.display!=='none';
+  row.style.display=estOuvert?'none':'table-row';
 }
 
 // ══ Helper JSONP commun — evite le blocage CORS des navigateurs ══
