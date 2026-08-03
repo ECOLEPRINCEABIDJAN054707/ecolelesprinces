@@ -3252,6 +3252,17 @@ const inputTxt=(champLabel,champKey,val)=>
     +'onblur="sauvegarderChampMenaCom('+idx+',\''+champKey+'\',this.value)" '
     +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px">'
     +'</div>';
+  const selectOuiNon=(champLabel,champKey,val)=>
+    '<div style="margin-bottom:8px">'
+    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">'+champLabel+'</span><br>'
+    +'<select id="mena_'+champKey+'_'+idx+'" '
+    +'onchange="sauvegarderChampMenaCom('+idx+',\''+champKey+'\',this.value)" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px">'
+    +'<option value=""'+(!val?' selected':'')+'>-- Non vérifié --</option>'
+    +'<option value="OUI"'+(val==='OUI'?' selected':'')+'>OUI</option>'
+    +'<option value="NON"'+(val==='NON'?' selected':'')+'>NON</option>'
+    +'</select>'
+    +'</div>';
 let h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
   h+=selectOuiNon('Inscription en ligne','inscriptionLigne',v.inscriptionLigne);
   h+=selectOuiNon('Photo','photo',v.photo);
