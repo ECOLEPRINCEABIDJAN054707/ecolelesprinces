@@ -3102,6 +3102,69 @@ async function chargerChecklistMenaDir(idx){
     +'</div>';
   contentDiv.innerHTML=h;
 }
+  async function sauvegarderChampMenaDir(idx,champ,valeur){
+  const r=window._affListeCourante[idx];
+  const ancienneValeur=(window._verifMenaCacheDir&&window._verifMenaCacheDir[r.matricule]&&window._verifMenaCacheDir[r.matricule][champ])||'';
+  if(String(valeur).trim()===String(ancienneValeur).trim())return;
+  const statutDiv=document.getElementById('menaStatutDir_'+idx);
+  if(statutDiv)statutDiv.textContent='Enregistrement...';
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+  const cbName='svm_dir_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({
+    callback:cbName,type:'SAUVEGARDER_VERIFICATION_MENA',
+    ecole:currentStaff.ecole,matricule:r.matricule,nom:r.nom,classe:r.classe,
+    champ:champ,valeur:valeur,modifiePar:modifiePar
+  });
+  const result=await new Promise(resolve=>{
+    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+    script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+    script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+    document.body.appendChild(script);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},10000);
+  });
+  if(result&&result.ok){
+    if(statutDiv)statutDiv.textContent='✓ Enregistré — '+modifiePar;
+    if(window._verifMenaCacheDir&&window._verifMenaCacheDir[r.matricule]){
+      window._verifMenaCacheDir[r.matricule][champ]=valeur;
+    }
+    showToast('Champ enregistré','success');
+  }else{
+    if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement';
+    showToast('Erreur enregistrement','error');
+  }
+}
+  async function signalerAnomalieDir(idx,typeAnomalie){
+  const r=window._affListeCourante[idx];
+  const libelle=typeAnomalie==='ECOLE_DIFFERENTE'?'École MENA différente':'Absence physique';
+  const ok=window.confirm('Confirmer le signalement "'+libelle+'" pour '+r.nom+' ('+r.matricule+') ?\n\nCe signalement sera transmis pour investigation.');
+  if(!ok)return;
+
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const signalePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+
+  const cbName='sig_dir_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({
+    callback:cbName,type:'SIGNALER_ANOMALIE_MENA',
+    ecole:currentStaff.ecole,matricule:r.matricule,nom:r.nom,classe:r.classe,
+    typeAnomalie:typeAnomalie,signalePar:signalePar
+  });
+  const result=await new Promise(resolve=>{
+    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+    script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+    script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+    document.body.appendChild(script);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},10000);
+  });
+
+  if(result&&result.ok){
+    showToast('Anomalie signalée — '+libelle,'success');
+  }else{
+    showToast('Erreur lors du signalement','error');
+  }
+}
 // ══ Helper JSONP commun — evite le blocage CORS des navigateurs ══
 function appelJSONP(url, params, timeoutMs){
   return new Promise(resolve=>{
