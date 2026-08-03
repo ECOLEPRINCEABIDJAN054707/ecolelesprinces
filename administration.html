@@ -3252,20 +3252,20 @@ const inputTxt=(champLabel,champKey,val)=>
     +'onblur="sauvegarderChampMenaCom('+idx+',\''+champKey+'\',this.value)" '
     +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px">'
     +'</div>';
-  let h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
-  h+=inputTxt('Inscription en ligne','inscriptionLigne',v.inscriptionLigne);
-  h+=inputTxt('Photo','photo',v.photo);
-  h+=inputTxt('Actualisé','actualise',v.actualise);
-  h+=inputTxt('Trans. DECO','transDeco',v.transDeco);
-  h+=inputTxt('DFA OK','dfaOk',v.dfaOk);
+let h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
+  h+=selectOuiNon('Inscription en ligne','inscriptionLigne',v.inscriptionLigne);
+  h+=selectOuiNon('Photo','photo',v.photo);
+  h+=selectOuiNon('Actualisé','actualise',v.actualise);
+  h+=selectOuiNon('Trans. DECO','transDeco',v.transDeco);
+  h+=selectOuiNon('DFA OK','dfaOk',v.dfaOk);
   h+=inputTxt('Année scolaire','anneeScolaire',v.anneeScolaire);
   h+=inputTxt('Classe MENA','classeMena',v.classeMena);
   h+=inputTxt('Moy T1','moyT1',v.moyT1);
-  h+=inputTxt('OK T1','okT1',v.okT1);
+  h+=selectOuiNon('OK T1','okT1',v.okT1);
   h+=inputTxt('Moy T2','moyT2',v.moyT2);
-  h+=inputTxt('OK T2','okT2',v.okT2);
+  h+=selectOuiNon('OK T2','okT2',v.okT2);
   h+=inputTxt('Moy T3','moyT3',v.moyT3);
-  h+=inputTxt('OK T3','okT3',v.okT3);
+  h+=selectOuiNon('OK T3','okT3',v.okT3);
   h+='</div>';
 h+='<div style="margin-top:10px">'
     +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">Observation</span><br>'
