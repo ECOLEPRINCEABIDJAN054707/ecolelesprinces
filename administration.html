@@ -3245,12 +3245,12 @@ async function chargerChecklistMenaCom(idx){
 function renderChecklistMenaCom(idx,r,v){
   const contentDiv=document.getElementById('menaContentCom_'+idx);
   if(!contentDiv)return;
-  const inputTxt=(champLabel,champKey,val)=>
+const inputTxt=(champLabel,champKey,val)=>
     '<div style="margin-bottom:8px">'
-    +'<span style="font-size:0.85em;font-weight:700;color:var(--gris);text-transform:uppercase">'+champLabel+'</span><br>'
+    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">'+champLabel+'</span><br>'
     +'<input type="text" id="mena_'+champKey+'_'+idx+'" value="'+(val||'').toString().replace(/"/g,'&quot;')+'" '
     +'onblur="sauvegarderChampMenaCom('+idx+',\''+champKey+'\',this.value)" '
-    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;margin-top:2px">'
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px">'
     +'</div>';
   let h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
   h+=inputTxt('Inscription en ligne','inscriptionLigne',v.inscriptionLigne);
@@ -3267,10 +3267,10 @@ function renderChecklistMenaCom(idx,r,v){
   h+=inputTxt('Moy T3','moyT3',v.moyT3);
   h+=inputTxt('OK T3','okT3',v.okT3);
   h+='</div>';
-  h+='<div style="margin-top:10px">'
-    +'<span style="font-size:0.85em;font-weight:700;color:var(--gris);text-transform:uppercase">Observation</span><br>'
+h+='<div style="margin-top:10px">'
+    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">Observation</span><br>'
     +'<textarea id="mena_observation_'+idx+'" onblur="sauvegarderChampMenaCom('+idx+',\'observation\',this.value)" '
-    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;margin-top:2px;min-height:50px">'+(v.observation||'')+'</textarea>'
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px;min-height:50px">'+(v.observation||'')+'</textarea>'
     +'</div>';
   h+='<div id="menaStatut_'+idx+'" style="margin-top:8px;font-size:0.8em;color:var(--gris)">'+(v.modifiePar?('Dernière modif : '+v.modifiePar+' — '+v.dateMaj):'')+'</div>';
   contentDiv.innerHTML=h;
