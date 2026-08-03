@@ -3067,17 +3067,21 @@ async function chargerChecklistMenaDir(idx){
     +'onblur="sauvegarderChampMenaDir('+idx+',\''+champKey+'\',this.value)" '
     +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px">'
     +'</div>';
-  const selectOuiNon=(champLabel,champKey,val)=>
-    '<div style="margin-bottom:8px">'
+const selectOuiNon=(champLabel,champKey,val)=>{
+    const bg=val==='OUI'?'#E8F5E9':val==='NON'?'#FFEBEE':'#fff';
+    const border=val==='OUI'?'#2E7D32':val==='NON'?'#C62828':'var(--border)';
+    const color=val==='OUI'?'#2E7D32':val==='NON'?'#C62828':'#1A1A2E';
+    return '<div style="margin-bottom:8px">'
     +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">'+champLabel+'</span><br>'
-    +'<select id="mena_'+champKey+'_'+idx+'_dir" '
-    +'onchange="sauvegarderChampMenaDir('+idx+',\''+champKey+'\',this.value)" '
-    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px">'
+    +'<select id="mena_'+champKey+'_'+idx+'" '
+    +'onchange="sauvegarderChampMenaCom('+idx+',\''+champKey+'\',this.value);coloreSelectOuiNon(this)" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid '+border+';background:'+bg+';color:'+color+';font-size:1em;font-weight:700;margin-top:2px">'
     +'<option value=""'+(!val?' selected':'')+'>-- Non vérifié --</option>'
     +'<option value="OUI"'+(val==='OUI'?' selected':'')+'>OUI</option>'
     +'<option value="NON"'+(val==='NON'?' selected':'')+'>NON</option>'
     +'</select>'
     +'</div>';
+  };
   let h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
   h+=selectOuiNon('Inscription en ligne','inscriptionLigne',v.inscriptionLigne);
   h+=selectOuiNon('Photo','photo',v.photo);
@@ -3392,7 +3396,7 @@ async function precargarMenaCacheEtColorerBoutonsCom(){
     const champs=['inscriptionLigne','photo','actualise','transDeco','dfaOk'];
     const rempli=champs.filter(c=>v[c]).length;
     if(rempli===0){btn.style.background='#F5F5F5';btn.style.color='#616161';btn.textContent='🔍 Checklist';}
-    else if(rempli===champs.length){btn.style.background='#2E7D32';btn.style.color='#fff';btn.textContent='✅ Checklist';}
+    else if(rempli===champs.length){btn.style.background='#0D47A1';btn.style.color='#fff';btn.textContent='✅ Checklist';}
     else{btn.style.background='#E65100';btn.style.color='#fff';btn.textContent='⏳ Checklist';}
   });
 }
