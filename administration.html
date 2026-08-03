@@ -3245,7 +3245,7 @@ async function chargerChecklistMenaCom(idx){
 function renderChecklistMenaCom(idx,r,v){
   const contentDiv=document.getElementById('menaContentCom_'+idx);
   if(!contentDiv)return;
-  const champ=(label,val)=>'<div style="margin-bottom:6px"><span style="font-size:0.7em;font-weight:700;color:var(--gris);text-transform:uppercase">'+label+'</span><br><span style="font-size:0.85em;font-weight:600">'+(val||'—')+'</span></div>';
+  const champ=(label,val)=>'<div style="margin-bottom:8px"><span style="font-size:0.85em;font-weight:700;color:var(--gris);text-transform:uppercase">'+label+'</span><br><span style="font-size:1.05em;font-weight:600">'+(val||'—')+'</span></div>';
   let h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
   h+=champ('Inscription en ligne',v.inscriptionLigne);
   h+=champ('Photo',v.photo);
@@ -3258,8 +3258,8 @@ function renderChecklistMenaCom(idx,r,v){
   h+=champ('Moy T2 / OK',v.moyT2+' / '+(v.okT2||'—'));
   h+=champ('Moy T3 / OK',v.moyT3+' / '+(v.okT3||'—'));
   h+='</div>';
-  if(v.observation)h+='<div style="margin-top:8px;padding:8px;background:#FFF3E0;border-radius:6px;font-size:0.8em"><b>Observation :</b> '+v.observation+'</div>';
-  if(v.modifiePar)h+='<div style="margin-top:6px;font-size:0.68em;color:var(--gris)">Dernière modif : '+v.modifiePar+' — '+v.dateMaj+'</div>';
+  if(v.observation)h+='<div style="margin-top:8px;padding:8px;background:#FFF3E0;border-radius:6px;font-size:0.95em"><b>Observation :</b> '+v.observation+'</div>';
+  if(v.modifiePar)h+='<div style="margin-top:6px;font-size:0.8em;color:var(--gris)">Dernière modif : '+v.modifiePar+' — '+v.dateMaj+'</div>';
   contentDiv.innerHTML=h;
 }
  async function sauvegarderAffectationCom(idx,sel){
