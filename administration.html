@@ -3292,7 +3292,7 @@ async function chargerAffectationTousCom(){
       classes.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;selCl.appendChild(o);});
     }
     const cnt=document.getElementById('comAffCount'); if(cnt)cnt.textContent='('+rows.length+' eleves)';
-    filtrerAffectationCom();     setTimeout(precargarMenaCacheEtColorerBoutonsCom, 300);
+    filtrerAffectationCom();     setTimeout(precargarMenaCacheEtColorerBoutonsCom, 2000);
   }catch(e){zone.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--rouge)">Erreur chargement</td></tr>';}
 }
 
@@ -3380,7 +3380,7 @@ async function precargarMenaCacheEtColorerBoutonsCom(){
       script.onerror=()=>{delete window[cbName];resolve({ok:false});};
       script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
       document.body.appendChild(script);
-      setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},10000);
+      setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
     });
     if(data&&data.ok){
       window._verifMenaCacheCom={};
@@ -3468,7 +3468,7 @@ async function chargerChecklistMenaCom(idx){
       script.onerror=()=>{delete window[cbName];resolve({ok:false});};
       script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
       document.body.appendChild(script);
-      setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},10000);
+      setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
     });
     if(data&&data.ok){
       window._verifMenaCacheCom={};
@@ -3548,7 +3548,7 @@ h+='<div style="margin-top:10px">'
     script.onerror=()=>{delete window[cbName];resolve({ok:false});};
     script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
     document.body.appendChild(script);
-    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},10000);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
   });
   if(result&&result.ok){
     if(statutDiv)statutDiv.textContent='✓ Enregistré — '+modifiePar;
