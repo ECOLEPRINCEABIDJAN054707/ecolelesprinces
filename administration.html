@@ -1994,7 +1994,7 @@ async function attribuerMatriculeCom() {
     <div id="eduAffResume" style="padding:10px 14px;font-size:0.95em"></div>
     <div class="tbl-wrap">
       <table>
-        <thead><tr><th style="font-size:0.9em">Matricule</th><th style="font-size:0.9em">Nom</th><th style="font-size:0.9em">Classe</th><th style="font-size:0.9em">Statut</th><th style="font-size:0.9em">Tél. Père</th><th style="font-size:0.9em">Tél. Mère</th><th style="font-size:0.9em">Tél. Tuteur</th></tr></thead>
+      <thead><tr><th style="font-size:0.9em">Matricule</th><th style="font-size:0.9em">Nom</th><th style="font-size:0.9em">Classe</th><th style="font-size:0.9em">Statut</th><th style="font-size:0.9em">Tél. Père</th><th style="font-size:0.9em">Tél. Mère</th><th style="font-size:0.9em">Tél. Tuteur</th><th></th></tr></thead>
         <tbody id="eduAffTbody"><tr><td colspan="7" style="text-align:center;padding:16px;color:var(--gris);font-size:0.95em">Cliquez sur "Charger" pour voir vos élèves</td></tr></tbody>
       </table>
     </div>
@@ -3029,6 +3029,249 @@ async function toggleChecklistMenaDir(idx){
     await chargerChecklistMenaDir(idx);
   }
 }
+  window._verifMenaCacheEdu = null;
+
+async function toggleChecklistMenaEdu(idx){
+  const row=document.getElementById('menaDetailEdu_'+idx);
+  if(!row)return;
+  const estOuvert=row.style.display!=='none';
+  row.style.display=estOuvert?'none':'table-row';
+  if(!estOuvert){
+    await chargerChecklistMenaEdu(idx);
+  }
+}
+
+async function chargerChecklistMenaEdu(idx){
+  const contentDiv=document.getElementById('menaContentEdu_'+idx);
+  if(!contentDiv)return;
+  const r=window._affListeCouranteEdu[idx];
+  if(!window._verifMenaCacheEdu){
+    contentDiv.innerHTML='Chargement des données MENA...';
+    const cbName='vm_edu_'+Date.now();
+    const script=document.createElement('script');
+    const params=new URLSearchParams({callback:cbName,type:'GET_VERIFICATION_MENA',ecole:currentStaff.ecole});
+    const data=await new Promise(resolve=>{
+      window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+      script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+      script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+      document.body.appendChild(script);
+      setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
+    });
+    if(data&&data.ok){
+      window._verifMenaCacheEdu={};
+      (data.eleves||[]).forEach(e=>{window._verifMenaCacheEdu[e.matricule]=e;});
+    }else{
+      contentDiv.innerHTML='<span style="color:var(--rouge)">Erreur de chargement</span>';
+      return;
+    }
+  }
+  const v=window._verifMenaCacheEdu[r.matricule]||{};
+  renderChecklistMenaEdu(idx,r,v);
+}
+  function renderChecklistMenaEdu(idx,r,v){
+  const contentDiv=document.getElementById('menaContentEdu_'+idx);
+  if(!contentDiv)return;
+  const inputTxt=(champLabel,champKey,val)=>
+    '<div style="margin-bottom:8px">'
+    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">'+champLabel+'</span><br>'
+    +'<input type="text" id="mena_'+champKey+'_'+idx+'_edu" value="'+(val||'').toString().replace(/"/g,'&quot;')+'" '
+    +'onblur="sauvegarderChampMenaEdu('+idx+',\''+champKey+'\',this.value)" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px">'
+    +'</div>';
+  const selectOuiNon=(champLabel,champKey,val)=>{
+    const bg=val==='OUI'?'#E8F5E9':val==='NON'?'#FFEBEE':'#fff';
+    const border=val==='OUI'?'#2E7D32':val==='NON'?'#C62828':'var(--border)';
+    const color=val==='OUI'?'#2E7D32':val==='NON'?'#C62828':'#1A1A2E';
+    return '<div style="margin-bottom:8px">'
+    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">'+champLabel+'</span><br>'
+    +'<select id="mena_'+champKey+'_'+idx+'_edu" '
+    +'onchange="sauvegarderChampMenaEdu('+idx+',\''+champKey+'\',this.value);coloreSelectOuiNon(this)" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid '+border+';background:'+bg+';color:'+color+';font-size:1em;font-weight:700;margin-top:2px">'
+    +'<option value=""'+(!val?' selected':'')+'>-- Non vérifié --</option>'
+    +'<option value="OUI"'+(val==='OUI'?' selected':'')+'>OUI</option>'
+    +'<option value="NON"'+(val==='NON'?' selected':'')+'>NON</option>'
+    +'</select>'
+    +'</div>';
+  };
+  let h='<div style="margin-bottom:10px;padding:8px;background:#F5F5F5;border-radius:6px">'
+    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">Statut AFF/NAFF</span><br>'
+    +'<span style="font-size:1em;font-weight:700">'+(r.statut==='AFF'?'Affecté(e)':r.statut==='NAFF'?'Non affecté(e)':'Non renseigné')+' <i style="font-size:0.75em;color:var(--gris);font-weight:400">(lecture seule)</i></span>'
+    +'</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
+  h+=selectOuiNon('Inscription en ligne','inscriptionLigne',v.inscriptionLigne);
+  h+=selectOuiNon('Photo','photo',v.photo);
+  h+=selectOuiNon('Actualisé','actualise',v.actualise);
+  h+=selectOuiNon('Trans. DECO','transDeco',v.transDeco);
+  h+=selectOuiNon('DFA OK','dfaOk',v.dfaOk);
+  h+=inputTxt('Année scolaire','anneeScolaire',v.anneeScolaire);
+  h+=inputTxt('Classe MENA','classeMena',v.classeMena);
+  h+=inputTxt('Moy T1','moyT1',v.moyT1);
+  h+=selectOuiNon('OK T1','okT1',v.okT1);
+  h+=inputTxt('Moy T2','moyT2',v.moyT2);
+  h+=selectOuiNon('OK T2','okT2',v.okT2);
+  h+=inputTxt('Moy T3','moyT3',v.moyT3);
+  h+=selectOuiNon('OK T3','okT3',v.okT3);
+  h+='</div>';
+  h+='<div style="margin-top:10px">'
+    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">Observation</span><br>'
+    +'<textarea id="mena_observation_'+idx+'_edu" onblur="sauvegarderChampMenaEdu('+idx+',\'observation\',this.value)" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px;min-height:50px">'+(v.observation||'')+'</textarea>'
+    +'</div>';
+  h+='<div id="menaStatutEdu_'+idx+'" style="margin-top:8px;font-size:0.8em;color:var(--gris)">'+(v.modifiePar?('Dernière modif : '+v.modifiePar+' — '+v.dateMaj):'')+'</div>';
+  h+='<div style="margin-top:12px;padding-top:10px">'
+    +'<button onclick="enregistrerChecklistMenaEdu('+idx+')" style="width:100%;padding:11px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:0.9em;font-weight:700;cursor:pointer">💾 Enregistrer la checklist</button>'
+    +'</div>';
+  h+='<div style="margin-top:12px;padding-top:10px;border-top:1.5px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">'
+    +'<button onclick="signalerAnomalieEdu('+idx+',\'ECOLE_DIFFERENTE\')" style="padding:8px 14px;background:#FFF3E0;color:#E65100;border:1.5px solid #FFB74D;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🚩 Signaler École différente</button>'
+    +'<button onclick="signalerAnomalieEdu('+idx+',\'ABSENCE_PHYSIQUE\')" style="padding:8px 14px;background:#FFEBEE;color:#C62828;border:1.5px solid #EF9A9A;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🚩 Signaler Absence physique</button>'
+    +'</div>';
+  contentDiv.innerHTML=h;
+}
+  function sauvegarderChampMenaEdu(idx,champ,valeur){
+  const r=window._affListeCouranteEdu[idx];
+  if(!window._verifMenaCacheEdu)window._verifMenaCacheEdu={};
+  if(!window._verifMenaCacheEdu[r.matricule])window._verifMenaCacheEdu[r.matricule]={};
+  window._verifMenaCacheEdu[r.matricule][champ]=valeur;
+  colorerUnBoutonMenaEdu(idx);
+  const statutDiv=document.getElementById('menaStatutEdu_'+idx);
+  if(statutDiv)statutDiv.textContent='Modifié — pensez à cliquer "💾 Enregistrer" pour sauvegarder';
+}
+  async function enregistrerChecklistMenaEdu(idx){
+  const r=window._affListeCouranteEdu[idx];
+  const v=(window._verifMenaCacheEdu&&window._verifMenaCacheEdu[r.matricule])||{};
+  const statutDiv=document.getElementById('menaStatutEdu_'+idx);
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+
+  if(statutDiv)statutDiv.textContent='Enregistrement de la checklist...';
+
+  const cbName='svmb_edu_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({
+    callback:cbName,type:'SAUVEGARDER_VERIFICATION_MENA_BATCH',
+    ecole:currentStaff.ecole,matricule:r.matricule,nom:r.nom,classe:r.classe,
+    statutAffNaff:r.statut||'',inscriptionLigne:v.inscriptionLigne||'',
+    photo:v.photo||'',actualise:v.actualise||'',transDeco:v.transDeco||'',dfaOk:v.dfaOk||'',
+    anneeScolaire:v.anneeScolaire||'',classeMena:v.classeMena||'',
+    moyT1:v.moyT1||'',okT1:v.okT1||'',moyT2:v.moyT2||'',okT2:v.okT2||'',moyT3:v.moyT3||'',okT3:v.okT3||'',
+    observation:v.observation||'',modifiePar:modifiePar
+  });
+  const result=await new Promise(resolve=>{
+    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+    script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+    script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+    document.body.appendChild(script);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
+  });
+
+  if(result&&result.ok){
+    if(statutDiv)statutDiv.textContent='✓ Checklist enregistrée — '+modifiePar;
+    colorerUnBoutonMenaEdu(idx);
+    showToast('Checklist enregistrée','success');
+  }else{
+    if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement — réessayez';
+    showToast('Erreur enregistrement','error');
+  }
+}
+  function colorerUnBoutonMenaEdu(idx){
+  const r=window._affListeCouranteEdu[idx];
+  const btn=document.getElementById('menaBtnEdu_'+idx);
+  if(!r||!btn||!window._verifMenaCacheEdu)return;
+  const v=window._verifMenaCacheEdu[r.matricule]||{};
+
+  const normClasse=(s)=>(s||'').toString().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-_]/g,' ').replace(/\s+/g,' ').trim();
+  const classeReelle=normClasse(r.classe);
+  const classeMenaNorm=normClasse(v.classeMena);
+  const classeMatch = !classeMenaNorm || classeMenaNorm===classeReelle
+    || classeReelle.startsWith(classeMenaNorm+' ') || classeMenaNorm.startsWith(classeReelle+' ')
+    || classeReelle===classeMenaNorm.replace(/\s/g,'') || classeMenaNorm===classeReelle.replace(/\s/g,'')
+    || classeReelle.startsWith(classeMenaNorm) || classeMenaNorm.startsWith(classeReelle);
+
+  const estExamen=/^(3EME|TLE|TERMINALE)/.test(classeReelle);
+  const baseOK = v.inscriptionLigne==='OUI' && v.photo==='OUI' && v.actualise==='OUI'
+    && !!String(v.anneeScolaire||'').trim() && !!String(v.classeMena||'').trim();
+  const decoOK = v.transDeco==='OUI';
+  const completOK = baseOK && (!estExamen || decoOK)
+    && !!String(v.moyT1||'').trim() && v.okT1==='OUI'
+    && !!String(v.moyT2||'').trim() && v.okT2==='OUI'
+    && !!String(v.moyT3||'').trim() && v.okT3==='OUI'
+    && v.dfaOk==='OUI';
+
+  if(!classeMatch){
+    btn.style.background='#0D47A1';btn.style.color='#fff';btn.textContent='⚠️ Checklist';
+  }else if(completOK){
+    btn.style.background='#2E7D32';btn.style.color='#fff';btn.textContent='✅ Checklist';
+  }else if(!estExamen && baseOK){
+    btn.style.background='#C62828';btn.style.color='#fff';btn.textContent='🔍 Checklist';
+  }else if(estExamen && baseOK && decoOK){
+    btn.style.background='#E65100';btn.style.color='#fff';btn.textContent='🔍 Checklist';
+  }else{
+    btn.style.background='#0D47A1';btn.style.color='#fff';btn.textContent='🔍 Checklist';
+  }
+}
+  async function signalerAnomalieEdu(idx,typeAnomalie){
+  const r=window._affListeCouranteEdu[idx];
+  const libelle=typeAnomalie==='ECOLE_DIFFERENTE'?'École MENA différente':'Absence physique';
+
+  var ecoleTrouvee='';
+  if(typeAnomalie==='ECOLE_DIFFERENTE'){
+    ecoleTrouvee=window.prompt('Quel est le nom de l\'école où '+r.nom+' ('+r.matricule+') est inscrit(e) selon la fiche MENA ?','');
+    if(ecoleTrouvee===null)return;
+    ecoleTrouvee=ecoleTrouvee.trim();
+    if(!ecoleTrouvee){showToast('Le nom de l\'école est obligatoire','error');return;}
+  }
+
+  const ok=window.confirm('Confirmer le signalement "'+libelle+'" pour '+r.nom+' ('+r.matricule+') ?'+(ecoleTrouvee?'\n\nÉcole trouvée : '+ecoleTrouvee:'')+'\n\nCe signalement sera transmis pour investigation.');
+  if(!ok)return;
+
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const signalePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+
+  const cbName='sig_edu_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({
+    callback:cbName,type:'SIGNALER_ANOMALIE_MENA',
+    ecole:currentStaff.ecole,matricule:r.matricule,nom:r.nom,classe:r.classe,
+    typeAnomalie:typeAnomalie,signalePar:signalePar,ecoleTrouvee:ecoleTrouvee
+  });
+  const result=await new Promise(resolve=>{
+    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+    script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+    script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+    document.body.appendChild(script);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
+  });
+
+  if(result&&result.ok){
+    showToast('Anomalie signalée — '+libelle,'success');
+  }else{
+    showToast('Erreur lors du signalement','error');
+  }
+}
+  async function precargarMenaCacheEtColorerBoutonsEdu(){
+  if(!window._affListeCouranteEdu||!window._affListeCouranteEdu.length)return;
+  if(true){
+    const cbName='vm_preload_edu_'+Date.now();
+    const script=document.createElement('script');
+    const params=new URLSearchParams({callback:cbName,type:'GET_VERIFICATION_MENA',ecole:currentStaff.ecole});
+    const data=await new Promise(resolve=>{
+      window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+      script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+      script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+      document.body.appendChild(script);
+      setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
+    });
+    if(data&&data.ok){
+      window._verifMenaCacheEdu={};
+      (data.eleves||[]).forEach(e=>{window._verifMenaCacheEdu[e.matricule]=e;});
+    }else{
+      return;
+    }
+  }
+  window._affListeCouranteEdu.forEach((r,idx)=>{
+    colorerUnBoutonMenaEdu(idx);
+  });
+}
 window._verifMenaCacheDir = null;
 
 async function chargerChecklistMenaDir(idx){
@@ -3811,6 +4054,7 @@ async function chargerAffectationTousEdu(){
     }
     const cnt=document.getElementById('eduAffCount'); if(cnt)cnt.textContent='('+rows.length+' eleves)';
     filtrerAffectationEdu();
+    setTimeout(precargarMenaCacheEtColorerBoutonsEdu, 2000);
   }catch(e){zone.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--rouge)">Erreur chargement</td></tr>';}
 }
 
@@ -3824,7 +4068,7 @@ function filtrerAffectationEdu(){
   });
   renderAffectationEdu(filtered);
 }
- function renderAffectationEdu(rows){
+function renderAffectationEdu(rows){
   const tbody=document.getElementById('eduAffTbody');
   const collegiens=rows.filter(r=>r.estCollege);
   const nbAff=collegiens.filter(r=>r.statut==='AFF').length;
@@ -3840,9 +4084,9 @@ function filtrerAffectationEdu(){
     +'<span class="bdg" style="background:#eee;color:#666;font-size:0.95em">'+nbVide+' Non renseigne (college)</span>'
     +(nbPrim>0?' &nbsp;<span class="bdg bg-bleu" style="background:#E3F2FD;color:#1565C0;font-size:0.95em">'+nbPrim+' primaire (contacts seulement)</span>':'')
     +(nbSansContact>0?' &nbsp;<span class="bdg bg-orange" style="font-size:0.95em">'+nbSansContact+' sans aucun contact</span>':'');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--gris);font-size:0.95em">Aucun eleve pour ce filtre</td></tr>';return;}
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris);font-size:0.95em">Aucun eleve pour ce filtre</td></tr>';return;}
   let h='';
-  rows.forEach(r=>{
+  rows.forEach((r,idx)=>{
     const statutTxt=r.estCollege
       ? (r.statut==='AFF'?'<span class="bdg bg-vert">Affecté(e)</span>'
         : r.statut==='NAFF'?'<span class="bdg bg-rouge">Non affecté(e)</span>'
@@ -3856,9 +4100,14 @@ function filtrerAffectationEdu(){
       +'<td style="font-size:0.9em">'+(r.tel1||'—')+'</td>'
       +'<td style="font-size:0.9em">'+(r.tel2||'—')+'</td>'
       +'<td style="font-size:0.9em">'+(r.tel3||'—')+'</td>'
+      +'<td><button id="menaBtnEdu_'+idx+'" onclick="toggleChecklistMenaEdu('+idx+')" style="padding:6px 10px;background:#4A148C;color:#fff;border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer;white-space:nowrap">🔍 Checklist</button></td>'
       +'</tr>';
+    h+='<tr id="menaDetailEdu_'+idx+'" style="display:none"><td colspan="8" style="padding:0;background:#F8FAFD">'
+      +'<div id="menaContentEdu_'+idx+'" style="padding:14px;font-size:0.85em;color:var(--gris)">Chargement...</div>'
+      +'</td></tr>';
   });
   tbody.innerHTML=h;
+  window._affListeCouranteEdu=rows;
 }
   // ★★★ NOUVEAU — change l'annee active et recharge les donnees affichees
 async function changerAnneeDir(){
