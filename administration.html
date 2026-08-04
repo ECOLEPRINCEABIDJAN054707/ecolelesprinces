@@ -3389,15 +3389,31 @@ async function precargarMenaCacheEtColorerBoutonsCom(){
       return;
     }
   }
-  window._affListeCouranteCom.forEach((r,idx)=>{
+window._affListeCouranteCom.forEach((r,idx)=>{
     const btn=document.getElementById('menaBtnCom_'+idx);
     if(!btn)return;
     const v=window._verifMenaCacheCom[r.matricule]||{};
-    const champs=['inscriptionLigne','photo','actualise','transDeco','dfaOk'];
-    const rempli=champs.filter(c=>v[c]).length;
-    if(rempli===0){btn.style.background='#F5F5F5';btn.style.color='#616161';btn.textContent='🔍 Checklist';}
-    else if(rempli===champs.length){btn.style.background='#0D47A1';btn.style.color='#fff';btn.textContent='✅ Checklist';}
-    else{btn.style.background='#E65100';btn.style.color='#fff';btn.textContent='⏳ Checklist';}
+    const classe=(r.classe||'').toUpperCase();
+    const estExamen=/^(3EME|TLE|TERMINALE)/.test(classe);
+
+    const baseOK = v.inscriptionLigne==='OUI' && v.photo==='OUI' && v.actualise==='OUI'
+      && !!(v.anneeScolaire&&v.anneeScolaire.trim()) && !!(v.classeMena&&v.classeMena.trim());
+    const decoOK = v.transDeco==='OUI';
+    const completOK = baseOK && (!estExamen || decoOK)
+      && !!(v.moyT1&&v.moyT1.trim()) && v.okT1==='OUI'
+      && !!(v.moyT2&&v.moyT2.trim()) && v.okT2==='OUI'
+      && !!(v.moyT3&&v.moyT3.trim()) && v.okT3==='OUI'
+      && v.dfaOk==='OUI';
+
+    if(completOK){
+      btn.style.background='#2E7D32';btn.style.color='#fff';btn.textContent='✅ Checklist';
+    }else if(!estExamen && baseOK){
+      btn.style.background='#C62828';btn.style.color='#fff';btn.textContent='🔍 Checklist';
+    }else if(estExamen && baseOK && decoOK){
+      btn.style.background='#E65100';btn.style.color='#fff';btn.textContent='🔍 Checklist';
+    }else{
+      btn.style.background='#0D47A1';btn.style.color='#fff';btn.textContent='🔍 Checklist';
+    }
   });
 }
 async function chargerChecklistMenaCom(idx){
