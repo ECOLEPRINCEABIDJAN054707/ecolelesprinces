@@ -3390,39 +3390,43 @@ async function precargarMenaCacheEtColorerBoutonsCom(){
     }
   }
 window._affListeCouranteCom.forEach((r,idx)=>{
-    const btn=document.getElementById('menaBtnCom_'+idx);
-    if(!btn)return;
-    const v=window._verifMenaCacheCom[r.matricule]||{};
-
-    const normClasse=(s)=>(s||'').toString().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-_]/g,' ').replace(/\s+/g,' ').trim();
-    const classeReelle=normClasse(r.classe);
-    const classeMenaNorm=normClasse(v.classeMena);
-    const classeMatch = !classeMenaNorm || classeMenaNorm===classeReelle
-      || classeReelle.startsWith(classeMenaNorm+' ') || classeMenaNorm.startsWith(classeReelle+' ')
-      || classeReelle===classeMenaNorm.replace(/\s/g,'') || classeMenaNorm===classeReelle.replace(/\s/g,'');
-
-    const estExamen=/^(3EME|TLE|TERMINALE)/.test(classeReelle);
-    const baseOK = v.inscriptionLigne==='OUI' && v.photo==='OUI' && v.actualise==='OUI'
-      && !!(v.anneeScolaire&&v.anneeScolaire.trim()) && !!(v.classeMena&&v.classeMena.trim());
-    const decoOK = v.transDeco==='OUI';
-    const completOK = baseOK && (!estExamen || decoOK)
-      && !!(v.moyT1&&v.moyT1.trim()) && v.okT1==='OUI'
-      && !!(v.moyT2&&v.moyT2.trim()) && v.okT2==='OUI'
-      && !!(v.moyT3&&v.moyT3.trim()) && v.okT3==='OUI'
-      && v.dfaOk==='OUI';
-
-    if(!classeMatch){
-      btn.style.background='#0D47A1';btn.style.color='#fff';btn.textContent='⚠️ Checklist';
-    }else if(completOK){
-      btn.style.background='#2E7D32';btn.style.color='#fff';btn.textContent='✅ Checklist';
-    }else if(!estExamen && baseOK){
-      btn.style.background='#C62828';btn.style.color='#fff';btn.textContent='🔍 Checklist';
-    }else if(estExamen && baseOK && decoOK){
-      btn.style.background='#E65100';btn.style.color='#fff';btn.textContent='🔍 Checklist';
-    }else{
-      btn.style.background='#0D47A1';btn.style.color='#fff';btn.textContent='🔍 Checklist';
-    }
+    colorerUnBoutonMenaCom(idx);
   });
+}
+  function colorerUnBoutonMenaCom(idx){
+  const r=window._affListeCouranteCom[idx];
+  const btn=document.getElementById('menaBtnCom_'+idx);
+  if(!r||!btn||!window._verifMenaCacheCom)return;
+  const v=window._verifMenaCacheCom[r.matricule]||{};
+
+  const normClasse=(s)=>(s||'').toString().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-_]/g,' ').replace(/\s+/g,' ').trim();
+  const classeReelle=normClasse(r.classe);
+  const classeMenaNorm=normClasse(v.classeMena);
+  const classeMatch = !classeMenaNorm || classeMenaNorm===classeReelle
+    || classeReelle.startsWith(classeMenaNorm+' ') || classeMenaNorm.startsWith(classeReelle+' ')
+    || classeReelle===classeMenaNorm.replace(/\s/g,'') || classeMenaNorm===classeReelle.replace(/\s/g,'');
+
+  const estExamen=/^(3EME|TLE|TERMINALE)/.test(classeReelle);
+  const baseOK = v.inscriptionLigne==='OUI' && v.photo==='OUI' && v.actualise==='OUI'
+    && !!(v.anneeScolaire&&v.anneeScolaire.trim()) && !!(v.classeMena&&v.classeMena.trim());
+  const decoOK = v.transDeco==='OUI';
+  const completOK = baseOK && (!estExamen || decoOK)
+    && !!(v.moyT1&&v.moyT1.trim()) && v.okT1==='OUI'
+    && !!(v.moyT2&&v.moyT2.trim()) && v.okT2==='OUI'
+    && !!(v.moyT3&&v.moyT3.trim()) && v.okT3==='OUI'
+    && v.dfaOk==='OUI';
+
+  if(!classeMatch){
+    btn.style.background='#0D47A1';btn.style.color='#fff';btn.textContent='⚠️ Checklist';
+  }else if(completOK){
+    btn.style.background='#2E7D32';btn.style.color='#fff';btn.textContent='✅ Checklist';
+  }else if(!estExamen && baseOK){
+    btn.style.background='#C62828';btn.style.color='#fff';btn.textContent='🔍 Checklist';
+  }else if(estExamen && baseOK && decoOK){
+    btn.style.background='#E65100';btn.style.color='#fff';btn.textContent='🔍 Checklist';
+  }else{
+    btn.style.background='#0D47A1';btn.style.color='#fff';btn.textContent='🔍 Checklist';
+  }
 }
 async function chargerChecklistMenaCom(idx){
   const contentDiv=document.getElementById('menaContentCom_'+idx);
@@ -3525,6 +3529,7 @@ h+='<div style="margin-top:10px">'
     if(window._verifMenaCacheCom&&window._verifMenaCacheCom[r.matricule]){
       window._verifMenaCacheCom[r.matricule][champ]=valeur;
     }
+    colorerUnBoutonMenaCom(idx);
     showToast('Champ enregistré','success');
   }else{
     if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement';
