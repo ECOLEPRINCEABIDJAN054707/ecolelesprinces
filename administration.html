@@ -3592,7 +3592,7 @@ const params=new URLSearchParams({
     script.onerror=()=>{delete window[cbName];resolve({ok:false});};
     script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
     document.body.appendChild(script);
-    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},10000);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},20000);
   });
 
 if(result&&result.ok){
