@@ -2953,6 +2953,7 @@ async function chargerAffectationTous(){
     }
     const cnt=document.getElementById('affCount'); if(cnt)cnt.textContent='('+rows.length+' eleves)';
     filtrerAffectation();
+ setTimeout(precargarMenaCacheEtColorerBoutonsDir, 2000);
   }catch(e){zone.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--rouge)">Erreur chargement</td></tr>';}
 }
 
@@ -3009,7 +3010,7 @@ function renderAffectation(rows){
       +'<td>'+telInput('affTel2',r.tel2,'Mère')+'</td>'
       +'<td>'+telInput('affTel3',r.tel3,'Tuteur')+'</td>'
       +'<td id="affStatut_'+idx+'" style="font-size:0.85em;color:var(--gris)">—</td>'
-      +'<td><button onclick="toggleChecklistMenaDir('+idx+')" style="padding:6px 10px;background:#4A148C;color:#fff;border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer;white-space:nowrap">🔍 Checklist</button></td>'
+    +'<td><button id="menaBtnDir_'+idx+'" onclick="toggleChecklistMenaDir('+idx+')" style="padding:6px 10px;background:#4A148C;color:#fff;border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer;white-space:nowrap">🔍 Checklist</button></td>'
       +'</tr>';
     h+='<tr id="menaDetailDir_'+idx+'" style="display:none"><td colspan="9" style="padding:0;background:#F8FAFD">'
       +'<div id="menaContentDir_'+idx+'" style="padding:14px;font-size:0.85em;color:var(--gris)">Chargement...</div>'
@@ -3057,7 +3058,7 @@ async function chargerChecklistMenaDir(idx){
   const v=window._verifMenaCacheDir[r.matricule]||{};
   renderChecklistMenaDir(idx,r,v);
 }
-  function renderChecklistMenaDir(idx,r,v){
+ function renderChecklistMenaDir(idx,r,v){
   const contentDiv=document.getElementById('menaContentDir_'+idx);
   if(!contentDiv)return;
   const inputTxt=(champLabel,champKey,val)=>
@@ -3067,14 +3068,14 @@ async function chargerChecklistMenaDir(idx){
     +'onblur="sauvegarderChampMenaDir('+idx+',\''+champKey+'\',this.value)" '
     +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px">'
     +'</div>';
-const selectOuiNon=(champLabel,champKey,val)=>{
+  const selectOuiNon=(champLabel,champKey,val)=>{
     const bg=val==='OUI'?'#E8F5E9':val==='NON'?'#FFEBEE':'#fff';
     const border=val==='OUI'?'#2E7D32':val==='NON'?'#C62828':'var(--border)';
     const color=val==='OUI'?'#2E7D32':val==='NON'?'#C62828':'#1A1A2E';
     return '<div style="margin-bottom:8px">'
     +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">'+champLabel+'</span><br>'
-    +'<select id="mena_'+champKey+'_'+idx+'" '
-    +'onchange="sauvegarderChampMenaCom('+idx+',\''+champKey+'\',this.value);coloreSelectOuiNon(this)" '
+    +'<select id="mena_'+champKey+'_'+idx+'_dir" '
+    +'onchange="sauvegarderChampMenaDir('+idx+',\''+champKey+'\',this.value);coloreSelectOuiNon(this)" '
     +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid '+border+';background:'+bg+';color:'+color+';font-size:1em;font-weight:700;margin-top:2px">'
     +'<option value=""'+(!val?' selected':'')+'>-- Non vérifié --</option>'
     +'<option value="OUI"'+(val==='OUI'?' selected':'')+'>OUI</option>'
@@ -3103,44 +3104,84 @@ const selectOuiNon=(champLabel,champKey,val)=>{
     +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px;min-height:50px">'+(v.observation||'')+'</textarea>'
     +'</div>';
   h+='<div id="menaStatutDir_'+idx+'" style="margin-top:8px;font-size:0.8em;color:var(--gris)">'+(v.modifiePar?('Dernière modif : '+v.modifiePar+' — '+v.dateMaj):'')+'</div>';
+  h+='<div style="margin-top:12px;padding-top:10px">'
+    +'<button onclick="enregistrerChecklistMenaDir('+idx+')" style="width:100%;padding:11px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:0.9em;font-weight:700;cursor:pointer">💾 Enregistrer la checklist</button>'
+    +'</div>';
   h+='<div style="margin-top:12px;padding-top:10px;border-top:1.5px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">'
     +'<button onclick="signalerAnomalieDir('+idx+',\'ECOLE_DIFFERENTE\')" style="padding:8px 14px;background:#FFF3E0;color:#E65100;border:1.5px solid #FFB74D;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🚩 Signaler École différente</button>'
     +'<button onclick="signalerAnomalieDir('+idx+',\'ABSENCE_PHYSIQUE\')" style="padding:8px 14px;background:#FFEBEE;color:#C62828;border:1.5px solid #EF9A9A;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🚩 Signaler Absence physique</button>'
     +'</div>';
   contentDiv.innerHTML=h;
 }
-  async function sauvegarderChampMenaDir(idx,champ,valeur){
+function sauvegarderChampMenaDir(idx,champ,valeur){
   const r=window._affListeCourante[idx];
-  const ancienneValeur=(window._verifMenaCacheDir&&window._verifMenaCacheDir[r.matricule]&&window._verifMenaCacheDir[r.matricule][champ])||'';
-  if(String(valeur).trim()===String(ancienneValeur).trim())return;
+  if(!window._verifMenaCacheDir)window._verifMenaCacheDir={};
+  if(!window._verifMenaCacheDir[r.matricule])window._verifMenaCacheDir[r.matricule]={};
+  window._verifMenaCacheDir[r.matricule][champ]=valeur;
+  colorerUnBoutonMenaDir(idx);
   const statutDiv=document.getElementById('menaStatutDir_'+idx);
-  if(statutDiv)statutDiv.textContent='Enregistrement...';
+  if(statutDiv)statutDiv.textContent='Modifié — pensez à cliquer "💾 Enregistrer" pour sauvegarder';
+}
+  async function enregistrerChecklistMenaDir(idx){
+  const r=window._affListeCourante[idx];
+  const v=(window._verifMenaCacheDir&&window._verifMenaCacheDir[r.matricule])||{};
+  const statutDiv=document.getElementById('menaStatutDir_'+idx);
   const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
   const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
-  const cbName='svm_dir_'+Date.now();
+
+  if(statutDiv)statutDiv.textContent='Enregistrement de la checklist...';
+
+  const cbName='svmb_dir_'+Date.now();
   const script=document.createElement('script');
   const params=new URLSearchParams({
-    callback:cbName,type:'SAUVEGARDER_VERIFICATION_MENA',
+    callback:cbName,type:'SAUVEGARDER_VERIFICATION_MENA_BATCH',
     ecole:currentStaff.ecole,matricule:r.matricule,nom:r.nom,classe:r.classe,
-    champ:champ,valeur:valeur,modifiePar:modifiePar
+    statutAffNaff:v.statutAffNaff||'',inscriptionLigne:v.inscriptionLigne||'',
+    photo:v.photo||'',actualise:v.actualise||'',transDeco:v.transDeco||'',dfaOk:v.dfaOk||'',
+    anneeScolaire:v.anneeScolaire||'',classeMena:v.classeMena||'',
+    moyT1:v.moyT1||'',okT1:v.okT1||'',moyT2:v.moyT2||'',okT2:v.okT2||'',moyT3:v.moyT3||'',okT3:v.okT3||'',
+    observation:v.observation||'',modifiePar:modifiePar
   });
   const result=await new Promise(resolve=>{
     window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
     script.onerror=()=>{delete window[cbName];resolve({ok:false});};
     script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
     document.body.appendChild(script);
-    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},10000);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
   });
+
   if(result&&result.ok){
-    if(statutDiv)statutDiv.textContent='✓ Enregistré — '+modifiePar;
-    if(window._verifMenaCacheDir&&window._verifMenaCacheDir[r.matricule]){
-      window._verifMenaCacheDir[r.matricule][champ]=valeur;
-    }
-    showToast('Champ enregistré','success');
+    if(statutDiv)statutDiv.textContent='✓ Checklist enregistrée — '+modifiePar;
+    colorerUnBoutonMenaDir(idx);
+    showToast('Checklist enregistrée','success');
   }else{
-    if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement';
+    if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement — réessayez';
     showToast('Erreur enregistrement','error');
   }
+}
+  async function precargarMenaCacheEtColorerBoutonsDir(){
+  if(!window._affListeCourante||!window._affListeCourante.length)return;
+  if(true){
+    const cbName='vm_preload_dir_'+Date.now();
+    const script=document.createElement('script');
+    const params=new URLSearchParams({callback:cbName,type:'GET_VERIFICATION_MENA',ecole:currentStaff.ecole});
+    const data=await new Promise(resolve=>{
+      window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+      script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+      script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+      document.body.appendChild(script);
+      setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
+    });
+    if(data&&data.ok){
+      window._verifMenaCacheDir={};
+      (data.eleves||[]).forEach(e=>{window._verifMenaCacheDir[e.matricule]=e;});
+    }else{
+      return;
+    }
+  }
+  window._affListeCourante.forEach((r,idx)=>{
+    colorerUnBoutonMenaDir(idx);
+  });
 }
   async function signalerAnomalieDir(idx,typeAnomalie){
   const r=window._affListeCourante[idx];
