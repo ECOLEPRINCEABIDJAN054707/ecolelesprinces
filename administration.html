@@ -3219,10 +3219,19 @@ function sauvegarderChampMenaDir(idx,champ,valeur){
     colorerUnBoutonMenaDir(idx);
   });
 }
-  async function signalerAnomalieDir(idx,typeAnomalie){
+async function signalerAnomalieDir(idx,typeAnomalie){
   const r=window._affListeCourante[idx];
   const libelle=typeAnomalie==='ECOLE_DIFFERENTE'?'École MENA différente':'Absence physique';
-  const ok=window.confirm('Confirmer le signalement "'+libelle+'" pour '+r.nom+' ('+r.matricule+') ?\n\nCe signalement sera transmis pour investigation.');
+
+  var ecoleTrouvee='';
+  if(typeAnomalie==='ECOLE_DIFFERENTE'){
+    ecoleTrouvee=window.prompt('Quel est le nom de l\'école où '+r.nom+' ('+r.matricule+') est inscrit(e) selon la fiche MENA ?','');
+    if(ecoleTrouvee===null)return;
+    ecoleTrouvee=ecoleTrouvee.trim();
+    if(!ecoleTrouvee){showToast('Le nom de l\'école est obligatoire','error');return;}
+  }
+
+  const ok=window.confirm('Confirmer le signalement "'+libelle+'" pour '+r.nom+' ('+r.matricule+') ?'+(ecoleTrouvee?'\n\nÉcole trouvée : '+ecoleTrouvee:'')+'\n\nCe signalement sera transmis pour investigation.');
   if(!ok)return;
 
   const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
@@ -3230,10 +3239,10 @@ function sauvegarderChampMenaDir(idx,champ,valeur){
 
   const cbName='sig_dir_'+Date.now();
   const script=document.createElement('script');
-  const params=new URLSearchParams({
+const params=new URLSearchParams({
     callback:cbName,type:'SIGNALER_ANOMALIE_MENA',
     ecole:currentStaff.ecole,matricule:r.matricule,nom:r.nom,classe:r.classe,
-    typeAnomalie:typeAnomalie,signalePar:signalePar
+    typeAnomalie:typeAnomalie,signalePar:signalePar,ecoleTrouvee:ecoleTrouvee
   });
   const result=await new Promise(resolve=>{
     window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
