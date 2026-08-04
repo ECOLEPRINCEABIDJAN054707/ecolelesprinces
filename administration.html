@@ -3504,7 +3504,10 @@ h+='<div style="margin-top:10px">'
     +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px;min-height:50px">'+(v.observation||'')+'</textarea>'
     +'</div>';
   h+='<div id="menaStatut_'+idx+'" style="margin-top:8px;font-size:0.8em;color:var(--gris)">'+(v.modifiePar?('Dernière modif : '+v.modifiePar+' — '+v.dateMaj):'')+'</div>';
- h+='<div style="margin-top:12px;padding-top:10px;border-top:1.5px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">'
+h+='<div style="margin-top:12px;padding-top:10px">'
+    +'<button onclick="enregistrerChecklistMenaCom('+idx+')" style="width:100%;padding:11px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:0.9em;font-weight:700;cursor:pointer">💾 Enregistrer la checklist</button>'
+    +'</div>';
+  h+='<div style="margin-top:12px;padding-top:10px;border-top:1.5px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">'
     +'<button onclick="signalerAnomalieCom('+idx+',\'ECOLE_DIFFERENTE\')" style="padding:8px 14px;background:#FFF3E0;color:#E65100;border:1.5px solid #FFB74D;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🚩 Signaler École différente</button>'
     +'<button onclick="signalerAnomalieCom('+idx+',\'ABSENCE_PHYSIQUE\')" style="padding:8px 14px;background:#FFEBEE;color:#C62828;border:1.5px solid #EF9A9A;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🚩 Signaler Absence physique</button>'
     +'</div>';
@@ -3534,6 +3537,43 @@ function sauvegarderChampMenaCom(idx,champ,valeur){
   colorerUnBoutonMenaCom(idx);
   const statutDiv=document.getElementById('menaStatut_'+idx);
   if(statutDiv)statutDiv.textContent='Modifié — pensez à cliquer "💾 Enregistrer" pour sauvegarder';
+}
+  async function enregistrerChecklistMenaCom(idx){
+  const r=window._affListeCouranteCom[idx];
+  const v=(window._verifMenaCacheCom&&window._verifMenaCacheCom[r.matricule])||{};
+  const statutDiv=document.getElementById('menaStatut_'+idx);
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+
+  if(statutDiv)statutDiv.textContent='Enregistrement de la checklist...';
+
+  const cbName='svmb_com_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({
+    callback:cbName,type:'SAUVEGARDER_VERIFICATION_MENA_BATCH',
+    ecole:currentStaff.ecole,matricule:r.matricule,nom:r.nom,classe:r.classe,
+    statutAffNaff:v.statutAffNaff||'',inscriptionLigne:v.inscriptionLigne||'',
+    photo:v.photo||'',actualise:v.actualise||'',transDeco:v.transDeco||'',dfaOk:v.dfaOk||'',
+    anneeScolaire:v.anneeScolaire||'',classeMena:v.classeMena||'',
+    moyT1:v.moyT1||'',okT1:v.okT1||'',moyT2:v.moyT2||'',okT2:v.okT2||'',moyT3:v.moyT3||'',okT3:v.okT3||'',
+    observation:v.observation||'',modifiePar:modifiePar
+  });
+  const result=await new Promise(resolve=>{
+    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+    script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+    script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+    document.body.appendChild(script);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
+  });
+
+  if(result&&result.ok){
+    if(statutDiv)statutDiv.textContent='✓ Checklist enregistrée — '+modifiePar;
+    colorerUnBoutonMenaCom(idx);
+    showToast('Checklist enregistrée','success');
+  }else{
+    if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement — réessayez';
+    showToast('Erreur enregistrement','error');
+  }
 }
 async function signalerAnomalieCom(idx,typeAnomalie){
   const r=window._affListeCouranteCom[idx];
