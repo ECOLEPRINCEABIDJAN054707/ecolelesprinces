@@ -3509,27 +3509,36 @@ h+='<div style="margin-top:10px">'
     +'<button onclick="signalerAnomalieCom('+idx+',\'ABSENCE_PHYSIQUE\')" style="padding:8px 14px;background:#FFEBEE;color:#C62828;border:1.5px solid #EF9A9A;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🚩 Signaler Absence physique</button>'
     +'</div>';
   contentDiv.innerHTML=h;
-}
-  async function sauvegarderChampMenaCom(idx,champ,valeur){
-  const r=window._affListeCouranteCom[idx];
-  const statutDiv=document.getElementById('menaStatut_'+idx);
-  if(statutDiv)statutDiv.textContent='Enregistrement...';
-  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
-  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
-  const cbName='svm_com_'+Date.now();
+}async function _appelSauvegarderMenaCom(r,champ,valeur,modifiePar){
+  const cbName='svm_com_'+Date.now()+'_'+Math.floor(Math.random()*10000);
   const script=document.createElement('script');
   const params=new URLSearchParams({
     callback:cbName,type:'SAUVEGARDER_VERIFICATION_MENA',
     ecole:currentStaff.ecole,matricule:r.matricule,nom:r.nom,classe:r.classe,
     champ:champ,valeur:valeur,modifiePar:modifiePar
   });
-  const result=await new Promise(resolve=>{
+  return await new Promise(resolve=>{
     window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
     script.onerror=()=>{delete window[cbName];resolve({ok:false});};
     script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
     document.body.appendChild(script);
     setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
   });
+}
+
+async function sauvegarderChampMenaCom(idx,champ,valeur){
+  const r=window._affListeCouranteCom[idx];
+  const statutDiv=document.getElementById('menaStatut_'+idx);
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+
+  let result={ok:false};
+  for(let tentative=1;tentative<=3;tentative++){
+    if(statutDiv)statutDiv.textContent='Enregistrement'+(tentative>1?' (tentative '+tentative+')':'')+'...';
+    result=await _appelSauvegarderMenaCom(r,champ,valeur,modifiePar);
+    if(result&&result.ok)break;
+  }
+
   if(result&&result.ok){
     if(statutDiv)statutDiv.textContent='✓ Enregistré — '+modifiePar;
     if(window._verifMenaCacheCom&&window._verifMenaCacheCom[r.matricule]){
@@ -3538,8 +3547,8 @@ h+='<div style="margin-top:10px">'
     colorerUnBoutonMenaCom(idx);
     showToast('Champ enregistré','success');
   }else{
-    if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement';
-    showToast('Erreur enregistrement','error');
+    if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement (3 tentatives)';
+    showToast('Erreur enregistrement — réessayez manuellement','error');
   }
 }
 async function signalerAnomalieCom(idx,typeAnomalie){
