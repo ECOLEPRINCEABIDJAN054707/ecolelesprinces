@@ -3526,30 +3526,14 @@ h+='<div style="margin-top:10px">'
   });
 }
 
-async function sauvegarderChampMenaCom(idx,champ,valeur){
+function sauvegarderChampMenaCom(idx,champ,valeur){
   const r=window._affListeCouranteCom[idx];
+  if(!window._verifMenaCacheCom)window._verifMenaCacheCom={};
+  if(!window._verifMenaCacheCom[r.matricule])window._verifMenaCacheCom[r.matricule]={};
+  window._verifMenaCacheCom[r.matricule][champ]=valeur;
+  colorerUnBoutonMenaCom(idx);
   const statutDiv=document.getElementById('menaStatut_'+idx);
-  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
-  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
-
-  let result={ok:false};
-  for(let tentative=1;tentative<=3;tentative++){
-    if(statutDiv)statutDiv.textContent='Enregistrement'+(tentative>1?' (tentative '+tentative+')':'')+'...';
-    result=await _appelSauvegarderMenaCom(r,champ,valeur,modifiePar);
-    if(result&&result.ok)break;
-  }
-
-  if(result&&result.ok){
-    if(statutDiv)statutDiv.textContent='✓ Enregistré — '+modifiePar;
-    if(window._verifMenaCacheCom&&window._verifMenaCacheCom[r.matricule]){
-      window._verifMenaCacheCom[r.matricule][champ]=valeur;
-    }
-    colorerUnBoutonMenaCom(idx);
-    showToast('Champ enregistré','success');
-  }else{
-    if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement (3 tentatives)';
-    showToast('Erreur enregistrement — réessayez manuellement','error');
-  }
+  if(statutDiv)statutDiv.textContent='Modifié — pensez à cliquer "💾 Enregistrer" pour sauvegarder';
 }
 async function signalerAnomalieCom(idx,typeAnomalie){
   const r=window._affListeCouranteCom[idx];
