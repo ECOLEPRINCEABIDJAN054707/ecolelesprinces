@@ -3389,6 +3389,27 @@ async function precargarMenaCacheEtColorerBoutonsCom(){
       return;
     }
   }
+  if(!window._anomaliesMenaCacheCom){
+    const cbName2='am_com_'+Date.now();
+    const script2=document.createElement('script');
+    const params2=new URLSearchParams({callback:cbName2,type:'GET_ANOMALIES_RESEAU_MENA'});
+    const data2=await new Promise(resolve=>{
+      window[cbName2]=res=>{delete window[cbName2];try{document.body.removeChild(script2);}catch(e){}resolve(res);};
+      script2.onerror=()=>{delete window[cbName2];resolve({ok:false});};
+      script2.src=APPS_SCRIPT_POINTAGE+'?'+params2.toString();
+      document.body.appendChild(script2);
+      setTimeout(()=>{if(window[cbName2]){delete window[cbName2];resolve({ok:false});}},10000);
+    });
+    if(data2&&data2.ok){
+      window._anomaliesMenaCacheCom={};
+      (data2.anomalies||[]).forEach(a=>{
+        if(!window._anomaliesMenaCacheCom[a.matricule])window._anomaliesMenaCacheCom[a.matricule]=[];
+        window._anomaliesMenaCacheCom[a.matricule].push(a);
+      });
+    }else{
+      window._anomaliesMenaCacheCom={};
+    }
+  }
 window._affListeCouranteCom.forEach((r,idx)=>{
     colorerUnBoutonMenaCom(idx);
   });
@@ -3398,7 +3419,11 @@ window._affListeCouranteCom.forEach((r,idx)=>{
   const btn=document.getElementById('menaBtnCom_'+idx);
   if(!r||!btn||!window._verifMenaCacheCom)return;
   const v=window._verifMenaCacheCom[r.matricule]||{};
-
+const aUneAnomalie = window._anomaliesMenaCacheCom && window._anomaliesMenaCacheCom[r.matricule] && window._anomaliesMenaCacheCom[r.matricule].length>0;
+  if(aUneAnomalie){
+    btn.style.background='#0D47A1';btn.style.color='#fff';btn.textContent='🚩 Checklist';
+    return;
+  }
   const normClasse=(s)=>(s||'').toString().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-_]/g,' ').replace(/\s+/g,' ').trim();
   const classeReelle=normClasse(r.classe);
   const classeMenaNorm=normClasse(v.classeMena);
