@@ -3514,6 +3514,61 @@ const params=new URLSearchParams({
     showToast('Erreur lors du signalement','error');
   }
 }
+  async function chargerAnomaliesMenaDir(){
+  const listeDiv=document.getElementById('dirAnomListe');
+  const countSpan=document.getElementById('dirAnomCount');
+  listeDiv.innerHTML='<p style="padding:14px;font-size:0.85em;color:var(--gris)">Chargement des anomalies (14 écoles)...</p>';
+
+  const cbName='am_dir_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({callback:cbName,type:'GET_ANOMALIES_RESEAU_MENA'});
+  const data=await new Promise(resolve=>{
+    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+    script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+    script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+    document.body.appendChild(script);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
+  });
+
+  if(!data||!data.ok){
+    listeDiv.innerHTML='<p style="padding:14px;font-size:0.85em;color:var(--rouge)">Erreur de chargement</p>';
+    return;
+  }
+
+  const anomalies=data.anomalies||[];
+  window._anomaliesDirListe=anomalies;
+  if(countSpan)countSpan.textContent=anomalies.length>0?'('+anomalies.length+')':'';
+
+  if(!anomalies.length){
+    listeDiv.innerHTML='<p style="padding:14px;font-size:0.85em;color:var(--vert)">✓ Aucune anomalie en attente</p>';
+    return;
+  }
+
+  let h='<div class="tbl-wrap"><table><thead><tr>'
+    +'<th style="font-size:0.85em">École</th><th style="font-size:0.85em">Matricule</th><th style="font-size:0.85em">Nom</th>'
+    +'<th style="font-size:0.85em">Classe</th><th style="font-size:0.85em">Type</th><th style="font-size:0.85em">Signalé par</th>'
+    +'<th style="font-size:0.85em">Date</th><th style="font-size:0.85em">École trouvée</th><th></th>'
+    +'</tr></thead><tbody>';
+  anomalies.forEach((a,idx)=>{
+    const typeLabel=a.type==='ECOLE_DIFFERENTE'?'🚩 École différente':'🚩 Absence physique';
+    h+='<tr>'
+      +'<td style="font-size:0.85em">'+a.ecole+'</td>'
+      +'<td style="font-size:0.85em;color:var(--gris)">'+a.matricule+'</td>'
+      +'<td style="font-size:0.9em;font-weight:600">'+a.nom+'</td>'
+      +'<td style="font-size:0.9em">'+a.classe+'</td>'
+      +'<td style="font-size:0.85em">'+typeLabel+'</td>'
+      +'<td style="font-size:0.8em">'+a.signalePar+'</td>'
+      +'<td style="font-size:0.8em;color:var(--gris)">'+a.dateSignalement+'</td>'
+      +'<td style="font-size:0.85em">'+(a.ecoleOrigine||'—')+'</td>'
+      +'<td><button onclick="toggleResolutionAnomalieDir('+idx+')" style="padding:6px 10px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer">Traiter</button></td>'
+      +'</tr>';
+    h+='<tr id="anomDetailDir_'+idx+'" style="display:none"><td colspan="9" style="padding:0;background:#F8FAFD">'
+      +'<div id="anomContentDir_'+idx+'" style="padding:14px"></div>'
+      +'</td></tr>';
+  });
+  h+='</tbody></table></div>';
+  listeDiv.innerHTML=h;
+}
 // ══ Helper JSONP commun — evite le blocage CORS des navigateurs ══
 function appelJSONP(url, params, timeoutMs){
   return new Promise(resolve=>{
