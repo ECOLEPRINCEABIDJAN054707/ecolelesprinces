@@ -3569,6 +3569,72 @@ const params=new URLSearchParams({
   h+='</tbody></table></div>';
   listeDiv.innerHTML=h;
 }
+  function toggleResolutionAnomalieDir(idx){
+  const row=document.getElementById('anomDetailDir_'+idx);
+  if(!row)return;
+  const estOuvert=row.style.display!=='none';
+  row.style.display=estOuvert?'none':'table-row';
+  if(!estOuvert){
+    renderResolutionAnomalieDir(idx);
+  }
+}
+
+function renderResolutionAnomalieDir(idx){
+  const contentDiv=document.getElementById('anomContentDir_'+idx);
+  if(!contentDiv)return;
+  const a=window._anomaliesDirListe[idx];
+
+  let h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">';
+  h+='<div><span style="font-size:0.8em;font-weight:800;color:#1A1A2E;text-transform:uppercase">École d\'origine</span><br>'
+    +'<input type="text" id="anomEcoleOrigine_'+idx+'" value="'+(a.ecoleOrigine||'').replace(/"/g,'&quot;')+'" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em;margin-top:2px"></div>';
+  h+='<div><span style="font-size:0.8em;font-weight:800;color:#1A1A2E;text-transform:uppercase">Contact directeur origine</span><br>'
+    +'<input type="text" id="anomContact_'+idx+'" value="'+(a.contactDirecteurOrigine||'').replace(/"/g,'&quot;')+'" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em;margin-top:2px"></div>';
+  h+='</div>';
+  h+='<div style="margin-bottom:10px"><span style="font-size:0.8em;font-weight:800;color:#1A1A2E;text-transform:uppercase">Cause</span><br>'
+    +'<input type="text" id="anomCause_'+idx+'" value="'+(a.cause||'').replace(/"/g,'&quot;')+'" placeholder="Ex: erreur de saisie, transfert non signalé..." '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em;margin-top:2px"></div>';
+  h+='<div style="margin-bottom:10px"><span style="font-size:0.8em;font-weight:800;color:#1A1A2E;text-transform:uppercase">Observation</span><br>'
+    +'<textarea id="anomObservation_'+idx+'" style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em;margin-top:2px;min-height:50px">'+(a.observation||'')+'</textarea></div>';
+  h+='<button onclick="resoudreAnomalieDirUI('+idx+')" style="width:100%;padding:11px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:0.9em;font-weight:700;cursor:pointer">✓ Marquer comme résolue</button>';
+
+  contentDiv.innerHTML=h;
+}
+
+async function resoudreAnomalieDirUI(idx){
+  const a=window._anomaliesDirListe[idx];
+  const ecoleOrigine=document.getElementById('anomEcoleOrigine_'+idx).value.trim();
+  const contactDirecteurOrigine=document.getElementById('anomContact_'+idx).value.trim();
+  const cause=document.getElementById('anomCause_'+idx).value.trim();
+  const observation=document.getElementById('anomObservation_'+idx).value.trim();
+
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const resoluPar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+
+  const cbName='res_dir_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({
+    callback:cbName,type:'RESOUDRE_ANOMALIE_MENA',
+    ecole:a.ecole,matricule:a.matricule,
+    ecoleOrigine:ecoleOrigine,contactDirecteurOrigine:contactDirecteurOrigine,
+    cause:cause,observation:observation,resoluPar:resoluPar
+  });
+  const result=await new Promise(resolve=>{
+    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+    script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+    script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+    document.body.appendChild(script);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
+  });
+
+  if(result&&result.ok){
+    showToast('Anomalie résolue','success');
+    chargerAnomaliesMenaDir();
+  }else{
+    showToast('Erreur lors de la résolution','error');
+  }
+}
 // ══ Helper JSONP commun — evite le blocage CORS des navigateurs ══
 function appelJSONP(url, params, timeoutMs){
   return new Promise(resolve=>{
