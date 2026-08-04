@@ -3159,6 +3159,42 @@ function sauvegarderChampMenaDir(idx,champ,valeur){
     showToast('Erreur enregistrement','error');
   }
 }
+  function colorerUnBoutonMenaDir(idx){
+  const r=window._affListeCourante[idx];
+  const btn=document.getElementById('menaBtnDir_'+idx);
+  if(!r||!btn||!window._verifMenaCacheDir)return;
+  const v=window._verifMenaCacheDir[r.matricule]||{};
+
+  const normClasse=(s)=>(s||'').toString().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-_]/g,' ').replace(/\s+/g,' ').trim();
+  const classeReelle=normClasse(r.classe);
+  const classeMenaNorm=normClasse(v.classeMena);
+  const classeMatch = !classeMenaNorm || classeMenaNorm===classeReelle
+    || classeReelle.startsWith(classeMenaNorm+' ') || classeMenaNorm.startsWith(classeReelle+' ')
+    || classeReelle===classeMenaNorm.replace(/\s/g,'') || classeMenaNorm===classeReelle.replace(/\s/g,'')
+    || classeReelle.startsWith(classeMenaNorm) || classeMenaNorm.startsWith(classeReelle);
+
+  const estExamen=/^(3EME|TLE|TERMINALE)/.test(classeReelle);
+  const baseOK = v.inscriptionLigne==='OUI' && v.photo==='OUI' && v.actualise==='OUI'
+    && !!String(v.anneeScolaire||'').trim() && !!String(v.classeMena||'').trim();
+  const decoOK = v.transDeco==='OUI';
+  const completOK = baseOK && (!estExamen || decoOK)
+    && !!String(v.moyT1||'').trim() && v.okT1==='OUI'
+    && !!String(v.moyT2||'').trim() && v.okT2==='OUI'
+    && !!String(v.moyT3||'').trim() && v.okT3==='OUI'
+    && v.dfaOk==='OUI';
+
+  if(!classeMatch){
+    btn.style.background='#0D47A1';btn.style.color='#fff';btn.textContent='⚠️ Checklist';
+  }else if(completOK){
+    btn.style.background='#2E7D32';btn.style.color='#fff';btn.textContent='✅ Checklist';
+  }else if(!estExamen && baseOK){
+    btn.style.background='#C62828';btn.style.color='#fff';btn.textContent='🔍 Checklist';
+  }else if(estExamen && baseOK && decoOK){
+    btn.style.background='#E65100';btn.style.color='#fff';btn.textContent='🔍 Checklist';
+  }else{
+    btn.style.background='#0D47A1';btn.style.color='#fff';btn.textContent='🔍 Checklist';
+  }
+}
   async function precargarMenaCacheEtColorerBoutonsDir(){
   if(!window._affListeCourante||!window._affListeCourante.length)return;
   if(true){
