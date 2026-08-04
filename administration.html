@@ -3163,7 +3163,7 @@ const selectOuiNon=(champLabel,champKey,val)=>{
     script.onerror=()=>{delete window[cbName];resolve({ok:false});};
     script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
     document.body.appendChild(script);
-    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},10000);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},20000);
   });
 
   if(result&&result.ok){
@@ -3586,7 +3586,11 @@ h+='<div style="margin-top:10px">'
     setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},10000);
   });
 
-  if(result&&result.ok){
+if(result&&result.ok){
+    if(!window._anomaliesMenaCacheCom)window._anomaliesMenaCacheCom={};
+    if(!window._anomaliesMenaCacheCom[r.matricule])window._anomaliesMenaCacheCom[r.matricule]=[];
+    window._anomaliesMenaCacheCom[r.matricule].push({type:typeAnomalie,statut:'SIGNALE'});
+    colorerUnBoutonMenaCom(idx);
     showToast('Anomalie signalée — '+libelle,'success');
   }else{
     showToast('Erreur lors du signalement','error');
