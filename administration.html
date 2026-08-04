@@ -3402,9 +3402,10 @@ window._affListeCouranteCom.forEach((r,idx)=>{
   const normClasse=(s)=>(s||'').toString().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-_]/g,' ').replace(/\s+/g,' ').trim();
   const classeReelle=normClasse(r.classe);
   const classeMenaNorm=normClasse(v.classeMena);
-  const classeMatch = !classeMenaNorm || classeMenaNorm===classeReelle
+const classeMatch = !classeMenaNorm || classeMenaNorm===classeReelle
     || classeReelle.startsWith(classeMenaNorm+' ') || classeMenaNorm.startsWith(classeReelle+' ')
-    || classeReelle===classeMenaNorm.replace(/\s/g,'') || classeMenaNorm===classeReelle.replace(/\s/g,'');
+    || classeReelle===classeMenaNorm.replace(/\s/g,'') || classeMenaNorm===classeReelle.replace(/\s/g,'')
+    || classeReelle.startsWith(classeMenaNorm) || classeMenaNorm.startsWith(classeReelle);
 
   const estExamen=/^(3EME|TLE|TERMINALE)/.test(classeReelle);
   const baseOK = v.inscriptionLigne==='OUI' && v.photo==='OUI' && v.actualise==='OUI'
