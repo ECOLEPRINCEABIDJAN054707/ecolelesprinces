@@ -3371,7 +3371,7 @@ async function toggleChecklistMenaCom(idx){
 }
 async function precargarMenaCacheEtColorerBoutonsCom(){
   if(!window._affListeCouranteCom||!window._affListeCouranteCom.length)return;
-  if(!window._verifMenaCacheCom){
+  if(true){
     const cbName='vm_preload_com_'+Date.now();
     const script=document.createElement('script');
     const params=new URLSearchParams({callback:cbName,type:'GET_VERIFICATION_MENA',ecole:currentStaff.ecole});
