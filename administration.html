@@ -3408,13 +3408,13 @@ const classeMatch = !classeMenaNorm || classeMenaNorm===classeReelle
     || classeReelle.startsWith(classeMenaNorm) || classeMenaNorm.startsWith(classeReelle);
 
   const estExamen=/^(3EME|TLE|TERMINALE)/.test(classeReelle);
-  const baseOK = v.inscriptionLigne==='OUI' && v.photo==='OUI' && v.actualise==='OUI'
-    && !!(v.anneeScolaire&&v.anneeScolaire.trim()) && !!(v.classeMena&&v.classeMena.trim());
+const baseOK = v.inscriptionLigne==='OUI' && v.photo==='OUI' && v.actualise==='OUI'
+    && !!String(v.anneeScolaire||'').trim() && !!String(v.classeMena||'').trim();
   const decoOK = v.transDeco==='OUI';
   const completOK = baseOK && (!estExamen || decoOK)
-    && !!(v.moyT1&&v.moyT1.trim()) && v.okT1==='OUI'
-    && !!(v.moyT2&&v.moyT2.trim()) && v.okT2==='OUI'
-    && !!(v.moyT3&&v.moyT3.trim()) && v.okT3==='OUI'
+    && !!String(v.moyT1||'').trim() && v.okT1==='OUI'
+    && !!String(v.moyT2||'').trim() && v.okT2==='OUI'
+    && !!String(v.moyT3||'').trim() && v.okT3==='OUI'
     && v.dfaOk==='OUI';
 
   if(!classeMatch){
