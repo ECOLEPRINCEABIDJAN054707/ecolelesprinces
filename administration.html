@@ -3393,9 +3393,15 @@ window._affListeCouranteCom.forEach((r,idx)=>{
     const btn=document.getElementById('menaBtnCom_'+idx);
     if(!btn)return;
     const v=window._verifMenaCacheCom[r.matricule]||{};
-    const classe=(r.classe||'').toUpperCase();
-    const estExamen=/^(3EME|TLE|TERMINALE)/.test(classe);
 
+    const normClasse=(s)=>(s||'').toString().toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[-_]/g,' ').replace(/\s+/g,' ').trim();
+    const classeReelle=normClasse(r.classe);
+    const classeMenaNorm=normClasse(v.classeMena);
+    const classeMatch = !classeMenaNorm || classeMenaNorm===classeReelle
+      || classeReelle.startsWith(classeMenaNorm+' ') || classeMenaNorm.startsWith(classeReelle+' ')
+      || classeReelle===classeMenaNorm.replace(/\s/g,'') || classeMenaNorm===classeReelle.replace(/\s/g,'');
+
+    const estExamen=/^(3EME|TLE|TERMINALE)/.test(classeReelle);
     const baseOK = v.inscriptionLigne==='OUI' && v.photo==='OUI' && v.actualise==='OUI'
       && !!(v.anneeScolaire&&v.anneeScolaire.trim()) && !!(v.classeMena&&v.classeMena.trim());
     const decoOK = v.transDeco==='OUI';
@@ -3405,7 +3411,9 @@ window._affListeCouranteCom.forEach((r,idx)=>{
       && !!(v.moyT3&&v.moyT3.trim()) && v.okT3==='OUI'
       && v.dfaOk==='OUI';
 
-    if(completOK){
+    if(!classeMatch){
+      btn.style.background='#0D47A1';btn.style.color='#fff';btn.textContent='⚠️ Checklist';
+    }else if(completOK){
       btn.style.background='#2E7D32';btn.style.color='#fff';btn.textContent='✅ Checklist';
     }else if(!estExamen && baseOK){
       btn.style.background='#C62828';btn.style.color='#fff';btn.textContent='🔍 Checklist';
