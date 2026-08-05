@@ -1608,7 +1608,42 @@ async function attribuerMatriculeCom() {
   </div>
 </div>
 </div>
-
+<div class="section" id="comSecListesAttente">
+  <div class="sec-head sec-orange" onclick="toggleSec(this)">
+    <h3>📋 Élèves en attente d'inscription</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+      <button onclick="chargerListesAttenteCom()" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.92em;font-weight:600;cursor:pointer">🔄 Charger les listes</button>
+    </div>
+    <div id="comListesAttenteStats" style="display:none;padding:10px 14px;display:flex;flex-direction:row;gap:8px">
+      <div onclick="afficherTableauAttenteCom('physique')" style="cursor:pointer;flex:1;border:2px solid #E65100;border-radius:8px;padding:10px 12px;background:#FFF3E0" id="comCardPhysique">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:0.82em;font-weight:700;color:#E65100">🟠 En attente d'inscription PHYSIQUE</div>
+          <div style="font-size:1.3em;font-weight:700;color:#E65100" id="comStatPhysique">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Payés en ligne (MENA), pas encore venus s'inscrire à l'école</div>
+      </div>
+      <div onclick="afficherTableauAttenteCom('ligneConfirmee')" style="cursor:pointer;flex:1;border:2px solid #C62828;border-radius:8px;padding:10px 12px;background:#FFEBEE" id="comCardLigneConfirmee">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:0.82em;font-weight:700;color:#C62828">🔴 En attente d'inscription EN LIGNE (confirmé)</div>
+          <div style="font-size:1.3em;font-weight:700;color:#C62828" id="comStatLigneConfirmee">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Déjà inscrits à l'école, mais vérifiés non inscrits sur MENA</div>
+      </div>
+      <div onclick="afficherTableauAttenteCom('ligneNonVerifiee')" style="cursor:pointer;flex:1;border:2px solid #999;border-radius:8px;padding:10px 12px;background:#F5F5F5" id="comCardLigneNonVerifiee">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:0.82em;font-weight:700;color:#555">⚪ En attente d'inscription EN LIGNE (à vérifier)</div>
+          <div style="font-size:1.3em;font-weight:700;color:#555" id="comStatLigneNonVerifiee">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Déjà inscrits à l'école, statut MENA jamais contrôlé</div>
+      </div>
+    </div>
+    <div id="comListesAttenteContenu">
+      <p style="padding:14px;font-size:0.85em;color:var(--gris)">Cliquez sur "Charger" pour voir les élèves en attente.</p>
+    </div>
+  </div>
+</div>
 <!-- ESPACE EDUCATEUR -->
 <div id="espaceEdu" class="espace" style="display:none">
   <div class="hdr hdr-edu">
@@ -3644,7 +3679,77 @@ html += '<div id="dirTableLigneNonVerifiee" style="display:none">' + mkTable('�
 contenu.innerHTML = html;
 afficherTableauAttenteDir('physique');
 }
+async function chargerListesAttenteCom() {
+  const contenu = document.getElementById('comListesAttenteContenu');
+  contenu.innerHTML = '<p style="padding:14px;font-size:0.85em;color:var(--gris)">Chargement...</p>';
 
+  const cbName = 'lai_com_' + Date.now();
+  const script = document.createElement('script');
+  const params = new URLSearchParams({callback: cbName, type: 'GET_LISTES_ATTENTE_INSCRIPTIONS', ecole: currentStaff.ecole});
+
+  const data = await new Promise(resolve => {
+    window[cbName] = res => { delete window[cbName]; try{document.body.removeChild(script);}catch(e){}; resolve(res); };
+    script.onerror = () => { delete window[cbName]; resolve({ok:false}); };
+    script.src = APPS_SCRIPT_POINTAGE + '?' + params.toString();
+    document.body.appendChild(script);
+    setTimeout(() => { if(window[cbName]){ delete window[cbName]; resolve({ok:false, error:'timeout'}); } }, 20000);
+  });
+
+  if (!data || !data.ok) {
+    contenu.innerHTML = '<p style="padding:14px;font-size:0.85em;color:var(--rouge)">Erreur de chargement : ' + (data && data.error || 'inconnue') + '</p>';
+    return;
+  }
+
+  document.getElementById('comListesAttenteStats').style.display = 'flex';
+  document.getElementById('comStatPhysique').textContent = (data.listeAttentePhysique || []).length;
+  document.getElementById('comStatLigneConfirmee').textContent = (data.listeAttenteLigneConfirmee || []).length;
+  document.getElementById('comStatLigneNonVerifiee').textContent = (data.listeAttenteLigneNonVerifiee || []).length;
+
+  function mkTableCom(liste, champsTel) {
+    let h = '';
+    if (!liste.length) {
+      h += '<p style="padding:12px 14px;font-size:0.8em;color:var(--gris)">Aucun élève dans cette liste</p>';
+      return h;
+    }
+    h += '<div class="tbl-wrap"><table><thead><tr><th>Niveau/Classe</th><th>Matricule</th><th>Nom</th><th>Contact(s)</th></tr></thead><tbody>';
+    liste.forEach(function(e) {
+      const niv = e.niveau || e.classe || '';
+      let tels = [];
+      if (champsTel === 'contact') {
+        if (e.contact) tels.push(e.contact);
+      } else {
+        if (e.tel1) tels.push(e.tel1);
+        if (e.tel2) tels.push(e.tel2);
+        if (e.tel3) tels.push(e.tel3);
+      }
+      const telsHtml = tels.length
+        ? tels.map(function(t){ return '<a href="tel:'+t+'" style="color:var(--bleu2);text-decoration:none;font-weight:600">📞 '+t+'</a>'; }).join(' · ')
+        : '<span style="color:var(--gris)">—</span>';
+      h += '<tr><td>' + niv + '</td><td style="font-size:0.78em;color:var(--gris)">' + e.matricule + '</td><td>' + e.nom + '</td><td>' + telsHtml + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+    return h;
+  }
+
+  let html = '';
+  html += '<div id="comTablePhysique" style="display:none">' + mkTableCom(data.listeAttentePhysique || [], 'contact') + '</div>';
+  html += '<div id="comTableLigneConfirmee" style="display:none">' + mkTableCom(data.listeAttenteLigneConfirmee || [], 'tel') + '</div>';
+  html += '<div id="comTableLigneNonVerifiee" style="display:none">' + mkTableCom(data.listeAttenteLigneNonVerifiee || [], 'tel') + '</div>';
+
+  contenu.innerHTML = html;
+  afficherTableauAttenteCom('physique');
+}
+
+function afficherTableauAttenteCom(quel) {
+  const ids = {physique:'comTablePhysique', ligneConfirmee:'comTableLigneConfirmee', ligneNonVerifiee:'comTableLigneNonVerifiee'};
+  const cartes = {physique:'comCardPhysique', ligneConfirmee:'comCardLigneConfirmee', ligneNonVerifiee:'comCardLigneNonVerifiee'};
+  Object.keys(ids).forEach(function(k) {
+    const el = document.getElementById(ids[k]);
+    if (el) el.style.display = (k === quel) ? 'block' : 'none';
+    const carte = document.getElementById(cartes[k]);
+    if (carte) carte.style.boxShadow = (k === quel) ? '0 0 0 3px rgba(31,78,121,0.4)' : 'none';
+  });
+}
 function afficherTableauAttenteDir(quel) {
   const ids = {physique:'dirTablePhysique', ligneConfirmee:'dirTableLigneConfirmee', ligneNonVerifiee:'dirTableLigneNonVerifiee'};
   const cartes = {physique:'dirCardPhysique', ligneConfirmee:'dirCardLigneConfirmee', ligneNonVerifiee:'dirCardLigneNonVerifiee'};
