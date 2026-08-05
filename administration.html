@@ -3667,7 +3667,7 @@ let h = '';
     return h;
   }
 
-  document.getElementById('dirListesAttenteStats').style.display = 'grid';
+  document.getElementById('dirListesAttenteStats').style.display = 'flex';
   document.getElementById('dirStatPhysique').textContent = (data.listeAttentePhysique || []).length;
   document.getElementById('dirStatLigneConfirmee').textContent = (data.listeAttenteLigneConfirmee || []).length;
   document.getElementById('dirStatLigneNonVerifiee').textContent = (data.listeAttenteLigneNonVerifiee || []).length;
