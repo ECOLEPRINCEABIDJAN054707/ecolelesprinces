@@ -1537,6 +1537,23 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
 </div>
+<div class="section" id="comSecImportMenaA">
+  <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+    <h3>📥 Import MENA — Pré-inscriptions</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:12px 14px">
+      <p style="font-size:0.85em;color:var(--gris);margin-bottom:8px">Copiez le tableau "Fichier pré-inscriptions" depuis agfne.sigfne.net (avec les en-têtes de colonnes), et collez-le ici :</p>
+      <textarea id="importMenaAZoneTexte" placeholder="Collez ici (Ctrl+V)..." style="width:100%;min-height:120px;padding:8px;border-radius:6px;border:1.5px solid var(--border);font-size:0.85em;font-family:monospace"></textarea>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:0.8em;color:var(--gris)">— ou —</span>
+        <input type="file" id="importMenaAFichier" accept=".csv,.xlsx,.xls" onchange="chargerFichierZoneA(event)" style="font-size:0.85em">
+      </div>
+      <button onclick="analyserEtImporterZoneA()" style="margin-top:10px;padding:10px 16px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:0.9em;font-weight:700;cursor:pointer">📊 Analyser et enregistrer</button>
+      <div id="importMenaAResultat" style="margin-top:12px;font-size:0.85em"></div>
+    </div>
+  </div>
+</div>
 </div>
 
 <!-- ESPACE EDUCATEUR -->
@@ -4037,6 +4054,34 @@ function sauvegarderChampMenaCom(idx,champ,valeur){
   }else{
     if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement — réessayez';
     showToast('Erreur enregistrement','error');
+  }
+}
+  async function analyserEtImporterZoneA(){
+  const texte = document.getElementById('importMenaAZoneTexte').value;
+  const resultatDiv = document.getElementById('importMenaAResultat');
+  if(!texte.trim()){ showToast('Collez d\'abord le tableau MENA','error'); return; }
+
+  resultatDiv.innerHTML = 'Analyse en cours...';
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+
+  try{
+    const response = await fetch(APPS_SCRIPT_POINTAGE, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({ type:'IMPORT_MENA_ZONE_A', ecole:currentStaff.ecole, texte:texte, modifiePar:modifiePar })
+    });
+    const result = await response.json();
+    if(result && result.ok){
+      resultatDiv.innerHTML = '<span style="color:var(--vert);font-weight:700">✓ '+result.message+'</span><br>'
+        + '<span style="font-size:0.9em">Ajoutés à la liste d\'attente : '+result.nbAttenteAjoutes+' — Retirés (désormais inscrits) : '+result.nbAttenteRetires+'</span>';
+      showToast('Import réussi','success');
+    }else{
+      resultatDiv.innerHTML = '<span style="color:var(--rouge)">Erreur : '+(result&&result.error||'inconnue')+'</span>';
+      showToast('Erreur import','error');
+    }
+  }catch(e){
+    resultatDiv.innerHTML = '<span style="color:var(--rouge)">Erreur réseau : '+e.message+'</span>';
   }
 }
 async function signalerAnomalieCom(idx,typeAnomalie){
