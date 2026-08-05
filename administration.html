@@ -489,7 +489,24 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div>
- <div class="section" id="dirSecListesAttente">
+ <div class="section" id="dirSecImportMenaB">
+  <div class="sec-head sec-violet" onclick="toggleSec(this)">
+    <h3>📥 Import MENA — Zone B (Photo/Actualisé/Moyennes)</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:12px 14px">
+      <p style="font-size:0.85em;color:var(--gris);margin-bottom:8px">Copiez le tableau "Fichier élèves" (Page 2) depuis agfne.sigfne.net (avec les en-têtes de colonnes), et collez-le ici :</p>
+      <textarea id="importMenaBDirZoneTexte" placeholder="Collez ici (Ctrl+V)..." style="width:100%;min-height:120px;padding:8px;border-radius:6px;border:1.5px solid var(--border);font-size:0.85em;font-family:monospace"></textarea>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:10px">
+        <span style="font-size:0.8em;color:var(--gris)">— ou —</span>
+        <input type="file" id="importMenaBDirFichier" accept=".csv,.xlsx,.xls" onchange="chargerFichierZoneBDir(event)" style="font-size:0.85em">
+      </div>
+      <button onclick="analyserEtImporterZoneBDir()" style="margin-top:10px;padding:10px 16px;background:#4A148C;color:#fff;border:none;border-radius:8px;font-size:0.9em;font-weight:700;cursor:pointer">📊 Analyser et enregistrer</button>
+      <div id="importMenaBDirResultat" style="margin-top:12px;font-size:0.85em"></div>
+    </div>
+  </div>
+</div>
+  <div class="section" id="dirSecListesAttente">
   <div class="sec-head sec-orange" onclick="toggleSec(this)">
     <h3>📋 Élèves en attente d'inscription</h3><span class="arr">▼</span>
   </div>
@@ -7902,7 +7919,68 @@ async function _chercherMatriculeDansBase(sheetsId, mat) {
 // IMPORT MENA — ZONE A, ESPACE DIRECTEUR
 // Clone de analyserEtImporterZoneA (Comptable), IDs dédiés Directeur
 // ============================================================
-function chargerFichierZoneADir(event) {
+function chargerFichierZoneBDir(event) {
+  const fichier = event.target.files[0];
+  if (!fichier) return;
+
+  const nomFichier = fichier.name.toLowerCase();
+  const zoneTexte = document.getElementById('importMenaBDirZoneTexte');
+
+  if (nomFichier.endsWith('.csv')) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const texteCSV = e.target.result;
+      const texteTabule = texteCSV.split('\n').map(function(ligne) {
+        return ligne.replace(/,/g, '\t');
+      }).join('\n');
+      zoneTexte.value = texteTabule;
+      showToast('Fichier CSV chargé — vérifiez avant d\'analyser', 'success');
+    };
+    reader.readAsText(fichier, 'UTF-8');
+  } else if (nomFichier.endsWith('.xlsx') || nomFichier.endsWith('.xls')) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const donnees = new Uint8Array(e.target.result);
+      const classeur = XLSX.read(donnees, {type:'array'});
+      const premiereFeuille = classeur.Sheets[classeur.SheetNames[0]];
+      const texteTabule = XLSX.utils.sheet_to_csv(premiereFeuille, {FS:'\t'});
+      zoneTexte.value = texteTabule;
+      showToast('Fichier Excel chargé — vérifiez avant d\'analyser', 'success');
+    };
+    reader.readAsArrayBuffer(fichier);
+  } else {
+    showToast('Format non reconnu (utilisez .csv, .xlsx ou .xls)', 'error');
+  }
+}
+
+async function analyserEtImporterZoneBDir() {
+  const texte = document.getElementById('importMenaBDirZoneTexte').value;
+  const resultatDiv = document.getElementById('importMenaBDirResultat');
+  if (!texte.trim()) { showToast('Collez d\'abord le tableau MENA', 'error'); return; }
+
+  resultatDiv.innerHTML = 'Analyse en cours...';
+  const roleLabels = {DIR:'Directeur', FOND:'Fondateur', COM:'Comptable', EDU:'Educateur'};
+  const modifiePar = (currentStaff.nom || currentStaff.matricule || 'inconnu') + ' (' + (roleLabels[currentStaff.profil] || currentStaff.profil) + ')';
+
+  try {
+    const response = await fetch(APPS_SCRIPT_POINTAGE, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain'},
+      body: JSON.stringify({ type: 'IMPORT_MENA_ZONE_B', ecole: currentStaff.ecole, texte: texte, modifiePar: modifiePar })
+    });
+    const result = await response.json();
+    if (result && result.ok) {
+      resultatDiv.innerHTML = '<span style="color:var(--vert);font-weight:700">✓ ' + result.message + '</span>';
+      showToast('Import réussi', 'success');
+    } else {
+      resultatDiv.innerHTML = '<span style="color:var(--rouge)">Erreur : ' + (result && result.error || 'inconnue') + '</span>';
+      showToast('Erreur import', 'error');
+    }
+  } catch(e) {
+    resultatDiv.innerHTML = '<span style="color:var(--rouge)">Erreur réseau : ' + e.message + '</span>';
+  }
+}
+  function chargerFichierZoneADir(event) {
   const fichier = event.target.files[0];
   if (!fichier) return;
 
