@@ -489,6 +489,19 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div>
+ <div class="section" id="dirSecListesAttente">
+  <div class="sec-head sec-orange" onclick="toggleSec(this)">
+    <h3>📋 Élèves en attente d'inscription</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+      <button onclick="chargerListesAttenteDir()" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.92em;font-weight:600;cursor:pointer">🔄 Charger les listes</button>
+    </div>
+    <div id="dirListesAttenteContenu">
+      <p style="padding:14px;font-size:0.85em;color:var(--gris)">Cliquez sur "Charger" pour voir les élèves en attente.</p>
+    </div>
+  </div>
+</div>
   <div class="section" id="dirSecAnomaliesMena">
   <div class="sec-head sec-rouge" onclick="toggleSec(this)">
     <h3>⚠️ Anomalies MENA à régler <span id="dirAnomCount" style="font-size:0.9em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -3548,6 +3561,62 @@ const params=new URLSearchParams({
   }else{
     showToast('Erreur lors du signalement','error');
   }
+}
+  async function chargerListesAttenteDir() {
+  const contenu = document.getElementById('dirListesAttenteContenu');
+  contenu.innerHTML = '<p style="padding:14px;font-size:0.85em;color:var(--gris)">Chargement...</p>';
+
+  const cbName = 'lai_dir_' + Date.now();
+  const script = document.createElement('script');
+  const params = new URLSearchParams({callback: cbName, type: 'GET_LISTES_ATTENTE_INSCRIPTIONS', ecole: currentStaff.ecole});
+
+  const data = await new Promise(resolve => {
+    window[cbName] = res => { delete window[cbName]; try{document.body.removeChild(script);}catch(e){}; resolve(res); };
+    script.onerror = () => { delete window[cbName]; resolve({ok:false}); };
+    script.src = APPS_SCRIPT_POINTAGE + '?' + params.toString();
+    document.body.appendChild(script);
+    setTimeout(() => { if(window[cbName]){ delete window[cbName]; resolve({ok:false, error:'timeout'}); } }, 20000);
+  });
+
+  if (!data || !data.ok) {
+    contenu.innerHTML = '<p style="padding:14px;font-size:0.85em;color:var(--rouge)">Erreur de chargement : ' + (data && data.error || 'inconnue') + '</p>';
+    return;
+  }
+
+  function mkTable(titre, sousTitre, couleurBadge, bgBadge, liste, champsTel) {
+    let h = '<div style="padding:10px 14px 6px;background:' + bgBadge + ';border-bottom:1px solid var(--border)">';
+    h += '<div style="font-size:0.82em;font-weight:700;color:' + couleurBadge + '">' + titre + ' <span style="font-weight:400">(' + liste.length + ')</span></div>';
+    h += '<div style="font-size:0.72em;color:var(--gris);margin-top:2px">' + sousTitre + '</div></div>';
+    if (!liste.length) {
+      h += '<p style="padding:12px 14px;font-size:0.8em;color:var(--gris)">Aucun élève dans cette liste</p>';
+      return h;
+    }
+    h += '<div class="tbl-wrap"><table><thead><tr><th>Niveau/Classe</th><th>Matricule</th><th>Nom</th><th>Contact(s)</th></tr></thead><tbody>';
+    liste.forEach(function(e) {
+      const niv = e.niveau || e.classe || '';
+      let tels = [];
+      if (champsTel === 'contact') {
+        if (e.contact) tels.push(e.contact);
+      } else {
+        if (e.tel1) tels.push(e.tel1);
+        if (e.tel2) tels.push(e.tel2);
+        if (e.tel3) tels.push(e.tel3);
+      }
+      const telsHtml = tels.length
+        ? tels.map(function(t){ return '<a href="tel:'+t+'" style="color:var(--bleu2);text-decoration:none;font-weight:600">📞 '+t+'</a>'; }).join(' · ')
+        : '<span style="color:var(--gris)">—</span>';
+      h += '<tr><td>' + niv + '</td><td style="font-size:0.78em;color:var(--gris)">' + e.matricule + '</td><td>' + e.nom + '</td><td>' + telsHtml + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+    return h;
+  }
+
+  let html = '';
+  html += mkTable('🟠 En attente d\'inscription PHYSIQUE', 'Payés en ligne (MENA), pas encore venus s\'inscrire à l\'école', '#E65100', '#FFF3E0', data.listeAttentePhysique || [], 'contact');
+  html += mkTable('🔴 En attente d\'inscription EN LIGNE (confirmé)', 'Déjà inscrits à l\'école, mais vérifiés non inscrits sur MENA', '#C62828', '#FFEBEE', data.listeAttenteLigneConfirmee || [], 'tel');
+  html += mkTable('⚪ En attente d\'inscription EN LIGNE (à vérifier)', 'Déjà inscrits à l\'école, statut MENA jamais contrôlé', '#555', '#F5F5F5', data.listeAttenteLigneNonVerifiee || [], 'tel');
+
+  contenu.innerHTML = html;
 }
   async function chargerAnomaliesMenaDir(){
   const listeDiv=document.getElementById('dirAnomListe');
