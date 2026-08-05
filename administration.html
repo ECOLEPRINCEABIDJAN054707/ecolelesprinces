@@ -497,18 +497,27 @@ table tr:nth-child(even){background:#F8FAFD}
     <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
       <button onclick="chargerListesAttenteDir()" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.92em;font-weight:600;cursor:pointer">🔄 Charger les listes</button>
     </div>
-   <div class="stats-row s3" id="dirListesAttenteStats" style="display:none">
-  <div class="stat-box orange" onclick="afficherTableauAttenteDir('physique')" style="cursor:pointer" id="dirCardPhysique">
-    <div class="stat-val" id="dirStatPhysique">-</div>
-    <div class="stat-lbl">🟠 PHYSIQUE</div>
+   <div id="dirListesAttenteStats" style="display:none;padding:10px 14px;display:flex;flex-direction:column;gap:8px">
+  <div onclick="afficherTableauAttenteDir('physique')" style="cursor:pointer;border:2px solid #E65100;border-radius:8px;padding:10px 12px;background:#FFF3E0" id="dirCardPhysique">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:0.82em;font-weight:700;color:#E65100">🟠 En attente d'inscription PHYSIQUE</div>
+      <div style="font-size:1.3em;font-weight:700;color:#E65100" id="dirStatPhysique">-</div>
+    </div>
+    <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Payés en ligne (MENA), pas encore venus s'inscrire à l'école</div>
   </div>
-  <div class="stat-box rouge" onclick="afficherTableauAttenteDir('ligneConfirmee')" style="cursor:pointer" id="dirCardLigneConfirmee">
-    <div class="stat-val" id="dirStatLigneConfirmee">-</div>
-    <div class="stat-lbl">🔴 EN LIGNE confirmé</div>
+  <div onclick="afficherTableauAttenteDir('ligneConfirmee')" style="cursor:pointer;border:2px solid #C62828;border-radius:8px;padding:10px 12px;background:#FFEBEE" id="dirCardLigneConfirmee">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:0.82em;font-weight:700;color:#C62828">🔴 En attente d'inscription EN LIGNE (confirmé)</div>
+      <div style="font-size:1.3em;font-weight:700;color:#C62828" id="dirStatLigneConfirmee">-</div>
+    </div>
+    <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Déjà inscrits à l'école, mais vérifiés non inscrits sur MENA</div>
   </div>
-  <div class="stat-box" onclick="afficherTableauAttenteDir('ligneNonVerifiee')" style="cursor:pointer" id="dirCardLigneNonVerifiee">
-    <div class="stat-val" id="dirStatLigneNonVerifiee" style="color:var(--gris)">-</div>
-    <div class="stat-lbl">⚪ EN LIGNE à vérifier</div>
+  <div onclick="afficherTableauAttenteDir('ligneNonVerifiee')" style="cursor:pointer;border:2px solid #999;border-radius:8px;padding:10px 12px;background:#F5F5F5" id="dirCardLigneNonVerifiee">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:0.82em;font-weight:700;color:#555">⚪ En attente d'inscription EN LIGNE (à vérifier)</div>
+      <div style="font-size:1.3em;font-weight:700;color:#555" id="dirStatLigneNonVerifiee">-</div>
+    </div>
+    <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Déjà inscrits à l'école, statut MENA jamais contrôlé</div>
   </div>
 </div>
     <div id="dirListesAttenteContenu">
@@ -3598,9 +3607,7 @@ const params=new URLSearchParams({
   }
 
   function mkTable(titre, sousTitre, couleurBadge, bgBadge, liste, champsTel) {
-    let h = '<div style="padding:10px 14px 6px;background:' + bgBadge + ';border-bottom:1px solid var(--border)">';
-    h += '<div style="font-size:0.82em;font-weight:700;color:' + couleurBadge + '">' + titre + ' <span style="font-weight:400">(' + liste.length + ')</span></div>';
-    h += '<div style="font-size:0.72em;color:var(--gris);margin-top:2px">' + sousTitre + '</div></div>';
+let h = '';
     if (!liste.length) {
       h += '<p style="padding:12px 14px;font-size:0.8em;color:var(--gris)">Aucun élève dans cette liste</p>';
       return h;
