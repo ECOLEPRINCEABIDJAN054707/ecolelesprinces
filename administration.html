@@ -3666,8 +3666,8 @@ let h = '';
     h += '</tbody></table></div>';
     return h;
   }
-
-  document.getElementById('dirListesAttenteStats').style.display = 'flex';
+_dirDataListesAttente = data;
+    document.getElementById('dirListesAttenteStats').style.display = 'flex';
   document.getElementById('dirStatPhysique').textContent = (data.listeAttentePhysique || []).length;
   document.getElementById('dirStatLigneConfirmee').textContent = (data.listeAttenteLigneConfirmee || []).length;
   document.getElementById('dirStatLigneNonVerifiee').textContent = (data.listeAttenteLigneNonVerifiee || []).length;
@@ -3678,7 +3678,11 @@ html += '<div id="dirTableLigneNonVerifiee" style="display:none">' + mkTable('�
 
 contenu.innerHTML = html;
 afficherTableauAttenteDir('physique');
-}
+const btnPdfDiv = document.createElement('div');
+  btnPdfDiv.style.cssText = 'padding:10px 14px';
+  btnPdfDiv.innerHTML = '<button onclick="telechargerPdfListeAttenteDir()" style="width:100%;padding:10px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;border:none;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🖨 Télécharger cette liste en PDF</button>';
+  contenu.insertBefore(btnPdfDiv, contenu.firstChild);
+  }
 async function chargerListesAttenteCom() {
   const contenu = document.getElementById('comListesAttenteContenu');
   contenu.innerHTML = '<p style="padding:14px;font-size:0.85em;color:var(--gris)">Chargement...</p>';
@@ -3750,8 +3754,44 @@ function afficherTableauAttenteCom(quel) {
     if (carte) carte.style.boxShadow = (k === quel) ? '0 0 0 3px rgba(31,78,121,0.4)' : 'none';
   });
 }
-function afficherTableauAttenteDir(quel) {
-  const ids = {physique:'dirTablePhysique', ligneConfirmee:'dirTableLigneConfirmee', ligneNonVerifiee:'dirTableLigneNonVerifiee'};
+let _dirListeActive = 'physique';
+let _dirDataListesAttente = null;
+
+function telechargerPdfListeAttenteDir() {
+  if (!_dirDataListesAttente) { showToast('Aucune donnée à exporter', 'error'); return; }
+  const titres = {
+    physique: {t: "En attente d'inscription PHYSIQUE", s: "Payés en ligne (MENA), pas encore venus s'inscrire à l'école", liste: _dirDataListesAttente.listeAttentePhysique || [], champTel: 'contact'},
+    ligneConfirmee: {t: "En attente d'inscription EN LIGNE (confirmé)", s: "Déjà inscrits à l'école, mais vérifiés non inscrits sur MENA", liste: _dirDataListesAttente.listeAttenteLigneConfirmee || [], champTel: 'tel'},
+    ligneNonVerifiee: {t: "En attente d'inscription EN LIGNE (à vérifier)", s: "Déjà inscrits à l'école, statut MENA jamais contrôlé", liste: _dirDataListesAttente.listeAttenteLigneNonVerifiee || [], champTel: 'tel'}
+  };
+  const info = titres[_dirListeActive];
+  const nomEcole = (currentStaff && currentStaff.label) || (currentStaff && currentStaff.ecole) || 'École';
+  const dateGen = new Date().toLocaleDateString('fr-FR');
+
+  let lignes = '';
+  info.liste.forEach(function(e, i) {
+    const niv = e.niveau || e.classe || '';
+    let tels = [];
+    if (info.champTel === 'contact') { if (e.contact) tels.push(e.contact); }
+    else { if (e.tel1) tels.push(e.tel1); if (e.tel2) tels.push(e.tel2); if (e.tel3) tels.push(e.tel3); }
+    lignes += '<tr style="background:' + (i % 2 === 0 ? '#fff' : '#f5f5f5') + '"><td style="padding:6px 8px;border:1px solid #ccc">' + (i+1) + '</td><td style="padding:6px 8px;border:1px solid #ccc">' + niv + '</td><td style="padding:6px 8px;border:1px solid #ccc">' + e.matricule + '</td><td style="padding:6px 8px;border:1px solid #ccc">' + e.nom + '</td><td style="padding:6px 8px;border:1px solid #ccc">' + tels.join(' / ') + '</td></tr>';
+  });
+
+  const w = window.open('', '_blank');
+  if (!w) { showToast('Autorisez les popups', 'error'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + info.t + '</title>');
+  w.document.write('<style>body{font-family:Arial,sans-serif;padding:16px}table{width:100%;border-collapse:collapse;margin-top:10px}th{background:#1F4E79;color:#fff;padding:8px;text-align:left}@media print{.no-print{display:none!important}}</style></head><body>');
+  w.document.write('<div class="no-print" style="text-align:center;margin-bottom:14px"><button onclick="window.print()" style="background:#1F4E79;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;margin-right:8px">🖨 Imprimer / PDF</button><button onclick="window.close()" style="background:#888;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer">Fermer</button></div>');
+  w.document.write('<h2 style="color:#1F4E79">' + nomEcole + '</h2>');
+  w.document.write('<h3>' + info.t + ' (' + info.liste.length + ')</h3>');
+  w.document.write('<p style="color:#666;font-size:0.9em">' + info.s + ' — Généré le ' + dateGen + '</p>');
+  w.document.write('<table><thead><tr><th>#</th><th>Niveau/Classe</th><th>Matricule</th><th>Nom</th><th>Contact(s)</th></tr></thead><tbody>' + lignes + '</tbody></table>');
+  w.document.write('</body></html>');
+  w.document.close();
+}
+  function afficherTableauAttenteDir(quel) {
+    _dirListeActive = quel;
+    const ids = {physique:'dirTablePhysique', ligneConfirmee:'dirTableLigneConfirmee', ligneNonVerifiee:'dirTableLigneNonVerifiee'};
   const cartes = {physique:'dirCardPhysique', ligneConfirmee:'dirCardLigneConfirmee', ligneNonVerifiee:'dirCardLigneNonVerifiee'};
   Object.keys(ids).forEach(function(k) {
     const el = document.getElementById(ids[k]);
