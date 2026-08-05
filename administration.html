@@ -498,15 +498,15 @@ table tr:nth-child(even){background:#F8FAFD}
       <button onclick="chargerListesAttenteDir()" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.92em;font-weight:600;cursor:pointer">🔄 Charger les listes</button>
     </div>
    <div class="stats-row s3" id="dirListesAttenteStats" style="display:none">
-  <div class="stat-box orange">
+  <div class="stat-box orange" onclick="afficherTableauAttenteDir('physique')" style="cursor:pointer" id="dirCardPhysique">
     <div class="stat-val" id="dirStatPhysique">-</div>
     <div class="stat-lbl">🟠 PHYSIQUE</div>
   </div>
-  <div class="stat-box rouge">
+  <div class="stat-box rouge" onclick="afficherTableauAttenteDir('ligneConfirmee')" style="cursor:pointer" id="dirCardLigneConfirmee">
     <div class="stat-val" id="dirStatLigneConfirmee">-</div>
     <div class="stat-lbl">🔴 EN LIGNE confirmé</div>
   </div>
-  <div class="stat-box">
+  <div class="stat-box" onclick="afficherTableauAttenteDir('ligneNonVerifiee')" style="cursor:pointer" id="dirCardLigneNonVerifiee">
     <div class="stat-val" id="dirStatLigneNonVerifiee" style="color:var(--gris)">-</div>
     <div class="stat-lbl">⚪ EN LIGNE à vérifier</div>
   </div>
@@ -3629,12 +3629,24 @@ const params=new URLSearchParams({
   document.getElementById('dirStatPhysique').textContent = (data.listeAttentePhysique || []).length;
   document.getElementById('dirStatLigneConfirmee').textContent = (data.listeAttenteLigneConfirmee || []).length;
   document.getElementById('dirStatLigneNonVerifiee').textContent = (data.listeAttenteLigneNonVerifiee || []).length;
-    let html = '';
-  html += mkTable('🟠 En attente d\'inscription PHYSIQUE', 'Payés en ligne (MENA), pas encore venus s\'inscrire à l\'école', '#E65100', '#FFF3E0', data.listeAttentePhysique || [], 'contact');
-  html += mkTable('🔴 En attente d\'inscription EN LIGNE (confirmé)', 'Déjà inscrits à l\'école, mais vérifiés non inscrits sur MENA', '#C62828', '#FFEBEE', data.listeAttenteLigneConfirmee || [], 'tel');
-  html += mkTable('⚪ En attente d\'inscription EN LIGNE (à vérifier)', 'Déjà inscrits à l\'école, statut MENA jamais contrôlé', '#555', '#F5F5F5', data.listeAttenteLigneNonVerifiee || [], 'tel');
+let html = '';
+html += '<div id="dirTablePhysique" style="display:none">' + mkTable('🟠 En attente d\'inscription PHYSIQUE', 'Payés en ligne (MENA), pas encore venus s\'inscrire à l\'école', '#E65100', '#FFF3E0', data.listeAttentePhysique || [], 'contact') + '</div>';
+html += '<div id="dirTableLigneConfirmee" style="display:none">' + mkTable('🔴 En attente d\'inscription EN LIGNE (confirmé)', 'Déjà inscrits à l\'école, mais vérifiés non inscrits sur MENA', '#C62828', '#FFEBEE', data.listeAttenteLigneConfirmee || [], 'tel') + '</div>';
+html += '<div id="dirTableLigneNonVerifiee" style="display:none">' + mkTable('⚪ En attente d\'inscription EN LIGNE (à vérifier)', 'Déjà inscrits à l\'école, statut MENA jamais contrôlé', '#555', '#F5F5F5', data.listeAttenteLigneNonVerifiee || [], 'tel') + '</div>';
 
-  contenu.innerHTML = html;
+contenu.innerHTML = html;
+afficherTableauAttenteDir('physique');
+}
+
+function afficherTableauAttenteDir(quel) {
+  const ids = {physique:'dirTablePhysique', ligneConfirmee:'dirTableLigneConfirmee', ligneNonVerifiee:'dirTableLigneNonVerifiee'};
+  const cartes = {physique:'dirCardPhysique', ligneConfirmee:'dirCardLigneConfirmee', ligneNonVerifiee:'dirCardLigneNonVerifiee'};
+  Object.keys(ids).forEach(function(k) {
+    const el = document.getElementById(ids[k]);
+    if (el) el.style.display = (k === quel) ? 'block' : 'none';
+    const carte = document.getElementById(cartes[k]);
+    if (carte) carte.style.boxShadow = (k === quel) ? '0 0 0 3px rgba(31,78,121,0.4)' : 'none';
+  });
 }
   async function chargerAnomaliesMenaDir(){
   const listeDiv=document.getElementById('dirAnomListe');
