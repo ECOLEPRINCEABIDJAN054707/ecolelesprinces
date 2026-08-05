@@ -4084,6 +4084,39 @@ function sauvegarderChampMenaCom(idx,champ,valeur){
     resultatDiv.innerHTML = '<span style="color:var(--rouge)">Erreur réseau : '+e.message+'</span>';
   }
 }
+  function chargerFichierZoneA(event){
+  const fichier = event.target.files[0];
+  if(!fichier) return;
+
+  const nomFichier = fichier.name.toLowerCase();
+  const zoneTexte = document.getElementById('importMenaAZoneTexte');
+
+  if(nomFichier.endsWith('.csv')){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      const texteCSV = e.target.result;
+      const texteTabule = texteCSV.split('\n').map(function(ligne){
+        return ligne.replace(/,/g, '\t');
+      }).join('\n');
+      zoneTexte.value = texteTabule;
+      showToast('Fichier CSV chargé — vérifiez avant d\'analyser','success');
+    };
+    reader.readAsText(fichier, 'UTF-8');
+  } else if(nomFichier.endsWith('.xlsx') || nomFichier.endsWith('.xls')){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      const donnees = new Uint8Array(e.target.result);
+      const classeur = XLSX.read(donnees, {type:'array'});
+      const premiereFeuille = classeur.Sheets[classeur.SheetNames[0]];
+      const texteTabule = XLSX.utils.sheet_to_csv(premiereFeuille, {FS:'\t'});
+      zoneTexte.value = texteTabule;
+      showToast('Fichier Excel chargé — vérifiez avant d\'analyser','success');
+    };
+    reader.readAsArrayBuffer(fichier);
+  } else {
+    showToast('Format non reconnu (utilisez .csv, .xlsx ou .xls)','error');
+  }
+}
 async function signalerAnomalieCom(idx,typeAnomalie){
   const r=window._affListeCouranteCom[idx];
   const libelle=typeAnomalie==='ECOLE_DIFFERENTE'?'École MENA différente':'Absence physique';
