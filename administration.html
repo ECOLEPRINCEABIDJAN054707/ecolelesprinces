@@ -2120,6 +2120,42 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
 </div>
+<div class="section" id="eduSecListesAttente">
+  <div class="sec-head sec-orange" onclick="toggleSec(this)">
+    <h3>📋 Élèves en attente d'inscription</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+      <button onclick="chargerListesAttenteEdu()" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.92em;font-weight:600;cursor:pointer">🔄 Charger les listes</button>
+    </div>
+    <div id="eduListesAttenteStats" style="display:none;padding:10px 14px;display:flex;flex-direction:row;gap:8px">
+      <div onclick="afficherTableauAttenteEdu('physique')" style="cursor:pointer;flex:1;border:2px solid #E65100;border-radius:8px;padding:10px 12px;background:#FFF3E0" id="eduCardPhysique">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:0.82em;font-weight:700;color:#E65100">🟠 En attente d'inscription PHYSIQUE</div>
+          <div style="font-size:1.3em;font-weight:700;color:#E65100" id="eduStatPhysique">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Payés en ligne (MENA), pas encore venus s'inscrire à l'école</div>
+      </div>
+      <div onclick="afficherTableauAttenteEdu('ligneConfirmee')" style="cursor:pointer;flex:1;border:2px solid #C62828;border-radius:8px;padding:10px 12px;background:#FFEBEE" id="eduCardLigneConfirmee">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:0.82em;font-weight:700;color:#C62828">🔴 En attente d'inscription EN LIGNE (confirmé)</div>
+          <div style="font-size:1.3em;font-weight:700;color:#C62828" id="eduStatLigneConfirmee">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Déjà inscrits à l'école, mais vérifiés non inscrits sur MENA</div>
+      </div>
+      <div onclick="afficherTableauAttenteEdu('ligneNonVerifiee')" style="cursor:pointer;flex:1;border:2px solid #999;border-radius:8px;padding:10px 12px;background:#F5F5F5" id="eduCardLigneNonVerifiee">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="font-size:0.82em;font-weight:700;color:#555">⚪ En attente d'inscription EN LIGNE (à vérifier)</div>
+          <div style="font-size:1.3em;font-weight:700;color:#555" id="eduStatLigneNonVerifiee">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Déjà inscrits à l'école, statut MENA jamais contrôlé</div>
+      </div>
+    </div>
+    <div id="eduListesAttenteContenu">
+      <p style="padding:14px;font-size:0.85em;color:var(--gris)">Cliquez sur "Charger" pour voir les élèves en attente.</p>
+    </div>
+  </div>
+</div>
 </div>
 
 <!-- MODALS -->
@@ -3795,7 +3831,121 @@ function telechargerPdfListeAttenteCom() {
     if (carte) carte.style.boxShadow = (k === quel) ? '0 0 0 3px rgba(31,78,121,0.4)' : 'none';
   });
 }
-let _dirListeActive = 'physique';
+async function chargerListesAttenteEdu() {
+  const contenu = document.getElementById('eduListesAttenteContenu');
+  contenu.innerHTML = '<p style="padding:14px;font-size:0.85em;color:var(--gris)">Chargement...</p>';
+
+  const cbName = 'lai_edu_' + Date.now();
+  const script = document.createElement('script');
+  const params = new URLSearchParams({callback: cbName, type: 'GET_LISTES_ATTENTE_INSCRIPTIONS', ecole: currentStaff.ecole});
+
+  const data = await new Promise(resolve => {
+    window[cbName] = res => { delete window[cbName]; try{document.body.removeChild(script);}catch(e){}; resolve(res); };
+    script.onerror = () => { delete window[cbName]; resolve({ok:false}); };
+    script.src = APPS_SCRIPT_POINTAGE + '?' + params.toString();
+    document.body.appendChild(script);
+    setTimeout(() => { if(window[cbName]){ delete window[cbName]; resolve({ok:false, error:'timeout'}); } }, 20000);
+  });
+
+  if (!data || !data.ok) {
+    contenu.innerHTML = '<p style="padding:14px;font-size:0.85em;color:var(--rouge)">Erreur de chargement : ' + (data && data.error || 'inconnue') + '</p>';
+    return;
+  }
+
+  _eduDataListesAttente = data;
+
+  document.getElementById('eduListesAttenteStats').style.display = 'flex';
+  document.getElementById('eduStatPhysique').textContent = (data.listeAttentePhysique || []).length;
+  document.getElementById('eduStatLigneConfirmee').textContent = (data.listeAttenteLigneConfirmee || []).length;
+  document.getElementById('eduStatLigneNonVerifiee').textContent = (data.listeAttenteLigneNonVerifiee || []).length;
+
+  function mkTableEdu(liste, champsTel) {
+    let h = '';
+    if (!liste.length) {
+      h += '<p style="padding:12px 14px;font-size:0.8em;color:var(--gris)">Aucun élève dans cette liste</p>';
+      return h;
+    }
+    h += '<div class="tbl-wrap"><table><thead><tr><th>Niveau/Classe</th><th>Matricule</th><th>Nom</th><th>Contact(s)</th></tr></thead><tbody>';
+    liste.forEach(function(e) {
+      const niv = e.niveau || e.classe || '';
+      let tels = [];
+      if (champsTel === 'contact') {
+        if (e.contact) tels.push(e.contact);
+      } else {
+        if (e.tel1) tels.push(e.tel1);
+        if (e.tel2) tels.push(e.tel2);
+        if (e.tel3) tels.push(e.tel3);
+      }
+      const telsHtml = tels.length
+        ? tels.map(function(t){ return '<a href="tel:'+t+'" style="color:var(--bleu2);text-decoration:none;font-weight:600">📞 '+t+'</a>'; }).join(' · ')
+        : '<span style="color:var(--gris)">—</span>';
+      h += '<tr><td>' + niv + '</td><td style="font-size:0.78em;color:var(--gris)">' + e.matricule + '</td><td>' + e.nom + '</td><td>' + telsHtml + '</td></tr>';
+    });
+    h += '</tbody></table></div>';
+    return h;
+  }
+
+  let html = '';
+  html += '<div id="eduTablePhysique" style="display:none">' + mkTableEdu(data.listeAttentePhysique || [], 'contact') + '</div>';
+  html += '<div id="eduTableLigneConfirmee" style="display:none">' + mkTableEdu(data.listeAttenteLigneConfirmee || [], 'tel') + '</div>';
+  html += '<div id="eduTableLigneNonVerifiee" style="display:none">' + mkTableEdu(data.listeAttenteLigneNonVerifiee || [], 'tel') + '</div>';
+
+  contenu.innerHTML = html;
+  afficherTableauAttenteEdu('physique');
+  const btnPdfDivEdu = document.createElement('div');
+  btnPdfDivEdu.style.cssText = 'padding:10px 14px';
+  btnPdfDivEdu.innerHTML = '<button onclick="telechargerPdfListeAttenteEdu()" style="width:100%;padding:10px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;border:none;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🖨 Télécharger cette liste en PDF</button>';
+  contenu.insertBefore(btnPdfDivEdu, contenu.firstChild);
+}
+
+function afficherTableauAttenteEdu(quel) {
+  _eduListeActive = quel;
+  const ids = {physique:'eduTablePhysique', ligneConfirmee:'eduTableLigneConfirmee', ligneNonVerifiee:'eduTableLigneNonVerifiee'};
+  const cartes = {physique:'eduCardPhysique', ligneConfirmee:'eduCardLigneConfirmee', ligneNonVerifiee:'eduCardLigneNonVerifiee'};
+  Object.keys(ids).forEach(function(k) {
+    const el = document.getElementById(ids[k]);
+    if (el) el.style.display = (k === quel) ? 'block' : 'none';
+    const carte = document.getElementById(cartes[k]);
+    if (carte) carte.style.boxShadow = (k === quel) ? '0 0 0 3px rgba(31,78,121,0.4)' : 'none';
+  });
+}
+
+let _eduListeActive = 'physique';
+let _eduDataListesAttente = null;
+
+function telechargerPdfListeAttenteEdu() {
+  if (!_eduDataListesAttente) { showToast('Aucune donnée à exporter', 'error'); return; }
+  const titres = {
+    physique: {t: "En attente d'inscription PHYSIQUE", s: "Payés en ligne (MENA), pas encore venus s'inscrire à l'école", liste: _eduDataListesAttente.listeAttentePhysique || [], champTel: 'contact'},
+    ligneConfirmee: {t: "En attente d'inscription EN LIGNE (confirmé)", s: "Déjà inscrits à l'école, mais vérifiés non inscrits sur MENA", liste: _eduDataListesAttente.listeAttenteLigneConfirmee || [], champTel: 'tel'},
+    ligneNonVerifiee: {t: "En attente d'inscription EN LIGNE (à vérifier)", s: "Déjà inscrits à l'école, statut MENA jamais contrôlé", liste: _eduDataListesAttente.listeAttenteLigneNonVerifiee || [], champTel: 'tel'}
+  };
+  const info = titres[_eduListeActive];
+  const nomEcole = (currentStaff && currentStaff.label) || (currentStaff && currentStaff.ecole) || 'École';
+  const dateGen = new Date().toLocaleDateString('fr-FR');
+
+  let lignes = '';
+  info.liste.forEach(function(e, i) {
+    const niv = e.niveau || e.classe || '';
+    let tels = [];
+    if (info.champTel === 'contact') { if (e.contact) tels.push(e.contact); }
+    else { if (e.tel1) tels.push(e.tel1); if (e.tel2) tels.push(e.tel2); if (e.tel3) tels.push(e.tel3); }
+    lignes += '<tr style="background:' + (i % 2 === 0 ? '#fff' : '#f5f5f5') + '"><td style="padding:6px 8px;border:1px solid #ccc">' + (i+1) + '</td><td style="padding:6px 8px;border:1px solid #ccc">' + niv + '</td><td style="padding:6px 8px;border:1px solid #ccc">' + e.matricule + '</td><td style="padding:6px 8px;border:1px solid #ccc">' + e.nom + '</td><td style="padding:6px 8px;border:1px solid #ccc">' + tels.join(' / ') + '</td></tr>';
+  });
+
+  const w = window.open('', '_blank');
+  if (!w) { showToast('Autorisez les popups', 'error'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + info.t + '</title>');
+  w.document.write('<style>body{font-family:Arial,sans-serif;padding:16px}table{width:100%;border-collapse:collapse;margin-top:10px}th{background:#1F4E79;color:#fff;padding:8px;text-align:left}@media print{.no-print{display:none!important}}</style></head><body>');
+  w.document.write('<div class="no-print" style="text-align:center;margin-bottom:14px"><button onclick="window.print()" style="background:#1F4E79;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;margin-right:8px">🖨 Imprimer / PDF</button><button onclick="window.close()" style="background:#888;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer">Fermer</button></div>');
+  w.document.write('<h2 style="color:#1F4E79">' + nomEcole + '</h2>');
+  w.document.write('<h3>' + info.t + ' (' + info.liste.length + ')</h3>');
+  w.document.write('<p style="color:#666;font-size:0.9em">' + info.s + ' — Généré le ' + dateGen + '</p>');
+  w.document.write('<table><thead><tr><th>#</th><th>Niveau/Classe</th><th>Matricule</th><th>Nom</th><th>Contact(s)</th></tr></thead><tbody>' + lignes + '</tbody></table>');
+  w.document.write('</body></html>');
+  w.document.close();
+}
+  let _dirListeActive = 'physique';
 let _dirDataListesAttente = null;
 
 function telechargerPdfListeAttenteDir() {
