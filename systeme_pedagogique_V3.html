@@ -330,6 +330,20 @@ const SHEETS_IDS = {
   'GS Rita Rosane':         '1oVaYjYSMaV1Dw5fdF69XXjgTll5ghHX-IGe_xLhalq0'
 };
 
+// ⚠️ NOUVEAU — lecture des paramètres reçus depuis administration.html
+const urlParamsSuivi = new URLSearchParams(window.location.search);
+const ecoleConnecteeSuivi = urlParamsSuivi.get('ecole') || '';
+const profilConnecteSuivi = urlParamsSuivi.get('profil') || '';
+const classesEduSuivi = (urlParamsSuivi.get('classes') || '')
+  .split(',').map(function(c){ return c.trim().toUpperCase(); }).filter(Boolean);
+
+// ⚠️ NOUVEAU — restreint le réseau à l'école connectée (sauf Fondateur, qui garde tout le réseau)
+const SHEETS_IDS_RESEAU_COMPLET = Object.assign({}, SHEETS_IDS);
+if (ecoleConnecteeSuivi && SHEETS_IDS_RESEAU_COMPLET[ecoleConnecteeSuivi]) {
+  Object.keys(SHEETS_IDS).forEach(function(k){ delete SHEETS_IDS[k]; });
+  SHEETS_IDS[ecoleConnecteeSuivi] = SHEETS_IDS_RESEAU_COMPLET[ecoleConnecteeSuivi];
+}
+
 const ECOLES = Object.keys(SHEETS_IDS);
 
 // 47 classes CPP
@@ -503,10 +517,20 @@ function initSelects() {
     });
   });
 
-  // Classes
+// Classes
   var fclasse = document.getElementById('f-classe');
   var fclassesuivi = document.getElementById('filtre-classe-suivi');
-  CLASSES_CPP.forEach(function(c){
+  // ⚠️ NOUVEAU — restreint les classes proposées si profil EDU
+  var classesAProposer = CLASSES_CPP;
+  if (profilConnecteSuivi === 'EDU' && classesEduSuivi.length) {
+    classesAProposer = CLASSES_CPP.filter(function(c) {
+      var clNorm = c.toUpperCase().trim();
+      return classesEduSuivi.some(function(ce) {
+        return clNorm === ce || clNorm.indexOf(ce + ' ') === 0 || ce.indexOf(clNorm + ' ') === 0;
+      });
+    });
+  }
+  classesAProposer.forEach(function(c){
     if(fclasse){ var o = document.createElement('option'); o.value=c; o.textContent=c; fclasse.appendChild(o); }
     if(fclassesuivi){ var o2 = document.createElement('option'); o2.value=c; o2.textContent=c; fclassesuivi.appendChild(o2); }
   });
@@ -558,6 +582,16 @@ async function chargerDonnees() {
   if (toutes.length === 0) {
     toutes = genererDonneesDemo();
     showToast('⚠️ Mode démo — Données réelles à saisir', 'error');
+  }
+
+// ⚠️ NOUVEAU — restreint aux classes de l'éducateur si profil EDU
+  if (profilConnecteSuivi === 'EDU' && classesEduSuivi.length) {
+    toutes = toutes.filter(function(d) {
+      var clNorm = (d.classe || '').toUpperCase().trim();
+      return classesEduSuivi.some(function(ce) {
+        return clNorm === ce || clNorm.indexOf(ce + ' ') === 0 || ce.indexOf(clNorm + ' ') === 0;
+      });
+    });
   }
 
   donneesSheet = toutes;
@@ -811,7 +845,7 @@ function toggleProg(btn) {
 }
 
 var donneesTerrain=[];
-async function chargerTerrain(){var container=document.getElementById('terrain-content');if(!container)return;container.innerHTML='<div class="loading"><div class="spinner"></div><p>Analyse de 12 écoles...</p></div>';var tousSignalements=[];var ecoleNoms=Object.keys(SHEETS_IDS);for(var i=0;i<ecoleNoms.length;i++){var nomEcole=ecoleNoms[i];var sheetId=SHEETS_IDS[nomEcole];try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/MESSAGES!A2:J300?key='+CONFIG.apiKey+'&valueRenderOption=UNFORMATTED_VALUE';var r=await fetch(url);var data=await r.json();if(data.values&&data.values.length){data.values.forEach(function(row,idx){var statut=String(row[8]||'').trim();var role=String(row[5]||'').trim().toUpperCase();if(!statut.includes('Signalement')&&!statut.includes('EDT')&&role!=='EDUCATEUR')return;var typeRaw=String(row[1]||'').trim().toUpperCase();var typeCode=typeRaw.includes('COURS')?'COURS':typeRaw.includes('CAHIER')?'CAHIER':'SIGNALEMENT';tousSignalements.push({ecole:nomEcole,sheetId:sheetId,date:String(row[0]||'').trim(),typeCode:typeCode,description:String(row[2]||'').trim(),obs:String(row[3]||'').trim(),educateur:String(row[4]||'').trim(),traite:String(row[9]||'').trim().toUpperCase()==='OUI',rowNum:idx+2});});}}catch(e){console.log('Terrain erreur '+nomEcole+': '+e.message);}}tousSignalements.sort(function(a,b){if(a.traite!==b.traite)return a.traite?1:-1;return 0;});donneesTerrain=tousSignalements;var selEcole=document.getElementById('terrain-filtre-ecole');if(selEcole&&selEcole.options.length<=1){ecoleNoms.forEach(function(e){var opt=document.createElement('option');opt.value=e;opt.textContent=e;selEcole.appendChild(opt);});}var nbCours=tousSignalements.filter(function(s){return s.typeCode==='COURS';}).length;var nbCahier=tousSignalements.filter(function(s){return s.typeCode==='CAHIER';}).length;var nbSignal=tousSignalements.filter(function(s){return s.typeCode==='SIGNALEMENT';}).length;var nbTraite=tousSignalements.filter(function(s){return s.traite;}).length;['terrain-nb-cours','terrain-nb-cahier','terrain-nb-signal','terrain-nb-traite'].forEach(function(id,i){var el=document.getElementById(id);if(el)el.textContent=[nbCours,nbCahier,nbSignal,nbTraite][i];});renderTerrain(tousSignalements);}
+async function chargerTerrain(){var container=document.getElementById('terrain-content');if(!container)return;container.innerHTML='<div class="loading"><div class="spinner"></div><p>Analyse de 12 écoles...</p></div>';var tousSignalements=[];var ecoleNoms=Object.keys(SHEETS_IDS);for(var i=0;i<ecoleNoms.length;i++){var nomEcole=ecoleNoms[i];var sheetId=SHEETS_IDS[nomEcole];try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/MESSAGES!A2:J300?key='+CONFIG.apiKey+'&valueRenderOption=UNFORMATTED_VALUE';var r=await fetch(url);var data=await r.json();if(data.values&&data.values.length){data.values.forEach(function(row,idx){var statut=String(row[8]||'').trim();var role=String(row[5]||'').trim().toUpperCase();if(!statut.includes('Signalement')&&!statut.includes('EDT')&&role!=='EDUCATEUR')return;var typeRaw=String(row[1]||'').trim().toUpperCase();var typeCode=typeRaw.includes('COURS')?'COURS':typeRaw.includes('CAHIER')?'CAHIER':'SIGNALEMENT';tousSignalements.push({ecole:nomEcole,sheetId:sheetId,date:String(row[0]||'').trim(),typeCode:typeCode,description:String(row[2]||'').trim(),obs:String(row[3]||'').trim(),educateur:String(row[4]||'').trim(),traite:String(row[9]||'').trim().toUpperCase()==='OUI',rowNum:idx+2});});}}catch(e){console.log('Terrain erreur '+nomEcole+': '+e.message);}}tousSignalements.sort(function(a,b){if(a.traite!==b.traite)return a.traite?1:-1;return 0;});if(profilConnecteSuivi==='EDU'&&classesEduSuivi.length){tousSignalements=tousSignalements.filter(function(s){var descNorm=((s.description||'')+' '+(s.obs||'')).toUpperCase();return classesEduSuivi.some(function(ce){return descNorm.indexOf(ce)>=0;});});}donneesTerrain=tousSignalements;var selEcole=document.getElementById('terrain-filtre-ecole');if(selEcole&&selEcole.options.length<=1){ecoleNoms.forEach(function(e){var opt=document.createElement('option');opt.value=e;opt.textContent=e;selEcole.appendChild(opt);});}var nbCours=tousSignalements.filter(function(s){return s.typeCode==='COURS';}).length;var nbCahier=tousSignalements.filter(function(s){return s.typeCode==='CAHIER';}).length;var nbSignal=tousSignalements.filter(function(s){return s.typeCode==='SIGNALEMENT';}).length;var nbTraite=tousSignalements.filter(function(s){return s.traite;}).length;['terrain-nb-cours','terrain-nb-cahier','terrain-nb-signal','terrain-nb-traite'].forEach(function(id,i){var el=document.getElementById(id);if(el)el.textContent=[nbCours,nbCahier,nbSignal,nbTraite][i];});renderTerrain(tousSignalements);}
 function renderTerrain(data){
   var container=document.getElementById('terrain-content');
   if(!container)return;
