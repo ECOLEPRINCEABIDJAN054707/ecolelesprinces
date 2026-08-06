@@ -950,7 +950,15 @@ nom, poste, type, salaireFixe, categorie, nationalite, cnps, embauche, tel
   document.body.appendChild(script);
 }
 </script>
-
+<div class="section" id="dirSecChefsClasse">
+  <div class="sec-head sec-or" onclick="chargerChefsClasseDir();toggleSec(this)">
+    <h3>&#127942; Chefs, Sous-chefs &amp; Présidents de club <span id="dirChefsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body" id="dirChefsBody">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour charger les Chefs de classe et Présidents de club (lecture seule).</p>
+  </div>
+</div>
+</parameter>
  <div class="section" id="dirSecSansResultat">
   <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('dir');toggleSec(this)">
     <h3>&#9888;&#65039; &Eacute;l&egrave;ves sans r&eacute;sultat 2025-2026 <span id="dirSansResultatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -1576,7 +1584,14 @@ async function attribuerMatriculeCom() {
      ajouter cette ligne :
        if (s.type==='PRIM' || s.type==='BOTH') setTimeout(chargerMatriculesPrimaireCom, 1200);
      ============================================================ -->
-
+<div class="section" id="comSecChefsClasse">
+  <div class="sec-head sec-or" onclick="chargerChefsClasseCom();toggleSec(this)">
+    <h3>&#127942; Chefs, Sous-chefs &amp; Présidents de club <span id="comChefsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body" id="comChefsBody">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour charger les Chefs de classe et Présidents de club (lecture seule).</p>
+  </div>
+</div>
  <div class="section" id="comSecSansResultat">
   <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('com');toggleSec(this)">
     <h3>&#9888;&#65039; &Eacute;l&egrave;ves sans r&eacute;sultat 2025-2026 <span id="comSansResultatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -1704,7 +1719,41 @@ async function attribuerMatriculeCom() {
       </div>
     </div>
   </div>
+<!-- CHEFS & SOUS-CHEFS DE CLASSE -->
+  <div class="section">
+    <div class="sec-head sec-or open" onclick="toggleSec(this)">
+      <h3>&#127942; Chefs &amp; Sous-chefs de classe <span id="eduChefsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body open">
+      <div style="padding:8px 14px 6px;background:#FFF8E1;border-bottom:1px solid var(--border)">
+        <span style="font-size:0.72em;color:#7a5f00;font-weight:600">&#128197; Élection le 30 septembre 2026 — Publication à partir du lundi 5 octobre 2026</span>
+      </div>
+      <div id="eduChefsListe">
+        <div style="text-align:center;padding:20px;color:var(--gris)">
+          <div class="spinner-sm" style="margin:0 auto 10px"></div>
+          <p style="font-size:0.82em">Chargement de vos classes...</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
+  <!-- PRESIDENTS DE CLUB -->
+  <div class="section">
+    <div class="sec-head sec-violet open" onclick="toggleSec(this)">
+      <h3>&#127942; Présidents de club <span id="eduClubsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body open">
+      <div style="padding:8px 14px 6px;background:#F3E5F5;border-bottom:1px solid var(--border)">
+        <span style="font-size:0.72em;color:#4A148C;font-weight:600">&#128197; Publication à partir du lundi 5 octobre 2026 — 7 clubs du réseau</span>
+      </div>
+      <div id="eduClubsListe">
+        <div style="text-align:center;padding:20px;color:var(--gris)">
+          <div class="spinner-sm" style="margin:0 auto 10px"></div>
+          <p style="font-size:0.82em">Chargement des clubs...</p>
+        </div>
+      </div>
+    </div>
+  </div>
   <!-- LISTES NOTES PROFS -->
   <div class="section">
     <div class="sec-head sec-vert open" onclick="toggleSec(this)">
@@ -4974,8 +5023,10 @@ function afficherEdu(s){
   chargerResultatsEtMessages(s.ecole,'EDU');
   chargerAbsencesElevesSigne(s.ecole, s.classes||[]);
   chargerPresencesEnseignants(s.ecole);
-  chargerClassesEdu(s);
+chargerClassesEdu(s);
  setTimeout(function(){chargerAffectationTousEdu();},700);
+  setTimeout(function(){chargerChefsClasse(s);},800);
+  setTimeout(function(){chargerPresidentsClub(s);},900);
   chargerNotesDevoir();
   setTimeout(() => chargerCoursJourEdu(s), 400);
   setTimeout(() => chargerEDT(), 500);
@@ -5040,6 +5091,267 @@ async function chargerClassesEdu(s){
     container.innerHTML=html;
   }catch(e){container.innerHTML='<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur chargement donnees.</p>';}
 }
+  // ============================================================
+// CHEFS & SOUS-CHEFS DE CLASSE — Espace Éducateur
+// ============================================================
+window._chefsClasseCache = [];
+
+async function chargerChefsClasse(s){
+  const container=document.getElementById('eduChefsListe');
+  if(!container)return;
+  const classesEdu=s.classes||[];
+  const cbName='gcc_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({callback:cbName,type:'GET_CHEFS_CLASSE',ecole:s.ecole});
+  window[cbName]=function(res){
+    delete window[cbName];try{document.body.removeChild(script);}catch(e){}
+    if(!res||!res.ok){container.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur de chargement</p>';return;}
+    window._chefsClasseCache=res.classes||[];
+    window._chefsClasseDebloque=!!res.debloque;
+    renderChefsClasseEdu(classesEdu);
+  };
+  script.onerror=function(){delete window[cbName];container.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur réseau</p>';};
+  script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+  document.body.appendChild(script);
+}
+
+function renderChefsClasseEdu(classesEdu){
+  const container=document.getElementById('eduChefsListe');
+  if(!container)return;
+  if(!classesEdu.length){container.innerHTML='<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucune classe assignée</p>';return;}
+  const cnt=document.getElementById('eduChefsCount');if(cnt)cnt.textContent='('+classesEdu.length+' classe'+(classesEdu.length>1?'s':'')+')';
+  const dataMap={};
+  window._chefsClasseCache.forEach(function(c){dataMap[String(c.classe).toUpperCase().trim()]=c;});
+  const dateLimite=new Date('2026-10-05T23:59:59');
+  const dateOuverture=new Date('2026-09-30T00:00:00');
+  const maintenant=new Date();
+  const peutPublier=(maintenant>=dateOuverture&&maintenant<=dateLimite)||window._chefsClasseDebloque;
+  let html='';
+  classesEdu.forEach(function(cl,idx){
+    const d=dataMap[cl.toUpperCase().trim()]||{};
+    const statut=d.statut||'BROUILLON';
+    const estPublie=statut==='PUBLIE';
+    const badge=estPublie?'<span class="bdg bg-vert" style="font-size:0.68em">✅ Publié</span>':'<span class="bdg bg-orange" style="font-size:0.68em">⏳ Brouillon</span>';
+    html+='<div class="edu-classe-card"><div class="edu-classe-head" onclick="toggleClasse(this)"><div><div class="edu-classe-nom">'+cl+'</div><div class="edu-classe-nb">'+badge+'</div></div><span style="font-size:0.78em;opacity:0.8">▼</span></div>';
+    html+='<div class="edu-classe-body" style="padding:14px">';
+    // CHEF
+    html+='<div style="font-size:0.76em;font-weight:700;color:var(--bleu);margin-bottom:6px">👑 CHEF DE CLASSE</div>';
+    html+='<div style="display:flex;gap:6px;margin-bottom:6px"><input type="text" id="chefMat_'+idx+'" placeholder="Matricule" value="'+(d.chefMatricule||'')+'" style="flex:1;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em" oninput="this.value=this.value.toUpperCase()">';
+    html+='<button onclick="rechercherEleveChefSousChef(\''+cl.replace(/'/g,"\\'")+'\','+idx+',\'chef\')" style="padding:8px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.78em;font-weight:600;cursor:pointer">🔍</button></div>';
+    html+='<div id="chefInfo_'+idx+'" style="font-size:0.76em;color:var(--gris);margin-bottom:10px">'+(d.chefNom?('<b>'+d.chefNom+'</b> — Père: '+(d.chefTelPere||'—')+' · Mère: '+(d.chefTelMere||'—')+' · Tuteur: '+(d.chefTelTuteur||'—')):'')+'</div>';
+    // SOUS-CHEF
+    html+='<div style="font-size:0.76em;font-weight:700;color:var(--violet);margin-bottom:6px">🎗️ SOUS-CHEF DE CLASSE</div>';
+    html+='<div style="display:flex;gap:6px;margin-bottom:6px"><input type="text" id="sousChefMat_'+idx+'" placeholder="Matricule" value="'+(d.sousChefMatricule||'')+'" style="flex:1;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em" oninput="this.value=this.value.toUpperCase()">';
+    html+='<button onclick="rechercherEleveChefSousChef(\''+cl.replace(/'/g,"\\'")+'\','+idx+',\'sousChef\')" style="padding:8px 12px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.78em;font-weight:600;cursor:pointer">🔍</button></div>';
+    html+='<div id="sousChefInfo_'+idx+'" style="font-size:0.76em;color:var(--gris);margin-bottom:12px">'+(d.sousChefNom?('<b>'+d.sousChefNom+'</b> — Père: '+(d.sousChefTelPere||'—')+' · Mère: '+(d.sousChefTelMere||'—')+' · Tuteur: '+(d.sousChefTelTuteur||'—')):'')+'</div>';
+    // BOUTONS
+    html+='<div style="display:flex;gap:8px">';
+    html+='<button onclick="sauvegarderChefsClasseBrouillonUI(\''+cl.replace(/'/g,"\\'")+'\','+idx+')" style="flex:1;padding:10px;background:var(--bg);border:1.5px solid var(--bleu);color:var(--bleu);border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer">💾 Enregistrer (brouillon)</button>';
+    if(peutPublier){
+      html+='<button onclick="publierChefsClasseUI(\''+cl.replace(/'/g,"\\'")+'\','+idx+')" style="flex:1;padding:10px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer">✓ Publier</button>';
+    }else{
+      html+='<button disabled style="flex:1;padding:10px;background:#e0e0e0;color:#999;border:none;border-radius:8px;font-size:0.78em;font-weight:700;cursor:not-allowed">🔒 Publication indisponible</button>';
+    }
+    html+='</div>';
+    html+='<div id="chefsMsg_'+idx+'" style="margin-top:8px;font-size:0.76em"></div>';
+    html+='</div></div>';
+  });
+  container.innerHTML=html;
+}
+
+window._chefsElevesTrouve={};
+async function rechercherEleveChefSousChef(classe,idx,type){
+  const inputId=type==='chef'?'chefMat_'+idx:'sousChefMat_'+idx;
+  const infoId=type==='chef'?'chefInfo_'+idx:'sousChefInfo_'+idx;
+  const mat=document.getElementById(inputId).value.trim();
+  if(!mat){showToast('Saisissez un matricule','error');return;}
+  const infoDiv=document.getElementById(infoId);
+  infoDiv.innerHTML='⏳ Recherche...';
+  const cbName='rem_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({callback:cbName,type:'RECHERCHER_ELEVE_MATRICULE',ecole:currentStaff.ecole,matricule:mat});
+  window[cbName]=function(res){
+    delete window[cbName];try{document.body.removeChild(script);}catch(e){}
+    if(res&&res.ok&&res.trouve){
+      infoDiv.innerHTML='<b>'+res.nom+'</b> ('+res.classe+') — Père: '+(res.telPere||'—')+' · Mère: '+(res.telMere||'—')+' · Tuteur: '+(res.telTuteur||'—');
+      if(!window._chefsElevesTrouve[idx])window._chefsElevesTrouve[idx]={};
+      window._chefsElevesTrouve[idx][type]=res;
+    }else{
+      infoDiv.innerHTML='<span style="color:var(--rouge)">⚠️ Élève introuvable</span>';
+      if(!window._chefsElevesTrouve[idx])window._chefsElevesTrouve[idx]={};
+      window._chefsElevesTrouve[idx][type]=null;
+    }
+  };
+  script.onerror=function(){delete window[cbName];infoDiv.innerHTML='<span style="color:var(--rouge)">Erreur réseau</span>';};
+  script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+  document.body.appendChild(script);
+}
+
+async function sauvegarderChefsClasseBrouillonUI(classe,idx){
+  const msgDiv=document.getElementById('chefsMsg_'+idx);
+  const chef=(window._chefsElevesTrouve[idx]||{}).chef;
+  const sousChef=(window._chefsElevesTrouve[idx]||{}).sousChef;
+  const chefMat=document.getElementById('chefMat_'+idx).value.trim();
+  const sousChefMat=document.getElementById('sousChefMat_'+idx).value.trim();
+  msgDiv.style.cssText='color:var(--bleu)';msgDiv.textContent='⏳ Enregistrement...';
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const saisiPar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+  try{
+    const resp=await fetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
+      action:'SAUVEGARDER_CHEFS_CLASSE_BROUILLON',ecole:currentStaff.ecole,classe:classe,
+      chefNom:chef?chef.nom:'',chefMatricule:chefMat,chefTelPere:chef?chef.telPere:'',chefTelMere:chef?chef.telMere:'',chefTelTuteur:chef?chef.telTuteur:'',
+      sousChefNom:sousChef?sousChef.nom:'',sousChefMatricule:sousChefMat,sousChefTelPere:sousChef?sousChef.telPere:'',sousChefTelMere:sousChef?sousChef.telMere:'',sousChefTelTuteur:sousChef?sousChef.telTuteur:'',
+      saisiPar:saisiPar
+    })});
+    const result=await resp.json();
+    if(result&&result.ok){msgDiv.style.cssText='color:var(--vert);font-weight:700';msgDiv.textContent='✅ '+result.message;showToast('Brouillon enregistré','success');}
+    else{msgDiv.style.cssText='color:var(--rouge)';msgDiv.textContent='❌ '+(result&&result.message||'Erreur');}
+  }catch(e){msgDiv.style.cssText='color:var(--rouge)';msgDiv.textContent='❌ Erreur réseau';}
+}
+
+async function publierChefsClasseUI(classe,idx){
+  const ok=window.confirm('Confirmer la publication du Chef et Sous-chef pour '+classe+' ?\n\nUne fois publié, cette information sera visible par la Direction et le Comptable.');
+  if(!ok)return;
+  const msgDiv=document.getElementById('chefsMsg_'+idx);
+  msgDiv.style.cssText='color:var(--bleu)';msgDiv.textContent='⏳ Publication...';
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const publiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+  try{
+    const resp=await fetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
+      action:'PUBLIER_CHEFS_CLASSE',ecole:currentStaff.ecole,classe:classe,publiePar:publiePar
+    })});
+    const result=await resp.json();
+    if(result&&result.ok){msgDiv.style.cssText='color:var(--vert);font-weight:700';msgDiv.textContent='✅ '+result.message;showToast('Publié !','success');setTimeout(function(){chargerChefsClasse(currentStaff);},1200);}
+    else{msgDiv.style.cssText='color:var(--rouge)';msgDiv.textContent='❌ '+(result&&result.message||'Erreur');}
+  }catch(e){msgDiv.style.cssText='color:var(--rouge)';msgDiv.textContent='❌ Erreur réseau';}
+}
+// ============================================================
+// PRESIDENTS DE CLUB — Espace Éducateur
+// ============================================================
+const CLUBS_RESEAU_EDU=[
+  {id:'SANTE',nom:'Club Santé',couleur:'#E53935'},
+  {id:'ROBOTIQUE',nom:'Club Robotique',couleur:'#1E88E5'},
+  {id:'FOOTBALL',nom:'Club Football Les Princes',couleur:'#43A047'},
+  {id:'LITTERAIRE',nom:'Club Littéraire',couleur:'#6D4C41'},
+  {id:'SCIENTIFIQUE',nom:'Club Scientifique',couleur:'#00897B'},
+  {id:'CUISINE',nom:'Club Cuisine',couleur:'#F4511E'},
+  {id:'ARCHITECTURE',nom:'Club Architecture',couleur:'#8E24AA'}
+];
+
+async function chargerPresidentsClub(s){
+  const container=document.getElementById('eduClubsListe');
+  if(!container)return;
+  const cbName='gpc_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({callback:cbName,type:'GET_PRESIDENTS_CLUB',ecole:s.ecole});
+  window[cbName]=function(res){
+    delete window[cbName];try{document.body.removeChild(script);}catch(e){}
+    if(!res||!res.ok){container.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur de chargement</p>';return;}
+    window._presidentsClubCache=res.clubs||[];
+    renderPresidentsClubEdu();
+  };
+  script.onerror=function(){delete window[cbName];container.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur réseau</p>';};
+  script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+  document.body.appendChild(script);
+}
+
+function renderPresidentsClubEdu(){
+  const container=document.getElementById('eduClubsListe');
+  if(!container)return;
+  const cnt=document.getElementById('eduClubsCount');if(cnt)cnt.textContent='(7 clubs)';
+  const dataMap={};
+  (window._presidentsClubCache||[]).forEach(function(c){dataMap[c.club]=c;});
+  const dateLimite=new Date('2026-10-05T23:59:59');
+  const dateOuverture=new Date('2026-09-30T00:00:00');
+  const maintenant=new Date();
+  const peutPublier=(maintenant>=dateOuverture&&maintenant<=dateLimite)||window._chefsClasseDebloque;
+  let html='';
+  CLUBS_RESEAU_EDU.forEach(function(club,idx){
+    const d=dataMap[club.id]||{};
+    const statut=d.statut||'BROUILLON';
+    const estPublie=statut==='PUBLIE';
+    const badge=estPublie?'<span class="bdg bg-vert" style="font-size:0.68em">✅ Publié</span>':(statut==='VIDE'?'<span class="bdg" style="background:#eee;color:#666;font-size:0.68em">Non renseigné</span>':'<span class="bdg bg-orange" style="font-size:0.68em">⏳ Brouillon</span>');
+    html+='<div class="edu-classe-card"><div class="edu-classe-head" style="background:linear-gradient(135deg,'+club.couleur+','+club.couleur+'CC)" onclick="toggleClasse(this)"><div><div class="edu-classe-nom">'+club.nom+'</div><div class="edu-classe-nb">'+badge+'</div></div><span style="font-size:0.78em;opacity:0.8">▼</span></div>';
+    html+='<div class="edu-classe-body" style="padding:14px">';
+    html+='<div style="font-size:0.76em;font-weight:700;color:'+club.couleur+';margin-bottom:6px">👑 PRÉSIDENT DU CLUB</div>';
+    html+='<div style="display:flex;gap:6px;margin-bottom:6px"><input type="text" id="clubMat_'+idx+'" placeholder="Matricule" value="'+(d.presidentMatricule||'')+'" style="flex:1;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em" oninput="this.value=this.value.toUpperCase()">';
+    html+='<button onclick="rechercherEleveClub(\''+club.id+'\','+idx+')" style="padding:8px 12px;background:'+club.couleur+';color:#fff;border:none;border-radius:8px;font-size:0.78em;font-weight:600;cursor:pointer">🔍</button></div>';
+    html+='<div id="clubInfo_'+idx+'" style="font-size:0.76em;color:var(--gris);margin-bottom:12px">'+(d.presidentNom?('<b>'+d.presidentNom+'</b> ('+(d.presidentClasse||'')+') — Père: '+(d.telPere||'—')+' · Mère: '+(d.telMere||'—')+' · Tuteur: '+(d.telTuteur||'—')):'')+'</div>';
+    html+='<div style="display:flex;gap:8px">';
+    html+='<button onclick="sauvegarderPresidentClubUI(\''+club.id+'\','+idx+')" style="flex:1;padding:10px;background:var(--bg);border:1.5px solid '+club.couleur+';color:'+club.couleur+';border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer">💾 Enregistrer (brouillon)</button>';
+    if(peutPublier){
+      html+='<button onclick="publierPresidentClubUI(\''+club.id+'\','+idx+')" style="flex:1;padding:10px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-size:0.78em;font-weight:700;cursor:pointer">✓ Publier</button>';
+    }else{
+      html+='<button disabled style="flex:1;padding:10px;background:#e0e0e0;color:#999;border:none;border-radius:8px;font-size:0.78em;font-weight:700;cursor:not-allowed">🔒 Publication indisponible</button>';
+    }
+    html+='</div>';
+    html+='<div id="clubMsg_'+idx+'" style="margin-top:8px;font-size:0.76em"></div>';
+    html+='</div></div>';
+  });
+  container.innerHTML=html;
+}
+
+window._clubElevesTrouve={};
+async function rechercherEleveClub(clubId,idx){
+  const mat=document.getElementById('clubMat_'+idx).value.trim();
+  if(!mat){showToast('Saisissez un matricule','error');return;}
+  const infoDiv=document.getElementById('clubInfo_'+idx);
+  infoDiv.innerHTML='⏳ Recherche...';
+  const cbName='rec_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({callback:cbName,type:'RECHERCHER_ELEVE_MATRICULE',ecole:currentStaff.ecole,matricule:mat});
+  window[cbName]=function(res){
+    delete window[cbName];try{document.body.removeChild(script);}catch(e){}
+    if(res&&res.ok&&res.trouve){
+      infoDiv.innerHTML='<b>'+res.nom+'</b> ('+res.classe+') — Père: '+(res.telPere||'—')+' · Mère: '+(res.telMere||'—')+' · Tuteur: '+(res.telTuteur||'—');
+      window._clubElevesTrouve[idx]=res;
+    }else{
+      infoDiv.innerHTML='<span style="color:var(--rouge)">⚠️ Élève introuvable</span>';
+      window._clubElevesTrouve[idx]=null;
+    }
+  };
+  script.onerror=function(){delete window[cbName];infoDiv.innerHTML='<span style="color:var(--rouge)">Erreur réseau</span>';};
+  script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+  document.body.appendChild(script);
+}
+
+async function sauvegarderPresidentClubUI(clubId,idx){
+  const msgDiv=document.getElementById('clubMsg_'+idx);
+  const eleve=window._clubElevesTrouve[idx];
+  const mat=document.getElementById('clubMat_'+idx).value.trim();
+  msgDiv.style.cssText='color:var(--bleu)';msgDiv.textContent='⏳ Enregistrement...';
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const saisiPar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+  try{
+    const resp=await fetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
+      action:'SAUVEGARDER_PRESIDENT_CLUB_BROUILLON',ecole:currentStaff.ecole,club:clubId,
+      presidentNom:eleve?eleve.nom:'',presidentMatricule:mat,presidentClasse:eleve?eleve.classe:'',
+      telPere:eleve?eleve.telPere:'',telMere:eleve?eleve.telMere:'',telTuteur:eleve?eleve.telTuteur:'',
+      saisiPar:saisiPar
+    })});
+    const result=await resp.json();
+    if(result&&result.ok){msgDiv.style.cssText='color:var(--vert);font-weight:700';msgDiv.textContent='✅ '+result.message;showToast('Brouillon enregistré','success');}
+    else{msgDiv.style.cssText='color:var(--rouge)';msgDiv.textContent='❌ '+(result&&result.message||'Erreur');}
+  }catch(e){msgDiv.style.cssText='color:var(--rouge)';msgDiv.textContent='❌ Erreur réseau';}
+}
+
+async function publierPresidentClubUI(clubId,idx){
+  const ok=window.confirm('Confirmer la publication du président pour ce club ?\n\nUne fois publié, cette information sera visible par la Direction et le Comptable.');
+  if(!ok)return;
+  const msgDiv=document.getElementById('clubMsg_'+idx);
+  msgDiv.style.cssText='color:var(--bleu)';msgDiv.textContent='⏳ Publication...';
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const publiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+  try{
+    const resp=await fetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
+      action:'PUBLIER_PRESIDENT_CLUB',ecole:currentStaff.ecole,club:clubId,publiePar:publiePar
+    })});
+    const result=await resp.json();
+    if(result&&result.ok){msgDiv.style.cssText='color:var(--vert);font-weight:700';msgDiv.textContent='✅ '+result.message;showToast('Publié !','success');setTimeout(function(){chargerPresidentsClub(currentStaff);},1200);}
+    else{msgDiv.style.cssText='color:var(--rouge)';msgDiv.textContent='❌ '+(result&&result.message||'Erreur');}
+  }catch(e){msgDiv.style.cssText='color:var(--rouge)';msgDiv.textContent='❌ Erreur réseau';}
+}
+  
 function toggleClasse(head){
   const body=head.nextElementSibling,arr=head.querySelector('span:last-child');
   if(body.classList.contains('open')){body.classList.remove('open');if(arr)arr.style.transform='';}
@@ -7959,7 +8271,156 @@ async function _chercherMatriculeDansBase(sheetsId, mat) {
   } catch(e) {}
   return null;
 } 
-  
+  // ============================================================
+// CHEFS DE CLASSE & PRESIDENTS DE CLUB — Vue Directeur (lecture seule + déblocage)
+// ============================================================
+async function chargerChefsClasseDir(){
+  const body=document.getElementById('dirChefsBody');
+  if(!body||!currentStaff)return;
+  body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  const ecole=currentStaff.ecole;
+
+  function fetchJSONP(type,params){
+    return new Promise(function(resolve){
+      const cbName='dcc_'+Date.now()+'_'+Math.floor(Math.random()*10000);
+      const script=document.createElement('script');
+      const p=new URLSearchParams(Object.assign({callback:cbName,type:type,ecole:ecole},params||{}));
+      window[cbName]=function(res){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+      script.onerror=function(){delete window[cbName];resolve({ok:false});};
+      script.src=APPS_SCRIPT_POINTAGE+'?'+p.toString();
+      document.body.appendChild(script);
+    });
+  }
+
+  const [resClasses,resClubs]=await Promise.all([
+    fetchJSONP('GET_CHEFS_CLASSE'),
+    fetchJSONP('GET_PRESIDENTS_CLUB')
+  ]);
+
+  const classes=(resClasses&&resClasses.ok)?resClasses.classes||[]:[];
+  const clubs=(resClubs&&resClubs.ok)?resClubs.clubs||[]:[];
+  const debloque=resClasses&&resClasses.debloque;
+
+  const cnt=document.getElementById('dirChefsCount');
+  if(cnt)cnt.textContent='('+classes.filter(function(c){return c.statut==='PUBLIE';}).length+'/'+classes.length+' classes publiées)';
+
+  let html='';
+  html+='<div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
+  html+='<button onclick="chargerChefsClasseDir()" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.85em;font-weight:600;cursor:pointer">🔄 Actualiser</button>';
+  if(debloque){
+    html+='<span class="bdg bg-vert" style="font-size:0.75em">🔓 Publication débloquée pour cette école</span>';
+  }else{
+    html+='<button onclick="debloquerPublicationChefsDir()" style="padding:8px 14px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-size:0.85em;font-weight:600;cursor:pointer">🔓 Débloquer la publication tardive</button>';
+  }
+  html+='</div>';
+
+  // CLASSES
+  html+='<div style="padding:10px 14px 4px;font-size:0.78em;font-weight:700;color:var(--bleu)">👑 Chefs & Sous-chefs de classe</div>';
+  if(!classes.length){
+    html+='<p style="padding:10px 14px;font-size:0.8em;color:var(--gris)">Aucune donnée pour le moment.</p>';
+  }else{
+    html+='<div class="tbl-wrap"><table><thead><tr><th>Classe</th><th>Chef</th><th>Sous-chef</th><th>Statut</th><th>Saisi par</th></tr></thead><tbody>';
+    classes.forEach(function(c){
+      const badge=c.statut==='PUBLIE'?'<span class="bdg bg-vert" style="font-size:0.68em">Publié</span>':'<span class="bdg bg-orange" style="font-size:0.68em">Brouillon</span>';
+      html+='<tr><td><strong>'+c.classe+'</strong></td>';
+      html+='<td style="font-size:0.8em">'+(c.chefNom||'—')+(c.chefTelPere?'<br><span style="color:var(--gris);font-size:0.85em">'+c.chefTelPere+'</span>':'')+'</td>';
+      html+='<td style="font-size:0.8em">'+(c.sousChefNom||'—')+(c.sousChefTelPere?'<br><span style="color:var(--gris);font-size:0.85em">'+c.sousChefTelPere+'</span>':'')+'</td>';
+      html+='<td>'+badge+'</td><td style="font-size:0.75em;color:var(--gris)">'+(c.saisiPar||'—')+'</td></tr>';
+    });
+    html+='</tbody></table></div>';
+  }
+
+  // CLUBS
+  html+='<div style="padding:14px 14px 4px;font-size:0.78em;font-weight:700;color:var(--violet)">🏆 Présidents de club</div>';
+  html+='<div class="tbl-wrap"><table><thead><tr><th>Club</th><th>Président</th><th>Classe</th><th>Statut</th></tr></thead><tbody>';
+  const nomsClubs={SANTE:'Club Santé',ROBOTIQUE:'Club Robotique',FOOTBALL:'Club Football Les Princes',LITTERAIRE:'Club Littéraire',SCIENTIFIQUE:'Club Scientifique',CUISINE:'Club Cuisine',ARCHITECTURE:'Club Architecture'};
+  clubs.forEach(function(c){
+    const badge=c.statut==='PUBLIE'?'<span class="bdg bg-vert" style="font-size:0.68em">Publié</span>':(c.statut==='VIDE'?'<span class="bdg" style="background:#eee;color:#666;font-size:0.68em">Non renseigné</span>':'<span class="bdg bg-orange" style="font-size:0.68em">Brouillon</span>');
+    html+='<tr><td><strong>'+(nomsClubs[c.club]||c.club)+'</strong></td>';
+    html+='<td style="font-size:0.8em">'+(c.presidentNom||'—')+(c.telPere?'<br><span style="color:var(--gris);font-size:0.85em">'+c.telPere+'</span>':'')+'</td>';
+    html+='<td style="font-size:0.8em">'+(c.presidentClasse||'—')+'</td><td>'+badge+'</td></tr>';
+  });
+  html+='</tbody></table></div>';
+
+  body.innerHTML=html;
+}
+
+async function debloquerPublicationChefsDir(){
+  const ok=window.confirm('Débloquer la publication des Chefs de classe et Présidents de club après la date limite (05/10/2026) ?\n\nCette action permettra à tous les éducateurs de cette école de publier même en retard.');
+  if(!ok)return;
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const directeur=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+  try{
+    const resp=await fetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
+      action:'DEBLOQUER_PUBLICATION_CHEFS',ecole:currentStaff.ecole,directeur:directeur
+    })});
+    const result=await resp.json();
+    if(result&&result.ok){showToast('Publication débloquée','success');chargerChefsClasseDir();}
+    else{showToast('Erreur : '+(result&&result.message||'inconnue'),'error');}
+  }catch(e){showToast('Erreur réseau','error');}
+}
+  async function chargerChefsClasseCom(){
+  const body=document.getElementById('comChefsBody');
+  if(!body||!currentStaff)return;
+  body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  const ecole=currentStaff.ecole;
+
+  function fetchJSONP(type,params){
+    return new Promise(function(resolve){
+      const cbName='ccc_'+Date.now()+'_'+Math.floor(Math.random()*10000);
+      const script=document.createElement('script');
+      const p=new URLSearchParams(Object.assign({callback:cbName,type:type,ecole:ecole},params||{}));
+      window[cbName]=function(res){delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+      script.onerror=function(){delete window[cbName];resolve({ok:false});};
+      script.src=APPS_SCRIPT_POINTAGE+'?'+p.toString();
+      document.body.appendChild(script);
+    });
+  }
+
+  const [resClasses,resClubs]=await Promise.all([
+    fetchJSONP('GET_CHEFS_CLASSE'),
+    fetchJSONP('GET_PRESIDENTS_CLUB')
+  ]);
+
+  const classes=(resClasses&&resClasses.ok)?resClasses.classes||[]:[];
+  const clubs=(resClubs&&resClubs.ok)?resClubs.clubs||[]:[];
+
+  const cnt=document.getElementById('comChefsCount');
+  if(cnt)cnt.textContent='('+classes.filter(function(c){return c.statut==='PUBLIE';}).length+'/'+classes.length+' classes publiées)';
+
+  let html='';
+  html+='<div style="padding:10px 14px;border-bottom:1px solid var(--border)">';
+  html+='<button onclick="chargerChefsClasseCom()" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.85em;font-weight:600;cursor:pointer">🔄 Actualiser</button>';
+  html+='</div>';
+
+  html+='<div style="padding:10px 14px 4px;font-size:0.78em;font-weight:700;color:var(--bleu)">👑 Chefs & Sous-chefs de classe</div>';
+  if(!classes.length){
+    html+='<p style="padding:10px 14px;font-size:0.8em;color:var(--gris)">Aucune donnée pour le moment.</p>';
+  }else{
+    html+='<div class="tbl-wrap"><table><thead><tr><th>Classe</th><th>Chef</th><th>Sous-chef</th><th>Statut</th></tr></thead><tbody>';
+    classes.forEach(function(c){
+      const badge=c.statut==='PUBLIE'?'<span class="bdg bg-vert" style="font-size:0.68em">Publié</span>':'<span class="bdg bg-orange" style="font-size:0.68em">Brouillon</span>';
+      html+='<tr><td><strong>'+c.classe+'</strong></td>';
+      html+='<td style="font-size:0.8em">'+(c.chefNom||'—')+(c.chefTelPere?'<br><span style="color:var(--gris);font-size:0.85em">'+c.chefTelPere+'</span>':'')+'</td>';
+      html+='<td style="font-size:0.8em">'+(c.sousChefNom||'—')+(c.sousChefTelPere?'<br><span style="color:var(--gris);font-size:0.85em">'+c.sousChefTelPere+'</span>':'')+'</td>';
+      html+='<td>'+badge+'</td></tr>';
+    });
+    html+='</tbody></table></div>';
+  }
+
+  html+='<div style="padding:14px 14px 4px;font-size:0.78em;font-weight:700;color:var(--violet)">🏆 Présidents de club</div>';
+  html+='<div class="tbl-wrap"><table><thead><tr><th>Club</th><th>Président</th><th>Classe</th><th>Statut</th></tr></thead><tbody>';
+  const nomsClubs={SANTE:'Club Santé',ROBOTIQUE:'Club Robotique',FOOTBALL:'Club Football Les Princes',LITTERAIRE:'Club Littéraire',SCIENTIFIQUE:'Club Scientifique',CUISINE:'Club Cuisine',ARCHITECTURE:'Club Architecture'};
+  clubs.forEach(function(c){
+    const badge=c.statut==='PUBLIE'?'<span class="bdg bg-vert" style="font-size:0.68em">Publié</span>':(c.statut==='VIDE'?'<span class="bdg" style="background:#eee;color:#666;font-size:0.68em">Non renseigné</span>':'<span class="bdg bg-orange" style="font-size:0.68em">Brouillon</span>');
+    html+='<tr><td><strong>'+(nomsClubs[c.club]||c.club)+'</strong></td>';
+    html+='<td style="font-size:0.8em">'+(c.presidentNom||'—')+(c.telPere?'<br><span style="color:var(--gris);font-size:0.85em">'+c.telPere+'</span>':'')+'</td>';
+    html+='<td style="font-size:0.8em">'+(c.presidentClasse||'—')+'</td><td>'+badge+'</td></tr>';
+  });
+  html+='</tbody></table></div>';
+
+  body.innerHTML=html;
+}
   function chargerElevesSansResultat(prefix){
   var body=document.getElementById(prefix+'SansResultatBody');
   var cnt=document.getElementById(prefix+'SansResultatCount');
