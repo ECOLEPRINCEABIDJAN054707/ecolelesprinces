@@ -185,9 +185,9 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
  <div id="sectionStatutMena" style="display:none;margin:0 16px 10px;background:white;border-radius:12px;padding:14px;box-shadow:0 4px 20px rgba(0,0,0,0.1)">
   <p style="font-size:0.8em;font-weight:bold;color:#1F4E79;margin-bottom:10px">📋 Statut inscription MENA 2026-2027</p>
   <div style="display:flex;gap:8px;margin-bottom:10px">
-    <div id="badgeMenaInscription" style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;font-size:0.7em;font-weight:bold">Inscription</div>
-    <div id="badgeMenaActualise" style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;font-size:0.7em;font-weight:bold">Actualisation</div>
-    <div id="badgeMenaPhoto" style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;font-size:0.7em;font-weight:bold">Photo</div>
+ <div id="badgeMenaInscription" style="flex:1;text-align:center;padding:10px 4px;border-radius:8px;font-size:0.85em;font-weight:bold">Inscription en ligne</div>
+   <div id="badgeMenaActualise" style="flex:1;text-align:center;padding:10px 4px;border-radius:8px;font-size:0.85em;font-weight:bold">Actualisation</div>
+   <div id="badgeMenaPhoto" style="flex:1;text-align:center;padding:10px 4px;border-radius:8px;font-size:0.85em;font-weight:bold">Photo</div>
   </div>
   <div id="messageMenaAction" style="font-size:0.8em;padding:10px;border-radius:8px;text-align:center"></div>
 </div> <div id="sectionAnnonces" style="display:none;">
@@ -2068,9 +2068,9 @@ function genererProgTrimPDF() {
     if (!el) return;
     el.style.background = ok ? '#E8F5E9' : '#FFF3E0';
     el.style.color = ok ? '#2E7D32' : '#E65100';
-    el.textContent = (ok ? '✅ ' : '🟠 ') + texte;
+    el.textContent = (ok ? '✅ ' : '🟠 ') + texte + ' ' + (ok ? 'OK' : 'NON');
   }
-  styleBadge('badgeMenaInscription', inscOK, 'Inscription');
+  styleBadge('badgeMenaInscription', inscOK, 'Inscription en ligne');
   styleBadge('badgeMenaActualise', actOK, 'Actualisation');
   styleBadge('badgeMenaPhoto', photoOK, 'Photo');
 
