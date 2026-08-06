@@ -182,7 +182,15 @@ body { font-family:Arial,sans-serif; background:#f0f4f8; color:#222; min-height:
   <div id="eleveCard"></div>
   <div id="statutPay">
   <div id="paiement2026Bloc" style="display:none;margin-top:6px;"></div></div>
-  <div id="sectionAnnonces" style="display:none;">
+ <div id="sectionStatutMena" style="display:none;margin:0 16px 10px;background:white;border-radius:12px;padding:14px;box-shadow:0 4px 20px rgba(0,0,0,0.1)">
+  <p style="font-size:0.8em;font-weight:bold;color:#1F4E79;margin-bottom:10px">📋 Statut inscription MENA 2026-2027</p>
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <div id="badgeMenaInscription" style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;font-size:0.7em;font-weight:bold">Inscription</div>
+    <div id="badgeMenaActualise" style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;font-size:0.7em;font-weight:bold">Actualisation</div>
+    <div id="badgeMenaPhoto" style="flex:1;text-align:center;padding:8px 4px;border-radius:8px;font-size:0.7em;font-weight:bold">Photo</div>
+  </div>
+  <div id="messageMenaAction" style="font-size:0.8em;padding:10px;border-radius:8px;text-align:center"></div>
+</div> <div id="sectionAnnonces" style="display:none;">
     <div class="section" style="border-left:4px solid #C62828;">
       <div class="sec-header" style="background:#C62828;" onclick="toggleSec(this)">&#128226; ANNONCES DE L'ECOLE <span>v</span></div>
       <div class="sec-body" id="annoncesBody"></div>
@@ -1192,7 +1200,7 @@ async function afficherEspaceParent(eleve) {
     document.getElementById("sectionBulletinsMensuels").style.display = "none";
     afficherSectionBloquee(eleve, soldeAccesParsed, verseParsed);
   }
-  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerProgrammeTrimestrielParent(eleve);chargerCarnetNotes(eleve);
+  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerStatutMenaParent(eleve);chargerProgrammeTrimestrielParent(eleve);chargerCarnetNotes(eleve);
   window._eleveActuel = eleve;
   document.getElementById("loginWrapper").style.display = "none";
   document.getElementById("parentSpace").style.display = "block";
@@ -2030,6 +2038,66 @@ function genererProgTrimPDF() {
   w.document.write(html);
   w.document.write('</body></html>');
   w.document.close();
+}
+ async function chargerStatutMenaParent(eleve) {
+  const section = document.getElementById('sectionStatutMena');
+  if (!section) return;
+  const sheetsId = window._sheetsId2026 || eleve.sheetsId;
+  if (!sheetsId) return;
+
+  const cbName = 'menap_' + Date.now();
+  const script = document.createElement('script');
+  const params = new URLSearchParams({callback: cbName, type: 'GET_STATUT_MENA_PARENT', sheetsId: sheetsId, matricule: eleve.matricule});
+
+  const data = await new Promise(resolve => {
+    window[cbName] = res => { delete window[cbName]; try{document.body.removeChild(script);}catch(e){}; resolve(res); };
+    script.onerror = () => { delete window[cbName]; resolve({ok:false}); };
+    script.src = 'https://script.google.com/macros/s/AKfycbx7nBhAMxM_zAMAHCPfPQPkktJ9avtOXm2igfzgOuw9PF1jW0Y7ElUApPoeHvw_F-pT/exec?' + params.toString();
+    document.body.appendChild(script);
+    setTimeout(() => { if(window[cbName]){ delete window[cbName]; resolve({ok:false}); } }, 15000);
+  });
+
+  if (!data || !data.ok || !data.trouve) { return; }
+
+  const inscOK = data.inscriptionLigne === 'OUI';
+  const actOK = data.actualise === 'OUI';
+  const photoOK = data.photo === 'OUI';
+
+  function styleBadge(id, ok, texte) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.background = ok ? '#E8F5E9' : '#FFF3E0';
+    el.style.color = ok ? '#2E7D32' : '#E65100';
+    el.textContent = (ok ? '✅ ' : '🟠 ') + texte;
+  }
+  styleBadge('badgeMenaInscription', inscOK, 'Inscription');
+  styleBadge('badgeMenaActualise', actOK, 'Actualisation');
+  styleBadge('badgeMenaPhoto', photoOK, 'Photo');
+
+  const msgDiv = document.getElementById('messageMenaAction');
+  let message = '', bg = '#E8F5E9', couleur = '#2E7D32';
+  if (!inscOK) {
+    message = 'Inscription en ligne à faire sur agfne.sigfne.net (paiement Wave/Orange/MTN)';
+    bg = '#FFEBEE'; couleur = '#C62828';
+  } else if (!actOK && !photoOK) {
+    message = 'Rendez-vous à l\'école avec le reçu d\'inscription pour actualisation et prise de vue';
+    bg = '#FFF3E0'; couleur = '#E65100';
+  } else if (!actOK) {
+    message = 'Rendez-vous à l\'école avec le reçu d\'inscription pour actualisation';
+    bg = '#FFF3E0'; couleur = '#E65100';
+  } else if (!photoOK) {
+    message = 'Rendez-vous à l\'école avec le reçu d\'inscription pour la prise de vue';
+    bg = '#FFF3E0'; couleur = '#E65100';
+  } else {
+    message = '✓ Dossier complet';
+    bg = '#E8F5E9'; couleur = '#2E7D32';
+  }
+  msgDiv.style.background = bg;
+  msgDiv.style.color = couleur;
+  msgDiv.style.fontWeight = 'bold';
+  msgDiv.textContent = message;
+
+  section.style.display = 'block';
 }
   async function chargerInscription2026(eleve) {
   const section = document.getElementById('sectionInscription2026');
