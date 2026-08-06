@@ -6005,7 +6005,24 @@ async function chargerResultatsEtMessages(ecole,profil){
   ['dirResFiltreClasse','comResFiltreClasse'].forEach(id=>{const s=document.getElementById(id);if(s)s.innerHTML='<option value="">Toutes les classes</option>';});
   if(profil==='DIR'){const el=document.getElementById('dirResCount');if(el)el.textContent='('+cRes+' eleves)';const em=document.getElementById('dirMsgCount');if(em)em.textContent='('+cMsg+' msg · '+cCon+' connexions)';renderTableResultats(resultats,'dirResTable','dirResFiltreClasse','dirResFiltreDecision','dirResFiltreNom');renderMessages(messages,'dirMsgBody',true);}
   else if(profil==='COM'){const el=document.getElementById('comResCount');if(el)el.textContent='('+cRes+' eleves)';const em=document.getElementById('comMsgCount');if(em)em.textContent='('+cMsg+' msg · '+cCon+' connexions)';renderTableResultats(resultats,'comResTable','comResFiltreClasse','comResFiltreDecision','comResFiltreNom');renderMessages(messages,'comMsgBody',true);}
-  else if(profil==='EDU'){const em=document.getElementById('eduMsgCount');if(em)em.textContent='('+cMsg+' msg)';renderMessages(messages,'eduMsgBody',false);}
+ else if(profil==='EDU'){
+    // ⚠️ FILTRE — restreint les messages parents aux classes de l'éducateur
+    var classesEduMsg = currentStaff.classes || [];
+    function _normMsgEdu(s){return String(s||'').toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U').replace(/[ÔÖÓÒÕ]/g,'O').replace(/[ÎÏÍÌ]/g,'I').replace(/[-_]/g,' ').replace(/\s+/g,' ');}
+    var messagesEdu = messages;
+    if(classesEduMsg.length){
+      messagesEdu = messages.filter(function(m){
+        if(!m.classe) return false; // pas de classe renseignée = pas rattachable, on exclut par prudence
+        return classesEduMsg.some(function(cl){
+          var nc=_normMsgEdu(m.classe), ncl=_normMsgEdu(cl);
+          return nc===ncl || nc.indexOf(ncl+' ')===0 || nc.indexOf(' '+ncl)>=0 || ncl.indexOf(nc+' ')===0;
+        });
+      });
+    }
+    var cMsgEdu=messagesEdu.filter(function(m){return m.message;}).length;
+    const em=document.getElementById('eduMsgCount');if(em)em.textContent='('+cMsgEdu+' msg)';
+    renderMessages(messagesEdu,'eduMsgBody',false);
+  }
 }
 
 // ══ NOTES ET DEVOIRS ENSEIGNANTS (ESPACE EDU) ══
