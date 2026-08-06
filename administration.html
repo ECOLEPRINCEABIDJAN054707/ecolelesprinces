@@ -3868,6 +3868,19 @@ async function chargerListesAttenteEdu() {
     contenu.innerHTML = '<p style="padding:14px;font-size:0.85em;color:var(--rouge)">Erreur de chargement : ' + (data && data.error || 'inconnue') + '</p>';
     return;
   }
+// ⚠️ FILTRE — restreint aux classes de l'éducateur connecté
+  var classesEduAttente = currentStaff.classes || [];
+  function _normAttEdu(s){return String(s||'').toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U').replace(/[ÔÖÓÒÕ]/g,'O').replace(/[ÎÏÍÌ]/g,'I').replace(/[-_]/g,' ').replace(/\s+/g,' ');}
+  function _appartientEduAttente(niveauOuClasse){
+    if(!classesEduAttente.length) return true;
+    return classesEduAttente.some(function(cl){
+      var nc=_normAttEdu(niveauOuClasse), ncl=_normAttEdu(cl);
+      return nc===ncl || nc.indexOf(ncl+' ')===0 || nc.indexOf(' '+ncl)>=0 || ncl.indexOf(nc+' ')===0;
+    });
+  }
+  if(data.listeAttentePhysique) data.listeAttentePhysique = data.listeAttentePhysique.filter(function(e){return _appartientEduAttente(e.niveau||e.classe);});
+  if(data.listeAttenteLigneConfirmee) data.listeAttenteLigneConfirmee = data.listeAttenteLigneConfirmee.filter(function(e){return _appartientEduAttente(e.niveau||e.classe);});
+  if(data.listeAttenteLigneNonVerifiee) data.listeAttenteLigneNonVerifiee = data.listeAttenteLigneNonVerifiee.filter(function(e){return _appartientEduAttente(e.niveau||e.classe);});
 
   _eduDataListesAttente = data;
 
