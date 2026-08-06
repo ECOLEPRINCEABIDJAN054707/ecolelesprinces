@@ -584,8 +584,8 @@ table tr:nth-child(even){background:#F8FAFD}
       </div>
       <div class="sec-body">
         <div style="display:flex;gap:10px;padding:14px;flex-wrap:wrap;">
-          <a href="generateur_compositions_CPP.html" target="_blank" style="flex:1;min-width:200px;text-decoration:none;background:#1565C0;color:white;padding:12px 16px;border-radius:10px;font-weight:700;font-size:.85rem;text-align:center;display:block;">📝 Générateur de compositions</a>
-          <a href="systeme_pedagogique_V3.html" target="_blank" style="flex:1;min-width:200px;text-decoration:none;background:#2E7D32;color:white;padding:12px 16px;border-radius:10px;font-weight:700;font-size:.85rem;text-align:center;display:block;">📊 Suivi pédagogique réseau</a>
+<a id="lienGenerateurDir" href="generateur_compositions_CPP.html" target="_blank" style="flex:1;min-width:200px;text-decoration:none;background:#1565C0;color:white;padding:12px 16px;border-radius:10px;font-weight:700;font-size:.85rem;text-align:center;display:block;">📝 Générateur de compositions</a>
+            <a id="lienSuiviPedaDir" href="systeme_pedagogique_V3.html" target="_blank" style="flex:1;min-width:200px;text-decoration:none;background:#2E7D32;color:white;padding:12px 16px;border-radius:10px;font-weight:700;font-size:.85rem;text-align:center;display:block;">📊 Suivi pédagogique</a>
         </div>
       </div>
     </div>
@@ -1820,8 +1820,8 @@ async function attribuerMatriculeCom() {
       </div>
       <div class="sec-body">
         <div style="display:flex;gap:10px;padding:14px;flex-wrap:wrap;">
-          <a href="generateur_compositions_CPP.html" target="_blank" style="flex:1;min-width:200px;text-decoration:none;background:#1565C0;color:white;padding:12px 16px;border-radius:10px;font-weight:700;font-size:.85rem;text-align:center;display:block;">📝 Générateur de compositions</a>
-          <a href="systeme_pedagogique_V3.html" target="_blank" style="flex:1;min-width:200px;text-decoration:none;background:#2E7D32;color:white;padding:12px 16px;border-radius:10px;font-weight:700;font-size:.85rem;text-align:center;display:block;">📊 Suivi pédagogique réseau</a>
+<a id="lienGenerateurEdu" href="generateur_compositions_CPP.html" target="_blank" style="flex:1;min-width:200px;text-decoration:none;background:#1565C0;color:white;padding:12px 16px;border-radius:10px;font-weight:700;font-size:.85rem;text-align:center;display:block;">📝 Générateur de compositions</a>
+            <a id="lienSuiviPedaEdu" href="systeme_pedagogique_V3.html" target="_blank" style="flex:1;min-width:200px;text-decoration:none;background:#2E7D32;color:white;padding:12px 16px;border-radius:10px;font-weight:700;font-size:.85rem;text-align:center;display:block;">📊 Suivi pédagogique</a>
         </div>
       </div>
     </div>
@@ -2385,7 +2385,42 @@ const SALAIRES_ADMIN=[{nom:'GONDO TOKPA Gervais',fonction:'Educateur',salaire:22
 const TACHES_DEMO=[{titre:'Preparer recus de paiement mai 2026',prio:'haute',heure:'09h00',done:false},{titre:'Envoyer liste impayes a la direction',prio:'haute',heure:'11h00',done:false},{titre:'Mettre a jour fiches inscription CP1',prio:'normale',heure:'14h00',done:false},{titre:'Commander fournitures de bureau',prio:'basse',heure:'15h00',done:false}];
 const ENSEIGNANTS_APPEL_DEMO=[];
 const NOTES_TYPES={emargement:{titre:'Liste emargement'},notes_d1:{titre:'Devoir N1'},notes_d2:{titre:'Devoir N2'},notes_compo:{titre:'Composition'},recap_trimestre:{titre:'Recapitulatif trimestre'},presence:{titre:'Registre presences'}};
-let currentStaff=null,donneesPointage=[],coursEnAttente=[],coursCourant=null,bulletinEnCours=null,tentativesPin=0,donneesSheetPeda=[],donneesResultats=[],donneesMessages=[],donneesElevesSheets=[],appelDir={};
+// ⚠️ NOUVEAU — Correspondance des codes école pour les outils pédagogiques externes
+const CODE_ECOLE_GENERATEUR = {
+  'CPP LES PRINCES': 'cpp', 'ACADEMIE': 'academie', 'GUINGLO VILLE': 'guinglo',
+  'GNONTINROU': 'gnont', 'KOUTOUAN': 'koutouan', 'SOAKPE': 'soakpe',
+  'AKEIKOI 1': 'akeikoi1', 'AKEIKOI 2': 'akeikoi2', 'CPP PRO': 'pro',
+  'CPP TECH': 'tech', 'ETL PRINCES KOUIBLY': 'kouibly', 'GS RITA ROSANE': 'rita'
+};
+const NOM_ECOLE_SUIVI_PEDA = {
+  'CPP LES PRINCES': 'CPP Les Princes', 'ACADEMIE': 'Académie des Princes',
+  'GUINGLO VILLE': 'Les Princes Guinglo', 'GNONTINROU': 'Les Princes Gnontinrou',
+  'KOUTOUAN': 'Les Princes Koutouan', 'SOAKPE': 'Les Princes Soakpé',
+  'AKEIKOI 1': 'Les Princes Akeïkoï 1', 'AKEIKOI 2': 'Les Princes Akeïkoï 2',
+  'CPP PRO': 'CPP Professionnel', 'CPP TECH': 'CPP Technique',
+  'ETL PRINCES KOUIBLY': 'ETL Princes Kouibly', 'GS RITA ROSANE': 'GS Rita Rosane'
+};
+
+function mettreAJourLiensOutilsPedago(prefixe) {
+  if (!currentStaff) return;
+  var codeGen = CODE_ECOLE_GENERATEUR[currentStaff.ecole] || 'cpp';
+  var nomSuivi = NOM_ECOLE_SUIVI_PEDA[currentStaff.ecole] || '';
+  var profil = currentStaff.profil || '';
+  var classes = (currentStaff.classes || []).join(',');
+
+  var urlGen = 'generateur_compositions_CPP.html?e=' + encodeURIComponent(codeGen)
+    + '&profil=' + encodeURIComponent(profil)
+    + (classes ? '&classes=' + encodeURIComponent(classes) : '');
+  var urlSuivi = 'systeme_pedagogique_V3.html?ecole=' + encodeURIComponent(nomSuivi)
+    + '&profil=' + encodeURIComponent(profil)
+    + (classes ? '&classes=' + encodeURIComponent(classes) : '');
+
+  var lienGen = document.getElementById('lienGenerateur' + prefixe);
+  var lienSuivi = document.getElementById('lienSuiviPeda' + prefixe);
+  if (lienGen) lienGen.href = urlGen;
+  if (lienSuivi) lienSuivi.href = urlSuivi;
+}
+  let currentStaff=null,donneesPointage=[],coursEnAttente=[],coursCourant=null,bulletinEnCours=null,tentativesPin=0,donneesSheetPeda=[],donneesResultats=[],donneesMessages=[],donneesElevesSheets=[],appelDir={};
 let notesTypeCourant='',notesClasseChoisie='',notesMatieresChoisies=[],notesElevesCache={};
 function getTarif(ecole,classe){const t=TARIFS[ecole]||TARIF_DEFAUT;return/^(2NDE|1[EÈ]RE|TLE|TERMINALE)/i.test(classe||'')?t.lycee:t.college;}
 function calculerSalaireV2(dm,tarif){const S=50,hC=Math.floor(dm/60),r=dm%60;let hV=hC;if(r>=S)hV+=1;return{heuresValidees:hV,resteMin:r,salaire:hV*tarif,salPartiel:Math.round(hV*tarif*0.5)};}
@@ -2619,6 +2654,7 @@ setTimeout(function(){chargerMasseSalarialeDir(s.ecole);},600);
   if(!isPRIM)chargerPointage();
   chargerResultatsEtMessages(s.ecole,'DIR');
   chargerSyntheseAvecCache(s.ecole).then(function(eleves){window._dirEleves=eleves||[];});
+ mettreAJourLiensOutilsPedago('Dir');
   document.getElementById('espaceDir').style.display='block';
   // Vérifier contacts manquants en arrière-plan
   setTimeout(function(){verifierContactsManquantsDir(s);}, 1500);
@@ -4946,6 +4982,7 @@ function afficherEdu(s){
   setTimeout(() => chargerProgrammeTrimestrielEdu(s), 600);
   setTimeout(() => chargerPointageEdu('jour'), 800);
  setTimeout(function(){ _rechargerListeReception('Edu'); }, 700);
+ mettreAJourLiensOutilsPedago('Edu');
   document.getElementById('espaceEdu').style.display='block';
 }
 async function chargerClassesEdu(s){
