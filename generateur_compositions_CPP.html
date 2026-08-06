@@ -693,6 +693,8 @@ let ecoleCode = 'CPP LES PRINCES';
 let themeSelectionne = 'fonctions';
 let toastTimer = null;
 
+let classesEduGen = []; // ⚠️ NOUVEAU — classes autorisées si Educateur
+
 window.onload = function() {
   try {
     var params = new URLSearchParams(window.location.search);
@@ -700,6 +702,14 @@ window.onload = function() {
     ecoleCode = ECOLE_CODES[code] || 'CPP LES PRINCES';
     var chip = document.getElementById('ecoleChip');
     if (chip) chip.textContent = code.toUpperCase();
+
+    // ⚠️ NOUVEAU — restreindre les classes si un Educateur ouvre l'outil
+    var profil = params.get('profil') || '';
+    var classesParam = params.get('classes') || '';
+    if (profil === 'EDU' && classesParam) {
+      classesEduGen = classesParam.split(',').map(function(c){ return c.trim().toUpperCase(); }).filter(Boolean);
+    }
+
     changerExamen();
   } catch(e) { console.error('onload:', e); }
 };
@@ -724,12 +734,24 @@ document.getElementById('statsBar').innerHTML = stats.map(function(s) {
     }).join('');
   }
 
-  // Classes
+ // Classes
   var classes = CLASSES[examen] || CLASSES['BEPC'];
+  if (classesEduGen.length) {
+    classes = classes.filter(function(cl) {
+      var clNorm = cl.toUpperCase().trim();
+      return classesEduGen.some(function(ce) {
+        return clNorm === ce || clNorm.indexOf(ce + ' ') === 0 || ce.indexOf(clNorm + ' ') === 0;
+      });
+    });
+  }
   var selClasse = document.getElementById('selClasse');
-  selClasse.innerHTML = classes.map(function(cl) {
-    return '<option value="' + cl + '">' + cl + '</option>';
-  }).join('');
+  if (!classes.length) {
+    selClasse.innerHTML = '<option value="">-- Aucune classe assignée à ce niveau --</option>';
+  } else {
+    selClasse.innerHTML = classes.map(function(cl) {
+      return '<option value="' + cl + '">' + cl + '</option>';
+    }).join('');
+  }
 
   // Trimestre / Semestre
   var labelP = document.getElementById('labelPeriode');
@@ -754,14 +776,26 @@ function changerFiliere() {
     document.getElementById('selFiliere').value = filiere;
   }
 
-  // Classes filtrées selon la filière choisie
+// Classes filtrées selon la filière choisie
   if (isTech && filiere) {
     var keyClasses = examen + '_' + filiere;
     var classesFiltrees = CLASSES[keyClasses] || CLASSES[examen] || [];
+    if (classesEduGen.length) {
+      classesFiltrees = classesFiltrees.filter(function(cl) {
+        var clNorm = cl.toUpperCase().trim();
+        return classesEduGen.some(function(ce) {
+          return clNorm === ce || clNorm.indexOf(ce + ' ') === 0 || ce.indexOf(clNorm + ' ') === 0;
+        });
+      });
+    }
     var selClasse = document.getElementById('selClasse');
-    selClasse.innerHTML = classesFiltrees.map(function(cl) {
-      return '<option value="' + cl + '">' + cl + '</option>';
-    }).join('');
+    if (!classesFiltrees.length) {
+      selClasse.innerHTML = '<option value="">-- Aucune classe assignée à cette filière --</option>';
+    } else {
+      selClasse.innerHTML = classesFiltrees.map(function(cl) {
+        return '<option value="' + cl + '">' + cl + '</option>';
+      }).join('');
+    }
   }
 
   // Matières selon filière
