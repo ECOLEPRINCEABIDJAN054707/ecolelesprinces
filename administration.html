@@ -961,6 +961,19 @@ nom, poste, type, salaireFixe, categorie, nationalite, cnps, embauche, tel
 // LISTE PERSONNEL MODIFIABLE — Espace Directeur
 // ============================================================
 let _personnelListeCache = [];
+  let _personnelFiltreActif = 'TOUS';
+
+function setFiltrePersonnelActif(f) {
+  _personnelFiltreActif = f;
+  const filtered = f === 'TOUS' ? _personnelListeCache : _personnelListeCache.filter(p => p.actif === f);
+  renderListePersonnelDir(filtered);
+}
+  function ajouterLignePersonnelVide() {
+  _personnelListeCache.push({ ligne: null, nom: '', poste: '', code: '', actif: 'OUI', type: 'VACATAIRE', salaire: 0 });
+  const filtered = _personnelFiltreActif === 'TOUS' ? _personnelListeCache : _personnelListeCache.filter(p => p.actif === _personnelFiltreActif);
+  renderListePersonnelDir(filtered);
+  setTimeout(() => { const el = document.getElementById('persNom_'+(filtered.length-1)); if (el) el.focus(); }, 100);
+}
 
 async function chargerListePersonnelDir() {
   const body = document.getElementById('dirPersonnelBody');
@@ -991,7 +1004,13 @@ async function chargerListePersonnelDir() {
 function renderListePersonnelDir(rows) {
   const body = document.getElementById('dirPersonnelBody');
   if (!rows.length) { body.innerHTML = '<p style="padding:14px;color:var(--gris)">Aucun personnel enregistré</p>'; return; }
-  let h = '<div class="tbl-wrap"><table><thead><tr><th>Nom</th><th>Poste</th><th>Type</th><th>Salaire fixe</th><th>Actif</th><th></th></tr></thead><tbody>';
+  let hFiltre = '<div style="padding:10px 14px;display:flex;gap:6px">'
+    + '<button onclick="setFiltrePersonnelActif(\'TOUS\')" style="padding:6px 12px;border-radius:20px;border:1.5px solid '+(_personnelFiltreActif==='TOUS'?'var(--bleu)':'var(--border)')+';background:'+(_personnelFiltreActif==='TOUS'?'var(--bleu)':'#fff')+';color:'+(_personnelFiltreActif==='TOUS'?'#fff':'var(--gris)')+';font-size:0.78em;font-weight:700;cursor:pointer">Tous ('+_personnelListeCache.length+')</button>'
+    + '<button onclick="setFiltrePersonnelActif(\'OUI\')" style="padding:6px 12px;border-radius:20px;border:1.5px solid '+(_personnelFiltreActif==='OUI'?'var(--vert)':'var(--border)')+';background:'+(_personnelFiltreActif==='OUI'?'var(--vert)':'#fff')+';color:'+(_personnelFiltreActif==='OUI'?'#fff':'var(--gris)')+';font-size:0.78em;font-weight:700;cursor:pointer">✓ Actifs ('+_personnelListeCache.filter(p=>p.actif==='OUI').length+')</button>'
+    + '<button onclick="setFiltrePersonnelActif(\'NON\')" style="padding:6px 12px;border-radius:20px;border:1.5px solid '+(_personnelFiltreActif==='NON'?'var(--rouge)':'var(--border)')+';background:'+(_personnelFiltreActif==='NON'?'var(--rouge)':'#fff')+';color:'+(_personnelFiltreActif==='NON'?'#fff':'var(--gris)')+';font-size:0.78em;font-weight:700;cursor:pointer">✗ Désactivés ('+_personnelListeCache.filter(p=>p.actif!=='OUI').length+')</button>'
+    + '<button onclick="ajouterLignePersonnelVide()" style="padding:6px 14px;border-radius:20px;border:none;background:var(--violet);color:#fff;font-size:0.78em;font-weight:700;cursor:pointer;margin-left:auto">➕ Nouvelle personne</button>'
+    + '</div>';
+  let h = hFiltre + '<div class="tbl-wrap"><table><thead><tr><th>Nom</th><th>Poste</th><th>Type</th><th>Salaire fixe</th><th>Actif</th><th></th></tr></thead><tbody>';
   rows.forEach((p, idx) => {
     h += '<tr>'
       + '<td><input type="text" id="persNom_'+idx+'" value="'+p.nom.replace(/"/g,'&quot;')+'" onblur="sauvegarderPersonnelDir('+idx+')" style="width:100%;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;font-weight:600"></td>'
@@ -1023,24 +1042,34 @@ async function sauvegarderPersonnelDir(idx) {
   const p = _personnelListeCache[idx];
   if (!p) return;
   const nom = document.getElementById('persNom_'+idx).value.trim();
+  const doublon = _personnelListeCache.find((autre, i) => i !== idx && autre.nom.trim().toLowerCase() === nom.toLowerCase());
+  if (doublon) {
+    const continuer = confirm('⚠️ "' + nom + '" existe déjà dans la liste (poste: ' + doublon.poste + '). Continuer quand même ?');
+    if (!continuer) { document.getElementById('persNom_'+idx).value = p.nom; return; }
+  }
   const poste = document.getElementById('persPoste_'+idx).value.trim();
   const type = document.getElementById('persType_'+idx).value;
   const salaire = document.getElementById('persSalaire_'+idx).value;
   const actif = document.getElementById('persActif_'+idx).value;
+  if (actif !== p.actif) {
+      const label = actif === 'OUI' ? 'RÉACTIVER' : 'DÉSACTIVER';
+      const ok = confirm(label + ' ' + (nom || p.nom) + ' ?');
+      if (!ok) { document.getElementById('persActif_'+idx).value = p.actif; return; }
+    }
   const statutCell = document.getElementById('persStatut_'+idx);
   if (!nom || !poste) { statutCell.textContent = 'Nom/poste requis'; statutCell.style.color = 'var(--rouge)'; return; }
   statutCell.textContent = '...';
   const sheetsId = SHEETS_IDS[currentStaff.ecole];
   try {
-    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A'+p.ligne+':F'+p.ligne+'?valueInputOption=RAW&key='+API_KEY;
-    // Écriture directe impossible sans OAuth côté client — on passe par Apps Script
-    const params = new URLSearchParams({
-      action: 'majPersonnelEnseignant', sheetsId, ligne: p.ligne,
-      nom, poste, type, salaire, actif
-    });
+   const estNouveau = !p.ligne;
+    const params = new URLSearchParams(estNouveau
+      ? { action: 'ajouterPersonnelSimple', sheetsId, nom, poste, type, salaire, actif }
+      : { action: 'majPersonnelEnseignant', sheetsId, ligne: p.ligne, nom, poste, type, salaire, actif }
+    );
     const result = await appelJSONP(APP_SCRIPT_URL_ADMIN, Object.fromEntries(params));
     if (result && result.succes) {
-      p.nom = nom; p.poste = poste; p.type = type; p.salaire = salaire; p.actif = actif;
+      p.nom = nom; p.poste = poste; p.type = type; p.salaire = salaire; p.actif = actif; 
+      if (estNouveau && result.ligne) p.ligne = result.ligne;
       statutCell.textContent = '✓ enregistré'; statutCell.style.color = 'var(--vert)';
     } else {
       statutCell.textContent = 'Erreur'; statutCell.style.color = 'var(--rouge)';
