@@ -898,6 +898,14 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div>
+  <div class="section" id="dirSecListePersonnel">
+  <div class="sec-head sec-violet" onclick="chargerListePersonnelDir();toggleSec(this)">
+    <h3>📋 Personnel du réseau <span id="dirPersonnelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirPersonnelBody">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour charger la liste du personnel (enseignants et personnel administratif).</p>
+  </div>
+</div>
 
 <script>
 async function ajouterPersonnelDir() {
@@ -948,6 +956,98 @@ nom, poste, type, salaireFixe, categorie, nationalite, cnps, embauche, tel
   setTimeout(() => { if (window[cbName]) { delete window[cbName]; msgDiv.textContent = '❌ Délai dépassé.'; } }, 15000);
   script.src = APP_SCRIPT_URL_ADMIN + '?' + params.toString();
   document.body.appendChild(script);
+}
+// ============================================================
+// LISTE PERSONNEL MODIFIABLE — Espace Directeur
+// ============================================================
+let _personnelListeCache = [];
+
+async function chargerListePersonnelDir() {
+  const body = document.getElementById('dirPersonnelBody');
+  const sheetsId = SHEETS_IDS[currentStaff.ecole];
+  if (!sheetsId) { body.innerHTML = '<p style="padding:14px;color:var(--rouge)">École non configurée</p>'; return; }
+  body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  try {
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r = await fetch(url); const data = await r.json();
+    const rows = (data.values || []).map((row, i) => ({
+      ligne: i + 2,
+      nom: String(row[0]||'').trim(),
+      poste: String(row[1]||'').trim(),
+      code: String(row[2]||'').trim(),
+      actif: String(row[3]||'').trim().toUpperCase(),
+      type: String(row[4]||'VACATAIRE').trim().toUpperCase(),
+      salaire: row[5]||0
+    })).filter(p => p.nom);
+    _personnelListeCache = rows;
+    const cnt = document.getElementById('dirPersonnelCount');
+    if (cnt) cnt.textContent = '('+rows.length+' personne(s))';
+    renderListePersonnelDir(rows);
+  } catch(e) {
+    body.innerHTML = '<p style="padding:14px;color:var(--rouge)">Erreur de chargement</p>';
+  }
+}
+
+function renderListePersonnelDir(rows) {
+  const body = document.getElementById('dirPersonnelBody');
+  if (!rows.length) { body.innerHTML = '<p style="padding:14px;color:var(--gris)">Aucun personnel enregistré</p>'; return; }
+  let h = '<div class="tbl-wrap"><table><thead><tr><th>Nom</th><th>Poste</th><th>Type</th><th>Salaire fixe</th><th>Actif</th><th></th></tr></thead><tbody>';
+  rows.forEach((p, idx) => {
+    h += '<tr>'
+      + '<td><input type="text" id="persNom_'+idx+'" value="'+p.nom.replace(/"/g,'&quot;')+'" onblur="sauvegarderPersonnelDir('+idx+')" style="width:100%;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;font-weight:600"></td>'
+      + '<td><input type="text" id="persPoste_'+idx+'" value="'+p.poste.replace(/"/g,'&quot;')+'" onblur="sauvegarderPersonnelDir('+idx+')" style="width:100%;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em"></td>'
+      + '<td><select id="persType_'+idx+'" onchange="sauvegarderPersonnelDir('+idx+')" style="padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em">'
+        + '<option value="VACATAIRE"'+(p.type==='VACATAIRE'?' selected':'')+'>Vacataire</option>'
+        + '<option value="PERMANENT"'+(p.type==='PERMANENT'?' selected':'')+'>Permanent</option>'
+        + '</select></td>'
+      + '<td><input type="number" id="persSalaire_'+idx+'" value="'+p.salaire+'" onblur="sauvegarderPersonnelDir('+idx+')" style="width:100px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em"></td>'
+      + '<td><select id="persActif_'+idx+'" onchange="sauvegarderPersonnelDir('+idx+')" style="padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;font-weight:700;color:'+(p.actif==='OUI'?'var(--vert)':'var(--rouge)')+'">'
+        + '<option value="OUI"'+(p.actif==='OUI'?' selected':'')+'>✓ Actif</option>'
+        + '<option value="NON"'+(p.actif!=='OUI'?' selected':'')+'>✗ Désactivé</option>'
+        + '</select></td>'
+      + '<td id="persStatut_'+idx+'" style="font-size:0.8em;color:var(--gris)">—</td>'
+      + '</tr>';
+  });
+  h += '</tbody></table></div>';
+  h += '<div style="padding:10px 14px"><input type="text" id="persSearch" oninput="filtrerListePersonnelDir()" placeholder="Rechercher un nom..." style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"></div>';
+  body.innerHTML = h;
+}
+
+function filtrerListePersonnelDir() {
+  const q = document.getElementById('persSearch').value.toLowerCase();
+  const filtered = _personnelListeCache.filter(p => p.nom.toLowerCase().includes(q) || p.poste.toLowerCase().includes(q));
+  renderListePersonnelDir(filtered);
+}
+
+async function sauvegarderPersonnelDir(idx) {
+  const p = _personnelListeCache[idx];
+  if (!p) return;
+  const nom = document.getElementById('persNom_'+idx).value.trim();
+  const poste = document.getElementById('persPoste_'+idx).value.trim();
+  const type = document.getElementById('persType_'+idx).value;
+  const salaire = document.getElementById('persSalaire_'+idx).value;
+  const actif = document.getElementById('persActif_'+idx).value;
+  const statutCell = document.getElementById('persStatut_'+idx);
+  if (!nom || !poste) { statutCell.textContent = 'Nom/poste requis'; statutCell.style.color = 'var(--rouge)'; return; }
+  statutCell.textContent = '...';
+  const sheetsId = SHEETS_IDS[currentStaff.ecole];
+  try {
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A'+p.ligne+':F'+p.ligne+'?valueInputOption=RAW&key='+API_KEY;
+    // Écriture directe impossible sans OAuth côté client — on passe par Apps Script
+    const params = new URLSearchParams({
+      action: 'majPersonnelEnseignant', sheetsId, ligne: p.ligne,
+      nom, poste, type, salaire, actif
+    });
+    const result = await appelJSONP(APP_SCRIPT_URL_ADMIN, Object.fromEntries(params));
+    if (result && result.succes) {
+      p.nom = nom; p.poste = poste; p.type = type; p.salaire = salaire; p.actif = actif;
+      statutCell.textContent = '✓ enregistré'; statutCell.style.color = 'var(--vert)';
+    } else {
+      statutCell.textContent = 'Erreur'; statutCell.style.color = 'var(--rouge)';
+    }
+  } catch(e) {
+    statutCell.textContent = 'Erreur réseau'; statutCell.style.color = 'var(--rouge)';
+  }
 }
 </script>
 <div class="section" id="dirSecChefsClasse">
