@@ -1042,7 +1042,7 @@ async function sauvegarderPersonnelDir(idx) {
   const p = _personnelListeCache[idx];
   if (!p) return;
   const nom = document.getElementById('persNom_'+idx).value.trim();
-  const doublon = _personnelListeCache.find((autre, i) => i !== idx && autre.nom.trim().toLowerCase() === nom.toLowerCase());
+  const doublon = nom && _personnelListeCache.find((autre, i) => i !== idx && autre.nom.trim() && autre.nom.trim().toLowerCase() === nom.toLowerCase());
   if (doublon) {
     const continuer = confirm('⚠️ "' + nom + '" existe déjà dans la liste (poste: ' + doublon.poste + '). Continuer quand même ?');
     if (!continuer) { document.getElementById('persNom_'+idx).value = p.nom; return; }
