@@ -900,7 +900,7 @@ table tr:nth-child(even){background:#F8FAFD}
 </div>
   <div class="section" id="dirSecListePersonnel">
   <div class="sec-head sec-violet" onclick="chargerListePersonnelDir();toggleSec(this)">
-    <h3>📋 Personnel du réseau <span id="dirPersonnelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    <h3>📋 Personnel Enseignant <span id="dirPersonnelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
   </div>
   <div class="sec-body" id="dirPersonnelBody">
     <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour charger la liste du personnel (enseignants et personnel administratif).</p>
@@ -1010,11 +1010,12 @@ function renderListePersonnelDir(rows) {
     + '<button onclick="setFiltrePersonnelActif(\'NON\')" style="padding:6px 12px;border-radius:20px;border:1.5px solid '+(_personnelFiltreActif==='NON'?'var(--rouge)':'var(--border)')+';background:'+(_personnelFiltreActif==='NON'?'var(--rouge)':'#fff')+';color:'+(_personnelFiltreActif==='NON'?'#fff':'var(--gris)')+';font-size:0.78em;font-weight:700;cursor:pointer">✗ Désactivés ('+_personnelListeCache.filter(p=>p.actif!=='OUI').length+')</button>'
     + '<button onclick="ajouterLignePersonnelVide()" style="padding:6px 14px;border-radius:20px;border:none;background:var(--violet);color:#fff;font-size:0.78em;font-weight:700;cursor:pointer;margin-left:auto">➕ Nouvelle personne</button>'
     + '</div>';
-  let h = hFiltre + '<div class="tbl-wrap"><table><thead><tr><th>Nom</th><th>Poste</th><th>Type</th><th>Salaire fixe</th><th>Actif</th><th></th></tr></thead><tbody>';
+  let h = hFiltre + '<div class="tbl-wrap"><table><thead><tr><th>Nom</th><th>Poste</th><th>Code</th><th>Type</th><th>Salaire fixe</th><th>Actif</th><th></th></tr></thead><tbody>';
   rows.forEach((p, idx) => {
     h += '<tr>'
       + '<td><input type="text" id="persNom_'+idx+'" value="'+p.nom.replace(/"/g,'&quot;')+'" onblur="sauvegarderPersonnelDir('+idx+')" style="width:100%;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;font-weight:600"></td>'
       + '<td><input type="text" id="persPoste_'+idx+'" value="'+p.poste.replace(/"/g,'&quot;')+'" onblur="sauvegarderPersonnelDir('+idx+')" style="width:100%;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em"></td>'
+      + '<td><input type="text" id="persCode_'+idx+'" value="'+(p.code||'').replace(/"/g,'&quot;')+'" placeholder="Ex: KJ-4782" onblur="sauvegarderPersonnelDir('+idx+')" style="width:100px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;font-family:monospace;font-weight:700;color:var(--bleu)"></td>'
       + '<td><select id="persType_'+idx+'" onchange="sauvegarderPersonnelDir('+idx+')" style="padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em">'
         + '<option value="VACATAIRE"'+(p.type==='VACATAIRE'?' selected':'')+'>Vacataire</option>'
         + '<option value="PERMANENT"'+(p.type==='PERMANENT'?' selected':'')+'>Permanent</option>'
@@ -1048,6 +1049,7 @@ async function sauvegarderPersonnelDir(idx) {
     if (!continuer) { document.getElementById('persNom_'+idx).value = p.nom; return; }
   }
   const poste = document.getElementById('persPoste_'+idx).value.trim();
+  const code = document.getElementById('persCode_'+idx).value.trim();
   const type = document.getElementById('persType_'+idx).value;
   const salaire = document.getElementById('persSalaire_'+idx).value;
   const actif = document.getElementById('persActif_'+idx).value;
@@ -1063,12 +1065,12 @@ async function sauvegarderPersonnelDir(idx) {
   try {
    const estNouveau = !p.ligne;
     const params = new URLSearchParams(estNouveau
-      ? { action: 'ajouterPersonnelSimple', sheetsId, nom, poste, type, salaire, actif }
-      : { action: 'majPersonnelEnseignant', sheetsId, ligne: p.ligne, nom, poste, type, salaire, actif }
+      ? { action: 'ajouterPersonnelSimple', sheetsId, nom, poste, code, type, salaire, actif }
+      : { action: 'majPersonnelEnseignant', sheetsId, ligne: p.ligne, nom, poste, code, type, salaire, actif }
     );
     const result = await appelJSONP(APP_SCRIPT_URL_ADMIN, Object.fromEntries(params));
     if (result && result.succes) {
-      p.nom = nom; p.poste = poste; p.type = type; p.salaire = salaire; p.actif = actif; 
+      p.nom = nom; p.poste = poste; p.code = code; p.type = type; p.salaire = salaire; p.actif = actif;
       if (estNouveau && result.ligne) p.ligne = result.ligne;
       statutCell.textContent = '✓ enregistré'; statutCell.style.color = 'var(--vert)';
     } else {
