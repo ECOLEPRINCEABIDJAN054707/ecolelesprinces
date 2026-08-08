@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Administration — Réseau Princes Smart School</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Cinzel:wght@600;700&display=swap');
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+@import url('https://fonts.googleapis.com/csrds2?family=DM+Sans:wght@300;400;500;600&family=Cinzel:wght@600;700&display=swap');
+*{margin:0;padding:0;box-sizing:boer-box;-webkit-tap-highlight-color:transparent}
 :root{
   --bleu:#1F4E79;--bleu2:#2E75B6;--vert:#2E7D32;--rouge:#C62828;
   --or:#D4AF37;--or2:#F0C94A;--orange:#E65100;--violet:#4A148C;
@@ -1387,6 +1388,112 @@ function afficherLiensDir(){
     container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement.</p>';
   }
 }
+  function telechargerProgrammeTrimestrielCom() {
+  if (!currentStaff) return;
+  var container = document.getElementById('comProgListe');
+  if (!container || container.querySelector('.spinner-sm')) {
+    showToast('Attendez le chargement du programme', 'error');
+    return;
+  }
+  var lignesTxt = container.innerText.trim();
+  if (!lignesTxt || lignesTxt.indexOf('Aucun programme') !== -1) {
+    showToast('Aucun programme à télécharger', 'error');
+    return;
+  }
+  try {
+    var doc = new jspdf.jsPDF();
+    var pageWidth = doc.internal.pageSize.getWidth();
+    var y = 18;
+
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Programme trimestriel — Devoirs surveillés', pageWidth / 2, y, { align: 'center' });
+    y += 7;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(String(currentStaff.label || currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
+    y += 5;
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text('Généré le ' + new Date().toLocaleDateString('fr-FR'), pageWidth / 2, y, { align: 'center' });
+    y += 8;
+    doc.setTextColor(0);
+
+    var blocs = container.querySelectorAll('div');
+    var classeCourante = '';
+    var matiereCourante = '';
+
+    Array.from(container.children).forEach(function(child) {
+      var texte = child.innerText ? child.innerText.trim() : '';
+      if (!texte) return;
+
+      var estClasse = child.style && child.style.background && child.style.background.indexOf('rgb') !== -1 && child.style.color === 'rgb(255, 255, 255)';
+      var estMatiereBox = child.querySelector && child.querySelector('span') && child.innerHTML.indexOf('#F3E5F5') === -1 && child.style.overflow === 'hidden';
+
+      if (child.textContent && child.className === '' && child.children.length === 0) return;
+    });
+
+    // Parcours simplifié par regroupement texte (classe / matière / devoirs)
+    var htmlBlocs = container.innerHTML.split('<div style="margin:8px 14px 0');
+    var texteBrut = container.innerText;
+    var lignes = texteBrut.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
+
+    if (y > 270) { doc.addPage(); y = 18; }
+
+    lignes.forEach(function(ligne) {
+      if (y > 275) { doc.addPage(); y = 18; }
+      var estDevoir = ligne.indexOf('Devoir le :') === 0;
+      var estRemise = ligne.indexOf('Copies corrigées') === 0;
+      var estSalleOuSurv = ligne.indexOf('Salle :') === 0 || ligne.indexOf('Surveillant :') === 0;
+      var estHoraire = ligne.indexOf('Horaire :') === 0;
+
+      if (estDevoir) {
+        y += 3;
+        doc.setFontSize(9.5);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(74, 20, 140);
+        doc.text(ligne, 12, y);
+        doc.setTextColor(0);
+      } else if (estRemise) {
+        doc.setFontSize(8.5);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(198, 40, 40);
+        doc.text(ligne, 14, y);
+        doc.setTextColor(0);
+      } else if (estSalleOuSurv || estHoraire) {
+        doc.setFontSize(8.5);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(90);
+        doc.text(ligne, 14, y);
+        doc.setTextColor(0);
+      } else {
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'bold');
+        var estGrosseEntete = ligne.length < 30 && ligne === ligne.toUpperCase();
+        if (estGrosseEntete) {
+          y += 4;
+          doc.setFillColor(31, 78, 121);
+          doc.setTextColor(255);
+          doc.rect(10, y - 5, pageWidth - 20, 7, 'F');
+          doc.text(ligne, 12, y);
+          doc.setTextColor(0);
+        } else {
+          doc.setFontSize(9.5);
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(106, 27, 154);
+          doc.text(ligne, 12, y);
+          doc.setTextColor(0);
+        }
+      }
+      y += 5;
+    });
+
+    var nomFichier = 'Programme_Trimestriel_' + String(currentStaff.ecole || '').replace(/\s+/g, '_') + '.pdf';
+    doc.save(nomFichier);
+  } catch (e) {
+    showToast('Erreur lors de la génération du PDF', 'error');
+  }
+}
 async function chargerListePersonnelDir() {
   const body = document.getElementById('dirPersonnelBody');
   const sheetsId = SHEETS_IDS[currentStaff.ecole];
@@ -2167,6 +2274,9 @@ async function attribuerMatriculeCom() {
     <div style="padding:8px 14px 6px;background:#F3E5F5;border-bottom:1px solid #CE93D8">
       <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">🔒 Lecture seule — Planning établi par la Direction, toutes classes</span>
     </div>
+   <div style="padding:10px 14px 4px;text-align:right">
+  <button onclick="telechargerProgrammeTrimestrielCom()" style="padding:8px 16px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:700;cursor:pointer">📥 Télécharger en PDF</button>
+</div>
     <div id="comProgListe">
       <div style="text-align:center;padding:20px;color:var(--gris)">
         <div class="spinner-sm" style="margin:0 auto 10px"></div>
