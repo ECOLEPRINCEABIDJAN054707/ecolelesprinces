@@ -1254,7 +1254,16 @@ function afficherLiensDir(){
   h += _blocLien('👨‍🏫 Espace Enseignant — '+(currentStaff.label||currentStaff.ecole), 'var(--vert)', lienEnseignant, 'lienEnsEdu');
   body.innerHTML = h;
 }
-  async function chargerProgrammeTrimestrielCom() {
+  var _progCacheCom = []; // cache des lignes du programme, pour affichage groupé + PDF
+
+function _niveauDeClasse(classe) {
+  var c = String(classe || '').trim();
+  var espace = c.indexOf(' ');
+  if (espace === -1) return c;
+  return c.substring(0, espace);
+}
+
+async function chargerProgrammeTrimestrielCom() {
   var container = document.getElementById('comProgListe');
   var countEl = document.getElementById('comProgCount');
   if (!container || !currentStaff) return;
@@ -1332,167 +1341,87 @@ function afficherLiensDir(){
       if (!date && !heureDebut && !heureFin && !salle && !sujet && !surveillant && !dateRendu) continue;
       lignes.push({
         classe: classeRow,
+        niveau: _niveauDeClasse(classeRow),
         matiere: String(row[1] || '').trim() || 'Matière',
         trimestre: String(row[2] || '').trim(),
         date: date,
+        dateAffiche: dateAvecJour(date),
         heureDebut: heureFromValue(heureDebut),
         heureFin: heureFromValue(heureFin),
         salle: String(salle),
         sujet: String(sujet),
         surveillant: String(surveillant),
-        dateRendu: dateRendu
+        dateRendu: dateRendu,
+        dateRenduAffiche: dateAvecJour(dateRendu)
       });
     }
+    _progCacheCom = lignes;
     if (!lignes.length) {
       container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun programme enregistré pour le moment.</p>';
       if (countEl) countEl.textContent = '(0)';
       return;
     }
     if (countEl) countEl.textContent = '(' + lignes.length + ')';
-    var parClasse = {};
+
+    var parNiveau = {};
     lignes.forEach(function(l) {
-      if (!parClasse[l.classe]) parClasse[l.classe] = {};
-      if (!parClasse[l.classe][l.matiere]) parClasse[l.classe][l.matiere] = [];
-      parClasse[l.classe][l.matiere].push(l);
+      if (!parNiveau[l.niveau]) parNiveau[l.niveau] = {};
+      if (!parNiveau[l.niveau][l.classe]) parNiveau[l.niveau][l.classe] = {};
+      if (!parNiveau[l.niveau][l.classe][l.matiere]) parNiveau[l.niveau][l.classe][l.matiere] = [];
+      parNiveau[l.niveau][l.classe][l.matiere].push(l);
     });
+
     var html = '';
-    Object.keys(parClasse).sort().forEach(function(cl) {
-      html += '<div style="margin:8px 14px 0;padding:6px 10px;background:var(--bleu);color:#fff;border-radius:8px;font-size:0.8em;font-weight:700">' + cl + '</div>';
-      var matieres = parClasse[cl];
-      Object.keys(matieres).sort().forEach(function(mat) {
-        var items = matieres[mat].slice().sort(function(a, b) {
-          return String(a.date).localeCompare(String(b.date));
-        });
-        html += '<div style="margin:6px 14px 0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08)">';
-        html += '<div style="background:#F3E5F5;padding:7px 12px;border-left:3px solid #6A1B9A"><span style="font-weight:700;color:#6A1B9A;font-size:0.8em">' + mat + '</span></div>';
-        items.forEach(function(it) {
-          html += '<div style="padding:8px 12px;border-bottom:1px solid #f0f0f0;background:#fff">';
-          html += '<div style="display:flex;justify-content:space-between;margin-bottom:2px">';
-          html += '<span style="font-size:0.78em;font-weight:700;color:#4A148C">Devoir le : ' + (dateAvecJour(it.date) || 'Date non renseignée') + '</span>';
-          if (it.heureDebut || it.heureFin) {
-            html += '<span style="font-size:0.72em;color:var(--gris)">Horaire : ' + it.heureDebut + (it.heureFin ? ' - ' + it.heureFin : '') + '</span>';
-          }
-          html += '</div>';
-          if (it.salle) html += '<div style="font-size:0.72em;color:var(--gris)">Salle : ' + it.salle + '</div>';
-          if (it.sujet) html += '<div style="font-size:0.78em;color:#333;margin-top:2px">' + it.sujet + '</div>';
-          if (it.surveillant) html += '<div style="font-size:0.72em;color:var(--gris);margin-top:2px">Surveillant : ' + it.surveillant + '</div>';
-          if (it.dateRendu) html += '<div style="font-size:0.72em;color:#C62828;font-weight:600;margin-top:2px">Copies corrigées remises aux élèves le : ' + dateAvecJour(it.dateRendu) + '</div>';
-          if (!it.salle && !it.sujet) html += '<div style="font-size:0.72em;color:#aaa;font-style:italic;margin-top:2px">Détails à venir</div>';
-          html += '</div>';
-        });
+    var niveauIdx = 0;
+    Object.keys(parNiveau).sort().forEach(function(niv) {
+      niveauIdx++;
+      var idNiv = 'progNivCom_' + niveauIdx;
+      html += '<div style="margin:10px 14px 0;border-radius:8px;overflow:hidden;border:1px solid var(--border)">';
+      html += '<div style="background:var(--bleu);color:#fff;padding:9px 12px;display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="_toggleNivProg(\'' + idNiv + '\')">';
+      html += '<span style="font-weight:700;font-size:0.85em">▸ Niveau ' + niv + '</span>';
+      html += '<button onclick="event.stopPropagation();telechargerProgPDF(\'niveau\',\'' + niv.replace(/'/g, "\\'") + '\',\'com\')" style="padding:5px 10px;background:#fff;color:var(--bleu);border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer">📥 PDF niveau</button>';
+      html += '</div>';
+      html += '<div id="' + idNiv + '" style="display:none">';
+
+      Object.keys(parNiveau[niv]).sort().forEach(function(cl) {
+        html += '<div style="padding:7px 12px;background:#EDE7F6;display:flex;justify-content:space-between;align-items:center">';
+        html += '<span style="font-weight:700;font-size:0.8em;color:#4A148C">' + cl + '</span>';
+        html += '<button onclick="telechargerProgPDF(\'classe\',\'' + cl.replace(/'/g, "\\'") + '\',\'com\')" style="padding:4px 9px;background:#4A148C;color:#fff;border:none;border-radius:6px;font-size:0.68em;font-weight:700;cursor:pointer">📥 PDF classe</button>';
         html += '</div>';
+
+        var matieres = parNiveau[niv][cl];
+        Object.keys(matieres).sort().forEach(function(mat) {
+          var items = matieres[mat].slice().sort(function(a, b) { return String(a.date).localeCompare(String(b.date)); });
+          html += '<div style="margin:0;overflow:hidden">';
+          html += '<div style="background:#F3E5F5;padding:6px 12px;border-left:3px solid #6A1B9A"><span style="font-weight:700;color:#6A1B9A;font-size:0.78em">' + mat + '</span></div>';
+          items.forEach(function(it) {
+            html += '<div style="padding:8px 12px;border-bottom:1px solid #f0f0f0;background:#fff">';
+            html += '<div style="display:flex;justify-content:space-between;margin-bottom:2px">';
+            html += '<span style="font-size:0.78em;font-weight:700;color:#4A148C">Devoir le : ' + (it.dateAffiche || 'Date non renseignée') + '</span>';
+            if (it.heureDebut || it.heureFin) html += '<span style="font-size:0.72em;color:var(--gris)">Horaire : ' + it.heureDebut + (it.heureFin ? ' - ' + it.heureFin : '') + '</span>';
+            html += '</div>';
+            if (it.salle) html += '<div style="font-size:0.72em;color:var(--gris)">Salle : ' + it.salle + '</div>';
+            if (it.sujet) html += '<div style="font-size:0.78em;color:#333;margin-top:2px">' + it.sujet + '</div>';
+            if (it.surveillant) html += '<div style="font-size:0.72em;color:var(--gris);margin-top:2px">Surveillant : ' + it.surveillant + '</div>';
+            if (it.dateRendu) html += '<div style="font-size:0.72em;color:#C62828;font-weight:600;margin-top:2px">Copies corrigées remises aux élèves le : ' + it.dateRenduAffiche + '</div>';
+            if (!it.salle && !it.sujet) html += '<div style="font-size:0.72em;color:#aaa;font-style:italic;margin-top:2px">Détails à venir</div>';
+            html += '</div>';
+          });
+          html += '</div>';
+        });
       });
+      html += '</div></div>';
     });
     container.innerHTML = html;
   } catch (e) {
     container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement.</p>';
   }
 }
-  function telechargerProgrammeTrimestrielCom() {
-  if (!currentStaff) return;
-  var container = document.getElementById('comProgListe');
-  if (!container || container.querySelector('.spinner-sm')) {
-    showToast('Attendez le chargement du programme', 'error');
-    return;
-  }
-  var lignesTxt = container.innerText.trim();
-  if (!lignesTxt || lignesTxt.indexOf('Aucun programme') !== -1) {
-    showToast('Aucun programme à télécharger', 'error');
-    return;
-  }
-  try {
-    var doc = new jspdf.jsPDF();
-    var pageWidth = doc.internal.pageSize.getWidth();
-    var y = 18;
 
-    doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
-    doc.text('Programme trimestriel — Devoirs surveillés', pageWidth / 2, y, { align: 'center' });
-    y += 7;
-    doc.setFontSize(10);
-    doc.setFont(undefined, 'normal');
-    doc.text(String(currentStaff.label || currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
-    y += 5;
-    doc.setFontSize(8);
-    doc.setTextColor(120);
-    doc.text('Généré le ' + new Date().toLocaleDateString('fr-FR'), pageWidth / 2, y, { align: 'center' });
-    y += 8;
-    doc.setTextColor(0);
-
-    var blocs = container.querySelectorAll('div');
-    var classeCourante = '';
-    var matiereCourante = '';
-
-    Array.from(container.children).forEach(function(child) {
-      var texte = child.innerText ? child.innerText.trim() : '';
-      if (!texte) return;
-
-      var estClasse = child.style && child.style.background && child.style.background.indexOf('rgb') !== -1 && child.style.color === 'rgb(255, 255, 255)';
-      var estMatiereBox = child.querySelector && child.querySelector('span') && child.innerHTML.indexOf('#F3E5F5') === -1 && child.style.overflow === 'hidden';
-
-      if (child.textContent && child.className === '' && child.children.length === 0) return;
-    });
-
-    // Parcours simplifié par regroupement texte (classe / matière / devoirs)
-    var htmlBlocs = container.innerHTML.split('<div style="margin:8px 14px 0');
-    var texteBrut = container.innerText;
-    var lignes = texteBrut.split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
-
-    if (y > 270) { doc.addPage(); y = 18; }
-
-    lignes.forEach(function(ligne) {
-      if (y > 275) { doc.addPage(); y = 18; }
-      var estDevoir = ligne.indexOf('Devoir le :') === 0;
-      var estRemise = ligne.indexOf('Copies corrigées') === 0;
-      var estSalleOuSurv = ligne.indexOf('Salle :') === 0 || ligne.indexOf('Surveillant :') === 0;
-      var estHoraire = ligne.indexOf('Horaire :') === 0;
-
-      if (estDevoir) {
-        y += 3;
-        doc.setFontSize(9.5);
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(74, 20, 140);
-        doc.text(ligne, 12, y);
-        doc.setTextColor(0);
-      } else if (estRemise) {
-        doc.setFontSize(8.5);
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(198, 40, 40);
-        doc.text(ligne, 14, y);
-        doc.setTextColor(0);
-      } else if (estSalleOuSurv || estHoraire) {
-        doc.setFontSize(8.5);
-        doc.setFont(undefined, 'normal');
-        doc.setTextColor(90);
-        doc.text(ligne, 14, y);
-        doc.setTextColor(0);
-      } else {
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'bold');
-        var estGrosseEntete = ligne.length < 30 && ligne === ligne.toUpperCase();
-        if (estGrosseEntete) {
-          y += 4;
-          doc.setFillColor(31, 78, 121);
-          doc.setTextColor(255);
-          doc.rect(10, y - 5, pageWidth - 20, 7, 'F');
-          doc.text(ligne, 12, y);
-          doc.setTextColor(0);
-        } else {
-          doc.setFontSize(9.5);
-          doc.setFont(undefined, 'bold');
-          doc.setTextColor(106, 27, 154);
-          doc.text(ligne, 12, y);
-          doc.setTextColor(0);
-        }
-      }
-      y += 5;
-    });
-
-    var nomFichier = 'Programme_Trimestriel_' + String(currentStaff.ecole || '').replace(/\s+/g, '_') + '.pdf';
-    doc.save(nomFichier);
-  } catch (e) {
-    showToast('Erreur lors de la génération du PDF', 'error');
-  }
+function _toggleNivProg(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = (el.style.display === 'none') ? 'block' : 'none';
 }
 async function chargerListePersonnelDir() {
   const body = document.getElementById('dirPersonnelBody');
