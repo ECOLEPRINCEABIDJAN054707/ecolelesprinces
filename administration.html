@@ -974,7 +974,75 @@ function setFiltrePersonnelActif(f) {
   renderListePersonnelDir(filtered);
   setTimeout(() => { const el = document.getElementById('persNom_'+(filtered.length-1)); if (el) el.focus(); }, 100);
 }
-
+async function chargerPersonnelEnsCom() {
+  const body = document.getElementById('comPersonnelEnsBody');
+  const sheetsId = SHEETS_IDS[currentStaff.ecole];
+  if (!sheetsId) { body.innerHTML = '<p style="padding:14px;color:var(--rouge)">École non configurée</p>'; return; }
+  body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  try {
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r = await fetch(url); const data = await r.json();
+    const rows = (data.values || []).map(row => ({
+      nom: String(row[0]||'').trim(),
+      poste: String(row[1]||'').trim(),
+      actif: String(row[3]||'').trim().toUpperCase(),
+      type: String(row[4]||'VACATAIRE').trim().toUpperCase(),
+      salaire: row[5]||0
+    })).filter(p => p.nom);
+    const cnt = document.getElementById('comPersonnelEnsCount');
+    if (cnt) cnt.textContent = '('+rows.length+' personne(s))';
+    if (!rows.length) { body.innerHTML = '<p style="padding:14px;color:var(--gris)">Aucun personnel enregistré</p>'; return; }
+    let h = '<div class="tbl-wrap"><table><thead><tr><th style="font-size:0.95em">Nom</th><th style="font-size:0.95em">Poste</th><th style="font-size:0.95em">Type</th><th style="font-size:0.95em">Salaire fixe</th><th style="font-size:0.95em">Actif</th></tr></thead><tbody>';
+    rows.forEach(p => {
+      h += '<tr>'
+        + '<td style="font-size:0.95em;font-weight:600">'+p.nom+'</td>'
+        + '<td style="font-size:0.95em">'+p.poste+'</td>'
+        + '<td style="font-size:0.95em">'+(p.type==='PERMANENT'?'Permanent':'Vacataire')+'</td>'
+        + '<td style="font-size:0.95em">'+(p.salaire?Number(p.salaire).toLocaleString('fr-FR')+' F':'—')+'</td>'
+        + '<td style="font-size:0.95em;font-weight:700;color:'+(p.actif==='OUI'?'var(--vert)':'var(--rouge)')+'">'+(p.actif==='OUI'?'✓ Actif':'✗ Désactivé')+'</td>'
+        + '</tr>';
+    });
+    h += '</tbody></table></div>';
+    body.innerHTML = h;
+  } catch(e) {
+    body.innerHTML = '<p style="padding:14px;color:var(--rouge)">Erreur de chargement</p>';
+  }
+}
+async function chargerPersonnelEnsEdu() {
+  const body = document.getElementById('eduPersonnelEnsBody');
+  const sheetsId = SHEETS_IDS[currentStaff.ecole];
+  if (!sheetsId) { body.innerHTML = '<p style="padding:14px;color:var(--rouge)">École non configurée</p>'; return; }
+  body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  try {
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r = await fetch(url); const data = await r.json();
+    const rows = (data.values || []).map(row => ({
+      nom: String(row[0]||'').trim(),
+      poste: String(row[1]||'').trim(),
+      actif: String(row[3]||'').trim().toUpperCase(),
+      type: String(row[4]||'VACATAIRE').trim().toUpperCase(),
+      salaire: row[5]||0
+    })).filter(p => p.nom);
+    const cnt = document.getElementById('eduPersonnelEnsCount');
+    if (cnt) cnt.textContent = '('+rows.length+' personne(s))';
+    if (!rows.length) { body.innerHTML = '<p style="padding:14px;color:var(--gris)">Aucun personnel enregistré</p>'; return; }
+    let h = '<div class="tbl-wrap"><table><thead><tr><th style="font-size:0.95em">Nom</th><th style="font-size:0.95em">Poste</th><th style="font-size:0.95em">Type</th><th style="font-size:0.95em">Salaire fixe</th><th style="font-size:0.95em">Actif</th></tr></thead><tbody>';
+    rows.forEach(p => {
+      h += '<tr>'
+        + '<td style="font-size:0.95em;font-weight:600">'+p.nom+'</td>'
+        + '<td style="font-size:0.95em">'+p.poste+'</td>'
+        + '<td style="font-size:0.95em">'+(p.type==='PERMANENT'?'Permanent':'Vacataire')+'</td>'
+        + '<td style="font-size:0.95em">'+(p.salaire?Number(p.salaire).toLocaleString('fr-FR')+' F':'—')+'</td>'
+        + '<td style="font-size:0.95em;font-weight:700;color:'+(p.actif==='OUI'?'var(--vert)':'var(--rouge)')+'">'+(p.actif==='OUI'?'✓ Actif':'✗ Désactivé')+'</td>'
+        + '</tr>';
+    });
+    h += '</tbody></table></div>';
+    body.innerHTML = h;
+  } catch(e) {
+    body.innerHTML = '<p style="padding:14px;color:var(--rouge)">Erreur de chargement</p>';
+  }
+}
+  
 async function chargerListePersonnelDir() {
   const body = document.getElementById('dirPersonnelBody');
   const sheetsId = SHEETS_IDS[currentStaff.ecole];
@@ -1723,6 +1791,14 @@ async function attribuerMatriculeCom() {
     <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour charger les Chefs de classe et Présidents de club (lecture seule).</p>
   </div>
 </div>
+  <div class="section" id="comSecPersonnelEns">
+  <div class="sec-head sec-violet" onclick="chargerPersonnelEnsCom();toggleSec(this)">
+    <h3>📋 Personnel Enseignant <span id="comPersonnelEnsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="comPersonnelEnsBody">
+    <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger la liste du personnel enseignant de votre école.</p>
+  </div>
+</div>
  <div class="section" id="comSecSansResultat">
   <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('com');toggleSec(this)">
     <h3>&#9888;&#65039; &Eacute;l&egrave;ves sans r&eacute;sultat 2025-2026 <span id="comSansResultatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -2287,7 +2363,15 @@ async function attribuerMatriculeCom() {
   </div>
 </div>
 </div>
-<div class="section">
+<div class="section" id="eduSecPersonnelEns">
+  <div class="sec-head sec-violet" onclick="chargerPersonnelEnsEdu();toggleSec(this)">
+    <h3>📋 Personnel Enseignant <span id="eduPersonnelEnsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="eduPersonnelEnsBody">
+    <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger la liste du personnel enseignant de votre école.</p>
+  </div>
+</div>
+  <div class="section">
   <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('edu');toggleSec(this)">
     <h3>&#9888;&#65039; &Eacute;l&egrave;ves sans r&eacute;sultat 2025-2026 <span id="eduSansResultatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
   </div>
