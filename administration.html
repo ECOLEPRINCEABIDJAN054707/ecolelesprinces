@@ -1253,6 +1253,140 @@ function afficherLiensDir(){
   h += _blocLien('👨‍🏫 Espace Enseignant — '+(currentStaff.label||currentStaff.ecole), 'var(--vert)', lienEnseignant, 'lienEnsEdu');
   body.innerHTML = h;
 }
+  async function chargerProgrammeTrimestrielCom() {
+  var container = document.getElementById('comProgListe');
+  var countEl = document.getElementById('comProgCount');
+  if (!container || !currentStaff) return;
+  var sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole];
+  if (!sheetsId) {
+    container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configurée pour cette école.</p>';
+    return;
+  }
+
+  function heureFromValue(v) {
+    if (v === null || v === undefined || v === '') return '';
+    if (typeof v === 'string' && /^\d{1,2}:\d{2}/.test(v.trim())) return v.trim();
+    var n = typeof v === 'number' ? v : parseFloat(v);
+    if (isNaN(n)) return String(v);
+    if (n >= 0 && n < 1) {
+      var totalMin = Math.round(n * 24 * 60);
+      var hh = Math.floor(totalMin / 60);
+      var mm = totalMin % 60;
+      return String(hh).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+    }
+    return String(v);
+  }
+
+  function dateFromValue(v) {
+    if (v === null || v === undefined || v === '') return '';
+    if (typeof v === 'string' && /^\d{1,2}\/\d{1,2}\/\d{4}/.test(v.trim())) return v.trim();
+    var n = typeof v === 'number' ? v : parseFloat(v);
+    if (isNaN(n) || n < 1000) return String(v || '');
+    var ms = Math.round(n * 86400000);
+    var epoch = Date.UTC(1899, 11, 30);
+    var d = new Date(epoch + ms);
+    var dd = String(d.getUTCDate()).padStart(2, '0');
+    var mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+    var yyyy = d.getUTCFullYear();
+    return dd + '/' + mm + '/' + yyyy;
+  }
+
+  function jourSemaineFR(dateStr) {
+    if (!dateStr) return '';
+    var m = String(dateStr).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+    if (!m) return '';
+    var d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+    var jours = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+    return jours[d.getDay()] || '';
+  }
+
+  function dateAvecJour(dateStr) {
+    if (!dateStr) return '';
+    var j = jourSemaineFR(dateStr);
+    return j ? (j + ' ' + dateStr) : dateStr;
+  }
+
+  try {
+    var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/PROGRAMME_TRIMESTRE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    var res = await fetch(url);
+    var data = await res.json();
+    var rows = data.values || [];
+    if (rows.length < 2) {
+      container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun programme enregistré pour le moment.</p>';
+      if (countEl) countEl.textContent = '(0)';
+      return;
+    }
+    var lignes = [];
+    for (var i = 1; i < rows.length; i++) {
+      var row = rows[i];
+      var classeRow = String(row[0] || '').trim();
+      if (!classeRow) continue;
+      var date = dateFromValue(row[4]);
+      var heureDebut = row[5];
+      var heureFin = row[6];
+      var salle = row[7] || '';
+      var sujet = row[8] || '';
+      var surveillant = row[9] || '';
+      var dateRendu = dateFromValue(row[10]);
+      if (!date && !heureDebut && !heureFin && !salle && !sujet && !surveillant && !dateRendu) continue;
+      lignes.push({
+        classe: classeRow,
+        matiere: String(row[1] || '').trim() || 'Matière',
+        trimestre: String(row[2] || '').trim(),
+        date: date,
+        heureDebut: heureFromValue(heureDebut),
+        heureFin: heureFromValue(heureFin),
+        salle: String(salle),
+        sujet: String(sujet),
+        surveillant: String(surveillant),
+        dateRendu: dateRendu
+      });
+    }
+    if (!lignes.length) {
+      container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun programme enregistré pour le moment.</p>';
+      if (countEl) countEl.textContent = '(0)';
+      return;
+    }
+    if (countEl) countEl.textContent = '(' + lignes.length + ')';
+    var parClasse = {};
+    lignes.forEach(function(l) {
+      if (!parClasse[l.classe]) parClasse[l.classe] = {};
+      if (!parClasse[l.classe][l.matiere]) parClasse[l.classe][l.matiere] = [];
+      parClasse[l.classe][l.matiere].push(l);
+    });
+    var html = '';
+    Object.keys(parClasse).sort().forEach(function(cl) {
+      html += '<div style="margin:8px 14px 0;padding:6px 10px;background:var(--bleu);color:#fff;border-radius:8px;font-size:0.8em;font-weight:700">' + cl + '</div>';
+      var matieres = parClasse[cl];
+      Object.keys(matieres).sort().forEach(function(mat) {
+        var items = matieres[mat].slice().sort(function(a, b) {
+          return String(a.date).localeCompare(String(b.date));
+        });
+        html += '<div style="margin:6px 14px 0;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08)">';
+        html += '<div style="background:#F3E5F5;padding:7px 12px;border-left:3px solid #6A1B9A"><span style="font-weight:700;color:#6A1B9A;font-size:0.8em">' + mat + '</span></div>';
+        items.forEach(function(it) {
+          html += '<div style="padding:8px 12px;border-bottom:1px solid #f0f0f0;background:#fff">';
+          html += '<div style="display:flex;justify-content:space-between;margin-bottom:2px">';
+          html += '<span style="font-size:0.78em;font-weight:700;color:#4A148C">Devoir le : ' + (dateAvecJour(it.date) || 'Date non renseignée') + '</span>';
+          if (it.heureDebut || it.heureFin) {
+            html += '<span style="font-size:0.72em;color:var(--gris)">Horaire : ' + it.heureDebut + (it.heureFin ? ' - ' + it.heureFin : '') + '</span>';
+          }
+          html += '</div>';
+          if (it.salle) html += '<div style="font-size:0.72em;color:var(--gris)">Salle : ' + it.salle + '</div>';
+          if (it.sujet) html += '<div style="font-size:0.78em;color:#333;margin-top:2px">' + it.sujet + '</div>';
+          if (it.surveillant) html += '<div style="font-size:0.72em;color:var(--gris);margin-top:2px">Surveillant : ' + it.surveillant + '</div>';
+          if (it.dateRendu) html += '<div style="font-size:0.72em;color:#C62828;font-weight:600;margin-top:2px">Copies corrigées remises aux élèves le : ' + dateAvecJour(it.dateRendu) + '</div>';
+          if (!it.salle && !it.sujet) html += '<div style="font-size:0.72em;color:#aaa;font-style:italic;margin-top:2px">Détails à venir</div>';
+          html += '</div>';
+        });
+        html += '</div>';
+      });
+    });
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement.</p>';
+  }
+}
 async function chargerListePersonnelDir() {
   const body = document.getElementById('dirPersonnelBody');
   const sheetsId = SHEETS_IDS[currentStaff.ecole];
@@ -2025,7 +2159,23 @@ async function attribuerMatriculeCom() {
     <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger la liste du personnel enseignant de votre école.</p>
   </div>
 </div>
-<div class="section" id="comSecLiens">
+<div class="section" id="comSecProgTrim">
+  <div class="sec-head sec-violet" onclick="chargerProgrammeTrimestrielCom();toggleSec(this)">
+    <h3>📅 Programme trimestriel — Devoirs surveillés <span id="comProgCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="comProgBody">
+    <div style="padding:8px 14px 6px;background:#F3E5F5;border-bottom:1px solid #CE93D8">
+      <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">🔒 Lecture seule — Planning établi par la Direction, toutes classes</span>
+    </div>
+    <div id="comProgListe">
+      <div style="text-align:center;padding:20px;color:var(--gris)">
+        <div class="spinner-sm" style="margin:0 auto 10px"></div>
+        <p style="font-size:0.82em">Chargement du programme...</p>
+      </div>
+    </div>
+  </div>
+</div>
+  <div class="section" id="comSecLiens">
   <div class="sec-head sec-emeraude" onclick="afficherLiensCom();toggleSec(this)">
     <h3>🔗 Liens à partager <span style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
   </div>
