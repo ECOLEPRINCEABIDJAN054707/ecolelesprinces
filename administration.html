@@ -1296,7 +1296,15 @@ async function sauvegarderPersonnelDir(idx) {
   }
 }
 </script>
-<div class="section" id="dirSecChefsClasse">
+<div class="section" id="dirSecPersonnelAdmin">
+  <div class="sec-head sec-violet" onclick="chargerPersonnelAdminDir();toggleSec(this)">
+    <h3>📋 Personnel Administratif <span id="dirPersonnelAdminCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirPersonnelAdminBody">
+    <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger le Comptable et les Éducateurs de votre école (matricule + code de connexion).</p>
+  </div>
+</div>
+  <div class="section" id="dirSecChefsClasse">
   <div class="sec-head sec-or" onclick="chargerChefsClasseDir();toggleSec(this)">
     <h3>&#127942; Chefs, Sous-chefs &amp; Présidents de club <span id="dirChefsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
   </div>
