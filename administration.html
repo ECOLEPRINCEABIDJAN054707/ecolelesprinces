@@ -1423,7 +1423,135 @@ function _toggleNivProg(id) {
   if (!el) return;
   el.style.display = (el.style.display === 'none') ? 'block' : 'none';
 }
-async function chargerListePersonnelDir() {
+function telechargerProgPDF(type, valeur, espace) {
+  if (!_progCacheCom.length) {
+    showToast('Le programme n\'est pas encore chargé', 'error');
+    return;
+  }
+  var lignes = _progCacheCom.filter(function(l) {
+    return type === 'niveau' ? l.niveau === valeur : l.classe === valeur;
+  });
+  if (!lignes.length) {
+    showToast('Aucun devoir trouvé', 'error');
+    return;
+  }
+
+  try {
+    var doc = new jspdf.jsPDF();
+    var pageWidth = doc.internal.pageSize.getWidth();
+    var y = 18;
+
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Programme trimestriel — Devoirs surveillés', pageWidth / 2, y, { align: 'center' });
+    y += 7;
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'bold');
+    doc.text((type === 'niveau' ? 'Niveau ' : 'Classe ') + valeur, pageWidth / 2, y, { align: 'center' });
+    y += 6;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(String(currentStaff.label || currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
+    y += 5;
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text('Généré le ' + new Date().toLocaleDateString('fr-FR'), pageWidth / 2, y, { align: 'center' });
+    y += 9;
+    doc.setTextColor(0);
+
+    var parClasse = {};
+    lignes.forEach(function(l) {
+      if (!parClasse[l.classe]) parClasse[l.classe] = {};
+      if (!parClasse[l.classe][l.matiere]) parClasse[l.classe][l.matiere] = [];
+      parClasse[l.classe][l.matiere].push(l);
+    });
+
+    Object.keys(parClasse).sort().forEach(function(cl) {
+      if (y > 265) { doc.addPage(); y = 18; }
+      doc.setFillColor(31, 78, 121);
+      doc.setTextColor(255);
+      doc.rect(10, y - 5, pageWidth - 20, 7, 'F');
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.text(cl, 12, y);
+      doc.setTextColor(0);
+      y += 8;
+
+      var matieres = parClasse[cl];
+      Object.keys(matieres).sort().forEach(function(mat) {
+        if (y > 270) { doc.addPage(); y = 18; }
+        doc.setFontSize(9.5);
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(106, 27, 154);
+        doc.text(mat, 12, y);
+        doc.setTextColor(0);
+        y += 5;
+
+        var items = matieres[mat].slice().sort(function(a, b) { return String(a.date).localeCompare(String(b.date)); });
+        items.forEach(function(it) {
+          if (y > 275) { doc.addPage(); y = 18; }
+          doc.setFontSize(9.5);
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(74, 20, 140);
+          doc.text('Devoir le : ' + (it.dateAffiche || 'Date non renseignée'), 14, y);
+          doc.setTextColor(0);
+          y += 4.5;
+
+          if (it.heureDebut || it.heureFin) {
+            doc.setFontSize(8.5);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(90);
+            doc.text('Horaire : ' + it.heureDebut + (it.heureFin ? ' - ' + it.heureFin : ''), 14, y);
+            doc.setTextColor(0);
+            y += 4;
+          }
+          if (it.salle) {
+            doc.setFontSize(8.5);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(90);
+            doc.text('Salle : ' + it.salle, 14, y);
+            doc.setTextColor(0);
+            y += 4;
+          }
+          if (it.sujet) {
+            doc.setFontSize(9);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(30);
+            var sujetLines = doc.splitTextToSize(it.sujet, pageWidth - 28);
+            doc.text(sujetLines, 14, y);
+            y += sujetLines.length * 4;
+            doc.setTextColor(0);
+          }
+          if (it.surveillant) {
+            doc.setFontSize(8.5);
+            doc.setFont(undefined, 'normal');
+            doc.setTextColor(90);
+            doc.text('Surveillant : ' + it.surveillant, 14, y);
+            doc.setTextColor(0);
+            y += 4;
+          }
+          if (it.dateRendu) {
+            doc.setFontSize(8.5);
+            doc.setFont(undefined, 'bold');
+            doc.setTextColor(198, 40, 40);
+            doc.text('Copies corrigées remises aux élèves le : ' + it.dateRenduAffiche, 14, y);
+            doc.setTextColor(0);
+            y += 4;
+          }
+          y += 3;
+        });
+        y += 2;
+      });
+      y += 3;
+    });
+
+    var nomFichier = 'Programme_' + valeur.replace(/\s+/g, '_') + '_' + String(currentStaff.ecole || '').replace(/\s+/g, '_') + '.pdf';
+    doc.save(nomFichier);
+  } catch (e) {
+    showToast('Erreur lors de la génération du PDF', 'error');
+  }
+}
+  async function chargerListePersonnelDir() {
   const body = document.getElementById('dirPersonnelBody');
   const sheetsId = SHEETS_IDS[currentStaff.ecole];
   if (!sheetsId) { body.innerHTML = '<p style="padding:14px;color:var(--rouge)">École non configurée</p>'; return; }
