@@ -1190,6 +1190,69 @@ async function sauvegarderPersonnelAdminDir(idx){
     body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.95em">Erreur de chargement</p>';
   }
 }
+  const CODE_ECOLE_ENSEIGNANT = {
+  'CPP LES PRINCES':'cpp','ACADEMIE':'academie','GUINGLO VILLE':'guinglo',
+  'GNONTINROU':'gnont','KOUTOUAN':'koutouan','SOAKPE':'soakpe',
+  'AKEIKOI 1':'akeikoi1','AKEIKOI 2':'akeikoi2','CPP PRO':'pro',
+  'CPP TECH':'tech','ETL PRINCES KOUIBLY':'kouibly','GS RITA ROSANE':'rita',
+  'CPP DABOU':'dabou','CPP ANYAMA':'anyama'
+};
+const LIEN_PARENTS = 'https://ecoleprinceabidjan054707.github.io/ecolelesprinces/index.html';
+const LIEN_ADMIN = 'https://ecoleprinceabidjan054707.github.io/ecolelesprinces/administration.html';
+const LIEN_ENSEIGNANT_BASE = 'https://ecoleprinceabidjan054707.github.io/ecolelesprinces/enseignant_cpp.html?e=';
+
+function copierLien(lienId, btn){
+  const el = document.getElementById(lienId);
+  if(!el) return;
+  navigator.clipboard.writeText(el.textContent.trim()).then(()=>{
+    const txtOrig = btn.textContent;
+    btn.textContent = '✓ Copié !';
+    btn.style.background = 'var(--vert)';
+    setTimeout(()=>{ btn.textContent = txtOrig; btn.style.background = ''; }, 1800);
+  }).catch(()=>{
+    showToast('Impossible de copier — copiez manuellement', 'error');
+  });
+}
+
+function _blocLien(titre, couleur, url, id){
+  return '<div style="margin-bottom:12px;background:var(--bg);border-radius:10px;padding:12px 14px;border-left:4px solid '+couleur+'">'
+    + '<div style="font-size:0.8em;font-weight:700;color:'+couleur+';margin-bottom:6px">'+titre+'</div>'
+    + '<div id="'+id+'" style="font-size:0.85em;color:#333;word-break:break-all;background:#fff;padding:8px 10px;border-radius:6px;border:1px solid var(--border);margin-bottom:8px;font-family:monospace">'+url+'</div>'
+    + '<button onclick="copierLien(\''+id+'\',this)" style="padding:7px 14px;background:'+couleur+';color:#fff;border:none;border-radius:8px;font-size:0.8em;font-weight:700;cursor:pointer">📋 Copier le lien</button>'
+    + '</div>';
+}
+
+function afficherLiensDir(){
+  const body = document.getElementById('dirLiensBody');
+  if(!body || !currentStaff) return;
+  const codeEns = CODE_ECOLE_ENSEIGNANT[currentStaff.ecole] || '';
+  const lienEnseignant = codeEns ? (LIEN_ENSEIGNANT_BASE + codeEns) : 'Non configuré pour cette école';
+  let h = '';
+  h += _blocLien('👨‍👩‍👧 Espace Parents (réseau entier)', 'var(--bleu)', LIEN_PARENTS, 'lienParentsDir');
+  h += _blocLien('👨‍🏫 Espace Enseignant — '+(currentStaff.label||currentStaff.ecole), 'var(--vert)', lienEnseignant, 'lienEnsDir');
+  h += _blocLien('🔐 Espace Administration (Directeur/Comptable/Éducateur)', 'var(--violet)', LIEN_ADMIN, 'lienAdminDir');
+  body.innerHTML = h;
+}
+  function afficherLiensCom(){
+  const body = document.getElementById('comLiensBody');
+  if(!body || !currentStaff) return;
+  const codeEns = CODE_ECOLE_ENSEIGNANT[currentStaff.ecole] || '';
+  const lienEnseignant = codeEns ? (LIEN_ENSEIGNANT_BASE + codeEns) : 'Non configuré pour cette école';
+  let h = '';
+  h += _blocLien('👨‍👩‍👧 Espace Parents (réseau entier)', 'var(--bleu)', LIEN_PARENTS, 'lienParentsCom');
+  h += _blocLien('👨‍🏫 Espace Enseignant — '+(currentStaff.label||currentStaff.ecole), 'var(--vert)', lienEnseignant, 'lienEnsCom');
+  body.innerHTML = h;
+}
+  function afficherLiensEdu(){
+  const body = document.getElementById('eduLiensBody');
+  if(!body || !currentStaff) return;
+  const codeEns = CODE_ECOLE_ENSEIGNANT[currentStaff.ecole] || '';
+  const lienEnseignant = codeEns ? (LIEN_ENSEIGNANT_BASE + codeEns) : 'Non configuré pour cette école';
+  let h = '';
+  h += _blocLien('👨‍👩‍👧 Espace Parents (réseau entier)', 'var(--bleu)', LIEN_PARENTS, 'lienParentsEdu');
+  h += _blocLien('👨‍🏫 Espace Enseignant — '+(currentStaff.label||currentStaff.ecole), 'var(--vert)', lienEnseignant, 'lienEnsEdu');
+  body.innerHTML = h;
+}
 async function chargerListePersonnelDir() {
   const body = document.getElementById('dirPersonnelBody');
   const sheetsId = SHEETS_IDS[currentStaff.ecole];
@@ -1296,7 +1359,15 @@ async function sauvegarderPersonnelDir(idx) {
   }
 }
 </script>
-<div class="section" id="dirSecPersonnelAdmin">
+<div class="section" id="dirSecLiens">
+  <div class="sec-head sec-emeraude" onclick="afficherLiensDir();toggleSec(this)">
+    <h3>🔗 Liens à partager <span style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirLiensBody">
+    <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour afficher les liens de connexion à transmettre aux parents et au personnel.</p>
+  </div>
+</div>
+  <div class="section" id="dirSecPersonnelAdmin">
   <div class="sec-head sec-violet" onclick="chargerPersonnelAdminDir();toggleSec(this)">
     <h3>📋 Personnel Administratif <span id="dirPersonnelAdminCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
   </div>
@@ -1954,7 +2025,15 @@ async function attribuerMatriculeCom() {
     <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger la liste du personnel enseignant de votre école.</p>
   </div>
 </div>
-<div class="section" id="comSecPersonnelAdmin">
+<div class="section" id="comSecLiens">
+  <div class="sec-head sec-emeraude" onclick="afficherLiensCom();toggleSec(this)">
+    <h3>🔗 Liens à partager <span style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="comLiensBody">
+    <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour afficher les liens de connexion à transmettre aux parents.</p>
+  </div>
+</div>
+  <div class="section" id="comSecPersonnelAdmin">
   <div class="sec-head sec-violet" onclick="chargerPersonnelAdminCom();toggleSec(this)">
     <h3>📋 Personnel Administratif <span id="comPersonnelAdminCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
   </div>
@@ -2534,7 +2613,15 @@ async function attribuerMatriculeCom() {
     <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger la liste du personnel enseignant de votre école.</p>
   </div>
 </div>
- <div class="section" id="eduSecPersonnelAdmin">
+<div class="section" id="eduSecLiens">
+  <div class="sec-head sec-emeraude" onclick="afficherLiensEdu();toggleSec(this)">
+    <h3>🔗 Liens à partager <span style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="eduLiensBody">
+    <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour afficher les liens de connexion à transmettre aux parents.</p>
+  </div>
+</div>
+  <div class="section" id="eduSecPersonnelAdmin">
   <div class="sec-head sec-violet" onclick="chargerPersonnelAdminEdu();toggleSec(this)">
     <h3>📋 Personnel Administratif <span id="eduPersonnelAdminCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
   </div>
