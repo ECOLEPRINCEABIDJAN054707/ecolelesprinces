@@ -1042,7 +1042,154 @@ async function chargerPersonnelEnsEdu() {
     body.innerHTML = '<p style="padding:14px;color:var(--rouge)">Erreur de chargement</p>';
   }
 }
-  
+const STAFF_SHEETS_ID = '1e37v34kcYXh0etsPjGo7rF7SyH0i1Xpj20azcirDUEY'; // base CPP Les Princes 2026-2027 — onglet STAFF partagé réseau
+let _personnelAdminCache = [];
+
+async function chargerPersonnelAdminDir(){
+  const body=document.getElementById('dirPersonnelAdminBody');
+  if(!body||!currentStaff)return;
+  body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  try{
+    const url='https://sheets.googleapis.com/v4/spreadsheets/'+STAFF_SHEETS_ID+'/values/STAFF!A2:H500?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r=await fetch(url);const data=await r.json();
+    const rows=[];
+    (data.values||[]).forEach((row,idx)=>{
+      const ecole=String(row[3]||'').trim().toUpperCase();
+      const profil=String(row[4]||'').trim().toUpperCase();
+      if(ecole===String(currentStaff.ecole||'').toUpperCase() && (profil==='COM'||profil==='EDU')){
+        rows.push({
+          ligne: idx+2,
+          matricule: String(row[0]||'').trim(),
+          code: String(row[1]||'').trim(),
+          nom: String(row[2]||'').trim(),
+          profil: profil
+        });
+      }
+    });
+    _personnelAdminCache=rows;
+    const cnt=document.getElementById('dirPersonnelAdminCount');
+    if(cnt)cnt.textContent='('+rows.length+' personne(s))';
+    renderPersonnelAdminDir(rows);
+  }catch(e){
+    body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.95em">Erreur de chargement</p>';
+  }
+}
+
+function renderPersonnelAdminDir(rows){
+  const body=document.getElementById('dirPersonnelAdminBody');
+  if(!rows.length){body.innerHTML='<p style="padding:14px;color:var(--gris);font-size:0.95em">Aucun Comptable ou Éducateur trouvé pour votre école.</p>';return;}
+  let h='<div class="tbl-wrap"><table><thead><tr><th style="font-size:0.95em">Nom</th><th style="font-size:0.95em">Matricule</th><th style="font-size:0.95em">Code</th><th style="font-size:0.95em">Rôle</th><th></th></tr></thead><tbody>';
+  rows.forEach((p,idx)=>{
+    const roleLabel=p.profil==='COM'?'Comptable':'Éducateur';
+    const badgeCouleur=p.profil==='COM'?'#E65100':'#4A148C';
+    h+='<tr>'
+      +'<td style="font-size:0.95em;font-weight:600">'+p.nom+'</td>'
+      +'<td style="font-size:0.95em;font-family:monospace;color:var(--gris)">'+p.matricule+'</td>'
+      +'<td><input type="text" id="paCode_'+idx+'" value="'+p.code.replace(/"/g,'&quot;')+'" onblur="sauvegarderPersonnelAdminDir('+idx+')" style="width:110px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.95em;font-family:monospace;font-weight:700;color:var(--bleu)"></td>'
+      +'<td><span style="background:'+badgeCouleur+'22;color:'+badgeCouleur+';padding:2px 10px;border-radius:12px;font-size:0.85em;font-weight:700">'+roleLabel+'</span></td>'
+      +'<td id="paStatut_'+idx+'" style="font-size:0.85em;color:var(--gris)">—</td>'
+      +'</tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div style="padding:10px 14px;font-size:0.85em;color:var(--gris);background:#F5F7FA;border-top:1px solid var(--border)">🔗 Connexion : ouvrir <strong>administration.html</strong> puis saisir le Matricule + Code ci-dessus.</div>';
+  body.innerHTML=h;
+}
+
+async function sauvegarderPersonnelAdminDir(idx){
+  const p=_personnelAdminCache[idx];
+  if(!p)return;
+  const code=document.getElementById('paCode_'+idx).value.trim();
+  const statutCell=document.getElementById('paStatut_'+idx);
+  statutCell.textContent='...';
+  try{
+    const params=new URLSearchParams({action:'majPersonnelAdmin',ligne:p.ligne,code,matricule:p.matricule,ecole:currentStaff.ecole});
+    const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,Object.fromEntries(params));
+    if(result&&result.succes){
+      p.code=code;
+      statutCell.textContent='✓ enregistré';statutCell.style.color='var(--vert)';
+    }else{
+      statutCell.textContent='Erreur';statutCell.style.color='var(--rouge)';
+    }
+  }catch(e){
+    statutCell.textContent='Erreur réseau';statutCell.style.color='var(--rouge)';
+  }
+}
+  async function chargerPersonnelAdminCom(){
+  const body=document.getElementById('comPersonnelAdminBody');
+  if(!body||!currentStaff)return;
+  body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  try{
+    const url='https://sheets.googleapis.com/v4/spreadsheets/'+STAFF_SHEETS_ID+'/values/STAFF!A2:H500?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r=await fetch(url);const data=await r.json();
+    const rows=[];
+    (data.values||[]).forEach(row=>{
+      const ecole=String(row[3]||'').trim().toUpperCase();
+      const profil=String(row[4]||'').trim().toUpperCase();
+      if(ecole===String(currentStaff.ecole||'').toUpperCase() && (profil==='COM'||profil==='EDU')){
+        rows.push({
+          matricule: String(row[0]||'').trim(),
+          nom: String(row[2]||'').trim(),
+          profil: profil
+        });
+      }
+    });
+    const cnt=document.getElementById('comPersonnelAdminCount');
+    if(cnt)cnt.textContent='('+rows.length+' personne(s))';
+    if(!rows.length){body.innerHTML='<p style="padding:14px;color:var(--gris);font-size:0.95em">Aucun Comptable ou Éducateur trouvé pour votre école.</p>';return;}
+    let h='<div class="tbl-wrap"><table><thead><tr><th style="font-size:0.95em">Nom</th><th style="font-size:0.95em">Matricule</th><th style="font-size:0.95em">Rôle</th></tr></thead><tbody>';
+    rows.forEach(p=>{
+      const roleLabel=p.profil==='COM'?'Comptable':'Éducateur';
+      const badgeCouleur=p.profil==='COM'?'#E65100':'#4A148C';
+      h+='<tr>'
+        +'<td style="font-size:0.95em;font-weight:600">'+p.nom+'</td>'
+        +'<td style="font-size:0.95em;font-family:monospace;color:var(--gris)">'+p.matricule+'</td>'
+        +'<td><span style="background:'+badgeCouleur+'22;color:'+badgeCouleur+';padding:2px 10px;border-radius:12px;font-size:0.85em;font-weight:700">'+roleLabel+'</span></td>'
+        +'</tr>';
+    });
+    h+='</tbody></table></div>';
+    body.innerHTML=h;
+  }catch(e){
+    body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.95em">Erreur de chargement</p>';
+  }
+}
+  async function chargerPersonnelAdminEdu(){
+  const body=document.getElementById('eduPersonnelAdminBody');
+  if(!body||!currentStaff)return;
+  body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  try{
+    const url='https://sheets.googleapis.com/v4/spreadsheets/'+STAFF_SHEETS_ID+'/values/STAFF!A2:H500?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r=await fetch(url);const data=await r.json();
+    const rows=[];
+    (data.values||[]).forEach(row=>{
+      const ecole=String(row[3]||'').trim().toUpperCase();
+      const profil=String(row[4]||'').trim().toUpperCase();
+      if(ecole===String(currentStaff.ecole||'').toUpperCase() && (profil==='COM'||profil==='EDU')){
+        rows.push({
+          matricule: String(row[0]||'').trim(),
+          nom: String(row[2]||'').trim(),
+          profil: profil
+        });
+      }
+    });
+    const cnt=document.getElementById('eduPersonnelAdminCount');
+    if(cnt)cnt.textContent='('+rows.length+' personne(s))';
+    if(!rows.length){body.innerHTML='<p style="padding:14px;color:var(--gris);font-size:0.95em">Aucun Comptable ou Éducateur trouvé pour votre école.</p>';return;}
+    let h='<div class="tbl-wrap"><table><thead><tr><th style="font-size:0.95em">Nom</th><th style="font-size:0.95em">Matricule</th><th style="font-size:0.95em">Rôle</th></tr></thead><tbody>';
+    rows.forEach(p=>{
+      const roleLabel=p.profil==='COM'?'Comptable':'Éducateur';
+      const badgeCouleur=p.profil==='COM'?'#E65100':'#4A148C';
+      h+='<tr>'
+        +'<td style="font-size:0.95em;font-weight:600">'+p.nom+'</td>'
+        +'<td style="font-size:0.95em;font-family:monospace;color:var(--gris)">'+p.matricule+'</td>'
+        +'<td><span style="background:'+badgeCouleur+'22;color:'+badgeCouleur+';padding:2px 10px;border-radius:12px;font-size:0.85em;font-weight:700">'+roleLabel+'</span></td>'
+        +'</tr>';
+    });
+    h+='</tbody></table></div>';
+    body.innerHTML=h;
+  }catch(e){
+    body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.95em">Erreur de chargement</p>';
+  }
+}
 async function chargerListePersonnelDir() {
   const body = document.getElementById('dirPersonnelBody');
   const sheetsId = SHEETS_IDS[currentStaff.ecole];
@@ -1799,7 +1946,15 @@ async function attribuerMatriculeCom() {
     <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger la liste du personnel enseignant de votre école.</p>
   </div>
 </div>
- <div class="section" id="comSecSansResultat">
+<div class="section" id="comSecPersonnelAdmin">
+  <div class="sec-head sec-violet" onclick="chargerPersonnelAdminCom();toggleSec(this)">
+    <h3>📋 Personnel Administratif <span id="comPersonnelAdminCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="comPersonnelAdminBody">
+    <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger le Comptable et les Éducateurs de votre école.</p>
+  </div>
+</div>
+  <div class="section" id="comSecSansResultat">
   <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('com');toggleSec(this)">
     <h3>&#9888;&#65039; &Eacute;l&egrave;ves sans r&eacute;sultat 2025-2026 <span id="comSansResultatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
   </div>
@@ -2369,6 +2524,14 @@ async function attribuerMatriculeCom() {
   </div>
   <div class="sec-body" id="eduPersonnelEnsBody">
     <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger la liste du personnel enseignant de votre école.</p>
+  </div>
+</div>
+ <div class="section" id="eduSecPersonnelAdmin">
+  <div class="sec-head sec-violet" onclick="chargerPersonnelAdminEdu();toggleSec(this)">
+    <h3>📋 Personnel Administratif <span id="eduPersonnelAdminCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="eduPersonnelAdminBody">
+    <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger le Comptable et les Éducateurs de votre école.</p>
   </div>
 </div>
   <div class="section">
