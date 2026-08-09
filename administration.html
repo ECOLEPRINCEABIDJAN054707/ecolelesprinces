@@ -6702,6 +6702,7 @@ async function chargerProgrammeTrimestrielEdu(s) {
         matiere: String(row[1] || '').trim() || 'Matiere',
         trimestre: String(row[2] || '').trim(),
         date: date,
+        dateTri: _dateVersTri(date),
         heureDebut: heureFromValue(heureDebut),
         heureFin: heureFromValue(heureFin),
         salle: String(salle),
