@@ -1560,7 +1560,7 @@ async function chargerProgrammeTrimestrielDir() {
   }
 }
 function telechargerProgPDF(type, valeur, espace) {
-  var cache = espace === 'edu' ? _progCacheEdu : _progCacheCom;
+  var cache = espace === 'edu' ? _progCacheEdu : (espace === 'dir' ? _progCacheDir : _progCacheCom);
   if (!cache.length) {
     showToast('Le programme n\'est pas encore chargé', 'error');
     return;
