@@ -7724,7 +7724,7 @@ async function chargerEDT() {
         data = d.values.slice(1).filter(row => {
           const cl = String(row[iClasse>=0?iClasse:2]||'').trim();
           const st = String(row[iStatut>=0?iStatut:9]||'').trim().toUpperCase();
-          return cl && (st==='VALIDÉ'||st==='VALIDE'||st==='PARTIEL'||st==='EN ATTENTE'||st==='');
+          return cl && (st.indexOf('VALID')!==-1||st==='PARTIEL'||st==='EN ATTENTE'||st==='VOIR DIRECTION'||st==='');
         }).map(row => {
           const dateVal = String(row[iDate>=0?iDate:0]||'').trim();
           let estAujourdhui = false;
