@@ -3746,7 +3746,7 @@ async function chargerPointage(){
     const res=await fetch(url);const data=await res.json();
     if(!data.values||!data.values.length){afficherTableauVide();return;}
     const lignesDuMois=data.values.filter(row=>{const mr=serielVersMois(row[6]);return mr===mois;});
-        const valides=lignesDuMois.filter(row=>{const st=String(row[9]||'').trim().toUpperCase();return st==='VALIDE'||st==='VALID\u00C9'||st==='PARTIEL';});
+        const valides=lignesDuMois.filter(row=>{const st=String(row[9]||'').trim().toUpperCase();return st.indexOf('VALID')!==-1||st==='PARTIEL';});
         const recap={};
         valides.forEach(row=>{const nom=String(row[4]||'').trim();const h=parseFloat(row[8])||0;const sal=parseFloat(row[11])||0;const cl=String(row[2]||'').trim();if(!recap[nom])recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],details:[]};recap[nom].totalHeures+=h;recap[nom].totalSalaire+=sal;recap[nom].nbCours++;if(!recap[nom].classes.includes(cl))recap[nom].classes.push(cl);});
         lignesDuMois.forEach(row=>{const nom=String(row[4]||'').trim();if(!nom)return;if(!recap[nom])recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],details:[]};if(!recap[nom].details)recap[nom].details=[];const st=String(row[9]||'').trim().toUpperCase();recap[nom].details.push({date:toDate(row[0]),classe:String(row[2]||'').trim(),matiere:String(row[3]||'').trim(),heures:parseFloat(row[8])||0,salaire:parseFloat(row[11])||0,statut:st});});
@@ -3809,7 +3809,7 @@ async function chargerPointageCom(){
     const res=await fetch(url);const data=await res.json();
     if(!data.values||!data.values.length){afficherTableauVideCom();return;}
     const lignesDuMois=data.values.filter(row=>{const mr=serielVersMois(row[6]);return mr===mois;});
-    const valides=lignesDuMois.filter(row=>{const st=String(row[9]||'').trim().toUpperCase();return st==='VALIDE'||st==='VALID\u00C9'||st==='PARTIEL';});
+    const valides=lignesDuMois.filter(row=>{const st=String(row[9]||'').trim().toUpperCase();return st.indexOf('VALID')!==-1||st==='PARTIEL';});
     const recap={};
     valides.forEach(row=>{const nom=String(row[4]||'').trim();const h=parseFloat(row[8])||0;const sal=parseFloat(row[11])||0;const cl=String(row[2]||'').trim();if(!recap[nom])recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],details:[]};recap[nom].totalHeures+=h;recap[nom].totalSalaire+=sal;recap[nom].nbCours++;if(!recap[nom].classes.includes(cl))recap[nom].classes.push(cl);});
     lignesDuMois.forEach(row=>{const nom=String(row[4]||'').trim();if(!nom)return;if(!recap[nom])recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],details:[]};if(!recap[nom].details)recap[nom].details=[];const st=String(row[9]||'').trim().toUpperCase();recap[nom].details.push({date:toDate(row[0]),classe:String(row[2]||'').trim(),matiere:String(row[3]||'').trim(),heures:parseFloat(row[8])||0,salaire:parseFloat(row[11])||0,statut:st});});
