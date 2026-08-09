@@ -1256,6 +1256,7 @@ function afficherLiensDir(){
 }
   var _progCacheCom = []; // cache des lignes du programme, pour affichage groupé + PDF
 
+  var _progCacheEdu = []; // cache des lignes du programme (espace Educateur), pour PDF
 function _niveauDeClasse(classe) {
   var c = String(classe || '').trim();
   var espace = c.indexOf(' ');
@@ -6716,6 +6717,7 @@ async function chargerProgrammeTrimestrielEdu(s) {
       if (countEl) countEl.textContent = '(0)';
       return;
     }
+    _progCacheEdu = lignes;
     if (countEl) countEl.textContent = '(' + lignes.length + ')';
     var parClasse = {};
     lignes.forEach(function(l) {
