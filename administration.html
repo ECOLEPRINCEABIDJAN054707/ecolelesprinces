@@ -2687,6 +2687,12 @@ async function attribuerMatriculeCom() {
       <h3>&#128197; Programme trimestriel &mdash; Devoirs surveilles <span id="eduProgCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
     </div>
     <div class="sec-body open" id="eduProgBody">
+      <div style="padding:10px 14px 6px;background:#F3E5F5;border-bottom:1px solid #CE93D8">
+      <label style="font-size:0.72em;font-weight:700;color:#6A1B9A;display:block;margin-bottom:4px">🔍 CHOISIR UNE CLASSE</label>
+      <select id="eduProgFiltre" onchange="_filtrerProgEdu()" style="width:100%;padding:8px;border:1.5px solid #CE93D8;border-radius:8px;font-size:0.82em;background:#fff">
+        <option value="">-- Toutes les classes --</option>
+      </select>
+    </div>
       <div style="padding:8px 14px 6px;background:#F3E5F5;border-bottom:1px solid #CE93D8">
         <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">&#128274; Lecture seule &mdash; Planning etabli par la Direction pour vos classes</span>
       </div>
