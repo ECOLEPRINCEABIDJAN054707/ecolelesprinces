@@ -2060,19 +2060,20 @@ function genererProgTrimPDF() {
  if (!data || !data.ok) { return; }
 
 if (!data.trouve) {
-  document.getElementById('badgeMenaInscription').style.display = 'none';
-  document.getElementById('badgeMenaActualise').style.display = 'none';
-  document.getElementById('badgeMenaPhoto').style.display = 'none';
-  const msgDivVide = document.getElementById('messageMenaAction');
-  if (msgDivVide) {
-    msgDivVide.style.background = '#FFF3E0';
-    msgDivVide.style.color = '#E65100';
-    msgDivVide.style.fontWeight = 'bold';
-    msgDivVide.textContent = "Aucune inscription en ligne trouvée — sans elle, votre enfant ne sera pas enregistré(e) au MENA et perd son statut affecté(e). Contactez la Direction via la messagerie ci-dessous.";
+    document.getElementById('badgeMenaInscription').style.display = 'none';
+    document.getElementById('badgeMenaActualise').style.display = 'none';
+    document.getElementById('badgeMenaPhoto').style.display = 'none';
+    const msgDivVide = document.getElementById('messageMenaAction');
+    if (msgDivVide) {
+      msgDivVide.style.background = '#FFF3E0';
+      msgDivVide.style.color = '#E65100';
+      msgDivVide.style.fontWeight = 'bold';
+      msgDivVide.style.fontSize = '1.05em';
+      msgDivVide.textContent = "Aucune inscription en ligne trouvée — sans elle, votre enfant ne sera pas enregistré(e) au MENA et perd son statut affecté(e). Contactez la Direction via la messagerie ci-dessous.";
+    }
+    section.style.display = 'block';
+    return;
   }
-  section.style.display = 'block';
-  return;
-}
 
   const inscOK = data.inscriptionLigne === 'OUI';
   const actOK = data.actualise === 'OUI';
