@@ -1432,6 +1432,14 @@ function _toggleNivProg(id) {
   if (!el) return;
   el.style.display = (el.style.display === 'none') ? 'block' : 'none';
 }
+  function _filtrerProgEdu() {
+  var sel = document.getElementById('eduProgFiltre');
+  if (!sel) return;
+  var valeur = sel.value;
+  document.querySelectorAll('.eduProgClasseBloc').forEach(function(bloc) {
+    bloc.style.display = (!valeur || bloc.getAttribute('data-classe') === valeur) ? '' : 'none';
+  });
+}
 function telechargerProgPDF(type, valeur, espace) {
   var cache = espace === 'edu' ? _progCacheEdu : _progCacheCom;
   if (!cache.length) {
@@ -6617,6 +6625,7 @@ async function chargerAppelsCom(ecole) {
   });
   liste.innerHTML = h;
 }
+  
 async function chargerProgrammeTrimestrielEdu(s) {
   var container = document.getElementById('eduProgListe');
   var countEl = document.getElementById('eduProgCount');
