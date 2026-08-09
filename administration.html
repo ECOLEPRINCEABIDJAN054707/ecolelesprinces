@@ -1617,8 +1617,13 @@ function telechargerProgPDF(type, valeur, espace) {
     showToast('Le programme n\'est pas encore chargé', 'error');
     return;
   }
-  var lignes = cache.filter(function(l) {
-    return type === 'niveau' ? l.niveau === valeur : l.classe === valeur;
+var lignes = cache.filter(function(l) {
+    if (type === 'niveau') return l.niveau === valeur;
+    if (type === 'matiere') {
+      var parts = valeur.split('|||');
+      return l.classe === parts[0] && l.matiere === parts[1];
+    }
+    return l.classe === valeur;
   });
   if (!lignes.length) {
     showToast('Aucun devoir trouvé', 'error');
@@ -1636,7 +1641,11 @@ function telechargerProgPDF(type, valeur, espace) {
     y += 7;
     doc.setFontSize(11);
     doc.setFont(undefined, 'bold');
-    doc.text((type === 'niveau' ? 'Niveau ' : 'Classe ') + valeur, pageWidth / 2, y, { align: 'center' });
+   var titrePdf = valeur;
+    if (type === 'niveau') titrePdf = 'Niveau ' + valeur;
+    else if (type === 'matiere') { var partsT = valeur.split('|||'); titrePdf = partsT[0] + ' — ' + partsT[1]; }
+    else titrePdf = 'Classe ' + valeur;
+    doc.text(titrePdf, pageWidth / 2, y, { align: 'center' });
     y += 6;
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
@@ -1734,7 +1743,8 @@ function telechargerProgPDF(type, valeur, espace) {
       y += 3;
     });
 
-    var nomFichier = 'Programme_' + valeur.replace(/\s+/g, '_') + '_' + String(currentStaff.ecole || '').replace(/\s+/g, '_') + '.pdf';
+    var nomVal = type === 'matiere' ? valeur.split('|||').join('_') : valeur;
+    var nomFichier = 'Programme_' + nomVal.replace(/\s+/g, '_') + '_' + String(currentStaff.ecole || '').replace(/\s+/g, '_') + '.pdf';
     doc.save(nomFichier);
   } catch (e) {
     showToast('Erreur lors de la génération du PDF', 'error');
