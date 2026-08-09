@@ -6744,6 +6744,7 @@ async function chargerProgrammeTrimestrielEdu(s) {
       filtreEl.innerHTML = optionsHtml;
     }
     Object.keys(parClasse).sort().forEach(function(cl) {
+      html += '<div class="eduProgClasseBloc" data-classe="' + cl.replace(/"/g, '&quot;') + '">';
      html += '<div style="margin:8px 14px 0;padding:6px 10px;background:var(--bleu);color:#fff;border-radius:8px;font-size:0.8em;font-weight:700;display:flex;justify-content:space-between;align-items:center"><span>' + cl + '</span><button onclick="telechargerProgPDF(\'classe\',\'' + cl.replace(/'/g, "\\'") + '\',\'edu\')" style="padding:4px 9px;background:#fff;color:var(--bleu);border:none;border-radius:6px;font-size:0.68em;font-weight:700;cursor:pointer">📥 PDF</button></div>';
       var matieres = parClasse[cl];
       Object.keys(matieres).sort().forEach(function(mat) {
@@ -6769,6 +6770,7 @@ var items = matieres[mat].slice().sort(function(a, b) {
         });
         html += '</div>';
       });
+   html += '</div>';
     });
     container.innerHTML = html;
   } catch (e) {
