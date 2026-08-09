@@ -7850,11 +7850,7 @@ function filtrerEDT() {
 function parseHeuresToMinutes(val) {
   if(!val) return 0;
   const n = parseFloat(val);
-  // Valeur Google Sheets sérielle (fractions de jour)
-  if(!isNaN(n) && n > 0 && n < 1) return Math.round(n * 24 * 60);
-  // Valeur en heures décimales (ex: 1.5 = 1h30)
   if(!isNaN(n) && n >= 0) return Math.round(n * 60);
-  // Format "h:mm" ou "1h30"
   const s = String(val).replace('h', ':').trim();
   const parts = s.split(':').map(Number);
   return (parts[0]||0)*60 + (parts[1]||0);
