@@ -6703,14 +6703,16 @@ async function chargerProgrammeTrimestrielEdu(s) {
         classe: classeRow,
         matiere: String(row[1] || '').trim() || 'Matiere',
         trimestre: String(row[2] || '').trim(),
-        date: date,
+         date: date,
+        dateAffiche: dateAvecJour(date),
         dateTri: _dateVersTri(date),
         heureDebut: heureFromValue(heureDebut),
         heureFin: heureFromValue(heureFin),
         salle: String(salle),
         sujet: String(sujet),
         surveillant: String(surveillant),
-        dateRendu: dateRendu
+        dateRendu: dateRendu,
+        dateRenduAffiche: dateAvecJour(dateRendu)
       });
     }
     if (!lignes.length) {
