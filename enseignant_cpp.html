@@ -1120,10 +1120,10 @@ async function chargerBilan() {
         // FIX : safeFloat évite les NaN
         const heures = safeFloat(row[8]);
         const salaire = safeFloat(row[11]);
-        if (statut === 'VALIDÉ' || statut === 'VALIDE') {
-          totalH += heures; totalS += salaire; nbCours++;
-          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures, salaire, statut: '✅' });
-        } else if (statut === 'EN ATTENTE') {
+if (statut.indexOf('VALID') !== -1) {
+  totalH += heures; totalS += salaire; nbCours++;
+  coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures, salaire, statut: '✅' });
+} else if (statut === 'EN ATTENTE') {
           nbAttente++;
           coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures, salaire:0, statut: '⏰' });
         }
