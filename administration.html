@@ -1262,7 +1262,14 @@ function _niveauDeClasse(classe) {
   if (espace === -1) return c;
   return c.substring(0, espace);
 }
-
+function _dateVersTri(dateStr) {
+  var m = String(dateStr || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (!m) return '99999999';
+  var jour = m[1].length === 1 ? '0' + m[1] : m[1];
+  var mois = m[2].length === 1 ? '0' + m[2] : m[2];
+  var annee = m[3];
+  return annee + mois + jour;
+}
 async function chargerProgrammeTrimestrielCom() {
   var container = document.getElementById('comProgListe');
   var countEl = document.getElementById('comProgCount');
