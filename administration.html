@@ -1433,11 +1433,12 @@ function _toggleNivProg(id) {
   el.style.display = (el.style.display === 'none') ? 'block' : 'none';
 }
 function telechargerProgPDF(type, valeur, espace) {
-  if (!_progCacheCom.length) {
+  var cache = espace === 'edu' ? _progCacheEdu : _progCacheCom;
+  if (!cache.length) {
     showToast('Le programme n\'est pas encore chargé', 'error');
     return;
   }
-  var lignes = _progCacheCom.filter(function(l) {
+  var lignes = cache.filter(function(l) {
     return type === 'niveau' ? l.niveau === valeur : l.classe === valeur;
   });
   if (!lignes.length) {
