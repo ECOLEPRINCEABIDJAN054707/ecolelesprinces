@@ -1450,7 +1450,17 @@ function _toggleNivProg(id) {
   });
 }
   var _progCacheDir = []; // cache des lignes du programme (espace Directeur), pour PDF
-
+function _toggleDirProgConsult() {
+  var body = document.getElementById('dirProgConsultBody');
+  var arr = document.getElementById('dirProgConsultArr');
+  if (!body) return;
+  var ouvert = body.style.display !== 'none';
+  body.style.display = ouvert ? 'none' : 'block';
+  if (arr) arr.textContent = ouvert ? '▼' : '▲';
+  if (!ouvert && !_progCacheDir.length) {
+    chargerProgrammeTrimestrielDir();
+  }
+}
 async function chargerProgrammeTrimestrielDir() {
   var container = document.getElementById('dirProgListe');
   if (!container || !currentStaff) return;
