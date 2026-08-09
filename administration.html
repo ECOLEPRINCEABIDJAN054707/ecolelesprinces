@@ -1495,7 +1495,7 @@ function telechargerProgPDF(type, valeur, espace) {
         doc.setTextColor(0);
         y += 5;
 
-        var items = matieres[mat].slice().sort(function(a, b) { return String(a.date).localeCompare(String(b.date)); });
+       var items = matieres[mat].slice().sort(function(a, b) { return String(a.dateTri).localeCompare(String(b.dateTri)); });
         items.forEach(function(it) {
           if (y > 275) { doc.addPage(); y = 18; }
           doc.setFontSize(9.5);
