@@ -5991,8 +5991,7 @@ function changerAnneeCom(){
 function afficherCom(s){ 
   enregistrerConnexionStaff('Comptable', s.ecole);
   peuplerNiveaux(s.ecole, 'mc-niveau');
- peuplerNiveaux(s.ecole, 'comPaiClasseSelect');
-peuplerNiveaux(s.ecole, 'comInscClasseSelect');
+peuplerClassesReellesCom(s.ecole);
   document.getElementById('comAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
   document.getElementById('comNom').textContent=s.nom;document.getElementById('comEcole').textContent=s.label;
   document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;
@@ -6000,6 +5999,17 @@ peuplerNiveaux(s.ecole, 'comInscClasseSelect');
 setTimeout(function(){chargerAffectationTousCom();},700);
   setTimeout(function(){chargerMasseSalarialeCom(s.ecole);},600);
   remplirMoisCom();
+  function peuplerClassesReellesCom(ecole){
+  chargerSynthese(ecole).then(eleves=>{
+    const classes=[...new Set((eleves||[]).map(e=>e.classe).filter(Boolean))].sort();
+    ['comPaiClasseSelect','comInscClasseSelect'].forEach(id=>{
+      const sel=document.getElementById(id);
+      if(!sel) return;
+      sel.innerHTML='<option value="">-- Choisir une classe --</option>';
+      classes.forEach(c=>{ sel.innerHTML+='<option value="'+c+'">'+c+'</option>'; });
+    });
+  });
+}
   function chargerPaiementsCom(){
   const classe = document.getElementById('comPaiClasseSelect').value;
   const zone = document.getElementById('comPaiResultats');
