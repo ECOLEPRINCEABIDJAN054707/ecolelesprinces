@@ -5991,6 +5991,8 @@ function changerAnneeCom(){
 function afficherCom(s){ 
   enregistrerConnexionStaff('Comptable', s.ecole);
   peuplerNiveaux(s.ecole, 'mc-niveau');
+ peuplerNiveaux(s.ecole, 'comPaiClasseSelect');
+peuplerNiveaux(s.ecole, 'comInscClasseSelect');
   document.getElementById('comAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
   document.getElementById('comNom').textContent=s.nom;document.getElementById('comEcole').textContent=s.label;
   document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;
