@@ -6000,21 +6000,35 @@ peuplerNiveaux(s.ecole, 'comInscClasseSelect');
 setTimeout(function(){chargerAffectationTousCom();},700);
   setTimeout(function(){chargerMasseSalarialeCom(s.ecole);},600);
   remplirMoisCom();
-  const cPai=document.getElementById('comPaiBody');if(cPai)cPai.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement...</p>';
-  chargerSynthese(s.ecole).then(eleves=>{
-    const data=eleves&&eleves.length?eleves:[];donneesElevesSheets=data;
-    const imp=data.filter(e=>e.statut!=='SOLDE').length;document.getElementById('cStatImpaye').textContent=imp;document.getElementById('cStatInsc').textContent=data.length;
-    let h='';
-    data.forEach(p=>{const bg=p.statut==='SOLDE'?'rgba(46,125,50,0.12)':p.statut==='PARTIEL'?'rgba(230,81,0,0.12)':'rgba(198,40,40,0.12)';const tc=p.statut==='SOLDE'?'#2E7D32':p.statut==='PARTIEL'?'#E65100':'#C62828';const badge=p.statut==='SOLDE'?'<span class="bdg bg-vert">Solde</span>':p.statut==='PARTIEL'?'<span class="bdg bg-orange">Partiel</span>':'<span class="bdg bg-rouge">Impaye</span>';const tel=p.tel1||p.tel2||'';h+='<div class="item"><div class="item-av" style="background:'+bg+';color:'+tc+'">'+p.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+p.nom+' '+badge+'</div><div class="item-meta">'+p.classe+(tel?' · '+tel:'')+'<br>'+p.verse.toLocaleString('fr-FR')+' / '+p.sco.toLocaleString('fr-FR')+' F</div></div><div class="item-val"><div class="val" style="color:'+tc+'">'+(p.solde>0?p.solde.toLocaleString('fr-FR')+' F':'OK')+'</div></div></div>';});
-    if(cPai)cPai.innerHTML=h||'<p style="padding:14px;color:var(--gris);font-size:0.82em">Aucune donnee</p>';
+  function chargerPaiementsCom(){
+  const classe = document.getElementById('comPaiClasseSelect').value;
+  const zone = document.getElementById('comPaiResultats');
+  if(!classe){ zone.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Choisissez une classe.</p>'; return; }
+  zone.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement...</p>';
+  chargerSynthese(currentStaff.ecole).then(eleves=>{
+    const data=(eleves||[]).filter(e=>e.classe===classe);
+    donneesElevesSheets=eleves||[];
+    const imp=(eleves||[]).filter(e=>e.statut!=='SOLDE').length;
+    document.getElementById('cStatImpaye').textContent=imp;
+    document.getElementById('cStatInsc').textContent=(eleves||[]).length;
+    let h='<div style="padding:8px 16px;background:#F5F7FA;border-bottom:1px solid var(--border);font-size:0.8em;font-weight:700;color:var(--bleu)">'+classe+' — '+data.length+' eleve(s)</div>';
+    data.forEach(p=>{const bg=p.statut==='SOLDE'?'rgba(46,125,50,0.12)':p.statut==='PARTIEL'?'rgba(230,81,0,0.12)':'rgba(198,40,40,0.12)';const tc=p.statut==='SOLDE'?'#2E7D32':p.statut==='PARTIEL'?'#E65100':'#C62828';const badge=p.statut==='SOLDE'?'<span class="bdg bg-vert">Solde</span>':p.statut==='PARTIEL'?'<span class="bdg bg-orange">Partiel</span>':'<span class="bdg bg-rouge">Impaye</span>';const tel=p.tel1||p.tel2||'';h+='<div class="item"><div class="item-av" style="background:'+bg+';color:'+tc+'">'+p.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+p.nom+' '+badge+'</div><div class="item-meta">'+(tel?tel+' · ':'')+p.verse.toLocaleString('fr-FR')+' / '+p.sco.toLocaleString('fr-FR')+' F</div></div><div class="item-val"><div class="val" style="color:'+tc+'">'+(p.solde>0?p.solde.toLocaleString('fr-FR')+' F':'OK')+'</div></div></div>';});
+    zone.innerHTML=h;
   });
-  chargerSynthese(s.ecole).then(eleves=>{
-    const cI=document.getElementById('comInscBody');if(!cI||!eleves||!eleves.length){if(cI)cI.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Connexion Google Sheets requise</p>';return;}
-    const byClasse={};eleves.forEach(e=>{if(!byClasse[e.classe])byClasse[e.classe]=[];byClasse[e.classe].push(e);});
-    let h2='<div style="padding:10px 14px;background:#E8F5E9;font-size:0.76em;color:var(--vert);border-bottom:1px solid var(--border)">'+eleves.length+' eleves · '+Object.keys(byClasse).length+' classes</div>';
-    Object.keys(byClasse).sort().forEach(classe=>{const els=byClasse[classe];h2+='<div style="padding:8px 16px;background:#F5F7FA;border-bottom:1px solid var(--border);font-size:0.8em;font-weight:700;color:var(--bleu)">'+classe+' — '+els.length+' eleve(s)</div>';els.forEach(e=>{const badge=e.statut==='SOLDE'?'<span class="bdg bg-vert">Solde</span>':e.statut==='PARTIEL'?'<span class="bdg bg-orange">Partiel</span>':'<span class="bdg bg-rouge">Impaye</span>';h2+='<div class="item"><div class="item-av" style="background:rgba(31,78,121,0.1);color:var(--bleu)">'+e.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+e.nom+'</div><div class="item-meta">'+e.classe+(e.tel1?' · '+e.tel1:'')+'</div></div>'+badge+'</div>';});});
-    cI.innerHTML=h2;
+}
+function chargerInscriptionsCom(){
+  const classe = document.getElementById('comInscClasseSelect').value;
+  const zone = document.getElementById('comInscResultats');
+  if(!classe){ zone.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Choisissez une classe.</p>'; return; }
+  zone.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement...</p>';
+  chargerSynthese(currentStaff.ecole).then(eleves=>{
+    const data=(eleves||[]).filter(e=>e.classe===classe);
+    let h='<div style="padding:8px 16px;background:#F5F7FA;border-bottom:1px solid var(--border);font-size:0.8em;font-weight:700;color:var(--bleu)">'+classe+' — '+data.length+' eleve(s)</div>';
+    data.forEach(e=>{const badge=e.statut==='SOLDE'?'<span class="bdg bg-vert">Solde</span>':e.statut==='PARTIEL'?'<span class="bdg bg-orange">Partiel</span>':'<span class="bdg bg-rouge">Impaye</span>';h+='<div class="item"><div class="item-av" style="background:rgba(31,78,121,0.1);color:var(--bleu)">'+e.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+e.nom+'</div><div class="item-meta">'+e.classe+(e.tel1?' · '+e.tel1:'')+'</div></div>'+badge+'</div>';});
+    zone.innerHTML=h||'<p style="padding:14px;color:var(--gris);font-size:0.82em">Aucune donnee</p>';
   });
+}
+
   chargerResultatsEtMessages(s.ecole,'COM');
   let h4='';TACHES_DEMO.forEach((t,i)=>{const ps={haute:'prio-h',normale:'prio-n',basse:'prio-b'};const pl={haute:'Urgent',normale:'Normal',basse:'Faible'};h4+='<div class="tache"><div class="tache-check '+(t.done?'done':'')+'" onclick="toggleTache('+i+',this)">'+(t.done?'✓':'')+'</div><div class="tache-titre '+(t.done?'done':'')+'">'+t.titre+'<br><small style="color:var(--gris)">'+t.heure+'</small></div><span class="prio '+ps[t.prio]+'">'+pl[t.prio]+'</span></div>';});
   document.getElementById('comTachesBody').innerHTML=h4;
