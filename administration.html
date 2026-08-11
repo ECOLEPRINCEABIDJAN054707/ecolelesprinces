@@ -2078,7 +2078,15 @@ async function sauvegarderPersonnelDir(idx) {
     <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
       <h3>&#128179; Suivi des paiements</h3><span class="arr">&#9660;</span>
     </div>
-    <div class="sec-body open" id="comPaiBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement...</p></div>
+    <div class="sec-body open" id="comPaiBody">
+  <div style="padding:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <select id="comPaiClasseSelect" style="flex:1;min-width:160px;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:0.85em">
+      <option value="">-- Choisir une classe --</option>
+    </select>
+    <button onclick="chargerPaiementsCom()" style="padding:8px 16px;background:var(--bleu);color:#fff;border:none;border-radius:6px;font-size:0.85em;font-weight:600;cursor:pointer">Charger</button>
+  </div>
+  <div id="comPaiResultats"></div>
+</div>
   </div>
   <div class="section">
     <div class="sec-head sec-vert" onclick="toggleSec(this)">
