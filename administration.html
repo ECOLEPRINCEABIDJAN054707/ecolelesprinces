@@ -5999,6 +5999,13 @@ peuplerClassesReellesCom(s.ecole);
 setTimeout(function(){chargerAffectationTousCom();},700);
   setTimeout(function(){chargerMasseSalarialeCom(s.ecole);},600);
   remplirMoisCom();
+  chargerResultatsEtMessages(s.ecole,'COM');
+  let h4='';TACHES_DEMO.forEach((t,i)=>{const ps={haute:'prio-h',normale:'prio-n',basse:'prio-b'};const pl={haute:'Urgent',normale:'Normal',basse:'Faible'};h4+='<div class="tache"><div class="tache-check '+(t.done?'done':'')+'" onclick="toggleTache('+i+',this)">'+(t.done?'✓':'')+'</div><div class="tache-titre '+(t.done?'done':'')+'">'+t.titre+'<br><small style="color:var(--gris)">'+t.heure+'</small></div><span class="prio '+ps[t.prio]+'">'+pl[t.prio]+'</span></div>';});
+  document.getElementById('comTachesBody').innerHTML=h4;
+setTimeout(function(){ _rechargerListeReception('Com'); }, 700);
+ if (s.type==='PRIM' || s.type==='BOTH') setTimeout(chargerMatriculesPrimaireCom, 1200);
+  document.getElementById('espaceCom').style.display='block';
+}
   function peuplerClassesReellesCom(ecole){
   chargerSynthese(ecole).then(eleves=>{
     const classes=[...new Set((eleves||[]).map(e=>e.classe).filter(Boolean))].sort();
@@ -6010,7 +6017,7 @@ setTimeout(function(){chargerAffectationTousCom();},700);
     });
   });
 }
-  function chargerPaiementsCom(){
+function chargerPaiementsCom(){
   const classe = document.getElementById('comPaiClasseSelect').value;
   const zone = document.getElementById('comPaiResultats');
   if(!classe){ zone.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Choisissez une classe.</p>'; return; }
@@ -6037,14 +6044,6 @@ function chargerInscriptionsCom(){
     data.forEach(e=>{const badge=e.statut==='SOLDE'?'<span class="bdg bg-vert">Solde</span>':e.statut==='PARTIEL'?'<span class="bdg bg-orange">Partiel</span>':'<span class="bdg bg-rouge">Impaye</span>';h+='<div class="item"><div class="item-av" style="background:rgba(31,78,121,0.1);color:var(--bleu)">'+e.nom.charAt(0)+'</div><div class="item-info"><div class="item-nom">'+e.nom+'</div><div class="item-meta">'+e.classe+(e.tel1?' · '+e.tel1:'')+'</div></div>'+badge+'</div>';});
     zone.innerHTML=h||'<p style="padding:14px;color:var(--gris);font-size:0.82em">Aucune donnee</p>';
   });
-}
-
-  chargerResultatsEtMessages(s.ecole,'COM');
-  let h4='';TACHES_DEMO.forEach((t,i)=>{const ps={haute:'prio-h',normale:'prio-n',basse:'prio-b'};const pl={haute:'Urgent',normale:'Normal',basse:'Faible'};h4+='<div class="tache"><div class="tache-check '+(t.done?'done':'')+'" onclick="toggleTache('+i+',this)">'+(t.done?'✓':'')+'</div><div class="tache-titre '+(t.done?'done':'')+'">'+t.titre+'<br><small style="color:var(--gris)">'+t.heure+'</small></div><span class="prio '+ps[t.prio]+'">'+pl[t.prio]+'</span></div>';});
-  document.getElementById('comTachesBody').innerHTML=h4;
-setTimeout(function(){ _rechargerListeReception('Com'); }, 700);
- if (s.type==='PRIM' || s.type==='BOTH') setTimeout(chargerMatriculesPrimaireCom, 1200);
-  document.getElementById('espaceCom').style.display='block';
 }
 function toggleTache(idx,el){TACHES_DEMO[idx].done=!TACHES_DEMO[idx].done;el.classList.toggle('done');el.textContent=TACHES_DEMO[idx].done?'✓':'';el.nextElementSibling.classList.toggle('done');document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;showToast(TACHES_DEMO[idx].done?'Accomplie !':'Remise en cours',TACHES_DEMO[idx].done?'success':'');}
 function afficherEdu(s){ 
