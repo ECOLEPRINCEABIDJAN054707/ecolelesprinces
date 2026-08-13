@@ -1323,26 +1323,33 @@ async function chargerEDT(eleve){var div=document.getElementById("edtBody");var 
   }
   var classeAncienne=eleve.classe;
   var classeNouvelle=window._classe2026;
-  async function tenter(sid,ongletNom){
-    try{
-      var urlBase="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/";
-      var urlParams="?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
-      var res=await fetch(urlBase+encodeURIComponent(ongletNom+"!A1:G15")+urlParams);
-      if(!res.ok) return null;
-      var data=await res.json();
-      if(!data.values||data.values.length<2) return null;
-     return data.values.slice(2);
-    }catch(e){ return null; }
+async function tenter(sid,ongletNom){
+      try{
+        var urlBase="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/";
+        var urlParams="?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
+        var res=await fetch(urlBase+encodeURIComponent(ongletNom+"!A1:G15")+urlParams);
+        if(!res.ok) return null;
+        var data=await res.json();
+        if(!data.values) return null;
+        var lignes=data.values.filter(function(row){
+          return /^\d{1,2}h\d{2}\s*-\s*\d{1,2}h\d{2}$/.test(String(row[0]||"").trim());
+        });
+        return lignes.length ? lignes : null;
+      }catch(e){ return null; }
+    }
   }
   // EDT = uniquement la base 2026-2027. On essaie plusieurs variantes de nom
   // d'onglet (avec ou sans underscore avant la section) et les deux classes
   // possibles (actuelle et 2026-2027), car la convention change selon les ecoles.
   var rows = null;
   if (window._sheetsId2026) {
-    var candidats=variantesOnglet(classeAncienne);
-    if(classeNouvelle && classeNouvelle!==classeAncienne){
-      candidats=candidats.concat(variantesOnglet(classeNouvelle));
-    }
+var candidats=[];
+      if(classeNouvelle){
+        candidats=candidats.concat(variantesOnglet(classeNouvelle));
+      }
+      if(!classeNouvelle || classeNouvelle!==classeAncienne){
+        candidats=candidats.concat(variantesOnglet(classeAncienne));
+      }
     for(var ci=0; ci<candidats.length && !rows; ci++){
       rows = await tenter(window._sheetsId2026, candidats[ci]);
     }
