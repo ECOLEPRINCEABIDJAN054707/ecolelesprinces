@@ -974,14 +974,23 @@ async function chargerClasses() {
       document.body.appendChild(script2);
       const dataMC = await Promise.race([promise2, new Promise(r => setTimeout(() => r({ok:false}), 15000))]);
 
-      if (dataMC && dataMC.ok && dataMC.classes && dataMC.classes.length) {
-        function normaliser(s) {
+function normaliser(s) {
         return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().replace(/\b([CD])1\b/g, '$1');
-        }
+      }
+      if (dataMC && dataMC.ok && dataMC.classes && dataMC.classes.length) {
         const mesClassesNorm = dataMC.classes.map(normaliser);
         classes = classes.filter(c => mesClassesNorm.includes(normaliser(c)));
+      } else if (user.niveau === 'primaire' && user.classeDefaut) {
+        // Repli de sécurité — EDT vide ou indisponible : on restreint
+        // à la classe déclarée au login, plutôt que d'afficher tout.
+        classes = classes.filter(c => normaliser(c) === normaliser(user.classeDefaut));
       }
-    } catch(e2) { console.warn('filtre classes prof:', e2); }
+    } catch(e2) {
+      console.warn('filtre classes prof:', e2);
+      if (user.niveau === 'primaire' && user.classeDefaut) {
+        classes = classes.filter(c => normaliser(c) === normaliser(user.classeDefaut));
+      }
+    }
 classes.sort((a, b) => a.localeCompare(b, 'fr'));
     sels.forEach(id => {
       const sel = document.getElementById(id);
