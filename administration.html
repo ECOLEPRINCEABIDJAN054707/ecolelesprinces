@@ -674,6 +674,19 @@ table tr:nth-child(even){background:#F8FAFD}
 </div>
 
 <div class="section">
+  <div class="sec-head" onclick="toggleSec(this)">
+    <h3>📋 Rapports DRENA</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirDrenaBody" style="display:none">
+    <p style="font-size:0.85em;color:var(--gris);margin-bottom:10px">
+      Génère automatiquement les canevas demandés par la DRENA à partir des données de l'école.
+    </p>
+    <button onclick="genererEnqueteRentree('xlsx')" style="margin-right:8px">📥 Enquête de rentrée — Excel</button>
+    <button onclick="genererEnqueteRentree('pdf')">📄 Enquête de rentrée — PDF</button>
+    <div id="drenaStatus" style="margin-top:10px;font-size:0.85em"></div>
+  </div>
+</div>
+  <div class="section">
     <div class="sec-head sec-violet" onclick="peuplerClassesProgrammeOnce();toggleSec(this)">
       <h3>&#128197; Programme trimestriel &mdash; Devoirs surveilles 2026-2027</h3><span class="arr">&#9660;</span>
     </div>
@@ -3335,6 +3348,101 @@ const APP_SCRIPT_URL_ADMIN='https://script.google.com/macros/s/AKfycbzwGgqVP502S
 const APPS_SCRIPT_POINTAGE='https://script.google.com/macros/s/AKfycbx7nBhAMxM_zAMAHCPfPQPkktJ9avtOXm2igfzgOuw9PF1jW0Y7ElUApPoeHvw_F-pT/exec';
 const APPS_SCRIPT_PEDA='https://script.google.com/macros/s/AKfycbwp27cGwqXrYZXDjcpl-Io_gtNKcczIdxMJ974NUrDHxmR46JgY0F7FRXhsMtuatDhM/exec';
 const API_KEY='AIzaSyBaDldTi4GWHL3RpnppDKb7dRmaFNd_WSA';
+  function genererEnqueteRentree(format) {
+ var ecole = (typeof currentStaff !== 'undefined' && currentStaff && currentStaff.ecole) || '';
+  if (!ecole) { alert("École non identifiée."); return; }
+  document.getElementById('drenaStatus').textContent = "Chargement des données...";
+
+  var callbackName = 'cbDrena_' + Date.now();
+  window[callbackName] = function(data) {
+    delete window[callbackName];
+    if (!data.ok) {
+      document.getElementById('drenaStatus').textContent = "Erreur : " + data.error;
+      return;
+    }
+    if (format === 'xlsx') construireExcelEnquete(data);
+    else construirePdfEnquete(data);
+    document.getElementById('drenaStatus').innerHTML =
+      "✅ Généré. <b>" + data.avertissement + "</b>";
+  };
+  var script = document.createElement('script');
+  script.src = APPS_SCRIPT_POINTAGE + '?type=GET_DONNEES_ENQUETE_RENTREE&ecole=' + encodeURIComponent(ecole) + '&callback=' + callbackName;
+  document.body.appendChild(script);
+}
+
+function construireExcelEnquete(d) {
+  var niv = d.niveaux;
+  var ws_data = [];
+  ws_data.push(["ENQUÊTE RAPIDE DE RENTRÉE 2026-2027 — " + d.ecole]);
+  ws_data.push([]);
+  ws_data.push(["NOMBRE DE CLASSES"]);
+  ws_data.push(niv.slice());
+  ws_data.push(niv.map(function(n){ return d.nbClassesParNiveau[n]; }));
+  ws_data.push([]);
+  ws_data.push(["EFFECTIFS (base inscriptions actuelles 2026-2027)"]);
+  ws_data.push(niv.slice());
+  ws_data.push(niv.map(function(n){ return d.effectifsParNiveau[n]; }));
+  ws_data.push([]);
+  ws_data.push(["DÉTAIL PAR SEXE"]);
+  ws_data.push(["Niveau","Masculin","Féminin","Non renseigné"]);
+  niv.forEach(function(n){
+    var s = d.effectifsSexeParNiveau[n];
+    ws_data.push([n, s.M, s.F, s.INCONNU]);
+  });
+  ws_data.push([]);
+  ws_data.push(["ENSEIGNANTS PAR MATIÈRE — Attendu / Présent"]);
+  ws_data.push(["Matière","Attendu","Présent"]);
+  d.matieres.forEach(function(m){
+    ws_data.push([m, d.ensAttendu[m], d.ensPresent[m]]);
+  });
+  ws_data.push([]);
+  ws_data.push(["PERSONNEL ADMINISTRATIF (⚠️ à vérifier/compléter avant envoi)"]);
+  ws_data.push(["Fonction","Nombre (base)"]);
+  Object.keys(d.personnelAdminAuto).forEach(function(f){
+    ws_data.push([f, d.personnelAdminAuto[f]]);
+  });
+
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [{wch:22},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws, "Enquete Rentree");
+  XLSX.writeFile(wb, "Enquete_Rentree_" + d.ecole.replace(/\s+/g,'_') + ".xlsx");
+}
+
+function construirePdfEnquete(d) {
+  var doc = new jspdf.jsPDF();
+  var y = 15;
+  doc.setFontSize(14);
+  doc.text("Enquête rapide de rentrée 2026-2027 — " + d.ecole, 105, y, { align: 'center' }); y += 10;
+
+  doc.setFontSize(11);
+  doc.text("Nombre de classes par niveau :", 14, y); y += 6;
+  doc.setFontSize(9);
+  var niv = d.niveaux;
+  doc.text(niv.map(function(n){ return n + ": " + d.nbClassesParNiveau[n]; }).join("   "), 14, y, {maxWidth: 180}); y += 12;
+
+  doc.setFontSize(11);
+  doc.text("Effectifs par niveau :", 14, y); y += 6;
+  doc.setFontSize(9);
+  doc.text(niv.map(function(n){ return n + ": " + d.effectifsParNiveau[n]; }).join("   "), 14, y, {maxWidth: 180}); y += 12;
+
+  doc.setFontSize(11);
+  doc.text("Enseignants attendus / présents par matière :", 14, y); y += 6;
+  doc.setFontSize(9);
+  d.matieres.forEach(function(m){
+    doc.text(m + " : " + d.ensAttendu[m] + " / " + d.ensPresent[m], 16, y); y += 5;
+  });
+  y += 4;
+
+  doc.setFontSize(11);
+  doc.text("Personnel administratif (⚠️ à vérifier avant envoi) :", 14, y); y += 6;
+  doc.setFontSize(9);
+  Object.keys(d.personnelAdminAuto).forEach(function(f){
+    doc.text(f + " : " + d.personnelAdminAuto[f], 16, y); y += 5;
+  });
+
+  doc.save("Enquete_Rentree_" + d.ecole.replace(/\s+/g,'_') + ".pdf");
+}
 const SHEETS_IDS = {
   'CPP LES PRINCES':     '1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
   'ACADEMIE':            '1oB-Ca1sPLaFaJ7CDoWMsi_3m1ocqEsu0zxmSww7mo5M',
