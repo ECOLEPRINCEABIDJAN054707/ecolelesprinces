@@ -1331,7 +1331,7 @@ async function chargerEDT(eleve){var div=document.getElementById("edtBody");var 
       if(!res.ok) return null;
       var data=await res.json();
       if(!data.values||data.values.length<2) return null;
-      return data.values.slice(1);
+     return data.values.slice(2);
     }catch(e){ return null; }
   }
   // EDT = uniquement la base 2026-2027. On essaie plusieurs variantes de nom
