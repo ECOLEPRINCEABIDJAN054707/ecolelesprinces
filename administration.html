@@ -684,6 +684,10 @@ table tr:nth-child(even){background:#F8FAFD}
     <button onclick="genererEnqueteRentree('xlsx')" style="margin-right:8px">📥 Enquête de rentrée — Excel</button>
     <button onclick="genererEnqueteRentree('pdf')">📄 Enquête de rentrée — PDF</button>
     <div id="drenaStatus" style="margin-top:10px;font-size:0.85em"></div>
+    <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
+<div style="font-weight:700;font-size:0.85em;color:var(--bleu);padding:0 0 8px">📋 Rapport de rentrée — Infrastructures & Personnel</div>
+<div id="rentreeFormDir"></div>
+<button onclick="chargerFormulaireRentree('rentreeFormDir')" style="margin-top:8px;padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire</button>
   </div>
 </div>
   <div class="section">
@@ -2584,6 +2588,16 @@ async function attribuerMatriculeCom() {
     <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger le Comptable et les Éducateurs de votre école.</p>
   </div>
 </div>
+  <div class="section" id="comSecRentree">
+  <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+    <h3>📋 Rapport de rentrée — Infrastructures & Personnel</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Complétez les champs que vous connaissez — n'importe quel profil peut aider à remplir.</p>
+    <div id="rentreeFormCom"></div>
+    <div style="padding:0 14px 14px"><button onclick="chargerFormulaireRentree('rentreeFormCom')" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire</button></div>
+  </div>
+</div>
   <div class="section" id="comSecSansResultat">
   <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('com');toggleSec(this)">
     <h3>&#9888;&#65039; &Eacute;l&egrave;ves sans r&eacute;sultat 2025-2026 <span id="comSansResultatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -3178,6 +3192,16 @@ async function attribuerMatriculeCom() {
     <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger le Comptable et les Éducateurs de votre école.</p>
   </div>
 </div>
+  <div class="section" id="eduSecRentree">
+  <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+    <h3>📋 Rapport de rentrée — Infrastructures & Personnel</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Complétez les champs que vous connaissez — n'importe quel profil peut aider à remplir.</p>
+    <div id="rentreeFormEdu"></div>
+    <div style="padding:0 14px 14px"><button onclick="chargerFormulaireRentree('rentreeFormEdu')" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire</button></div>
+  </div>
+</div>
   <div class="section">
   <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('edu');toggleSec(this)">
     <h3>&#9888;&#65039; &Eacute;l&egrave;ves sans r&eacute;sultat 2025-2026 <span id="eduSansResultatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -3442,6 +3466,142 @@ function construirePdfEnquete(d) {
   });
 
   doc.save("Enquete_Rentree_" + d.ecole.replace(/\s+/g,'_') + ".pdf");
+}
+
+  // ============================================================
+// RAPPORT DE RENTRÉE — 163 champs manuels générés dynamiquement
+// ============================================================
+var MATIERES_RENTREE = ['Philosophie','Français','Anglais','Espagnol','Allemand','Histoire-Géographie','Physiques et Chimie','Mathématiques','Sciences de la Vie et de la Terre','Arts Plastiques','Musique','EDHC','Informatique','EPS'];
+var FONCTIONS_RENTREE = ['Directeur des Etudes','Adjoint au DE','Econome / Intendant','Educateurs','Infirmiers','Secrétaires','Informaticiens','Laborantins','Reprographe','Bibliothécaires','Gardiens','Manœuvres'];
+var ACTIVITES_RENTREE = ['Infirmerie','Bibliothèque','Foyer','Coopérative','Clubs','Association'];
+
+function _slugRentree(s){ return s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]/g,'_'); }
+
+function construireChampsRentree() {
+  var champs = [];
+  champs.push({cle:'INFRA_LABO_PC', section:'Infrastructures', label:'Laboratoires Physique-Chimie (nb salles)'});
+  champs.push({cle:'INFRA_LABO_SVT', section:'Infrastructures', label:'Laboratoires SVT (nb salles)'});
+  champs.push({cle:'INFRA_SALLE_HG', section:'Infrastructures', label:'Salles spécialisées Histoire-Géo (nb salles)'});
+  ['Bâtiments administratifs','Bâtiments pédagogiques','Réfectoire','Dortoirs','Cuisine','Autres types de salles'].forEach(function(t){
+    champs.push({cle:'INFRA_'+_slugRentree(t)+'_BAT', section:'Infrastructures', label:t+' (nb bâtiments)'});
+    champs.push({cle:'INFRA_'+_slugRentree(t)+'_SALLES', section:'Infrastructures', label:t+' (nb salles)'});
+  });
+  MATIERES_RENTREE.forEach(function(m){
+    ['1er cycle','2nd cycle'].forEach(function(cyc){
+      var cycSlug = cyc.indexOf('1er')===0 ? '1ER_CYCLE' : '2ND_CYCLE';
+      ['Femme','Homme'].forEach(function(sx){
+        champs.push({cle:'ENS_'+_slugRentree(m)+'_'+cycSlug+'_'+sx.toUpperCase()+'_EXISTANT', section:'Personnel enseignant', label:m+' — '+cyc+' — '+sx+' (existant)'});
+      });
+      ['Femme','Homme'].forEach(function(sx){
+        champs.push({cle:'ENS_'+_slugRentree(m)+'_'+cycSlug+'_'+sx.toUpperCase()+'_BESOIN', section:'Personnel enseignant', label:m+' — '+cyc+' — '+sx+' (besoin)'});
+      });
+    });
+  });
+  FONCTIONS_RENTREE.forEach(function(f){
+    ['Femme','Homme'].forEach(function(sx){
+      champs.push({cle:'NENS_'+_slugRentree(f)+'_'+sx.toUpperCase(), section:'Personnel non-enseignant', label:f+' — '+sx});
+    });
+  });
+  ACTIVITES_RENTREE.forEach(function(a){
+    champs.push({cle:'PARA_'+_slugRentree(a)+'_EXISTANT', section:'Activités parascolaires', label:a+' — Existant (OUI/NON)'});
+    champs.push({cle:'PARA_'+_slugRentree(a)+'_FONCTIONNEL', section:'Activités parascolaires', label:a+' — Fonctionnel (OUI/NON)'});
+  });
+  return champs;
+}
+
+var _champsRentreeCache = null;
+var _valeursRentreeCache = {};
+
+async function chargerFormulaireRentree(containerId) {
+  var container = document.getElementById(containerId);
+  if (!container || !currentStaff) return;
+  container.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  if (!_champsRentreeCache) _champsRentreeCache = construireChampsRentree();
+
+  var result = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_DONNEES_MANUELLES_RENTREE', ecole: currentStaff.ecole });
+  if (!result || !result.ok) { container.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur de chargement</p>'; return; }
+  _valeursRentreeCache = result.champs || {};
+
+  var parSection = {};
+  _champsRentreeCache.forEach(function(c) { if (!parSection[c.section]) parSection[c.section] = []; parSection[c.section].push(c); });
+
+  var html = '<p style="padding:10px 14px;font-size:0.78em;color:var(--gris)">Chaque champ s\'enregistre automatiquement en le quittant. N\'importe quel profil (Directeur, Éducateur, Comptable) peut compléter.</p>';
+  Object.keys(parSection).forEach(function(sec, si) {
+    var idSec = containerId + '_sec_' + si;
+    html += '<div style="margin:0 14px 10px;border:1px solid var(--border);border-radius:8px;overflow:hidden">';
+    html += '<div style="background:var(--bleu);color:#fff;padding:8px 12px;cursor:pointer;font-size:0.82em;font-weight:700" onclick="var b=document.getElementById(\'' + idSec + '\');b.style.display=b.style.display===\'none\'?\'block\':\'none\'">▸ ' + sec + ' (' + parSection[sec].length + ' champs)</div>';
+    html += '<div id="' + idSec + '" style="display:none;padding:8px">';
+    parSection[sec].forEach(function(c) {
+      var val = _valeursRentreeCache[c.cle] || '';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 8px;border-bottom:1px solid #f0f4f8">';
+      html += '<span style="font-size:0.76em;flex:1">' + c.label + '</span>';
+      html += '<input type="text" id="' + containerId + '_' + c.cle + '" value="' + String(val).replace(/"/g,'&quot;') + '" onblur="sauvegarderChampRentreeUI(\'' + c.cle + '\', this.value, this)" style="width:90px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.78em">';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  });
+  html += '<div style="padding:10px 14px"><button onclick="genererRapportRentreeComplet()" style="width:100%;padding:11px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.85em;cursor:pointer">📥 Générer le rapport complet (Excel)</button><div id="rapportRentreeStatus" style="margin-top:8px;font-size:0.82em"></div></div>';
+
+  container.innerHTML = html;
+}
+
+async function sauvegarderChampRentreeUI(cle, valeur, inputEl) {
+  if (_valeursRentreeCache[cle] === valeur) return;
+  inputEl.style.borderColor = 'var(--orange)';
+  var result = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'SAUVEGARDER_CHAMP_RENTREE', ecole: currentStaff.ecole, cle: cle, valeur: valeur });
+  if (result && result.succes) {
+    _valeursRentreeCache[cle] = valeur;
+    inputEl.style.borderColor = 'var(--vert)';
+    setTimeout(function(){ inputEl.style.borderColor = 'var(--border)'; }, 1500);
+  } else {
+    inputEl.style.borderColor = 'var(--rouge)';
+    showToast('Erreur enregistrement', 'error');
+  }
+}
+
+async function genererRapportRentreeComplet() {
+  var statusDiv = document.getElementById('rapportRentreeStatus');
+  if (statusDiv) statusDiv.textContent = 'Chargement des données...';
+  var d = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_DONNEES_RAPPORT_RENTREE_COMPLET', ecole: currentStaff.ecole });
+  if (!d || !d.ok) { if (statusDiv) statusDiv.textContent = 'Erreur : ' + (d && d.error); return; }
+  if (!_champsRentreeCache) _champsRentreeCache = construireChampsRentree();
+
+  var ws_data = [];
+  ws_data.push(['RAPPORT DE RENTRÉE 2026-2027 — ' + d.ecole]);
+  ws_data.push([]);
+  ws_data.push(['II. STATUT DES ÉLÈVES (auto — base PSS)']);
+  ws_data.push(['Cycle', 'Statut', 'Filles', 'Garçons', 'Total']);
+  ['1er','2nd'].forEach(function(cyc){
+    ['AFF','NAFF'].forEach(function(st){
+      var v = d.statutParCycle[cyc][st];
+      ws_data.push([(cyc==='1er'?'1er cycle':'2nd cycle'), st, v.F, v.M, v.F+v.M]);
+    });
+  });
+  ws_data.push([]);
+  ws_data.push(['III. PYRAMIDE EFFECTIFS PAR NIVEAU (auto — base PSS, hors distinction redoublants)']);
+  ws_data.push(['Niveau','Filles','Garçons','Total']);
+  Object.keys(d.pyramide).forEach(function(niv){
+    var v = d.pyramide[niv];
+    ws_data.push([niv, v.F, v.M, v.F+v.M]);
+  });
+  ws_data.push([]);
+  ws_data.push(['AUTRES SECTIONS (saisie manuelle — voir données ci-dessous)']);
+  ws_data.push(['Section','Champ','Valeur']);
+  var parSection = {};
+  _champsRentreeCache.forEach(function(c){ if(!parSection[c.section]) parSection[c.section]=[]; parSection[c.section].push(c); });
+  Object.keys(parSection).forEach(function(sec){
+    if (sec === 'Infrastructures') return; // déjà listé plus haut si besoin, ou laissé ici
+  });
+  _champsRentreeCache.forEach(function(c){
+    ws_data.push([c.section, c.label, d.champsManuels[c.cle] || '']);
+  });
+
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [{wch:22},{wch:45},{wch:14},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Rapport Rentree');
+  XLSX.writeFile(wb, 'Rapport_Rentree_' + d.ecole.replace(/\s+/g,'_') + '.xlsx');
+  if (statusDiv) statusDiv.innerHTML = '✅ Généré. <b>Rappel : la distinction "Redoublants" (section III) n\'est pas trackée dans PSS — à ajuster manuellement si besoin.</b>';
 }
 const SHEETS_IDS = {
   'CPP LES PRINCES':     '1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
