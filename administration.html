@@ -694,6 +694,15 @@ table tr:nth-child(even){background:#F8FAFD}
 <div id="rapportT1FormDir"></div>
 <button onclick="chargerFormulaireT1('rapportT1FormDir')" style="margin-top:8px;padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire T1</button>
 </div>
+
+  <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
+<div style="font-weight:700;font-size:0.85em;color:var(--bleu);padding:0 0 8px">📊 Rapport du 2ème trimestre</div>
+<div id="rapportT2FormDir"></div>
+<button onclick="chargerFormulaireT2('rapportT2FormDir')" style="margin-top:8px;padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire T2</button>
+<hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
+<div style="font-weight:700;font-size:0.85em;color:var(--bleu);padding:0 0 8px">📊 Rapport du 3ème trimestre</div>
+<div id="rapportT3FormDir"></div>
+<button onclick="chargerFormulaireT3('rapportT3FormDir')" style="margin-top:8px;padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire T3</button>
   <div class="section">
     <div class="sec-head sec-violet" onclick="peuplerClassesProgrammeOnce();toggleSec(this)">
       <h3>&#128197; Programme trimestriel &mdash; Devoirs surveilles 2026-2027</h3><span class="arr">&#9660;</span>
@@ -2612,6 +2621,27 @@ async function attribuerMatriculeCom() {
     <div style="padding:0 14px 14px"><button onclick="chargerFormulaireT1('rapportT1FormCom')" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire T1</button></div>
   </div>
 </div>
+
+  <div class="section" id="comSecRapportT2">
+  <div class="sec-head sec-violet" onclick="toggleSec(this)">
+    <h3>📊 Rapport du 2ème trimestre</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Complétez les champs que vous connaissez.</p>
+    <div id="rapportT2FormCom"></div>
+    <div style="padding:0 14px 14px"><button onclick="chargerFormulaireT2('rapportT2FormCom')" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire T2</button></div>
+  </div>
+</div>
+<div class="section" id="comSecRapportT3">
+  <div class="sec-head sec-violet" onclick="toggleSec(this)">
+    <h3>📊 Rapport du 3ème trimestre</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Complétez les champs que vous connaissez.</p>
+    <div id="rapportT3FormCom"></div>
+    <div style="padding:0 14px 14px"><button onclick="chargerFormulaireT3('rapportT3FormCom')" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire T3</button></div>
+  </div>
+</div>
   <div class="section" id="comSecSansResultat">
   <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('com');toggleSec(this)">
     <h3>&#9888;&#65039; &Eacute;l&egrave;ves sans r&eacute;sultat 2025-2026 <span id="comSansResultatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -3225,6 +3255,27 @@ async function attribuerMatriculeCom() {
     <div style="padding:0 14px 14px"><button onclick="chargerFormulaireT1('rapportT1FormEdu')" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire T1</button></div>
   </div>
 </div>
+
+  <div class="section" id="eduSecRapportT2">
+  <div class="sec-head sec-violet" onclick="toggleSec(this)">
+    <h3>📊 Rapport du 2ème trimestre</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Complétez les champs que vous connaissez.</p>
+    <div id="rapportT2FormEdu"></div>
+    <div style="padding:0 14px 14px"><button onclick="chargerFormulaireT2('rapportT2FormEdu')" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire T2</button></div>
+  </div>
+</div>
+<div class="section" id="eduSecRapportT3">
+  <div class="sec-head sec-violet" onclick="toggleSec(this)">
+    <h3>📊 Rapport du 3ème trimestre</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Complétez les champs que vous connaissez.</p>
+    <div id="rapportT3FormEdu"></div>
+    <div style="padding:0 14px 14px"><button onclick="chargerFormulaireT3('rapportT3FormEdu')" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire T3</button></div>
+  </div>
+</div>
   <div class="section">
   <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('edu');toggleSec(this)">
     <h3>&#9888;&#65039; &Eacute;l&egrave;ves sans r&eacute;sultat 2025-2026 <span id="eduSansResultatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -3727,6 +3778,225 @@ async function genererRapportT1Complet() {
   ws['!cols'] = [{wch:22},{wch:32},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12}];
   XLSX.utils.book_append_sheet(wb, ws, 'Rapport T1');
   XLSX.writeFile(wb, 'Rapport_T1_' + d.ecole.replace(/\s+/g,'_') + '.xlsx');
+  if (statusDiv) statusDiv.innerHTML = '✅ Généré. <b>' + d.avertissement + '</b>';
+}
+
+  // ============================================================
+// RAPPORT DU 2ème TRIMESTRE — même structure que T1
+// ============================================================
+function construireChampsT2() {
+  var champs = [];
+  CATEGORIES_CAS_SOCIAUX.forEach(function(cat) {
+    ['Garçons','Filles'].forEach(function(sx) {
+      champs.push({cle:'CAS_'+_slugRentree(cat)+'_'+_slugRentree(sx), section:'Cas sociaux', label:cat+' — '+sx});
+    });
+  });
+  QUALITES_VISITEUR.forEach(function(q) {
+    DISCIPLINES_VISITES.forEach(function(d) {
+      champs.push({cle:'VISITE_'+q+'_'+_slugRentree(d), section:'Visites de classes', label:q+' — '+d});
+    });
+  });
+  return champs;
+}
+
+var _champsT2Cache = null;
+var _valeursT2Cache = {};
+
+async function chargerFormulaireT2(containerId) {
+  var container = document.getElementById(containerId);
+  if (!container || !currentStaff) return;
+  container.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  if (!_champsT2Cache) _champsT2Cache = construireChampsT2();
+
+  var result = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_DONNEES_MANUELLES_T2', ecole: currentStaff.ecole });
+  if (!result || !result.ok) { container.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur de chargement</p>'; return; }
+  _valeursT2Cache = result.champs || {};
+
+  var parSection = {};
+  _champsT2Cache.forEach(function(c) { if (!parSection[c.section]) parSection[c.section] = []; parSection[c.section].push(c); });
+
+  var html = '<p style="padding:10px 14px;font-size:0.78em;color:var(--gris)">Résultats scolaires calculés automatiquement. Complétez ici Cas sociaux et Visites de classes.</p>';
+  Object.keys(parSection).forEach(function(sec, si) {
+    var idSec = containerId + '_t2sec_' + si;
+    html += '<div style="margin:0 14px 10px;border:1px solid var(--border);border-radius:8px;overflow:hidden">';
+    html += '<div style="background:var(--violet);color:#fff;padding:8px 12px;cursor:pointer;font-size:0.82em;font-weight:700" onclick="var b=document.getElementById(\'' + idSec + '\');b.style.display=b.style.display===\'none\'?\'block\':\'none\'">▸ ' + sec + ' (' + parSection[sec].length + ' champs)</div>';
+    html += '<div id="' + idSec + '" style="display:none;padding:8px">';
+    parSection[sec].forEach(function(c) {
+      var val = _valeursT2Cache[c.cle] || '';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 8px;border-bottom:1px solid #f0f4f8">';
+      html += '<span style="font-size:0.76em;flex:1">' + c.label + '</span>';
+      html += '<input type="text" id="' + containerId + '_' + c.cle + '" value="' + String(val).replace(/"/g,'&quot;') + '" onblur="sauvegarderChampT2UI(\'' + c.cle + '\', this.value, this)" style="width:70px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.78em">';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  });
+  html += '<div style="padding:10px 14px"><button onclick="genererRapportT2Complet()" style="width:100%;padding:11px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.85em;cursor:pointer">📥 Générer le rapport T2 (Excel)</button><div id="rapportT2Status" style="margin-top:8px;font-size:0.82em"></div></div>';
+
+  container.innerHTML = html;
+}
+
+async function sauvegarderChampT2UI(cle, valeur, inputEl) {
+  if (_valeursT2Cache[cle] === valeur) return;
+  inputEl.style.borderColor = 'var(--orange)';
+  var result = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'SAUVEGARDER_CHAMP_T2', ecole: currentStaff.ecole, cle: cle, valeur: valeur });
+  if (result && result.succes) {
+    _valeursT2Cache[cle] = valeur;
+    inputEl.style.borderColor = 'var(--vert)';
+    setTimeout(function(){ inputEl.style.borderColor = 'var(--border)'; }, 1500);
+  } else {
+    inputEl.style.borderColor = 'var(--rouge)';
+    showToast('Erreur enregistrement', 'error');
+  }
+}
+
+async function genererRapportT2Complet() {
+  var statusDiv = document.getElementById('rapportT2Status');
+  if (statusDiv) statusDiv.textContent = 'Chargement des données...';
+  var d = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_DONNEES_RAPPORT_T2_COMPLET', ecole: currentStaff.ecole });
+  if (!d || !d.ok) { if (statusDiv) statusDiv.textContent = 'Erreur : ' + (d && d.error); return; }
+  if (!_champsT2Cache) _champsT2Cache = construireChampsT2();
+
+  var ws_data = [];
+  ws_data.push(['RAPPORT DU 2ème TRIMESTRE 2026-2027 — ' + d.ecole]);
+  ws_data.push([]);
+  ws_data.push(['RÉSULTATS SCOLAIRES (auto)']);
+  ws_data.push(['Niveau','Eff. Filles','Eff. Garçons','MOY≥10 F','MOY≥10 G','8,5≤MOY<10 F','8,5≤MOY<10 G','MOY<8,5 F','MOY<8,5 G']);
+  d.niveaux.forEach(function(niv) {
+    var s = d.stats[niv];
+    ws_data.push([niv, s.effGlobalF, s.effGlobalG, s.sup10F, s.sup10G, s.moy85_10F, s.moy85_10G, s.inf85F, s.inf85G]);
+  });
+  ws_data.push([]);
+  ws_data.push(['CAS SOCIAUX ET VISITES DE CLASSES (saisie manuelle)']);
+  ws_data.push(['Section','Champ','Valeur']);
+  _champsT2Cache.forEach(function(c){
+    ws_data.push([c.section, c.label, d.champsManuels[c.cle] || '']);
+  });
+
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [{wch:22},{wch:32},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Rapport T2');
+  XLSX.writeFile(wb, 'Rapport_T2_' + d.ecole.replace(/\s+/g,'_') + '.xlsx');
+  if (statusDiv) statusDiv.innerHTML = '✅ Généré. <b>' + d.avertissement + '</b>';
+}
+
+// ============================================================
+// RAPPORT DU 3ème TRIMESTRE — + Taux promotion + Statut auto, + Examens manuels
+// ============================================================
+var EXAMENS_LISTE = ['BEPC','BAC A1','BAC A2','BAC C','BAC D'];
+
+function construireChampsT3() {
+  var champs = [];
+  CATEGORIES_CAS_SOCIAUX.forEach(function(cat) {
+    ['Garçons','Filles'].forEach(function(sx) {
+      champs.push({cle:'CAS_'+_slugRentree(cat)+'_'+_slugRentree(sx), section:'Cas sociaux', label:cat+' — '+sx});
+    });
+  });
+  QUALITES_VISITEUR.forEach(function(q) {
+    DISCIPLINES_VISITES.forEach(function(d) {
+      champs.push({cle:'VISITE_'+q+'_'+_slugRentree(d), section:'Visites de classes', label:q+' — '+d});
+    });
+  });
+  EXAMENS_LISTE.forEach(function(ex) {
+    ['Inscrits Garçons','Inscrits Filles','Présents Garçons','Présents Filles','Admis Garçons','Admis Filles'].forEach(function(champ) {
+      champs.push({cle:'EXAM_'+_slugRentree(ex)+'_'+_slugRentree(champ), section:'Examens BEPC/BAC', label:ex+' — '+champ});
+    });
+  });
+  return champs;
+}
+
+var _champsT3Cache = null;
+var _valeursT3Cache = {};
+
+async function chargerFormulaireT3(containerId) {
+  var container = document.getElementById(containerId);
+  if (!container || !currentStaff) return;
+  container.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  if (!_champsT3Cache) _champsT3Cache = construireChampsT3();
+
+  var result = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_DONNEES_MANUELLES_T3', ecole: currentStaff.ecole });
+  if (!result || !result.ok) { container.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur de chargement</p>'; return; }
+  _valeursT3Cache = result.champs || {};
+
+  var parSection = {};
+  _champsT3Cache.forEach(function(c) { if (!parSection[c.section]) parSection[c.section] = []; parSection[c.section].push(c); });
+
+  var html = '<p style="padding:10px 14px;font-size:0.78em;color:var(--gris)">Résultats scolaires, Taux de promotion et Statut des élèves sont calculés automatiquement. Complétez ici Cas sociaux, Visites et Examens.</p>';
+  Object.keys(parSection).forEach(function(sec, si) {
+    var idSec = containerId + '_t3sec_' + si;
+    html += '<div style="margin:0 14px 10px;border:1px solid var(--border);border-radius:8px;overflow:hidden">';
+    html += '<div style="background:var(--violet);color:#fff;padding:8px 12px;cursor:pointer;font-size:0.82em;font-weight:700" onclick="var b=document.getElementById(\'' + idSec + '\');b.style.display=b.style.display===\'none\'?\'block\':\'none\'">▸ ' + sec + ' (' + parSection[sec].length + ' champs)</div>';
+    html += '<div id="' + idSec + '" style="display:none;padding:8px">';
+    parSection[sec].forEach(function(c) {
+      var val = _valeursT3Cache[c.cle] || '';
+      html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 8px;border-bottom:1px solid #f0f4f8">';
+      html += '<span style="font-size:0.76em;flex:1">' + c.label + '</span>';
+      html += '<input type="text" id="' + containerId + '_' + c.cle + '" value="' + String(val).replace(/"/g,'&quot;') + '" onblur="sauvegarderChampT3UI(\'' + c.cle + '\', this.value, this)" style="width:70px;padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.78em">';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  });
+  html += '<div style="padding:10px 14px"><button onclick="genererRapportT3Complet()" style="width:100%;padding:11px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.85em;cursor:pointer">📥 Générer le rapport T3 (Excel)</button><div id="rapportT3Status" style="margin-top:8px;font-size:0.82em"></div></div>';
+
+  container.innerHTML = html;
+}
+
+async function sauvegarderChampT3UI(cle, valeur, inputEl) {
+  if (_valeursT3Cache[cle] === valeur) return;
+  inputEl.style.borderColor = 'var(--orange)';
+  var result = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'SAUVEGARDER_CHAMP_T3', ecole: currentStaff.ecole, cle: cle, valeur: valeur });
+  if (result && result.succes) {
+    _valeursT3Cache[cle] = valeur;
+    inputEl.style.borderColor = 'var(--vert)';
+    setTimeout(function(){ inputEl.style.borderColor = 'var(--border)'; }, 1500);
+  } else {
+    inputEl.style.borderColor = 'var(--rouge)';
+    showToast('Erreur enregistrement', 'error');
+  }
+}
+
+async function genererRapportT3Complet() {
+  var statusDiv = document.getElementById('rapportT3Status');
+  if (statusDiv) statusDiv.textContent = 'Chargement des données...';
+  var d = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_DONNEES_RAPPORT_T3_COMPLET', ecole: currentStaff.ecole });
+  if (!d || !d.ok) { if (statusDiv) statusDiv.textContent = 'Erreur : ' + (d && d.error); return; }
+  if (!_champsT3Cache) _champsT3Cache = construireChampsT3();
+
+  var ws_data = [];
+  ws_data.push(['RAPPORT DU 3ème TRIMESTRE 2026-2027 — ' + d.ecole]);
+  ws_data.push([]);
+  ws_data.push(['RÉSULTATS SCOLAIRES (auto)']);
+  ws_data.push(['Niveau','Eff. Filles','Eff. Garçons','MOY≥10 F','MOY≥10 G','8,5≤MOY<10 F','8,5≤MOY<10 G','MOY<8,5 F','MOY<8,5 G']);
+  d.niveaux.forEach(function(niv) {
+    var s = d.stats[niv];
+    ws_data.push([niv, s.effGlobalF, s.effGlobalG, s.sup10F, s.sup10G, s.moy85_10F, s.moy85_10G, s.inf85F, s.inf85G]);
+  });
+  ws_data.push([]);
+  ws_data.push(['TAUX DE PROMOTION (auto — colonne DECISION)']);
+  ws_data.push(['Cycle','Admis F','Admis G','Redoublants F','Redoublants G','Exclus F','Exclus G']);
+  ws_data.push(['1er cycle', d.promo1erCycle.AF, d.promo1erCycle.AG, d.promo1erCycle.RF, d.promo1erCycle.RG, d.promo1erCycle.EF, d.promo1erCycle.EG]);
+  ws_data.push(['2nd cycle', d.promo2ndCycle.AF, d.promo2ndCycle.AG, d.promo2ndCycle.RF, d.promo2ndCycle.RG, d.promo2ndCycle.EF, d.promo2ndCycle.EG]);
+  ws_data.push([]);
+  ws_data.push(['STATUT DES ÉLÈVES AFF/NAFF (auto)']);
+  ws_data.push(['Cycle','Statut','Filles','Garçons']);
+  ['1er','2nd'].forEach(function(cyc) {
+    ['AFF','NAFF'].forEach(function(st) {
+      var v = d.statutAffNaff[cyc][st];
+      ws_data.push([(cyc==='1er'?'1er cycle':'2nd cycle'), st, v.F, v.M]);
+    });
+  });
+  ws_data.push([]);
+  ws_data.push(['CAS SOCIAUX, VISITES, EXAMENS (saisie manuelle)']);
+  ws_data.push(['Section','Champ','Valeur']);
+  _champsT3Cache.forEach(function(c){
+    ws_data.push([c.section, c.label, d.champsManuels[c.cle] || '']);
+  });
+
+  var wb = XLSX.utils.book_new();
+  var ws = XLSX.utils.aoa_to_sheet(ws_data);
+  ws['!cols'] = [{wch:22},{wch:32},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Rapport T3');
+  XLSX.writeFile(wb, 'Rapport_T3_' + d.ecole.replace(/\s+/g,'_') + '.xlsx');
   if (statusDiv) statusDiv.innerHTML = '✅ Généré. <b>' + d.avertissement + '</b>';
 }
 const SHEETS_IDS = {
