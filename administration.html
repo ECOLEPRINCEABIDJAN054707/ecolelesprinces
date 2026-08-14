@@ -703,6 +703,10 @@ table tr:nth-child(even){background:#F8FAFD}
 <div style="font-weight:700;font-size:0.85em;color:var(--bleu);padding:0 0 8px">📊 Rapport du 3ème trimestre</div>
 <div id="rapportT3FormDir"></div>
 <button onclick="chargerFormulaireT3('rapportT3FormDir')" style="margin-top:8px;padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire T3</button>
+  <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
+<div style="font-weight:700;font-size:0.85em;color:var(--bleu);padding:0 0 8px">🎯 Journal de Pilotage — Mes tâches</div>
+<div id="pilotageFormDir"></div>
+<button onclick="chargerJournalPilotage('pilotageFormDir')" style="margin-top:8px;padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger mes tâches</button>
   <div class="section">
     <div class="sec-head sec-violet" onclick="peuplerClassesProgrammeOnce();toggleSec(this)">
       <h3>&#128197; Programme trimestriel &mdash; Devoirs surveilles 2026-2027</h3><span class="arr">&#9660;</span>
@@ -1961,6 +1965,14 @@ async function sauvegarderPersonnelDir(idx) {
     <div class="sec-body" id="fondSoldesBody"></div>
   </div>
   <div class="section">
+  <div class="sec-head sec-vert" onclick="chargerJournalPilotageReseau();toggleSec(this)">
+    <h3>🎯 Journal de Pilotage — Vue réseau</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="pilotageReseauFond">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour charger le suivi des 18 tâches par école.</p>
+  </div>
+</div>
+  <div class="section">
     <div class="sec-head sec-or" onclick="toggleSec(this)">
       <h3>&#128101; Masse salariale &mdash; Personnel admin</h3><span class="arr">&#9660;</span>
     </div>
@@ -2642,6 +2654,16 @@ async function attribuerMatriculeCom() {
     <div style="padding:0 14px 14px"><button onclick="chargerFormulaireT3('rapportT3FormCom')" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire T3</button></div>
   </div>
 </div>
+  <div class="section" id="comSecPilotage">
+  <div class="sec-head sec-violet" onclick="toggleSec(this)">
+    <h3>🎯 Journal de Pilotage — Mes tâches</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour charger vos tâches assignées.</p>
+    <div id="pilotageFormCom"></div>
+    <div style="padding:0 14px 14px"><button onclick="chargerJournalPilotage('pilotageFormCom')" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger mes tâches</button></div>
+  </div>
+</div>
   <div class="section" id="comSecSansResultat">
   <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('com');toggleSec(this)">
     <h3>&#9888;&#65039; &Eacute;l&egrave;ves sans r&eacute;sultat 2025-2026 <span id="comSansResultatCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -3275,6 +3297,16 @@ async function attribuerMatriculeCom() {
     <div id="rapportT3FormEdu"></div>
     <div style="padding:0 14px 14px"><button onclick="chargerFormulaireT3('rapportT3FormEdu')" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger le formulaire T3</button></div>
   </div>
+  <div class="section" id="eduSecPilotage">
+  <div class="sec-head sec-violet" onclick="toggleSec(this)">
+    <h3>🎯 Journal de Pilotage — Mes tâches</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour charger vos tâches assignées.</p>
+    <div id="pilotageFormEdu"></div>
+    <div style="padding:0 14px 14px"><button onclick="chargerJournalPilotage('pilotageFormEdu')" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;cursor:pointer">🔄 Charger mes tâches</button></div>
+  </div>
+</div>
 </div>
   <div class="section">
   <div class="sec-head sec-rouge" onclick="chargerElevesSansResultat('edu');toggleSec(this)">
@@ -3998,6 +4030,104 @@ async function genererRapportT3Complet() {
   XLSX.utils.book_append_sheet(wb, ws, 'Rapport T3');
   XLSX.writeFile(wb, 'Rapport_T3_' + d.ecole.replace(/\s+/g,'_') + '.xlsx');
   if (statusDiv) statusDiv.innerHTML = '✅ Généré. <b>' + d.avertissement + '</b>';
+}
+
+  // ============================================================
+// JOURNAL DE PILOTAGE — affichage par rôle + vue réseau Fondateur
+// ============================================================
+var _pilotageTachesCache = null;
+var _pilotageStatutsCache = {};
+
+async function chargerJournalPilotage(containerId) {
+  var container = document.getElementById(containerId);
+  if (!container || !currentStaff) return;
+  container.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+  var result = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_JOURNAL_PILOTAGE', ecole: currentStaff.ecole });
+  if (!result || !result.ok) { container.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur de chargement</p>'; return; }
+  _pilotageTachesCache = result.taches;
+  _pilotageStatutsCache = {};
+  Object.keys(result.statuts).forEach(function(cle) {
+    _pilotageStatutsCache[cle] = result.statuts[cle];
+  });
+
+  var mesTaches = _pilotageTachesCache.filter(function(t) { return t.role === currentStaff.profil; });
+  if (!mesTaches.length) { container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Aucune tâche assignée à votre profil pour le moment.</p>'; return; }
+
+  var parAxe = {};
+  mesTaches.forEach(function(t) { if (!parAxe[t.axe]) parAxe[t.axe] = []; parAxe[t.axe].push(t); });
+
+  var couleurs = {'FAIT':'#E8F5E9','EN_COURS':'#FFF3E0','PAS_FAIT':'#FFEBEE'};
+  var couleursTexte = {'FAIT':'var(--vert)','EN_COURS':'var(--orange)','PAS_FAIT':'var(--rouge)'};
+  var labels = {'FAIT':'✓ Fait','EN_COURS':'⏳ En cours','PAS_FAIT':'✗ Pas fait'};
+
+  var html = '';
+  Object.keys(parAxe).forEach(function(axe) {
+    html += '<div style="margin:0 14px 10px;border:1px solid var(--border);border-radius:8px;overflow:hidden">';
+    html += '<div style="background:var(--bleu);color:#fff;padding:8px 12px;font-size:0.82em;font-weight:700">' + axe + '</div>';
+    parAxe[axe].forEach(function(t) {
+      var cle = currentStaff.ecole + '|' + t.id;
+      var statut = _pilotageStatutsCache[cle] || 'PAS_FAIT';
+      html += '<div style="padding:8px 12px;border-bottom:1px solid #f0f4f8;background:' + couleurs[statut] + '">';
+      html += '<div style="font-size:0.8em;margin-bottom:6px">' + t.texte + '</div>';
+      html += '<select id="pilotStatut_' + t.id + '" onchange="sauvegarderTachePilotageUI(\'' + t.id + '\')" style="padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.76em;font-weight:700;color:' + couleursTexte[statut] + '">';
+      ['PAS_FAIT','EN_COURS','FAIT'].forEach(function(s) {
+        html += '<option value="' + s + '"' + (s === statut ? ' selected' : '') + '>' + labels[s] + '</option>';
+      });
+      html += '</select>';
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+async function sauvegarderTachePilotageUI(tacheId) {
+  var sel = document.getElementById('pilotStatut_' + tacheId);
+  if (!sel) return;
+  var statut = sel.value;
+  var roleLabels = {DIR:'Directeur', FOND:'Fondateur', COM:'Comptable', EDU:'Educateur'};
+  var modifiePar = (currentStaff.nom || currentStaff.matricule || 'inconnu') + ' (' + (roleLabels[currentStaff.profil] || currentStaff.profil) + ')';
+  var result = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'SAUVEGARDER_TACHE_PILOTAGE', ecole: currentStaff.ecole, tacheId: tacheId, statut: statut, note: '', modifiePar: modifiePar });
+  if (result && result.succes) {
+    showToast('Enregistré', 'success');
+    _pilotageStatutsCache[currentStaff.ecole + '|' + tacheId] = statut;
+  } else {
+    showToast('Erreur enregistrement', 'error');
+  }
+}
+
+// --- Vue réseau, espace Fondateur uniquement ---
+async function chargerJournalPilotageReseau() {
+  var container = document.getElementById('pilotageReseauFond');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+  var result = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_JOURNAL_PILOTAGE_RESEAU' });
+  if (!result || !result.ok) { container.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur de chargement</p>'; return; }
+
+  var totalTaches = result.taches.length;
+  var html = '<div class="tbl-wrap"><table><thead><tr><th>École</th><th>Fait</th><th>En cours</th><th>Pas fait</th><th>% Complété</th></tr></thead><tbody>';
+  var ecoles = Object.keys(ECOLE_LABELS);
+  ecoles.forEach(function(code) {
+    var statuts = result.parEcole[code] || {};
+    var fait = 0, enCours = 0, pasFait = 0;
+    result.taches.forEach(function(t) {
+      var s = statuts[t.id] || 'PAS_FAIT';
+      if (s === 'FAIT') fait++;
+      else if (s === 'EN_COURS') enCours++;
+      else pasFait++;
+    });
+    var pct = totalTaches > 0 ? Math.round(fait / totalTaches * 100) : 0;
+    var couleurPct = pct >= 70 ? 'var(--vert)' : pct >= 40 ? 'var(--orange)' : 'var(--rouge)';
+    html += '<tr><td>' + (ECOLE_LABELS[code] || code) + '</td>';
+    html += '<td style="text-align:center;color:var(--vert);font-weight:700">' + fait + '</td>';
+    html += '<td style="text-align:center;color:var(--orange)">' + enCours + '</td>';
+    html += '<td style="text-align:center;color:var(--rouge)">' + pasFait + '</td>';
+    html += '<td style="text-align:center;font-weight:700;color:' + couleurPct + '">' + pct + '%</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
 }
 const SHEETS_IDS = {
   'CPP LES PRINCES':     '1zfDZkGtdf3djlCtHV70TbQ8yLQD2hdB2g54MGNwUcjI',
