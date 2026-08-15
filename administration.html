@@ -404,6 +404,33 @@ table tr:nth-child(even){background:#F8FAFD}
     <p style="text-align:center;color:var(--gris);font-size:0.82em;padding:14px">Chargement...</p>
   </div>
 </div>
+<div class="section" id="dirSecNotes">
+    <div class="sec-head sec-violet" onclick="toggleSec(this)">
+      <h3>&#128202; Notes saisies par classe <span id="dirNotesCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="dirNotesBody">
+      <div style="padding:8px 14px 6px;background:#F3E5F5;border-bottom:1px solid #CE93D8">
+        <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">&#128274; Lecture seule &mdash; Notes D1 à D6 telles que saisies par les enseignants</span>
+      </div>
+      <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="dirNotesTrimestre" onchange="chargerNotesSaisiesDir()" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+          <option value="NOTES_T1">Trimestre 1</option>
+          <option value="NOTES_T2">Trimestre 2</option>
+          <option value="NOTES_T3">Trimestre 3</option>
+        </select>
+        <select id="dirNotesFiltreClasse" onchange="filtrerNotesSaisiesDir()" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+          <option value="">Toutes les classes</option>
+        </select>
+        <select id="dirNotesFiltreMatiere" onchange="filtrerNotesSaisiesDir()" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+          <option value="">Toutes les matières</option>
+        </select>
+        <button onclick="chargerNotesSaisiesDir()" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">&#128260; Charger</button>
+      </div>
+      <div id="dirNotesListe">
+        <p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur "Charger" pour voir les notes saisies.</p>
+      </div>
+    </div>
+  </div>
   <div class="section" id="dirSecAppel">
     <div class="sec-head sec-vert" onclick="toggleSec(this)">
       <h3>&#128203; Appels enseignants &mdash; Aujourd'hui <span id="dirAppelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -7457,6 +7484,116 @@ function enregistrerConnexionStaff(role, ecole) {
     headers: {'Content-Type':'text/plain'},
     body: JSON.stringify({ action:'CONNEXION_STAFF', nom: currentStaff.nom || role, role: role, ecole: ecole })
   }).catch(function(e){ console.warn('connexion staff non enregistrée:', e); });
+}
+async function chargerNotesSaisiesDir() {
+  const ongletTrim = document.getElementById('dirNotesTrimestre').value;
+  const container = document.getElementById('dirNotesListe');
+  const countEl = document.getElementById('dirNotesCount');
+  if (!container || !currentStaff) return;
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+  const sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole];
+  if (!sheetsId) {
+    container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configurée pour cette école.</p>';
+    return;
+  }
+
+  try {
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/' + encodeURIComponent(ongletTrim) + '?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    const res = await fetch(url);
+    const data = await res.json();
+    const rows = data.values || [];
+    if (rows.length < 2) {
+      container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucune note enregistrée pour ce trimestre.</p>';
+      if (countEl) countEl.textContent = '(0)';
+      return;
+    }
+
+    var lignes = [];
+    for (var i = 1; i < rows.length; i++) {
+      var row = rows[i];
+      var matricule = String(row[0] || '').trim();
+      if (!matricule) continue;
+      lignes.push({
+        matricule: matricule,
+        nom: String(row[1] || '').trim(),
+        classe: String(row[2] || '').trim(),
+        matiere: String(row[3] || '').trim(),
+        notes: [row[4], row[5], row[6], row[7], row[8], row[9]],
+        moyenne: row[10],
+        enseignant: String(row[11] || '').trim(),
+        dateMaj: String(row[12] || '').trim()
+      });
+    }
+
+    if (!lignes.length) {
+      container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucune note enregistrée pour ce trimestre.</p>';
+      if (countEl) countEl.textContent = '(0)';
+      return;
+    }
+    if (countEl) countEl.textContent = '(' + lignes.length + ' ligne(s))';
+    window._notesCache_dir = lignes;
+
+    var selCl = document.getElementById('dirNotesFiltreClasse');
+    if (selCl) {
+      var classesUniques = [...new Set(lignes.map(function(l){return l.classe;}))].filter(Boolean).sort();
+      var valeurActuelle = selCl.value;
+      selCl.innerHTML = '<option value="">Toutes les classes</option>' + classesUniques.map(function(c){return '<option value="' + c + '">' + c + '</option>';}).join('');
+      selCl.value = valeurActuelle;
+    }
+
+    var selMat = document.getElementById('dirNotesFiltreMatiere');
+    if (selMat) {
+      var lignesPourMatieres = window._notesFiltreClasse_dir ? lignes.filter(function(l){return l.classe === window._notesFiltreClasse_dir;}) : lignes;
+      var matieresUniques = [...new Set(lignesPourMatieres.map(function(l){return l.matiere;}))].filter(Boolean).sort();
+      var valeurMatiereActuelle = selMat.value;
+      selMat.innerHTML = '<option value="">Toutes les matières</option>' + matieresUniques.map(function(m){return '<option value="' + m + '">' + m + '</option>';}).join('');
+      selMat.value = valeurMatiereActuelle;
+    }
+
+    var lignesFiltrees = lignes.filter(function(l){
+      return (!window._notesFiltreClasse_dir || l.classe === window._notesFiltreClasse_dir)
+          && (!window._notesFiltreMatiere_dir || l.matiere === window._notesFiltreMatiere_dir);
+    });
+
+    var parClasse = {};
+    lignesFiltrees.forEach(function(l) {
+      if (!parClasse[l.classe]) parClasse[l.classe] = {};
+      if (!parClasse[l.classe][l.matiere]) parClasse[l.classe][l.matiere] = [];
+      parClasse[l.classe][l.matiere].push(l);
+    });
+
+    var html = '';
+    Object.keys(parClasse).sort().forEach(function(cl) {
+      html += '<div style="margin:10px 14px 0;border-radius:8px;overflow:hidden;border:1px solid var(--border)">';
+      html += '<div style="background:var(--violet);color:#fff;padding:9px 12px;font-weight:700;font-size:0.85em">' + cl + '</div>';
+      Object.keys(parClasse[cl]).sort().forEach(function(mat) {
+        html += '<div style="padding:7px 12px;background:#F3E5F5;font-weight:700;font-size:0.8em;color:#6A1B9A">' + mat + '</div>';
+        html += '<div class="tbl-wrap"><table style="min-width:480px"><thead><tr><th>Élève</th><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th><th>Moy.</th><th>Enseignant</th></tr></thead><tbody>';
+        parClasse[cl][mat].forEach(function(l) {
+          html += '<tr><td style="font-size:0.8em;font-weight:600">' + l.nom + '</td>';
+          l.notes.forEach(function(n) {
+            html += '<td style="text-align:center;font-size:0.78em">' + (n === '' || n === null || n === undefined ? '—' : n) + '</td>';
+          });
+          html += '<td style="text-align:center;font-size:0.8em;font-weight:700;color:var(--violet)">' + (l.moyenne || '—') + '</td>';
+          html += '<td style="font-size:0.74em;color:var(--gris)">' + l.enseignant + '</td></tr>';
+        });
+        html += '</tbody></table></div>';
+      });
+      html += '</div>';
+    });
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement.</p>';
+  }
+}
+
+function filtrerNotesSaisiesDir() {
+  var sel = document.getElementById('dirNotesFiltreClasse');
+  window._notesFiltreClasse_dir = sel ? sel.value : '';
+  var selM = document.getElementById('dirNotesFiltreMatiere');
+  window._notesFiltreMatiere_dir = selM ? selM.value : '';
+  chargerNotesSaisiesDir();
 }
   async function chargerAppelsDir(ecole) {
   const liste = document.getElementById('dirAppelListe');
