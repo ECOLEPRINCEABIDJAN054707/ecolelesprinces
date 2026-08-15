@@ -2597,6 +2597,9 @@ async function attribuerMatriculeCom() {
 <select id="comNotesFiltreClasse" onchange="filtrerNotesSaisiesCom()" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
         <option value="">Toutes les classes</option>
       </select>
+  <select id="comNotesFiltreMatiere" onchange="filtrerNotesSaisiesCom()" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+        <option value="">Toutes les matières</option>
+      </select>
       <button onclick="chargerNotesSaisiesCom()" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">&#128260; Charger</button>
     </div>
     <div id="comNotesListe">
@@ -6901,9 +6904,19 @@ setTimeout(function(){ _rechargerListeReception('Com'); }, 700);
         selCl.innerHTML = '<option value="">Toutes les classes</option>' + classesUniques.map(function(c){return '<option value="' + c + '">' + c + '</option>';}).join('');
         selCl.value = valeurActuelle;
       }
-
+var selMat = document.getElementById('comNotesFiltreMatiere');
+      if (selMat) {
+        var lignesPourMatieres = window._notesFiltreClasse_com ? lignes.filter(function(l){return l.classe === window._notesFiltreClasse_com;}) : lignes;
+        var matieresUniques = [...new Set(lignesPourMatieres.map(function(l){return l.matiere;}))].filter(Boolean).sort();
+        var valeurMatiereActuelle = selMat.value;
+        selMat.innerHTML = '<option value="">Toutes les matières</option>' + matieresUniques.map(function(m){return '<option value="' + m + '">' + m + '</option>';}).join('');
+        selMat.value = valeurMatiereActuelle;
+      }
     var parClasse = {};
-   var lignesFiltrees = window._notesFiltreClasse_com ? lignes.filter(function(l){return l.classe === window._notesFiltreClasse_com;}) : lignes;
+var lignesFiltrees = lignes.filter(function(l){
+        return (!window._notesFiltreClasse_com || l.classe === window._notesFiltreClasse_com)
+            && (!window._notesFiltreMatiere_com || l.matiere === window._notesFiltreMatiere_com);
+      });
       lignesFiltrees.forEach(function(l) {
       if (!parClasse[l.classe]) parClasse[l.classe] = {};
       if (!parClasse[l.classe][l.matiere]) parClasse[l.classe][l.matiere] = [];
@@ -6937,6 +6950,8 @@ setTimeout(function(){ _rechargerListeReception('Com'); }, 700);
 function filtrerNotesSaisiesCom() {
   var sel = document.getElementById('comNotesFiltreClasse');
   window._notesFiltreClasse_com = sel ? sel.value : '';
+  var selM = document.getElementById('comNotesFiltreMatiere');
+  window._notesFiltreMatiere_com = selM ? selM.value : '';
   chargerNotesSaisiesCom();
 }
   function chargerPaiementsCom(){
