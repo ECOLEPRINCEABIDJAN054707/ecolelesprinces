@@ -1175,7 +1175,7 @@ async function afficherEspaceParent(eleve) {
   if (eleve.gratuit) {
     pay.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>&#127891;</div><div class='pay-text'><h4>Prise en charge etablissement</h4><p class='pay-montant c-vert'>Acces complet active</p></div></div>";
   } else if (soldeParsed === 0) {
-    pay.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>&#10003;</div><div class='pay-text'><h4>Scolarite " + anneeEleve + " entierement payee</h4><p class='pay-montant c-vert'>" + verseParsed.toLocaleString('fr-FR') + " F CFA verses</p></div></div>";
+    pay.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>&#10003;</div><div class='pay-text'><h4>Scolarite " + anneeEleve + " entierement payee</h4><p class='pay-montant c-vert'>" + duParsed.toLocaleString('fr-FR') + " F CFA verses</p></div></div>";
   } else if (verseParsed > 0) {
     pay.innerHTML = "<div class='paiement-bar paiement-partiel'><div class='pay-icon'>&#9888;</div><div class='pay-text'><h4>Solde " + anneeEleve + " restant</h4><p class='pay-montant c-or'>" + soldeParsed.toLocaleString('fr-FR') + " F CFA restants</p><p>Verse : " + verseParsed.toLocaleString('fr-FR') + " sur " + duParsed.toLocaleString('fr-FR') + " F CFA</p></div></div>";
   } else {
@@ -2217,7 +2217,7 @@ if (anneeHeader) anneeHeader.textContent = '📅 Annee scolaire 2026-2027';
           const payBand = document.getElementById('statutPay');
           if (payBand) {
             if (inscrit.solde === 0) {
-              payBand.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>✅</div><div class='pay-text'><h4>Scolarité 2026-2027 entièrement payée</h4><p class='pay-montant c-vert'>" + (inscrit.verse||0).toLocaleString('fr-FR') + " F CFA versés</p></div></div>";
+payBand.innerHTML = "<div class='paiement-bar paiement-ok'><div class='pay-icon'>✅</div><div class='pay-text'><h4>Scolarité 2026-2027 entièrement payée</h4><p class='pay-montant c-vert'>" + (inscrit.du||0).toLocaleString('fr-FR') + " F CFA versés</p></div></div>";
             } else {
               payBand.innerHTML = "<div class='paiement-bar paiement-partiel'><div class='pay-icon'>⚠️</div><div class='pay-text'><h4>Scolarité 2026-2027 — Solde restant</h4><p class='pay-montant c-or'>" + (inscrit.solde||0).toLocaleString('fr-FR') + " F CFA restants</p><p>Versé : " + (inscrit.verse||0).toLocaleString('fr-FR') + " / " + (inscrit.du||0).toLocaleString('fr-FR') + " F CFA</p></div></div>";
             }
@@ -2235,7 +2235,7 @@ if (anneeHeader) anneeHeader.textContent = '📅 Annee scolaire 2026-2027';
           const pay2026 = document.getElementById('paiement2026Bloc');
           if (pay2026) {
             pay2026.style.display = 'block';
-            pay2026.innerHTML = '<div class="paiement-bar ' + (inscrit.solde===0?'paiement-ok':'paiement-partiel') + '"><div class="pay-icon">' + (inscrit.solde===0?'&#10003;':'&#9888;') + '</div><div class="pay-text"><h4>Scolarite 2026-2027' + (inscrit.solde===0?' entierement payee':'') + '</h4><p class="pay-montant">Montant du : ' + (inscrit.du||0).toLocaleString("fr-FR") + ' F CFA</p><p class="pay-montant">Verse : ' + (inscrit.verse||0).toLocaleString("fr-FR") + ' F CFA</p>' + (inscrit.solde>0?'<p class="pay-montant c-rouge">Solde : ' + inscrit.solde.toLocaleString("fr-FR") + ' F CFA</p>':'<p class="pay-montant c-vert">Entierement paye</p>') + '</div></div>';
+            pay2026.innerHTML = '<div class="paiement-bar ' + (inscrit.solde===0?'paiement-ok':'paiement-partiel') + '"><div class="pay-icon">' + (inscrit.solde===0?'&#10003;':'&#9888;') + '</div><div class="pay-text"><h4>Scolarite 2026-2027' + (inscrit.solde===0?' entierement payee':'') + '</h4><p class="pay-montant">Montant du : ' + (inscrit.du||0).toLocaleString("fr-FR") + ' F CFA</p><p class="pay-montant">Verse : ' + Math.min(inscrit.verse||0, inscrit.du||0).toLocaleString("fr-FR") + ' F CFA</p>' + (inscrit.solde>0?'<p class="pay-montant c-rouge">Solde : ' + inscrit.solde.toLocaleString("fr-FR") + ' F CFA</p>':'<p class="pay-montant c-vert">Entierement paye</p>') + '</div></div>';
           }
           const hdrInfos = document.querySelector('.eleve-infos');
           if (hdrInfos) hdrInfos.textContent = inscrit.classe + ' | ' + ((window.SHEETS_IDS_COMPLET[eleve.sheetsId]||{}).nom||'');
@@ -2289,7 +2289,7 @@ function _cardInscrit2026Solde(inscrit, info) {
     '</div>' +
     '<div style="background:rgba(46,125,50,0.2);border:1px solid #4CAF50;border-radius:8px;padding:8px;margin-bottom:12px;">' +
     '<div style="color:#81C784;font-size:0.85em;font-weight:bold;">✅ Scolarité entièrement payée</div>' +
-    '<div style="color:#fff;font-size:0.9em;">' + (inscrit.verse||0).toLocaleString('fr-FR') + ' F CFA versés</div>' +
+    '<div style="color:#fff;font-size:0.9em;">' + (inscrit.du||0).toLocaleString('fr-FR') + ' F CFA versés</div>' +
     '</div>' +
     '<div class="cpp-contact-block"><p style="color:' + (type==='EXCELLENCE'?'#D4AF37':'#D4AF37') + ';font-weight:bold;font-size:0.85em;margin-bottom:4px;">📞 Contact & Renseignements</p>' +
     '<p style="color:#fff;font-size:1em;font-weight:bold;">' + tel + '</p></div></div>';
