@@ -2594,6 +2594,9 @@ async function attribuerMatriculeCom() {
         <option value="NOTES_T2">Trimestre 2</option>
         <option value="NOTES_T3">Trimestre 3</option>
       </select>
+<select id="comNotesFiltreClasse" onchange="filtrerNotesSaisiesCom()" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+        <option value="">Toutes les classes</option>
+      </select>
       <button onclick="chargerNotesSaisiesCom()" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">&#128260; Charger</button>
     </div>
     <div id="comNotesListe">
@@ -6890,9 +6893,18 @@ setTimeout(function(){ _rechargerListeReception('Com'); }, 700);
       return;
     }
     if (countEl) countEl.textContent = '(' + lignes.length + ' ligne(s))';
+      window._notesCache_com = lignes;
+      var selCl = document.getElementById('comNotesFiltreClasse');
+      if (selCl) {
+        var classesUniques = [...new Set(lignes.map(function(l){return l.classe;}))].filter(Boolean).sort();
+        var valeurActuelle = selCl.value;
+        selCl.innerHTML = '<option value="">Toutes les classes</option>' + classesUniques.map(function(c){return '<option value="' + c + '">' + c + '</option>';}).join('');
+        selCl.value = valeurActuelle;
+      }
 
     var parClasse = {};
-    lignes.forEach(function(l) {
+   var lignesFiltrees = window._notesFiltreClasse_com ? lignes.filter(function(l){return l.classe === window._notesFiltreClasse_com;}) : lignes;
+      lignesFiltrees.forEach(function(l) {
       if (!parClasse[l.classe]) parClasse[l.classe] = {};
       if (!parClasse[l.classe][l.matiere]) parClasse[l.classe][l.matiere] = [];
       parClasse[l.classe][l.matiere].push(l);
@@ -6922,7 +6934,12 @@ setTimeout(function(){ _rechargerListeReception('Com'); }, 700);
     container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement.</p>';
   }
 }
-function chargerPaiementsCom(){
+function filtrerNotesSaisiesCom() {
+  var sel = document.getElementById('comNotesFiltreClasse');
+  window._notesFiltreClasse_com = sel ? sel.value : '';
+  chargerNotesSaisiesCom();
+}
+  function chargerPaiementsCom(){
   const classe = document.getElementById('comPaiClasseSelect').value;
   const zone = document.getElementById('comPaiResultats');
   if(!classe){ zone.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Choisissez une classe.</p>'; return; }
