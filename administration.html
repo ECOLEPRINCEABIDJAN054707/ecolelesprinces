@@ -2916,6 +2916,17 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
 
+  <div class="section" id="eduSecAppel">
+    <div class="sec-head sec-vert open" onclick="toggleSec(this)">
+      <h3>&#128203; Appels enseignants &mdash; Aujourd'hui <span id="eduAppelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body open" id="eduAppelBody">
+      <div style="padding:8px 14px;text-align:right">
+        <button onclick="chargerAppelsEdu(currentStaff.ecole)" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">&#128260; Actualiser</button>
+      </div>
+      <div id="eduAppelListe"><div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div></div>
+    </div>
+  </div>
 <!-- COURS DU JOUR — PRÉSENCE ENSEIGNANTS -->
   <div class="section">
     <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
@@ -6851,6 +6862,7 @@ function afficherEdu(s){
   chargerResultatsEtMessages(s.ecole,'EDU');
   chargerAbsencesElevesSigne(s.ecole, s.classes||[]);
   chargerPresencesEnseignants(s.ecole);
+  setTimeout(function(){chargerAppelsEdu(s.ecole);},600);
 chargerClassesEdu(s);
  setTimeout(function(){chargerAffectationTousEdu();},700);
   setTimeout(function(){chargerChefsClasse(s);},800);
@@ -7382,6 +7394,82 @@ function enregistrerConnexionStaff(role, ecole) {
   });
   liste.innerHTML = h;
 } 
+  // ⚠️ NOUVEAU — Appels enseignants réels pour l'espace Éducateur
+async function chargerAppelsEdu(ecole) {
+  const liste = document.getElementById('eduAppelListe');
+  if (!liste || !ecole) return;
+  liste.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+  const sheetsId = getSheetsIdPourEcole(ecole);
+  if (!sheetsId) { liste.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">École non configurée.</p>'; return; }
+
+  const today = new Date();
+  const dd = String(today.getDate()).padStart(2,'0');
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const yyyy = today.getFullYear();
+  const dateFormats = [dd+'/'+mm+'/'+yyyy, yyyy+'-'+mm+'-'+dd, dd+'-'+mm+'-'+yyyy];
+
+  const classesEdu = (currentStaff && currentStaff.classes) || [];
+  function normAppelEdu(s){return String(s||'').toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[-_]/g,' ').replace(/\s+/g,' ');}
+  function appartientEdu(classeVal){
+    if(!classesEdu.length) return true;
+    return classesEdu.some(function(cl){
+      var nc=normAppelEdu(classeVal), ncl=normAppelEdu(cl);
+      return nc===ncl || nc.indexOf(ncl+' ')===0 || nc.indexOf(' '+ncl)>=0 || ncl.indexOf(nc+' ')===0;
+    });
+  }
+
+  let appels = [];
+  try {
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/APPELS?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r = await fetch(url); const data = await r.json();
+    if (data.values && data.values.length >= 2) {
+      const headers = data.values[0].map(h => String(h||'').toUpperCase().trim());
+      const iDate = headers.findIndex(h => h.includes('DATE'));
+      const iHeure = headers.findIndex(h => h.includes('HEURE'));
+      const iEns = headers.findIndex(h => h.includes('ENS'));
+      const iClasse = headers.findIndex(h => h.includes('CLASS'));
+      const iMatiere = headers.findIndex(h => h.includes('MAT') && !h.includes('CULE'));
+      const iPresents = headers.findIndex(h => h.includes('PRES'));
+      const iTotal = headers.findIndex(h => h.includes('TOTAL'));
+      appels = data.values.slice(1).filter(row => {
+        const dateVal = String(row[iDate>=0?iDate:0]||'').trim();
+        const n = parseFloat(dateVal);
+        if (!isNaN(n) && n > 40000) {
+          const d = new Date(Math.round((n-25569)*86400*1000));
+          const dStr = String(d.getUTCDate()).padStart(2,'0')+'/'+String(d.getUTCMonth()+1).padStart(2,'0')+'/'+d.getUTCFullYear();
+          return dStr === dd+'/'+mm+'/'+yyyy;
+        }
+        return dateFormats.some(f => dateVal.startsWith(f) || dateVal === f);
+      }).map(row => ({
+        heure: iHeure>=0 ? String(row[iHeure]||'').trim() : '',
+        enseignant: iEns>=0 ? String(row[iEns]||'').trim() : '',
+        classe: iClasse>=0 ? String(row[iClasse]||'').trim() : '',
+        matiere: iMatiere>=0 ? String(row[iMatiere]||'').trim() : '',
+        presents: iPresents>=0 ? parseInt(row[iPresents])||0 : 0,
+        total: iTotal>=0 ? parseInt(row[iTotal])||0 : 0
+      })).filter(a => (a.enseignant || a.classe) && appartientEdu(a.classe));
+    }
+  } catch(e) {}
+
+  const compteEl = document.getElementById('eduAppelCount');
+  if (compteEl) compteEl.textContent = '(' + appels.length + ' appel(s))';
+
+  if (!appels.length) {
+    liste.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.84em">Aucun appel enregistré aujourd\'hui</div>';
+    return;
+  }
+
+  let h = '';
+  appels.forEach(a => {
+    const tauxCours = a.total>0 ? Math.round(a.presents/a.total*100) : (a.presents>0?100:0);
+    const tc = tauxCours>=85 ? 'var(--vert)' : tauxCours>=70 ? 'var(--orange)' : 'var(--rouge)';
+    h += '<div class="item"><div class="item-av" style="background:rgba(31,78,121,0.1);color:var(--bleu)">'+(a.enseignant.charAt(0)||'?')+'</div>';
+    h += '<div class="item-info"><div class="item-nom">'+a.enseignant+'</div><div class="item-meta">'+a.classe+(a.matiere?' · '+a.matiere:'')+(a.heure?' · '+a.heure:'')+'</div></div>';
+    h += '<div class="item-val"><div class="val" style="color:'+tc+'">'+tauxCours+'%</div><div class="lbl">'+a.presents+'/'+(a.total||a.presents)+'</div></div></div>';
+  });
+  liste.innerHTML = h;
+}
 // ⚠️ NOUVEAU — Remplacer un enseignant dans l'EDT (espace Directeur)
 async function confirmerChangerEnseignant() {
   const classe = document.getElementById('ceClasse').value.trim();
