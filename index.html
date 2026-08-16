@@ -1185,8 +1185,13 @@ async function afficherEspaceParent(eleve) {
   // (eleve.solde, jamais mutee) — pas du solde 2026-2027 en cours. Un ancien
   // eleve garde acces a ses vraies donnees deja payees, meme si le paiement
   // 2026-2027 n'est pas encore complet.
-  var soldeAccesParsed = _pm(eleve.solde);
-  var accesComplet = eleve.gratuit || soldeAccesParsed === 0;
+var soldeAccesParsed = _pm(eleve.solde);
+  // Élève sans dossier 2025-2026 (nouveau, trouvé directement en base 2026-2027)
+  // → jamais bloqué par son solde 2026-2027 en cours.
+  // Élève avec un dossier 2025-2026 → reste bloqué tant que CETTE dette n'est pas soldée.
+  var basesEleve2026 = Object.values(SHEETS_IDS_COMPLET).map(function(v){ return v.base2026; }).filter(Boolean);
+  var estNouveauSansDossier2025 = basesEleve2026.indexOf(eleve.sheetsId) >= 0;
+  var accesComplet = eleve.gratuit || estNouveauSansDossier2025 || soldeAccesParsed === 0;
   if (accesComplet) {
     chargerAnnonces(eleve); chargerNotes(eleve); chargerAbsences(eleve); chargerCahierTextes(eleve);
     // Forcer RNO pour CM2 sans décision
