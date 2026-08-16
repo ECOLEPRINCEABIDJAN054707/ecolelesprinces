@@ -2046,9 +2046,13 @@ function genererProgTrimPDF() {
   w.document.write('</body></html>');
   w.document.close();
 }
- async function chargerStatutMenaParent(eleve) {
+async function chargerStatutMenaParent(eleve) {
   const section = document.getElementById('sectionStatutMena');
   if (!section) return;
+  // Le processus d'inscription en ligne MENA (agfne.sigfne.net) ne concerne
+  // que le collège et le lycée — jamais le primaire.
+  const classeVerif = window._classe2026 || eleve.classe;
+  if (estPrimaire(classeVerif)) { section.style.display = 'none'; return; }
   const sheetsId = window._sheetsId2026 || eleve.sheetsId;
   if (!sheetsId) return;
 
