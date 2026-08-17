@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" href="ecole.jpg">
 <script>
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/ecolelesprinces/service-worker.js')
+   navigator.serviceWorker.register('./service-worker.js')
     .then(function(reg) { 
       window._swRegistration = reg;
       console.log('SW enregistré:', reg.scope);
