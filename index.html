@@ -1447,8 +1447,8 @@ devoirs.forEach(function(d) {
           var color = isNaN(n) ? '#999' : n>=14 ? '#2E7D32' : n>=10 ? '#B8860B' : '#C62828';
           var bg = isNaN(n) ? '#F5F5F5' : n>=14 ? '#E8F5E9' : n>=10 ? '#FFFDE7' : '#FFEBEE';
           html += '<div style="background:'+bg+';border-radius:6px;padding:4px 10px;text-align:center;">';
-          html += '<div style="font-size:0.65em;color:#888;">Devoir '+(d.devoir||'')+'</div>';
-          html += '<div style="font-size:0.9em;font-weight:bold;color:'+color+';">'+(isNaN(n)?'—':n)+'</div>';
+          html += '<div style="font-size:0.8em;color:#888;">Devoir '+(d.devoir||'')+'</div>';
+          html += '<div style="font-size:1.15em;font-weight:bold;color:'+color+';">'+(isNaN(n)?'—':n)+'</div>';
           html += '</div>';
         });
         if (moyenne !== null) {
