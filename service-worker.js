@@ -16,11 +16,11 @@ const messaging = firebase.messaging();
 // ─── NOM DU CACHE ─────────────────────────────────────────
 const CACHE_NAME = 'les-princes-v3';
 const URLS_A_CACHER = [
-  '/ecolelesprinces/',
-  '/ecolelesprinces/index.html',
-  '/ecolelesprinces/enseignant_cpp.html',
-  '/ecolelesprinces/manifest.json',
-  '/ecolelesprinces/ecole.jpg'
+  './',
+  './index.html',
+  './enseignant_cpp.html',
+  './manifest.json',
+  './ecole.jpg'
 ];
 
 // ─── INSTALLATION ─────────────────────────────────────────
@@ -76,7 +76,7 @@ self.addEventListener('fetch', function(event) {
       return response;
     }).catch(function() {
       return caches.match(event.request).then(function(cached) {
-        return cached || caches.match('/ecolelesprinces/index.html');
+        return cached || caches.match('./index.html');
       });
     })
   );
@@ -88,12 +88,12 @@ messaging.onBackgroundMessage(function(payload) {
   var data = payload.data || payload.notification || {};
   var titre = data.titre || data.title || 'Ecole Les Princes';
   var message = data.message || data.body || '';
-  var url = data.url || '/ecolelesprinces/';
+  var url = data.url || './';
 
   var options = {
     body: message,
-    icon: '/ecolelesprinces/ecole.png',
-    badge: '/ecolelesprinces/ecole.png',
+icon: './ecole.png',
+badge: './ecole.png',
     vibrate: [200, 100, 200],
     requireInteraction: false,
     data: { url: url },
@@ -108,9 +108,9 @@ messaging.onBackgroundMessage(function(payload) {
 // ─── CLIC SUR NOTIFICATION ────────────────────────────────
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
-  var urlCible = (event.notification.data && event.notification.data.url)
+var urlCible = (event.notification.data && event.notification.data.url)
     ? event.notification.data.url
-    : '/ecolelesprinces/';
+    : './';
 
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
