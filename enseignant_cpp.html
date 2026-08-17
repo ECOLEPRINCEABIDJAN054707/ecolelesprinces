@@ -1117,13 +1117,12 @@ function demarrerCoursPrimaireDirect() {
     alert('Classe "' + cible + '" introuvable dans la liste. Contactez la Direction pour vérifier le nom exact de cette classe.');
     return;
   }
+  const maintenant = new Date();
+  const fin = new Date(maintenant.getTime() + 55*60000);
   document.getElementById('modalMatiere').value = user.matiere || 'Instituteur(trice)';
-  document.getElementById('modalHeureDebut').value = formatHeure(new Date());
-  document.getElementById('modalHeureFin').value = '';
-  document.getElementById('estimBloc').style.display = 'none';
-  goTo('accueil');
-  document.querySelector('.quick-btn').scrollIntoView({behavior:'smooth'});
-  showToast('Renseignez l\'heure de fin pour démarrer','warn');
+  document.getElementById('modalHeureDebut').value = formatHeure(maintenant);
+  document.getElementById('modalHeureFin').value = formatHeure(fin);
+  confirmerCours();
 }
   
 function signalerProblemeEDT() {
