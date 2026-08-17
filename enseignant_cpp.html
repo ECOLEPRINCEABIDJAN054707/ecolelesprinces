@@ -1616,7 +1616,7 @@ async function chargerElevesNotes() {
     }
     elevesNotes = data.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({
       matricule:(r[0]||'').toString().trim(), nom:(r[1]||'').toString().trim(),
-      note:'', statutAbsence:''
+     note:'', statutAbsence:'', commentaire:''
     }));
 
     const dateVal = document.getElementById('notesDate').value;
@@ -1722,11 +1722,14 @@ function afficherElevesNotes() {
           </div>
         </div>`;
     } else {
-      contenu = `
-        <div style="display:flex;align-items:center;gap:6px">
-          <input type="number" min="0" max="20" step="0.5" placeholder="—" value="${esc(el.note)}" class="note-input" oninput="majNoteInput(this,${i})">
-          <span style="font-size:11px;color:var(--text2)">/20</span>
-          <button onclick="setStatutAbsence(${i},'NON_JUSTIFIEE')" class="btn btn-sm btn-ghost" style="min-height:auto;padding:6px 8px" title="Marquer absent">🚫</button>
+contenu = `
+        <div style="display:flex;flex-direction:column;gap:6px;flex:1">
+          <div style="display:flex;align-items:center;gap:6px">
+            <input type="number" min="0" max="20" step="0.5" placeholder="—" value="${esc(el.note)}" class="note-input" oninput="majNoteInput(this,${i})">
+            <span style="font-size:11px;color:var(--text2)">/20</span>
+            <button onclick="setStatutAbsence(${i},'NON_JUSTIFIEE')" class="btn btn-sm btn-ghost" style="min-height:auto;padding:6px 8px" title="Marquer absent">🚫</button>
+          </div>
+          <input type="text" placeholder="Commentaire (optionnel)" value="${esc(el.commentaire||'')}" oninput="majCommentaireInput(this,${i})" style="width:100%;padding:6px 8px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:12px;font-family:inherit;background:var(--bg)">
         </div>`;
     }
     return `<div class="note-row" style="${bordure};align-items:flex-start">
@@ -1756,6 +1759,9 @@ function majNoteInput(el, i) {
   if (!isNaN(v)) { el.classList.toggle('ok',v>=10); el.classList.toggle('bad',v<10); }
   else { el.classList.remove('ok','bad'); }
 }
+function majCommentaireInput(el, i) {
+  elevesNotes[i].commentaire = el.value;
+}
 
 async function publierNotes() {
   const classe = document.getElementById('notesClasse').value;
@@ -1781,7 +1787,7 @@ async function publierNotes() {
     date:formatDate(new Date()), dateRemise, classe,
     matiere:user.matiere, enseignant:user.nom, ecole:user.ecole,
     numeroDevoir:numero, trimestre,
-    notes:elevesNotes.map(e=>({matricule:e.matricule,nom:e.nom,note:e.note,statutAbsence:e.statutAbsence||''}))
+  notes:elevesNotes.map(e=>({matricule:e.matricule,nom:e.nom,note:e.note,statutAbsence:e.statutAbsence||'',commentaire:e.commentaire||''}))
   };
   try {
     const res = await envoyerDonnees('NOTES', data);
