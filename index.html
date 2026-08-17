@@ -1400,7 +1400,7 @@ function appreciationNote(moy) {
   if (pct >= 0.50) return { label: 'Fragile — revoir les leçons et s\'exercer davantage', color: '#E65100', bg: '#FFF3E0' };
   return { label: 'À renforcer — un soutien scolaire est recommandé', color: '#C62828', bg: '#FFEBEE' };
 }
-  async function chargerCarnetNotes(eleve) {
+async function chargerCarnetNotes(eleve) {
   var section = document.getElementById('sectionCarnetNotes');
   var body = document.getElementById('carnetNotesBody');
   if (!section || !body) return;
@@ -1412,7 +1412,7 @@ function appreciationNote(moy) {
   try {
     for (var t = 0; t < trimestres.length; t++) {
       var trim = trimestres[t];
-      var range = encodeURIComponent(trim + '!A2:H5000');
+      var range = encodeURIComponent(trim + '!A2:S5000');
       var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sid + '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
       var res = await fetch(url);
       if (!res.ok) continue;
@@ -1425,17 +1425,26 @@ function appreciationNote(moy) {
       var parMatiere = {};
       rows.forEach(function(r) {
         var matiere = String(r[3]||'').trim() || 'Matière';
-        if (!parMatiere[matiere]) parMatiere[matiere] = [];
-        parMatiere[matiere].push({ devoir: r[4], note: r[5] });
+        var devoirs = [];
+        for (var d = 0; d < 6; d++) {
+          var noteVal = r[4+d];
+          if (noteVal === '' || noteVal === null || noteVal === undefined) continue;
+          devoirs.push({ devoir: d+1, note: noteVal, commentaire: r[13+d] || '' });
+        }
+        if (!devoirs.length) return;
+        parMatiere[matiere] = { devoirs: devoirs, moyenneServeur: r[10] };
       });
 
       var trimLabel = trim === 'NOTES_T1' ? '1er Trimestre' : trim === 'NOTES_T2' ? '2ème Trimestre' : '3ème Trimestre';
+      if (!Object.keys(parMatiere).length) continue;
       html += '<div style="margin-bottom:16px;">';
       html += '<div style="font-size:0.85em;font-weight:700;color:#1F4E79;margin-bottom:8px;">' + trimLabel + '</div>';
       Object.keys(parMatiere).sort().forEach(function(matiere) {
-        var devoirs = parMatiere[matiere];
+        var infos = parMatiere[matiere];
+        var devoirs = infos.devoirs;
         var notesVal = devoirs.map(function(d){ return parseFloat(d.note); }).filter(function(n){ return !isNaN(n); });
-        var moyenne = notesVal.length ? (notesVal.reduce(function(a,b){return a+b;},0)/notesVal.length) : null;
+        var moyenneServeur = parseFloat(infos.moyenneServeur);
+        var moyenne = !isNaN(moyenneServeur) ? moyenneServeur : (notesVal.length ? (notesVal.reduce(function(a,b){return a+b;},0)/notesVal.length) : null);
         html += '<div style="margin-bottom:10px;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">';
         html += '<div style="background:#1565C0;padding:8px 12px;display:flex;justify-content:space-between;align-items:center;">';
         html += '<span style="font-weight:bold;color:white;font-size:1em;">' + matiere + '</span>';
@@ -1446,9 +1455,11 @@ devoirs.forEach(function(d) {
           var n = parseFloat(d.note);
           var color = isNaN(n) ? '#999' : n>=14 ? '#2E7D32' : n>=10 ? '#B8860B' : '#C62828';
           var bg = isNaN(n) ? '#F5F5F5' : n>=14 ? '#E8F5E9' : n>=10 ? '#FFFDE7' : '#FFEBEE';
-          html += '<div style="background:'+bg+';border-radius:6px;padding:4px 10px;text-align:center;">';
+          var comEsc = String(d.commentaire||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          html += '<div style="background:'+bg+';border-radius:6px;padding:4px 10px;text-align:center;max-width:140px;">';
           html += '<div style="font-size:0.8em;color:#888;">Devoir '+(d.devoir||'')+'</div>';
           html += '<div style="font-size:1.15em;font-weight:bold;color:'+color+';">'+(isNaN(n)?'—':n)+'</div>';
+          if (comEsc) html += '<div style="font-size:0.7em;color:#666;margin-top:2px;white-space:normal;">'+comEsc+'</div>';
           html += '</div>';
         });
         if (moyenne !== null) {
