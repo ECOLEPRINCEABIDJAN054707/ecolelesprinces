@@ -1323,17 +1323,16 @@ async function chargerEleves(classe) {
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     if (!data.values || !data.values.length) {
-      eleves = genDemo();
+      eleves = [];
     } else {
       eleves = data.values
         .filter(r => r[0] && r[0].toString().trim())
         .map(r => ({ classe, matricule: (r[0]||'').toString().trim(), nom: (r[1]||'').toString().trim(), statut:'present', motif:'', heure:'', obs:'' }));
-      if (!eleves.length) eleves = genDemo();
     }
   } catch(e) {
     console.warn('chargerEleves:', e);
-    eleves = genDemo();
-    showToast('Chargement échoué — mode démo','warn');
+    eleves = [];
+    showToast('Erreur de chargement des élèves — réessayez ou contactez la direction','error');
   }
   hideLoader();
   elevesFiltres = [...eleves];
