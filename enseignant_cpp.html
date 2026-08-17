@@ -1015,6 +1015,17 @@ async function chargerMesCoursDuJour() {
     heroDiv.parentNode.insertBefore(container, heroDiv.nextSibling);
   }
 
+  // ⚠️ NOUVEAU — Le primaire n'a pas d'EDT au format "matière-Prof",
+  // la recherche EDT_PAR_PROF échoue toujours pour ces comptes.
+  // On propose directement de démarrer le cours dans leur classe déclarée au login.
+  if (user.niveau === 'primaire' && user.classeDefaut) {
+    container.innerHTML = '<div class="card"><div class="card-title">📅 Votre classe aujourd\'hui</div><div class="card-body" style="padding:12px">' +
+      '<button onclick="demarrerCoursPrimaireDirect()" style="width:100%;text-align:left;padding:12px;background:var(--blue-lt);border:1.5px solid #90CAF9;border-radius:10px;font-family:inherit;cursor:pointer">' +
+      '<div style="font-weight:700;font-size:14px;color:var(--navy)">' + esc(user.classeDefaut) + '</div>' +
+      '<div style="font-size:12px;color:var(--text2);margin-top:2px">Toucher pour démarrer le cours</div>' +
+      '</button></div></div>';
+    return;
+  }
   try {
     const url = APPS_SCRIPT_URL + '?type=MES_COURS_JOUR&ecole=' + encodeURIComponent(user.ecole) + '&enseignant=' + encodeURIComponent(user.nom);
     const cbName = 'mcj_' + Date.now();
@@ -1095,7 +1106,26 @@ function demarrerCoursDepuisEDT(idx) {
   calculerEstim();
   confirmerCours();
 }
-
+function demarrerCoursPrimaireDirect() {
+  const sel = document.getElementById('modalClasse');
+  const cible = user.classeDefaut;
+  let trouve = false;
+  for (let i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value === cible) { sel.selectedIndex = i; trouve = true; break; }
+  }
+  if (!trouve) {
+    alert('Classe "' + cible + '" introuvable dans la liste. Contactez la Direction pour vérifier le nom exact de cette classe.');
+    return;
+  }
+  document.getElementById('modalMatiere').value = user.matiere || 'Instituteur(trice)';
+  document.getElementById('modalHeureDebut').value = formatHeure(new Date());
+  document.getElementById('modalHeureFin').value = '';
+  document.getElementById('estimBloc').style.display = 'none';
+  goTo('accueil');
+  document.querySelector('.quick-btn').scrollIntoView({behavior:'smooth'});
+  showToast('Renseignez l\'heure de fin pour démarrer','warn');
+}
+  
 function signalerProblemeEDT() {
   const msg = 'Bonjour, je ne trouve pas mon cours du jour dans l\'EDT.\n' +
     'Enseignant : ' + user.nom + '\nÉcole : ' + user.ecole + '\nDate : ' + formatDate(new Date());
