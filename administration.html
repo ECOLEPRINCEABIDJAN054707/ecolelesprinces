@@ -1672,6 +1672,69 @@ async function chargerProgrammeTrimestrielDir() {
     container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement.</p>';
   }
 }
+
+  function telechargerSousMoyennePDF(espace) {
+  var cache = espace === 'edu' ? window._sousMoyenneCache_edu : (espace === 'dir' ? window._sousMoyenneCache_dir : window._sousMoyenneCache_com);
+  if (!cache || !cache.length) {
+    showToast('Aucune donnée chargée', 'error');
+    return;
+  }
+  var filtreClasse = espace === 'edu' ? window._sousMoyFiltreClasse_edu : (espace === 'dir' ? window._sousMoyFiltreClasse_dir : window._sousMoyFiltreClasse_com);
+  var filtreDevoir = espace === 'edu' ? window._sousMoyFiltreDevoir_edu : (espace === 'dir' ? window._sousMoyFiltreDevoir_dir : window._sousMoyFiltreDevoir_com);
+  var lignes = cache.filter(function(l) {
+    return (!filtreClasse || l.classe === filtreClasse) && (!filtreDevoir || String(l.devoir) === filtreDevoir);
+  });
+  lignes.sort(function(a, b) { return a.note - b.note; });
+  if (!lignes.length) {
+    showToast('Aucun élève ne correspond à ce filtre', 'error');
+    return;
+  }
+
+  try {
+    var doc = new jspdf.jsPDF();
+    var pageWidth = doc.internal.pageSize.getWidth();
+    var y = 18;
+
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Élèves sous la moyenne', pageWidth / 2, y, { align: 'center' });
+    y += 7;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(String(currentStaff.label || currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
+    y += 5;
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text('Généré le ' + new Date().toLocaleDateString('fr-FR'), pageWidth / 2, y, { align: 'center' });
+    y += 9;
+    doc.setTextColor(0);
+
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'bold');
+    var colX = [14, 60, 90, 120, 138, 158];
+    var headers = ['Élève', 'Classe', 'Matière', 'Devoir', 'Note', 'Contact parent'];
+    headers.forEach(function(h, idx) { doc.text(h, colX[idx], y); });
+    y += 5;
+    doc.setDrawColor(180);
+    doc.line(14, y - 3, pageWidth - 14, y - 3);
+    doc.setFont(undefined, 'normal');
+
+    lignes.forEach(function(l) {
+      if (y > 280) { doc.addPage(); y = 18; }
+      doc.text(String(l.nom).substring(0, 28), colX[0], y);
+      doc.text(String(l.classe), colX[1], y);
+      doc.text(String(l.matiere).substring(0, 15), colX[2], y);
+      doc.text('D' + l.devoir, colX[3], y);
+      doc.text(String(l.note) + '/20', colX[4], y);
+      doc.text(String(l.tel), colX[5], y);
+      y += 5.5;
+    });
+
+    doc.save('Eleves_sous_moyenne_' + (currentStaff.ecole || '').replace(/\s+/g, '_') + '.pdf');
+  } catch (e) {
+    showToast('Erreur génération PDF', 'error');
+  }
+}
 function telechargerProgPDF(type, valeur, espace) {
   var cache = espace === 'edu' ? _progCacheEdu : (espace === 'dir' ? _progCacheDir : _progCacheCom);
   if (!cache.length) {
@@ -2634,6 +2697,117 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
 </div>
+  async function chargerSousMoyenneCom() {
+  const ongletTrim = document.getElementById('comSousMoyTrimestre').value;
+  const container = document.getElementById('comSousMoyListe');
+  const countEl = document.getElementById('comSousMoyCount');
+  if (!container || !currentStaff) return;
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+  const sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole];
+  if (!sheetsId) {
+    container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configurée pour cette école.</p>';
+    return;
+  }
+
+  try {
+    const urlNotes = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/' + encodeURIComponent(ongletTrim) + '?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    const [resNotes, resSynth] = await Promise.all([fetch(urlNotes), fetch(urlSynth)]);
+    const dataNotes = await resNotes.json();
+    const dataSynth = await resSynth.json();
+    const rows = dataNotes.values || [];
+
+    var telParMatricule = {};
+    (dataSynth.values || []).forEach(function(r) {
+      var mat = String(r[1] || '').trim().toUpperCase();
+      if (!mat) return;
+      var tels = [r[6], r[7], r[8]].filter(Boolean).join(' / ');
+      telParMatricule[mat] = tels || '—';
+    });
+
+    var sousLaMoyenne = [];
+    for (var i = 1; i < rows.length; i++) {
+      var row = rows[i];
+      var matricule = String(row[0] || '').trim();
+      if (!matricule) continue;
+      var nom = String(row[1] || '').trim();
+      var classe = String(row[2] || '').trim();
+      var matiere = String(row[3] || '').trim();
+      var enseignant = String(row[11] || '').trim();
+      for (var d = 0; d < 6; d++) {
+        var val = row[4 + d];
+        if (val === '' || val === null || val === undefined) continue;
+        var note = parseFloat(val);
+        if (isNaN(note) || note >= 10) continue;
+        sousLaMoyenne.push({
+          matricule: matricule, nom: nom, classe: classe, matiere: matiere,
+          devoir: d + 1, note: note, enseignant: enseignant,
+          tel: telParMatricule[matricule.toUpperCase()] || '—'
+        });
+      }
+    }
+
+    if (!sousLaMoyenne.length) {
+      container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun élève sous la moyenne pour ce trimestre.</p>';
+      if (countEl) countEl.textContent = '(0)';
+      window._sousMoyenneCache_com = [];
+      return;
+    }
+
+    window._sousMoyenneCache_com = sousLaMoyenne;
+    if (countEl) countEl.textContent = '(' + sousLaMoyenne.length + ')';
+
+    var selCl = document.getElementById('comSousMoyFiltreClasse');
+    if (selCl) {
+      var classesUniques = [...new Set(sousLaMoyenne.map(function(l){return l.classe;}))].filter(Boolean).sort();
+      var valeurActuelle = selCl.value;
+      selCl.innerHTML = '<option value="">Toutes les classes</option>' + classesUniques.map(function(c){return '<option value="' + c + '">' + c + '</option>';}).join('');
+      selCl.value = valeurActuelle;
+    }
+
+    afficherSousMoyenneCom();
+  } catch (e) {
+    container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement.</p>';
+  }
+}
+
+function afficherSousMoyenneCom() {
+  const container = document.getElementById('comSousMoyListe');
+  if (!container) return;
+  var lignes = (window._sousMoyenneCache_com || []).filter(function(l) {
+    return (!window._sousMoyFiltreClasse_com || l.classe === window._sousMoyFiltreClasse_com)
+        && (!window._sousMoyFiltreDevoir_com || String(l.devoir) === window._sousMoyFiltreDevoir_com);
+  });
+  lignes.sort(function(a, b) { return a.note - b.note; });
+
+  if (!lignes.length) {
+    container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun élève ne correspond à ce filtre.</p>';
+    return;
+  }
+
+  var html = '<div class="tbl-wrap"><table style="min-width:600px"><thead><tr><th>Élève</th><th>Classe</th><th>Matière</th><th>Devoir</th><th>Note</th><th>Contact parent</th><th>Enseignant</th></tr></thead><tbody>';
+  lignes.forEach(function(l) {
+    var couleur = l.note < 5 ? 'var(--rouge)' : '#E65100';
+    html += '<tr><td style="font-size:0.8em;font-weight:600">' + l.nom + '</td>';
+    html += '<td style="font-size:0.78em">' + l.classe + '</td>';
+    html += '<td style="font-size:0.78em">' + l.matiere + '</td>';
+    html += '<td style="text-align:center;font-size:0.78em">D' + l.devoir + '</td>';
+    html += '<td style="text-align:center;font-size:0.82em;font-weight:700;color:' + couleur + '">' + l.note + '/20</td>';
+    html += '<td style="font-size:0.78em">' + l.tel + '</td>';
+    html += '<td style="font-size:0.74em;color:var(--gris)">' + l.enseignant + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+function filtrerSousMoyenneCom() {
+  var sel = document.getElementById('comSousMoyFiltreClasse');
+  window._sousMoyFiltreClasse_com = sel ? sel.value : '';
+  var selD = document.getElementById('comSousMoyFiltreDevoir');
+  window._sousMoyFiltreDevoir_com = selD ? selD.value : '';
+  afficherSousMoyenneCom();
+}
 <div class="section" id="comSecProgTrim">
   <div class="sec-head sec-violet" onclick="chargerProgrammeTrimestrielCom();toggleSec(this)">
     <h3>📅 Programme trimestriel — Devoirs surveillés <span id="comProgCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
