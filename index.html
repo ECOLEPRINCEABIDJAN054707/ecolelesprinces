@@ -3066,5 +3066,99 @@ let deferredPrompt;
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;document.getElementById("pwaBanner").style.display="flex";});
 function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{document.getElementById("pwaBanner").style.display="none";deferredPrompt=null;});}}
 </script>
+<!-- ============================================================
+     LIEN DISCRET FOOTER — vers le règlement intérieur
+     ============================================================
+     À coller dans le footer/pied de page existant de index.html
+     (cherche "footer" ou la toute fin du menu principal).
+     S'il n'y a pas de footer existant, colle ce bloc juste avant
+     </body>, AVANT le bloc du règlement intérieur lui-même.
+     ============================================================ -->
+<div style="text-align:center;padding:14px 10px;font-size:0.72em;color:#9AA5B8">
+  <a href="#secReglementInterieur"
+     onclick="document.getElementById('secReglementInterieur').scrollIntoView({behavior:'smooth'}); var b=document.getElementById('secReglementInterieur').querySelector('.sec-body'); if(b && !b.classList.contains('open')){document.getElementById('secReglementInterieur').querySelector('.sec-head').click();}"
+     style="color:#9AA5B8;text-decoration:underline;cursor:pointer">
+     📜 Règlement intérieur
+  </a>
+</div>
+<!-- ============================================================
+     SECTION — RÈGLEMENT INTÉRIEUR (VERSION COURTE), ESPACE PARENT
+     ============================================================
+     INSTRUCTIONS D'INSTALLATION :
+     1. Ouvrir index.html (espace parent) dans l'éditeur GitHub
+     2. Coller ce bloc à l'endroit choisi (après le menu principal
+        ou avant le footer)
+     3. Commit changes
+     ============================================================ -->
+<div class="section" id="secReglementInterieur">
+  <div class="sec-head" onclick="toggleSec(this)" style="background:#1F4E79;color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-radius:10px 10px 0 0">
+    <h3 style="margin:0;font-size:0.95em">📜 Règlement intérieur</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" style="background:#fff;border-radius:0 0 10px 10px;box-shadow:0 2px 12px rgba(31,78,121,0.10)">
+    <div style="padding:16px;max-height:70vh;overflow-y:auto;font-family:'DM Sans',sans-serif;color:#1A1A2E;font-size:0.86em;line-height:1.6">
+
+      <div style="text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1F4E79">
+        <div style="font-size:1.1em;font-weight:800;color:#1F4E79">GROUPE SCOLAIRE LES PRINCES D'ABIDJAN</div>
+        <div style="font-size:0.82em;color:#666;margin-top:3px">RÈGLEMENT INTÉRIEUR — 2026-2027</div>
+      </div>
+
+      <p style="margin-bottom:12px">L'inscription d'un élève vaut acceptation pleine et entière du présent règlement par les parents/tuteurs et par l'élève.</p>
+
+      <div style="background:#1F4E79;color:#fff;padding:6px 12px;border-radius:6px;font-weight:700;font-size:0.86em;margin:12px 0 6px">1. INSCRIPTION & SCOLARITÉ</div>
+      <ul style="padding-left:20px;margin:0">
+        <li>Inscription valable un an, à renouveler chaque année. Coordonnées des parents (père, mère et/ou tuteur) obligatoires et à jour.</li>
+        <li>Scolarité selon la grille tarifaire en vigueur (statut Affecté/Non affecté déterminé par le Ministère). Paiement échelonné via Wave, Orange Money ou espèces.</li>
+        <li>En cas de retard important de paiement, l'accès à certains services (bulletins, examens blancs) peut être restreint jusqu'à régularisation.</li>
+      </ul>
+
+      <div style="background:#1F4E79;color:#fff;padding:6px 12px;border-radius:6px;font-weight:700;font-size:0.86em;margin:12px 0 6px">2. ASSIDUITÉ, TENUE & COMPORTEMENT</div>
+      <ul style="padding-left:20px;margin:0">
+        <li>Ponctualité exigée ; toute absence doit être justifiée (mot des parents ou certificat médical).</li>
+        <li>Tenue scolaire officielle obligatoire tous les jours de classe.</li>
+        <li>Respect exigé envers le personnel, les camarades et le matériel. Sont interdits : violence, harcèlement, tricherie, vol.</li>
+        <li style="color:#C62828;font-weight:700">Sont strictement interdits et passibles d'exclusion définitive : téléphone portable, objets de valeur, objets tranchants, boissons alcoolisées, drogue ou substances assimilées, introduits dans l'enceinte de l'établissement.</li>
+      </ul>
+
+      <div style="background:#1F4E79;color:#fff;padding:6px 12px;border-radius:6px;font-weight:700;font-size:0.86em;margin:12px 0 6px">3. SANCTIONS DISCIPLINAIRES</div>
+      <table style="width:100%;border-collapse:collapse;margin-top:4px;font-size:0.92em">
+        <tbody>
+          <tr><td style="padding:5px 8px;border:1px solid #D6E4F0;font-weight:700;width:20px">1</td><td style="padding:5px 8px;border:1px solid #D6E4F0">Avertissement oral / écrit</td></tr>
+          <tr><td style="padding:5px 8px;border:1px solid #D6E4F0;font-weight:700">2</td><td style="padding:5px 8px;border:1px solid #D6E4F0">Convocation des parents</td></tr>
+          <tr><td style="padding:5px 8px;border:1px solid #D6E4F0;font-weight:700">3</td><td style="padding:5px 8px;border:1px solid #D6E4F0">Travaux d'intérêt collectif / retenue</td></tr>
+          <tr><td style="padding:5px 8px;border:1px solid #D6E4F0;font-weight:700">4</td><td style="padding:5px 8px;border:1px solid #D6E4F0">Exclusion temporaire (1-8 jours)</td></tr>
+          <tr><td style="padding:5px 8px;border:1px solid #D6E4F0;font-weight:700">5</td><td style="padding:5px 8px;border:1px solid #D6E4F0">Exclusion définitive (faute grave/récidive)</td></tr>
+        </tbody>
+      </table>
+      <p style="margin-top:6px">Toute sanction est communiquée aux parents/tuteurs.</p>
+      <p style="margin-top:4px;color:#C62828;font-weight:700">⚠️ La possession de téléphone, objet de valeur, objet tranchant, boisson alcoolisée, drogue ou substance assimilée entraîne une exclusion définitive immédiate, sans passer par les niveaux 1 à 4.</p>
+
+      <div style="background:#1F4E79;color:#fff;padding:6px 12px;border-radius:6px;font-weight:700;font-size:0.86em;margin:12px 0 6px">4. SÉCURITÉ & SANTÉ</div>
+      <ul style="padding-left:20px;margin:0">
+        <li>Toute condition médicale particulière (allergie, traitement) doit être signalée à l'école.</li>
+        <li>Administration de médicaments uniquement sur prescription écrite et autorisation des parents.</li>
+        <li>Dégradation volontaire de matériel engage la responsabilité financière des parents.</li>
+      </ul>
+
+      <div style="background:#1F4E79;color:#fff;padding:6px 12px;border-radius:6px;font-weight:700;font-size:0.86em;margin:12px 0 6px">5. COMMUNICATION & ÉVALUATIONS</div>
+      <ul style="padding-left:20px;margin:0">
+        <li>L'espace parent numérique est le canal officiel (notes, absences, paiements, annonces) — à consulter régulièrement.</li>
+        <li>Toute fraude lors d'une évaluation entraîne l'annulation de la copie et une sanction.</li>
+        <li>Le passage en classe supérieure est décidé par le Conseil de classe selon les textes du Ministère.</li>
+      </ul>
+
+      <div style="background:#1F4E79;color:#fff;padding:6px 12px;border-radius:6px;font-weight:700;font-size:0.86em;margin:12px 0 6px">6. DISPOSITIONS FINALES</div>
+      <ul style="padding-left:20px;margin:0">
+        <li>Le règlement peut être modifié en cours d'année ; toute modification est communiquée via l'espace parent.</li>
+        <li>Les cas non prévus sont tranchés par la Direction, en lien avec le Fondateur si nécessaire.</li>
+      </ul>
+
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid #E0E4EF;text-align:center;font-size:0.76em;color:#888">
+        Groupe Scolaire Les Princes d'Abidjan — Année 2026-2027
+      </div>
+
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
