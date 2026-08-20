@@ -431,6 +431,37 @@ table tr:nth-child(even){background:#F8FAFD}
       </div>
     </div>
   </div>
+  <div class="section" id="dirSecSousMoyenne">
+    <div class="sec-head sec-violet" onclick="toggleSec(this)">
+      <h3>⚠️ Élèves sous la moyenne <span id="dirSousMoyCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body" id="dirSousMoyBody">
+      <div style="padding:8px 14px 6px;background:#F3E5F5;border-bottom:1px solid #CE93D8">
+        <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">🔒 Lecture seule — Élèves avec une note &lt; 10/20 à un devoir, contact parent inclus</span>
+      </div>
+      <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select id="dirSousMoyTrimestre" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+          <option value="NOTES_T1">Trimestre 1</option>
+          <option value="NOTES_T2">Trimestre 2</option>
+          <option value="NOTES_T3">Trimestre 3</option>
+        </select>
+        <select id="dirSousMoyFiltreClasse" onchange="filtrerSousMoyenneDir()" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+          <option value="">Toutes les classes</option>
+        </select>
+        <select id="dirSousMoyFiltreDevoir" onchange="filtrerSousMoyenneDir()" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+          <option value="">Tous les devoirs</option>
+          <option value="1">Devoir 1</option><option value="2">Devoir 2</option>
+          <option value="3">Devoir 3</option><option value="4">Devoir 4</option>
+          <option value="5">Devoir 5</option><option value="6">Devoir 6</option>
+        </select>
+        <button onclick="chargerSousMoyenneDir()" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Charger</button>
+        <button onclick="telechargerSousMoyennePDF('dir')" style="padding:8px 14px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">📥 PDF</button>
+      </div>
+      <div id="dirSousMoyListe">
+        <p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur "Charger" pour voir la liste.</p>
+      </div>
+    </div>
+  </div>
   <div class="section" id="dirSecAppel">
     <div class="sec-head sec-vert" onclick="toggleSec(this)">
       <h3>&#128203; Appels enseignants &mdash; Aujourd'hui <span id="dirAppelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -7872,6 +7903,117 @@ function filtrerNotesSaisiesDir() {
   var selM = document.getElementById('dirNotesFiltreMatiere');
   window._notesFiltreMatiere_dir = selM ? selM.value : '';
   chargerNotesSaisiesDir();
+}
+  async function chargerSousMoyenneDir() {
+  const ongletTrim = document.getElementById('dirSousMoyTrimestre').value;
+  const container = document.getElementById('dirSousMoyListe');
+  const countEl = document.getElementById('dirSousMoyCount');
+  if (!container || !currentStaff) return;
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+  const sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole];
+  if (!sheetsId) {
+    container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configurée pour cette école.</p>';
+    return;
+  }
+
+  try {
+    const urlNotes = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/' + encodeURIComponent(ongletTrim) + '?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    const [resNotes, resSynth] = await Promise.all([fetch(urlNotes), fetch(urlSynth)]);
+    const dataNotes = await resNotes.json();
+    const dataSynth = await resSynth.json();
+    const rows = dataNotes.values || [];
+
+    var telParMatricule = {};
+    (dataSynth.values || []).forEach(function(r) {
+      var mat = String(r[1] || '').trim().toUpperCase();
+      if (!mat) return;
+      var tels = [r[6], r[7], r[8]].filter(Boolean).join(' / ');
+      telParMatricule[mat] = tels || '—';
+    });
+
+    var sousLaMoyenne = [];
+    for (var i = 1; i < rows.length; i++) {
+      var row = rows[i];
+      var matricule = String(row[0] || '').trim();
+      if (!matricule) continue;
+      var nom = String(row[1] || '').trim();
+      var classe = String(row[2] || '').trim();
+      var matiere = String(row[3] || '').trim();
+      var enseignant = String(row[11] || '').trim();
+      for (var d = 0; d < 6; d++) {
+        var val = row[4 + d];
+        if (val === '' || val === null || val === undefined) continue;
+        var note = parseFloat(val);
+        if (isNaN(note) || note >= 10) continue;
+        sousLaMoyenne.push({
+          matricule: matricule, nom: nom, classe: classe, matiere: matiere,
+          devoir: d + 1, note: note, enseignant: enseignant,
+          tel: telParMatricule[matricule.toUpperCase()] || '—'
+        });
+      }
+    }
+
+    if (!sousLaMoyenne.length) {
+      container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun élève sous la moyenne pour ce trimestre.</p>';
+      if (countEl) countEl.textContent = '(0)';
+      window._sousMoyenneCache_dir = [];
+      return;
+    }
+
+    window._sousMoyenneCache_dir = sousLaMoyenne;
+    if (countEl) countEl.textContent = '(' + sousLaMoyenne.length + ')';
+
+    var selCl = document.getElementById('dirSousMoyFiltreClasse');
+    if (selCl) {
+      var classesUniques = [...new Set(sousLaMoyenne.map(function(l){return l.classe;}))].filter(Boolean).sort();
+      var valeurActuelle = selCl.value;
+      selCl.innerHTML = '<option value="">Toutes les classes</option>' + classesUniques.map(function(c){return '<option value="' + c + '">' + c + '</option>';}).join('');
+      selCl.value = valeurActuelle;
+    }
+
+    afficherSousMoyenneDir();
+  } catch (e) {
+    container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement.</p>';
+  }
+}
+
+function afficherSousMoyenneDir() {
+  const container = document.getElementById('dirSousMoyListe');
+  if (!container) return;
+  var lignes = (window._sousMoyenneCache_dir || []).filter(function(l) {
+    return (!window._sousMoyFiltreClasse_dir || l.classe === window._sousMoyFiltreClasse_dir)
+        && (!window._sousMoyFiltreDevoir_dir || String(l.devoir) === window._sousMoyFiltreDevoir_dir);
+  });
+  lignes.sort(function(a, b) { return a.note - b.note; });
+
+  if (!lignes.length) {
+    container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun élève ne correspond à ce filtre.</p>';
+    return;
+  }
+
+  var html = '<div class="tbl-wrap"><table style="min-width:600px"><thead><tr><th>Élève</th><th>Classe</th><th>Matière</th><th>Devoir</th><th>Note</th><th>Contact parent</th><th>Enseignant</th></tr></thead><tbody>';
+  lignes.forEach(function(l) {
+    var couleur = l.note < 5 ? 'var(--rouge)' : '#E65100';
+    html += '<tr><td style="font-size:0.8em;font-weight:600">' + l.nom + '</td>';
+    html += '<td style="font-size:0.78em">' + l.classe + '</td>';
+    html += '<td style="font-size:0.78em">' + l.matiere + '</td>';
+    html += '<td style="text-align:center;font-size:0.78em">D' + l.devoir + '</td>';
+    html += '<td style="text-align:center;font-size:0.82em;font-weight:700;color:' + couleur + '">' + l.note + '/20</td>';
+    html += '<td style="font-size:0.78em">' + l.tel + '</td>';
+    html += '<td style="font-size:0.74em;color:var(--gris)">' + l.enseignant + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+function filtrerSousMoyenneDir() {
+  var sel = document.getElementById('dirSousMoyFiltreClasse');
+  window._sousMoyFiltreClasse_dir = sel ? sel.value : '';
+  var selD = document.getElementById('dirSousMoyFiltreDevoir');
+  window._sousMoyFiltreDevoir_dir = selD ? selD.value : '';
+  afficherSousMoyenneDir();
 }
   async function chargerAppelsDir(ecole) {
   const liste = document.getElementById('dirAppelListe');
