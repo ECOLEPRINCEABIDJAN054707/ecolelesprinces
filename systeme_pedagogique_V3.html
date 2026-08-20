@@ -133,13 +133,10 @@ tr:hover td{background:var(--bleu-pale);}
 
 <script>
 (function() {
-  try {
-    var s = JSON.parse(sessionStorage.getItem('staffConnecte') || 'null');
-    if (!s || !s.profil || ['DIR', 'COM', 'EDU'].indexOf(s.profil) === -1) {
-      document.getElementById('blocageAccesSuivi').style.display = 'flex';
-      document.write('</body></html>');
-    }
-  } catch(e) {
+  var params = new URLSearchParams(window.location.search);
+  var profil = (params.get('profil') || '').toUpperCase();
+  var ecole = params.get('ecole') || '';
+  if (!profil || !ecole || ['DIR', 'COM', 'EDU'].indexOf(profil) === -1) {
     document.getElementById('blocageAccesSuivi').style.display = 'flex';
     document.write('</body></html>');
   }
