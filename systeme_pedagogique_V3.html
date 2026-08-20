@@ -124,6 +124,28 @@ tr:hover td{background:var(--bleu-pale);}
 </head>
 <body>
 
+<div id="blocageAccesSuivi" style="display:none;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1F4E79,#2E75B6);padding:20px;text-align:center;color:#fff;font-family:inherit">
+  <div style="font-size:48px;margin-bottom:12px">🔒</div>
+  <h1 style="font-size:18px;margin-bottom:8px">Accès non autorisé</h1>
+  <p style="font-size:13px;opacity:0.85;max-width:320px;margin-bottom:20px">Cette page est réservée au personnel connecté. Merci de vous connecter d'abord via l'Espace Administration.</p>
+  <a href="administration.html" style="background:#fff;color:#1F4E79;padding:10px 20px;border-radius:8px;font-weight:700;text-decoration:none;font-size:13px">Aller à l'Espace Administration</a>
+</div>
+
+<script>
+(function() {
+  try {
+    var s = JSON.parse(sessionStorage.getItem('staffConnecte') || 'null');
+    if (!s || !s.profil || ['DIR', 'COM', 'EDU'].indexOf(s.profil) === -1) {
+      document.getElementById('blocageAccesSuivi').style.display = 'flex';
+      document.write('</body></html>');
+    }
+  } catch(e) {
+    document.getElementById('blocageAccesSuivi').style.display = 'flex';
+    document.write('</body></html>');
+  }
+})();
+</script>
+
 <div class="header">
   <div class="header-inner">
     <div class="logo">GP</div>
