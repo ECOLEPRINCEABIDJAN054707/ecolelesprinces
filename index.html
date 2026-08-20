@@ -820,19 +820,13 @@ async function login() {
   {code:"DABOU",id:"1pGaLYadX7j65tqIFvZ3laXEZryERaifA0-HEC5W6XvA"},
   {code:"ANYAMA",id:"1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE"},
 ];
-document.getElementById("loadingEtape").textContent = "Recherche en cours dans les " + TOUTES_ECOLES.length + " ecoles...";
-  const resultats2025 = await Promise.all(
-    TOUTES_ECOLES.map(ec => chercherDansEcoleDirecte(mat, ec.code, ec.id))
-  );
-  eleve = resultats2025.find(e => e) || null;
-  // Repli — nouvel élève 2026-2027, pas encore présent dans la base 2025-2026
-  if (!eleve) {
-    document.getElementById("loadingEtape").textContent = "Recherche dans les bases 2026-2027...";
-    const resultats2026 = await Promise.all(
-      TOUTES_ECOLES_2026.map(ec => chercherDansEcoleDirecte(mat, ec.code, ec.id))
-    );
-    eleve = resultats2026.find(e => e) || null;
-  }
+document.getElementById("loadingEtape").textContent = "Recherche en cours dans le reseau...";
+  const [resultats2025, resultats2026] = await Promise.all([
+    Promise.all(TOUTES_ECOLES.map(ec => chercherDansEcoleDirecte(mat, ec.code, ec.id))),
+    Promise.all(TOUTES_ECOLES_2026.map(ec => chercherDansEcoleDirecte(mat, ec.code, ec.id)))
+  ]);
+  // Priorite a la base 2025-2026 (historique complet) si trouve dans les deux
+  eleve = resultats2025.find(e => e) || resultats2026.find(e => e) || null;
   document.getElementById("loadingDiv").style.display = "none";
   if (!eleve) {
     tentatives++;
