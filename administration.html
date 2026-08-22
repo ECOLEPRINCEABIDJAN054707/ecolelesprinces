@@ -886,6 +886,10 @@ table tr:nth-child(even){background:#F8FAFD}
         <div id="panelManuel" style="display:none">
           <div style="background:#E3F2FD;border-left:3px solid #1F4E79;padding:8px;font-size:0.75em;border-radius:4px;margin-bottom:10px;color:#1F4E79">Remplissez les informations du document manuellement</div>
           <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">MATRICULE *</label><input type="text" id="m-mat" placeholder="Ex: 24188737C" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px"></div>
+       <div style="margin-bottom:10px">
+  <button type="button" onclick="chercherReseauDir()" style="width:100%;padding:8px;background:#F3E5F5;color:#6A1B9A;border:1.5px solid #CE93D8;border-radius:6px;font-size:0.78em;font-weight:700;cursor:pointer">🔍 Chercher dans tout le réseau</button>
+  <div id="resultRechercheReseauDir" style="margin-top:6px"></div>
+</div>
           <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">NOM ET PRENOMS *</label><input type="text" id="m-nom" placeholder="NOM PRENOM" oninput="this.value=this.value.toUpperCase()" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px"></div>
           <div style="margin-bottom:8px"><label style="font-size:0.72em;font-weight:700;color:var(--gris)">NIVEAU 2026-2027 *</label>
             <select id="m-niveau" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px">
@@ -11802,7 +11806,53 @@ async function confirmerInscriptionDir(){
     affImportErr(res.message);
   }
 }
+async function chercherReseauDir(){
+  const mat = document.getElementById('m-mat').value.trim().toUpperCase();
+  const zone = document.getElementById('resultRechercheReseauDir');
+  if(!mat){
+    zone.innerHTML = '<div style="font-size:0.76em;color:var(--rouge)">⚠️ Saisissez d\'abord le matricule</div>';
+    return;
+  }
+  zone.innerHTML = '<div style="font-size:0.76em;color:var(--gris)">⏳ Recherche en cours...</div>';
+  const result = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action:'chercherMatriculeReseau', matricule: mat }, 35000);
+  if(!result){
+    zone.innerHTML = '<div style="font-size:0.76em;color:var(--rouge)">❌ Erreur réseau</div>';
+    return;
+  }
+  if(!result.trouve){
+    zone.innerHTML = '<div style="font-size:0.76em;color:var(--vert);font-weight:600">✓ Pas trouvé ailleurs — vous pouvez inscrire normalement</div>';
+    return;
+  }
+  if(result.ecoleCode === currentStaff.ecole){
+    zone.innerHTML = '<div style="font-size:0.76em;color:var(--orange);font-weight:600">⚠️ Déjà en attente dans VOTRE école (' + (result.nom||mat) + ')</div>';
+    return;
+  }
+  const labelEcole = ECOLE_LABELS[result.ecoleCode] || result.ecoleCode;
+  zone.innerHTML = '<div style="background:#FFF3E0;border:1.5px solid #FFB74D;border-radius:8px;padding:10px;font-size:0.8em">'
+    + '<div style="color:#E65100;font-weight:700;margin-bottom:6px">⚠️ Déjà en attente à ' + labelEcole + '</div>'
+    + '<div style="color:#555;margin-bottom:8px">' + (result.nom||'') + '</div>'
+    + '<button type="button" onclick="transfererIciDir(\'' + mat + '\',\'' + result.ecoleCode + '\')" style="width:100%;padding:8px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:0.8em;font-weight:700;cursor:pointer">↪️ Transférer ici</button>'
+    + '</div>';
+}
 
+async function transfererIciDir(matricule, ecoleSource){
+  const zone = document.getElementById('resultRechercheReseauDir');
+  zone.innerHTML = '<div style="font-size:0.76em;color:var(--bleu)">⏳ Transfert en cours...</div>';
+  const roleLabels = {DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const transferePar = (currentStaff.nom||currentStaff.matricule||'inconnu') + ' (' + (roleLabels[currentStaff.profil]||currentStaff.profil) + ')';
+  const result = await appelJSONP(APP_SCRIPT_URL_ADMIN, {
+    action:'transfererNouvelEleve', matricule: matricule,
+    ecoleSource: ecoleSource, ecoleCible: currentStaff.ecole, transferePar: transferePar
+  }, 35000);
+  if(result && result.succes){
+    zone.innerHTML = '<div style="font-size:0.78em;color:var(--vert);font-weight:700">✅ ' + result.message + '</div>';
+    showToast('Transfert réussi', 'success');
+    document.getElementById('m-mat').value = matricule;
+  } else {
+    zone.innerHTML = '<div style="font-size:0.78em;color:var(--rouge)">❌ ' + (result&&result.message||'Erreur') + '</div>';
+    showToast('Erreur transfert', 'error');
+  }
+}
 function validerManuelDir(){
   var mat=document.getElementById('m-mat').value.trim();
   var nom=document.getElementById('m-nom').value.trim();
