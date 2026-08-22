@@ -10730,7 +10730,7 @@ async function chercherReseauCom(){
     return;
   }
   zone.innerHTML = '<div style="font-size:0.76em;color:var(--gris)">⏳ Recherche en cours...</div>';
-  const result = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action:'chercherMatriculeReseau', matricule: mat });
+ const result = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action:'chercherMatriculeReseau', matricule: mat }, 35000);
   if(!result){
     zone.innerHTML = '<div style="font-size:0.76em;color:var(--rouge)">❌ Erreur réseau</div>';
     return;
@@ -10756,10 +10756,10 @@ async function transfererIciCom(matricule, ecoleSource){
   zone.innerHTML = '<div style="font-size:0.76em;color:var(--bleu)">⏳ Transfert en cours...</div>';
   const roleLabels = {DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
   const transferePar = (currentStaff.nom||currentStaff.matricule||'inconnu') + ' (' + (roleLabels[currentStaff.profil]||currentStaff.profil) + ')';
-  const result = await appelJSONP(APP_SCRIPT_URL_ADMIN, {
-    action:'transfererNouvelEleve', matricule: matricule,
-    ecoleSource: ecoleSource, ecoleCible: currentStaff.ecole, transferePar: transferePar
-  });
+const result = await appelJSONP(APP_SCRIPT_URL_ADMIN, {
+  action:'transfererNouvelEleve', matricule: matricule,
+  ecoleSource: ecoleSource, ecoleCible: currentStaff.ecole, transferePar: transferePar
+}, 35000);
   if(result && result.succes){
     zone.innerHTML = '<div style="font-size:0.78em;color:var(--vert);font-weight:700">✅ ' + result.message + '</div>';
     showToast('Transfert réussi', 'success');
