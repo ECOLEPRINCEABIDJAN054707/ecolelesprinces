@@ -11911,26 +11911,63 @@ async function chercherReseauDir(){
     zone.innerHTML = '<div style="font-size:0.76em;color:var(--vert);font-weight:600">✓ Pas trouvé ailleurs — vous pouvez inscrire normalement</div>';
     return;
   }
-  if(result.ecoleCode === currentStaff.ecole){
-    zone.innerHTML = '<div style="font-size:0.76em;color:var(--orange);font-weight:600">⚠️ Déjà en attente dans VOTRE école (' + (result.nom||mat) + ')</div>';
+  const dansMonEcole = result.ecoleCode === currentStaff.ecole;
+  const labelEcole = ECOLE_LABELS[result.ecoleCode] || result.ecoleCode;
+  const titre = dansMonEcole
+    ? '⚠️ Déjà en attente dans VOTRE école'
+    : '⚠️ Déjà en attente à ' + labelEcole;
+
+  let h = '<div style="background:#FFF3E0;border:1.5px solid #FFB74D;border-radius:8px;padding:10px;font-size:0.8em">';
+  h += '<div style="color:#E65100;font-weight:700;margin-bottom:6px">' + titre + '</div>';
+  h += '<div style="color:#555;margin-bottom:8px">' + (result.nom||'') + '</div>';
+  h += '<div style="background:#E3F2FD;border-left:3px solid #1F4E79;padding:7px 10px;border-radius:6px;margin-bottom:8px;font-size:0.75em;color:#1F4E79;font-weight:700">📞 Compléter les contacts (optionnel)</div>';
+  h += '<div style="display:flex;gap:6px;margin-bottom:8px">';
+  h += '<div style="flex:1"><label style="font-size:0.7em;font-weight:700;color:#C62828">TEL PÈRE</label><input type="tel" id="rrTelPereDir" placeholder="0701234567" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')" style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px"></div>';
+  h += '<div style="flex:1"><label style="font-size:0.7em;font-weight:700;color:#C62828">TEL MÈRE</label><input type="tel" id="rrTelMereDir" placeholder="0507654321" maxlength="15" oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')" style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:6px;font-size:0.82em;margin-top:2px"></div>';
+  h += '</div>';
+
+  if(dansMonEcole){
+    h += '<button type="button" onclick="enregistrerContactReseauDir(\'' + mat + '\',\'' + result.ecoleCode + '\')" style="width:100%;padding:8px;background:#1F4E79;color:#fff;border:none;border-radius:6px;font-size:0.8em;font-weight:700;cursor:pointer">💾 Enregistrer le contact</button>';
+  } else {
+    h += '<button type="button" onclick="transfererIciDir(\'' + mat + '\',\'' + result.ecoleCode + '\')" style="width:100%;padding:8px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:0.8em;font-weight:700;cursor:pointer">↪️ Transférer ici</button>';
+  }
+  h += '</div>';
+  zone.innerHTML = h;
+}
+
+async function enregistrerContactReseauDir(matricule, ecoleCode){
+  const zone = document.getElementById('resultRechercheReseauDir');
+  const telPere = (document.getElementById('rrTelPereDir')||{}).value || '';
+  const telMere = (document.getElementById('rrTelMereDir')||{}).value || '';
+  if((telPere && telPere.length<8) || (telMere && telMere.length<8)){
+    showToast('Numéro incomplet (8 chiffres minimum)', 'error');
     return;
   }
-  const labelEcole = ECOLE_LABELS[result.ecoleCode] || result.ecoleCode;
-  zone.innerHTML = '<div style="background:#FFF3E0;border:1.5px solid #FFB74D;border-radius:8px;padding:10px;font-size:0.8em">'
-    + '<div style="color:#E65100;font-weight:700;margin-bottom:6px">⚠️ Déjà en attente à ' + labelEcole + '</div>'
-    + '<div style="color:#555;margin-bottom:8px">' + (result.nom||'') + '</div>'
-    + '<button type="button" onclick="transfererIciDir(\'' + mat + '\',\'' + result.ecoleCode + '\')" style="width:100%;padding:8px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:0.8em;font-weight:700;cursor:pointer">↪️ Transférer ici</button>'
-    + '</div>';
+  zone.innerHTML = '<div style="font-size:0.76em;color:var(--bleu)">⏳ Enregistrement...</div>';
+  const sheetsId = SHEETS_IDS_2026_2027[ecoleCode];
+  const result = await appelJSONP(APP_SCRIPT_URL_ADMIN, {
+    action:'majContactsNouvelEleve', sheetsId: sheetsId, matricule: matricule, telPere: telPere, telMere: telMere
+  }, 35000);
+  if(result && result.succes){
+    zone.innerHTML = '<div style="font-size:0.78em;color:var(--vert);font-weight:700">✅ ' + result.message + '</div>';
+    showToast('Contact enregistré', 'success');
+  } else {
+    zone.innerHTML = '<div style="font-size:0.78em;color:var(--rouge)">❌ ' + (result&&result.message||'Erreur') + '</div>';
+    showToast('Erreur enregistrement', 'error');
+  }
 }
 
 async function transfererIciDir(matricule, ecoleSource){
   const zone = document.getElementById('resultRechercheReseauDir');
+  const telPere = (document.getElementById('rrTelPereDir')||{}).value || '';
+  const telMere = (document.getElementById('rrTelMereDir')||{}).value || '';
   zone.innerHTML = '<div style="font-size:0.76em;color:var(--bleu)">⏳ Transfert en cours...</div>';
   const roleLabels = {DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
   const transferePar = (currentStaff.nom||currentStaff.matricule||'inconnu') + ' (' + (roleLabels[currentStaff.profil]||currentStaff.profil) + ')';
   const result = await appelJSONP(APP_SCRIPT_URL_ADMIN, {
     action:'transfererNouvelEleve', matricule: matricule,
-    ecoleSource: ecoleSource, ecoleCible: currentStaff.ecole, transferePar: transferePar
+    ecoleSource: ecoleSource, ecoleCible: currentStaff.ecole, transferePar: transferePar,
+    telPere: telPere, telMere: telMere
   }, 35000);
   if(result && result.succes){
     zone.innerHTML = '<div style="font-size:0.78em;color:var(--vert);font-weight:700">✅ ' + result.message + '</div>';
