@@ -6741,7 +6741,7 @@ async function enregistrerChecklistMenaEdu(idx){
     showToast('Erreur enregistrement','error');
   }
 }
-}async function _appelSauvegarderMenaCom(r,champ,valeur,modifiePar){
+  async function _appelSauvegarderMenaCom(r,champ,valeur,modifiePar){
   const cbName='svm_com_'+Date.now()+'_'+Math.floor(Math.random()*10000);
   const script=document.createElement('script');
   const params=new URLSearchParams({
