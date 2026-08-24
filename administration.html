@@ -5390,7 +5390,7 @@ async function chargerChecklistMenaEdu(idx){
   const v=window._verifMenaCacheEdu[r.matricule]||{};
   renderChecklistMenaEdu(idx,r,v);
 }
-  function renderChecklistMenaEdu(idx,r,v){
+function renderChecklistMenaEdu(idx,r,v){
   const contentDiv=document.getElementById('menaContentEdu_'+idx);
   if(!contentDiv)return;
   const inputTxt=(champLabel,champKey,val)=>
@@ -5415,10 +5415,29 @@ async function chargerChecklistMenaEdu(idx){
     +'</select>'
     +'</div>';
   };
-  let h='<div style="margin-bottom:10px;padding:8px;background:#F5F5F5;border-radius:6px">'
-    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">Statut AFF/NAFF</span><br>'
-    +'<span style="font-size:1em;font-weight:700">'+(r.statut==='AFF'?'Affecté(e)':r.statut==='NAFF'?'Non affecté(e)':'Non renseigné')+' <i style="font-size:0.75em;color:var(--gris);font-weight:400">(lecture seule)</i></span>'
+  const selectSexe=(champKey,val)=>
+    '<div style="margin-bottom:8px">'
+    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">Sexe</span><br>'
+    +'<select id="mena_'+champKey+'_'+idx+'_edu" '
+    +'onchange="sauvegarderChampMenaEdu('+idx+',\''+champKey+'\',this.value)" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px">'
+    +'<option value=""'+(!val?' selected':'')+'>--</option>'
+    +'<option value="MASCULIN"'+(val==='MASCULIN'?' selected':'')+'>MASCULIN</option>'
+    +'<option value="FEMININ"'+(val==='FEMININ'?' selected':'')+'>FEMININ</option>'
+    +'</select>'
     +'</div>';
+
+  let h='<div style="background:#F0F7FF;border:1.5px solid #90CAF9;border-radius:8px;padding:10px 12px;margin-bottom:12px">';
+  h+='<div style="font-size:0.9em;font-weight:800;color:#1F4E79;text-transform:uppercase;margin-bottom:8px">📋 Fiche élève 2026-2027</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
+  h+=inputTxt('Classe 2026-2027','classe2026',v.classe2026);
+  h+=inputTxt('LV2','lv2',v.lv2);
+  h+=inputTxt('Nationalité','nationalite',v.nationalite);
+  h+=selectSexe('sexeEleve',v.sexeEleve);
+  h+=inputTxt('Date naissance','dateNaissanceEleve',v.dateNaissanceEleve);
+  h+=inputTxt('Lieu naissance','lieuNaissanceEleve',v.lieuNaissanceEleve);
+  h+='</div></div>';
+
   h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
   h+=selectOuiNon('Inscription en ligne','inscriptionLigne',v.inscriptionLigne);
   h+=selectOuiNon('Photo','photo',v.photo);
@@ -5458,7 +5477,8 @@ async function chargerChecklistMenaEdu(idx){
   const statutDiv=document.getElementById('menaStatutEdu_'+idx);
   if(statutDiv)statutDiv.textContent='Modifié — pensez à cliquer "💾 Enregistrer" pour sauvegarder';
 }
-  async function enregistrerChecklistMenaEdu(idx){
+
+async function enregistrerChecklistMenaEdu(idx){
   const r=window._affListeCouranteEdu[idx];
   const v=(window._verifMenaCacheEdu&&window._verifMenaCacheEdu[r.matricule])||{};
   const statutDiv=document.getElementById('menaStatutEdu_'+idx);
@@ -5472,11 +5492,13 @@ async function chargerChecklistMenaEdu(idx){
   const params=new URLSearchParams({
     callback:cbName,type:'SAUVEGARDER_VERIFICATION_MENA_BATCH',
     ecole:currentStaff.ecole,matricule:r.matricule,nom:r.nom,classe:r.classe,
-    statutAffNaff:r.statut||'',inscriptionLigne:v.inscriptionLigne||'',
+    statutAffNaff:v.statutAffNaff||'',inscriptionLigne:v.inscriptionLigne||'',
     photo:v.photo||'',actualise:v.actualise||'',transDeco:v.transDeco||'',dfaOk:v.dfaOk||'',
     anneeScolaire:v.anneeScolaire||'',classeMena:v.classeMena||'',
     moyT1:v.moyT1||'',okT1:v.okT1||'',moyT2:v.moyT2||'',okT2:v.okT2||'',moyT3:v.moyT3||'',okT3:v.okT3||'',
-    observation:v.observation||'',modifiePar:modifiePar
+    observation:v.observation||'',modifiePar:modifiePar,
+    classe2026:v.classe2026||'',lv2:v.lv2||'',nationalite:v.nationalite||'',
+    sexeEleve:v.sexeEleve||'',dateNaissanceEleve:v.dateNaissanceEleve||'',lieuNaissanceEleve:v.lieuNaissanceEleve||''
   });
   const result=await new Promise(resolve=>{
     window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
@@ -5487,9 +5509,9 @@ async function chargerChecklistMenaEdu(idx){
   });
 
   if(result&&result.ok){
-    if(statutDiv)statutDiv.textContent='✓ Checklist enregistrée — '+modifiePar;
+    if(statutDiv)statutDiv.textContent='✓ '+(result.message||('Checklist enregistrée — '+modifiePar));
     colorerUnBoutonMenaEdu(idx);
-    showToast('Checklist enregistrée','success');
+    showToast(result.message||'Checklist enregistrée', result.message&&result.message.indexOf('⚠️')>=0?'error':'success');
   }else{
     if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement — réessayez';
     showToast('Erreur enregistrement','error');
@@ -6606,10 +6628,10 @@ async function chargerChecklistMenaCom(idx){
   renderChecklistMenaCom(idx,r,v);
 }
 
-function renderChecklistMenaCom(idx,r,v){
+  function renderChecklistMenaCom(idx,r,v){
   const contentDiv=document.getElementById('menaContentCom_'+idx);
   if(!contentDiv)return;
-const inputTxt=(champLabel,champKey,val)=>
+  const inputTxt=(champLabel,champKey,val)=>
     '<div style="margin-bottom:8px">'
     +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">'+champLabel+'</span><br>'
     +'<input type="text" id="mena_'+champKey+'_'+idx+'" value="'+(val||'').toString().replace(/"/g,'&quot;')+'" '
@@ -6627,7 +6649,30 @@ const inputTxt=(champLabel,champKey,val)=>
     +'<option value="NON"'+(val==='NON'?' selected':'')+'>NON</option>'
     +'</select>'
     +'</div>';
-let h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
+  const selectSexe=(champKey,val)=>
+    '<div style="margin-bottom:8px">'
+    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">Sexe</span><br>'
+    +'<select id="mena_'+champKey+'_'+idx+'" '
+    +'onchange="sauvegarderChampMenaCom('+idx+',\''+champKey+'\',this.value)" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px">'
+    +'<option value=""'+(!val?' selected':'')+'>--</option>'
+    +'<option value="MASCULIN"'+(val==='MASCULIN'?' selected':'')+'>MASCULIN</option>'
+    +'<option value="FEMININ"'+(val==='FEMININ'?' selected':'')+'>FEMININ</option>'
+    +'</select>'
+    +'</div>';
+
+  let h='<div style="background:#F0F7FF;border:1.5px solid #90CAF9;border-radius:8px;padding:10px 12px;margin-bottom:12px">';
+  h+='<div style="font-size:0.9em;font-weight:800;color:#1F4E79;text-transform:uppercase;margin-bottom:8px">📋 Fiche élève 2026-2027</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
+  h+=inputTxt('Classe 2026-2027','classe2026',v.classe2026);
+  h+=inputTxt('LV2','lv2',v.lv2);
+  h+=inputTxt('Nationalité','nationalite',v.nationalite);
+  h+=selectSexe('sexeEleve',v.sexeEleve);
+  h+=inputTxt('Date naissance','dateNaissanceEleve',v.dateNaissanceEleve);
+  h+=inputTxt('Lieu naissance','lieuNaissanceEleve',v.lieuNaissanceEleve);
+  h+='</div></div>';
+
+  h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
   h+=selectOuiNon('Inscription en ligne','inscriptionLigne',v.inscriptionLigne);
   h+=selectOuiNon('Photo','photo',v.photo);
   h+=selectOuiNon('Actualisé','actualise',v.actualise);
@@ -6642,13 +6687,13 @@ let h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16p
   h+=inputTxt('Moy T3','moyT3',v.moyT3);
   h+=selectOuiNon('OK T3','okT3',v.okT3);
   h+='</div>';
-h+='<div style="margin-top:10px">'
+  h+='<div style="margin-top:10px">'
     +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">Observation</span><br>'
     +'<textarea id="mena_observation_'+idx+'" onblur="sauvegarderChampMenaCom('+idx+',\'observation\',this.value)" '
     +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px;min-height:50px">'+(v.observation||'')+'</textarea>'
     +'</div>';
   h+='<div id="menaStatut_'+idx+'" style="margin-top:8px;font-size:0.8em;color:var(--gris)">'+(v.modifiePar?('Dernière modif : '+v.modifiePar+' — '+v.dateMaj):'')+'</div>';
-h+='<div style="margin-top:12px;padding-top:10px">'
+  h+='<div style="margin-top:12px;padding-top:10px">'
     +'<button onclick="enregistrerChecklistMenaCom('+idx+')" style="width:100%;padding:11px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:0.9em;font-weight:700;cursor:pointer">💾 Enregistrer la checklist</button>'
     +'</div>';
   h+='<div style="margin-top:12px;padding-top:10px;border-top:1.5px solid var(--border);display:flex;gap:8px;flex-wrap:wrap">'
@@ -6656,6 +6701,46 @@ h+='<div style="margin-top:12px;padding-top:10px">'
     +'<button onclick="signalerAnomalieCom('+idx+',\'ABSENCE_PHYSIQUE\')" style="padding:8px 14px;background:#FFEBEE;color:#C62828;border:1.5px solid #EF9A9A;border-radius:8px;font-size:0.85em;font-weight:700;cursor:pointer">🚩 Signaler Absence physique</button>'
     +'</div>';
   contentDiv.innerHTML=h;
+}
+async function enregistrerChecklistMenaEdu(idx){
+  const r=window._affListeCouranteEdu[idx];
+  const v=(window._verifMenaCacheEdu&&window._verifMenaCacheEdu[r.matricule])||{};
+  const statutDiv=document.getElementById('menaStatutEdu_'+idx);
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+
+  if(statutDiv)statutDiv.textContent='Enregistrement de la checklist...';
+
+  const cbName='svmb_edu_'+Date.now();
+  const script=document.createElement('script');
+  const params=new URLSearchParams({
+    callback:cbName,type:'SAUVEGARDER_VERIFICATION_MENA_BATCH',
+    ecole:currentStaff.ecole,matricule:r.matricule,nom:r.nom,classe:r.classe,
+    statutAffNaff:v.statutAffNaff||'',inscriptionLigne:v.inscriptionLigne||'',
+    photo:v.photo||'',actualise:v.actualise||'',transDeco:v.transDeco||'',dfaOk:v.dfaOk||'',
+    anneeScolaire:v.anneeScolaire||'',classeMena:v.classeMena||'',
+    moyT1:v.moyT1||'',okT1:v.okT1||'',moyT2:v.moyT2||'',okT2:v.okT2||'',moyT3:v.moyT3||'',okT3:v.okT3||'',
+    observation:v.observation||'',modifiePar:modifiePar,
+    classe2026:v.classe2026||'',lv2:v.lv2||'',nationalite:v.nationalite||'',
+    sexeEleve:v.sexeEleve||'',dateNaissanceEleve:v.dateNaissanceEleve||'',lieuNaissanceEleve:v.lieuNaissanceEleve||''
+  });
+  const result=await new Promise(resolve=>{
+    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+    script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+    script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+    document.body.appendChild(script);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
+  });
+
+  if(result&&result.ok){
+    if(statutDiv)statutDiv.textContent='✓ '+(result.message||('Checklist enregistrée — '+modifiePar));
+    colorerUnBoutonMenaEdu(idx);
+    showToast(result.message||'Checklist enregistrée', result.message&&result.message.indexOf('⚠️')>=0?'error':'success');
+  }else{
+    if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement — réessayez';
+    showToast('Erreur enregistrement','error');
+  }
+}
 }async function _appelSauvegarderMenaCom(r,champ,valeur,modifiePar){
   const cbName='svm_com_'+Date.now()+'_'+Math.floor(Math.random()*10000);
   const script=document.createElement('script');
@@ -6682,7 +6767,8 @@ function sauvegarderChampMenaCom(idx,champ,valeur){
   const statutDiv=document.getElementById('menaStatut_'+idx);
   if(statutDiv)statutDiv.textContent='Modifié — pensez à cliquer "💾 Enregistrer" pour sauvegarder';
 }
-  async function enregistrerChecklistMenaCom(idx){
+ 
+async function enregistrerChecklistMenaCom(idx){
   const r=window._affListeCouranteCom[idx];
   const v=(window._verifMenaCacheCom&&window._verifMenaCacheCom[r.matricule])||{};
   const statutDiv=document.getElementById('menaStatut_'+idx);
@@ -6700,7 +6786,9 @@ function sauvegarderChampMenaCom(idx,champ,valeur){
     photo:v.photo||'',actualise:v.actualise||'',transDeco:v.transDeco||'',dfaOk:v.dfaOk||'',
     anneeScolaire:v.anneeScolaire||'',classeMena:v.classeMena||'',
     moyT1:v.moyT1||'',okT1:v.okT1||'',moyT2:v.moyT2||'',okT2:v.okT2||'',moyT3:v.moyT3||'',okT3:v.okT3||'',
-    observation:v.observation||'',modifiePar:modifiePar
+    observation:v.observation||'',modifiePar:modifiePar,
+    classe2026:v.classe2026||'',lv2:v.lv2||'',nationalite:v.nationalite||'',
+    sexeEleve:v.sexeEleve||'',dateNaissanceEleve:v.dateNaissanceEleve||'',lieuNaissanceEleve:v.lieuNaissanceEleve||''
   });
   const result=await new Promise(resolve=>{
     window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
@@ -6711,9 +6799,9 @@ function sauvegarderChampMenaCom(idx,champ,valeur){
   });
 
   if(result&&result.ok){
-    if(statutDiv)statutDiv.textContent='✓ Checklist enregistrée — '+modifiePar;
+    if(statutDiv)statutDiv.textContent='✓ '+(result.message||('Checklist enregistrée — '+modifiePar));
     colorerUnBoutonMenaCom(idx);
-    showToast('Checklist enregistrée','success');
+    showToast(result.message||'Checklist enregistrée', result.message&&result.message.indexOf('⚠️')>=0?'error':'success');
   }else{
     if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement — réessayez';
     showToast('Erreur enregistrement','error');
