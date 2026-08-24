@@ -5710,7 +5710,7 @@ function sauvegarderChampMenaDir(idx,champ,valeur){
   const statutDiv=document.getElementById('menaStatutDir_'+idx);
   if(statutDiv)statutDiv.textContent='Modifié — pensez à cliquer "💾 Enregistrer" pour sauvegarder';
 }
-  async function enregistrerChecklistMenaDir(idx){
+async function enregistrerChecklistMenaDir(idx){
   const r=window._affListeCourante[idx];
   const v=(window._verifMenaCacheDir&&window._verifMenaCacheDir[r.matricule])||{};
   const statutDiv=document.getElementById('menaStatutDir_'+idx);
@@ -5728,7 +5728,9 @@ function sauvegarderChampMenaDir(idx,champ,valeur){
     photo:v.photo||'',actualise:v.actualise||'',transDeco:v.transDeco||'',dfaOk:v.dfaOk||'',
     anneeScolaire:v.anneeScolaire||'',classeMena:v.classeMena||'',
     moyT1:v.moyT1||'',okT1:v.okT1||'',moyT2:v.moyT2||'',okT2:v.okT2||'',moyT3:v.moyT3||'',okT3:v.okT3||'',
-    observation:v.observation||'',modifiePar:modifiePar
+    observation:v.observation||'',modifiePar:modifiePar,
+    classe2026:v.classe2026||'',lv2:v.lv2||'',nationalite:v.nationalite||'',
+    sexeEleve:v.sexeEleve||'',dateNaissanceEleve:v.dateNaissanceEleve||'',lieuNaissanceEleve:v.lieuNaissanceEleve||''
   });
   const result=await new Promise(resolve=>{
     window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
