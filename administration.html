@@ -4674,7 +4674,7 @@ function procederLogin(s){
   currentStaff=s;
   try{sessionStorage.setItem('staffConnecte',JSON.stringify(s));}catch(e){}
   peuplerNiveaux(s.ecole);
-  setTimeout(()=>{hideLoader();if(s.profil==='DIR')afficherDir(s);else if(s.profil==='FOND')afficherFond(s);else if(s.profil==='COM')afficherCom(s);else if(s.profil==='EDU')afficherEdu(s);verifierPointageEnAttente();},900);
+  setTimeout(()=>{hideLoader();if(s.profil==='DIR')afficherDir(s);else if(s.profil==='FOND')afficherFond(s);else if(s.profil==='COM')afficherCom(s);else if(s.profil==='EDU')afficherEdu(s);verifierPointageEnAttente();_initFCMStaff();},900);
 }
 // ══ BANDEAU POINTAGE — vérifie à l'ouverture + à chaque réouverture d'app ══
 var _pointageEnCours = null;
@@ -13704,6 +13704,74 @@ window.addEventListener('load', ()=>{
     }
   }catch(e){}
 });
+</script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js"></script>
+<script>
+function _initFCMStaff(){
+  var firebaseConfig={
+    apiKey:"AIzaSyDtH88yVNazbUtPH45-e1t01ufBa3guad4",
+    authDomain:"cpp-les-princes.firebaseapp.com",
+    projectId:"cpp-les-princes",
+    storageBucket:"cpp-les-princes.firebasestorage.app",
+    messagingSenderId:"820225042885",
+    appId:"1:820225042885:web:7b0a6bbecc048a5eef83ac"
+  };
+  if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+  var messaging=firebase.messaging();
+
+  Notification.requestPermission().then(function(permission){
+    if(permission==='granted'){
+      navigator.serviceWorker.ready.then(function(swReg){
+        messaging.getToken({
+          vapidKey:"BFdTNOr6PvgD0EPW0Af9ju7BjgDxanUyuQRs6HJemgoAyYnT9yvvsSIqIDTOUKwcdQMr7yPFULqnUubgBiQvT3k",
+          serviceWorkerRegistration: swReg
+        }).then(function(token){
+          if(token){
+            console.log('FCM token staff obtenu : '+token.substring(0,20)+'...');
+            _sauvegarderTokenFCMStaff(token);
+          }
+        }).catch(function(e){console.warn('FCM token staff:',e);});
+      });
+    } else {
+      console.log('Notifications refusées par le staff');
+    }
+  }).catch(function(e){console.warn('Permission notif staff:',e);});
+}
+
+function _sauvegarderTokenFCMStaff(token){
+  try{
+    if(!currentStaff||!currentStaff.matricule||!currentStaff.ecole){
+      console.warn('FCM staff: currentStaff manquant');
+      return;
+    }
+    var sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
+    if(!sheetsId){
+      console.warn('FCM staff: sheetsId introuvable pour',currentStaff.ecole);
+      return;
+    }
+    var cbName='fcms_'+Date.now();
+    var script=document.createElement('script');
+    var params=new URLSearchParams({
+      callback:cbName, action:'sauvegarderTokenFCMStaff',
+      matricule:currentStaff.matricule, sheetsId:sheetsId, token:token
+    });
+    window[cbName]=function(res){
+      console.log('FCM staff sauvegardé:',JSON.stringify(res));
+      delete window[cbName];
+      try{document.body.removeChild(script);}catch(e){}
+    };
+    script.onerror=function(){delete window[cbName];};
+    script.src=APP_SCRIPT_URL_ADMIN+'?'+params.toString();
+    document.body.appendChild(script);
+  }catch(e){console.warn('Save token staff:',e);}
+}
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('./service-worker.js')
+    .then(function(reg){console.log('SW staff enregistré:',reg.scope);})
+    .catch(function(e){console.warn('SW staff:',e);});
+}
 </script>
 </body>
 </html>
