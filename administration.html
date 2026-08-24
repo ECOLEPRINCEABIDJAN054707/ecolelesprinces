@@ -7123,30 +7123,113 @@ function renderAffectationEdu(rows){
     +'<span class="bdg" style="background:#eee;color:#666;font-size:0.95em">'+nbVide+' Non renseigne (college)</span>'
     +(nbPrim>0?' &nbsp;<span class="bdg bg-bleu" style="background:#E3F2FD;color:#1565C0;font-size:0.95em">'+nbPrim+' primaire (contacts seulement)</span>':'')
     +(nbSansContact>0?' &nbsp;<span class="bdg bg-orange" style="font-size:0.95em">'+nbSansContact+' sans aucun contact</span>':'');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris);font-size:0.95em">Aucun eleve pour ce filtre</td></tr>';return;}
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:16px;color:var(--gris);font-size:0.95em">Aucun eleve pour ce filtre</td></tr>';return;}
   let h='';
   rows.forEach((r,idx)=>{
-    const statutTxt=r.estCollege
-      ? (r.statut==='AFF'?'<span class="bdg bg-vert">Affecté(e)</span>'
-        : r.statut==='NAFF'?'<span class="bdg bg-rouge">Non affecté(e)</span>'
-        : '<span style="color:var(--gris);font-style:italic">Non renseigné</span>')
+    const telInput=(champ,val,label)=>'<input type="tel" id="'+champ+'Edu_'+idx+'" value="'+(val||'')+'" placeholder="'+label+'" maxlength="15" '
+      +'oninput="this.value=this.value.replace(/[^0-9+]/g,\'\')" '
+      +'onblur="sauvegarderContactEdu('+idx+')" '
+      +'style="width:100%;padding:7px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em">';
+    const statutCol=r.estCollege
+      ? '<select id="eduAffSel_'+idx+'" onchange="sauvegarderAffectationEdu('+idx+',this)" style="width:100%;padding:7px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em">'
+        +'<option value=""'+(r.statut===''?' selected':'')+'>-- Non renseigne --</option>'
+        +'<option value="AFF"'+(r.statut==='AFF'?' selected':'')+'>Affecté(e)</option>'
+        +'<option value="NAFF"'+(r.statut==='NAFF'?' selected':'')+'>Non affecté(e)</option>'
+        +'</select>'
       : '<span style="font-size:0.9em;color:var(--gris);font-style:italic">— (Primaire)</span>';
+    const nomInput='<input type="text" id="eduAffNom_'+idx+'" value="'+r.nom.replace(/"/g,'&quot;')+'" '
+      +'onblur="confirmerModifNomEdu('+idx+')" '
+      +'style="width:100%;padding:7px;border-radius:6px;border:1.5px solid var(--border);font-size:0.95em;font-weight:600">';
     h+='<tr>'
       +'<td style="font-size:0.9em;color:var(--gris)">'+r.matricule+'</td>'
-      +'<td style="font-weight:600">'+r.nom+'</td>'
+      +'<td>'+nomInput+'</td>'
       +'<td style="font-size:0.95em">'+r.classe+'</td>'
-      +'<td>'+statutTxt+'</td>'
-      +'<td style="font-size:0.9em">'+(r.tel1||'—')+'</td>'
-      +'<td style="font-size:0.9em">'+(r.tel2||'—')+'</td>'
-      +'<td style="font-size:0.9em">'+(r.tel3||'—')+'</td>'
+      +'<td>'+statutCol+'</td>'
+      +'<td>'+telInput('eduAffTel1',r.tel1,'Père')+'</td>'
+      +'<td>'+telInput('eduAffTel2',r.tel2,'Mère')+'</td>'
+      +'<td>'+telInput('eduAffTel3',r.tel3,'Tuteur')+'</td>'
+      +'<td id="eduAffStatut_'+idx+'" style="font-size:0.85em;color:var(--gris)">—</td>'
       +'<td><button id="menaBtnEdu_'+idx+'" onclick="toggleChecklistMenaEdu('+idx+')" style="padding:6px 10px;background:#4A148C;color:#fff;border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer;white-space:nowrap">🔍 Checklist</button></td>'
       +'</tr>';
-    h+='<tr id="menaDetailEdu_'+idx+'" style="display:none"><td colspan="8" style="padding:0;background:#F8FAFD">'
+    h+='<tr id="menaDetailEdu_'+idx+'" style="display:none"><td colspan="9" style="padding:0;background:#F8FAFD">'
       +'<div id="menaContentEdu_'+idx+'" style="padding:14px;font-size:0.85em;color:var(--gris)">Chargement...</div>'
       +'</td></tr>';
   });
   tbody.innerHTML=h;
   window._affListeCouranteEdu=rows;
+}
+  async function sauvegarderContactEdu(idx){
+  const r=window._affListeCouranteEdu[idx];
+  const tel1=(document.getElementById('eduAffTel1Edu_'+idx)||{}).value||'';
+  const tel2=(document.getElementById('eduAffTel2Edu_'+idx)||{}).value||'';
+  const tel3=(document.getElementById('eduAffTel3Edu_'+idx)||{}).value||'';
+  const statutCell=document.getElementById('eduAffStatut_'+idx);
+  if((tel1&&tel1.length<8)||(tel2&&tel2.length<8)||(tel3&&tel3.length<8)){
+    showToast('Numero incomplet (8 chiffres minimum)','error');
+    return;
+  }
+  if(tel1===r.tel1&&tel2===r.tel2&&tel3===r.tel3) return;
+  if(statutCell)statutCell.textContent='...';
+  const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+  const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
+    action:'majContactsEleve',sheetsId:sheetsId,ligne:r.ligne,
+    telPere:tel1,telMere:tel2,telTuteur:tel3,matricule:r.matricule,
+    modifiePar:modifiePar
+  });
+  if(result&&result.succes){r.tel1=tel1;r.tel2=tel2;r.tel3=tel3;invaliderCacheSynthese(currentStaff.ecole);if(statutCell)statutCell.textContent='✓ contact maj';showToast('Contact enregistre','success');}
+  else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement contact','error');}
+}
+
+async function sauvegarderAffectationEdu(idx,sel){
+  const r=window._affListeCouranteEdu[idx];
+  const statutCell=document.getElementById('eduAffStatut_'+idx);
+  if(statutCell)statutCell.textContent='...';
+  const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
+  const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
+    action:'majStatutEleve',sheetsId:sheetsId,ligne:r.ligne,
+    classe2026:r.classe2026||r.classe,statutEleve:sel.value,matricule:r.matricule,nom:r.nom,
+    modifiePar:modifiePar
+  });
+  if(result&&result.succes){r.statut=sel.value;invaliderCacheSynthese(currentStaff.ecole);if(statutCell)statutCell.textContent='✓ enregistré';showToast('Statut enregistre','success');}
+  else{if(statutCell)statutCell.textContent='Erreur';showToast('Erreur enregistrement','error');}
+}
+
+async function confirmerModifNomEdu(idx){
+  const r=window._affListeCouranteEdu[idx];
+  const input=document.getElementById('eduAffNom_'+idx);
+  if(!input) return;
+  const nouvelleValeur=input.value.trim();
+  const ancienneValeur=r.nom;
+  if(nouvelleValeur===ancienneValeur) return;
+  if(!nouvelleValeur){ showToast('Le nom ne peut pas etre vide','error'); input.value=ancienneValeur; return; }
+  const ok=window.confirm('Confirmer le changement de nom ?\n\n'
+    +'Ancien : '+ancienneValeur+'\nNouveau : '+nouvelleValeur+'\n\n'
+    +'Matricule : '+r.matricule);
+  if(!ok){ input.value=ancienneValeur; return; }
+  const statutCell=document.getElementById('eduAffStatut_'+idx);
+  if(statutCell)statutCell.textContent='...';
+  const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
+  const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
+  const result=await appelJSONP(APP_SCRIPT_URL_ADMIN,{
+    action:'majFicheEleve',sheetsId:sheetsId,ligne:r.ligne,
+    champ:'nom',ancienneValeur:ancienneValeur,nouvelleValeur:nouvelleValeur,
+    matricule:r.matricule,ecole:currentStaff.ecole,
+    directeur:(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')'
+  });
+  if(result&&result.succes){
+    r.nom=nouvelleValeur;
+    invaliderCacheSynthese(currentStaff.ecole);
+    if(statutCell)statutCell.textContent='✓ modifié';
+    showToast('Nom mis a jour (historise)','success');
+  }else{
+    if(statutCell)statutCell.textContent='Erreur';
+    input.value=ancienneValeur;
+    showToast('Erreur : '+(result&&result.message||'echec'),'error');
+  }
 }
   // ★★★ NOUVEAU — change l'annee active et recharge les donnees affichees
 async function changerAnneeDir(){
