@@ -203,6 +203,14 @@ table tr:nth-child(even){background:#F8FAFD}
 </head>
 <body>
 
+<div id="bandeauPointage" class="bandeau-pointage">
+  <div class="bandeau-pointage-txt">
+    📍 Pointage requis — Créneau <span id="bpCreneau"></span>
+    <small>Vous avez 10 minutes pour pointer depuis l'heure prévue (<span id="bpHeure"></span>)</small>
+  </div>
+  <button class="btn-pointer" id="btnPointerMaintenant" onclick="pointerMaintenant()">✓ Je pointe maintenant</button>
+</div>
+  
 <!-- LOGIN -->
 <div id="loginPage" class="login-page">
   <div class="login-logo">
