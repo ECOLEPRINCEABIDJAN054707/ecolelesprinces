@@ -5740,10 +5740,10 @@ async function enregistrerChecklistMenaDir(idx){
     setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},30000);
   });
 
-  if(result&&result.ok){
-    if(statutDiv)statutDiv.textContent='✓ Checklist enregistrée — '+modifiePar;
+   if(result&&result.ok){
+    if(statutDiv)statutDiv.textContent='✓ '+(result.message||('Checklist enregistrée — '+modifiePar));
     colorerUnBoutonMenaDir(idx);
-    showToast('Checklist enregistrée','success');
+    showToast(result.message||'Checklist enregistrée', result.message&&result.message.indexOf('⚠️')>=0?'error':'success');
   }else{
     if(statutDiv)statutDiv.textContent='Erreur d\'enregistrement — réessayez';
     showToast('Erreur enregistrement','error');
