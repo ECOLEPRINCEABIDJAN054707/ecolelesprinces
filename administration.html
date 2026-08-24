@@ -6513,6 +6513,7 @@ async function chargerAffectationTousCom(){
     }
     const cnt=document.getElementById('comAffCount'); if(cnt)cnt.textContent='('+rows.length+' eleves)';
     filtrerAffectationCom();     setTimeout(precargarMenaCacheEtColorerBoutonsCom, 2000);
+    chargerBadgeFichesIncompletes(currentStaff.ecole,rows,'comAffResume','Com');
   }catch(e){zone.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--rouge)">Erreur chargement</td></tr>';}
 }
 
@@ -6520,9 +6521,12 @@ function filtrerAffectationCom(){
   const rows=window._affListeCom||[];
   const fc=(document.getElementById('comAffFiltreClasse')||{}).value||'';
   const fs=(document.getElementById('comAffFiltreStatut')||{}).value||'';
+  const setIncomplet=window._fichesIncompletesCom;
+  const filtreIncomplet=window._filtreFichesIncompletesCom;
   const filtered=rows.filter(r=>{
     const st=r.statut||'NON RENSEIGNE';
-    return (!fc||r.classe===fc)&&(!fs||st===fs);
+    const passIncomplet=!filtreIncomplet||(setIncomplet&&setIncomplet.has(r.matricule));
+    return (!fc||r.classe===fc)&&(!fs||st===fs)&&passIncomplet;
   });
   renderAffectationCom(filtered);
 }
@@ -7086,6 +7090,7 @@ async function chargerAffectationTousEdu(){
     const cnt=document.getElementById('eduAffCount'); if(cnt)cnt.textContent='('+rows.length+' eleves)';
     filtrerAffectationEdu();
     setTimeout(precargarMenaCacheEtColorerBoutonsEdu, 2000);
+          chargerBadgeFichesIncompletes(currentStaff.ecole,rows,'eduAffResume','Edu');
   }catch(e){zone.innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--rouge)">Erreur chargement</td></tr>';}
 }
 
@@ -7093,9 +7098,12 @@ function filtrerAffectationEdu(){
   const rows=window._affListeEdu||[];
   const fc=(document.getElementById('eduAffFiltreClasse')||{}).value||'';
   const fs=(document.getElementById('eduAffFiltreStatut')||{}).value||'';
+  const setIncomplet=window._fichesIncompletesEdu;
+  const filtreIncomplet=window._filtreFichesIncompletesEdu;
   const filtered=rows.filter(r=>{
     const st=r.statut||'NON RENSEIGNE';
-    return (!fc||r.classe===fc)&&(!fs||st===fs);
+    const passIncomplet=!filtreIncomplet||(setIncomplet&&setIncomplet.has(r.matricule));
+    return (!fc||r.classe===fc)&&(!fs||st===fs)&&passIncomplet;
   });
   renderAffectationEdu(filtered);
 }
