@@ -5235,7 +5235,7 @@ function invaliderCacheSynthese(ecole){
   }catch(e){return null;}
 }
 function _normRechDir(s){return String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
-  async function chargerBadgeFichesIncompletes(ecole,rows,resumeElId){
+async function chargerBadgeFichesIncompletes(ecole,rows,resumeElId,varPrefix){
   try{
     const cbName='gtis_'+Date.now();
     const script=document.createElement('script');
@@ -5249,20 +5249,43 @@ function _normRechDir(s){return String(s||'').toUpperCase().normalize('NFD').rep
     });
     if(!result||!result.ok||!result.infos)return;
     const infos=result.infos;
-    let incomplet=0;
+    const setIncomplet=new Set();
     rows.forEach(r=>{
       if(!r.estCollege)return;
       const inf=infos[r.matricule.toUpperCase()];
       const manque=!inf||!inf.classe2026||!inf.sexe||!inf.dateNaissance||!inf.lieuNaissance||!inf.lv2||!inf.nationalite;
-      if(manque)incomplet++;
+      if(manque)setIncomplet.add(r.matricule);
     });
+    window['_fichesIncompletes'+varPrefix]=setIncomplet;
+
     const resume=document.getElementById(resumeElId);
-    if(resume&&incomplet>0){
-      resume.innerHTML+=' &nbsp;<span class="bdg" style="background:#FFF3E0;color:#E65100;font-size:0.95em" title="Au moins un champ (Classe 2026-2027/Sexe/Date naissance/Lieu naissance/LV2/Nationalité) manquant">'+incomplet+' fiche(s) incomplète(s)</span>';
+    if(!resume)return;
+    const ancien=document.getElementById('btnFichesIncompletes'+varPrefix);
+    if(ancien)ancien.remove();
+    if(setIncomplet.size>0){
+      const actif=window['_filtreFichesIncompletes'+varPrefix];
+      resume.insertAdjacentHTML('beforeend',
+        ' &nbsp;<span id="btnFichesIncompletes'+varPrefix+'" class="bdg" '
+        +'style="background:'+(actif?'#E65100':'#FFF3E0')+';color:'+(actif?'#fff':'#E65100')+';font-size:0.95em;cursor:pointer" '
+        +'title="Cliquer pour filtrer / annuler le filtre" '
+        +'onclick="toggleFiltreFichesIncompletes(\''+varPrefix+'\')">🔍 '+setIncomplet.size+' fiche(s) incomplète(s)</span>');
     }
   }catch(e){/* silencieux, non bloquant */}
 }
 
+function toggleFiltreFichesIncompletes(varPrefix){
+  const key='_filtreFichesIncompletes'+varPrefix;
+  window[key]=!window[key];
+  const btn=document.getElementById('btnFichesIncompletes'+varPrefix);
+  if(btn){
+    const actif=window[key];
+    btn.style.background=actif?'#E65100':'#FFF3E0';
+    btn.style.color=actif?'#fff':'#E65100';
+  }
+  if(varPrefix==='Dir')filtrerAffectation();
+  else if(varPrefix==='Com')filtrerAffectationCom();
+  else if(varPrefix==='Edu')filtrerAffectationEdu();
+}
 // ══ STATUT AFFECTATION — Tous les élèves (colonnes R/S de SYNTHESE) ══
 async function chargerAffectationTous(){
   const s=currentStaff; if(!s) return;
@@ -5303,7 +5326,7 @@ async function chargerAffectationTous(){
     const cnt=document.getElementById('affCount'); if(cnt)cnt.textContent='('+rows.length+' eleves)';
     filtrerAffectation();
  setTimeout(precargarMenaCacheEtColorerBoutonsDir, 2000);
-    chargerBadgeFichesIncompletes(s.ecole,rows,'affResume');
+    chargerBadgeFichesIncompletes(s.ecole,rows,'affResume','Dir');
   }catch(e){zone.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--rouge)">Erreur chargement</td></tr>';}
 }
 
@@ -5311,9 +5334,12 @@ function filtrerAffectation(){
   const rows=window._affListe||[];
   const fc=(document.getElementById('affFiltreClasse')||{}).value||'';
   const fs=(document.getElementById('affFiltreStatut')||{}).value||'';
+  const setIncomplet=window._fichesIncompletesDir;
+  const filtreIncomplet=window._filtreFichesIncompletesDir;
   const filtered=rows.filter(r=>{
     const st=r.statut||'NON RENSEIGNE';
-    return (!fc||r.classe===fc)&&(!fs||st===fs);
+    const passIncomplet=!filtreIncomplet||(setIncomplet&&setIncomplet.has(r.matricule));
+    return (!fc||r.classe===fc)&&(!fs||st===fs)&&passIncomplet;
   });
   renderAffectation(filtered);
 }
