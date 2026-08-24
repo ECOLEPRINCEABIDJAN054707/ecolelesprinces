@@ -199,6 +199,12 @@ table tr:nth-child(even){background:#F8FAFD}
 .btn-f-bleu{background:var(--bleu);color:#fff}
 .btn-f-vert{background:var(--vert);color:#fff}
 .btn-f-violet{background:#7B1FA2;color:#fff}
+    .bandeau-pointage{display:none;position:fixed;top:0;left:0;width:100%;z-index:9500;background:linear-gradient(135deg,#C62828,#E53935);color:#fff;padding:10px 16px;box-shadow:0 2px 10px rgba(0,0,0,0.25);align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.bandeau-pointage.show{display:flex}
+.bandeau-pointage-txt{font-size:0.85em;font-weight:700;flex:1;min-width:180px}
+.bandeau-pointage-txt small{display:block;font-weight:500;opacity:0.9;font-size:0.85em;margin-top:2px}
+.btn-pointer{background:#fff;color:#C62828;border:none;padding:9px 18px;border-radius:20px;font-weight:800;font-size:0.85em;cursor:pointer;white-space:nowrap}
+.btn-pointer:disabled{opacity:0.6;cursor:default}
 </style>
 </head>
 <body>
