@@ -5235,6 +5235,33 @@ function invaliderCacheSynthese(ecole){
   }catch(e){return null;}
 }
 function _normRechDir(s){return String(s||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
+  async function chargerBadgeFichesIncompletes(ecole,rows,resumeElId){
+  try{
+    const cbName='gtis_'+Date.now();
+    const script=document.createElement('script');
+    const params=new URLSearchParams({callback:cbName,type:'GET_TOUTES_INFOS_SYNTHESE',ecole:ecole});
+    const result=await new Promise(resolve=>{
+      window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}resolve(res);};
+      script.onerror=()=>{delete window[cbName];resolve({ok:false});};
+      script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();
+      document.body.appendChild(script);
+      setTimeout(()=>{if(window[cbName]){delete window[cbName];resolve({ok:false});}},20000);
+    });
+    if(!result||!result.ok||!result.infos)return;
+    const infos=result.infos;
+    let incomplet=0;
+    rows.forEach(r=>{
+      if(!r.estCollege)return;
+      const inf=infos[r.matricule.toUpperCase()];
+      const manque=!inf||!inf.classe2026||!inf.sexe||!inf.dateNaissance||!inf.lieuNaissance||!inf.lv2||!inf.nationalite;
+      if(manque)incomplet++;
+    });
+    const resume=document.getElementById(resumeElId);
+    if(resume&&incomplet>0){
+      resume.innerHTML+=' &nbsp;<span class="bdg" style="background:#FFF3E0;color:#E65100;font-size:0.95em" title="Au moins un champ (Classe 2026-2027/Sexe/Date naissance/Lieu naissance/LV2/Nationalité) manquant">'+incomplet+' fiche(s) incomplète(s)</span>';
+    }
+  }catch(e){/* silencieux, non bloquant */}
+}
 
 // ══ STATUT AFFECTATION — Tous les élèves (colonnes R/S de SYNTHESE) ══
 async function chargerAffectationTous(){
@@ -5276,6 +5303,7 @@ async function chargerAffectationTous(){
     const cnt=document.getElementById('affCount'); if(cnt)cnt.textContent='('+rows.length+' eleves)';
     filtrerAffectation();
  setTimeout(precargarMenaCacheEtColorerBoutonsDir, 2000);
+    chargerBadgeFichesIncompletes(s.ecole,rows,'affResume');
   }catch(e){zone.innerHTML='<tr><td colspan="8" style="text-align:center;color:var(--rouge)">Erreur chargement</td></tr>';}
 }
 
