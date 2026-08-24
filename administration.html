@@ -7074,8 +7074,10 @@ async function chargerAffectationTousEdu(){
       const classe=String(row[0]||'').trim();
       if(!appartientAMesClasses(classe)) continue; // ⚠️ NOUVEAU — restreint aux classes de l'éducateur
       rows.push({
+        ligne:i+1,
         classe:classe, matricule:matricule, nom:String(row[2]||'').trim(),
         tel1:String(row[6]||'').trim(), tel2:String(row[7]||'').trim(), tel3:String(row[8]||'').trim(),
+        classe2026:String(row[17]||'').trim(),
         statut:String(row[18]||'').trim().toUpperCase(),
         estCollege:regexSEC.test(classe)
       });
