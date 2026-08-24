@@ -5623,7 +5623,7 @@ async function chargerChecklistMenaDir(idx){
   const v=window._verifMenaCacheDir[r.matricule]||{};
   renderChecklistMenaDir(idx,r,v);
 }
- function renderChecklistMenaDir(idx,r,v){
+function renderChecklistMenaDir(idx,r,v){
   const contentDiv=document.getElementById('menaContentDir_'+idx);
   if(!contentDiv)return;
   const inputTxt=(champLabel,champKey,val)=>
@@ -5648,7 +5648,30 @@ async function chargerChecklistMenaDir(idx){
     +'</select>'
     +'</div>';
   };
-  let h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
+  const selectSexe=(champKey,val)=>
+    '<div style="margin-bottom:8px">'
+    +'<span style="font-size:0.9em;font-weight:800;color:#1A1A2E;text-transform:uppercase">Sexe</span><br>'
+    +'<select id="mena_'+champKey+'_'+idx+'_dir" '
+    +'onchange="sauvegarderChampMenaDir('+idx+',\''+champKey+'\',this.value)" '
+    +'style="width:100%;padding:6px;border-radius:6px;border:1.5px solid var(--border);font-size:1em;font-weight:600;margin-top:2px">'
+    +'<option value=""'+(!val?' selected':'')+'>--</option>'
+    +'<option value="MASCULIN"'+(val==='MASCULIN'?' selected':'')+'>MASCULIN</option>'
+    +'<option value="FEMININ"'+(val==='FEMININ'?' selected':'')+'>FEMININ</option>'
+    +'</select>'
+    +'</div>';
+
+  let h='<div style="background:#F0F7FF;border:1.5px solid #90CAF9;border-radius:8px;padding:10px 12px;margin-bottom:12px">';
+  h+='<div style="font-size:0.9em;font-weight:800;color:#1F4E79;text-transform:uppercase;margin-bottom:8px">📋 Fiche élève 2026-2027</div>';
+  h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
+  h+=inputTxt('Classe 2026-2027','classe2026',v.classe2026);
+  h+=inputTxt('LV2','lv2',v.lv2);
+  h+=inputTxt('Nationalité','nationalite',v.nationalite);
+  h+=selectSexe('sexeEleve',v.sexeEleve);
+  h+=inputTxt('Date naissance','dateNaissanceEleve',v.dateNaissanceEleve);
+  h+=inputTxt('Lieu naissance','lieuNaissanceEleve',v.lieuNaissanceEleve);
+  h+='</div></div>';
+
+  h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px 16px">';
   h+=selectOuiNon('Inscription en ligne','inscriptionLigne',v.inscriptionLigne);
   h+=selectOuiNon('Photo','photo',v.photo);
   h+=selectOuiNon('Actualisé','actualise',v.actualise);
