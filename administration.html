@@ -4674,9 +4674,90 @@ function procederLogin(s){
   currentStaff=s;
   try{sessionStorage.setItem('staffConnecte',JSON.stringify(s));}catch(e){}
   peuplerNiveaux(s.ecole);
-  setTimeout(()=>{hideLoader();if(s.profil==='DIR')afficherDir(s);else if(s.profil==='FOND')afficherFond(s);else if(s.profil==='COM')afficherCom(s);else if(s.profil==='EDU')afficherEdu(s);},900);
+  setTimeout(()=>{hideLoader();if(s.profil==='DIR')afficherDir(s);else if(s.profil==='FOND')afficherFond(s);else if(s.profil==='COM')afficherCom(s);else if(s.profil==='EDU')afficherEdu(s);verifierPointageEnAttente();},900);
+}
+// ══ BANDEAU POINTAGE — vérifie à l'ouverture + à chaque réouverture d'app ══
+var _pointageEnCours = null;
+
+function verifierPointageEnAttente() {
+  if (!currentStaff || currentStaff.profil === 'FOND') return;
+  var sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole];
+  if (!sheetsId) return;
+  var cbName = 'pea_' + Date.now();
+  var script = document.createElement('script');
+  var params = new URLSearchParams({
+    callback: cbName, action: 'getPointageEnAttenteStaff',
+    matricule: currentStaff.matricule, sheetsId: sheetsId
+  });
+  window[cbName] = function(res) {
+    delete window[cbName]; try { document.body.removeChild(script); } catch(e) {}
+    if (res && res.creneau) {
+      _pointageEnCours = res;
+      afficherBandeauPointage(res);
+    } else {
+      _pointageEnCours = null;
+      masquerBandeauPointage();
+    }
+  };
+  script.onerror = function() { delete window[cbName]; };
+  script.src = APP_SCRIPT_URL_ADMIN + '?' + params.toString();
+  document.body.appendChild(script);
 }
 
+function afficherBandeauPointage(info) {
+  var creneauLabel = info.creneau === 'MATIN' ? 'Matin' : 'Après-midi';
+  document.getElementById('bpCreneau').textContent = creneauLabel;
+  document.getElementById('bpHeure').textContent = info.heurePrevue || '';
+  document.getElementById('bandeauPointage').classList.add('show');
+}
+
+function masquerBandeauPointage() {
+  document.getElementById('bandeauPointage').classList.remove('show');
+}
+
+// Revérifie à chaque fois que l'app repasse au premier plan (réouverture)
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible' && currentStaff) {
+    verifierPointageEnAttente();
+  }
+});
+  
+function pointerMaintenant() {
+  if (!currentStaff || !_pointageEnCours) return;
+  var sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole];
+  if (!sheetsId) return;
+
+  var btn = document.getElementById('btnPointerMaintenant');
+  btn.disabled = true;
+  btn.textContent = '⏳ Enregistrement...';
+
+  var cbName = 'ep_' + Date.now();
+  var script = document.createElement('script');
+  var params = new URLSearchParams({
+    callback: cbName, action: 'enregistrerPointage',
+    matricule: currentStaff.matricule, sheetsId: sheetsId
+  });
+  window[cbName] = function(res) {
+    delete window[cbName]; try { document.body.removeChild(script); } catch(e) {}
+    btn.disabled = false;
+    btn.textContent = '✓ Je pointe maintenant';
+    if (res && res.succes) {
+      showToast(res.message, res.statut === 'POINTE' ? 'success' : '');
+      _pointageEnCours = null;
+      masquerBandeauPointage();
+    } else {
+      showToast(res && res.message ? res.message : 'Erreur de pointage', 'error');
+    }
+  };
+  script.onerror = function() {
+    delete window[cbName];
+    btn.disabled = false;
+    btn.textContent = '✓ Je pointe maintenant';
+    showToast('Erreur réseau', 'error');
+  };
+  script.src = APP_SCRIPT_URL_ADMIN + '?' + params.toString();
+  document.body.appendChild(script);
+}
 function peuplerNiveaux(ecole, selectId) {
   var sel = document.getElementById(selectId || 'm-niveau');
   if(!sel) return;
