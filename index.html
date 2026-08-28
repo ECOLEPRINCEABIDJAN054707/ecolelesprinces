@@ -1411,13 +1411,15 @@ var EDT_HORAIRES=[{type:"cours",h:"07h45 - 08h55"},{type:"cours",h:"08h55 - 09h5
 
 async function chargerEDT(eleve){var div=document.getElementById("edtBody");var titre=document.getElementById("titreEDT");if(!div)return;var anneeEDT="2026-2027";if(titre)titre.innerHTML="&#128336; EMPLOI DU TEMPS "+anneeEDT+" <span>v</span>";
   function nettoyerClasseBase(c){return String(c||"").trim().toUpperCase().replace(/[ÈÉÊË]/g,"E").replace(/[ÀÂÄ]/g,"A").replace(/[ÎÏ]/g,"I").replace(/[ÔÖ]/g,"O").replace(/[ÛÙÜ]/g,"U").replace(/Ç/g,"C").replace(/[^A-Z0-9 _]/g,"");}
-  function variantesOnglet(classe){
+function variantesOnglet(classe){
     var base=nettoyerClasseBase(classe);
     if(!base) return [];
+    var sansEspace="EDT_"+base.replace(/\s+/g,""); // ex: "EDT_4EME1" — convention reelle du reseau
     var toutUnderscore="EDT_"+base.replace(/\s+/g,"_");
     var espacePreserve="EDT_"+base; // ex: "EDT_4EME EX1" (un seul underscore apres EDT)
-    var v=[toutUnderscore];
-    if(espacePreserve!==toutUnderscore) v.push(espacePreserve);
+    var v=[sansEspace];
+    if(toutUnderscore!==sansEspace) v.push(toutUnderscore);
+    if(espacePreserve!==sansEspace && espacePreserve!==toutUnderscore) v.push(espacePreserve);
     return v;
   }
   var classeAncienne=eleve.classe;
