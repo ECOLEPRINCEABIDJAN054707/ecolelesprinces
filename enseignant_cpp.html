@@ -1114,16 +1114,15 @@ function demarrerCoursPrimaireDirect() {
     if (sel.options[i].value === cible) { sel.selectedIndex = i; trouve = true; break; }
   }
   if (!trouve) {
-    alert('Classe "' + cible + '" introuvable dans la liste. Contactez la Direction pour vérifier le nom exact de cette classe.');
-    return;
+    // ⚠️ CORRIGÉ — la liste des classes peut ne pas encore être chargée
+    // (chargement réseau en parallèle) : on ajoute directement la classe
+    // déclarée au login plutôt que de bloquer l'enseignant avec une erreur.
+    const opt = document.createElement('option');
+    opt.value = cible;
+    opt.textContent = cible;
+    sel.appendChild(opt);
+    sel.value = cible;
   }
-  const maintenant = new Date();
-  const fin = new Date(maintenant.getTime() + 55*60000);
-  document.getElementById('modalMatiere').value = user.matiere || 'Instituteur(trice)';
-  document.getElementById('modalHeureDebut').value = formatHeure(maintenant);
-  document.getElementById('modalHeureFin').value = formatHeure(fin);
-  confirmerCours();
-}
   
 function signalerProblemeEDT() {
   const msg = 'Bonjour, je ne trouve pas mon cours du jour dans l\'EDT.\n' +
