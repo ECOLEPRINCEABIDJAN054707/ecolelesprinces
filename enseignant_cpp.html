@@ -1076,12 +1076,10 @@ data.cours.sort((a, b) => parseMin(a.heureDebut) - parseMin(b.heureDebut));
    }
 }
 
-function demarrerCoursDepuisEDT(idx) {
+async function demarrerCoursDepuisEDT(idx) {
   const c = window._mesCoursJour[idx];
   if (!c) return;
 
-  // ⚠️ CORRIGÉ — recherche la bonne option même si l'écriture diffère
-  // légèrement (accents, espaces, majuscules) entre l'EDT et la liste des classes
   function normaliser(s) {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
   }
@@ -1095,15 +1093,27 @@ function demarrerCoursDepuisEDT(idx) {
       break;
     }
   }
+
+  // ⚠️ CORRIGÉ — si la liste n'est pas encore chargée (course réseau),
+  // on attend chargerClasses() pour obtenir les VRAIS noms d'onglets
+  // avant de retenter, plutôt que de deviner un nom qui peut être
+  // légèrement différent de l'onglet réel (espace, accent...).
   if (!trouve) {
-    // ⚠️ CORRIGÉ — la liste des classes peut ne pas encore être chargée
-    // (chargement réseau en parallèle) : on ajoute directement la classe
-    // trouvée dans l'EDT plutôt que de bloquer l'enseignant avec une erreur.
-    const opt = document.createElement('option');
-    opt.value = c.classe;
-    opt.textContent = c.classe;
-    sel.appendChild(opt);
-    sel.value = c.classe;
+    showLoader('Chargement de la classe...');
+    await chargerClasses();
+    hideLoader();
+    for (let i = 0; i < sel.options.length; i++) {
+      if (normaliser(sel.options[i].value) === cible) {
+        sel.selectedIndex = i;
+        trouve = true;
+        break;
+      }
+    }
+  }
+
+  if (!trouve) {
+    alert('Classe "' + c.classe + '" introuvable dans la liste. Contactez la Direction pour vérifier le nom exact de cette classe.');
+    return;
   }
 
   document.getElementById('modalMatiere').value = c.matiere;
@@ -1112,23 +1122,28 @@ function demarrerCoursDepuisEDT(idx) {
   calculerEstim();
   confirmerCours();
 }
-function demarrerCoursPrimaireDirect() {
+async function demarrerCoursPrimaireDirect() {
   const sel = document.getElementById('modalClasse');
   const cible = user.classeDefaut;
   let trouve = false;
   for (let i = 0; i < sel.options.length; i++) {
     if (sel.options[i].value === cible) { sel.selectedIndex = i; trouve = true; break; }
   }
+
   if (!trouve) {
-    // ⚠️ CORRIGÉ — la liste des classes peut ne pas encore être chargée
-    // (chargement réseau en parallèle) : on ajoute directement la classe
-    // déclarée au login plutôt que de bloquer l'enseignant avec une erreur.
-    const opt = document.createElement('option');
-    opt.value = cible;
-    opt.textContent = cible;
-    sel.appendChild(opt);
-    sel.value = cible;
+    showLoader('Chargement de la classe...');
+    await chargerClasses();
+    hideLoader();
+    for (let i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === cible) { sel.selectedIndex = i; trouve = true; break; }
+    }
   }
+
+  if (!trouve) {
+    alert('Classe "' + cible + '" introuvable dans la liste. Contactez la Direction pour vérifier le nom exact de cette classe.');
+    return;
+  }
+
   const maintenant = new Date();
   const fin = new Date(maintenant.getTime() + 55*60000);
   document.getElementById('modalMatiere').value = user.matiere || 'Instituteur(trice)';
