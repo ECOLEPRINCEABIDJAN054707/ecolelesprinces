@@ -1096,8 +1096,14 @@ function demarrerCoursDepuisEDT(idx) {
     }
   }
   if (!trouve) {
-    alert('Classe "' + c.classe + '" introuvable dans la liste. Contactez la Direction pour vérifier le nom exact de cette classe.');
-    return;
+    // ⚠️ CORRIGÉ — la liste des classes peut ne pas encore être chargée
+    // (chargement réseau en parallèle) : on ajoute directement la classe
+    // trouvée dans l'EDT plutôt que de bloquer l'enseignant avec une erreur.
+    const opt = document.createElement('option');
+    opt.value = c.classe;
+    opt.textContent = c.classe;
+    sel.appendChild(opt);
+    sel.value = c.classe;
   }
 
   document.getElementById('modalMatiere').value = c.matiere;
