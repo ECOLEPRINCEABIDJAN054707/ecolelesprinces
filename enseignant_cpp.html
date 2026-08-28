@@ -1123,11 +1123,15 @@ async function demarrerCoursDepuisEDT(idx) {
   confirmerCours();
 }
 async function demarrerCoursPrimaireDirect() {
+  function normaliser(s) {
+    return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+  }
   const sel = document.getElementById('modalClasse');
   const cible = user.classeDefaut;
+  const cibleNorm = normaliser(cible);
   let trouve = false;
   for (let i = 0; i < sel.options.length; i++) {
-    if (sel.options[i].value === cible) { sel.selectedIndex = i; trouve = true; break; }
+    if (normaliser(sel.options[i].value) === cibleNorm) { sel.selectedIndex = i; trouve = true; break; }
   }
 
   if (!trouve) {
@@ -1135,7 +1139,7 @@ async function demarrerCoursPrimaireDirect() {
     await chargerClasses();
     hideLoader();
     for (let i = 0; i < sel.options.length; i++) {
-      if (sel.options[i].value === cible) { sel.selectedIndex = i; trouve = true; break; }
+      if (normaliser(sel.options[i].value) === cibleNorm) { sel.selectedIndex = i; trouve = true; break; }
     }
   }
 
@@ -1151,7 +1155,6 @@ async function demarrerCoursPrimaireDirect() {
   document.getElementById('modalHeureFin').value = formatHeure(fin);
   confirmerCours();
 }
-
 function signalerProblemeEDT() {
   const msg = 'Bonjour, je ne trouve pas mon cours du jour dans l\'EDT.\n' +
     'Enseignant : ' + user.nom + '\nÉcole : ' + user.ecole + '\nDate : ' + formatDate(new Date());
