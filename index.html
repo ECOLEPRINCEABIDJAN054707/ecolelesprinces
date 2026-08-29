@@ -2022,13 +2022,15 @@ async function getBulletinAnnuelKoutouan(matricule) {
 }
 
 const maxItMap={"CPP":{numero:"0759975244",qr:"assets/qr/cpp-flagship-confirm.png"},"ACADEMIE":{numero:"0768294150",qr:"assets/qr/cpp-academie.png"},"GNONTINROU":{numero:"0703745615",qr:"assets/qr/gnontinrou.png"},"GUINGLO_V":{numero:"0758703249",qr:null},"KOUTOUAN":{numero:"0788216477",qr:"assets/qr/cpp-koutouan-confirm.png"},"SOAKPE":{numero:"0707512607",qr:"assets/qr/cpp-soakpe.png"},"AKEIKOI_1":{numero:"0703512664",qr:"assets/qr/akeikoi-1.png"},"AKEIKOI_2":{numero:"0704102766",qr:"assets/qr/akeikoi-2.png"},"CPP_PRO":{numero:"0708793312",qr:"assets/qr/cpp-professionnel.png"},"CPP_TECH":{numero:"0749981739",qr:"assets/qr/cpp-technique.png"},"KOUIBLY_TEC":{numero:"0759425244",qr:"assets/qr/etl-kouibly-tech.png"},"RITA":{numero:"0757561918",qr:"assets/qr/gs-rita-rosane.png"},"DABOU":{numero:"0777620076",qr:"assets/qr/cpp-dabou.png"},"ANYAMA":{numero:"0797673340",qr:"assets/qr/cpp-anyama-adjame.png"}};
+const DATE_ACTIVATION_QR_MAXIT=new Date('2026-09-01T00:00:00');
 function construireBlocMaxIt(sid,nomEcole,matricule,nomEleve){
   const info=maxItMap[sid];
   const mat=matricule||"-";
   const nom=nomEleve||"-";
+  const qrActif=new Date()>=DATE_ACTIVATION_QR_MAXIT;
   let html="";
   let n=1;
-  if(info&&info.qr){
+  if(info&&info.qr&&qrActif){
     html+='<div style="text-align:center;margin-bottom:12px;"><img src="'+info.qr+'" alt="QR paiement '+nomEcole+'" style="width:140px;height:140px;border-radius:8px;border:1px solid #FFD9B3;"></div>';
     html+='<div class="step"><div class="step-n" style="background:#FF6600;">'+(n++)+'</div><p>Scannez le QR ci-dessus</p></div>';
     html+='<div class="step"><div class="step-n" style="background:#FF6600;">'+(n++)+'</div><p>Ou dans Max It, allez dans <strong>Paiement</strong> puis <strong>Education</strong></p></div>';
