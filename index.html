@@ -1018,7 +1018,16 @@ async function rechercherPaiementRapide() {
     {code:"ANYAMA",id:"1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE"},
   ];
   const TOUTES_ECOLES_PAIEMENT = TOUTES_ECOLES_2026_RAPIDE.concat(TOUTES_ECOLES_2025_RAPIDE);
-  const resultats = await Promise.all(TOUTES_ECOLES_PAIEMENT.map(ec => chercherDansEcoleDirecte(mat, ec.code, ec.id)));
+  let resultats;
+  try {
+    resultats = await Promise.all(TOUTES_ECOLES_PAIEMENT.map(ec => chercherDansEcoleDirecte(mat, ec.code, ec.id)));
+  } catch(e) {
+    resEl.innerHTML = "";
+    errEl.textContent = "Erreur technique : " + e.message + " (fais une capture d'ecran de ce message)";
+    errEl.style.display = "block";
+    console.error("Erreur rechercherPaiementRapide:", e);
+    return;
+  }
   const eleve = resultats.find(e => e) || null;
   resEl.innerHTML = "";
   if (!eleve) {
