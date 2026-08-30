@@ -860,7 +860,7 @@ function seConnecter() {
 
   if (!nom) { showToast('Saisissez votre nom complet', 'error'); return; }
   if (!niveau) { showToast('Sélectionnez votre niveau', 'error'); return; }
-  if (niveau === 'secondaire' && !matiere) { showToast('Sélectionnez votre matière', 'error'); return; }
+  
   if (niveau === 'primaire' && !classePrimaire) { showToast('Sélectionnez votre classe', 'error'); return; }
   if (!code) { showToast("Entrez votre code d'accès", 'error'); return; }
 
