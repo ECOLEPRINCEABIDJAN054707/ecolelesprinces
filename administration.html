@@ -10344,6 +10344,38 @@ function _parseEleves(dataRows,iMat,iNom,iPrenom,iDu,iVerse,iSolde,iTel1,iTel2,i
   return dataRows.filter(function(row){return(iNom>=0?String(row[iNom]||'').trim().length>1:false)||(iMat>=0?String(row[iMat]||'').trim().length>1:false);}).map(function(row){var nomVal=iNom>=0?String(row[iNom]||'').trim():'';var prenomVal=iPrenom>=0?String(row[iPrenom]||'').trim():'';var nomComplet=prenomVal&&!nomVal.includes(prenomVal)?nomVal+' '+prenomVal:nomVal;var du=iDu>=0?parseFloat(String(row[iDu]||'').replace(/\s/g,''))||0:0;var verse=iVerse>=0?parseFloat(String(row[iVerse]||'').replace(/\s/g,''))||0:0;var solde=iSolde>=0?parseFloat(String(row[iSolde]||'').replace(/\s/g,''))||0:du-verse;function nTel(t){t=(t+'').replace(/[^0-9+]/g,'');return t.length>=8?t:'';}return{matricule:iMat>=0?String(row[iMat]||'').trim():'',nom_prenom:nomComplet,montant_du:du,versement:verse,solde:solde,tel1:nTel(iTel1>=0?row[iTel1]||'':''),tel2:nTel(iTel2>=0?row[iTel2]||'':''),tel3:nTel(iTel3>=0?row[iTel3]||'':''),statut:solde<=0?'SOLDE':verse===0?'IMPAYE':'PARTIEL'};});
 }
 
+  async function filtrerOngletsAvecEleves(sheetsId, onglets) {
+  if (!onglets.length) return onglets;
+  try {
+    var ranges = onglets.map(function(nom) {
+      return 'ranges=' + encodeURIComponent(nom + '!A1:C6');
+    }).join('&');
+    var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId
+      + '/values:batchGet?' + ranges + '&key=' + API_KEY;
+    var r = await fetch(url);
+    var data = await r.json();
+    if (!data.valueRanges) return onglets;
+    var ongletsAvecEleves = [];
+    data.valueRanges.forEach(function(vr, idx) {
+      var rows = vr.values || [];
+      // Repère l'en-tête (ligne où MATRICULE/N apparaît), sinon suppose ligne 0
+      var headerIdx = -1;
+      for (var li = 0; li < Math.min(3, rows.length); li++) {
+        var testRow = (rows[li] || []).map(function(h){ return String(h||'').toUpperCase().trim(); });
+        if (testRow.some(function(h){ return h === 'MATRICULE' || h === 'N'; })) { headerIdx = li; break; }
+      }
+      var dataRows = headerIdx >= 0 ? rows.slice(headerIdx + 1) : rows.slice(1);
+      var aDesEleves = dataRows.some(function(row) {
+        return row && row.some(function(cell) { return String(cell||'').trim().length > 1; });
+      });
+      if (aDesEleves) ongletsAvecEleves.push(onglets[idx]);
+    });
+    return ongletsAvecEleves;
+  } catch (e) {
+    // En cas d'erreur réseau, on ne filtre pas — on affiche tout plutôt que rien
+    return onglets;
+  }
+}
 async function listerOnglets(sheetsId){
   try{
     var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'?key='+API_KEY+'&fields=sheets.properties.title';
@@ -10357,12 +10389,19 @@ async function listerOnglets(sheetsId){
     var classesPRIM=tous.filter(function(t){return regexPRIM.test(t);});
     var isPRIM=currentStaff&&currentStaff.type==='PRIM';
     var isSEC=currentStaff&&currentStaff.type==='SEC';
-    if(isPRIM&&classesPRIM.length)return classesPRIM;
-    if(isSEC&&classesSEC.length)return classesSEC;
-    if(classesSEC.length&&classesPRIM.length)return classesSEC.concat(classesPRIM);
-    if(classesSEC.length)return classesSEC;
-    if(classesPRIM.length)return classesPRIM;
-    return tous;
+    var resultat;
+    if(isPRIM&&classesPRIM.length)resultat=classesPRIM;
+    else if(isSEC&&classesSEC.length)resultat=classesSEC;
+    else if(classesSEC.length&&classesPRIM.length)resultat=classesSEC.concat(classesPRIM);
+    else if(classesSEC.length)resultat=classesSEC;
+    else if(classesPRIM.length)resultat=classesPRIM;
+    else resultat=tous;
+
+    var ecolesAFiltrer=['CPP PRO','CPP TECH'];
+    if(currentStaff&&ecolesAFiltrer.indexOf(currentStaff.ecole)>=0){
+      resultat=await filtrerOngletsAvecEleves(sheetsId,resultat);
+    }
+    return resultat;
   }catch(e){return[];}
 }
 
