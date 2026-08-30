@@ -10369,6 +10369,7 @@ function _parseEleves(dataRows,iMat,iNom,iPrenom,iDu,iVerse,iSolde,iTel1,iTel2,i
       var aDesEleves = dataRows.some(function(row) {
         return row && row.some(function(cell) { return String(cell||'').trim().length > 1; });
       });
+      console.log('DEBUG classe=' + onglets[idx] + ' rows.length=' + rows.length + ' headerIdx=' + headerIdx + ' dataRows.length=' + dataRows.length + ' aDesEleves=' + aDesEleves);
       if (aDesEleves) ongletsAvecEleves.push(onglets[idx]);
     });
     return ongletsAvecEleves;
