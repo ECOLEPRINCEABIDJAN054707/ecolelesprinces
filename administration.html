@@ -10385,7 +10385,7 @@ async function listerOnglets(sheetsId){
     var data=await r.json();
     if(!data.sheets)return[];
     var tous=data.sheets.map(function(s){return s.properties.title;}).filter(estOngletValide);
-    var regexSEC=/^(6|5|4|3|2NDE|1[EÈ]RE|TLE|BT)/i;
+    var regexSEC=/^(6|5|4|3EME|2NDE|1[EÈ]RE|TLE|BT|1A|2A|3A)/i;
     var regexPRIM=/^(CP|CE|CM|GS|MS|PS|TPS|SIL|CI|MATERNELLE)/i;
     var classesSEC=tous.filter(function(t){return regexSEC.test(t);});
     var classesPRIM=tous.filter(function(t){return regexPRIM.test(t);});
