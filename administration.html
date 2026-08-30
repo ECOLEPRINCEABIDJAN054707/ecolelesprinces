@@ -10398,10 +10398,16 @@ async function listerOnglets(sheetsId){
     else if(classesPRIM.length)resultat=classesPRIM;
     else resultat=tous;
 
-    var ecolesAFiltrer=['CPP PRO','CPP TECH'];
+       var ecolesAFiltrer=['CPP PRO','CPP TECH'];
+    console.log('DEBUG listerOnglets AVANT filtre', currentStaff && currentStaff.ecole, 'resultat.length=', resultat.length);
     if(currentStaff&&ecolesAFiltrer.indexOf(currentStaff.ecole)>=0){
-      resultat=await filtrerOngletsAvecEleves(sheetsId,resultat);
+      try{
+        resultat=await filtrerOngletsAvecEleves(sheetsId,resultat);
+      }catch(errFiltre){
+        console.log('DEBUG ERREUR filtrerOngletsAvecEleves', errFiltre.message);
+      }
     }
+    console.log('DEBUG listerOnglets APRES filtre resultat.length=', resultat.length);
     return resultat;
   }catch(e){return[];}
 }
