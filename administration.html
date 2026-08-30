@@ -10348,7 +10348,7 @@ function _parseEleves(dataRows,iMat,iNom,iPrenom,iDu,iVerse,iSolde,iTel1,iTel2,i
   if (!onglets.length) return onglets;
   try {
     var ranges = onglets.map(function(nom) {
-      return 'ranges=' + encodeURIComponent(nom + '!A1:C6');
+      return 'ranges=' + encodeURIComponent("'" + nom + "'!A1:C6");
     }).join('&');
     var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId
       + '/values:batchGet?' + ranges + '&key=' + API_KEY;
