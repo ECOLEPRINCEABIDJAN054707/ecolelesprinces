@@ -1359,7 +1359,7 @@ function confirmerCours() {
   document.getElementById('appelFin').textContent = hF;
   document.getElementById('cahierClasse').textContent = classe;
   document.getElementById('cahierMatiere').textContent = matiere;
-  document.getElementById('notesSousTitre').textContent = (user.matiere||matiere) + ' · ' + classe;
+  document.getElementById('notesSousTitre').textContent = (matiere||user.matiere) + ' · ' + classe;
   // Réinitialiser l'appel
   document.getElementById('carteValidation').style.display = 'none';
   document.getElementById('btnValiderAppel').style.display = 'flex';
@@ -1653,7 +1653,7 @@ function contacterDirectionGPS() {
 async function chargerElevesNotes() {
   const classe = document.getElementById('notesClasse').value;
   if (!classe) return;
-  document.getElementById('notesSousTitre').textContent = (user.matiere||'') + ' · ' + classe;
+  document.getElementById('notesSousTitre').textContent = ((coursActuel && coursActuel.matiere) || user.matiere || '') + ' · ' + classe;
   document.getElementById('btnPublierNotes').style.display = 'none';
   document.getElementById('notesBandeauManquants').style.display = 'none';
   // ── Nettoyer un éventuel avertissement heures laissé par un appel précédent ──
