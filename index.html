@@ -1682,35 +1682,116 @@ devoirs.forEach(function(d) {
   w.document.write('</body></html>');
   w.document.close();
 }
-async function chargerAbsences(eleve){const div=document.getElementById("absencesBody");if(!div)return;
-  // Ecrit le resultat dans la div cachee (comportement original, inchange)
-  // ET dans le bouton visible s'il est deja construit — evite que l'affichage
-  // reste bloque sur "Chargement..." si le parent clique avant la fin du fetch.
+async function chargerAbsences(eleve){
+  const div=document.getElementById("absencesBody");
+  if(!div)return;
   function ecrire(html){div.innerHTML=html;const dst=document.getElementById("absBody");if(dst)dst.innerHTML=html;}
-  try{const mat=eleve.matricule;const range=encodeURIComponent("ABSENCES!A2:K500");const sheetsId=window._sheetsId2026||eleve.sheetsId||CONFIG.SHEETS_ID;const url="https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";const res=await fetch(url);const data=await res.json();if(!data.values||data.values.length===0){ecrire("<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>Aucune absence enregistree</p>");return;}const absEleve=data.values.filter(row=>String(row[2]||"").trim().toUpperCase()===mat.toUpperCase());if(absEleve.length===0){ecrire("<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>&#10003; Aucune absence enregistree</p>");return;}let totalH=0,justH=0,nonJustH=0;absEleve.forEach(row=>{totalH++;if(String(row[8]||"").toUpperCase()==="OUI")justH++;else nonJustH++;});var htmlStats="<div style='display:flex;gap:8px;margin-bottom:14px;'><div style='flex:1;background:#FFEBEE;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#C62828;margin-bottom:2px;'>TOTAL</p><p style='font-size:1.6em;font-weight:bold;color:#C62828;'>"+totalH+"</p></div><div style='flex:1;background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#2E7D32;margin-bottom:2px;'>JUSTIFIEES</p><p style='font-size:1.6em;font-weight:bold;color:#2E7D32;'>"+justH+"</p></div><div style='flex:1;background:#FFF3E0;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#E65100;margin-bottom:2px;'>NON JUST.</p><p style='font-size:1.6em;font-weight:bold;color:#E65100;'>"+nonJustH+"</p></div></div>";
-var htmlDetail="<div style='margin-top:4px;'>";
-absEleve.slice().reverse().forEach(function(row){
-  var date=String(row[0]||"—").trim();
-  var heure=String(row[1]||"—").trim();
-  var statut=String(row[5]||"").trim().toUpperCase();
-  var motif=String(row[7]||"").trim();
-  var matiere=String(row[10]||"").trim();
-  var enseignant=String(row[9]||"").trim();
-  var estRetard=statut==="RETARD";
-  var col=estRetard?"#E65100":"#C62828";
-  var bg=estRetard?"#FFF3E0":"#FFEBEE";
-  htmlDetail+="<div style='background:"+bg+";border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:4px solid "+col+";'>";
-  htmlDetail+="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;'>";
-  htmlDetail+="<span style='font-size:0.85em;font-weight:bold;color:"+col+";'>"+(estRetard?"⏰ Retard":"❌ Absence")+"</span>";
-  htmlDetail+="<span style='font-size:0.78em;color:#555;'>"+date+" à "+heure+"</span></div>";
-  if(matiere)htmlDetail+="<div style='font-size:0.8em;color:#333;'>Matière : <strong>"+matiere+"</strong></div>";
-  if(enseignant)htmlDetail+="<div style='font-size:0.76em;color:#666;'>Enseignant : "+enseignant+"</div>";
-  if(motif)htmlDetail+="<div style='font-size:0.76em;color:#666;'>Motif : "+motif+"</div>";
-  htmlDetail+="</div>";
-});
-htmlDetail+="</div>";
-ecrire(htmlStats+htmlDetail);}catch(e){ecrire("<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>&#10003; Aucune absence enregistree</p>");}}
 
+  const sheetsId=window._sheetsId2026||eleve.sheetsId||CONFIG.SHEETS_ID;
+  const APPS_SCRIPT_POINTAGE = "https://script.google.com/macros/s/AKfycbx7nBhAMxM_zAMAHCPfPQPkktJ9avtOXm2igfzgOuw9PF1jW0Y7ElUApPoeHvw_F-pT/exec";
+
+  function chargerHeuresAbsenceMois(){
+    return new Promise(function(resolve){
+      try{
+        var maintenant = new Date();
+        var premierJour = new Date(maintenant.getFullYear(), maintenant.getMonth(), 1);
+        var dernierJour = new Date(maintenant.getFullYear(), maintenant.getMonth()+1, 0);
+        function fmt(d){
+          return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+        }
+        var dateDebut = fmt(premierJour);
+        var dateFin = fmt(dernierJour);
+
+        var cbName = 'heuresabs_' + Date.now();
+        var script = document.createElement('script');
+        var timeout = setTimeout(function(){
+          if(window[cbName]){ delete window[cbName]; try{document.body.removeChild(script);}catch(e){} }
+          resolve(null);
+        }, 8000);
+        window[cbName] = function(data){
+          clearTimeout(timeout);
+          delete window[cbName];
+          try{document.body.removeChild(script);}catch(e){}
+          resolve(data && data.ok ? data : null);
+        };
+        script.onerror = function(){
+          clearTimeout(timeout);
+          delete window[cbName];
+          try{document.body.removeChild(script);}catch(e){}
+          resolve(null);
+        };
+        script.src = APPS_SCRIPT_POINTAGE + '?callback=' + cbName +
+          '&type=GET_HEURES_ABSENCE' +
+          '&sheetsId=' + encodeURIComponent(sheetsId) +
+          '&matricule=' + encodeURIComponent(eleve.matricule) +
+          '&dateDebut=' + encodeURIComponent(dateDebut) +
+          '&dateFin=' + encodeURIComponent(dateFin);
+        document.body.appendChild(script);
+      }catch(e){ resolve(null); }
+    });
+  }
+
+  function carteHeuresAbsence(res){
+    if(!res) return "";
+    var minutes = res.totalMinutes || 0;
+    var txt = res.totalTxt || '0h';
+    var nomMois = new Date().toLocaleDateString('fr-FR',{month:'long'});
+    var col = minutes===0 ? "#2E7D32" : minutes<=360 ? "#B8860B" : "#C62828";
+    var bg  = minutes===0 ? "#E8F5E9" : minutes<=360 ? "#FFFDE7" : "#FFEBEE";
+    var icone = minutes===0 ? "&#10003;" : "&#9888;";
+    return "<div style='background:"+bg+";border-radius:10px;padding:14px;text-align:center;margin-bottom:14px;border:1.5px solid "+col+";'>"
+      + "<p style='font-size:0.78em;color:"+col+";font-weight:bold;margin-bottom:4px;'>"+icone+" HEURES D'ABSENCE — "+nomMois.toUpperCase()+"</p>"
+      + "<p style='font-size:1.8em;font-weight:bold;color:"+col+";'>"+txt+"</p>"
+      + "</div>";
+  }
+
+  try{
+    const mat=eleve.matricule;
+    const range=encodeURIComponent("ABSENCES!A2:K500");
+    const url="https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
+
+    const [res, heuresMoisRes] = await Promise.all([fetch(url), chargerHeuresAbsenceMois()]);
+    const data = await res.json();
+    const carteH = carteHeuresAbsence(heuresMoisRes);
+
+    if(!data.values||data.values.length===0){
+      ecrire(carteH+"<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>Aucune absence enregistree</p>");
+      return;
+    }
+    const absEleve=data.values.filter(row=>String(row[2]||"").trim().toUpperCase()===mat.toUpperCase());
+    if(absEleve.length===0){
+      ecrire(carteH+"<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>&#10003; Aucune absence enregistree</p>");
+      return;
+    }
+    let totalH=0,justH=0,nonJustH=0;
+    absEleve.forEach(row=>{totalH++;if(String(row[8]||"").toUpperCase()==="OUI")justH++;else nonJustH++;});
+    var htmlStats="<div style='display:flex;gap:8px;margin-bottom:14px;'><div style='flex:1;background:#FFEBEE;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#C62828;margin-bottom:2px;'>TOTAL</p><p style='font-size:1.6em;font-weight:bold;color:#C62828;'>"+totalH+"</p></div><div style='flex:1;background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#2E7D32;margin-bottom:2px;'>JUSTIFIEES</p><p style='font-size:1.6em;font-weight:bold;color:#2E7D32;'>"+justH+"</p></div><div style='flex:1;background:#FFF3E0;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#E65100;margin-bottom:2px;'>NON JUST.</p><p style='font-size:1.6em;font-weight:bold;color:#E65100;'>"+nonJustH+"</p></div></div>";
+    var htmlDetail="<div style='margin-top:4px;'>";
+    absEleve.slice().reverse().forEach(function(row){
+      var date=String(row[0]||"—").trim();
+      var heure=String(row[1]||"—").trim();
+      var statut=String(row[5]||"").trim().toUpperCase();
+      var motif=String(row[7]||"").trim();
+      var matiere=String(row[10]||"").trim();
+      var enseignant=String(row[9]||"").trim();
+      var estRetard=statut==="RETARD";
+      var col=estRetard?"#E65100":"#C62828";
+      var bg=estRetard?"#FFF3E0":"#FFEBEE";
+      htmlDetail+="<div style='background:"+bg+";border-radius:8px;padding:10px 12px;margin-bottom:8px;border-left:4px solid "+col+";'>";
+      htmlDetail+="<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;'>";
+      htmlDetail+="<span style='font-size:0.85em;font-weight:bold;color:"+col+";'>"+(estRetard?"⏰ Retard":"❌ Absence")+"</span>";
+      htmlDetail+="<span style='font-size:0.78em;color:#555;'>"+date+" à "+heure+"</span></div>";
+      if(matiere)htmlDetail+="<div style='font-size:0.8em;color:#333;'>Matière : <strong>"+matiere+"</strong></div>";
+      if(enseignant)htmlDetail+="<div style='font-size:0.76em;color:#666;'>Enseignant : "+enseignant+"</div>";
+      if(motif)htmlDetail+="<div style='font-size:0.76em;color:#666;'>Motif : "+motif+"</div>";
+      htmlDetail+="</div>";
+    });
+    htmlDetail+="</div>";
+    ecrire(carteH+htmlStats+htmlDetail);
+  }catch(e){
+    ecrire("<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>&#10003; Aucune absence enregistree</p>");
+  }
+}
 
 // ── BULLETIN ANNUEL PDF KOUTOUAN ──────────────────────────────
 const BULLETINS_KOUTOUAN = {
