@@ -445,7 +445,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
       </div>
     </div>
     <button class="btn btn-green" id="btnValiderAppel" onclick="validerAppel()">✅ Valider l'appel</button>
-    <button class="btn btn-outline" id="btnCahierAppel" style="display:none" onclick="goTo('cahier')">📝 Compléter le cahier →</button>
+    <button class="btn btn-outline" id="btnMajAppel" style="display:none" onclick="mettreAJourAppel()">🔄 Mettre à jour l'appel</button>     <button class="btn btn-outline" id="btnCahierAppel" style="display:none" onclick="goTo('cahier')">📝 Compléter le cahier →</button>
     <button class="btn btn-ghost" onclick="goTo('accueil')">← Retour à l'accueil</button>
   </div>
 </div>
@@ -1450,6 +1450,9 @@ function setStatut(e, i, s) {
   eleves[i].statut = s;
   if (s === 'present') { eleves[i].motif = ''; eleves[i].heure = ''; }
   afficherEleves(); majStats();
+  if (coursActuel && coursActuel.horodatageAppel) {
+    document.getElementById('btnMajAppel').style.display = 'flex';
+  }
 }
 function filtrerEleves() {
   const q = document.getElementById('searchEleve').value.toLowerCase().trim();
@@ -1512,6 +1515,41 @@ async function validerAppel() {
     hideLoader();
     sauvegarderHorsLigne('APPEL', {date:formatDate(maintenant), classe:coursActuel.classe, absences});
     showToast('✅ Appel sauvegardé localement','success');
+  }
+}
+
+async function mettreAJourAppel() {
+  if (!coursActuel || !coursActuel.horodatageAppel) return;
+  showLoader('Mise à jour de l\'appel...');
+  const maintenant = new Date();
+  const absences = eleves.filter(e=>e.statut!=='present').map(e=>({
+    date:coursActuel.dateAppel, matricule:e.matricule, nom:e.nom,
+    classe:coursActuel.classe, statut:e.statut, heureArrivee:e.heure||'',
+    motif:e.motif||'', obs:e.obs||'', enseignant:user.nom, matiere:coursActuel.matiere
+  }));
+  const presents = eleves.filter(e=>e.statut==='present').map(e=>e.matricule);
+  try {
+    const res = await envoyerDonnees('CORRECTION_APPEL', {
+      date:coursActuel.dateAppel, classe:coursActuel.classe, enseignant:user.nom,
+      ecole:user.ecole, absences, presents,
+      heureCorrection:formatHeure(maintenant), corrigePar:user.nom
+    });
+    hideLoader();
+    if (res && res.ok === false) {
+      showToast(`❌ Erreur : ${res.error||'echec inconnu'}`,'error');
+      return;
+    }
+    document.getElementById('btnMajAppel').style.display = 'none';
+    const nbP = eleves.filter(e=>e.statut==='present').length;
+    const nbR = eleves.filter(e=>e.statut==='retard').length;
+    const nbA = eleves.filter(e=>e.statut==='absent').length;
+    document.getElementById('resumeAppel').textContent = `${eleves.length} élèves · ${nbP} présents · ${nbR} retards · ${nbA} absents (corrigé à ${formatHeure(maintenant)})`;
+    showToast('✅ Appel mis à jour','success');
+  } catch(e) {
+    hideLoader();
+    sauvegarderHorsLigne('CORRECTION_APPEL', {date:coursActuel.dateAppel, classe:coursActuel.classe, absences, presents});
+    showToast('✅ Correction sauvegardée localement','success');
+    document.getElementById('btnMajAppel').style.display = 'none';
   }
 }
 
@@ -1594,6 +1632,7 @@ async function publierCahier() {
       showToast(msg, calcul.heuresAttente > 0 ? 'warn' : 'success');
       resetCahier();
       coursActuel = null;
+      document.getElementById('btnMajAppel').style.display = 'none';
       chargerBilan();
       setTimeout(() => goToScreen('accueil'), 1800);
     }).catch(() => {
@@ -1602,6 +1641,7 @@ async function publierCahier() {
       showToast('📝 Cahier sauvegardé localement','success');
       resetCahier();
       coursActuel = null;
+      document.getElementById('btnMajAppel').style.display = 'none';
       setTimeout(() => goToScreen('accueil'), 1800);
     });
   }
