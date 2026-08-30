@@ -476,6 +476,25 @@ table tr:nth-child(even){background:#F8FAFD}
       </div>
     </div>
   </div>
+  <div class="section" id="dirSecHeuresAbsence">
+  <div class="sec-head sec-orange" onclick="toggleSec(this)">
+    <h3>⏱️ Heures d'absence — Ce mois <span id="dirHeuresAbsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirHeuresAbsBody">
+    <div style="padding:8px 14px 6px;background:#FFF3E0;border-bottom:1px solid #FFCC80">
+      <span style="font-size:0.72em;color:#E65100;font-weight:600">🔒 Lecture seule — Total d'heures d'absence par élève depuis le 1er du mois</span>
+    </div>
+    <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="dirHeuresAbsFiltreClasse" onchange="filtrerHeuresAbsenceDir()" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+        <option value="">Toutes les classes</option>
+      </select>
+      <button onclick="chargerHeuresAbsenceDir()" style="padding:8px 14px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Charger</button>
+    </div>
+    <div id="dirHeuresAbsListe">
+      <p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur "Charger" pour voir la liste.</p>
+    </div>
+  </div>
+</div>
   <div class="section" id="dirSecAppel">
     <div class="sec-head sec-vert" onclick="toggleSec(this)">
       <h3>&#128203; Appels enseignants &mdash; Aujourd'hui <span id="dirAppelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -2781,7 +2800,26 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
 </div>
-<div class="section" id="comSecProgTrim">
+<div class="section" id="comSecHeuresAbsence">
+  <div class="sec-head sec-orange" onclick="toggleSec(this)">
+    <h3>⏱️ Heures d'absence — Ce mois <span id="comHeuresAbsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="comHeuresAbsBody">
+    <div style="padding:8px 14px 6px;background:#FFF3E0;border-bottom:1px solid #FFCC80">
+      <span style="font-size:0.72em;color:#E65100;font-weight:600">🔒 Lecture seule — Total d'heures d'absence par élève depuis le 1er du mois</span>
+    </div>
+    <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="comHeuresAbsFiltreClasse" onchange="filtrerHeuresAbsenceCom()" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+        <option value="">Toutes les classes</option>
+      </select>
+      <button onclick="chargerHeuresAbsenceCom()" style="padding:8px 14px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Charger</button>
+    </div>
+    <div id="comHeuresAbsListe">
+      <p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur "Charger" pour voir la liste.</p>
+    </div>
+  </div>
+</div>
+  <div class="section" id="comSecProgTrim">
   <div class="sec-head sec-violet" onclick="chargerProgrammeTrimestrielCom();toggleSec(this)">
     <h3>📅 Programme trimestriel — Devoirs surveillés <span id="comProgCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
   </div>
@@ -3175,6 +3213,25 @@ async function attribuerMatriculeCom() {
       </div>
     </div>
   </div>
+ <div class="section" id="eduSecHeuresAbsence">
+  <div class="sec-head sec-orange" onclick="toggleSec(this)">
+    <h3>⏱️ Heures d'absence — Ce mois <span id="eduHeuresAbsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="eduHeuresAbsBody">
+    <div style="padding:8px 14px 6px;background:#FFF3E0;border-bottom:1px solid #FFCC80">
+      <span style="font-size:0.72em;color:#E65100;font-weight:600">🔒 Lecture seule — Total d'heures d'absence par élève, pour vos classes</span>
+    </div>
+    <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="eduHeuresAbsFiltreClasse" onchange="filtrerHeuresAbsenceEdu()" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+        <option value="">Toutes mes classes</option>
+      </select>
+      <button onclick="chargerHeuresAbsenceEdu()" style="padding:8px 14px;background:var(--orange);color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Charger</button>
+    </div>
+    <div id="eduHeuresAbsListe">
+      <p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur "Charger" pour voir la liste.</p>
+    </div>
+  </div>
+</div>
   <div class="section" id="eduSecAppel">
     <div class="sec-head sec-vert open" onclick="toggleSec(this)">
       <h3>&#128203; Appels enseignants &mdash; Aujourd'hui <span id="eduAppelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
