@@ -386,6 +386,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
   </div>
   <div style="padding:16px">
     <div class="form-group"><label class="label">Classe</label><select class="select" id="moyennesClasse" onchange="chargerMoyennes()"><option value="">— Sélectionner —</option></select></div>
+    <div class="form-group" id="moyennesGroupMatiere" style="display:none"><label class="label">Matière</label><select class="select" id="moyennesMatiereSelect" onchange="changerMatiereMoyennes()"></select></div>
     <div class="tabs" id="moyennesTabs"></div>
     <div id="resumeClasse" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center">
@@ -501,6 +502,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
   <div class="header"><div class="header-icon">🎯</div><div class="header-title"><h1>Saisie des notes</h1><p id="notesSousTitre">Sélectionnez une classe</p></div></div>
   <div style="padding:16px" class="has-nav">
     <div class="form-group"><label class="label">Classe</label><select class="select" id="notesClasse" onchange="chargerElevesNotes()"><option value="">— Sélectionner —</option></select></div>
+    <div class="form-group" id="notesGroupMatiere" style="display:none"><label class="label">Matière</label><select class="select" id="notesMatiereSelect" onchange="changerMatiereNotes()"></select></div>
     <div class="grid2">
       <div class="form-group"><label class="label">Devoir N°</label>
         <select class="select" id="notesNumero">
@@ -1690,9 +1692,54 @@ function contacterDirectionGPS() {
 // ══════════════════════════════════════════════
 // NOTES DEVOIRS
 // ══════════════════════════════════════════════
+// ⚠️ NOUVEAU — vérifie si le prof a plusieurs matières pour cette classe précise.
+// Si oui, affiche un sélecteur ; si une seule, remplit automatiquement sans rien montrer.
+let matiereActiveNotes = '';
+async function verifierMatieresClasse(classe, contexte) {
+  const groupeId = contexte === 'notes' ? 'notesGroupMatiere' : 'moyennesGroupMatiere';
+  const selectId = contexte === 'notes' ? 'notesMatiereSelect' : 'moyennesMatiereSelect';
+  const groupe = document.getElementById(groupeId);
+  const select = document.getElementById(selectId);
+  if (!groupe || !select) return;
+
+  groupe.style.display = 'none';
+  select.innerHTML = '';
+
+  try {
+    const cbName = 'mmc_' + Date.now();
+    const script = document.createElement('script');
+    const params = new URLSearchParams({ callback: cbName, type: 'MES_MATIERES_CLASSE', ecole: user.ecole, enseignant: user.nom, classe });
+    const data = await new Promise((resolve) => {
+      window[cbName] = (d) => { resolve(d); delete window[cbName]; try{document.body.removeChild(script);}catch(e){} };
+      script.onerror = () => { resolve({ ok: false }); delete window[cbName]; };
+      script.src = APPS_SCRIPT_URL + '?' + params.toString();
+      document.body.appendChild(script);
+      setTimeout(() => { if (window[cbName]) { delete window[cbName]; resolve({ ok: false }); } }, 10000);
+    });
+
+    if (data && data.ok && data.matieres && data.matieres.length > 1) {
+      data.matieres.forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.textContent = m; select.appendChild(opt); });
+      groupe.style.display = 'block';
+      if (contexte === 'notes') matiereActiveNotes = data.matieres[0];
+      else matiereActiveMoyennes = data.matieres[0];
+    } else if (data && data.ok && data.matieres && data.matieres.length === 1) {
+      if (contexte === 'notes') matiereActiveNotes = data.matieres[0];
+      else matiereActiveMoyennes = data.matieres[0];
+    } else {
+      if (contexte === 'notes') matiereActiveNotes = '';
+      else matiereActiveMoyennes = '';
+    }
+  } catch (e) { console.warn('verifierMatieresClasse:', e); }
+}
+
+function changerMatiereNotes() {
+  matiereActiveNotes = document.getElementById('notesMatiereSelect').value;
+}
+
 async function chargerElevesNotes() {
   const classe = document.getElementById('notesClasse').value;
   if (!classe) return;
+  await verifierMatieresClasse(classe, 'notes');
   document.getElementById('notesSousTitre').textContent = ((coursActuel && coursActuel.matiere) || user.matiere || '') + ' · ' + classe;
   document.getElementById('btnPublierNotes').style.display = 'none';
   document.getElementById('notesBandeauManquants').style.display = 'none';
@@ -1881,9 +1928,9 @@ async function publierNotes() {
   document.getElementById('notesBandeauManquants').style.display = 'none';
 
   showLoader('Publication des notes...');
-  const data = {
+const data = {
     date:formatDate(new Date()), dateRemise, classe,
-    matiere:user.matiere, enseignant:user.nom, ecole:user.ecole,
+    matiere:matiereActiveNotes || user.matiere, enseignant:user.nom, ecole:user.ecole,
     numeroDevoir:numero, trimestre,
   notes:elevesNotes.map(e=>({matricule:e.matricule,nom:e.nom,note:e.note,statutAbsence:e.statutAbsence||'',commentaire:e.commentaire||''}))
   };
@@ -1915,14 +1962,20 @@ function afficherBandeauManquants(noms) {
 // ══════════════════════════════════════════════
 // MOYENNES
 // ══════════════════════════════════════════════
+let matiereActiveMoyennes = '';
+function changerMatiereMoyennes() {
+  matiereActiveMoyennes = document.getElementById('moyennesMatiereSelect').value;
+}
+
 async function chargerMoyennes() {
   const classe = document.getElementById('moyennesClasse').value;
   if (!classe) return;
+  await verifierMatieresClasse(classe, 'moyennes');
   if (!trimestreActif) {
     const onglets = getOnglets(user?.ecole||'');
     trimestreActif = onglets[0].id;
   }
-  document.getElementById('moyennesSousTitre').textContent = classe + ' · ' + (user.matiere||'');
+  document.getElementById('moyennesSousTitre').textContent = classe + ' · ' + (matiereActiveMoyennes || user.matiere || '');
   document.getElementById('btnPublierMoyennes').style.display = 'none';
   document.getElementById('resumeClasse').style.display = 'none';
   document.getElementById('moyennesListe').innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px">⏳ Chargement...</p>';
@@ -2000,8 +2053,8 @@ async function publierMoyennes() {
   if (!classe || !moyennesData[classe]) return;
   showLoader('Publication des moyennes...');
   try {
-    await envoyerDonnees('MOYENNES', {
-      date:formatDate(new Date()), classe, matiere:user.matiere,
+await envoyerDonnees('MOYENNES', {
+      date:formatDate(new Date()), classe, matiere:matiereActiveMoyennes || user.matiere,
       enseignant:user.nom, ecole:user.ecole, trimestre:trimestreActif,
       moyennes:moyennesData[classe].map(e=>({matricule:e.matricule,nom:e.nom,moyenne:e.moyenne!==''?e.moyenne:'ABS'}))
     });
