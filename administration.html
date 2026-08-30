@@ -8809,17 +8809,40 @@ function filtrerSousMoyenneEdu() {
 }
   
 // ══ HEURES D'ABSENCE — Comptable ══
+
+// ══ HEURES D'ABSENCE — Comptable (chargement par classe) ══
 async function chargerHeuresAbsenceCom() {
   const container = document.getElementById('comHeuresAbsListe');
   const countEl = document.getElementById('comHeuresAbsCount');
+  const selCl = document.getElementById('comHeuresAbsFiltreClasse');
   if (!container || !currentStaff) return;
-  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
 
   const sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole];
   if (!sheetsId) {
     container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configurée pour cette école.</p>';
     return;
   }
+
+  if (!window._heuresAbsClassesPeuplees_com) {
+    try {
+      const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+      const resSynth = await fetch(urlSynth);
+      const dataSynth = await resSynth.json();
+      const rows = dataSynth.values || [];
+      var classesUniques = [...new Set(rows.slice(1).map(function(r) { return String(r[0] || '').trim(); }))].filter(Boolean).sort();
+      selCl.innerHTML = '<option value="">-- Choisir une classe --</option>' + classesUniques.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+      window._heuresAbsClassesPeuplees_com = true;
+    } catch (e) {}
+  }
+
+  var classeChoisie = selCl.value;
+  if (!classeChoisie) {
+    container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--orange);font-size:0.82em">⚠️ Sélectionnez une classe puis cliquez "Charger" (le calcul par élève est trop long pour toute l\'école à la fois).</p>';
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
 
   try {
     const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
@@ -8830,15 +8853,16 @@ async function chargerHeuresAbsenceCom() {
     var eleves = [];
     for (var i = 1; i < rows.length; i++) {
       var row = rows[i];
+      var classe = String(row[0] || '').trim();
+      if (classe !== classeChoisie) continue;
       var matricule = String(row[1] || '').trim();
       var nom = String(row[2] || '').trim();
-      var classe = String(row[0] || '').trim();
       if (!matricule || !nom) continue;
       eleves.push({ matricule: matricule, nom: nom, classe: classe });
     }
 
     if (!eleves.length) {
-      container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun élève trouvé.</p>';
+      container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun élève trouvé pour cette classe.</p>';
       if (countEl) countEl.textContent = '(0)';
       return;
     }
@@ -8850,13 +8874,11 @@ async function chargerHeuresAbsenceCom() {
     var dateDebut = fmt(premierJour);
     var dateFin = fmt(dernierJour);
 
-    container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div><p style="font-size:0.82em">Chargement des heures — ' + eleves.length + ' élève(s)...</p></div>';
-
-    var TAILLE_LOT = 5;
+    var TAILLE_LOT = 6;
     for (var j = 0; j < eleves.length; j += TAILLE_LOT) {
       var lot = eleves.slice(j, j + TAILLE_LOT);
       var reponses = await Promise.all(lot.map(function(e) {
-        return appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_HEURES_ABSENCE', sheetsId: sheetsId, matricule: e.matricule, dateDebut: dateDebut, dateFin: dateFin });
+        return appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_HEURES_ABSENCE', sheetsId: sheetsId, matricule: e.matricule, dateDebut: dateDebut, dateFin: dateFin }, 12000);
       }));
       lot.forEach(function(e, idx) {
         var r = reponses[idx];
@@ -8865,52 +8887,226 @@ async function chargerHeuresAbsenceCom() {
       });
     }
 
-    window._heuresAbsCache_com = eleves;
-    if (countEl) countEl.textContent = '(' + eleves.length + ' élève(s))';
+    eleves.sort(function(a, b) { return b.totalMinutes - a.totalMinutes; });
+    if (countEl) countEl.textContent = '(' + eleves.length + ' élève(s) — ' + classeChoisie + ')';
 
-    var selCl = document.getElementById('comHeuresAbsFiltreClasse');
-    if (selCl) {
-      var classesUniques = [...new Set(eleves.map(function(e) { return e.classe; }))].filter(Boolean).sort();
-      var valeurActuelle = selCl.value;
-      selCl.innerHTML = '<option value="">Toutes les classes</option>' + classesUniques.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
-      selCl.value = valeurActuelle;
-    }
-
-    afficherHeuresAbsenceCom();
+    var html = '<div class="tbl-wrap"><table style="min-width:400px"><thead><tr><th>Élève</th><th>Classe</th><th>Heures d\'absence</th></tr></thead><tbody>';
+    eleves.forEach(function(l) {
+      var couleur = l.totalMinutes === 0 ? 'var(--vert)' : l.totalMinutes <= 360 ? '#E65100' : 'var(--rouge)';
+      html += '<tr><td style="font-size:0.8em;font-weight:600">' + l.nom + '</td>';
+      html += '<td style="font-size:0.78em">' + l.classe + '</td>';
+      html += '<td style="text-align:center;font-size:0.82em;font-weight:700;color:' + couleur + '">' + l.totalTxt + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
   } catch (e) {
     container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement.</p>';
   }
 }
 
-function afficherHeuresAbsenceCom() {
-  var container = document.getElementById('comHeuresAbsListe');
-  if (!container) return;
-  var lignes = (window._heuresAbsCache_com || []).filter(function(l) {
-    return !window._heuresAbsFiltreClasse_com || l.classe === window._heuresAbsFiltreClasse_com;
-  });
-  lignes.sort(function(a, b) { return b.totalMinutes - a.totalMinutes; });
+function filtrerHeuresAbsenceCom() { /* rien — l'utilisateur reclique "Charger" après avoir changé de classe */ }
 
-  if (!lignes.length) {
-    container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun élève ne correspond à ce filtre.</p>';
+// ══ HEURES D'ABSENCE — Directeur (chargement par classe) ══
+async function chargerHeuresAbsenceDir() {
+  const container = document.getElementById('dirHeuresAbsListe');
+  const countEl = document.getElementById('dirHeuresAbsCount');
+  const selCl = document.getElementById('dirHeuresAbsFiltreClasse');
+  if (!container || !currentStaff) return;
+
+  const sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole];
+  if (!sheetsId) {
+    container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configurée pour cette école.</p>';
     return;
   }
 
-  var html = '<div class="tbl-wrap"><table style="min-width:400px"><thead><tr><th>Élève</th><th>Classe</th><th>Heures d\'absence</th></tr></thead><tbody>';
-  lignes.forEach(function(l) {
-    var couleur = l.totalMinutes === 0 ? 'var(--vert)' : l.totalMinutes <= 360 ? '#E65100' : 'var(--rouge)';
-    html += '<tr><td style="font-size:0.8em;font-weight:600">' + l.nom + '</td>';
-    html += '<td style="font-size:0.78em">' + l.classe + '</td>';
-    html += '<td style="text-align:center;font-size:0.82em;font-weight:700;color:' + couleur + '">' + l.totalTxt + '</td></tr>';
-  });
-  html += '</tbody></table></div>';
-  container.innerHTML = html;
+  if (!window._heuresAbsClassesPeuplees_dir) {
+    try {
+      const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+      const resSynth = await fetch(urlSynth);
+      const dataSynth = await resSynth.json();
+      const rows = dataSynth.values || [];
+      var classesUniques = [...new Set(rows.slice(1).map(function(r) { return String(r[0] || '').trim(); }))].filter(Boolean).sort();
+      selCl.innerHTML = '<option value="">-- Choisir une classe --</option>' + classesUniques.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+      window._heuresAbsClassesPeuplees_dir = true;
+    } catch (e) {}
+  }
+
+  var classeChoisie = selCl.value;
+  if (!classeChoisie) {
+    container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--orange);font-size:0.82em">⚠️ Sélectionnez une classe puis cliquez "Charger" (le calcul par élève est trop long pour toute l\'école à la fois).</p>';
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+  try {
+    const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    const resSynth = await fetch(urlSynth);
+    const dataSynth = await resSynth.json();
+    const rows = dataSynth.values || [];
+
+    var eleves = [];
+    for (var i = 1; i < rows.length; i++) {
+      var row = rows[i];
+      var classe = String(row[0] || '').trim();
+      if (classe !== classeChoisie) continue;
+      var matricule = String(row[1] || '').trim();
+      var nom = String(row[2] || '').trim();
+      if (!matricule || !nom) continue;
+      eleves.push({ matricule: matricule, nom: nom, classe: classe });
+    }
+
+    if (!eleves.length) {
+      container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun élève trouvé pour cette classe.</p>';
+      if (countEl) countEl.textContent = '(0)';
+      return;
+    }
+
+    var maintenant = new Date();
+    var premierJour = new Date(maintenant.getFullYear(), maintenant.getMonth(), 1);
+    var dernierJour = new Date(maintenant.getFullYear(), maintenant.getMonth() + 1, 0);
+    function fmt(d) { return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(); }
+    var dateDebut = fmt(premierJour);
+    var dateFin = fmt(dernierJour);
+
+    var TAILLE_LOT = 6;
+    for (var j = 0; j < eleves.length; j += TAILLE_LOT) {
+      var lot = eleves.slice(j, j + TAILLE_LOT);
+      var reponses = await Promise.all(lot.map(function(e) {
+        return appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_HEURES_ABSENCE', sheetsId: sheetsId, matricule: e.matricule, dateDebut: dateDebut, dateFin: dateFin }, 12000);
+      }));
+      lot.forEach(function(e, idx) {
+        var r = reponses[idx];
+        e.totalMinutes = (r && r.ok) ? (r.totalMinutes || 0) : 0;
+        e.totalTxt = (r && r.ok) ? (r.totalTxt || '0h') : '—';
+      });
+    }
+
+    eleves.sort(function(a, b) { return b.totalMinutes - a.totalMinutes; });
+    if (countEl) countEl.textContent = '(' + eleves.length + ' élève(s) — ' + classeChoisie + ')';
+
+    var html = '<div class="tbl-wrap"><table style="min-width:400px"><thead><tr><th>Élève</th><th>Classe</th><th>Heures d\'absence</th></tr></thead><tbody>';
+    eleves.forEach(function(l) {
+      var couleur = l.totalMinutes === 0 ? 'var(--vert)' : l.totalMinutes <= 360 ? '#E65100' : 'var(--rouge)';
+      html += '<tr><td style="font-size:0.8em;font-weight:600">' + l.nom + '</td>';
+      html += '<td style="font-size:0.78em">' + l.classe + '</td>';
+      html += '<td style="text-align:center;font-size:0.82em;font-weight:700;color:' + couleur + '">' + l.totalTxt + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement.</p>';
+  }
 }
 
-function filtrerHeuresAbsenceCom() {
-  var sel = document.getElementById('comHeuresAbsFiltreClasse');
-  window._heuresAbsFiltreClasse_com = sel ? sel.value : '';
-  afficherHeuresAbsenceCom();
+function filtrerHeuresAbsenceDir() { /* rien — l'utilisateur reclique "Charger" après avoir changé de classe */ }
+
+// ══ HEURES D'ABSENCE — Éducateur (chargement par classe) ══
+async function chargerHeuresAbsenceEdu() {
+  const container = document.getElementById('eduHeuresAbsListe');
+  const countEl = document.getElementById('eduHeuresAbsCount');
+  const selCl = document.getElementById('eduHeuresAbsFiltreClasse');
+  if (!container || !currentStaff) return;
+
+  const sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole];
+  if (!sheetsId) {
+    container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configurée pour cette école.</p>';
+    return;
+  }
+
+  const classesEdu = currentStaff.classes || [];
+  function normHA(s) { return String(s || '').toUpperCase().trim().replace(/[ÈÉÊËẼ]/g, 'E').replace(/[ÀÂÃÄ]/g, 'A').replace(/[-_]/g, ' ').replace(/\s+/g, ' '); }
+  function appartientHA(classeVal) {
+    if (!classesEdu.length) return true;
+    return classesEdu.some(function(cl) {
+      var nc = normHA(classeVal), ncl = normHA(cl);
+      return nc === ncl || nc.indexOf(ncl + ' ') === 0 || nc.indexOf(' ' + ncl) >= 0 || ncl.indexOf(nc + ' ') === 0;
+    });
+  }
+
+  if (!window._heuresAbsClassesPeuplees_edu) {
+    try {
+      const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+      const resSynth = await fetch(urlSynth);
+      const dataSynth = await resSynth.json();
+      const rows = dataSynth.values || [];
+      var classesUniques = [...new Set(rows.slice(1).map(function(r) { return String(r[0] || '').trim(); }).filter(appartientHA))].filter(Boolean).sort();
+      selCl.innerHTML = '<option value="">-- Choisir une classe --</option>' + classesUniques.map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+      window._heuresAbsClassesPeuplees_edu = true;
+    } catch (e) {}
+  }
+
+  var classeChoisie = selCl.value;
+  if (!classeChoisie) {
+    container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--orange);font-size:0.82em">⚠️ Sélectionnez une classe puis cliquez "Charger".</p>';
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  container.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+  try {
+    const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    const resSynth = await fetch(urlSynth);
+    const dataSynth = await resSynth.json();
+    const rows = dataSynth.values || [];
+
+    var eleves = [];
+    for (var i = 1; i < rows.length; i++) {
+      var row = rows[i];
+      var classe = String(row[0] || '').trim();
+      if (classe !== classeChoisie) continue;
+      var matricule = String(row[1] || '').trim();
+      var nom = String(row[2] || '').trim();
+      if (!matricule || !nom) continue;
+      eleves.push({ matricule: matricule, nom: nom, classe: classe });
+    }
+
+    if (!eleves.length) {
+      container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun élève trouvé pour cette classe.</p>';
+      if (countEl) countEl.textContent = '(0)';
+      return;
+    }
+
+    var maintenant = new Date();
+    var premierJour = new Date(maintenant.getFullYear(), maintenant.getMonth(), 1);
+    var dernierJour = new Date(maintenant.getFullYear(), maintenant.getMonth() + 1, 0);
+    function fmt(d) { return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(); }
+    var dateDebut = fmt(premierJour);
+    var dateFin = fmt(dernierJour);
+
+    var TAILLE_LOT = 6;
+    for (var j = 0; j < eleves.length; j += TAILLE_LOT) {
+      var lot = eleves.slice(j, j + TAILLE_LOT);
+      var reponses = await Promise.all(lot.map(function(e) {
+        return appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_HEURES_ABSENCE', sheetsId: sheetsId, matricule: e.matricule, dateDebut: dateDebut, dateFin: dateFin }, 12000);
+      }));
+      lot.forEach(function(e, idx) {
+        var r = reponses[idx];
+        e.totalMinutes = (r && r.ok) ? (r.totalMinutes || 0) : 0;
+        e.totalTxt = (r && r.ok) ? (r.totalTxt || '0h') : '—';
+      });
+    }
+
+    eleves.sort(function(a, b) { return b.totalMinutes - a.totalMinutes; });
+    if (countEl) countEl.textContent = '(' + eleves.length + ' élève(s) — ' + classeChoisie + ')';
+
+    var html = '<div class="tbl-wrap"><table style="min-width:400px"><thead><tr><th>Élève</th><th>Classe</th><th>Heures d\'absence</th></tr></thead><tbody>';
+    eleves.forEach(function(l) {
+      var couleur = l.totalMinutes === 0 ? 'var(--vert)' : l.totalMinutes <= 360 ? '#E65100' : 'var(--rouge)';
+      html += '<tr><td style="font-size:0.8em;font-weight:600">' + l.nom + '</td>';
+      html += '<td style="font-size:0.78em">' + l.classe + '</td>';
+      html += '<td style="text-align:center;font-size:0.82em;font-weight:700;color:' + couleur + '">' + l.totalTxt + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement.</p>';
+  }
 }
+
+function filtrerHeuresAbsenceEdu() { /* rien — l'utilisateur reclique "Charger" après avoir changé de classe */ }
 
 // ══ HEURES D'ABSENCE — Directeur ══
 async function chargerHeuresAbsenceDir() {
