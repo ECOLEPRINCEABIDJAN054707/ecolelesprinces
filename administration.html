@@ -10354,6 +10354,7 @@ function _parseEleves(dataRows,iMat,iNom,iPrenom,iDu,iVerse,iSolde,iTel1,iTel2,i
       + '/values:batchGet?' + ranges + '&key=' + API_KEY;
     var r = await fetch(url);
     var data = await r.json();
+    console.log('DEBUG filtrerOngletsAvecEleves', JSON.stringify(data).substring(0, 500));
     if (!data.valueRanges) return onglets;
     var ongletsAvecEleves = [];
     data.valueRanges.forEach(function(vr, idx) {
