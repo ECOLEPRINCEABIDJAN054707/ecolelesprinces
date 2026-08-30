@@ -10366,11 +10366,11 @@ function _parseEleves(dataRows,iMat,iNom,iPrenom,iDu,iVerse,iSolde,iTel1,iTel2,i
         if (testRow.some(function(h){ return h === 'MATRICULE' || h === 'N'; })) { headerIdx = li; break; }
       }
       var dataRows = headerIdx >= 0 ? rows.slice(headerIdx + 1) : rows.slice(1);
-      var aDesEleves = dataRows.some(function(row) {
-        return row && row.some(function(cell) { return String(cell||'').trim().length > 1; });
-      });
-      
-      if (aDesEleves) ongletsAvecEleves.push(onglets[idx]);
+        var aDesEleves = dataRows.some(function(row) {
+          return row && row.some(function(cell) { return String(cell||'').trim().length > 1; });
+        });
+        console.log('DEBUG classe=' + onglets[idx] + ' rows.length=' + rows.length + ' headerIdx=' + headerIdx + ' dataRows.length=' + dataRows.length + ' aDesEleves=' + aDesEleves);
+        if (aDesEleves) ongletsAvecEleves.push(onglets[idx]);
     });
     return ongletsAvecEleves;
   } catch (e) {
