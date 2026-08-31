@@ -8949,6 +8949,8 @@ async function chargerHeuresAbsenceCom() {
     }
 
     eleves.sort(function(a, b) { return b.totalMinutes - a.totalMinutes; });
+    window._heuresAbsCache_com = eleves;
+window._heuresAbsFiltreClasse_com = classeChoisie;
     if (countEl) countEl.textContent = '(' + eleves.length + ' élève(s) — ' + classeChoisie + ')';
 
     var html = '<div class="tbl-wrap"><table style="min-width:400px"><thead><tr><th>Élève</th><th>Classe</th><th>Heures d\'absence</th></tr></thead><tbody>';
@@ -9045,6 +9047,8 @@ async function chargerHeuresAbsenceDir() {
     }
 
     eleves.sort(function(a, b) { return b.totalMinutes - a.totalMinutes; });
+    window._heuresAbsCache_dir = eleves;
+window._heuresAbsFiltreClasse_dir = classeChoisie;
     if (countEl) countEl.textContent = '(' + eleves.length + ' élève(s) — ' + classeChoisie + ')';
 
     var html = '<div class="tbl-wrap"><table style="min-width:400px"><thead><tr><th>Élève</th><th>Classe</th><th>Heures d\'absence</th></tr></thead><tbody>';
@@ -9151,6 +9155,8 @@ async function chargerHeuresAbsenceEdu() {
     }
 
     eleves.sort(function(a, b) { return b.totalMinutes - a.totalMinutes; });
+    window._heuresAbsCache_edu = eleves;
+window._heuresAbsFiltreClasse_edu = classeChoisie;
     if (countEl) countEl.textContent = '(' + eleves.length + ' élève(s) — ' + classeChoisie + ')';
 
     var html = '<div class="tbl-wrap"><table style="min-width:400px"><thead><tr><th>Élève</th><th>Classe</th><th>Heures d\'absence</th></tr></thead><tbody>';
