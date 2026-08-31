@@ -439,6 +439,7 @@ table tr:nth-child(even){background:#F8FAFD}
           <option value="">Toutes les matières</option>
         </select>
         <button onclick="chargerNotesSaisiesDir()" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">&#128260; Charger</button>
+     <button onclick="telechargerNotesSaisiesPDF('dir')" style="padding:8px 14px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">📥 PDF</button>
       </div>
       <div id="dirNotesListe">
         <p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur "Charger" pour voir les notes saisies.</p>
@@ -1862,6 +1863,101 @@ async function chargerProgrammeTrimestrielDir() {
     showToast('Erreur génération PDF', 'error');
   }
 }
+  function telechargerNotesSaisiesPDF(espace) {
+  var cache = espace === 'edu' ? window._notesCache_edu : (espace === 'dir' ? window._notesCache_dir : window._notesCache_com);
+  var absMap = espace === 'edu' ? window._notesAbsMap_edu : (espace === 'dir' ? window._notesAbsMap_dir : window._notesAbsMap_com);
+  if (!cache || !cache.length) {
+    showToast('Aucune donnée chargée', 'error');
+    return;
+  }
+  var filtreClasse = espace === 'edu' ? window._notesFiltreClasse_edu : (espace === 'dir' ? window._notesFiltreClasse_dir : window._notesFiltreClasse_com);
+  var filtreMatiere = espace === 'edu' ? window._notesFiltreMatiere_edu : (espace === 'dir' ? window._notesFiltreMatiere_dir : window._notesFiltreMatiere_com);
+  var lignes = cache.filter(function(l) {
+    return (!filtreClasse || l.classe === filtreClasse) && (!filtreMatiere || l.matiere === filtreMatiere);
+  });
+  if (!lignes.length) {
+    showToast('Aucune ligne à exporter pour ce filtre', 'error');
+    return;
+  }
+
+  function absLabelPDF(mat) {
+    var d = absMap && absMap[mat];
+    if (!d || !d.total) return '—';
+    if (d.nonJust > 0) return d.total + ' (' + d.nonJust + ' NJ)';
+    return String(d.total);
+  }
+
+  try {
+    var doc = new jspdf.jsPDF({ orientation: 'landscape' });
+    var pageWidth = doc.internal.pageSize.getWidth();
+    var y = 16;
+
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Notes saisies par classe', pageWidth / 2, y, { align: 'center' });
+    y += 6;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(String(currentStaff.label || currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
+    y += 5;
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text('Généré le ' + new Date().toLocaleDateString('fr-FR'), pageWidth / 2, y, { align: 'center' });
+    y += 8;
+    doc.setTextColor(0);
+
+    var parClasse = {};
+    lignes.forEach(function(l) {
+      if (!parClasse[l.classe]) parClasse[l.classe] = {};
+      if (!parClasse[l.classe][l.matiere]) parClasse[l.classe][l.matiere] = [];
+      parClasse[l.classe][l.matiere].push(l);
+    });
+
+    var headers = ['Élève', 'D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'Moy.', 'Abs.', 'Enseignant'];
+    var colX = [10, 60, 78, 96, 114, 132, 150, 168, 186, 210];
+
+    Object.keys(parClasse).sort().forEach(function(cl) {
+      Object.keys(parClasse[cl]).sort().forEach(function(mat) {
+        if (y > 178) { doc.addPage(); y = 16; }
+        doc.setFillColor(74, 20, 140);
+        doc.setTextColor(255);
+        doc.rect(10, y - 5, pageWidth - 20, 7, 'F');
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'bold');
+        doc.text(cl + ' — ' + mat, 12, y);
+        doc.setTextColor(0);
+        y += 6;
+
+        doc.setFontSize(8);
+        doc.setFont(undefined, 'bold');
+        headers.forEach(function(h, idx) { doc.text(h, colX[idx], y); });
+        y += 4;
+        doc.setDrawColor(180);
+        doc.line(10, y - 3, pageWidth - 10, y - 3);
+        doc.setFont(undefined, 'normal');
+
+        parClasse[cl][mat].forEach(function(l) {
+          if (y > 188) { doc.addPage(); y = 16; }
+          doc.text(String(l.nom).substring(0, 28), colX[0], y);
+          l.notes.forEach(function(n, i) {
+            var val = (n === '' || n === null || n === undefined) ? '—' : String(n);
+            doc.text(val, colX[1 + i], y);
+          });
+          var moyTxt = (l.moyenne !== undefined && l.moyenne !== '' && l.moyenne !== null) ? String(l.moyenne) : '—';
+          doc.text(moyTxt, colX[7], y);
+          doc.text(absLabelPDF(l.matricule), colX[8], y);
+          doc.text(String(l.enseignant || '').substring(0, 22), colX[9], y);
+          y += 5;
+        });
+        y += 4;
+      });
+    });
+
+    doc.save('Notes_' + (currentStaff.ecole || '').replace(/\s+/g, '_') + '.pdf');
+  } catch (e) {
+    showToast('Erreur génération PDF', 'error');
+  }
+}
 function telechargerProgPDF(type, valeur, espace) {
   var cache = espace === 'edu' ? _progCacheEdu : (espace === 'dir' ? _progCacheDir : _progCacheCom);
   if (!cache.length) {
@@ -2822,6 +2918,7 @@ async function attribuerMatriculeCom() {
         <option value="">Toutes les matières</option>
       </select>
       <button onclick="chargerNotesSaisiesCom()" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">&#128260; Charger</button>
+  <button onclick="telechargerNotesSaisiesPDF('com')" style="padding:8px 14px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">📥 PDF</button>
     </div>
     <div id="comNotesListe">
       <p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur "Charger" pour voir les notes saisies.</p>
@@ -3236,6 +3333,7 @@ async function attribuerMatriculeCom() {
           <option value="">Toutes les matières</option>
         </select>
         <button onclick="chargerNotesSaisiesEdu()" style="padding:8px 14px;background:var(--violet);color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">&#128260; Charger</button>
+     <button onclick="telechargerNotesSaisiesPDF('edu')" style="padding:8px 14px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">📥 PDF</button>
       </div>
       <div id="eduNotesListe">
         <p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur "Charger" pour voir les notes saisies.</p>
@@ -7629,6 +7727,7 @@ var lignesFiltrees = lignes.filter(function(l){
           if (justifieCom !== 'OUI') absMap_com[matAbsCom].nonJust++;
         }
       } catch (eAbsCom) {}
+    window._notesAbsMap_com = absMap_com;
       function absLabelCom(mat) {
         var d = absMap_com[mat];
         if (!d || !d.total) return '<span style="color:var(--gris)">—</span>';
@@ -8375,6 +8474,7 @@ async function chargerNotesSaisiesDir() {
           if (justifieDir !== 'OUI') absMap_dir[matAbsDir].nonJust++;
         }
       } catch (eAbsDir) {}
+window._notesAbsMap_dir = absMap_dir;
       function absLabelDir(mat) {
         var d = absMap_dir[mat];
         if (!d || !d.total) return '<span style="color:var(--gris)">—</span>';
@@ -8700,6 +8800,7 @@ async function chargerNotesSaisiesEdu() {
           if (justifieEdu !== 'OUI') absMap_edu[matAbsEdu].nonJust++;
         }
       } catch (eAbsEdu) {}
+    window._notesAbsMap_edu = absMap_edu;
       function absLabelEdu(mat) {
         var d = absMap_edu[mat];
         if (!d || !d.total) return '<span style="color:var(--gris)">—</span>';
