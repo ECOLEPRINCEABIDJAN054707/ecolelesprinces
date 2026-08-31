@@ -1968,8 +1968,9 @@ async function chargerProgrammeTrimestrielDir() {
   }
 }
 
-  function telechargerCoursJourPDF(espace) {
-  var cache = espace === 'dir' ? window._coursJourCache_dir : window._coursJourCache_com;
+function telechargerCoursJourPDF(espace) {
+  var cache = espace === 'dir' ? window._coursJourCache_dir : (espace === 'edu' ? window._coursJourCache_edu : window._coursJourCache_com);
+  var dateAffichee = espace === 'dir' ? window._coursJourDate_dir : (espace === 'edu' ? window._coursJourDate_edu : window._coursJourDate_com);
   if (!cache || !cache.length) {
     showToast('Aucune donnée chargée', 'error');
     return;
@@ -1988,11 +1989,38 @@ async function chargerProgrammeTrimestrielDir() {
     doc.setFont(undefined, 'normal');
     doc.text(String(currentStaff.label || currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
     y += 5;
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'bold');
+    doc.text('Date du planning : ' + (dateAffichee || new Date().toLocaleDateString('fr-FR')), pageWidth / 2, y, { align: 'center' });
+    y += 5;
     doc.setFontSize(8);
+    doc.setFont(undefined, 'normal');
     doc.setTextColor(120);
     doc.text('Généré le ' + new Date().toLocaleDateString('fr-FR'), pageWidth / 2, y, { align: 'center' });
-    y += 9;
+    y += 7;
     doc.setTextColor(0);
+
+    var nbFaits = cache.filter(function(c) { return c.fait; }).length;
+    var nbManquants = cache.filter(function(c) { return c.statut === 'MANQUANT'; }).length;
+    var nbAVenir = cache.filter(function(c) { return c.statut === 'A_VENIR'; }).length;
+    var nbEnCours = cache.filter(function(c) { return c.statut === 'EN_COURS'; }).length;
+
+    doc.setFontSize(9);
+    doc.setFont(undefined, 'bold');
+    doc.setFillColor(232, 245, 233);
+    doc.rect(14, y - 4, 45, 8, 'F');
+    doc.setTextColor(46, 125, 50);
+    doc.text('Faits : ' + nbFaits, 17, y + 1);
+    doc.setFillColor(255, 235, 238);
+    doc.rect(63, y - 4, 45, 8, 'F');
+    doc.setTextColor(198, 40, 40);
+    doc.text('Manquants : ' + nbManquants, 66, y + 1);
+    doc.setFillColor(227, 242, 253);
+    doc.rect(112, y - 4, pageWidth - 126, 8, 'F');
+    doc.setTextColor(31, 78, 121);
+    doc.text('Total : ' + cache.length + (nbEnCours ? ' · En cours : ' + nbEnCours : '') + (nbAVenir ? ' · À venir : ' + nbAVenir : ''), 115, y + 1);
+    doc.setTextColor(0);
+    y += 12;
 
     doc.setFontSize(8);
     doc.setFont(undefined, 'bold');
@@ -10433,7 +10461,7 @@ function renderNotesDevoirs(data) {
 let donneesEDT = [];
 let donneesEDT_filtrees = [];
 
- async function chargerCoursJourEdu(s) {
+async function chargerCoursJourEdu(s, dateChoisie) {
   const container = document.getElementById('eduCoursJourListe');
   const countEl = document.getElementById('eduCoursJourCount');
   if (!container || !s) return;
@@ -10442,13 +10470,16 @@ let donneesEDT_filtrees = [];
   if (!sheetsId) { container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configurée pour cette école.</p>'; return; }
 
   const joursFR = ['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
-  const today = new Date();
-  const jourAuj = joursFR[today.getDay()];
-  const dd = String(today.getDate()).padStart(2,'0');
-  const mm = String(today.getMonth()+1).padStart(2,'0');
-  const yyyy = today.getFullYear();
+  const now = new Date();
+  const refDate = dateChoisie ? new Date(dateChoisie + 'T00:00:00') : now;
+  const jourAuj = joursFR[refDate.getDay()];
+  const dd = String(refDate.getDate()).padStart(2,'0');
+  const mm = String(refDate.getMonth()+1).padStart(2,'0');
+  const yyyy = refDate.getFullYear();
   const dateFormats = [dd+'/'+mm+'/'+yyyy, yyyy+'-'+mm+'-'+dd];
-  const maintenantMin = today.getHours()*60 + today.getMinutes();
+  const estAujourdhuiReel = dd === String(now.getDate()).padStart(2,'0') && mm === String(now.getMonth()+1).padStart(2,'0') && yyyy === now.getFullYear();
+  const maintenantMin = now.getHours()*60 + now.getMinutes();
+  const estFutur = refDate > now && !estAujourdhuiReel;
 
   const norm = str => String(str||'').toUpperCase().trim()
     .replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U')
@@ -10464,7 +10495,6 @@ let donneesEDT_filtrees = [];
   }
 
   try {
-    // 1. Lire EDT_PAR_PROF, filtrer sur le jour + classes de l'éducateur
     const urlEdt = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/EDT_PAR_PROF?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
     const rEdt = await fetch(urlEdt); const dEdt = await rEdt.json();
     let creneaux = [];
@@ -10484,12 +10514,11 @@ let donneesEDT_filtrees = [];
     }
 
     if (!creneaux.length) {
-      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.84em">Aucun cours prévu aujourd\'hui ('+jourAuj+') pour vos classes.</div>';
+      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.84em">Aucun cours prévu ce jour ('+jourAuj+') pour vos classes.</div>';
       if (countEl) countEl.textContent = '(0)';
       return;
     }
 
-    // 2. Lire CAHIER_TEXTES et POINTAGE_MENSUEL du jour — pour savoir ce qui a été fait
     const faits = new Set();
     for (const sn of ['CAHIER_TEXTES', 'POINTAGE_MENSUEL']) {
       try {
@@ -10504,14 +10533,14 @@ let donneesEDT_filtrees = [];
         d.values.slice(1).forEach(row => {
           const dateVal = String(row[iDate>=0?iDate:0]||'').trim();
           const n = parseFloat(dateVal);
-          let estAuj = false;
+          let estCeJour = false;
           if (!isNaN(n) && n > 40000) {
             const dd2 = new Date(Math.round((n-25569)*86400000));
-            estAuj = dd2.getUTCDate()==parseInt(dd) && (dd2.getUTCMonth()+1)==parseInt(mm) && dd2.getUTCFullYear()==parseInt(yyyy);
+            estCeJour = dd2.getUTCDate()==parseInt(dd) && (dd2.getUTCMonth()+1)==parseInt(mm) && dd2.getUTCFullYear()==parseInt(yyyy);
           } else {
-            estAuj = dateFormats.some(f => dateVal.startsWith(f) || dateVal === f);
+            estCeJour = dateFormats.some(f => dateVal.startsWith(f) || dateVal === f);
           }
-          if (!estAuj) return;
+          if (!estCeJour) return;
           const classe = iClasse>=0 ? String(row[iClasse]||'').trim() : '';
           const matiere = iMat>=0 ? String(row[iMat]||'').trim() : '';
           const ens = iEns>=0 ? String(row[iEns]||'').trim() : '';
@@ -10520,19 +10549,25 @@ let donneesEDT_filtrees = [];
       } catch(e) {}
     }
 
-    // 3. Croiser et déterminer le statut de chaque créneau
     creneaux.forEach(c => {
       const cle = norm(c.classe)+'|'+norm(c.matiere)+'|'+norm(c.enseignant);
       c.fait = faits.has(cle);
-      const finMin = parseH(c.heureFin);
-      const debutMin = parseH(c.heureDebut);
-      if (c.fait) c.statut = 'FAIT';
-      else if (maintenantMin < debutMin) c.statut = 'A_VENIR';
-      else if (maintenantMin >= debutMin && maintenantMin <= finMin) c.statut = 'EN_COURS';
-      else c.statut = 'MANQUANT';
+      if (!estAujourdhuiReel) {
+        c.statut = c.fait ? 'FAIT' : (estFutur ? 'A_VENIR' : 'MANQUANT');
+      } else {
+        const finMin = parseH(c.heureFin);
+        const debutMin = parseH(c.heureDebut);
+        if (c.fait) c.statut = 'FAIT';
+        else if (maintenantMin < debutMin) c.statut = 'A_VENIR';
+        else if (maintenantMin >= debutMin && maintenantMin <= finMin) c.statut = 'EN_COURS';
+        else c.statut = 'MANQUANT';
+      }
     });
 
     creneaux.sort((a,b) => parseH(a.heureDebut) - parseH(b.heureDebut));
+
+    window._coursJourCache_edu = creneaux;
+    window._coursJourDate_edu = dd+'/'+mm+'/'+yyyy;
 
     const nbManquants = creneaux.filter(c => c.statut==='MANQUANT').length;
     const nbFaits = creneaux.filter(c => c.fait).length;
@@ -10541,7 +10576,7 @@ let donneesEDT_filtrees = [];
     let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)">';
     html += '<div style="background:#E8F5E9;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:#2E7D32">'+nbFaits+'</div><div style="font-size:0.62em;color:#2E7D32;font-weight:600">✅ Faits</div></div>';
     html += '<div style="background:'+(nbManquants>0?'#FFEBEE':'#F5F5F5')+';border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:'+(nbManquants>0?'var(--rouge)':'var(--gris)')+'">'+nbManquants+'</div><div style="font-size:0.62em;color:'+(nbManquants>0?'var(--rouge)':'var(--gris)')+';font-weight:600">🔴 Manquants</div></div>';
-    html += '<div style="background:#E3F2FD;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:var(--bleu)">'+creneaux.length+'</div><div style="font-size:0.62em;color:var(--bleu);font-weight:600">Total ('+jourAuj+')</div></div>';
+    html += '<div style="background:#E3F2FD;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:var(--bleu)">'+creneaux.length+'</div><div style="font-size:0.62em;color:var(--bleu);font-weight:600">Total ('+jourAuj+' '+dd+'/'+mm+')</div></div>';
     html += '</div>';
 
     creneaux.forEach(c => {
@@ -10564,7 +10599,7 @@ let donneesEDT_filtrees = [];
     container.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur: '+e.message+'</p>';
   }
 } 
-async function chargerCoursJourDir(s) {
+async function chargerCoursJourDir(s, dateChoisie) {
   const container = document.getElementById('dirCoursJourListe');
   const countEl = document.getElementById('dirCoursJourCount');
   if (!container || !s) return;
@@ -10572,13 +10607,16 @@ async function chargerCoursJourDir(s) {
   if (!sheetsId) { container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configurée pour cette école.</p>'; return; }
 
   const joursFR = ['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
-  const today = new Date();
-  const jourAuj = joursFR[today.getDay()];
-  const dd = String(today.getDate()).padStart(2,'0');
-  const mm = String(today.getMonth()+1).padStart(2,'0');
-  const yyyy = today.getFullYear();
+  const now = new Date();
+  const refDate = dateChoisie ? new Date(dateChoisie + 'T00:00:00') : now;
+  const jourAuj = joursFR[refDate.getDay()];
+  const dd = String(refDate.getDate()).padStart(2,'0');
+  const mm = String(refDate.getMonth()+1).padStart(2,'0');
+  const yyyy = refDate.getFullYear();
   const dateFormats = [dd+'/'+mm+'/'+yyyy, yyyy+'-'+mm+'-'+dd];
-  const maintenantMin = today.getHours()*60 + today.getMinutes();
+  const estAujourdhuiReel = dd === String(now.getDate()).padStart(2,'0') && mm === String(now.getMonth()+1).padStart(2,'0') && yyyy === now.getFullYear();
+  const maintenantMin = now.getHours()*60 + now.getMinutes();
+  const estFutur = refDate > now && !estAujourdhuiReel;
 
   const norm = str => String(str||'').toUpperCase().trim()
     .replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U')
@@ -10605,7 +10643,7 @@ async function chargerCoursJourDir(s) {
     }
 
     if (!creneaux.length) {
-      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.84em">Aucun cours prévu aujourd\'hui ('+jourAuj+').</div>';
+      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.84em">Aucun cours prévu ce jour ('+jourAuj+').</div>';
       if (countEl) countEl.textContent = '(0)';
       return;
     }
@@ -10624,14 +10662,14 @@ async function chargerCoursJourDir(s) {
         d.values.slice(1).forEach(row => {
           const dateVal = String(row[iDate>=0?iDate:0]||'').trim();
           const n = parseFloat(dateVal);
-          let estAuj = false;
+          let estCeJour = false;
           if (!isNaN(n) && n > 40000) {
             const dd2 = new Date(Math.round((n-25569)*86400000));
-            estAuj = dd2.getUTCDate()==parseInt(dd) && (dd2.getUTCMonth()+1)==parseInt(mm) && dd2.getUTCFullYear()==parseInt(yyyy);
+            estCeJour = dd2.getUTCDate()==parseInt(dd) && (dd2.getUTCMonth()+1)==parseInt(mm) && dd2.getUTCFullYear()==parseInt(yyyy);
           } else {
-            estAuj = dateFormats.some(f => dateVal.startsWith(f) || dateVal === f);
+            estCeJour = dateFormats.some(f => dateVal.startsWith(f) || dateVal === f);
           }
-          if (!estAuj) return;
+          if (!estCeJour) return;
           const classe = iClasse>=0 ? String(row[iClasse]||'').trim() : '';
           const matiere = iMat>=0 ? String(row[iMat]||'').trim() : '';
           const ens = iEns>=0 ? String(row[iEns]||'').trim() : '';
@@ -10643,17 +10681,22 @@ async function chargerCoursJourDir(s) {
     creneaux.forEach(c => {
       const cle = norm(c.classe)+'|'+norm(c.matiere)+'|'+norm(c.enseignant);
       c.fait = faits.has(cle);
-      const finMin = parseH(c.heureFin);
-      const debutMin = parseH(c.heureDebut);
-      if (c.fait) c.statut = 'FAIT';
-      else if (maintenantMin < debutMin) c.statut = 'A_VENIR';
-      else if (maintenantMin >= debutMin && maintenantMin <= finMin) c.statut = 'EN_COURS';
-      else c.statut = 'MANQUANT';
+      if (!estAujourdhuiReel) {
+        c.statut = c.fait ? 'FAIT' : (estFutur ? 'A_VENIR' : 'MANQUANT');
+      } else {
+        const finMin = parseH(c.heureFin);
+        const debutMin = parseH(c.heureDebut);
+        if (c.fait) c.statut = 'FAIT';
+        else if (maintenantMin < debutMin) c.statut = 'A_VENIR';
+        else if (maintenantMin >= debutMin && maintenantMin <= finMin) c.statut = 'EN_COURS';
+        else c.statut = 'MANQUANT';
+      }
     });
 
     creneaux.sort((a,b) => parseH(a.heureDebut) - parseH(b.heureDebut));
 
     window._coursJourCache_dir = creneaux;
+    window._coursJourDate_dir = dd+'/'+mm+'/'+yyyy;
 
     const nbManquants = creneaux.filter(c => c.statut==='MANQUANT').length;
     const nbFaits = creneaux.filter(c => c.fait).length;
@@ -10662,7 +10705,7 @@ async function chargerCoursJourDir(s) {
     let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)">';
     html += '<div style="background:#E8F5E9;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:#2E7D32">'+nbFaits+'</div><div style="font-size:0.62em;color:#2E7D32;font-weight:600">✅ Faits</div></div>';
     html += '<div style="background:'+(nbManquants>0?'#FFEBEE':'#F5F5F5')+';border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:'+(nbManquants>0?'var(--rouge)':'var(--gris)')+'">'+nbManquants+'</div><div style="font-size:0.62em;color:'+(nbManquants>0?'var(--rouge)':'var(--gris)')+';font-weight:600">🔴 Manquants</div></div>';
-    html += '<div style="background:#E3F2FD;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:var(--bleu)">'+creneaux.length+'</div><div style="font-size:0.62em;color:var(--bleu);font-weight:600">Total ('+jourAuj+')</div></div>';
+    html += '<div style="background:#E3F2FD;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:var(--bleu)">'+creneaux.length+'</div><div style="font-size:0.62em;color:var(--bleu);font-weight:600">Total ('+jourAuj+' '+dd+'/'+mm+')</div></div>';
     html += '</div>';
 
     creneaux.forEach(c => {
@@ -10686,7 +10729,7 @@ async function chargerCoursJourDir(s) {
   }
 }
 
-async function chargerCoursJourCom(s) {
+async function chargerCoursJourCom(s, dateChoisie) {
   const container = document.getElementById('comCoursJourListe');
   const countEl = document.getElementById('comCoursJourCount');
   if (!container || !s) return;
@@ -10694,13 +10737,16 @@ async function chargerCoursJourCom(s) {
   if (!sheetsId) { container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configurée pour cette école.</p>'; return; }
 
   const joursFR = ['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
-  const today = new Date();
-  const jourAuj = joursFR[today.getDay()];
-  const dd = String(today.getDate()).padStart(2,'0');
-  const mm = String(today.getMonth()+1).padStart(2,'0');
-  const yyyy = today.getFullYear();
+  const now = new Date();
+  const refDate = dateChoisie ? new Date(dateChoisie + 'T00:00:00') : now;
+  const jourAuj = joursFR[refDate.getDay()];
+  const dd = String(refDate.getDate()).padStart(2,'0');
+  const mm = String(refDate.getMonth()+1).padStart(2,'0');
+  const yyyy = refDate.getFullYear();
   const dateFormats = [dd+'/'+mm+'/'+yyyy, yyyy+'-'+mm+'-'+dd];
-  const maintenantMin = today.getHours()*60 + today.getMinutes();
+  const estAujourdhuiReel = dd === String(now.getDate()).padStart(2,'0') && mm === String(now.getMonth()+1).padStart(2,'0') && yyyy === now.getFullYear();
+  const maintenantMin = now.getHours()*60 + now.getMinutes();
+  const estFutur = refDate > now && !estAujourdhuiReel;
 
   const norm = str => String(str||'').toUpperCase().trim()
     .replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U')
@@ -10727,7 +10773,7 @@ async function chargerCoursJourCom(s) {
     }
 
     if (!creneaux.length) {
-      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.84em">Aucun cours prévu aujourd\'hui ('+jourAuj+').</div>';
+      container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--gris);font-size:0.84em">Aucun cours prévu ce jour ('+jourAuj+').</div>';
       if (countEl) countEl.textContent = '(0)';
       return;
     }
@@ -10746,14 +10792,14 @@ async function chargerCoursJourCom(s) {
         d.values.slice(1).forEach(row => {
           const dateVal = String(row[iDate>=0?iDate:0]||'').trim();
           const n = parseFloat(dateVal);
-          let estAuj = false;
+          let estCeJour = false;
           if (!isNaN(n) && n > 40000) {
             const dd2 = new Date(Math.round((n-25569)*86400000));
-            estAuj = dd2.getUTCDate()==parseInt(dd) && (dd2.getUTCMonth()+1)==parseInt(mm) && dd2.getUTCFullYear()==parseInt(yyyy);
+            estCeJour = dd2.getUTCDate()==parseInt(dd) && (dd2.getUTCMonth()+1)==parseInt(mm) && dd2.getUTCFullYear()==parseInt(yyyy);
           } else {
-            estAuj = dateFormats.some(f => dateVal.startsWith(f) || dateVal === f);
+            estCeJour = dateFormats.some(f => dateVal.startsWith(f) || dateVal === f);
           }
-          if (!estAuj) return;
+          if (!estCeJour) return;
           const classe = iClasse>=0 ? String(row[iClasse]||'').trim() : '';
           const matiere = iMat>=0 ? String(row[iMat]||'').trim() : '';
           const ens = iEns>=0 ? String(row[iEns]||'').trim() : '';
@@ -10765,17 +10811,22 @@ async function chargerCoursJourCom(s) {
     creneaux.forEach(c => {
       const cle = norm(c.classe)+'|'+norm(c.matiere)+'|'+norm(c.enseignant);
       c.fait = faits.has(cle);
-      const finMin = parseH(c.heureFin);
-      const debutMin = parseH(c.heureDebut);
-      if (c.fait) c.statut = 'FAIT';
-      else if (maintenantMin < debutMin) c.statut = 'A_VENIR';
-      else if (maintenantMin >= debutMin && maintenantMin <= finMin) c.statut = 'EN_COURS';
-      else c.statut = 'MANQUANT';
+      if (!estAujourdhuiReel) {
+        c.statut = c.fait ? 'FAIT' : (estFutur ? 'A_VENIR' : 'MANQUANT');
+      } else {
+        const finMin = parseH(c.heureFin);
+        const debutMin = parseH(c.heureDebut);
+        if (c.fait) c.statut = 'FAIT';
+        else if (maintenantMin < debutMin) c.statut = 'A_VENIR';
+        else if (maintenantMin >= debutMin && maintenantMin <= finMin) c.statut = 'EN_COURS';
+        else c.statut = 'MANQUANT';
+      }
     });
 
     creneaux.sort((a,b) => parseH(a.heureDebut) - parseH(b.heureDebut));
 
     window._coursJourCache_com = creneaux;
+    window._coursJourDate_com = dd+'/'+mm+'/'+yyyy;
 
     const nbManquants = creneaux.filter(c => c.statut==='MANQUANT').length;
     const nbFaits = creneaux.filter(c => c.fait).length;
@@ -10784,7 +10835,7 @@ async function chargerCoursJourCom(s) {
     let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)">';
     html += '<div style="background:#E8F5E9;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:#2E7D32">'+nbFaits+'</div><div style="font-size:0.62em;color:#2E7D32;font-weight:600">✅ Faits</div></div>';
     html += '<div style="background:'+(nbManquants>0?'#FFEBEE':'#F5F5F5')+';border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:'+(nbManquants>0?'var(--rouge)':'var(--gris)')+'">'+nbManquants+'</div><div style="font-size:0.62em;color:'+(nbManquants>0?'var(--rouge)':'var(--gris)')+';font-weight:600">🔴 Manquants</div></div>';
-    html += '<div style="background:#E3F2FD;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:var(--bleu)">'+creneaux.length+'</div><div style="font-size:0.62em;color:var(--bleu);font-weight:600">Total ('+jourAuj+')</div></div>';
+    html += '<div style="background:#E3F2FD;border-radius:8px;padding:8px;text-align:center"><div style="font-size:1.2em;font-weight:700;color:var(--bleu)">'+creneaux.length+'</div><div style="font-size:0.62em;color:var(--bleu);font-weight:600">Total ('+jourAuj+' '+dd+'/'+mm+')</div></div>';
     html += '</div>';
 
     creneaux.forEach(c => {
