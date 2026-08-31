@@ -497,15 +497,24 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div>
-  <div class="section" id="dirSecAppel">
-    <div class="sec-head sec-vert" onclick="toggleSec(this)">
-      <h3>&#128203; Appels enseignants &mdash; Aujourd'hui <span id="dirAppelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
+<div class="section" id="dirSecCoursJour">
+    <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
+      <h3>&#128680; Cours du jour — présence enseignants <span id="dirCoursJourCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
     </div>
-    <div class="sec-body" id="dirAppelBody">
-      <div style="padding:8px 14px;text-align:right">
-        <button onclick="chargerAppelsDir(currentStaff.ecole)" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">&#128260; Actualiser</button>
+    <div class="sec-body open" id="dirCoursJourBody">
+      <div style="padding:8px 14px 6px;background:#FFEBEE;border-bottom:1px solid #FFCDD2">
+        <span style="font-size:0.72em;color:var(--rouge);font-weight:600">Planning EDT du jour croisé avec les cours réellement enregistrés — repère les enseignants absents sans appel</span>
       </div>
-      <div id="dirAppelListe"><div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div></div>
+      <div style="padding:8px 14px;text-align:right">
+        <button onclick="chargerCoursJourDir(currentStaff)" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">&#128260; Actualiser</button>
+        <button onclick="telechargerCoursJourPDF('dir')" style="padding:6px 12px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer;margin-left:6px">&#128229; PDF</button>
+      </div>
+      <div id="dirCoursJourListe">
+        <div style="text-align:center;padding:20px;color:var(--gris)">
+          <div class="spinner-sm" style="margin:0 auto 10px"></div>
+          <p style="font-size:0.82em">Chargement...</p>
+        </div>
+      </div>
     </div>
   </div>
   <div class="section">
@@ -1958,6 +1967,60 @@ async function chargerProgrammeTrimestrielDir() {
     showToast('Erreur génération PDF', 'error');
   }
 }
+
+  function telechargerCoursJourPDF(espace) {
+  var cache = espace === 'dir' ? window._coursJourCache_dir : window._coursJourCache_com;
+  if (!cache || !cache.length) {
+    showToast('Aucune donnée chargée', 'error');
+    return;
+  }
+
+  try {
+    var doc = new jspdf.jsPDF();
+    var pageWidth = doc.internal.pageSize.getWidth();
+    var y = 18;
+
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Cours du jour — Présence enseignants', pageWidth / 2, y, { align: 'center' });
+    y += 7;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(String(currentStaff.label || currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
+    y += 5;
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text('Généré le ' + new Date().toLocaleDateString('fr-FR'), pageWidth / 2, y, { align: 'center' });
+    y += 9;
+    doc.setTextColor(0);
+
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'bold');
+    var colX = [14, 65, 105, 140, 165];
+    var headers = ['Enseignant', 'Classe', 'Matière', 'Horaire', 'Statut'];
+    headers.forEach(function(h, idx) { doc.text(h, colX[idx], y); });
+    y += 5;
+    doc.setDrawColor(180);
+    doc.line(14, y - 3, pageWidth - 14, y - 3);
+    doc.setFont(undefined, 'normal');
+
+    var labels = { FAIT: 'Fait', EN_COURS: 'En cours - rien saisi', A_VENIR: 'A venir', MANQUANT: 'Rien enregistre' };
+
+    cache.forEach(function(c) {
+      if (y > 280) { doc.addPage(); y = 18; }
+      doc.text(String(c.enseignant).substring(0, 28), colX[0], y);
+      doc.text(String(c.classe), colX[1], y);
+      doc.text(String(c.matiere).substring(0, 18), colX[2], y);
+      doc.text(c.heureDebut + '-' + c.heureFin, colX[3], y);
+      doc.text(labels[c.statut] || c.statut, colX[4], y);
+      y += 5.5;
+    });
+
+    doc.save('Cours_du_jour_' + (currentStaff.ecole || '').replace(/\s+/g, '_') + '.pdf');
+  } catch (e) {
+    showToast('Erreur génération PDF', 'error');
+  }
+}
 function telechargerProgPDF(type, valeur, espace) {
   var cache = espace === 'edu' ? _progCacheEdu : (espace === 'dir' ? _progCacheDir : _progCacheCom);
   if (!cache.length) {
@@ -2517,15 +2580,24 @@ async function sauvegarderPersonnelDir(idx) {
     </div>
   </div>
 </div>
-  <div class="section" id="comSecAppel">
-    <div class="sec-head sec-vert" onclick="toggleSec(this)">
-      <h3>&#128203; Appels enseignants &mdash; Aujourd'hui <span id="comAppelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
+<div class="section" id="comSecCoursJour">
+    <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
+      <h3>&#128680; Cours du jour — présence enseignants <span id="comCoursJourCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
     </div>
-    <div class="sec-body" id="comAppelBody">
-      <div style="padding:8px 14px;text-align:right">
-        <button onclick="chargerAppelsCom(currentStaff.ecole)" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">&#128260; Actualiser</button>
+    <div class="sec-body open" id="comCoursJourBody">
+      <div style="padding:8px 14px 6px;background:#FFEBEE;border-bottom:1px solid #FFCDD2">
+        <span style="font-size:0.72em;color:var(--rouge);font-weight:600">Planning EDT du jour croisé avec les cours réellement enregistrés — repère les enseignants absents sans appel</span>
       </div>
-      <div id="comAppelListe"><div style="text-align:center;padding:20px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div></div>
+      <div style="padding:8px 14px;text-align:right">
+        <button onclick="chargerCoursJourCom(currentStaff)" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">&#128260; Actualiser</button>
+        <button onclick="telechargerCoursJourPDF('com')" style="padding:6px 12px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer;margin-left:6px">&#128229; PDF</button>
+      </div>
+      <div id="comCoursJourListe">
+        <div style="text-align:center;padding:20px;color:var(--gris)">
+          <div class="spinner-sm" style="margin:0 auto 10px"></div>
+          <p style="font-size:0.82em">Chargement...</p>
+        </div>
+      </div>
     </div>
   </div>
  <!-- ============================================================
@@ -5070,7 +5142,7 @@ function afficherDir(s){
   alertes.forEach(a=>{ha+='<div class="alerte-item"><div class="alerte-ico">'+a.ico+'</div><div><div class="alerte-nom">'+a.nom+'</div><div class="alerte-detail">'+a.detail+'</div></div></div>';});
   document.getElementById('dirAlertesBody').innerHTML=ha;
   const dsa=document.getElementById('dStatAlert');if(dsa)dsa.textContent=alertes.length;
-  chargerSuiviPedagogique();setTimeout(initSaisiePedago,500);setTimeout(function(){chargerAppelsDir(s.ecole);},600);
+  chargerSuiviPedagogique();setTimeout(initSaisiePedago,500);setTimeout(function(){chargerCoursJourDir(s);},600);
 setTimeout(function(){chargerMasseSalarialeDir(s.ecole);},600);
   setTimeout(function(){chargerRecepParentsDir(s.ecole);},700);
   let hag='';AGENDA_DEMO.forEach(a=>{hag+='<div class="agenda-item"><div class="agenda-date" style="background:'+a.col+'"><div class="jour">'+a.jour+'</div><div class="mois">'+a.mois+'</div></div><div><div class="agenda-titre">'+a.titre+'</div><div class="agenda-detail">'+a.detail+'</div></div></div>';});
@@ -7621,7 +7693,7 @@ peuplerClassesReellesCom(s.ecole);
   document.getElementById('comAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
   document.getElementById('comNom').textContent=s.nom;document.getElementById('comEcole').textContent=s.label;
   document.getElementById('cStatTaches').textContent=TACHES_DEMO.filter(t=>!t.done).length;
- chargerAppelsCom(s.ecole); 
+ chargerCoursJourCom(s);
 setTimeout(function(){chargerAffectationTousCom();},700);
   setTimeout(function(){chargerMasseSalarialeCom(s.ecole);},600);
   remplirMoisCom();
