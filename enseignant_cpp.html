@@ -1082,6 +1082,17 @@ async function demarrerCoursDepuisEDT(idx) {
   const c = window._mesCoursJour[idx];
   if (!c) return;
 
+  // ⚠️ NOUVEAU — bloque l'appel si l'heure prévue du cours n'est pas encore arrivée
+  const TOLERANCE_AVANT = 10; // minutes de marge autorisée avant l'heure EDT
+  const maintenant = new Date();
+  const minMaintenant = maintenant.getHours() * 60 + maintenant.getMinutes();
+  const minDebut = parseMin(c.heureDebut);
+  if (minDebut !== null && minMaintenant < (minDebut - TOLERANCE_AVANT)) {
+    const minutesRestantes = (minDebut - TOLERANCE_AVANT) - minMaintenant;
+    showToast(`⏰ Ce cours commence à ${c.heureDebut} — revenez dans ${minutesRestantes} min`, 'warn');
+    return;
+  }
+
   function normaliser(s) {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
   }
