@@ -1804,6 +1804,64 @@ async function chargerProgrammeTrimestrielDir() {
     showToast('Erreur génération PDF', 'error');
   }
 }
+  function telechargerHeuresAbsencePDF(espace) {
+  var cache = espace === 'edu' ? window._heuresAbsCache_edu : (espace === 'dir' ? window._heuresAbsCache_dir : window._heuresAbsCache_com);
+  if (!cache || !cache.length) {
+    showToast('Aucune donnée chargée', 'error');
+    return;
+  }
+  var filtreClasse = espace === 'edu' ? window._heuresAbsFiltreClasse_edu : (espace === 'dir' ? window._heuresAbsFiltreClasse_dir : window._heuresAbsFiltreClasse_com);
+  var lignes = cache.filter(function(l) {
+    return !filtreClasse || l.classe === filtreClasse;
+  });
+  lignes.sort(function(a, b) { return b.totalMinutes - a.totalMinutes; });
+  if (!lignes.length) {
+    showToast('Aucun élève ne correspond à ce filtre', 'error');
+    return;
+  }
+
+  try {
+    var doc = new jspdf.jsPDF();
+    var pageWidth = doc.internal.pageSize.getWidth();
+    var y = 18;
+
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text("Heures d'absence — Ce mois", pageWidth / 2, y, { align: 'center' });
+    y += 7;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(String(currentStaff.label || currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
+    y += 5;
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text('Généré le ' + new Date().toLocaleDateString('fr-FR'), pageWidth / 2, y, { align: 'center' });
+    y += 9;
+    doc.setTextColor(0);
+
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'bold');
+    var colX = [14, 90, 150];
+    var headers = ['Élève', 'Classe', "Heures d'absence"];
+    headers.forEach(function(h, idx) { doc.text(h, colX[idx], y); });
+    y += 5;
+    doc.setDrawColor(180);
+    doc.line(14, y - 3, pageWidth - 14, y - 3);
+    doc.setFont(undefined, 'normal');
+
+    lignes.forEach(function(l) {
+      if (y > 280) { doc.addPage(); y = 18; }
+      doc.text(String(l.nom).substring(0, 35), colX[0], y);
+      doc.text(String(l.classe), colX[1], y);
+      doc.text(String(l.totalTxt), colX[2], y);
+      y += 5.5;
+    });
+
+    doc.save('Heures_absence_' + (currentStaff.ecole || '').replace(/\s+/g, '_') + '.pdf');
+  } catch (e) {
+    showToast('Erreur génération PDF', 'error');
+  }
+}
 function telechargerProgPDF(type, valeur, espace) {
   var cache = espace === 'edu' ? _progCacheEdu : (espace === 'dir' ? _progCacheDir : _progCacheCom);
   if (!cache.length) {
