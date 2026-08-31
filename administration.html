@@ -506,7 +506,8 @@ table tr:nth-child(even){background:#F8FAFD}
         <span style="font-size:0.72em;color:var(--rouge);font-weight:600">Planning EDT du jour croisé avec les cours réellement enregistrés — repère les enseignants absents sans appel</span>
       </div>
       <div style="padding:8px 14px;text-align:right">
-        <button onclick="chargerCoursJourDir(currentStaff)" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">&#128260; Actualiser</button>
+        <input type="date" id="dirCoursJourDate" style="padding:6px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.76em;margin-right:6px">
+<button onclick="chargerCoursJourDir(currentStaff, document.getElementById('dirCoursJourDate').value)" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">&#128260; Actualiser</button>
         <button onclick="telechargerCoursJourPDF('dir')" style="padding:6px 12px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer;margin-left:6px">&#128229; PDF</button>
       </div>
       <div id="dirCoursJourListe">
@@ -2617,7 +2618,8 @@ async function sauvegarderPersonnelDir(idx) {
         <span style="font-size:0.72em;color:var(--rouge);font-weight:600">Planning EDT du jour croisé avec les cours réellement enregistrés — repère les enseignants absents sans appel</span>
       </div>
       <div style="padding:8px 14px;text-align:right">
-        <button onclick="chargerCoursJourCom(currentStaff)" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">&#128260; Actualiser</button>
+       <input type="date" id="comCoursJourDate" style="padding:6px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.76em;margin-right:6px">
+<button onclick="chargerCoursJourCom(currentStaff, document.getElementById('comCoursJourDate').value)" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">&#128260; Actualiser</button>
         <button onclick="telechargerCoursJourPDF('com')" style="padding:6px 12px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer;margin-left:6px">&#128229; PDF</button>
       </div>
       <div id="comCoursJourListe">
@@ -3510,6 +3512,11 @@ async function attribuerMatriculeCom() {
     <div class="sec-body open" id="eduCoursJourBody">
       <div style="padding:8px 14px 6px;background:#FFEBEE;border-bottom:1px solid #FFCDD2">
         <span style="font-size:0.72em;color:var(--rouge);font-weight:600">Planning EDT du jour croisé avec les cours réellement enregistrés — repère les enseignants absents sans appel</span>
+      </div>
+            <div style="padding:8px 14px;text-align:right">
+        <input type="date" id="eduCoursJourDate" style="padding:6px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.76em;margin-right:6px">
+        <button onclick="chargerCoursJourEdu(currentStaff, document.getElementById('eduCoursJourDate').value)" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">&#128260; Actualiser</button>
+        <button onclick="telechargerCoursJourPDF('edu')" style="padding:6px 12px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer;margin-left:6px">&#128229; PDF</button>
       </div>
       <div id="eduCoursJourListe">
         <div style="text-align:center;padding:20px;color:var(--gris)">
