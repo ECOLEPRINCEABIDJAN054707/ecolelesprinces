@@ -8671,14 +8671,14 @@ function filtrerSousMoyenneDir() {
         }
         return dateFormats.some(f => dateVal.startsWith(f) || dateVal === f);
       }).map(row => ({
-        heure: iHeure>=0 ? String(row[iHeure]||'').trim() : '',
+       heure: iHeure>=0 ? toHeure(row[iHeure]) : '',
         enseignant: iEns>=0 ? String(row[iEns]||'').trim() : '',
         classe: iClasse>=0 ? String(row[iClasse]||'').trim() : '',
         matiere: iMatiere>=0 ? String(row[iMatiere]||'').trim() : '',
         presents: iPresents>=0 ? parseInt(row[iPresents])||0 : 0,
         total: iTotal>=0 ? parseInt(row[iTotal])||0 : 0,
         taux: iTaux>=0 ? parseFloat(row[iTaux])||0 : 0
-      })).filter(a => a.enseignant || a.classe);
+     })).filter(a => a.enseignant);
     }
   } catch(e) {}
 
@@ -9324,13 +9324,13 @@ function filtrerHeuresAbsenceEdu() { /* rien — l'utilisateur reclique "Charger
         }
         return dateFormats.some(f => dateVal.startsWith(f) || dateVal === f);
       }).map(row => ({
-        heure: iHeure>=0 ? String(row[iHeure]||'').trim() : '',
+        heure: iHeure>=0 ? toHeure(row[iHeure]) : '',
         enseignant: iEns>=0 ? String(row[iEns]||'').trim() : '',
         classe: iClasse>=0 ? String(row[iClasse]||'').trim() : '',
         matiere: iMatiere>=0 ? String(row[iMatiere]||'').trim() : '',
         presents: iPresents>=0 ? parseInt(row[iPresents])||0 : 0,
         total: iTotal>=0 ? parseInt(row[iTotal])||0 : 0
-      })).filter(a => (a.enseignant || a.classe) && appartientEdu(a.classe));
+      })).filter(a => a.enseignant && appartientEdu(a.classe));
     }
   } catch(e) {}
 
@@ -9582,14 +9582,14 @@ async function chargerAppelsCom(ecole) {
         }
         return dateFormats.some(f => dateVal.startsWith(f) || dateVal === f);
       }).map(row => ({
-        heure: iHeure>=0 ? String(row[iHeure]||'').trim() : '',
+       heure: iHeure>=0 ? toHeure(row[iHeure]) : '',
         enseignant: iEns>=0 ? String(row[iEns]||'').trim() : '',
         classe: iClasse>=0 ? String(row[iClasse]||'').trim() : '',
         matiere: iMatiere>=0 ? String(row[iMatiere]||'').trim() : '',
         presents: iPresents>=0 ? parseInt(row[iPresents])||0 : 0,
         total: iTotal>=0 ? parseInt(row[iTotal])||0 : 0,
         taux: iTaux>=0 ? parseFloat(row[iTaux])||0 : 0
-      })).filter(a => a.enseignant || a.classe);
+      })).filter(a => a.enseignant);
     }
   } catch(e) {}
 
