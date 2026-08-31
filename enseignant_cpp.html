@@ -1096,16 +1096,35 @@ async function demarrerCoursDepuisEDT(idx) {
   function normaliser(s) {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
   }
+  // ⚠️ NOUVEAU — repli supplémentaire sans aucun espace (ex: "CE1 A" doit matcher l'onglet "CE1A")
+  function normaliserSansEspace(s) {
+    return normaliser(s).replace(/\s+/g, '');
+  }
+
   const sel = document.getElementById('modalClasse');
   const cible = normaliser(c.classe);
+  const cibleSansEspace = normaliserSansEspace(c.classe);
   let trouve = false;
-  for (let i = 0; i < sel.options.length; i++) {
-    if (normaliser(sel.options[i].value) === cible) {
-      sel.selectedIndex = i;
-      trouve = true;
-      break;
+
+  function chercherDansListe() {
+    // 1er essai : comparaison normale (espaces conservés)
+    for (let i = 0; i < sel.options.length; i++) {
+      if (normaliser(sel.options[i].value) === cible) {
+        sel.selectedIndex = i;
+        return true;
+      }
     }
+    // 2e essai : comparaison sans aucun espace (repli)
+    for (let i = 0; i < sel.options.length; i++) {
+      if (normaliserSansEspace(sel.options[i].value) === cibleSansEspace) {
+        sel.selectedIndex = i;
+        return true;
+      }
+    }
+    return false;
   }
+
+  trouve = chercherDansListe();
 
   // ⚠️ CORRIGÉ — si la liste n'est pas encore chargée (course réseau),
   // on attend chargerClasses() pour obtenir les VRAIS noms d'onglets
@@ -1115,13 +1134,7 @@ async function demarrerCoursDepuisEDT(idx) {
     showLoader('Chargement de la classe...');
     await chargerClasses();
     hideLoader();
-    for (let i = 0; i < sel.options.length; i++) {
-      if (normaliser(sel.options[i].value) === cible) {
-        sel.selectedIndex = i;
-        trouve = true;
-        break;
-      }
-    }
+    trouve = chercherDansListe();
   }
 
   if (!trouve) {
