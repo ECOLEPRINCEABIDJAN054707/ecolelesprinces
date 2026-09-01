@@ -347,7 +347,7 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
           <div class="step"><div class="step-n" style="background:#1F6FEB;">7</div><p>Entrez le <strong>montant</strong> que vous pouvez payer</p></div>
           <div class="step"><div class="step-n" style="background:#1F6FEB;">8</div><p>Confirmez avec votre <strong>code PIN</strong></p></div>
         </div>
-        <div id="sectionOrangeMoney" style="background:#FFF3E0;border-radius:10px;padding:14px;margin-bottom:12px;border-left:4px solid #FF6600;">
+        <div id="sectionOrangeMoney" style="background:#FFF3E0;border-radius:10px;padding:14px;margin-bottom:12px;border-left:4px solid #FF6600;display:none;">
           <p style="font-weight:bold;color:#FF6600;font-size:0.9em;margin-bottom:12px;">&#127820; PAYER VIA ORANGE MONEY (Max It)</p>
           <div id="orangeMoneyContent"></div>
           <p style="font-size:0.78em;color:#888;margin-top:10px;">Pas encore Max It ? <a href="https://play.google.com/store/apps/details?id=com.orange.myorange.oci&hl=fr" target="_blank" style="color:#FF6600;">Android</a> · <a href="https://apps.apple.com/ci/app/orange-max-it-c%C3%B4te-divoire/id1061120855" target="_blank" style="color:#FF6600;">iPhone</a></p>
@@ -3467,5 +3467,16 @@ function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.
   </div>
 </div>
 
+  <script>
+(function() {
+  // Masquage temporaire du bloc Orange Money — réapparaît automatiquement après le 01/09/2026
+  var dateLimite = new Date('2026-09-02T00:00:00');
+  var maintenant = new Date();
+  if (maintenant >= dateLimite) {
+    var bloc = document.getElementById('sectionOrangeMoney');
+    if (bloc) bloc.style.display = 'block';
+  }
+})();
+</script>
 </body>
 </html>
