@@ -2637,6 +2637,32 @@ async function sauvegarderPersonnelDir(idx) {
     </div>
   </div>
 </div>
+  <div class="section" id="comSecEdtClasse">
+  <div class="sec-head sec-or" onclick="toggleSec(this);peuplerEdtClasseSelectCom()">
+    <h3>&#128197; Emploi du temps &mdash; Classe</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:8px">
+      <select id="comEdtClasseSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
+      <button onclick="chargerEdtClasseCom()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
+      <button onclick="exporterEdtClassePDFCom()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+      <div id="comEdtClasseBody" style="padding:12px 0"></div>
+    </div>
+  </div>
+</div>
+  <div class="section" id="comSecEdtProf">
+  <div class="sec-head sec-or" onclick="toggleSec(this);peuplerEdtProfSelectCom()">
+    <h3>&#128197; Emploi du temps &mdash; Enseignant</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:8px">
+      <select id="comEdtProfSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
+      <button onclick="chargerEdtProfCom()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
+      <button onclick="exporterEdtProfPDFCom()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+      <div id="comEdtProfBody" style="padding:12px 0"></div>
+    </div>
+  </div>
+</div>
 <div class="section" id="comSecCoursJour">
     <div class="sec-head sec-rouge open" onclick="toggleSec(this)">
       <h3>&#128680; Cours du jour — présence enseignants <span id="comCoursJourCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -12064,7 +12090,266 @@ function exporterEdtProfPDF() {
 
   doc.save('EDT_' + _edtProfCourant.prof + '.pdf');
 }
-  
+
+  async function peuplerEdtClasseSelectCom() {
+  const sel = document.getElementById('comEdtClasseSelect');
+  if (!sel || !currentStaff) return;
+  sel.innerHTML = '<option>Chargement...</option>';
+  const res = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LISTER_CLASSES_EDT', ecole: currentStaff.ecole });
+  if (res && res.ok && res.classes && res.classes.length) {
+    const classesFiltrees = res.classes.filter(c => !/^(PAR_PROF|ENSEIGNANTS)$/i.test(c));
+    sel.innerHTML = classesFiltrees.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+  } else {
+    sel.innerHTML = '<option>Aucune classe trouvée</option>';
+  }
+}
+
+let _edtClasseCouranteCom = null;
+
+async function chargerEdtClasseCom() {
+  const classe = document.getElementById('comEdtClasseSelect').value;
+  const body = document.getElementById('comEdtClasseBody');
+  if (!classe || !currentStaff) return;
+  body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+  const res = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_EDT', ecole: currentStaff.ecole, classe: classe });
+  if (!res || !res.ok) {
+    body.innerHTML = '<p style="color:var(--rouge)">EDT introuvable pour cette classe.</p>';
+    return;
+  }
+  _edtClasseCouranteCom = { classe: classe, lignes: res.lignes, profPrincipal: res.profPrincipal || '' };
+  let h = '<div style="font-weight:bold;margin-bottom:8px">Professeur Principal : ' + (_edtClasseCouranteCom.profPrincipal || '<span style="color:var(--gris);font-weight:normal">non renseigné</span>') + '</div>';
+  h += '<table style="width:100%;border-collapse:collapse;font-size:0.82em"><thead><tr>';
+  h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">Horaire</th>';
+  JOURS_LABELS.forEach(j => h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">' + j + '</th>');
+  h += '</tr></thead><tbody>';
+  _edtClasseCouranteCom.lignes.forEach(function(l) {
+    h += '<tr><td style="border:1px solid var(--border);padding:6px;font-weight:bold">' + l.creneau + '</td>';
+    JOURS_EDT.forEach(function(j) {
+      h += '<td style="border:1px solid var(--border);padding:6px">' + (l[j] || '') + '</td>';
+    });
+    h += '</tr>';
+  });
+  h += '</tbody></table>';
+  body.innerHTML = h;
+}
+
+function exporterEdtClassePDFCom() {
+  if (!_edtClasseCouranteCom || !window.jspdf) { showToast('Charge d\'abord un EDT', 'error'); return; }
+  const doc = new jspdf.jsPDF({ orientation: 'landscape' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  let y = 16;
+
+  if (_logoCppBase64) {
+    try { doc.addImage(_logoCppBase64, 'PNG', 14, 8, 20, 20); } catch (e) {}
+  }
+
+  doc.setFontSize(18);
+  doc.setFont(undefined, 'bold');
+  doc.text('EMPLOI DU TEMPS — ' + _edtClasseCouranteCom.classe, pageWidth / 2, y, { align: 'center' });
+  y += 8;
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'normal');
+  doc.text(String(currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
+  y += 6;
+  doc.setFontSize(11);
+  doc.text('Année scolaire : 2026-2027', pageWidth / 2, y, { align: 'center' });
+  y += 8;
+  doc.setFontSize(10);
+  doc.text('Professeur Principal : ' + (_edtClasseCouranteCom.profPrincipal || '______________________________'), 14, y);
+  y += 8;
+
+  const colWidths = [30, 42, 42, 42, 42, 42, 42];
+  const startX = 10;
+  const headers = ['Horaire'].concat(JOURS_LABELS);
+
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'bold');
+  let x = startX;
+  headers.forEach(function(h, i) {
+    doc.rect(x, y, colWidths[i], 9);
+    doc.text(h, x + 2, y + 6);
+    x += colWidths[i];
+  });
+  y += 9;
+
+  doc.setFont(undefined, 'normal');
+  doc.setFontSize(9);
+  _edtClasseCouranteCom.lignes.forEach(function(l) {
+    const estSpeciale = /RÉCR|RECR|DÉJEUNER|DEJEUNER/i.test(l.creneau);
+    if (estSpeciale) {
+      const largeurTotale = colWidths.reduce((a, b) => a + b, 0);
+      doc.setFillColor(230, 230, 230);
+      doc.rect(startX, y, largeurTotale, 9, 'FD');
+      doc.setFont(undefined, 'bold');
+      doc.text(l.creneau, startX + largeurTotale / 2, y + 6, { align: 'center' });
+      doc.setFont(undefined, 'normal');
+      y += 9;
+    } else {
+      x = startX;
+      const valeurs = [l.creneau, l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi, l.samedi];
+      valeurs.forEach(function(v, i) {
+        doc.rect(x, y, colWidths[i], 9);
+        doc.text(String(v || ''), x + 2, y + 6);
+        x += colWidths[i];
+      });
+      y += 9;
+    }
+    if (y > pageHeight - 35) { doc.addPage(); y = 15; }
+  });
+
+  y += 15;
+  if (y > pageHeight - 25) { doc.addPage(); y = 20; }
+  doc.setFontSize(10);
+  doc.text('Fait à Abidjan, le ' + new Date().toLocaleDateString('fr-FR'), 14, y);
+  y += 15;
+  doc.text('Le Directeur des Études', pageWidth - 70, y);
+  y += 20;
+  doc.text('_____________________', pageWidth - 75, y);
+
+  doc.save('EDT_' + _edtClasseCouranteCom.classe + '.pdf');
+}
+
+async function peuplerEdtProfSelectCom() {
+  const sel = document.getElementById('comEdtProfSelect');
+  if (!sel || !currentStaff) return;
+  sel.innerHTML = '<option>Chargement...</option>';
+  const res = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LISTER_ENSEIGNANTS_ACTIFS', ecole: currentStaff.ecole });
+  if (res && res.ok && res.noms && res.noms.length) {
+    sel.innerHTML = res.noms.map(n => '<option value="' + n + '">' + n + '</option>').join('');
+  } else {
+    sel.innerHTML = '<option>Aucun enseignant trouvé</option>';
+  }
+}
+
+let _edtProfCourantCom = null;
+
+async function chargerEdtProfCom() {
+  const prof = document.getElementById('comEdtProfSelect').value;
+  const body = document.getElementById('comEdtProfBody');
+  if (!prof || !currentStaff) return;
+  body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+  const res = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_EDT_PROF', ecole: currentStaff.ecole, prof: prof });
+  if (!res || !res.ok) {
+    body.innerHTML = '<p style="color:var(--rouge)">EDT introuvable pour cet enseignant.</p>';
+    return;
+  }
+  _edtProfCourantCom = { prof: prof, lignes: res.lignes };
+
+  const prefixesPremierCycle = ['6EME', '5EME', '4EME', '3EME'];
+  const prefixesSecondCycle = ['2NDE', '1ERE', 'TLE'];
+  let totalPremierCycle = 0;
+  let totalSecondCycle = 0;
+  _edtProfCourantCom.lignes.forEach(function(l) {
+    JOURS_EDT.forEach(function(j) {
+      const valeur = String(l[j] || '').trim();
+      if (!valeur) return;
+      const classe = valeur.split(' - ')[0].trim().toUpperCase();
+      if (prefixesPremierCycle.some(p => classe.indexOf(p) === 0)) totalPremierCycle++;
+      else if (prefixesSecondCycle.some(p => classe.indexOf(p) === 0)) totalSecondCycle++;
+    });
+  });
+
+  let h = '<div style="display:flex;gap:20px;margin-bottom:10px;font-weight:bold">' +
+    '<span>Premier cycle (6ème-3ème) : ' + totalPremierCycle + ' h</span>' +
+    '<span>Second cycle (2nde-Tle) : ' + totalSecondCycle + ' h</span>' +
+    '<span>Total : ' + (totalPremierCycle + totalSecondCycle) + ' h</span>' +
+    '</div>';
+  h += '<table style="width:100%;border-collapse:collapse;font-size:0.82em"><thead><tr>';
+  h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">Horaire</th>';
+  JOURS_LABELS.forEach(j => h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">' + j + '</th>');
+  h += '</tr></thead><tbody>';
+  _edtProfCourantCom.lignes.forEach(function(l) {
+    h += '<tr><td style="border:1px solid var(--border);padding:6px;font-weight:bold">' + l.creneau + '</td>';
+    JOURS_EDT.forEach(function(j) {
+      h += '<td style="border:1px solid var(--border);padding:6px">' + (l[j] || '') + '</td>';
+    });
+    h += '</tr>';
+  });
+  h += '</tbody></table>';
+  body.innerHTML = h;
+}
+
+function exporterEdtProfPDFCom() {
+  if (!_edtProfCourantCom || !window.jspdf) { showToast('Charge d\'abord un EDT', 'error'); return; }
+  const doc = new jspdf.jsPDF({ orientation: 'landscape' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  let y = 16;
+
+  if (_logoCppBase64) {
+    try { doc.addImage(_logoCppBase64, 'PNG', 14, 8, 20, 20); } catch (e) {}
+  }
+
+  doc.setFontSize(18);
+  doc.setFont(undefined, 'bold');
+  doc.text('EMPLOI DU TEMPS — ' + _edtProfCourantCom.prof, pageWidth / 2, y, { align: 'center' });
+  y += 8;
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'normal');
+  doc.text(String(currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
+  y += 6;
+  doc.setFontSize(11);
+  doc.text('Année scolaire : 2026-2027', pageWidth / 2, y, { align: 'center' });
+  y += 10;
+
+  const colWidths = [30, 42, 42, 42, 42, 42, 42];
+  const startX = 10;
+  const headers = ['Horaire'].concat(JOURS_LABELS);
+
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'bold');
+  let x = startX;
+  headers.forEach(function(h, i) {
+    doc.rect(x, y, colWidths[i], 9);
+    doc.text(h, x + 2, y + 6);
+    x += colWidths[i];
+  });
+  y += 9;
+
+  doc.setFont(undefined, 'normal');
+  doc.setFontSize(8);
+  const prefixesPremierCycle = ['6EME', '5EME', '4EME', '3EME'];
+  const prefixesSecondCycle = ['2NDE', '1ERE', 'TLE'];
+  let totalPremierCycle = 0;
+  let totalSecondCycle = 0;
+  _edtProfCourantCom.lignes.forEach(function(l) {
+    x = startX;
+    const valeurs = [l.creneau, l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi, l.samedi];
+    valeurs.forEach(function(v, i) {
+      doc.rect(x, y, colWidths[i], 9);
+      doc.text(String(v || ''), x + 2, y + 6);
+      x += colWidths[i];
+    });
+    JOURS_EDT.forEach(function(j) {
+      const valeur = String(l[j] || '').trim();
+      if (!valeur) return;
+      const classe = valeur.split(' - ')[0].trim().toUpperCase();
+      if (prefixesPremierCycle.some(p => classe.indexOf(p) === 0)) totalPremierCycle++;
+      else if (prefixesSecondCycle.some(p => classe.indexOf(p) === 0)) totalSecondCycle++;
+    });
+    y += 9;
+    if (y > pageHeight - 30) { doc.addPage(); y = 15; }
+  });
+
+  y += 6;
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'bold');
+  doc.text('Premier cycle (6ème-3ème) : ' + totalPremierCycle + ' h    Second cycle (2nde-Tle) : ' + totalSecondCycle + ' h    Total : ' + (totalPremierCycle + totalSecondCycle) + ' h', 14, y);
+  doc.setFont(undefined, 'normal');
+
+  y += 15;
+  doc.setFontSize(10);
+  doc.text('Fait à Abidjan, le ' + new Date().toLocaleDateString('fr-FR'), 14, y);
+  y += 15;
+  doc.text('Le Directeur des Études', pageWidth - 70, y);
+  y += 20;
+  doc.text('_____________________', pageWidth - 75, y);
+
+  doc.save('EDT_' + _edtProfCourantCom.prof + '.pdf');
+}
 function chargerMasseSalarialeDir(ecole){
   const sheetsId=SHEETS_IDS_2026_2027[ecole];
   const body=document.getElementById('dirMasseSalarialeBody');
