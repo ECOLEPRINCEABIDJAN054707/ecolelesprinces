@@ -342,6 +342,19 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div>
+  <div class="section" id="dirSecEdtProf">
+  <div class="sec-head sec-or" onclick="toggleSec(this);peuplerEdtProfSelect()">
+    <h3>&#128197; Emploi du temps &mdash; Enseignant</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:8px">
+      <select id="dirEdtProfSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
+      <button onclick="chargerEdtProfDir()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
+      <button onclick="exporterEdtProfPDF()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+      <div id="dirEdtProfBody" style="padding:12px 0"></div>
+    </div>
+  </div>
+</div>
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
       <h3>&#128200; Suivi p&eacute;dagogique</h3><span class="arr">&#9660;</span>
@@ -11856,6 +11869,117 @@ async function sauvegarderProfPrincipalDir() {
     showToast('❌ Erreur réseau', 'error');
   }
 }
+let _edtProfCourant = null;
+
+async function peuplerEdtProfSelect() {
+  const sel = document.getElementById('dirEdtProfSelect');
+  if (!sel || !currentStaff) return;
+  sel.innerHTML = '<option>Chargement...</option>';
+  const res = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LISTER_ENSEIGNANTS_ACTIFS', ecole: currentStaff.ecole });
+  if (res && res.ok && res.noms && res.noms.length) {
+    sel.innerHTML = res.noms.map(n => '<option value="' + n + '">' + n + '</option>').join('');
+  } else {
+    sel.innerHTML = '<option>Aucun enseignant trouvé</option>';
+  }
+}
+
+async function chargerEdtProfDir() {
+  const prof = document.getElementById('dirEdtProfSelect').value;
+  const body = document.getElementById('dirEdtProfBody');
+  if (!prof || !currentStaff) return;
+  body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+  const res = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_EDT_PROF', ecole: currentStaff.ecole, prof: prof });
+  if (!res || !res.ok) {
+    body.innerHTML = '<p style="color:var(--rouge)">EDT introuvable pour cet enseignant.</p>';
+    return;
+  }
+  _edtProfCourant = { prof: prof, lignes: res.lignes };
+  _renderEdtProfTable();
+}
+
+function _renderEdtProfTable() {
+  const body = document.getElementById('dirEdtProfBody');
+  if (!_edtProfCourant) return;
+  let h = '<table style="width:100%;border-collapse:collapse;font-size:0.82em"><thead><tr>';
+  h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">Horaire</th>';
+  JOURS_LABELS.forEach(j => h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">' + j + '</th>');
+  h += '</tr></thead><tbody>';
+  _edtProfCourant.lignes.forEach(function(l) {
+    h += '<tr><td style="border:1px solid var(--border);padding:6px;font-weight:bold">' + l.creneau + '</td>';
+    JOURS_EDT.forEach(function(j) {
+      h += '<td style="border:1px solid var(--border);padding:6px">' + (l[j] || '') + '</td>';
+    });
+    h += '</tr>';
+  });
+  h += '</tbody></table>';
+  body.innerHTML = h;
+}
+
+function exporterEdtProfPDF() {
+  if (!_edtProfCourant || !window.jspdf) { showToast('Charge d\'abord un EDT', 'error'); return; }
+  const doc = new jspdf.jsPDF({ orientation: 'landscape' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  let y = 16;
+
+  if (_logoCppBase64) {
+    try { doc.addImage(_logoCppBase64, 'PNG', 14, 8, 20, 20); } catch (e) {}
+  }
+
+  doc.setFontSize(18);
+  doc.setFont(undefined, 'bold');
+  doc.text('EMPLOI DU TEMPS — ' + _edtProfCourant.prof, pageWidth / 2, y, { align: 'center' });
+  y += 8;
+
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'normal');
+  doc.text(String(currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
+  y += 6;
+
+  doc.setFontSize(11);
+  doc.text('Année scolaire : 2026-2027', pageWidth / 2, y, { align: 'center' });
+  y += 10;
+
+  const colWidths = [30, 42, 42, 42, 42, 42, 42];
+  const startX = 10;
+  const headers = ['Horaire'].concat(JOURS_LABELS);
+
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'bold');
+  let x = startX;
+  headers.forEach(function(h, i) {
+    doc.rect(x, y, colWidths[i], 9);
+    doc.text(h, x + 2, y + 6);
+    x += colWidths[i];
+  });
+  y += 9;
+
+  doc.setFont(undefined, 'normal');
+  doc.setFontSize(8);
+  _edtProfCourant.lignes.forEach(function(l) {
+    x = startX;
+    const valeurs = [l.creneau, l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi, l.samedi];
+    valeurs.forEach(function(v, i) {
+      doc.rect(x, y, colWidths[i], 9);
+      doc.text(String(v || ''), x + 2, y + 6);
+      x += colWidths[i];
+    });
+    y += 9;
+    if (y > pageHeight - 30) { doc.addPage(); y = 15; }
+  });
+
+  y += 15;
+  doc.setFontSize(10);
+  doc.text('Fait à Abidjan, le ' + new Date().toLocaleDateString('fr-FR'), 14, y);
+  y += 15;
+  doc.text('Le Directeur des Études', pageWidth - 70, y);
+  y += 20;
+  doc.text('_____________________', pageWidth - 75, y);
+
+  doc.save('EDT_' + _edtProfCourant.prof + '.pdf');
+}
+  
 function chargerMasseSalarialeDir(ecole){
   const sheetsId=SHEETS_IDS_2026_2027[ecole];
   const body=document.getElementById('dirMasseSalarialeBody');
