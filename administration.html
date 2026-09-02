@@ -11650,7 +11650,7 @@ async function chargerEdtClasseDir() {
     body.innerHTML = '<p style="color:var(--rouge)">EDT introuvable pour cette classe.</p>';
     return;
   }
-  _edtClasseCourante = { classe: classe, lignes: res.lignes };
+  _edtClasseCourante = { classe: classe, lignes: res.lignes, profPrincipal: res.profPrincipal || '' };
   _renderEdtClasseTable();
   saveBtn.style.display = 'inline-block';
 }
@@ -11658,7 +11658,9 @@ async function chargerEdtClasseDir() {
 function _renderEdtClasseTable() {
   const body = document.getElementById('dirEdtClasseBody');
   if (!_edtClasseCourante) return;
-  let h = '<table style="width:100%;border-collapse:collapse;font-size:0.82em"><thead><tr>';
+  let h = '<p style="font-weight:bold;margin-bottom:8px">Professeur Principal : ' +
+    (_edtClasseCourante.profPrincipal || '<span style="color:var(--gris);font-weight:normal">non renseigné</span>') + '</p>';
+  h += '<table style="width:100%;border-collapse:collapse;font-size:0.82em"><thead><tr>';
   h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">Horaire</th>';
   JOURS_LABELS.forEach(j => h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">' + j + '</th>');
   h += '</tr></thead><tbody>';
@@ -11740,7 +11742,7 @@ function exporterEdtClassePDF() {
   y += 8;
 
   doc.setFontSize(10);
-  doc.text('Professeur Principal : ______________________________', 14, y);
+  doc.text('Professeur Principal : ' + (_edtClasseCourante.profPrincipal || '______________________________'), 14, y);
   y += 8;
 
   const colWidths = [30, 42, 42, 42, 42, 42, 42];
