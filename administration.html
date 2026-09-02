@@ -328,6 +328,20 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div>
+<div class="section" id="dirSecEdtClasse">
+<div class="sec-head sec-or" onclick="toggleSec(this);peuplerEdtClasseSelect()">
+  <h3>&#128197; Emploi du temps &mdash; Classe</h3><span class="arr">&#9660;</span>
+</div>
+  <div class="sec-body">
+    <div style="padding:8px">
+      <select id="dirEdtClasseSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
+      <button onclick="chargerEdtClasseDir()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
+      <button onclick="exporterEdtClassePDF()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+      <button id="dirEdtSaveBtn" onclick="sauvegarderEdtClasseDir()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
+      <div id="dirEdtClasseBody" style="padding:12px 0"></div>
+    </div>
+  </div>
+</div>
   <div class="section">
     <div class="sec-head sec-bleu" onclick="toggleSec(this)">
       <h3>&#128200; Suivi p&eacute;dagogique</h3><span class="arr">&#9660;</span>
@@ -11606,6 +11620,146 @@ function _renderMasseSalariale(bodyId, data){
   h+='<tr><td>Vacataires</td><td style="text-align:center">'+data.vacataires.count+'</td><td style="text-align:right;font-weight:700">'+Math.round(data.vacataires.total).toLocaleString('fr-FR')+' F</td></tr>';
   h+='</tbody><tfoot><tr class="total-row"><td colspan="2" style="text-align:right">MASSE SALARIALE</td><td style="text-align:right">'+Math.round(data.masse).toLocaleString('fr-FR')+' F CFA</td></tr></tfoot></table></div>';
   body.innerHTML=h;
+}
+  async function peuplerEdtClasseSelect() {
+  const sel = document.getElementById('dirEdtClasseSelect');
+  if (!sel || !currentStaff) return;
+  sel.innerHTML = '<option>Chargement...</option>';
+  const res = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LISTER_CLASSES_EDT', ecole: currentStaff.ecole });
+  if (res && res.ok && res.classes && res.classes.length) {
+    sel.innerHTML = res.classes.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+  } else {
+    sel.innerHTML = '<option>Aucune classe trouvée</option>';
+  }
+}
+  let _edtClasseCourante = null;
+const JOURS_EDT = ['lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+const JOURS_LABELS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+
+async function chargerEdtClasseDir() {
+  const classe = document.getElementById('dirEdtClasseSelect').value;
+  const body = document.getElementById('dirEdtClasseBody');
+  const saveBtn = document.getElementById('dirEdtSaveBtn');
+  if (!classe || !currentStaff) return;
+  body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  saveBtn.style.display = 'none';
+
+  const res = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_EDT', ecole: currentStaff.ecole, classe: classe });
+  if (!res || !res.ok) {
+    body.innerHTML = '<p style="color:var(--rouge)">EDT introuvable pour cette classe.</p>';
+    return;
+  }
+  _edtClasseCourante = { classe: classe, lignes: res.lignes };
+  _renderEdtClasseTable();
+  saveBtn.style.display = 'inline-block';
+}
+
+function _renderEdtClasseTable() {
+  const body = document.getElementById('dirEdtClasseBody');
+  if (!_edtClasseCourante) return;
+  let h = '<table style="width:100%;border-collapse:collapse;font-size:0.82em"><thead><tr>';
+  h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">Horaire</th>';
+  JOURS_LABELS.forEach(j => h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">' + j + '</th>');
+  h += '</tr></thead><tbody>';
+  _edtClasseCourante.lignes.forEach(function(l) {
+    h += '<tr><td style="border:1px solid var(--border);padding:6px;font-weight:bold">' + l.creneau + '</td>';
+    JOURS_EDT.forEach(function(j, idx) {
+      const col = idx + 2; // B=2 (lundi) ... G=7 (samedi)
+      h += '<td style="border:1px solid var(--border);padding:2px">' +
+        '<input type="text" value="' + (l[j] || '').replace(/"/g,'&quot;') + '" ' +
+        'data-ligne="' + l.ligne + '" data-colonne="' + col + '" ' +
+        'style="width:100%;border:none;padding:4px;font-size:0.95em" ' +
+        'onchange="_marquerEdtModifie(this)"></td>';
+    });
+    h += '</tr>';
+  });
+  h += '</tbody></table>';
+  body.innerHTML = h;
+}
+
+function _marquerEdtModifie(input) {
+  input.style.background = '#FFF3CD';
+}
+
+  async function sauvegarderEdtClasseDir() {
+  if (!_edtClasseCourante) return;
+  const inputs = document.querySelectorAll('#dirEdtClasseBody input[data-ligne]');
+  const modifications = [];
+  inputs.forEach(function(inp) {
+    modifications.push({ ligne: inp.dataset.ligne, colonne: inp.dataset.colonne, valeur: inp.value });
+  });
+  const saveBtn = document.getElementById('dirEdtSaveBtn');
+  saveBtn.textContent = '⏳ Enregistrement...';
+  saveBtn.disabled = true;
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'SAUVEGARDER_EDT_CLASSE',
+        ecole: currentStaff.ecole,
+        classe: _edtClasseCourante.classe,
+        modifications: modifications
+      })
+    });
+    const result = await resp.json();
+    if (result && result.ok) {
+      showToast('✅ Emploi du temps enregistré (' + result.nbEcrits + ' case(s))', 'success');
+      document.querySelectorAll('#dirEdtClasseBody input').forEach(i => i.style.background = '');
+    } else {
+      showToast('❌ Erreur : ' + (result.error || 'inconnue'), 'error');
+    }
+  } catch (e) {
+    showToast('❌ Erreur réseau', 'error');
+  }
+  saveBtn.textContent = '💾 Enregistrer';
+  saveBtn.disabled = false;
+}
+
+function exporterEdtClassePDF() {
+  if (!_edtClasseCourante || !window.jspdf) { showToast('Charge d\'abord un EDT', 'error'); return; }
+  const doc = new jspdf.jsPDF({ orientation: 'landscape' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  let y = 15;
+
+  doc.setFontSize(14);
+  doc.setFont(undefined, 'bold');
+  doc.text('Emploi du temps — ' + _edtClasseCourante.classe, pageWidth / 2, y, { align: 'center' });
+  y += 6;
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'normal');
+  doc.text(String(currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
+  y += 10;
+
+  const colWidths = [30, 40, 40, 40, 40, 40, 40];
+  const startX = 10;
+  const headers = ['Horaire'].concat(JOURS_LABELS);
+
+  doc.setFontSize(8);
+  doc.setFont(undefined, 'bold');
+  let x = startX;
+  headers.forEach(function(h, i) {
+    doc.rect(x, y, colWidths[i], 8);
+    doc.text(h, x + 2, y + 5.5);
+    x += colWidths[i];
+  });
+  y += 8;
+
+  doc.setFont(undefined, 'normal');
+  _edtClasseCourante.lignes.forEach(function(l) {
+    x = startX;
+    const valeurs = [l.creneau, l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi, l.samedi];
+    valeurs.forEach(function(v, i) {
+      doc.rect(x, y, colWidths[i], 8);
+      doc.text(String(v || ''), x + 2, y + 5.5);
+      x += colWidths[i];
+    });
+    y += 8;
+    if (y > 190) { doc.addPage(); y = 15; }
+  });
+
+  doc.save('EDT_' + _edtClasseCourante.classe + '.pdf');
 }
 function chargerMasseSalarialeDir(ecole){
   const sheetsId=SHEETS_IDS_2026_2027[ecole];
