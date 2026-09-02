@@ -11722,43 +11722,63 @@ function exporterEdtClassePDF() {
   if (!_edtClasseCourante || !window.jspdf) { showToast('Charge d\'abord un EDT', 'error'); return; }
   const doc = new jspdf.jsPDF({ orientation: 'landscape' });
   const pageWidth = doc.internal.pageSize.getWidth();
-  let y = 15;
+  const pageHeight = doc.internal.pageSize.getHeight();
+  let y = 16;
 
-  doc.setFontSize(14);
+  doc.setFontSize(18);
   doc.setFont(undefined, 'bold');
-  doc.text('Emploi du temps — ' + _edtClasseCourante.classe, pageWidth / 2, y, { align: 'center' });
-  y += 6;
-  doc.setFontSize(10);
+  doc.text('EMPLOI DU TEMPS — ' + _edtClasseCourante.classe, pageWidth / 2, y, { align: 'center' });
+  y += 8;
+
+  doc.setFontSize(12);
   doc.setFont(undefined, 'normal');
   doc.text(String(currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
-  y += 10;
+  y += 6;
 
-  const colWidths = [30, 40, 40, 40, 40, 40, 40];
+  doc.setFontSize(11);
+  doc.text('Année scolaire : 2026-2027', pageWidth / 2, y, { align: 'center' });
+  y += 8;
+
+  doc.setFontSize(10);
+  doc.text('Professeur Principal : ______________________________', 14, y);
+  y += 8;
+
+  const colWidths = [30, 42, 42, 42, 42, 42, 42];
   const startX = 10;
   const headers = ['Horaire'].concat(JOURS_LABELS);
 
-  doc.setFontSize(8);
+  doc.setFontSize(9);
   doc.setFont(undefined, 'bold');
   let x = startX;
   headers.forEach(function(h, i) {
-    doc.rect(x, y, colWidths[i], 8);
-    doc.text(h, x + 2, y + 5.5);
+    doc.rect(x, y, colWidths[i], 9);
+    doc.text(h, x + 2, y + 6);
     x += colWidths[i];
   });
-  y += 8;
+  y += 9;
 
   doc.setFont(undefined, 'normal');
+  doc.setFontSize(9);
   _edtClasseCourante.lignes.forEach(function(l) {
     x = startX;
     const valeurs = [l.creneau, l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi, l.samedi];
     valeurs.forEach(function(v, i) {
-      doc.rect(x, y, colWidths[i], 8);
-      doc.text(String(v || ''), x + 2, y + 5.5);
+      doc.rect(x, y, colWidths[i], 9);
+      doc.text(String(v || ''), x + 2, y + 6);
       x += colWidths[i];
     });
-    y += 8;
-    if (y > 190) { doc.addPage(); y = 15; }
+    y += 9;
+    if (y > pageHeight - 35) { doc.addPage(); y = 15; }
   });
+
+  y += 15;
+  if (y > pageHeight - 25) { doc.addPage(); y = 20; }
+  doc.setFontSize(10);
+  doc.text('Fait à Abidjan, le ' + new Date().toLocaleDateString('fr-FR'), 14, y);
+  y += 15;
+  doc.text('Le Directeur des Études', pageWidth - 70, y);
+  y += 20;
+  doc.text('_____________________', pageWidth - 75, y);
 
   doc.save('EDT_' + _edtClasseCourante.classe + '.pdf');
 }
