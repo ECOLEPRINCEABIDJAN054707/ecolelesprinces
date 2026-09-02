@@ -11627,7 +11627,8 @@ function _renderMasseSalariale(bodyId, data){
   sel.innerHTML = '<option>Chargement...</option>';
   const res = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LISTER_CLASSES_EDT', ecole: currentStaff.ecole });
   if (res && res.ok && res.classes && res.classes.length) {
-    sel.innerHTML = res.classes.map(c => '<option value="' + c + '">' + c + '</option>').join('');
+    const classesFiltrees = res.classes.filter(c => !/^(PAR_PROF|ENSEIGNANTS)$/i.test(c));
+sel.innerHTML = classesFiltrees.map(c => '<option value="' + c + '">' + c + '</option>').join('');
   } else {
     sel.innerHTML = '<option>Aucune classe trouvée</option>';
   }
