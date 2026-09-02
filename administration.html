@@ -3903,7 +3903,8 @@ async function attribuerMatriculeCom() {
     <div style="padding:8px">
       <select id="eduEdtClasseSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtClasseEdu()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
-      <button onclick="exporterEdtClassePDFEdu()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+     <button onclick="exporterEdtClassePDFEdu()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+<button id="eduEdtClasseSaveBtn" onclick="sauvegarderEdtClasseEdu()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="eduEdtClasseBody" style="padding:12px 0"></div>
     </div>
   </div>
@@ -3917,6 +3918,7 @@ async function attribuerMatriculeCom() {
       <select id="eduEdtProfSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtProfEdu()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
       <button onclick="exporterEdtProfPDFEdu()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+<button id="eduEdtProfSaveBtn" onclick="sauvegarderEdtProfEdu()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="eduEdtProfBody" style="padding:12px 0"></div>
     </div>
   </div>
@@ -12483,8 +12485,10 @@ let _edtClasseCouranteEdu = null;
 async function chargerEdtClasseEdu() {
   const classe = document.getElementById('eduEdtClasseSelect').value;
   const body = document.getElementById('eduEdtClasseBody');
+  const saveBtn = document.getElementById('eduEdtClasseSaveBtn');
   if (!classe || !currentStaff) return;
   body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  if (saveBtn) saveBtn.style.display = 'none';
 
   const res = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_EDT', ecole: currentStaff.ecole, classe: classe });
   if (!res || !res.ok) {
@@ -12499,13 +12503,55 @@ async function chargerEdtClasseEdu() {
   h += '</tr></thead><tbody>';
   _edtClasseCouranteEdu.lignes.forEach(function(l) {
     h += '<tr><td style="border:1px solid var(--border);padding:6px;font-weight:bold">' + l.creneau + '</td>';
-    JOURS_EDT.forEach(function(j) {
-      h += '<td style="border:1px solid var(--border);padding:6px">' + (l[j] || '') + '</td>';
+    JOURS_EDT.forEach(function(j, idx) {
+      const col = idx + 2;
+      h += '<td style="border:1px solid var(--border);padding:2px">' +
+        '<input type="text" value="' + (l[j] || '').replace(/"/g,'&quot;') + '" ' +
+        'data-ligne="' + l.ligne + '" data-colonne="' + col + '" ' +
+        'style="width:100%;border:none;padding:4px;font-size:0.95em" ' +
+        'onchange="this.style.background=\'#FFF3CD\'"></td>';
     });
     h += '</tr>';
   });
   h += '</tbody></table>';
   body.innerHTML = h;
+  if (saveBtn) saveBtn.style.display = 'inline-block';
+}
+
+async function sauvegarderEdtClasseEdu() {
+  if (!_edtClasseCouranteEdu) return;
+  const inputs = document.querySelectorAll('#eduEdtClasseBody input[data-ligne]');
+  const modifications = [];
+  inputs.forEach(function(inp) {
+    modifications.push({ ligne: inp.dataset.ligne, colonne: inp.dataset.colonne, valeur: inp.value });
+  });
+  const saveBtn = document.getElementById('eduEdtClasseSaveBtn');
+  saveBtn.textContent = '⏳ Enregistrement...';
+  saveBtn.disabled = true;
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'SAUVEGARDER_EDT_CLASSE',
+        ecole: currentStaff.ecole,
+        classe: _edtClasseCouranteEdu.classe,
+        modifications: modifications
+      })
+    });
+    const result = await resp.json();
+    if (result && result.ok) {
+      showToast('✅ Emploi du temps enregistré (' + result.nbEcrits + ' case(s))', 'success');
+      document.querySelectorAll('#eduEdtClasseBody input').forEach(i => i.style.background = '');
+    } else {
+      showToast('❌ Erreur : ' + (result.error || 'inconnue'), 'error');
+    }
+  } catch (e) {
+    showToast('❌ Erreur réseau', 'error');
+  }
+  saveBtn.textContent = '💾 Enregistrer';
+  saveBtn.disabled = false;
 }
 
 function exporterEdtClassePDFEdu() {
@@ -12602,8 +12648,10 @@ let _edtProfCourantEdu = null;
 async function chargerEdtProfEdu() {
   const prof = document.getElementById('eduEdtProfSelect').value;
   const body = document.getElementById('eduEdtProfBody');
+  const saveBtn = document.getElementById('eduEdtProfSaveBtn');
   if (!prof || !currentStaff) return;
   body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  if (saveBtn) saveBtn.style.display = 'none';
 
   const res = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_EDT_PROF', ecole: currentStaff.ecole, prof: prof });
   if (!res || !res.ok) {
@@ -12638,12 +12686,53 @@ async function chargerEdtProfEdu() {
   _edtProfCourantEdu.lignes.forEach(function(l) {
     h += '<tr><td style="border:1px solid var(--border);padding:6px;font-weight:bold">' + l.creneau + '</td>';
     JOURS_EDT.forEach(function(j) {
-      h += '<td style="border:1px solid var(--border);padding:6px">' + (l[j] || '') + '</td>';
+      h += '<td style="border:1px solid var(--border);padding:2px">' +
+        '<input type="text" value="' + (l[j] || '').replace(/"/g,'&quot;') + '" ' +
+        'data-creneau="' + l.creneau.replace(/"/g,'&quot;') + '" data-jour="' + j + '" ' +
+        'style="width:100%;border:none;padding:4px;font-size:0.95em" ' +
+        'onchange="this.style.background=\'#FFF3CD\'"></td>';
     });
     h += '</tr>';
   });
   h += '</tbody></table>';
   body.innerHTML = h;
+  if (saveBtn) saveBtn.style.display = 'inline-block';
+}
+
+async function sauvegarderEdtProfEdu() {
+  if (!_edtProfCourantEdu) return;
+  const inputs = document.querySelectorAll('#eduEdtProfBody input[data-creneau]');
+  const modifications = [];
+  inputs.forEach(function(inp) {
+    modifications.push({ creneau: inp.dataset.creneau, jour: inp.dataset.jour, valeur: inp.value });
+  });
+  const saveBtn = document.getElementById('eduEdtProfSaveBtn');
+  saveBtn.textContent = '⏳ Enregistrement...';
+  saveBtn.disabled = true;
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'SAUVEGARDER_EDT_PROF',
+        ecole: currentStaff.ecole,
+        prof: _edtProfCourantEdu.prof,
+        modifications: modifications
+      })
+    });
+    const result = await resp.json();
+    if (result && result.ok) {
+      showToast('✅ Emploi du temps enregistré', 'success');
+      document.querySelectorAll('#eduEdtProfBody input').forEach(i => i.style.background = '');
+    } else {
+      showToast('❌ Erreur : ' + (result.error || 'inconnue'), 'error');
+    }
+  } catch (e) {
+    showToast('❌ Erreur réseau', 'error');
+  }
+  saveBtn.textContent = '💾 Enregistrer';
+  saveBtn.disabled = false;
 }
 
 function exporterEdtProfPDFEdu() {
