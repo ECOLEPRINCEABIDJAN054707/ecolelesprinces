@@ -4083,6 +4083,19 @@ async function attribuerMatriculeCom() {
 <div class="toast" id="toast"></div>
 
 <script>
+  let _logoCppBase64 = null;
+(function chargerLogoCpp() {
+  const img = new Image();
+  img.crossOrigin = 'Anonymous';
+  img.onload = function() {
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    canvas.getContext('2d').drawImage(img, 0, 0);
+    _logoCppBase64 = canvas.toDataURL('image/png');
+  };
+  img.src = 'logo_cpp.png';
+})();
 const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbzwGgqVP502S65OKM_rPVnA5CSpokZ9Btmmg_mEzh_SNC56Z5yXvQxdMVjD_-VyIcx2/exec';
 const APP_SCRIPT_URL_ADMIN='https://script.google.com/macros/s/AKfycbzwGgqVP502S65OKM_rPVnA5CSpokZ9Btmmg_mEzh_SNC56Z5yXvQxdMVjD_-VyIcx2/exec';
 // ★ NOUVEAU — projet "CPP Pointage API" (validation salaires + bulletins primaire)
@@ -11729,7 +11742,11 @@ function exporterEdtClassePDF() {
   const pageHeight = doc.internal.pageSize.getHeight();
   let y = 16;
 
-  doc.setFontSize(18);
+  if (_logoCppBase64) {
+    try { doc.addImage(_logoCppBase64, 'PNG', 14, 8, 20, 20); } catch (e) {}
+  }
+
+  doc.setFontSize(14);
   doc.setFont(undefined, 'bold');
   doc.text('EMPLOI DU TEMPS — ' + _edtClasseCourante.classe, pageWidth / 2, y, { align: 'center' });
   y += 8;
