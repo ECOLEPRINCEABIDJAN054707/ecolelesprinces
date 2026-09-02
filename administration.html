@@ -11651,15 +11651,17 @@ async function chargerEdtClasseDir() {
     return;
   }
   _edtClasseCourante = { classe: classe, lignes: res.lignes, profPrincipal: res.profPrincipal || '' };
-  _renderEdtClasseTable();
+_renderEdtClasseTable();
+  await peuplerProfPrincipalSelect();
   saveBtn.style.display = 'inline-block';
 }
 
 function _renderEdtClasseTable() {
   const body = document.getElementById('dirEdtClasseBody');
   if (!_edtClasseCourante) return;
-  let h = '<p style="font-weight:bold;margin-bottom:8px">Professeur Principal : ' +
-    (_edtClasseCourante.profPrincipal || '<span style="color:var(--gris);font-weight:normal">non renseigné</span>') + '</p>';
+let h = '<div style="font-weight:bold;margin-bottom:8px">Professeur Principal : ' +
+  '<select id="dirEdtProfPrincipalSelect" style="padding:4px;border-radius:6px;border:1px solid var(--border)"><option value="">— non renseigné —</option></select> ' +
+  '<button onclick="sauvegarderProfPrincipalDir()" style="padding:4px 10px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:4px">Enregistrer</button></div>';
   h += '<table style="width:100%;border-collapse:collapse;font-size:0.82em"><thead><tr>';
   h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">Horaire</th>';
   JOURS_LABELS.forEach(j => h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">' + j + '</th>');
@@ -11795,6 +11797,47 @@ function exporterEdtClassePDF() {
   doc.text('_____________________', pageWidth - 75, y);
 
   doc.save('EDT_' + _edtClasseCourante.classe + '.pdf');
+}
+  async function peuplerProfPrincipalSelect() {
+  const sel = document.getElementById('dirEdtProfPrincipalSelect');
+  if (!sel || !currentStaff || !_edtClasseCourante) return;
+  const res = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LISTER_ENSEIGNANTS_ACTIFS', ecole: currentStaff.ecole });
+  let options = '<option value="">— non renseigné —</option>';
+  if (res && res.ok && res.noms) {
+    res.noms.forEach(function(n) {
+      const selected = (n === _edtClasseCourante.profPrincipal) ? ' selected' : '';
+      options += '<option value="' + n + '"' + selected + '>' + n + '</option>';
+    });
+  }
+  sel.innerHTML = options;
+}
+
+async function sauvegarderProfPrincipalDir() {
+  const sel = document.getElementById('dirEdtProfPrincipalSelect');
+  if (!sel || !_edtClasseCourante) return;
+  const enseignant = sel.value;
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'SAUVEGARDER_PROF_PRINCIPAL',
+        ecole: currentStaff.ecole,
+        classe: _edtClasseCourante.classe,
+        enseignant: enseignant
+      })
+    });
+    const result = await resp.json();
+    if (result && result.ok) {
+      showToast('✅ Professeur principal enregistré', 'success');
+      _edtClasseCourante.profPrincipal = enseignant;
+    } else {
+      showToast('❌ Erreur : ' + (result.error || 'inconnue'), 'error');
+    }
+  } catch (e) {
+    showToast('❌ Erreur réseau', 'error');
+  }
 }
 function chargerMasseSalarialeDir(ecole){
   const sheetsId=SHEETS_IDS_2026_2027[ecole];
