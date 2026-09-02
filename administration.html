@@ -2646,6 +2646,7 @@ async function sauvegarderPersonnelDir(idx) {
       <select id="comEdtClasseSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtClasseCom()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
       <button onclick="exporterEdtClassePDFCom()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+<button id="comEdtClasseSaveBtn" onclick="sauvegarderEdtClasseCom()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="comEdtClasseBody" style="padding:12px 0"></div>
     </div>
   </div>
@@ -12135,8 +12136,10 @@ let _edtClasseCouranteCom = null;
 async function chargerEdtClasseCom() {
   const classe = document.getElementById('comEdtClasseSelect').value;
   const body = document.getElementById('comEdtClasseBody');
+  const saveBtn = document.getElementById('comEdtClasseSaveBtn');
   if (!classe || !currentStaff) return;
   body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  if (saveBtn) saveBtn.style.display = 'none';
 
   const res = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_EDT', ecole: currentStaff.ecole, classe: classe });
   if (!res || !res.ok) {
@@ -12151,13 +12154,55 @@ async function chargerEdtClasseCom() {
   h += '</tr></thead><tbody>';
   _edtClasseCouranteCom.lignes.forEach(function(l) {
     h += '<tr><td style="border:1px solid var(--border);padding:6px;font-weight:bold">' + l.creneau + '</td>';
-    JOURS_EDT.forEach(function(j) {
-      h += '<td style="border:1px solid var(--border);padding:6px">' + (l[j] || '') + '</td>';
+    JOURS_EDT.forEach(function(j, idx) {
+      const col = idx + 2;
+      h += '<td style="border:1px solid var(--border);padding:2px">' +
+        '<input type="text" value="' + (l[j] || '').replace(/"/g,'&quot;') + '" ' +
+        'data-ligne="' + l.ligne + '" data-colonne="' + col + '" ' +
+        'style="width:100%;border:none;padding:4px;font-size:0.95em" ' +
+        'onchange="this.style.background=\'#FFF3CD\'"></td>';
     });
     h += '</tr>';
   });
   h += '</tbody></table>';
   body.innerHTML = h;
+  if (saveBtn) saveBtn.style.display = 'inline-block';
+}
+
+async function sauvegarderEdtClasseCom() {
+  if (!_edtClasseCouranteCom) return;
+  const inputs = document.querySelectorAll('#comEdtClasseBody input[data-ligne]');
+  const modifications = [];
+  inputs.forEach(function(inp) {
+    modifications.push({ ligne: inp.dataset.ligne, colonne: inp.dataset.colonne, valeur: inp.value });
+  });
+  const saveBtn = document.getElementById('comEdtClasseSaveBtn');
+  saveBtn.textContent = '⏳ Enregistrement...';
+  saveBtn.disabled = true;
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'SAUVEGARDER_EDT_CLASSE',
+        ecole: currentStaff.ecole,
+        classe: _edtClasseCouranteCom.classe,
+        modifications: modifications
+      })
+    });
+    const result = await resp.json();
+    if (result && result.ok) {
+      showToast('✅ Emploi du temps enregistré (' + result.nbEcrits + ' case(s))', 'success');
+      document.querySelectorAll('#comEdtClasseBody input').forEach(i => i.style.background = '');
+    } else {
+      showToast('❌ Erreur : ' + (result.error || 'inconnue'), 'error');
+    }
+  } catch (e) {
+    showToast('❌ Erreur réseau', 'error');
+  }
+  saveBtn.textContent = '💾 Enregistrer';
+  saveBtn.disabled = false;
 }
 
 function exporterEdtClassePDFCom() {
