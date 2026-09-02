@@ -11903,7 +11903,29 @@ function _renderEdtProfTable() {
   const body = document.getElementById('dirEdtProfBody');
   const saveBtn = document.getElementById('dirEdtProfSaveBtn');
   if (!_edtProfCourant) return;
-  let h = '<table style="width:100%;border-collapse:collapse;font-size:0.82em"><thead><tr>';
+
+  const prefixesPremierCycle = ['6EME', '5EME', '4EME', '3EME'];
+  const prefixesSecondCycle = ['2NDE', '1ERE', 'TLE'];
+  let totalPremierCycle = 0;
+  let totalSecondCycle = 0;
+
+  _edtProfCourant.lignes.forEach(function(l) {
+    JOURS_EDT.forEach(function(j) {
+      const valeur = String(l[j] || '').trim();
+      if (!valeur) return;
+      const classe = valeur.split(' - ')[0].trim().toUpperCase();
+      if (prefixesPremierCycle.some(p => classe.indexOf(p) === 0)) totalPremierCycle++;
+      else if (prefixesSecondCycle.some(p => classe.indexOf(p) === 0)) totalSecondCycle++;
+    });
+  });
+
+  let h = '<div style="display:flex;gap:20px;margin-bottom:10px;font-weight:bold">' +
+    '<span>Premier cycle (6ème-3ème) : ' + totalPremierCycle + ' h</span>' +
+    '<span>Second cycle (2nde-Tle) : ' + totalSecondCycle + ' h</span>' +
+    '<span>Total : ' + (totalPremierCycle + totalSecondCycle) + ' h</span>' +
+    '</div>';
+
+  h += '<table style="width:100%;border-collapse:collapse;font-size:0.82em"><thead><tr>';
   h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">Horaire</th>';
   JOURS_LABELS.forEach(j => h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">' + j + '</th>');
   h += '</tr></thead><tbody>';
@@ -11922,7 +11944,6 @@ function _renderEdtProfTable() {
   body.innerHTML = h;
   if (saveBtn) saveBtn.style.display = 'inline-block';
 }
-
 function _marquerEdtProfModifie(input) {
   input.style.background = '#FFF3CD';
 }
@@ -12003,6 +12024,11 @@ function exporterEdtProfPDF() {
 
   doc.setFont(undefined, 'normal');
   doc.setFontSize(8);
+   const prefixesPremierCycle = ['6EME', '5EME', '4EME', '3EME'];
+  const prefixesSecondCycle = ['2NDE', '1ERE', 'TLE'];
+  let totalPremierCycle = 0;
+  let totalSecondCycle = 0;
+
   _edtProfCourant.lignes.forEach(function(l) {
     x = startX;
     const valeurs = [l.creneau, l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi, l.samedi];
@@ -12011,9 +12037,22 @@ function exporterEdtProfPDF() {
       doc.text(String(v || ''), x + 2, y + 6);
       x += colWidths[i];
     });
+    JOURS_EDT.forEach(function(j) {
+      const valeur = String(l[j] || '').trim();
+      if (!valeur) return;
+      const classe = valeur.split(' - ')[0].trim().toUpperCase();
+      if (prefixesPremierCycle.some(p => classe.indexOf(p) === 0)) totalPremierCycle++;
+      else if (prefixesSecondCycle.some(p => classe.indexOf(p) === 0)) totalSecondCycle++;
+    });
     y += 9;
     if (y > pageHeight - 30) { doc.addPage(); y = 15; }
   });
+
+  y += 6;
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'bold');
+  doc.text('Premier cycle (6ème-3ème) : ' + totalPremierCycle + ' h    Second cycle (2nde-Tle) : ' + totalSecondCycle + ' h    Total : ' + (totalPremierCycle + totalSecondCycle) + ' h', 14, y);
+  doc.setFont(undefined, 'normal');
 
   y += 15;
   doc.setFontSize(10);
