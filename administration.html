@@ -351,6 +351,7 @@ table tr:nth-child(even){background:#F8FAFD}
       <select id="dirEdtProfSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtProfDir()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
       <button onclick="exporterEdtProfPDF()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+<button id="dirEdtProfSaveBtn" onclick="sauvegarderEdtProfDir()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="dirEdtProfBody" style="padding:12px 0"></div>
     </div>
   </div>
@@ -11900,6 +11901,7 @@ async function chargerEdtProfDir() {
 
 function _renderEdtProfTable() {
   const body = document.getElementById('dirEdtProfBody');
+  const saveBtn = document.getElementById('dirEdtProfSaveBtn');
   if (!_edtProfCourant) return;
   let h = '<table style="width:100%;border-collapse:collapse;font-size:0.82em"><thead><tr>';
   h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">Horaire</th>';
@@ -11908,14 +11910,58 @@ function _renderEdtProfTable() {
   _edtProfCourant.lignes.forEach(function(l) {
     h += '<tr><td style="border:1px solid var(--border);padding:6px;font-weight:bold">' + l.creneau + '</td>';
     JOURS_EDT.forEach(function(j) {
-      h += '<td style="border:1px solid var(--border);padding:6px">' + (l[j] || '') + '</td>';
+      h += '<td style="border:1px solid var(--border);padding:2px">' +
+        '<input type="text" value="' + (l[j] || '').replace(/"/g,'&quot;') + '" ' +
+        'data-creneau="' + l.creneau.replace(/"/g,'&quot;') + '" data-jour="' + j + '" ' +
+        'style="width:100%;border:none;padding:4px;font-size:0.95em" ' +
+        'onchange="_marquerEdtProfModifie(this)"></td>';
     });
     h += '</tr>';
   });
   h += '</tbody></table>';
   body.innerHTML = h;
+  if (saveBtn) saveBtn.style.display = 'inline-block';
 }
 
+function _marquerEdtProfModifie(input) {
+  input.style.background = '#FFF3CD';
+}
+
+  async function sauvegarderEdtProfDir() {
+  if (!_edtProfCourant) return;
+  const inputs = document.querySelectorAll('#dirEdtProfBody input[data-creneau]');
+  const modifications = [];
+  inputs.forEach(function(inp) {
+    modifications.push({ creneau: inp.dataset.creneau, jour: inp.dataset.jour, valeur: inp.value });
+  });
+  const saveBtn = document.getElementById('dirEdtProfSaveBtn');
+  saveBtn.textContent = '⏳ Enregistrement...';
+  saveBtn.disabled = true;
+
+  try {
+    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'SAUVEGARDER_EDT_PROF',
+        ecole: currentStaff.ecole,
+        prof: _edtProfCourant.prof,
+        modifications: modifications
+      })
+    });
+    const result = await resp.json();
+    if (result && result.ok) {
+      showToast('✅ Emploi du temps enregistré', 'success');
+      document.querySelectorAll('#dirEdtProfBody input').forEach(i => i.style.background = '');
+    } else {
+      showToast('❌ Erreur : ' + (result.error || 'inconnue'), 'error');
+    }
+  } catch (e) {
+    showToast('❌ Erreur réseau', 'error');
+  }
+  saveBtn.textContent = '💾 Enregistrer';
+  saveBtn.disabled = false;
+}
 function exporterEdtProfPDF() {
   if (!_edtProfCourant || !window.jspdf) { showToast('Charge d\'abord un EDT', 'error'); return; }
   const doc = new jspdf.jsPDF({ orientation: 'landscape' });
