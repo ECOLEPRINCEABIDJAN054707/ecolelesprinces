@@ -2262,7 +2262,7 @@ function renderListePersonnelDir(rows) {
     + '<button onclick="setFiltrePersonnelActif(\'NON\')" style="padding:6px 12px;border-radius:20px;border:1.5px solid '+(_personnelFiltreActif==='NON'?'var(--rouge)':'var(--border)')+';background:'+(_personnelFiltreActif==='NON'?'var(--rouge)':'#fff')+';color:'+(_personnelFiltreActif==='NON'?'#fff':'var(--gris)')+';font-size:0.78em;font-weight:700;cursor:pointer">✗ Désactivés ('+_personnelListeCache.filter(p=>p.actif!=='OUI').length+')</button>'
     + '<button onclick="ajouterLignePersonnelVide()" style="padding:6px 14px;border-radius:20px;border:none;background:var(--violet);color:#fff;font-size:0.78em;font-weight:700;cursor:pointer;margin-left:auto">➕ Nouvelle personne</button>'
     + '</div>';
-  let h = hFiltre + '<div class="tbl-wrap"><table><thead><tr><th>Nom</th><th>Poste</th><th>Code</th><th>Type</th><th>Salaire fixe</th><th>Actif</th><th></th></tr></thead><tbody>';
+  let h = hFiltre + '<div class="tbl-wrap"><table><thead><tr><th>Nom</th><th>Poste</th><th>Code</th><th>Type</th><th>Salaire fixe</th><th>Actif</th><th></th><th>Bulletin</th></tr></thead><tbody>';
   rows.forEach((p, idx) => {
     h += '<tr>'
       + '<td><input type="text" id="persNom_'+idx+'" value="'+p.nom.replace(/"/g,'&quot;')+'" onblur="sauvegarderPersonnelDir('+idx+')" style="width:100%;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;font-weight:600"></td>'
@@ -2277,6 +2277,9 @@ function renderListePersonnelDir(rows) {
         + '<option value="OUI"'+(p.actif==='OUI'?' selected':'')+'>✓ Actif</option>'
         + '<option value="NON"'+(p.actif!=='OUI'?' selected':'')+'>✗ Désactivé</option>'
         + '</select></td>'
++ '<td>' + (p.type!=='PERMANENT'
+        ? '<button onclick="imprimerBulletinVacataireDepuisListe(\''+p.nom.replace(/'/g,"\\'")+'\')" style="padding:5px 10px;background:var(--or);color:#fff;border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer">🖨</button>'
+        : '<span style="font-size:0.7em;color:var(--gris)">Voir "Bulletins de salaire"</span>') + '</td>'
       + '<td id="persStatut_'+idx+'" style="font-size:0.8em;color:var(--gris)">—</td>'
       + '</tr>';
   });
@@ -13076,6 +13079,13 @@ function ouvrirFenetreBulletinVacataire(d) {
   w.document.write(html);
   w.document.close();
   setTimeout(function(){ w.print(); }, 400);
+}
+  
+function imprimerBulletinVacataireDepuisListe(nom) {
+  var sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole];
+  var maintenant = new Date();
+  var mois = maintenant.getFullYear() + '-' + String(maintenant.getMonth() + 1).padStart(2, '0');
+  imprimerBulletinVacataire(sheetsId, nom, mois);
 }
 function chargerMasseSalarialeDir(ecole){
   const sheetsId=SHEETS_IDS_2026_2027[ecole];
