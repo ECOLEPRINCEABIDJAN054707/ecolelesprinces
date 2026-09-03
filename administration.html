@@ -12813,6 +12813,133 @@ function exporterEdtProfPDFEdu() {
 
   doc.save('EDT_' + _edtProfCourantEdu.prof + '.pdf');
 }
+  function imprimerBulletin(sheetsId, employeId, ecoleLabel) {
+  var cbName = 'bulletin_' + Date.now();
+  var script = document.createElement('script');
+
+  var timeout = setTimeout(function() {
+    delete window[cbName];
+    try { document.body.removeChild(script); } catch(e) {}
+    alert('Délai dépassé, réessayez.');
+  }, 15000);
+
+  window[cbName] = function(data) {
+    clearTimeout(timeout);
+    delete window[cbName];
+    try { document.body.removeChild(script); } catch(e) {}
+
+    if (!data || data.error) {
+      alert('Erreur bulletin : ' + (data ? data.error : 'inconnue'));
+      return;
+    }
+    ouvrirFenetreBulletin(data);
+  };
+
+  script.onerror = function() {
+    clearTimeout(timeout);
+    delete window[cbName];
+    alert('Erreur de connexion au serveur.');
+  };
+
+  var params = new URLSearchParams({
+    callback: cbName,
+    action: 'genererBulletinData',
+    sheetsId: sheetsId,
+    employeId: employeId
+  });
+  script.src = APPS_SCRIPT_URL + '?' + params.toString();
+  document.body.appendChild(script);
+}
+
+function _formaterMontant(n) {
+  return Math.round(n || 0).toLocaleString('fr-FR').replace(/,/g, ' ');
+}
+
+function _formaterDate(iso) {
+  if (!iso) return '—';
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return '—';
+  var jj = String(d.getDate()).padStart(2, '0');
+  var mm = String(d.getMonth() + 1).padStart(2, '0');
+  return jj + '/' + mm + '/' + d.getFullYear();
+}
+
+function ouvrirFenetreBulletin(d) {
+  var now = new Date();
+  var moisAnnee = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  var dateEmission = now.toLocaleDateString('fr-FR');
+
+  var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Bulletin de paie</title>' +
+    '<style>' +
+    'body{font-family:"Times New Roman",serif;color:#000;padding:20px;max-width:700px;margin:0 auto;font-size:13px;}' +
+    'h1{font-size:16px;text-align:center;border:2px solid #000;padding:8px;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;}' +
+    '.ecole{text-align:center;font-weight:bold;font-size:14px;margin-bottom:2px;}' +
+    '.periode{text-align:center;font-style:italic;margin-bottom:16px;}' +
+    '.bloc{border:1px solid #000;padding:10px 14px;margin-bottom:14px;}' +
+    '.bloc-titre{font-weight:bold;text-transform:uppercase;font-size:11px;letter-spacing:1px;margin-bottom:8px;border-bottom:1px solid #ccc;padding-bottom:4px;}' +
+    '.ligne{display:flex;justify-content:space-between;padding:3px 0;}' +
+    '.ligne b{font-weight:normal;}' +
+    'table{width:100%;border-collapse:collapse;margin-bottom:4px;}' +
+    'td{padding:5px 4px;border-bottom:1px solid #eee;}' +
+    'td.montant{text-align:right;}' +
+    '.total-row td{border-top:1.5px solid #000;font-weight:bold;padding-top:6px;}' +
+    '.net{border:2px solid #000;text-align:center;padding:12px;margin:16px 0;font-size:16px;font-weight:bold;}' +
+    '.pied{display:flex;justify-content:space-between;margin-top:30px;font-size:12px;}' +
+    '.signature{text-align:center;width:200px;}' +
+    '.signature .ligne-sign{border-top:1px solid #000;margin-top:40px;padding-top:4px;}' +
+    '@media print{@page{size:A4 portrait;margin:15mm;}}' +
+    '</style></head><body>' +
+    '<div class="ecole">' + (d.ecole || '') + '</div>' +
+    '<h1>Bulletin de paie</h1>' +
+    '<div class="periode">Période : ' + moisAnnee + '</div>' +
+
+    '<div class="bloc">' +
+      '<div class="bloc-titre">Employé</div>' +
+      '<div class="ligne"><span>Nom et prénoms</span><b>' + (d.nom || '') + ' ' + (d.prenoms || '') + '</b></div>' +
+      '<div class="ligne"><span>Poste</span><b>' + (d.poste || '') + '</b></div>' +
+      '<div class="ligne"><span>Catégorie</span><b>' + (d.categorie || '') + '</b></div>' +
+      '<div class="ligne"><span>N° CNPS</span><b>' + (d.cnpsNumero || '—') + '</b></div>' +
+      '<div class="ligne"><span>Date d\'embauche</span><b>' + _formaterDate(d.dateEmbauche) + '</b></div>' +
+      '<div class="ligne"><span>Ancienneté</span><b>' + (d.anciennete || 0) + ' an(s)</b></div>' +
+    '</div>' +
+
+    '<div class="bloc">' +
+      '<div class="bloc-titre">Gains</div>' +
+      '<table>' +
+        '<tr><td>Salaire de base</td><td class="montant">' + _formaterMontant(d.salaireBase) + ' F</td></tr>' +
+        '<tr><td>Prime d\'ancienneté</td><td class="montant">' + _formaterMontant(d.primeAnciennete) + ' F</td></tr>' +
+        '<tr><td>Indemnité de transport</td><td class="montant">' + _formaterMontant(d.indemniteTransport) + ' F</td></tr>' +
+        '<tr class="total-row"><td>Salaire brut</td><td class="montant">' + _formaterMontant(d.salaireBrut) + ' F</td></tr>' +
+      '</table>' +
+    '</div>' +
+
+    '<div class="bloc">' +
+      '<div class="bloc-titre">Retenues</div>' +
+      '<table>' +
+        '<tr><td>CNPS (6,3%)</td><td class="montant">' + _formaterMontant(d.cnps) + ' F</td></tr>' +
+        '<tr><td>CMU</td><td class="montant">' + _formaterMontant(d.cmu) + ' F</td></tr>' +
+        '<tr><td>ITS (après RICF)</td><td class="montant">' + _formaterMontant(Math.max(0, d.itsBrut - d.ricf)) + ' F</td></tr>' +
+        '<tr class="total-row"><td>Total retenues</td><td class="montant">' + _formaterMontant(d.salaireBrut - d.netAPayer) + ' F</td></tr>' +
+      '</table>' +
+    '</div>' +
+
+    '<div class="net">NET À PAYER : ' + _formaterMontant(d.netAPayer) + ' F CFA</div>' +
+
+    '<div class="pied">' +
+      '<div>Fait à Abidjan, le ' + dateEmission + '</div>' +
+    '</div>' +
+    '<div class="pied">' +
+      '<div class="signature"><div class="ligne-sign">Signature Comptable</div></div>' +
+      '<div class="signature"><div class="ligne-sign">Cachet école</div></div>' +
+    '</div>' +
+
+    '</body></html>';
+
+  var w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function(){ w.print(); }, 400);
+}
 function chargerMasseSalarialeDir(ecole){
   const sheetsId=SHEETS_IDS_2026_2027[ecole];
   const body=document.getElementById('dirMasseSalarialeBody');
