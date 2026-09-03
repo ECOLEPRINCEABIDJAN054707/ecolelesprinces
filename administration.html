@@ -12961,6 +12961,122 @@ function ouvrirFenetreBulletin(d) {
   w.document.close();
   setTimeout(function(){ w.print(); }, 400);
 }
+
+  function imprimerBulletinVacataire(sheetsId, enseignant, mois) {
+  var cbName = 'bulletinvac_' + Date.now();
+  var script = document.createElement('script');
+
+  var timeout = setTimeout(function() {
+    delete window[cbName];
+    try { document.body.removeChild(script); } catch(e) {}
+    alert('Délai dépassé, réessayez.');
+  }, 15000);
+
+  window[cbName] = function(data) {
+    clearTimeout(timeout);
+    delete window[cbName];
+    try { document.body.removeChild(script); } catch(e) {}
+
+    if (!data || data.error) {
+      alert('Erreur bulletin : ' + (data ? data.error : 'inconnue'));
+      return;
+    }
+    ouvrirFenetreBulletinVacataire(data);
+  };
+
+  script.onerror = function() {
+    clearTimeout(timeout);
+    delete window[cbName];
+    alert('Erreur de connexion au serveur.');
+  };
+
+  var params = new URLSearchParams({
+    callback: cbName,
+    action: 'genererBulletinVacataireData',
+    sheetsId: sheetsId,
+    enseignant: enseignant,
+    mois: mois
+  });
+  script.src = APPS_SCRIPT_URL + '?' + params.toString();
+  document.body.appendChild(script);
+}
+
+function ouvrirFenetreBulletinVacataire(d) {
+  var dateEmission = new Date().toLocaleDateString('fr-FR');
+  var moisLabel = '';
+  try {
+    var parts = d.mois.split('-');
+    var dObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, 1);
+    moisLabel = dObj.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  } catch(e) { moisLabel = d.mois; }
+
+  var lignesCours = '';
+  d.cours.forEach(function(c) {
+    lignesCours += '<tr>'
+      + '<td>' + (c.date || '—') + '</td>'
+      + '<td>' + (c.classe || '') + '</td>'
+      + '<td>' + (c.matiere || '') + '</td>'
+      + '<td class="montant">' + (c.heures || 0).toFixed(2) + ' h</td>'
+      + '<td class="montant">' + _formaterMontant(c.salaire) + ' F</td>'
+      + '</tr>';
+  });
+
+  var html = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Bulletin vacataire</title>' +
+    '<style>' +
+    'body{font-family:"Times New Roman",serif;color:#000;padding:20px;max-width:700px;margin:0 auto;font-size:13px;}' +
+    'h1{font-size:16px;text-align:center;border:2px solid #000;padding:8px;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;}' +
+    '.ecole{text-align:center;font-weight:bold;font-size:14px;margin-bottom:2px;}' +
+    '.periode{text-align:center;font-style:italic;margin-bottom:16px;}' +
+    '.bloc{border:1px solid #000;padding:10px 14px;margin-bottom:14px;}' +
+    '.bloc-titre{font-weight:bold;text-transform:uppercase;font-size:11px;letter-spacing:1px;margin-bottom:8px;border-bottom:1px solid #ccc;padding-bottom:4px;}' +
+    '.ligne{display:flex;justify-content:space-between;padding:3px 0;}' +
+    'table{width:100%;border-collapse:collapse;margin-bottom:4px;}' +
+    'th{text-align:left;font-size:11px;text-transform:uppercase;border-bottom:1.5px solid #000;padding:5px 4px;}' +
+    'td{padding:5px 4px;border-bottom:1px solid #eee;font-size:12px;}' +
+    'td.montant, th.montant{text-align:right;}' +
+    '.total-row td{border-top:1.5px solid #000;font-weight:bold;padding-top:6px;}' +
+    '.net{border:2px solid #000;text-align:center;padding:12px;margin:16px 0;font-size:16px;font-weight:bold;}' +
+    '.pied{display:flex;justify-content:space-between;margin-top:30px;font-size:12px;}' +
+    '.signature{text-align:center;width:200px;}' +
+    '.signature .ligne-sign{border-top:1px solid #000;margin-top:40px;padding-top:4px;}' +
+    '@media print{@page{size:A4 portrait;margin:15mm;}}' +
+    '</style></head><body>' +
+    '<div class="ecole">' + (d.ecole || '') + '</div>' +
+    '<h1>Bulletin de paie — Vacataire</h1>' +
+    '<div class="periode">Période : ' + moisLabel + '</div>' +
+
+    '<div class="bloc">' +
+      '<div class="bloc-titre">Employé</div>' +
+      '<div class="ligne"><span>Nom et prénoms</span><b>' + (d.enseignant || '') + '</b></div>' +
+      '<div class="ligne"><span>Statut</span><b>Vacataire</b></div>' +
+    '</div>' +
+
+    '<div class="bloc">' +
+      '<div class="bloc-titre">Détail des cours validés</div>' +
+      '<table>' +
+        '<tr><th>Date</th><th>Classe</th><th>Matière</th><th class="montant">Heures</th><th class="montant">Montant</th></tr>' +
+        lignesCours +
+        '<tr class="total-row"><td colspan="3">Total</td><td class="montant">' + d.totalHeures.toFixed(2) + ' h</td><td class="montant">' + _formaterMontant(d.totalSalaire) + ' F</td></tr>' +
+      '</table>' +
+    '</div>' +
+
+    '<div class="net">NET À PAYER : ' + _formaterMontant(d.totalSalaire) + ' F CFA</div>' +
+
+    '<div class="pied">' +
+      '<div>Fait à Abidjan, le ' + dateEmission + '</div>' +
+    '</div>' +
+    '<div class="pied">' +
+      '<div class="signature"><div class="ligne-sign">Signature Comptable</div></div>' +
+      '<div class="signature"><div class="ligne-sign">Cachet école</div></div>' +
+    '</div>' +
+
+    '</body></html>';
+
+  var w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(function(){ w.print(); }, 400);
+}
 function chargerMasseSalarialeDir(ecole){
   const sheetsId=SHEETS_IDS_2026_2027[ecole];
   const body=document.getElementById('dirMasseSalarialeBody');
