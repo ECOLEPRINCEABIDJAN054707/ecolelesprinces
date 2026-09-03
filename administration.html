@@ -1220,6 +1220,8 @@ async function chargerPersonnelEnsCom() {
         + '<td>'+(p.type!=='PERMANENT'?'<button onclick="imprimerBulletinVacataireDepuisListe(\''+p.nom.replace(/'/g,"\\'")+'\')" style="padding:5px 10px;background:var(--or);color:#fff;border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer">🖨</button>':'—')+'</td>'
         + '</tr>';
     });
+       const totalMois = rows.filter(function(p){return p.type!=='PERMANENT';}).reduce(function(s,p){return s + (montantsMois[p.nom.toUpperCase()]||0);}, 0);
+    h += '<tr style="border-top:2px solid var(--or)"><td colspan="4" style="font-weight:700;text-align:right">TOTAL MASSE SALARIALE VACATAIRES (mois)</td><td style="font-weight:700;color:var(--or)">' + Math.round(totalMois).toLocaleString('fr-FR') + ' F</td><td></td><td></td></tr>';
     h += '</tbody></table></div>';
     body.innerHTML = h;
   } catch(e) {
@@ -2339,7 +2341,9 @@ let h = hFiltre + '<div class="tbl-wrap"><table><thead><tr><th>Nom</th><th>Poste
       + '<td id="persStatut_'+idx+'" style="font-size:0.8em;color:var(--gris)">—</td>'
       + '</tr>';
   });
-  h += '</tbody></table></div>';
+      const totalMoisDir = rows.filter(function(p){return p.type!=='PERMANENT';}).reduce(function(s,p){return s + ((window._montantsMoisDir||{})[p.nom.toUpperCase()]||0);}, 0);
+      h += '<tr style="border-top:2px solid var(--or)"><td colspan="5" style="font-weight:700;text-align:right">TOTAL MASSE SALARIALE VACATAIRES (mois)</td><td style="font-weight:700;color:var(--or)">' + Math.round(totalMoisDir).toLocaleString('fr-FR') + ' F</td><td></td><td></td></tr>';
+   h += '</tbody></table></div>';
   h += '<div style="padding:10px 14px"><input type="text" id="persSearch" oninput="filtrerListePersonnelDir()" placeholder="Rechercher un nom..." style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"></div>';
   body.innerHTML = h;
 }
@@ -13219,6 +13223,8 @@ async function _chargerBulletinsSalaire(ecole, bodyId) {
         + '<td style="text-align:right;font-weight:700">' + Math.round(l.net).toLocaleString('fr-FR') + ' F</td>'
         + '<td><button onclick="imprimerBulletin(\'' + sheetsId + '\',' + l.numero + ')" style="padding:6px 12px;background:var(--or);color:#fff;border:none;border-radius:6px;font-size:0.78em;font-weight:700;cursor:pointer">🖨 Bulletin</button></td></tr>';
     });
+      const totalNet = lignes.reduce(function(s, l) { return s + l.net; }, 0);
+      h += '<tr style="border-top:2px solid var(--or)"><td colspan="2" style="font-weight:700;text-align:right">TOTAL MASSE SALARIALE</td><td style="text-align:right;font-weight:700;color:var(--or)">' + Math.round(totalNet).toLocaleString('fr-FR') + ' F</td><td></td></tr>';
     h += '</tbody></table></div>';
     body.innerHTML = h;
   } catch (e) {
