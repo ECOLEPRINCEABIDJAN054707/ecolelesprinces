@@ -5485,7 +5485,7 @@ async function traiterAttente(decision){
     window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(res&&res.ok){showToast('Decision: '+salaire.toLocaleString('fr-FR')+' F','success');fermerModalAttente();setTimeout(()=>chargerPointage(),2000);}else showToast('Erreur','error');resolve(res);};
     script.onerror=()=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}showToast('Erreur connexion','error');resolve({ok:false});};
     script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();document.body.appendChild(script);
-    setTimeout(()=>{if(window[cbName]){delete window[cbName];showToast('Delai depasse','error');resolve({ok:false});}},10000);
+    setTimeout(()=>{if(window[cbName]){delete window[cbName];showToast('Delai depasse','error');resolve({ok:false});}},25000);
   });
 }
 function chargerBulletinsPrimaire(){
