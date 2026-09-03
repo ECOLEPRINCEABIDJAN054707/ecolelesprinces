@@ -1240,7 +1240,7 @@ async function chargerPersonnelEnsEdu() {
       actif: String(row[3]||'').trim().toUpperCase(),
       type: String(row[4]||'VACATAIRE').trim().toUpperCase(),
       salaire: row[5]||0
-    })).filter(p => p.nom);
+       })).filter(p => p.nom).sort((a,b) => a.nom.localeCompare(b.nom, 'fr'));
     const cnt = document.getElementById('eduPersonnelEnsCount');
     if (cnt) cnt.textContent = '('+rows.length+' personne(s))';
     if (!rows.length) { body.innerHTML = '<p style="padding:14px;color:var(--gris)">Aucun personnel enregistré</p>'; return; }
@@ -1287,7 +1287,7 @@ async function chargerPersonnelAdminDir(){
     _personnelAdminCache=rows;
     const cnt=document.getElementById('dirPersonnelAdminCount');
     if(cnt)cnt.textContent='('+rows.length+' personne(s))';
-    renderPersonnelAdminDir(rows);
+            renderPersonnelAdminDir(rows.slice().sort((a,b) => a.nom.localeCompare(b.nom, 'fr')));
   }catch(e){
     body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.95em">Erreur de chargement</p>';
   }
@@ -1355,7 +1355,8 @@ async function sauvegarderPersonnelAdminDir(idx){
     if(cnt)cnt.textContent='('+rows.length+' personne(s))';
     if(!rows.length){body.innerHTML='<p style="padding:14px;color:var(--gris);font-size:0.95em">Aucun Comptable ou Éducateur trouvé pour votre école.</p>';return;}
     let h='<div class="tbl-wrap"><table><thead><tr><th style="font-size:0.95em">Nom</th><th style="font-size:0.95em">Matricule</th><th style="font-size:0.95em">Rôle</th></tr></thead><tbody>';
-    rows.forEach(p=>{
+           rows.sort((a,b) => a.nom.localeCompare(b.nom, 'fr'));
+        rows.forEach(p=>{
       const roleLabel=p.profil==='COM'?'Comptable':'Éducateur';
       const badgeCouleur=p.profil==='COM'?'#E65100':'#4A148C';
       h+='<tr>'
@@ -1393,7 +1394,8 @@ async function sauvegarderPersonnelAdminDir(idx){
     if(cnt)cnt.textContent='('+rows.length+' personne(s))';
     if(!rows.length){body.innerHTML='<p style="padding:14px;color:var(--gris);font-size:0.95em">Aucun Comptable ou Éducateur trouvé pour votre école.</p>';return;}
     let h='<div class="tbl-wrap"><table><thead><tr><th style="font-size:0.95em">Nom</th><th style="font-size:0.95em">Matricule</th><th style="font-size:0.95em">Rôle</th></tr></thead><tbody>';
-    rows.forEach(p=>{
+            rows.sort((a,b) => a.nom.localeCompare(b.nom, 'fr'));
+        rows.forEach(p=>{
       const roleLabel=p.profil==='COM'?'Comptable':'Éducateur';
       const badgeCouleur=p.profil==='COM'?'#E65100':'#4A148C';
       h+='<tr>'
