@@ -2310,8 +2310,10 @@ if (spanMois) spanMois.textContent = '— ' + moisActuelLabel;
         } catch(eP) {}
       }
       renderListePersonnelDir(rows);
-  } catch(e) {
-    body.innerHTML = '<p style="padding:14px;color:var(--rouge)">Erreur de chargement</p>';
+} catch(e) {
+  console.error('ERREUR PERSONNEL DIR:', e);
+  body.innerHTML = '<p style="padding:14px;color:var(--rouge)">Erreur de chargement</p>';
+}
   }
 }
 
