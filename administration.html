@@ -2276,7 +2276,30 @@ var lignes = cache.filter(function(l) {
     _personnelListeCache = rows;
     const cnt = document.getElementById('dirPersonnelCount');
     if (cnt) cnt.textContent = '('+rows.length+' personne(s))';
-    renderListePersonnelDir(rows);
+         window._montantsMoisDir = {};
+      const sheetsId2026 = SHEETS_IDS_2026_2027[currentStaff.ecole];
+      if (sheetsId2026) {
+        try {
+          const urlP = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId2026+'/values/POINTAGE_MENSUEL?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+          const rP = await fetch(urlP); const dataP = await rP.json();
+          const now = new Date();
+          const moisActuel = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+          (dataP.values || []).slice(1).forEach(row => {
+            const ens = String(row[4]||'').trim().toUpperCase();
+            if (!ens) return;
+            let moisLigne = '';
+            const moisVal = row[6];
+            if (moisVal instanceof Date) moisLigne = moisVal.getUTCFullYear()+'-'+String(moisVal.getUTCMonth()+1).padStart(2,'0');
+            else moisLigne = String(moisVal||'').trim();
+            if (moisLigne !== moisActuel) return;
+            const statut = String(row[9]||'').trim().toUpperCase();
+            if (statut.indexOf('VALID')===-1 && statut!=='PARTIEL') return;
+            const sal = parseFloat(row[11]) || 0;
+            window._montantsMoisDir[ens] = (window._montantsMoisDir[ens]||0) + sal;
+          });
+        } catch(eP) {}
+      }
+      renderListePersonnelDir(rows);
   } catch(e) {
     body.innerHTML = '<p style="padding:14px;color:var(--rouge)">Erreur de chargement</p>';
   }
@@ -2292,7 +2315,7 @@ var lignes = cache.filter(function(l) {
     + '<button onclick="setFiltrePersonnelActif(\'NON\')" style="padding:6px 12px;border-radius:20px;border:1.5px solid '+(_personnelFiltreActif==='NON'?'var(--rouge)':'var(--border)')+';background:'+(_personnelFiltreActif==='NON'?'var(--rouge)':'#fff')+';color:'+(_personnelFiltreActif==='NON'?'#fff':'var(--gris)')+';font-size:0.78em;font-weight:700;cursor:pointer">✗ Désactivés ('+_personnelListeCache.filter(p=>p.actif!=='OUI').length+')</button>'
     + '<button onclick="ajouterLignePersonnelVide()" style="padding:6px 14px;border-radius:20px;border:none;background:var(--violet);color:#fff;font-size:0.78em;font-weight:700;cursor:pointer;margin-left:auto">➕ Nouvelle personne</button>'
     + '</div>';
-  let h = hFiltre + '<div class="tbl-wrap"><table><thead><tr><th>Nom</th><th>Poste</th><th>Code</th><th>Type</th><th>Salaire fixe</th><th>Actif</th><th></th><th>Bulletin</th></tr></thead><tbody>';
+let h = hFiltre + '<div class="tbl-wrap"><table><thead><tr><th>Nom</th><th>Poste</th><th>Code</th><th>Type</th><th>Salaire fixe</th><th>Montant (mois)</th><th>Actif</th><th></th><th>Bulletin</th></tr></thead><tbody>';
   rows.forEach((p, idx) => {
     h += '<tr>'
       + '<td><input type="text" id="persNom_'+idx+'" value="'+p.nom.replace(/"/g,'&quot;')+'" onblur="sauvegarderPersonnelDir('+idx+')" style="width:100%;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;font-weight:600"></td>'
@@ -2303,6 +2326,7 @@ var lignes = cache.filter(function(l) {
         + '<option value="PERMANENT"'+(p.type==='PERMANENT'?' selected':'')+'>Permanent</option>'
         + '</select></td>'
       + '<td><input type="number" id="persSalaire_'+idx+'" value="'+p.salaire+'" onblur="sauvegarderPersonnelDir('+idx+')" style="width:100px;padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em"></td>'
+            + '<td style="font-size:0.85em;font-weight:700;color:var(--or)">' + (p.type!=='PERMANENT' ? (((window._montantsMoisDir||{})[p.nom.toUpperCase()]||0).toLocaleString('fr-FR')+' F') : '—') + '</td>'
       + '<td><select id="persActif_'+idx+'" onchange="sauvegarderPersonnelDir('+idx+')" style="padding:6px;border:1.5px solid var(--border);border-radius:6px;font-size:0.85em;font-weight:700;color:'+(p.actif==='OUI'?'var(--vert)':'var(--rouge)')+'">'
         + '<option value="OUI"'+(p.actif==='OUI'?' selected':'')+'>✓ Actif</option>'
         + '<option value="NON"'+(p.actif!=='OUI'?' selected':'')+'>✗ Désactivé</option>'
