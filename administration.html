@@ -1177,11 +1177,11 @@ async function chargerPersonnelEnsCom() {
       actif: String(row[3]||'').trim().toUpperCase(),
       type: String(row[4]||'VACATAIRE').trim().toUpperCase(),
       salaire: row[5]||0
-    })).filter(p => p.nom);
+   })).filter(p => p.nom).sort((a,b) => a.nom.localeCompare(b.nom, 'fr'));
     const cnt = document.getElementById('comPersonnelEnsCount');
     if (cnt) cnt.textContent = '('+rows.length+' personne(s))';
     if (!rows.length) { body.innerHTML = '<p style="padding:14px;color:var(--gris)">Aucun personnel enregistré</p>'; return; }
-    let h = '<div class="tbl-wrap"><table><thead><tr><th style="font-size:0.95em">Nom</th><th style="font-size:0.95em">Poste</th><th style="font-size:0.95em">Type</th><th style="font-size:0.95em">Salaire fixe</th><th style="font-size:0.95em">Actif</th></tr></thead><tbody>';
+    let h = '<div class="tbl-wrap"><table><thead><tr><th style="font-size:0.95em">Nom</th><th style="font-size:0.95em">Poste</th><th style="font-size:0.95em">Type</th><th style="font-size:0.95em">Salaire fixe</th><th style="font-size:0.95em">Actif</th><th style="font-size:0.95em">Bulletin</th></tr></thead><tbody>';
     rows.forEach(p => {
       h += '<tr>'
         + '<td style="font-size:0.95em;font-weight:600">'+p.nom+'</td>'
@@ -1189,6 +1189,7 @@ async function chargerPersonnelEnsCom() {
         + '<td style="font-size:0.95em">'+(p.type==='PERMANENT'?'Permanent':'Vacataire')+'</td>'
         + '<td style="font-size:0.95em">'+(p.salaire?Number(p.salaire).toLocaleString('fr-FR')+' F':'—')+'</td>'
         + '<td style="font-size:0.95em;font-weight:700;color:'+(p.actif==='OUI'?'var(--vert)':'var(--rouge)')+'">'+(p.actif==='OUI'?'✓ Actif':'✗ Désactivé')+'</td>'
+                      + '<td>'+(p.type!=='PERMANENT'?'<button onclick="imprimerBulletinVacataireDepuisListe(\''+p.nom.replace(/'/g,"\\'")+'\')" style="padding:5px 10px;background:var(--or);color:#fff;border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer">🖨</button>':'—')+'</td>'
         + '</tr>';
     });
     h += '</tbody></table></div>';
