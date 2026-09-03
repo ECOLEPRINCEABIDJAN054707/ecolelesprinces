@@ -4997,6 +4997,7 @@ function getTarif(ecole,classe){const t=TARIFS[ecole]||TARIF_DEFAUT;return/^(2ND
 function calculerSalaireV2(dm,tarif){const S=50,hC=Math.floor(dm/60),r=dm%60;let hV=hC;if(r>=S)hV+=1;return{heuresValidees:hV,resteMin:r,salaire:hV*tarif,salPartiel:Math.round(hV*tarif*0.5)};}
 function toDate(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>40000){const d=new Date(Math.round((n-25569)*86400*1000));return d.getUTCDate().toString().padStart(2,'0')+'/'+(d.getUTCMonth()+1).toString().padStart(2,'0')+'/'+d.getUTCFullYear();}return String(val);}
 function toHeure(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>0&&n<1){const m=Math.round(n*24*60);return Math.floor(m/60).toString().padStart(2,'0')+':'+(m%60).toString().padStart(2,'0');}return String(val).trim();}
+  function minStr(min){min=Math.round(min||0);const h=Math.floor(min/60);const m=min%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');}
 function parseH(h){if(!h)return 0;const s=h.toString().replace('h',':').split(':').map(Number);return(s[0]||0)*60+(s[1]||0);}
 function serielVersMois(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>40000){const d=new Date(Math.round((n-25569)*86400*1000));return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');}return String(val).trim().substring(0,7);}
 function getSemActuelle(){const debut=new Date('2025-09-08'),now=new Date(),diff=Math.floor((now-debut)/(7*24*60*60*1000))+1;return Math.max(1,Math.min(30,diff));}
