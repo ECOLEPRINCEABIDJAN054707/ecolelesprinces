@@ -2253,7 +2253,8 @@ var lignes = cache.filter(function(l) {
   }
 }
 
-function renderListePersonnelDir(rows) {
+ function renderListePersonnelDir(rows) {
+  rows = rows.slice().sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
   const body = document.getElementById('dirPersonnelBody');
   if (!rows.length) { body.innerHTML = '<p style="padding:14px;color:var(--gris)">Aucun personnel enregistré</p>'; return; }
   let hFiltre = '<div style="padding:10px 14px;display:flex;gap:6px">'
