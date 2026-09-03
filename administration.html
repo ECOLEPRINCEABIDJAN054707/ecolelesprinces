@@ -328,7 +328,17 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div>
-<div class="section" id="dirSecEdtClasse">
+<div class="section" id="dirSecBulletinsSalaire">
+  <div class="sec-head sec-or" onclick="chargerBulletinsSalaireDir(currentStaff.ecole);toggleSec(this)">
+    <h3>&#128220; Bulletins de salaire &mdash; Personnel Permanent</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div id="dirBulletinsSalaireBody" style="padding:8px">
+      <div style="text-align:center;padding:30px;color:var(--gris)">Cliquez pour charger la liste</div>
+    </div>
+  </div>
+</div>
+  <div class="section" id="dirSecEdtClasse">
 <div class="sec-head sec-or" onclick="toggleSec(this);peuplerEdtClasseSelect()">
   <h3>&#128197; Emploi du temps &mdash; Classe</h3><span class="arr">&#9660;</span>
 </div>
@@ -2637,6 +2647,17 @@ async function sauvegarderPersonnelDir(idx) {
     </div>
   </div>
 </div>
+ <div class="section" id="comSecBulletinsSalaire">
+  <div class="sec-head sec-or" onclick="chargerBulletinsSalaireCom(currentStaff.ecole);toggleSec(this)">
+    <h3>&#128220; Bulletins de salaire &mdash; Personnel Permanent</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div id="comBulletinsSalaireBody" style="padding:8px">
+      <div style="text-align:center;padding:30px;color:var(--gris)">Cliquez pour charger la liste</div>
+    </div>
+  </div>
+</div>
+  
   <div class="section" id="comSecEdtClasse">
   <div class="sec-head sec-or" onclick="toggleSec(this);peuplerEdtClasseSelectCom()">
     <h3>&#128197; Emploi du temps &mdash; Classe</h3><span class="arr">&#9660;</span>
@@ -12965,6 +12986,61 @@ function chargerMasseSalarialeCom(ecole){
   setTimeout(function(){if(window[cbName]){delete window[cbName];if(body)body.innerHTML='<p style="text-align:center;padding:20px;color:var(--rouge);font-size:0.82em">D&eacute;lai d&eacute;pass&eacute;</p>';}},10000);
   script.src=APP_SCRIPT_URL_ADMIN+'?'+params.toString();
   document.body.appendChild(script);
+}
+  
+function chargerBulletinsSalaireDir(ecole) {
+  _chargerBulletinsSalaire(ecole, 'dirBulletinsSalaireBody');
+}
+function chargerBulletinsSalaireCom(ecole) {
+  _chargerBulletinsSalaire(ecole, 'comBulletinsSalaireBody');
+}
+
+async function _chargerBulletinsSalaire(ecole, bodyId) {
+  const body = document.getElementById(bodyId);
+  const sheetsId = SHEETS_IDS_2026_2027[ecole];
+  if (!sheetsId) { body.innerHTML = '<p style="text-align:center;padding:20px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configurée</p>'; return; }
+  body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+  try {
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/PERSONNEL_SALAIRES?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    const r = await fetch(url);
+    const data = await r.json();
+    if (!data.values || data.values.length < 5) { body.innerHTML = '<p style="text-align:center;padding:20px;color:var(--gris);font-size:0.82em">Aucune donnée</p>'; return; }
+
+    const headerRow = data.values[3].map(function(h){ return String(h||'').toUpperCase().trim(); });
+    const iNom = headerRow.indexOf('NOM');
+    const iPoste = headerRow.findIndex(function(h){ return h.indexOf('POSTE') >= 0; });
+    const iNet = headerRow.findIndex(function(h){ return h.indexOf('NET A PAYER') >= 0; });
+    const iType = headerRow.indexOf('TYPE');
+
+    const lignes = [];
+    for (var i = 4; i < data.values.length; i++) {
+      const row = data.values[i];
+      const nom = String(row[1] || '').trim();
+      if (!nom) continue;
+      if (String(nom).toUpperCase().indexOf('TOTAL') >= 0) continue;
+      const type = iType >= 0 ? String(row[iType] || '').trim() : 'Permanent';
+      if (type && type.toUpperCase() !== 'PERMANENT') continue;
+      lignes.push({
+        numero: row[0],
+        nom: nom,
+        poste: iPoste >= 0 ? String(row[iPoste] || '').trim() : '',
+        net: iNet >= 0 ? (parseFloat(row[iNet]) || 0) : 0
+      });
+    }
+
+    if (!lignes.length) { body.innerHTML = '<p style="text-align:center;padding:20px;color:var(--gris);font-size:0.82em">Aucun permanent trouvé</p>'; return; }
+
+    let h = '<div class="tbl-wrap"><table><thead><tr><th>Nom</th><th>Poste</th><th>Net à payer</th><th></th></tr></thead><tbody>';
+    lignes.forEach(function(l) {
+      h += '<tr><td><strong>' + l.nom + '</strong></td><td style="font-size:0.85em">' + l.poste + '</td>'
+        + '<td style="text-align:right;font-weight:700">' + Math.round(l.net).toLocaleString('fr-FR') + ' F</td>'
+        + '<td><button onclick="imprimerBulletin(\'' + sheetsId + '\',' + l.numero + ')" style="padding:6px 12px;background:var(--or);color:#fff;border:none;border-radius:6px;font-size:0.78em;font-weight:700;cursor:pointer">🖨 Bulletin</button></td></tr>';
+    });
+    h += '</tbody></table></div>';
+    body.innerHTML = h;
+  } catch (e) {
+    body.innerHTML = '<p style="text-align:center;padding:20px;color:var(--rouge);font-size:0.82em">Erreur de chargement</p>';
+  }
 }
   function logout(){
   if(currentStaff && (currentStaff.profil==='EDU' || currentStaff.profil==='COM')){
