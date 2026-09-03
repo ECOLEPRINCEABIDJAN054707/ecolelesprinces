@@ -2315,7 +2315,6 @@ if (spanMois) spanMois.textContent = '— ' + moisActuelLabel;
   body.innerHTML = '<p style="padding:14px;color:var(--rouge)">Erreur de chargement</p>';
 }
   }
-}
 
  function renderListePersonnelDir(rows) {
   rows = rows.slice().sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
