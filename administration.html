@@ -1089,7 +1089,7 @@ table tr:nth-child(even){background:#F8FAFD}
 </div>
   <div class="section" id="dirSecListePersonnel">
   <div class="sec-head sec-violet" onclick="chargerListePersonnelDir();toggleSec(this)">
-    <h3>📋 Personnel Enseignant <span id="dirPersonnelCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+<h3>&#128203; Personnel Enseignant <span id="dirPersonnelCount" style="font-size:0.78em;opacity:0.85"></span> <span id="dirPersonnelEnsMois" style="font-size:0.78em;opacity:0.85;color:var(--or)"></span></h3><span class="arr">&#9660;</span>
   </div>
   <div class="sec-body" id="dirPersonnelBody">
     <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour charger la liste du personnel (enseignants et personnel administratif).</p>
@@ -1188,6 +1188,7 @@ async function chargerPersonnelEnsCom() {
         const rP = await fetch(urlP); const dataP = await rP.json();
         const now = new Date();
         const moisActuel = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
+       const moisActuelLabel = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
         (dataP.values || []).slice(1).forEach(row => {
           const ens = String(row[4]||'').trim().toUpperCase();
           if (!ens) return;
@@ -1205,6 +1206,8 @@ async function chargerPersonnelEnsCom() {
     }
 
     const cnt = document.getElementById('comPersonnelEnsCount');
+    const spanMois = document.getElementById('comPersonnelEnsMois');
+if (spanMois) spanMois.textContent = '— ' + moisActuelLabel;
     if (cnt) cnt.textContent = '('+rows.length+' personne(s))';
     if (!rows.length) { body.innerHTML = '<p style="padding:14px;color:var(--gris)">Aucun personnel enregistré</p>'; return; }
     let h = '<div class="tbl-wrap"><table><thead><tr><th style="font-size:0.95em">Nom</th><th style="font-size:0.95em">Poste</th><th style="font-size:0.95em">Type</th><th style="font-size:0.95em">Salaire fixe</th><th style="font-size:0.95em">Montant (mois)</th><th style="font-size:0.95em">Actif</th><th style="font-size:0.95em">Bulletin</th></tr></thead><tbody>';
@@ -1221,7 +1224,7 @@ async function chargerPersonnelEnsCom() {
         + '</tr>';
     });
        const totalMois = rows.filter(function(p){return p.type!=='PERMANENT';}).reduce(function(s,p){return s + (montantsMois[p.nom.toUpperCase()]||0);}, 0);
-    h += '<tr style="border-top:2px solid var(--or)"><td colspan="4" style="font-weight:700;text-align:right">TOTAL MASSE SALARIALE VACATAIRES (mois)</td><td style="font-weight:700;color:var(--or)">' + Math.round(totalMois).toLocaleString('fr-FR') + ' F</td><td></td><td></td></tr>';
+h += '<tr style="border-top:2px solid var(--or)"><td colspan="4" style="font-weight:700;text-align:right">TOTAL MASSE SALARIALE VACATAIRES — ' + moisActuelLabel + '</td><td style="font-weight:700;color:var(--or)">' + Math.round(totalMois).toLocaleString('fr-FR') + ' F</td><td></td></tr>';
     h += '</tbody></table></div>';
     body.innerHTML = h;
   } catch(e) {
@@ -2288,15 +2291,18 @@ var lignes = cache.filter(function(l) {
           const rP = await fetch(urlP); const dataP = await rP.json();
           const now = new Date();
           const moisActuel = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-          (dataP.values || []).slice(1).forEach(row => {
-            const ens = String(row[4]||'').trim().toUpperCase();
-            if (!ens) return;
-            let moisLigne = '';
-            const moisVal = row[6];
-            if (moisVal instanceof Date) moisLigne = moisVal.getUTCFullYear()+'-'+String(moisVal.getUTCMonth()+1).padStart(2,'0');
-            else moisLigne = String(moisVal||'').trim();
-            if (moisLigne !== moisActuel) return;
-            const statut = String(row[9]||'').trim().toUpperCase();
+         const moisActuelLabel = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+         const spanMois = document.getElementById('dirPersonnelEnsMois');
+if (spanMois) spanMois.textContent = '— ' + moisActuelLabel;
+(dataP.values || []).slice(1).forEach(row => {
+  const ens = String(row[4]||'').trim().toUpperCase();
+  if (!ens) return;
+  let moisLigne = '';
+  const moisVal = row[6];
+  if (moisVal instanceof Date) moisLigne = moisVal.getUTCFullYear()+'-'+String(moisVal.getUTCMonth()+1).padStart(2,'0');
+  else moisLigne = String(moisVal||'').trim();
+  if (moisLigne !== moisActuel) return;
+  const statut = String(row[9]||'').trim().toUpperCase();
             if (statut.indexOf('VALID')===-1 && statut!=='PARTIEL') return;
             const sal = parseFloat(row[11]) || 0;
             window._montantsMoisDir[ens] = (window._montantsMoisDir[ens]||0) + sal;
@@ -2342,7 +2348,7 @@ let h = hFiltre + '<div class="tbl-wrap"><table><thead><tr><th>Nom</th><th>Poste
       + '</tr>';
   });
       const totalMoisDir = rows.filter(function(p){return p.type!=='PERMANENT';}).reduce(function(s,p){return s + ((window._montantsMoisDir||{})[p.nom.toUpperCase()]||0);}, 0);
-      h += '<tr style="border-top:2px solid var(--or)"><td colspan="5" style="font-weight:700;text-align:right">TOTAL MASSE SALARIALE VACATAIRES (mois)</td><td style="font-weight:700;color:var(--or)">' + Math.round(totalMoisDir).toLocaleString('fr-FR') + ' F</td><td></td><td></td></tr>';
+h += '<tr style="border-top:2px solid var(--or)"><td colspan="5" style="font-weight:700;text-align:right">TOTAL MASSE SALARIALE VACATAIRES — ' + moisActuelLabel + '</td><td style="font-weight:700;color:var(--or)">' + Math.round(totalMoisDir).toLocaleString('fr-FR') + ' F</td><td></td><td></td></tr>';
    h += '</tbody></table></div>';
   h += '<div style="padding:10px 14px"><input type="text" id="persSearch" oninput="filtrerListePersonnelDir()" placeholder="Rechercher un nom..." style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"></div>';
   body.innerHTML = h;
@@ -3133,7 +3139,7 @@ async function attribuerMatriculeCom() {
 </div>
   <div class="section" id="comSecPersonnelEns">
   <div class="sec-head sec-violet" onclick="chargerPersonnelEnsCom();toggleSec(this)">
-    <h3>📋 Personnel Enseignant <span id="comPersonnelEnsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+<h3>&#128203; Personnel Enseignant <span id="comPersonnelEnsCount" style="font-size:0.78em;opacity:0.85"></span> <span id="comPersonnelEnsMois" style="font-size:0.78em;opacity:0.85;color:var(--or)"></span></h3><span class="arr">&#9660;</span>
   </div>
   <div class="sec-body" id="comPersonnelEnsBody">
     <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger la liste du personnel enseignant de votre école.</p>
