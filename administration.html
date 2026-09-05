@@ -1089,7 +1089,7 @@ table tr:nth-child(even){background:#F8FAFD}
 </div>
   <div class="section" id="dirSecListePersonnel">
   <div class="sec-head sec-violet" onclick="chargerListePersonnelDir();toggleSec(this)">
-<h3>&#128203; Personnel Enseignant <span id="dirPersonnelCount" style="font-size:0.78em;opacity:0.85"></span> <span id="dirPersonnelEnsMois" style="font-size:0.78em;opacity:0.85;color:var(--or)"></span></h3><span class="arr">&#9660;</span>
+<h3>&#128203; Personnel Enseignant <span id="dirPersonnelCount" style="font-size:0.78em;opacity:0.85"></span> <span id="dirPersonnelEnsMois" style="font-size:0.78em;opacity:0.85;color:var(--or)"></span></h3><button onclick="event.stopPropagation();telechargerPersonnelEnsPDF('dir')" style="padding:5px 10px;background:#fff;color:var(--violet);border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer;margin-right:6px">📥 PDF</button><span class="arr">&#9660;</span>
   </div>
   <div class="sec-body" id="dirPersonnelBody">
     <p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour charger la liste du personnel (enseignants et personnel administratif).</p>
@@ -1233,7 +1233,8 @@ if (spanMois) spanMois.textContent = '— ' + moisActuelLabel;
        const totalMois = rows.filter(function(p){return p.type!=='PERMANENT';}).reduce(function(s,p){return s + (montantsMois[p.nom.toUpperCase()]||0);}, 0);
 h += '<tr style="border-top:2px solid var(--or)"><td colspan="4" style="font-weight:700;text-align:right">TOTAL MASSE SALARIALE VACATAIRES — ' + moisActuelLabel + '</td><td style="font-weight:700;color:var(--or)">' + Math.round(totalMois).toLocaleString('fr-FR') + ' F</td><td></td></tr>';
     h += '</tbody></table></div>';
-    body.innerHTML = h;
+          window._personnelComAffiches = rows;
+      body.innerHTML = h;
   } catch(e) {
     body.innerHTML = '<p style="padding:14px;color:var(--rouge)">Erreur de chargement</p>';
   }
@@ -1954,6 +1955,76 @@ async function chargerProgrammeTrimestrielDir() {
     showToast('Erreur génération PDF', 'error');
   }
 }
+ function telechargerPersonnelEnsPDF(espace) {
+  var rows = espace === 'dir' ? window._personnelDirAffiches : window._personnelComAffiches;
+  if (!rows || !rows.length) {
+    showToast('Aucune donnée chargée', 'error');
+    return;
+  }
+
+  try {
+    var doc = new jspdf.jsPDF();
+    var pageWidth = doc.internal.pageSize.getWidth();
+    var y = 18;
+
+    doc.setFontSize(14);
+    doc.setFont(undefined, 'bold');
+    doc.text('Personnel Enseignant', pageWidth / 2, y, { align: 'center' });
+    y += 7;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(String(currentStaff.label || currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
+    y += 5;
+    doc.setFontSize(8);
+    doc.setTextColor(120);
+    doc.text('Généré le ' + new Date().toLocaleDateString('fr-FR'), pageWidth / 2, y, { align: 'center' });
+    y += 9;
+    doc.setTextColor(0);
+
+    doc.setFontSize(8);
+    doc.setFont(undefined, 'bold');
+    var colX = [14, 65, 105, 140, 165, 190];
+    var headers = ['Nom', 'Poste', 'Type', 'Salaire fixe', 'Montant (mois)', 'Statut'];
+    headers.forEach(function(h, idx) { doc.text(h, colX[idx], y); });
+    y += 5;
+    doc.setDrawColor(180);
+    doc.line(14, y - 3, pageWidth - 14, y - 3);
+    doc.setFont(undefined, 'normal');
+
+    var totalMois = 0;
+    var montantsMois = (espace === 'dir') ? (window._montantsMoisDir || {}) : null;
+
+    rows.forEach(function(p) {
+      if (y > 280) { doc.addPage(); y = 18; }
+      var estPermanent = (p.type === 'PERMANENT');
+      var montant = 0;
+      if (espace === 'dir') {
+        montant = !estPermanent ? ((montantsMois[String(p.nom).toUpperCase()] || 0)) : null;
+      } else {
+        montant = p._montantMois || 0;
+      }
+      if (!estPermanent && typeof montant === 'number') totalMois += montant;
+
+      doc.text(String(p.nom).substring(0, 28), colX[0], y);
+      doc.text(String(p.poste || '').substring(0, 22), colX[1], y);
+      doc.text(estPermanent ? 'Permanent' : 'Vacataire', colX[2], y);
+      doc.text(p.salaire ? Number(p.salaire).toLocaleString('fr-FR') + ' F' : '—', colX[3], y);
+      doc.text(estPermanent ? '—' : (Number(montant || 0).toLocaleString('fr-FR') + ' F'), colX[4], y);
+      doc.text(p.actif === 'OUI' ? 'Actif' : 'Désactivé', colX[5], y);
+      y += 5.5;
+    });
+
+    y += 4;
+    if (y > 280) { doc.addPage(); y = 18; }
+    doc.setFont(undefined, 'bold');
+    doc.setFontSize(9);
+    doc.text('TOTAL MASSE SALARIALE VACATAIRES : ' + Math.round(totalMois).toLocaleString('fr-FR') + ' F', 14, y);
+
+    doc.save('Personnel_Enseignant_' + (currentStaff.ecole || '').replace(/\s+/g, '_') + '.pdf');
+  } catch (e) {
+    showToast('Erreur génération PDF', 'error');
+  }
+}
   function telechargerNotesSaisiesPDF(espace) {
   var cache = espace === 'edu' ? window._notesCache_edu : (espace === 'dir' ? window._notesCache_dir : window._notesCache_com);
   var absMap = espace === 'edu' ? window._notesAbsMap_edu : (espace === 'dir' ? window._notesAbsMap_dir : window._notesAbsMap_com);
@@ -2330,8 +2401,9 @@ if (spanMois) spanMois.textContent = '— ' + moisActuelLabel;
 }
   }
 
- function renderListePersonnelDir(rows) {
+function renderListePersonnelDir(rows) {
   rows = rows.slice().sort(function(a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
+  window._personnelDirAffiches = rows;
   const body = document.getElementById('dirPersonnelBody');
   if (!rows.length) { body.innerHTML = '<p style="padding:14px;color:var(--gris)">Aucun personnel enregistré</p>'; return; }
   let hFiltre = '<div style="padding:10px 14px;display:flex;gap:6px">'
@@ -3154,7 +3226,7 @@ async function attribuerMatriculeCom() {
 </div>
   <div class="section" id="comSecPersonnelEns">
   <div class="sec-head sec-violet" onclick="chargerPersonnelEnsCom();toggleSec(this)">
-<h3>&#128203; Personnel Enseignant <span id="comPersonnelEnsCount" style="font-size:0.78em;opacity:0.85"></span> <span id="comPersonnelEnsMois" style="font-size:0.78em;opacity:0.85;color:var(--or)"></span></h3><span class="arr">&#9660;</span>
+<h3>&#128203; Personnel Enseignant <span id="comPersonnelEnsCount" style="font-size:0.78em;opacity:0.85"></span> <span id="comPersonnelEnsMois" style="font-size:0.78em;opacity:0.85;color:var(--or)"></span></h3><button onclick="event.stopPropagation();telechargerPersonnelEnsPDF('com')" style="padding:5px 10px;background:#fff;color:var(--violet);border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer;margin-right:6px">📥 PDF</button><span class="arr">&#9660;</span>
   </div>
   <div class="sec-body" id="comPersonnelEnsBody">
     <p style="padding:14px;font-size:0.95em;color:var(--gris)">Cliquez pour charger la liste du personnel enseignant de votre école.</p>
