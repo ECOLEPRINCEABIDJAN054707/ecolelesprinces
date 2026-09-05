@@ -1233,7 +1233,8 @@ if (spanMois) spanMois.textContent = '— ' + moisActuelLabel;
        const totalMois = rows.filter(function(p){return p.type!=='PERMANENT';}).reduce(function(s,p){return s + (montantsMois[p.nom.toUpperCase()]||0);}, 0);
 h += '<tr style="border-top:2px solid var(--or)"><td colspan="4" style="font-weight:700;text-align:right">TOTAL MASSE SALARIALE VACATAIRES — ' + moisActuelLabel + '</td><td style="font-weight:700;color:var(--or)">' + Math.round(totalMois).toLocaleString('fr-FR') + ' F</td><td></td></tr>';
     h += '</tbody></table></div>';
-          window._personnelComAffiches = rows;
+              window._montantsMoisCom = montantsMois;
+      window._personnelComAffiches = rows;
       body.innerHTML = h;
   } catch(e) {
     body.innerHTML = '<p style="padding:14px;color:var(--rouge)">Erreur de chargement</p>';
@@ -1956,7 +1957,8 @@ async function chargerProgrammeTrimestrielDir() {
   }
 }
  function telechargerPersonnelEnsPDF(espace) {
-  var rows = espace === 'dir' ? window._personnelDirAffiches : window._personnelComAffiches;
+  function fmtF(n) { return Math.round(n || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+   var rows = espace === 'dir' ? window._personnelDirAffiches : window._personnelComAffiches;
   if (!rows || !rows.length) {
     showToast('Aucune donnée chargée', 'error');
     return;
@@ -2001,15 +2003,15 @@ async function chargerProgrammeTrimestrielDir() {
       if (espace === 'dir') {
         montant = !estPermanent ? ((montantsMois[String(p.nom).toUpperCase()] || 0)) : null;
       } else {
-        montant = p._montantMois || 0;
+        montant = (window._montantsMoisCom && window._montantsMoisCom[String(p.nom).toUpperCase()]) || 0;
       }
       if (!estPermanent && typeof montant === 'number') totalMois += montant;
 
       doc.text(String(p.nom).substring(0, 28), colX[0], y);
       doc.text(String(p.poste || '').substring(0, 22), colX[1], y);
       doc.text(estPermanent ? 'Permanent' : 'Vacataire', colX[2], y);
-      doc.text(p.salaire ? Number(p.salaire).toLocaleString('fr-FR') + ' F' : '—', colX[3], y);
-      doc.text(estPermanent ? '—' : (Number(montant || 0).toLocaleString('fr-FR') + ' F'), colX[4], y);
+       doc.text(p.salaire ? fmtF(p.salaire) + ' F' : '—', colX[3], y);
+      doc.text(estPermanent ? '—' : (fmtF(montant) + ' F'), colX[4], y);
       doc.text(p.actif === 'OUI' ? 'Actif' : 'Désactivé', colX[5], y);
       y += 5.5;
     });
@@ -2018,7 +2020,7 @@ async function chargerProgrammeTrimestrielDir() {
     if (y > 280) { doc.addPage(); y = 18; }
     doc.setFont(undefined, 'bold');
     doc.setFontSize(9);
-    doc.text('TOTAL MASSE SALARIALE VACATAIRES : ' + Math.round(totalMois).toLocaleString('fr-FR') + ' F', 14, y);
+    doc.text('TOTAL MASSE SALARIALE VACATAIRES : ' + fmtF(totalMois) + ' F', 14, y);
 
     doc.save('Personnel_Enseignant_' + (currentStaff.ecole || '').replace(/\s+/g, '_') + '.pdf');
   } catch (e) {
