@@ -4204,13 +4204,11 @@ async function attribuerMatriculeCom() {
       <option>Gr&egrave;ve</option><option>Absence &eacute;l&egrave;ves</option><option>Coupure courant</option>
       <option>Intemp&eacute;ries</option><option>R&eacute;union &eacute;cole</option><option>Autre</option>
     </select>
-    <div class="modal-btns">
-      <button onclick="traiterAttente('VALID&Eacute;')" style="background:var(--vert);color:#fff">Valider</button>
-      <button onclick="traiterAttente('PARTIEL')" style="background:var(--orange);color:#fff">50%</button>
-      <button onclick="traiterAttente('REJET&Eacute;')" style="background:var(--rouge);color:#fff">Rejeter</button>
-      <button onclick="fermerModalAttente()" style="background:#E0E4EF">Annuler</button>
-    </div>
-  </div>
+<div class="modal-btns">
+  <button onclick="traiterAttente('VALIDÉ;')" style="background:var(--vert);color:#fff">Valider</button>
+  <button onclick="traiterAttente('REJETÉ;')" style="background:var(--rouge);color:#fff">Rejeter</button>
+  <button onclick="fermerModalAttente()" style="background:#E0E4EF">Annuler</button>
+</div>
 </div>
 
 <div class="modal" id="modalBulletin">
@@ -5062,7 +5060,7 @@ function mettreAJourLiensOutilsPedago(prefixe) {
   let currentStaff=null,donneesPointage=[],coursEnAttente=[],coursCourant=null,bulletinEnCours=null,tentativesPin=0,donneesSheetPeda=[],donneesResultats=[],donneesMessages=[],donneesElevesSheets=[],appelDir={};
 let notesTypeCourant='',notesClasseChoisie='',notesMatieresChoisies=[],notesElevesCache={};
 function getTarif(ecole,classe){const t=TARIFS[ecole]||TARIF_DEFAUT;return/^(2NDE|1[EÈ]RE|TLE|TERMINALE)/i.test(classe||'')?t.lycee:t.college;}
-function calculerSalaireV2(dm,tarif){const S=50,hC=Math.floor(dm/60),r=dm%60;let hV=hC;if(r>=S)hV+=1;return{heuresValidees:hV,resteMin:r,salaire:hV*tarif,salPartiel:Math.round(hV*tarif*0.5)};}
+function calculerSalaireV2(dm,tarif){return{heuresValidees:1,resteMin:0,salaire:tarif,salPartiel:0};}
 function toDate(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>40000){const d=new Date(Math.round((n-25569)*86400*1000));return d.getUTCDate().toString().padStart(2,'0')+'/'+(d.getUTCMonth()+1).toString().padStart(2,'0')+'/'+d.getUTCFullYear();}return String(val);}
 function toHeure(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>0&&n<1){const m=Math.round(n*24*60);return Math.floor(m/60).toString().padStart(2,'0')+':'+(m%60).toString().padStart(2,'0');}return String(val).trim();}
   function minStr(min){min=Math.round(min||0);const h=Math.floor(min/60);const m=min%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');}
@@ -5534,7 +5532,7 @@ function ouvrirModalAttente(idx){
   const tarif=getTarif(currentStaff.ecole,String(row[2]||''));
   const hD=(row[12]?String(row[12]).trim():'')||toHeure(row[1]);const hF=(row[13]?String(row[13]).trim():'')||toHeure(row[7]);
   const dm=hD&&hF?Math.max(0,parseH(hF)-parseH(hD)):0;const calc=calculerSalaireV2(dm,tarif);
-  document.getElementById('modalAttenteInfo').innerHTML='<div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:0.82em;line-height:1.9;margin-bottom:8px"><b>Enseignant:</b> '+(row[4]||'—')+'<br><b>Classe:</b> '+(row[2]||'—')+' · <b>Matiere:</b> '+(row[3]||'—')+'<br><b>Date:</b> '+toDate(row[0])+'</div><div class="calcul-bloc"><div class="calcul-row"><span>Debut</span><span style="color:var(--bleu)">'+(hD||'—')+'</span></div><div class="calcul-row"><span>Fin</span><span style="color:var(--bleu)">'+(hF||'—')+'</span></div><div class="calcul-row"><span>Duree</span><span style="color:var(--orange)">'+dm+' min</span></div><div class="calcul-row"><span>Tarif</span><span>'+tarif.toLocaleString('fr-FR')+' F/h</span></div></div><div class="sal-opts"><div class="sal-box vert"><div class="sal-box-label">VALIDE</div><div class="sal-box-val">'+calc.salaire.toLocaleString('fr-FR')+' F</div></div><div class="sal-box orange"><div class="sal-box-label">50%</div><div class="sal-box-val">'+calc.salPartiel.toLocaleString('fr-FR')+' F</div></div></div>';
+ document.getElementById('modalAttenteInfo').innerHTML='<div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:0.82em;line-height:1.9;margin-bottom:8px"><b>Enseignant:</b> '+(row[4]||'—')+'<br><b>Classe:</b> '+(row[2]||'—')+' · <b>Matiere:</b> '+(row[3]||'—')+'<br><b>Date:</b> '+toDate(row[0])+'</div><div class="calcul-bloc"><div class="calcul-row"><span>Debut</span><span style="color:var(--bleu)">'+(hD||'—')+'</span></div><div class="calcul-row"><span>Fin</span><span style="color:var(--bleu)">'+(hF||'—')+'</span></div><div class="calcul-row"><span>Duree</span><span style="color:var(--orange)">'+dm+' min</span></div><div class="calcul-row"><span>Tarif</span><span>'+tarif.toLocaleString('fr-FR')+' F/h</span></div></div><div class="sal-opts"><div class="sal-box vert"><div class="sal-box-label">VALIDE</div><div class="sal-box-val">'+calc.salaire.toLocaleString('fr-FR')+' F</div></div></div>';
   document.getElementById('modalRaison').value='';document.getElementById('modalAttente').style.display='flex';
 }
 function fermerModalAttente(){document.getElementById('modalAttente').style.display='none';coursCourant=null;}
@@ -5544,7 +5542,7 @@ async function traiterAttente(decision){
   const tarif=getTarif(currentStaff.ecole,String(row[2]||''));
   const hD=(row[12]?String(row[12]).trim():'')||toHeure(row[1]);const hF=(row[13]?String(row[13]).trim():'')||toHeure(row[7]);
   const dm=hD&&hF?Math.max(0,parseH(hF)-parseH(hD)):0;const calc=calculerSalaireV2(dm,tarif);
-  let salaire=0;if(decision==='VALID\u00C9')salaire=calc.salaire;if(decision==='PARTIEL')salaire=calc.salPartiel;
+  let salaire=0;if(decision==='VALID\u00C9')salaire=calc.salaire;
   const cbName='dir_'+Date.now();
   const params=new URLSearchParams({callback:cbName,type:'TRAITER_ATTENTE',ecole:currentStaff.ecole||'',enseignant:String(row[4]||''),classe:String(row[2]||''),date:toDate(row[0]),decision,raison,salaire});
   return new Promise(resolve=>{
