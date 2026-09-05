@@ -13109,7 +13109,8 @@ function ouvrirFenetreBulletin(d) {
       '<div class="ligne"><span>Catégorie</span><b>' + (d.categorie || '') + '</b></div>' +
       '<div class="ligne"><span>N° CNPS</span><b>' + (d.cnpsNumero || '—') + '</b></div>' +
       '<div class="ligne"><span>Date d\'embauche</span><b>' + _formaterDate(d.dateEmbauche) + '</b></div>' +
-      '<div class="ligne"><span>Ancienneté</span><b>' + (d.anciennete || 0) + ' an(s)</b></div>' +
+       '<div class="ligne"><span>Ancienneté</span><b>' + (d.anciennete || 0) + ' an(s)</b></div>' +
+      '<div class="ligne"><span>Type de contrat</span><b>' + (d.typeContrat || 'CDI') + '</b></div>' +
     '</div>' +
 
     '<div class="bloc">' +
@@ -13237,6 +13238,15 @@ function ouvrirFenetreBulletinVacataire(d) {
       '<div class="bloc-titre">Employé</div>' +
       '<div class="ligne"><span>Nom et prénoms</span><b>' + (d.enseignant || '') + '</b></div>' +
       '<div class="ligne"><span>Statut</span><b>Vacataire</b></div>' +
+      '<div class="ligne"><span>Type de contrat</span><b>' + (d.typeContrat || 'CDD') + '</b></div>' +
+    '</div>' +
+
+    '<div class="bloc" style="border-color:#E65100">' +
+      '<div class="bloc-titre" style="color:#E65100">Indemnité de fin de contrat (estimation)</div>' +
+      '<div class="ligne"><span>Cumul brut depuis le</span><b>' + (d.dateDebutCumul || '—') + '</b></div>' +
+      '<div class="ligne"><span>Cumul brut total (contrat)</span><b>' + _formaterMontant(d.cumulBrutContrat) + ' F</b></div>' +
+      '<div class="ligne"><span>Indemnité estimée (3%)</span><b>' + _formaterMontant(d.indemniteEstimee) + ' F</b></div>' +
+      '<div style="font-size:10px;color:#999;margin-top:6px;font-style:italic">Estimation indicative, due uniquement au terme du contrat (Art. 15.8 Code du Travail) — à vérifier selon la date réelle de début du contrat.</div>' +
     '</div>' +
 
     '<div class="bloc">' +
