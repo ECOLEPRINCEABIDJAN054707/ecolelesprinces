@@ -1194,7 +1194,7 @@ async function chargerBilan() {
   const moisCode = getMoisCode();
   document.getElementById('bilanMoisTitre').textContent = getMoisLabel();
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS[user.ecole]}/values/POINTAGE_MENSUEL!A2:L2000?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${getIdEcole(user.ecole, '2026-2027')}/values/POINTAGE_MENSUEL!A2:L2000?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
