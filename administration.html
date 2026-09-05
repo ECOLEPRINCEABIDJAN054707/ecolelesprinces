@@ -1180,7 +1180,8 @@ async function chargerPersonnelEnsCom() {
     })).filter(p => p.nom).sort((a,b) => a.nom.localeCompare(b.nom, 'fr'));
 
     // Calcul du montant du mois en cours pour les vacataires (POINTAGE_MENSUEL)
-    const montantsMois = {};
+          const montantsMois = {};
+      let moisActuelLabel = '';
     const sheetsId2026 = SHEETS_IDS_2026_2027[currentStaff.ecole];
     if (sheetsId2026) {
       try {
@@ -1188,7 +1189,7 @@ async function chargerPersonnelEnsCom() {
         const rP = await fetch(urlP); const dataP = await rP.json();
         const now = new Date();
         const moisActuel = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
-       const moisActuelLabel = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+            moisActuelLabel = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
         (dataP.values || []).slice(1).forEach(row => {
           const ens = String(row[4]||'').trim().toUpperCase();
           if (!ens) return;
