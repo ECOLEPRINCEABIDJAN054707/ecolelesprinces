@@ -285,7 +285,7 @@ table tr:nth-child(even){background:#F8FAFD}
     <div class="filters-bar">
       <select id="filtreMois" onchange="chargerPointage()"></select>
       <button class="btn-f btn-f-bleu" onclick="chargerPointage()">&#128260; Actualiser</button>
-      <button class="btn-f btn-f-vert" onclick="exporterCSV()">&#128229; CSV</button>
+      <button class="btn-f btn-f-vert" onclick="exporterExcel()">&#128229; Excel</button>
       <button class="btn-f btn-f-violet" onclick="syncEnseignants()">&#128101; Sync</button>
     </div>
     <div class="sync-result" id="syncResult"></div>
@@ -5594,6 +5594,37 @@ function exporterCSV(){
   let csv='NOM,TYPE,NB COURS,HEURES,SALAIRE\n';
   donneesPointage.forEach(e=>{csv+='"'+e.nom+'","'+(e.type||'VACATAIRE')+'",'+e.nbCours+','+e.totalHeures.toFixed(2)+','+e.totalSalaire+'\n';});
   const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='Salaires_'+currentStaff.ecole+'_'+mois+'.csv';a.click();showToast('Export reussi','success');
+}
+  function exporterExcel(){
+  if(!donneesPointage.length){showToast('Aucune donnee','error');return;}
+  const moisSel=document.getElementById('filtreMois');const mois=moisSel?moisSel.value:'';
+  const moisLabel=mois?new Date(mois+'-01').toLocaleDateString('fr-FR',{month:'long',year:'numeric'}):'';
+  const dateGen=new Date().toLocaleDateString('fr-FR');
+  const data=[];
+  data.push(['BASE '+(currentStaff.ecole||'')]);
+  data.push(['MASSE SALARIALE — Salaires & Pointage enseignants']);
+  data.push(['Periode : '+moisLabel]);
+  data.push(['Genere le : '+dateGen]);
+  data.push([]);
+  data.push(['NOM','TYPE','NB COURS','HEURES','SALAIRE (F CFA)']);
+  let totalCours=0,totalHeures=0,totalSalaire=0;
+  donneesPointage.forEach(e=>{
+    data.push([e.nom, e.type||'VACATAIRE', e.nbCours, Number(e.totalHeures.toFixed(2)), e.totalSalaire]);
+    totalCours+=e.nbCours; totalHeures+=e.totalHeures; totalSalaire+=e.totalSalaire;
+  });
+  data.push(['TOTAL','', totalCours, Number(totalHeures.toFixed(2)), totalSalaire]);
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  ws['!cols']=[{wch:30},{wch:14},{wch:12},{wch:10},{wch:16}];
+  ws['!merges']=[
+    {s:{r:0,c:0},e:{r:0,c:4}},
+    {s:{r:1,c:0},e:{r:1,c:4}},
+    {s:{r:2,c:0},e:{r:2,c:4}},
+    {s:{r:3,c:0},e:{r:3,c:4}}
+  ];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Salaires');
+  XLSX.writeFile(wb, 'Salaires_'+(currentStaff.ecole||'')+'_'+mois+'.xlsx');
+  showToast('Export reussi','success');
 }
 function showPedaPage(id,el){
   document.querySelectorAll('.peda-tab').forEach(t=>t.classList.remove('active'));
