@@ -1194,8 +1194,14 @@ async function chargerPersonnelEnsCom() {
           if (!ens) return;
           let moisLigne = '';
           const moisVal = row[6];
-         if (moisVal instanceof Date) moisLigne = moisVal.getUTCFullYear()+'-'+String(moisVal.getUTCMonth()+1).padStart(2,'0');
-          else moisLigne = String(moisVal||'').trim();
+       if (moisVal instanceof Date) {
+        moisLigne = moisVal.getUTCFullYear()+'-'+String(moisVal.getUTCMonth()+1).padStart(2,'0');
+      } else if (typeof moisVal === 'number' && moisVal > 1000) {
+        const dConv = new Date(Math.round((moisVal - 25569) * 86400 * 1000));
+        moisLigne = dConv.getUTCFullYear()+'-'+String(dConv.getUTCMonth()+1).padStart(2,'0');
+      } else {
+        moisLigne = String(moisVal||'').trim();
+      }
           if (moisLigne !== moisActuel) return;
           const statut = String(row[9]||'').trim().toUpperCase();
           if (statut.indexOf('VALID')===-1 && statut!=='PARTIEL') return;
@@ -2300,8 +2306,14 @@ if (spanMois) spanMois.textContent = '— ' + moisActuelLabel;
   if (!ens) return;
   let moisLigne = '';
   const moisVal = row[6];
-  if (moisVal instanceof Date) moisLigne = moisVal.getUTCFullYear()+'-'+String(moisVal.getUTCMonth()+1).padStart(2,'0');
-  else moisLigne = String(moisVal||'').trim();
+  if (moisVal instanceof Date) {
+    moisLigne = moisVal.getUTCFullYear()+'-'+String(moisVal.getUTCMonth()+1).padStart(2,'0');
+  } else if (typeof moisVal === 'number' && moisVal > 1000) {
+    const dConv = new Date(Math.round((moisVal - 25569) * 86400 * 1000));
+    moisLigne = dConv.getUTCFullYear()+'-'+String(dConv.getUTCMonth()+1).padStart(2,'0');
+  } else {
+    moisLigne = String(moisVal||'').trim();
+  }
   if (moisLigne !== moisActuel) return;
   const statut = String(row[9]||'').trim().toUpperCase();
             if (statut.indexOf('VALID')===-1 && statut!=='PARTIEL') return;
