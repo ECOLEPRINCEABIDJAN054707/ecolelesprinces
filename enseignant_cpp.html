@@ -1243,9 +1243,17 @@ function serielVersMois(val) {
       }
     } catch(e) {}
   }
-  // Déjà au format "2026-05" ou "2026-05-15"
   const s = String(val).trim();
+  // Déjà au format "2026-05" ou "2026-05-15"
   if (/^\d{4}-\d{2}/.test(s)) return s.substring(0,7);
+  // FIX : format texte français "JJ/MM/AAAA" (ex: "05/09/2026")
+  const p = s.split('/');
+  if (p.length === 3) {
+    const jj = parseInt(p[0], 10), mm = parseInt(p[1], 10), aaaa = parseInt(p[2], 10);
+    if (!isNaN(jj) && !isNaN(mm) && !isNaN(aaaa) && aaaa > 2000) {
+      return aaaa + '-' + String(mm).padStart(2,'0');
+    }
+  }
   return '';
 }
 
