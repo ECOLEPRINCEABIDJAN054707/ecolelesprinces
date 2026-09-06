@@ -1750,14 +1750,23 @@ async function verifierMatieresClasse(classe, contexte) {
       setTimeout(() => { if (window[cbName]) { delete window[cbName]; resolve({ ok: false }); } }, 10000);
     });
 
-    if (data && data.ok && data.matieres && data.matieres.length > 1) {
-      data.matieres.forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.textContent = m; select.appendChild(opt); });
+    let matieres = (data && data.ok && data.matieres) ? data.matieres.slice() : [];
+
+    // ── Français 1er cycle (6EME/5EME/4EME/3EME) : forcer le choix des 3 sous-matières ──
+    const estNiveau1erCycle = /^(6EME|5EME|4EME|3EME)/i.test(String(classe || '').trim());
+    const estFrancaisGlobal = matieres.length === 1 && /^(FRANC|FRS|FR)\b/i.test(matieres[0].trim());
+    if (estNiveau1erCycle && estFrancaisGlobal) {
+      matieres = ['Comp Francaise', 'Ex Orale', 'Orth Grammaire'];
+    }
+
+    if (matieres.length > 1) {
+      matieres.forEach(m => { const opt = document.createElement('option'); opt.value = m; opt.textContent = m; select.appendChild(opt); });
       groupe.style.display = 'block';
-      if (contexte === 'notes') matiereActiveNotes = data.matieres[0];
-      else matiereActiveMoyennes = data.matieres[0];
-    } else if (data && data.ok && data.matieres && data.matieres.length === 1) {
-      if (contexte === 'notes') matiereActiveNotes = data.matieres[0];
-      else matiereActiveMoyennes = data.matieres[0];
+      if (contexte === 'notes') matiereActiveNotes = matieres[0];
+      else matiereActiveMoyennes = matieres[0];
+    } else if (matieres.length === 1) {
+      if (contexte === 'notes') matiereActiveNotes = matieres[0];
+      else matiereActiveMoyennes = matieres[0];
     } else {
       if (contexte === 'notes') matiereActiveNotes = '';
       else matiereActiveMoyennes = '';
