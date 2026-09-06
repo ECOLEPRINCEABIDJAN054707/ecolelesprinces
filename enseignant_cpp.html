@@ -2389,34 +2389,15 @@ async function soumettreNotesBulletin() {
 // ══════════════════════════════════════════════
 // RÉSEAU — JSONP + OFFLINE
 // ══════════════════════════════════════════════
-function envoyerDonnees(type, data) {
-  const payload = {type,...data};
-  return new Promise((resolve, reject) => {
-    const cbName = 'pss_' + Date.now();
-    const script = document.createElement('script');
-    const params = encodeURIComponent(JSON.stringify(payload));
-    let done = false;
-    const timeout = setTimeout(() => {
-      if (done) return;
-      done = true; delete window[cbName];
-      try{document.body.removeChild(script);}catch(e){}
-      reject(new Error('timeout'));
-    }, 10000);
-    window[cbName] = res => {
-      if (done) return; done = true;
-      clearTimeout(timeout); delete window[cbName];
-      try{document.body.removeChild(script);}catch(e){}
-      resolve(res || {ok:true});
-    };
-    script.onerror = () => {
-      if (done) return; done = true;
-      clearTimeout(timeout); delete window[cbName];
-      try{document.body.removeChild(script);}catch(e){}
-      reject(new Error('script error'));
-    };
-    script.src = APPS_SCRIPT_URL + '?callback=' + cbName + '&type=' + encodeURIComponent(type) + '&data=' + params;
-    document.body.appendChild(script);
+async function envoyerDonnees(type, data) {
+  const payload = {type, ...data};
+  const resp = await fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: {'Content-Type': 'text/plain'},
+    body: JSON.stringify(payload)
   });
+  const res = await resp.json();
+  return res || {ok:true};
 }
 
 function sauvegarderHorsLigne(type, data) {
