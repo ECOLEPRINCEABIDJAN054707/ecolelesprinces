@@ -1853,7 +1853,7 @@ async function majSelecteurDevoirs(classe, matiere, trimestre) {
       if (devoirsFaits.has(n)) {
         opt.disabled = false;
         opt.dataset.dejaSaisi = '1';
-        opt.textContent = `Devoir N°${n} — 🔄 Rattrapage`;
+        opt.textContent = `Devoir N°${n} — ✅ déjà saisi`;
       } else {
         opt.disabled = false;
         opt.dataset.dejaSaisi = '';
