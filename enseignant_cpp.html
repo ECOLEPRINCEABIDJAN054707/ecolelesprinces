@@ -978,7 +978,7 @@ async function chargerClasses() {
       const dataMC = await Promise.race([promise2, new Promise(r => setTimeout(() => r({ok:false}), 15000))]);
 
 function normaliser(s) {
-        return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim().replace(/\b([CD])1\b/g, '$1');
+        return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/^(\dEME)(\d)/, '$1 $2').replace(/\s+/g, ' ').trim().replace(/\b([CD])1\b/g, '$1');
       }
       if (dataMC && dataMC.ok && dataMC.classes && dataMC.classes.length) {
         const mesClassesNorm = dataMC.classes.map(normaliser);
