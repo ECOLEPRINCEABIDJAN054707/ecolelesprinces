@@ -976,7 +976,7 @@ async function chargerClasses() {
       script2.src = urlMC + '&callback=' + cbName2;
       document.body.appendChild(script2);
       const dataMC = await Promise.race([promise2, new Promise(r => setTimeout(() => r({ok:false}), 15000))]);
-
+console.log('DEBUG MES_CLASSES_SEMAINE reçu:', JSON.stringify(dataMC));
 function normaliser(s) {
         return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/^(\dEME)(\d)/, '$1 $2').replace(/\s+/g, ' ').trim().replace(/\b([CD])1\b/g, '$1');
       }
