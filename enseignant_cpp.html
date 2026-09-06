@@ -1816,7 +1816,7 @@ async function chargerElevesNotes() {
       } catch(eAbs) { console.warn('fetchAbsencesDevoir:', eAbs); }
     }
 const trimestreVal = document.getElementById('notesTrimestre').value;
-    try { await majSelecteurDevoirs(classe, user.matiere, trimestreVal); } catch(eSel) { console.warn('majSelecteurDevoirs:', eSel); }
+   try { await majSelecteurDevoirs(classe, matiereActiveNotes || user.matiere, trimestreVal); } catch(eSel) { console.warn('majSelecteurDevoirs:', eSel); }
 
     hideLoader();
     hideLoader();
