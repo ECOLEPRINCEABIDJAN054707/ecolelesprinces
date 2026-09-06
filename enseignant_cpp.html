@@ -2494,6 +2494,15 @@ function initNotes() {
     document.getElementById('notesHeureDebut').value = coursActuel.heureDebutEDT || '';
     document.getElementById('notesHeureFin').value = coursActuel.heureFinEDT || '';
     chargerElevesNotes();
+  } else {
+    document.getElementById('notesClasse').value = '';
+    elevesNotes = [];
+    elevesNotesComplet = [];
+    document.getElementById('notesListe').innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px">Sélectionnez une classe</p>';
+    const btn = document.getElementById('btnPublierNotes');
+    if (btn) btn.style.display = 'none';
+    const bandeau = document.getElementById('notesRattrapageBandeau');
+    if (bandeau) bandeau.remove();
   }
 }
 
