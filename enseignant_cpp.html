@@ -510,6 +510,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
           <option value="3">Devoir N°3</option><option value="4">Devoir N°4</option>
           <option value="5">Devoir N°5</option><option value="6">Devoir N°6</option>
         </select>
+     <div id="notesRattrapageCompteur" style="display:none;font-size:11px;font-weight:700;color:var(--amber);margin-top:4px"></div>
       </div>
       <div class="form-group"><label class="label">Trimestre</label><select class="select" id="notesTrimestre" onchange="chargerElevesNotes()"></select></div>
     </div>
@@ -1915,13 +1916,19 @@ async function activerModeRattrapage() {
     }
 
     const absents = data.elevesAbs || [];
+    const compteur = document.getElementById('notesRattrapageCompteur');
 
     if (!absents.length) {
+      if (compteur) compteur.style.display = 'none';
       document.getElementById('notesListe').innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px">✅ Devoir N°' + numero + ' déjà saisi — aucun élève en attente de rattrapage.</p>';
       document.getElementById('btnPublierNotes').style.display = 'none';
       return;
     }
 
+    if (compteur) {
+      compteur.textContent = `🔄 ${absents.length} élève${absents.length>1?'s':''} à rattraper`;
+      compteur.style.display = 'block';
+    }
     const bandeau = document.createElement('div');
     bandeau.id = 'notesRattrapageBandeau';
     bandeau.style.cssText = 'background:var(--amber-lt);border:1.5px solid #FFD54F;border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--amber)';
