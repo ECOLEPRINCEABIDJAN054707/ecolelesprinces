@@ -749,7 +749,7 @@ let eleves = [], elevesFiltres = [];
 let avancement = 'dans les temps';
 let sigCtx = null, sigPainting = false;
 let ecoleURL = null;
-let elevesNotes = [], moyennesData = {}, trimestreActif = '';
+let elevesNotes = [], elevesNotesComplet = [], moyennesData = {}, trimestreActif = '';
 let bulletinInite = false;
 
 // ══════════════════════════════════════════════
@@ -1795,7 +1795,7 @@ async function chargerElevesNotes() {
       matricule:(r[0]||'').toString().trim(), nom:(r[1]||'').toString().trim(),
      note:'', statutAbsence:'', commentaire:''
     }));
-
+    elevesNotesComplet = elevesNotes.slice();
     const dateVal = document.getElementById('notesDate').value;
     const hD = document.getElementById('notesHeureDebut').value;
     const hF = document.getElementById('notesHeureFin').value;
@@ -1873,7 +1873,9 @@ async function onChangeDevoirNotes() {
   if (opt && opt.dataset.dejaSaisi === '1') {
     await activerModeRattrapage();
   } else {
+    elevesNotes = elevesNotesComplet.slice();
     if (elevesNotes.length) afficherElevesNotes();
+    if (document.getElementById('btnPublierNotes')) document.getElementById('btnPublierNotes').style.display = elevesNotes.length ? 'block' : 'none';
   }
 }
 
