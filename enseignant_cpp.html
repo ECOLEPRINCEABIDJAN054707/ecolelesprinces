@@ -505,7 +505,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
     <div class="form-group" id="notesGroupMatiere" style="display:none"><label class="label">Matière</label><select class="select" id="notesMatiereSelect" onchange="changerMatiereNotes()"></select></div>
     <div class="grid2">
       <div class="form-group"><label class="label">Devoir N°</label>
-        <select class="select" id="notesNumero">
+        <select class="select" id="notesNumero" onchange="onChangeDevoirNotes()">
           <option value="1">Devoir N°1</option><option value="2">Devoir N°2</option>
           <option value="3">Devoir N°3</option><option value="4">Devoir N°4</option>
           <option value="5">Devoir N°5</option><option value="6">Devoir N°6</option>
@@ -1842,7 +1842,7 @@ async function majSelecteurDevoirs(classe, matiere, trimestre) {
       const mat = (row[3]||'').toString().trim();
       if (cls !== classe || mat !== matiere) return;
       for (let d=1; d<=6; d++) {
-        const val = row[3+d]; // D1 est à l'index 4 (colonne E)
+        const val = row[3+d];
         if (val !== '' && val !== null && val !== undefined) devoirsFaits.add(d);
       }
     });
@@ -1851,19 +1851,86 @@ async function majSelecteurDevoirs(classe, matiere, trimestre) {
     Array.from(sel.options).forEach(opt => {
       const n = parseInt(opt.value, 10);
       if (devoirsFaits.has(n)) {
-        opt.disabled = true;
-        opt.textContent = `Devoir N°${n} ✅ déjà saisi`;
+        opt.disabled = false;
+        opt.dataset.dejaSaisi = '1';
+        opt.textContent = `Devoir N°${n} — 🔄 Rattrapage`;
       } else {
         opt.disabled = false;
+        opt.dataset.dejaSaisi = '';
         opt.textContent = `Devoir N°${n}`;
       }
     });
-    // Si l'option sélectionnée est maintenant désactivée, basculer sur le premier devoir dispo
-    if (sel.options[sel.selectedIndex] && sel.options[sel.selectedIndex].disabled) {
-      const premierDispo = Array.from(sel.options).find(o => !o.disabled);
-      if (premierDispo) sel.value = premierDispo.value;
-    }
+    onChangeDevoirNotes();
   } catch(e) { console.warn('majSelecteurDevoirs:', e); }
+}
+
+async function onChangeDevoirNotes() {
+  const sel = document.getElementById('notesNumero');
+  const opt = sel.options[sel.selectedIndex];
+  const bandeau = document.getElementById('notesRattrapageBandeau');
+  if (bandeau) bandeau.remove();
+
+  if (opt && opt.dataset.dejaSaisi === '1') {
+    await activerModeRattrapage();
+  } else {
+    if (elevesNotes.length) afficherElevesNotes();
+  }
+}
+
+async function activerModeRattrapage() {
+  const classe = document.getElementById('notesClasse').value;
+  const numero = document.getElementById('notesNumero').value;
+  const trimestre = document.getElementById('notesTrimestre').value;
+  const matiere = matiereActiveNotes || user.matiere;
+  if (!classe) return;
+
+  document.getElementById('notesListe').innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px">⏳ Recherche des absents...</p>';
+
+  try {
+    const data = await new Promise((resolve) => {
+      const cbName = 'rattr_' + Date.now();
+      const script = document.createElement('script');
+      const params = new URLSearchParams({
+        callback: cbName, type: 'GET_ELEVES_ABS_DEVOIR',
+        sheetsId: user.sheetsId, trimestre, classe, matiere, numero
+      });
+      window[cbName] = (res) => {
+        delete window[cbName]; try{document.body.removeChild(script);}catch(e){}
+        resolve(res);
+      };
+      script.onerror = () => { delete window[cbName]; resolve({ok:false}); };
+      script.src = APPS_SCRIPT_URL + '?' + params.toString();
+      document.body.appendChild(script);
+      setTimeout(() => { if (window[cbName]) { delete window[cbName]; resolve({ok:false}); } }, 12000);
+    });
+
+    if (!data || !data.ok) {
+      document.getElementById('notesListe').innerHTML = '<p style="text-align:center;color:var(--red);padding:20px">Erreur de chargement des absents.</p>';
+      return;
+    }
+
+    const absents = data.elevesAbs || [];
+    const bandeau = document.createElement('div');
+    bandeau.id = 'notesRattrapageBandeau';
+    bandeau.style.cssText = 'background:var(--amber-lt);border:1.5px solid #FFD54F;border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--amber)';
+    bandeau.textContent = `🔄 Mode rattrapage — Devoir N°${numero} déjà saisi. Seuls les élèves marqués absents apparaissent ci-dessous ; les autres notes ne seront pas modifiées.`;
+    document.getElementById('notesListe').parentNode.insertBefore(bandeau, document.getElementById('notesListe'));
+
+    if (!absents.length) {
+      document.getElementById('notesListe').innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px">Aucun élève absent enregistré pour ce devoir — rien à rattraper.</p>';
+      document.getElementById('btnPublierNotes').style.display = 'none';
+      return;
+    }
+
+    elevesNotes = absents.map(e => ({
+      matricule: e.matricule, nom: e.nom,
+      note: '', statutAbsence: '', commentaire: '', _ligneExistante: e.ligne
+    }));
+    afficherElevesNotes();
+    document.getElementById('btnPublierNotes').style.display = 'block';
+  } catch(e) {
+    document.getElementById('notesListe').innerHTML = '<p style="text-align:center;color:var(--red);padding:20px">Erreur réseau.</p>';
+  }
 }
 function fetchAbsencesDevoir(classe, dateFr, heureDebut, heureFin) {
   return new Promise((resolve) => {
