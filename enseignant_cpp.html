@@ -1750,13 +1750,15 @@ async function verifierMatieresClasse(classe, contexte) {
       setTimeout(() => { if (window[cbName]) { delete window[cbName]; resolve({ ok: false }); } }, 10000);
     });
 
-    let matieres = (data && data.ok && data.matieres) ? data.matieres.slice() : [];
+let matieres = (data && data.ok && data.matieres) ? data.matieres.slice() : [];
 
-    // ── Français 1er cycle (6EME/5EME/4EME/3EME) : forcer le choix des 3 sous-matières ──
+    // ── Français 1er cycle (6EME/5EME/4EME/3EME) : remplacer "Français"/"FRS" par les 3 sous-matières, en gardant les autres matières (ex: EDHC) intactes ──
     const estNiveau1erCycle = /^(6EME|5EME|4EME|3EME)/i.test(String(classe || '').trim());
-    const estFrancaisGlobal = matieres.length === 1 && /^(FRANC|FRS|FR)\b/i.test(matieres[0].trim());
-    if (estNiveau1erCycle && estFrancaisGlobal) {
-      matieres = ['Comp Francaise', 'Ex Orale', 'Orth Grammaire'];
+    if (estNiveau1erCycle) {
+      const idxFrancais = matieres.findIndex(m => /^(FRANC|FRS|FR)\b/i.test(String(m).trim()));
+      if (idxFrancais !== -1) {
+        matieres.splice(idxFrancais, 1, 'Comp Francaise', 'Ex Orale', 'Orth Grammaire');
+      }
     }
 
     if (matieres.length > 1) {
