@@ -4285,16 +4285,16 @@ async function attribuerMatriculeCom() {
   <div class="modal" id="modalAttente">
   <div class="modal-card">
     <h3>Cours en attente de validation</h3>
-    <div id="modalAttenteInfo"></div>
-    <select class="raison-sel" id="modalRaison">
-      <option value="">Raison (optionnel)</option>
-      <option>Gr&egrave;ve</option><option>Absence &eacute;l&egrave;ves</option><option>Coupure courant</option>
-      <option>Intemp&eacute;ries</option><option>R&eacute;union &eacute;cole</option><option>Autre</option>
-    </select>
-<div class="modal-btns">
-<button onclick="traiterAttente('VALIDÉ')" style="background:var(--vert);color:#fff">Valider</button>
-<button onclick="traiterAttente('REJETÉ')" style="background:var(--rouge);color:#fff">Rejeter</button>
-  <button onclick="fermerModalAttente()" style="background:#E0E4EF">Annuler</button>
+        <div id="modalAttenteInfo"></div>
+        <div id="modalAttenteOptions" style="margin-top:10px"></div>
+        <select class="raison-sel" id="modalRaison">
+          <option value="">Raison (optionnel)</option>
+          <option>Gr&egrave;ve</option><option>Absence &eacute;l&egrave;ves</option><option>Coupure courant</option>
+          <option>Intemp&eacute;ries</option><option>R&eacute;union &eacute;cole</option><option>Autre</option>
+        </select>
+        <div class="modal-btns">
+          <button onclick="fermerModalAttente()" style="background:#E0E4EF">Annuler</button>
+        </div>
 </div>
 </div>
 
@@ -5637,42 +5637,52 @@ function ouvrirModalAttente(idx){
   const dm=hAppel&&hPubli?Math.max(0,parseH(hPubli)-parseH(hAppel)):0;
   const edtD=row[12]?String(row[12]).trim():'';const edtF=row[13]?String(row[13]).trim():'';
   const dureeEDT=edtD&&edtF?Math.max(0,parseH(edtF)-parseH(edtD)):0;
-  const calc=calculerSalaireV2(dm,tarif,dureeEDT);
-  const dureeRetenue=dureeEDT>0?Math.min(dm,dureeEDT):dm;
-  const resteAValider=Math.max(0,dureeEDT-dureeRetenue);
+  const heuresCreneauEntier=dureeEDT>0?Math.floor(dureeEDT/60):0;
   document.getElementById('modalAttenteInfo').innerHTML='<div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:0.82em;line-height:1.9;margin-bottom:8px"><b>Enseignant:</b> '+(row[4]||'—')+'<br><b>Classe:</b> '+(row[2]||'—')+' · <b>Matiere:</b> '+(row[3]||'—')+'<br><b>Date:</b> '+toDate(row[0])+'</div>'
     +'<div class="calcul-bloc">'
     +(dureeEDT>0?'<div class="calcul-row"><span>Creneau prevu</span><span style="color:var(--bleu);font-weight:700">'+edtD+' - '+edtF+' ('+minStr(dureeEDT)+')</span></div>':'<div class="calcul-row"><span>Creneau prevu</span><span style="color:var(--rouge)">Non disponible</span></div>')
     +'<div class="calcul-row"><span>Appel</span><span style="color:var(--bleu)">'+(hAppel||'—')+'</span></div>'
     +'<div class="calcul-row"><span>Publication</span><span style="color:var(--bleu)">'+(hPubli||'—')+'</span></div>'
     +'<div class="calcul-row"><span>Duree travaillee</span><span style="color:var(--orange)">'+minStr(dm)+'</span></div>'
-    +(dureeEDT>0?'<div class="calcul-row"><span>Reste non couvert</span><span style="color:'+(resteAValider>0?'var(--rouge)':'var(--vert)')+'">'+minStr(resteAValider)+'</span></div>':'')
     +'<div class="calcul-row"><span>Tarif</span><span>'+tarif.toLocaleString('fr-FR')+' F/h</span></div>'
-    +'</div>'
-    +'<div class="sal-opts"><div class="sal-box vert"><div class="sal-box-label">SI VALIDE : '+calc.heuresValidees+'h</div><div class="sal-box-val">'+calc.salaire.toLocaleString('fr-FR')+' F</div></div></div>';
+    +'</div>';
+  const optsDiv=document.getElementById('modalAttenteOptions');
+  let optsHtml='';
+  if(dureeEDT>0&&heuresCreneauEntier>0){
+    optsHtml+='<p style="font-size:0.78em;color:var(--gris);margin:8px 0 6px">Choisissez le nombre d\'heures a valider pour ce creneau :</p>';
+    for(let h=heuresCreneauEntier;h>=1;h--){
+      const sal=h*tarif;
+      const estComplet=h===heuresCreneauEntier;
+      optsHtml+='<button onclick="validerAvecHeures('+h+')" style="width:100%;margin-bottom:6px;padding:11px;background:'+(estComplet?'var(--vert)':'#E3F2FD')+';color:'+(estComplet?'#fff':'var(--bleu)')+';border:none;border-radius:8px;font-weight:700;font-size:0.85em;cursor:pointer;text-align:left">'
+        +'Valider '+h+'h'+(estComplet?' (creneau complet)':'')+' — '+sal.toLocaleString('fr-FR')+' F</button>';
+    }
+  } else {
+    optsHtml+='<p style="font-size:0.78em;color:var(--orange);margin:8px 0 6px">⚠️ Creneau non disponible — validation basee sur la duree mesuree uniquement.</p>';
+    const calcFallback=calculerSalaireV2(dm,tarif,0);
+    optsHtml+='<button onclick="validerAvecHeures('+calcFallback.heuresValidees+')" style="width:100%;margin-bottom:6px;padding:11px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.85em;cursor:pointer;text-align:left">'
+      +'Valider '+calcFallback.heuresValidees+'h (calcul automatique) — '+calcFallback.salaire.toLocaleString('fr-FR')+' F</button>';
+  }
+  optsHtml+='<button onclick="validerAvecHeures(0)" style="width:100%;padding:11px;background:#FFEBEE;color:var(--rouge);border:none;border-radius:8px;font-weight:700;font-size:0.85em;cursor:pointer;text-align:left">Rejeter (0h) — 0 F</button>';
+  optsDiv.innerHTML=optsHtml;
   document.getElementById('modalRaison').value='';document.getElementById('modalAttente').style.display='flex';
 }
-function fermerModalAttente(){document.getElementById('modalAttente').style.display='none';coursCourant=null;}
-async function traiterAttente(decision){
+  function validerAvecHeures(heures){
   if(!coursCourant)return;
-  const raison=document.getElementById('modalRaison').value||'';const row=coursCourant;
+  const row=coursCourant;
   const tarif=getTarif(currentStaff.ecole,String(row[2]||''));
-  const hAppel=toHeure(row[1]);const hPubli=toHeure(row[7]);
-  const dm=hAppel&&hPubli?Math.max(0,parseH(hPubli)-parseH(hAppel)):0;
-  const edtD=row[12]?String(row[12]).trim():'';const edtF=row[13]?String(row[13]).trim():'';
-  const dureeEDT=edtD&&edtF?Math.max(0,parseH(edtF)-parseH(edtD)):0;
-  const calc=calculerSalaireV2(dm,tarif,dureeEDT);
-  let salaire=0;if(decision==='VALID\u00C9')salaire=calc.salaire;
+  const salaire=heures*tarif;
+  const decision=heures>0?'VALID\u00C9':'REJET\u00C9';
+  const raison=document.getElementById('modalRaison').value||'';
   const cbName='dir_'+Date.now();
-  const params=new URLSearchParams({callback:cbName,type:'TRAITER_ATTENTE',ecole:currentStaff.ecole||'',enseignant:String(row[4]||''),classe:String(row[2]||''),date:toDate(row[0]),decision,raison,salaire});
-  return new Promise(resolve=>{
-    const script=document.createElement('script');
-    window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(res&&res.ok){showToast('Decision: '+salaire.toLocaleString('fr-FR')+' F','success');fermerModalAttente();setTimeout(()=>chargerPointage(),2000);}else showToast('Erreur','error');resolve(res);};
-    script.onerror=()=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}showToast('Erreur connexion','error');resolve({ok:false});};
-    script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();document.body.appendChild(script);
-    setTimeout(()=>{if(window[cbName]){delete window[cbName];showToast('Delai depasse','error');resolve({ok:false});}},25000);
-  });
+  const params=new URLSearchParams({callback:cbName,type:'TRAITER_ATTENTE',ecole:currentStaff.ecole||'',enseignant:String(row[4]||''),classe:String(row[2]||''),date:toDate(row[0]),decision,raison,salaire,heures});
+  const script=document.createElement('script');
+  window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(res&&res.ok){showToast('Decision: '+salaire.toLocaleString('fr-FR')+' F ('+heures+'h)','success');fermerModalAttente();setTimeout(()=>chargerPointage(),2000);}else showToast('Erreur','error');};
+  script.onerror=()=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}showToast('Erreur connexion','error');};
+  script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();document.body.appendChild(script);
+  setTimeout(()=>{if(window[cbName]){delete window[cbName];showToast('Delai depasse','error');}},25000);
 }
+function fermerModalAttente(){document.getElementById('modalAttente').style.display='none';coursCourant=null;}
+
 function chargerBulletinsPrimaire(){
   const body=document.getElementById('dirBulBody');if(!body)return;
   body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
