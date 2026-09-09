@@ -8452,11 +8452,48 @@ async function chargerClassesEdu(s){
 // CHEFS & SOUS-CHEFS DE CLASSE — Espace Éducateur
 // ============================================================
 window._chefsClasseCache = [];
+// ⚠️ NOUVEAU — résout les préfixes assignés (ex: "1ERE","TLE") en vraies classes de SYNTHESE
+async function resoudreClassesReelles(ecole, classesAssignees) {
+  const sheetsId = SHEETS_IDS_2026_2027[ecole];
+  if (!sheetsId) return classesAssignees;
+  try {
+    const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const r = await fetch(url);
+    const data = await r.json();
+    if (!data.values || data.values.length < 2) return classesAssignees;
 
+    const norm = s => String(s||'').toUpperCase().trim()
+      .replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U')
+      .replace(/[ÔÖÓÒÕ]/g,'O').replace(/[ÎÏÍÌ]/g,'I')
+      .replace(/[-_]/g,' ').replace(/\s+/g,' ');
+
+    const classesUniques = [...new Set(data.values.slice(1).map(row => String(row[0]||'').trim()).filter(Boolean))];
+
+    const resolues = [];
+    const dejaAjoutees = new Set();
+
+    classesAssignees.forEach(function(cl) {
+      const ncl = norm(cl);
+      const matches = classesUniques.filter(function(vraie) {
+        const nv = norm(vraie);
+        return nv===ncl || nv.startsWith(ncl+' ') || nv.endsWith(' '+ncl) || ncl.startsWith(nv+' ');
+      });
+      if (matches.length) {
+        matches.forEach(function(m) { if (!dejaAjoutees.has(m)) { dejaAjoutees.add(m); resolues.push(m); } });
+      } else if (!dejaAjoutees.has(cl)) {
+        dejaAjoutees.add(cl); resolues.push(cl); // repli si aucune correspondance
+      }
+    });
+
+    return resolues.sort();
+  } catch(e) {
+    return classesAssignees; // erreur réseau → comportement actuel inchangé
+  }
+}
 async function chargerChefsClasse(s){
   const container=document.getElementById('eduChefsListe');
   if(!container)return;
-  const classesEdu=s.classes||[];
+  const classesEdu = await resoudreClassesReelles(s.ecole, s.classes||[]);
   const cbName='gcc_'+Date.now();
   const script=document.createElement('script');
   const params=new URLSearchParams({callback:cbName,type:'GET_CHEFS_CLASSE',ecole:s.ecole});
