@@ -1510,6 +1510,55 @@ function majStats() {
 async function validerAppel() {
   const maintenant = new Date();
   const horodatage = formatHeure(maintenant);
+
+  // ── Capture GPS + IP AVANT tout traitement de l'appel ──
+  showLoader("Vérification de la position...");
+  let latEnseignant = null, lonEnseignant = null, ipEnseignant = null;
+
+  try {
+    const position = await new Promise((resolve, reject) => {
+      if (!navigator.geolocation) { reject(new Error('GPS non supporté')); return; }
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000, enableHighAccuracy: true });
+    });
+    latEnseignant = position.coords.latitude;
+    lonEnseignant = position.coords.longitude;
+  } catch (e) {
+    console.warn('GPS indisponible ou refusé :', e.message);
+  }
+
+  try {
+    const ipRes = await fetch('https://api.ipify.org?format=json');
+    const ipData = await ipRes.json();
+    ipEnseignant = ipData.ip;
+  } catch (e) {
+    console.warn('IP publique non récupérée :', e.message);
+  }
+
+  let verifPosition;
+  try {
+    verifPosition = await envoyerDonnees('VERIFIER_POSITION', {
+      matriculeEnseignant: user.matricule,
+      nomEnseignant: user.nom,
+      nomEcole: user.ecole,
+      latEnseignant, lonEnseignant, ipEnseignant
+    });
+  } catch (e) {
+    console.warn('Vérification position indisponible (hors ligne ?) :', e.message);
+    verifPosition = { autorise: true, motif: 'ERREUR_RESEAU' }; // fail-open si pas de réseau
+  }
+
+  hideLoader();
+
+  if (verifPosition && verifPosition.autorise === false) {
+    if (verifPosition.bloque) {
+      showToast('🚫 Compte bloqué — trop de tentatives d\'appel hors zone. Contactez la direction.', 'error');
+    } else {
+      showToast(`⚠️ Position hors zone — tentative ${verifPosition.tentatives}/3. Rendez-vous dans l'établissement pour faire l'appel.`, 'warn');
+    }
+    return; // on arrête ici, l'appel n'est PAS enregistré
+  }
+
+  // ── Suite normale de validerAppel, inchangée ──
   if (coursActuel) { coursActuel.horodatageAppel = horodatage; coursActuel.dateAppel = formatDate(maintenant); }
   document.getElementById('heureAppelAffiche').textContent = horodatage;
   const nbP = eleves.filter(e=>e.statut==='present').length;
@@ -1552,7 +1601,6 @@ async function validerAppel() {
     showToast('✅ Appel sauvegardé localement','success');
   }
 }
-
 async function mettreAJourAppel() {
   if (!coursActuel || !coursActuel.horodatageAppel) return;
   showLoader('Mise à jour de l\'appel...');
