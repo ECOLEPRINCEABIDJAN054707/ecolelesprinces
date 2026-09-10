@@ -1537,7 +1537,7 @@ async function validerAppel() {
   let verifPosition;
   try {
     verifPosition = await envoyerDonnees('VERIFIER_POSITION', {
-      matriculeEnseignant: user.matricule,
+     matriculeEnseignant: user.code,
       nomEnseignant: user.nom,
       nomEcole: user.ecole,
       latEnseignant, lonEnseignant, ipEnseignant
