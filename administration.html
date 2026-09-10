@@ -5608,7 +5608,14 @@ function afficherTableauVideCom(){
   const tb=document.getElementById('tableBodyCom');if(tb)tb.innerHTML='<p style="text-align:center;padding:30px;color:var(--gris);font-size:0.82em">Aucun pointage valide ce mois</p>';
 }
 function afficherAttente(lignes,mois){
-  coursEnAttente=lignes.filter(row=>{const st=String(row[9]||'').trim().toUpperCase();const mr=serielVersMois(row[6]);return st==='EN ATTENTE'&&mr===mois;});
+ coursEnAttente=lignes.filter(row=>{
+  const st=String(row[9]||'').trim().toUpperCase();
+  const mr=serielVersMois(row[6]);
+  const classeUpper=String(row[2]||'').trim().toUpperCase();
+  const prefixesPrimaire=['CP1','CP2','CE1','CE2','CM1','CM2','PSA','MSA','GSA','MATERNELLE'];
+  const estPrimaire=prefixesPrimaire.some(prefix=>classeUpper===prefix||classeUpper.indexOf(prefix+' ')===0||classeUpper.indexOf(prefix+'A')===0);
+  return st==='EN ATTENTE'&&mr===mois&&!estPrimaire;
+});
   const sec=document.getElementById('dirSecAttente');if(sec)sec.style.display='block';
   const se=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   se('statAttente',coursEnAttente.length);se('attenteCompteur',coursEnAttente.length+' cours');
