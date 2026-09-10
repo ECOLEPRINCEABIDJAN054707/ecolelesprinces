@@ -2359,7 +2359,12 @@ var lignes = cache.filter(function(l) {
       actif: String(row[3]||'').trim().toUpperCase(),
       type: String(row[4]||'VACATAIRE').trim().toUpperCase(),
       salaire: row[5]||0
-    })).filter(p => p.nom);
+  })).filter(p => {
+  if (!p.nom) return false;
+  const posteUpper = p.poste.toUpperCase();
+  const postesPrimaire = ['CP1 A','CP2 A','CE1 A','CE2 A','CM1 A','CM2 A','MATERNELLE','PSA','MSA','GSA'];
+  return !postesPrimaire.includes(posteUpper);
+});
     _personnelListeCache = rows;
     const cnt = document.getElementById('dirPersonnelCount');
     if (cnt) cnt.textContent = '('+rows.length+' personne(s))';
