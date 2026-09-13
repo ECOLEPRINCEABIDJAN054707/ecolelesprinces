@@ -3730,6 +3730,25 @@ async function attribuerMatriculeCom() {
       </div>
     </div>
   </div>
+  <div class="section" id="eduSecAlertePrecoce">
+  <div class="sec-head sec-rouge open" onclick="chargerAlertePrecoceEdu();toggleSec(this)">
+    <h3>🚨 Élèves à risque de décrochage <span id="eduRisqueCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body open" id="eduRisqueBody">
+    <div style="padding:8px 14px 6px;background:#F3E5F5;border-bottom:1px solid #CE93D8">
+      <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">🔒 Filtré sur vos classes assignées uniquement</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px 14px" id="eduRisqueCompteurs">
+      <div class="stat-box rouge"><div class="stat-val" id="eduRisqueEleve">-</div><div class="stat-lbl">🔴 Élevé</div></div>
+      <div class="stat-box orange"><div class="stat-val" id="eduRisqueMoyen">-</div><div class="stat-lbl">🟠 Moyen</div></div>
+      <div class="stat-box"><div class="stat-val" id="eduRisqueFaible">-</div><div class="stat-lbl">🟢 Faible</div></div>
+    </div>
+    <div id="eduRisqueListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement...</p></div>
+    <div style="padding:10px 14px;display:none" id="eduRisqueBoutonFaible">
+      <button onclick="afficherRisqueFaibleEdu()" style="width:100%;padding:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;cursor:pointer">Afficher aussi les cas Faible</button>
+    </div>
+  </div>
+</div>
   <div class="section" id="eduSecSousMoyenne">
     <div class="sec-head sec-violet" onclick="toggleSec(this)">
       <h3>⚠️ Élèves sous la moyenne <span id="eduSousMoyCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -9599,6 +9618,91 @@ function filtrerNotesSaisiesEdu() {
   var selM = document.getElementById('eduNotesFiltreMatiere');
   window._notesFiltreMatiere_edu = selM ? selM.value : '';
   chargerNotesSaisiesEdu();
+}
+  window._risqueCacheEdu = [];
+window._risqueAfficherFaibleEdu = false;
+
+function _normRisqueEdu(s) {
+  return String(s || '').toUpperCase().trim()
+    .replace(/[ÈÉÊËẼ]/g, 'E').replace(/[ÀÂÃÄ]/g, 'A')
+    .replace(/[-_]/g, ' ').replace(/\s+/g, ' ');
+}
+
+function _appartientRisqueEdu(classeVal) {
+  const classesEdu = (currentStaff && currentStaff.classes) || [];
+  if (!classesEdu.length) return true;
+  return classesEdu.some(cl => {
+    const nc = _normRisqueEdu(classeVal), ncl = _normRisqueEdu(cl);
+    return nc === ncl || nc.indexOf(ncl + ' ') === 0 || nc.indexOf(' ' + ncl) >= 0 || ncl.indexOf(nc + ' ') === 0;
+  });
+}
+
+async function chargerAlertePrecoceEdu() {
+  const listeEl = document.getElementById('eduRisqueListe');
+  const countEl = document.getElementById('eduRisqueCount');
+  if (!listeEl || !currentStaff) return;
+  listeEl.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+  const result = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_SCORE_RISQUE', ecole: currentStaff.ecole, trimestre: 'NOTES_T1' }, 25000);
+  if (!result || !result.ok) {
+    listeEl.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur de chargement</p>';
+    return;
+  }
+
+  // Filtrage sur les classes assignées à l'éducateur
+  window._risqueCacheEdu = (result.eleves || []).filter(e => _appartientRisqueEdu(e.classe));
+
+  const nbEleve = window._risqueCacheEdu.filter(e => e.niveau === 'ELEVE').length;
+  const nbMoyen = window._risqueCacheEdu.filter(e => e.niveau === 'MOYEN').length;
+  const nbFaible = window._risqueCacheEdu.filter(e => e.niveau === 'FAIBLE').length;
+
+  document.getElementById('eduRisqueEleve').textContent = nbEleve;
+  document.getElementById('eduRisqueMoyen').textContent = nbMoyen;
+  document.getElementById('eduRisqueFaible').textContent = nbFaible;
+  if (countEl) countEl.textContent = '(' + (nbEleve + nbMoyen) + ' à surveiller)';
+
+  const boutonDiv = document.getElementById('eduRisqueBoutonFaible');
+  if (boutonDiv) boutonDiv.style.display = nbFaible > 0 ? 'block' : 'none';
+
+  renderAlertePrecoceEdu();
+}
+
+function afficherRisqueFaibleEdu() {
+  window._risqueAfficherFaibleEdu = !window._risqueAfficherFaibleEdu;
+  renderAlertePrecoceEdu();
+}
+
+function renderAlertePrecoceEdu() {
+  const listeEl = document.getElementById('eduRisqueListe');
+  const niveauxAffiches = window._risqueAfficherFaibleEdu ? ['ELEVE', 'MOYEN', 'FAIBLE'] : ['ELEVE', 'MOYEN'];
+  const eleves = window._risqueCacheEdu.filter(e => niveauxAffiches.indexOf(e.niveau) >= 0);
+
+  if (!eleves.length) {
+    listeEl.innerHTML = '<p style="padding:14px;text-align:center;color:var(--vert);font-size:0.85em;font-weight:700">✅ Aucun élève à risque significatif dans vos classes actuellement</p>';
+    return;
+  }
+
+  const couleurs = { ELEVE: '#C62828', MOYEN: '#E65100', FAIBLE: '#2E7D32' };
+  const bg = { ELEVE: '#FFEBEE', MOYEN: '#FFF3E0', FAIBLE: '#E8F5E9' };
+  const emoji = { ELEVE: '🔴', MOYEN: '🟠', FAIBLE: '🟢' };
+
+  let html = '';
+  eleves.forEach(e => {
+    const tels = [e.telPere, e.telMere, e.telTuteur].filter(Boolean);
+    html += '<div style="padding:10px 14px;border-bottom:1px solid #f0f4f8;background:' + bg[e.niveau] + '">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+    html += '<span style="font-weight:700;font-size:0.86em">' + emoji[e.niveau] + ' ' + e.nom + '</span>';
+    html += '<span style="font-weight:700;color:' + couleurs[e.niveau] + '">Score ' + e.score + '</span></div>';
+    html += '<div style="font-size:0.74em;color:var(--gris);margin-bottom:4px">' + e.classe + ' — ' + e.matricule + '</div>';
+    e.raisons.forEach(r => { html += '<div style="font-size:0.76em;color:#333">• ' + r + '</div>'; });
+    if (tels.length) {
+      html += '<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">';
+      tels.forEach(t => { html += '<a href="tel:' + t + '" style="background:#E3F2FD;color:var(--bleu2);padding:3px 10px;border-radius:20px;font-size:0.72em;text-decoration:none;font-weight:700">📞 ' + t + '</a>'; });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+  listeEl.innerHTML = html;
 }
   async function chargerSousMoyenneEdu() {
   const ongletTrim = document.getElementById('eduSousMoyTrimestre').value;
