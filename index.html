@@ -1254,29 +1254,42 @@ async function chargerAlerteRisqueParent(eleve) {
     const monEleve = (result.eleves || []).find(e => String(e.matricule).toUpperCase() === String(eleve.matricule).toUpperCase());
     if (!monEleve || (monEleve.niveau !== 'MOYEN' && monEleve.niveau !== 'ELEVE')) return;
 
-    const couleurFond = monEleve.niveau === 'ELEVE' ? '#FFEBEE' : '#FFF3E0';
+    const raisonsAcademiques = (monEleve.raisonsResultats || []).concat(monEleve.raisonsAssiduite || []);
+    const raisonsPaiement = monEleve.raisonsPaiement || [];
     const couleurTexte = monEleve.niveau === 'ELEVE' ? '#C62828' : '#E65100';
+    const couleurFond = monEleve.niveau === 'ELEVE' ? '#FFEBEE' : '#FFF3E0';
 
-    let html = '<div style="background:' + couleurFond + ';border-radius:12px;padding:14px 16px;margin:10px 0">';
-    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
-    html += '<span style="font-size:1.1em">⚠️</span><span style="font-weight:700;font-size:0.88em;color:' + couleurTexte + '">Ce qui est en jeu</span></div>';
-    if (monEleve.enjeu) {
-      html += '<p style="font-size:0.85em;margin:0 0 10px;color:#333;line-height:1.5">' + monEleve.enjeu + '</p>';
+    let html = '';
+
+    if (raisonsAcademiques.length) {
+      html += '<div style="background:' + couleurFond + ';border-radius:12px;padding:14px 16px;margin:10px 0">';
+      html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+      html += '<span style="font-size:1.1em">⚠️</span><span style="font-weight:700;font-size:0.88em;color:' + couleurTexte + '">Ce qui est en jeu</span></div>';
+      if (monEleve.enjeu) {
+        html += '<p style="font-size:0.85em;margin:0 0 10px;color:#333;line-height:1.5">' + monEleve.enjeu + '</p>';
+      }
+      html += '<div style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:10px">';
+      raisonsAcademiques.forEach(r => {
+        html += '<p style="font-size:0.78em;margin:3px 0;color:#333">• ' + r + '</p>';
+      });
+      html += '</div>';
+      html += '<button onclick="document.getElementById(\'sectionCarnetNotes\').scrollIntoView({behavior:\'smooth\'})" style="width:100%;background:' + couleurTexte + ';color:#fff;border:none;border-radius:8px;padding:10px;font-weight:700;font-size:0.82em;cursor:pointer">Voir le suivi des résultats</button>';
+      html += '</div>';
     }
-    html += '<div style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:10px">';
-    html += '<p style="font-size:0.7em;color:#888;margin:0 0 6px;font-weight:600">Ce qui explique cette alerte</p>';
-    monEleve.raisons.forEach(r => {
-      html += '<p style="font-size:0.78em;margin:3px 0;color:#333">• ' + r + '</p>';
-    });
-    html += '</div>';
-    html += '</div>';
+
+    if (raisonsPaiement.length) {
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#F5F5F5;border-radius:10px;border:1px solid #E0E0E0;margin:8px 0">';
+      html += '<div style="display:flex;align-items:center;gap:8px">';
+      html += '<span style="font-size:0.9em">ℹ️</span><span style="font-size:0.76em;color:#666">Scolarité : ' + Math.round(monEleve.solde).toLocaleString('fr-FR') + ' F restant</span></div>';
+      html += '<a href="#" onclick="document.getElementById(\'sectionResultats\').scrollIntoView({behavior:\'smooth\'});return false;" style="font-size:0.76em;color:#1F4E79;font-weight:600;text-decoration:none">Voir</a>';
+      html += '</div>';
+    }
 
     conteneur.innerHTML = html;
   } catch (e) {
-    // silencieux — ne bloque pas l'affichage du reste de l'espace parent
+    // silencieux
   }
 }
-  
 async function afficherEspaceParent(eleve) {
   // Cas prospect : élève CEPE d'une autre école courtisé
   if (eleve.estProspect) {
