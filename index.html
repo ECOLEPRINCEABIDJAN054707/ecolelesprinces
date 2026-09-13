@@ -287,6 +287,7 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
       <div class="sec-body" id="annoncesBody"></div>
     </div>
   </div>
+<div id="alerteRisqueParentZone"></div>
   <div class="section" id="sectionResultats" style="display:none">
     <div class="sec-header" style="background:linear-gradient(135deg,#D4AF37,#B8860B);color:#fff" onclick="toggleSec(this)" id="titreResultats">&#127942; RESULTATS DE FIN D'ANNEE <span>v</span></div>
     <div class="sec-body open" id="resultatsBody"></div>
@@ -1236,7 +1237,46 @@ function afficherEspaceProspect(eleve) {
     '</div>' +
     '</div>';
 }
+async function chargerAlerteRisqueParent(eleve) {
+  const conteneur = document.getElementById('alerteRisqueParentZone');
+  if (!conteneur || !eleve || !eleve.sheetsId) return;
+  conteneur.innerHTML = '';
 
+  try {
+    const result = await appelJSONP(APPS_SCRIPT_POINTAGE, {
+      type: 'GET_SCORE_RISQUE',
+      trimestre: 'NOTES_T1',
+      sheetsId: eleve.sheetsId
+    }, 25000);
+
+    if (!result || !result.ok) return;
+
+    const monEleve = (result.eleves || []).find(e => String(e.matricule).toUpperCase() === String(eleve.matricule).toUpperCase());
+    if (!monEleve || (monEleve.niveau !== 'MOYEN' && monEleve.niveau !== 'ELEVE')) return;
+
+    const couleurFond = monEleve.niveau === 'ELEVE' ? '#FFEBEE' : '#FFF3E0';
+    const couleurTexte = monEleve.niveau === 'ELEVE' ? '#C62828' : '#E65100';
+
+    let html = '<div style="background:' + couleurFond + ';border-radius:12px;padding:14px 16px;margin:10px 0">';
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
+    html += '<span style="font-size:1.1em">⚠️</span><span style="font-weight:700;font-size:0.88em;color:' + couleurTexte + '">Ce qui est en jeu</span></div>';
+    if (monEleve.enjeu) {
+      html += '<p style="font-size:0.85em;margin:0 0 10px;color:#333;line-height:1.5">' + monEleve.enjeu + '</p>';
+    }
+    html += '<div style="background:#fff;border-radius:8px;padding:10px 12px;margin-bottom:10px">';
+    html += '<p style="font-size:0.7em;color:#888;margin:0 0 6px;font-weight:600">Ce qui explique cette alerte</p>';
+    monEleve.raisons.forEach(r => {
+      html += '<p style="font-size:0.78em;margin:3px 0;color:#333">• ' + r + '</p>';
+    });
+    html += '</div>';
+    html += '</div>';
+
+    conteneur.innerHTML = html;
+  } catch (e) {
+    // silencieux — ne bloque pas l'affichage du reste de l'espace parent
+  }
+}
+  
 async function afficherEspaceParent(eleve) {
   // Cas prospect : élève CEPE d'une autre école courtisé
   if (eleve.estProspect) {
@@ -1376,7 +1416,7 @@ var soldeAccesParsed = _pm(eleve.solde);
     document.getElementById("sectionBulletinsMensuels").style.display = "none";
     afficherSectionBloquee(eleve, soldeAccesParsed, verseParsed);
   }
-  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerStatutMenaParent(eleve);chargerProgrammeTrimestrielParent(eleve);chargerCarnetNotes(eleve);
+  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerStatutMenaParent(eleve);chargerAlerteRisqueParent(eleve);chargerProgrammeTrimestrielParent(eleve);chargerCarnetNotes(eleve);
   window._eleveActuel = eleve;
   document.getElementById("loginWrapper").style.display = "none";
   document.getElementById("parentSpace").style.display = "block";
