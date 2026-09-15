@@ -2193,14 +2193,17 @@ async function chargerReponsesMessages(eleve){const div=document.getElementById(
 async function chargerHistoriquePaiements2026(eleve, base2026) {
   try {
     const mat   = eleve.matricule.trim().toUpperCase();
-    const range = encodeURIComponent('HISTORIQUE_MAJ!A3:L2000');
+    const range = encodeURIComponent('HISTORIQUE_MAJ!A1:L2000');
     const url   = 'https://sheets.googleapis.com/v4/spreadsheets/' + base2026 +
                   '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
     const res   = await fetch(url);
     if (!res.ok) return [];
     const data  = await res.json();
     if (!data.values) return [];
-    return data.values
+    let ligneEntete = data.values.findIndex(row => row.some(c => String(c).trim().toUpperCase() === 'MATRICULE'));
+    if (ligneEntete === -1) ligneEntete = 0;
+    const lignesDonnees = data.values.slice(ligneEntete + 1);
+    return lignesDonnees
       .filter(row => String(row[1]||'').trim().toUpperCase() === mat)
       .filter(row => {
         var montant = parseFloat(String(row[5]||'0').replace(/\s/g,'').replace(/,(\d{3})/g,'$1').replace(',','.')) || 0;
