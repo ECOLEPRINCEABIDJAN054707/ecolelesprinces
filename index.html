@@ -2734,16 +2734,18 @@ if(dateRemiseRaw){
     // ── Essayer HISTORIQUE_PAIEMENTS d'abord ──
     // Colonnes : DATE(0) MATRICULE(1) NOM(2) CLASSE(3) MONTANT(4) SOURCE(5) ID_TRANSACTION(6)
     try{
-      const url1="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+encodeURIComponent("HISTORIQUE_PAIEMENTS!A2:G500")+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
-      const r1=await fetch(url1);
-      if(r1.ok){
-        const d1=await r1.json();
-        if(d1.values&&d1.values.length>0){
-          const mat=eleve.matricule.trim().toUpperCase();
-          paiements=d1.values.filter(row=>String(row[1]||"").trim().toUpperCase()===mat&&(parseFloat(row[4])||0)>0)
-            .map(row=>({date:serialToDate(row[0]),montant:parseFloat(row[4])||0,source:String(row[5]||"").trim(),idTrans:String(row[6]||"").trim(),nom:String(row[2]||eleve.nom||"").trim(),classe:String(row[3]||eleve.classe||"").trim()}));
-        }
-      }
+    const url1="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+encodeURIComponent("HISTORIQUE_PAIEMENTS!A1:G500")+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
+const r1=await fetch(url1);
+if(r1.ok){
+  const d1=await r1.json();
+  if(d1.values&&d1.values.length>0){
+    let ligneEntete1=d1.values.findIndex(row=>row.some(c=>String(c).trim().toUpperCase()==='MATRICULE'));
+    const lignesDonnees1=d1.values.slice(ligneEntete1===-1?0:ligneEntete1+1);
+    const mat=eleve.matricule.trim().toUpperCase();
+    paiements=lignesDonnees1.filter(row=>String(row[1]||"").trim().toUpperCase()===mat&&(parseFloat(row[4])||0)>0)
+      .map(row=>({date:serialToDate(row[0]),montant:parseFloat(row[4])||0,source:String(row[5]||"").trim(),idTrans:String(row[6]||"").trim(),nom:String(row[2]||eleve.nom||"").trim(),classe:String(row[3]||eleve.classe||"").trim()}));
+  }
+}
     }catch(e1){}
 
       // ── Fallback : lire HISTORIQUE_MAJ ──
