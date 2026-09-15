@@ -2753,7 +2753,7 @@ if(r1.ok){
     // Colonnes attendues : DATE_HEURE(0) MATRICULE(1) NOM(2) CLASSE(3) N°VERS(4) MONTANT_VERSE(5) CUMUL(6) DU(7) SOLDE(8) ID_TRANS(9) SOURCE(10)
     if(paiements.length===0){
       try{
-const url2="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+encodeURIComponent("HISTORIQUE_MAJ!A1:K500")+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
+const url2="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+encodeURIComponent("HISTORIQUE_MAJ!A1:K5000")+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
       console.log("DEBUG_RECU sid=",sid);
       const r2=await fetch(url2);
       console.log("DEBUG_RECU status=",r2.status);
