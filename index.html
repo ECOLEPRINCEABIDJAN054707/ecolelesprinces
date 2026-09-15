@@ -2200,9 +2200,8 @@ async function chargerHistoriquePaiements2026(eleve, base2026) {
     if (!res.ok) return [];
     const data  = await res.json();
     if (!data.values) return [];
-    let ligneEntete = data.values.findIndex(row => row.some(c => String(c).trim().toUpperCase() === 'MATRICULE'));
-    if (ligneEntete === -1) ligneEntete = 0;
-    const lignesDonnees = data.values.slice(ligneEntete + 1);
+let ligneEntete = data.values.findIndex(row => row.some(c => String(c).trim().toUpperCase() === 'MATRICULE'));
+const lignesDonnees = data.values.slice(ligneEntete === -1 ? 0 : ligneEntete + 1);
     return lignesDonnees
       .filter(row => String(row[1]||'').trim().toUpperCase() === mat)
       .filter(row => {
@@ -2757,9 +2756,8 @@ if(dateRemiseRaw){
         if(r2.ok){
           const d2=await r2.json();
           if(d2.values&&d2.values.length>0){
-            let ligneEntete=d2.values.findIndex(row=>row.some(c=>String(c).trim().toUpperCase()==='MATRICULE'));
-            if(ligneEntete===-1)ligneEntete=0;
-            const lignesDonnees=d2.values.slice(ligneEntete+1);
+let ligneEntete=d2.values.findIndex(row=>row.some(c=>String(c).trim().toUpperCase()==='MATRICULE'));
+const lignesDonnees=d2.values.slice(ligneEntete===-1?0:ligneEntete+1);
             const mat=eleve.matricule.trim().toUpperCase();
             paiements=lignesDonnees.filter(row=>String(row[1]||"").trim().toUpperCase()===mat&&(parseFloat(row[5])||0)>0)
               .map(row=>({date:serialToDate(row[0]),montant:parseFloat(row[5])||0,source:String(row[10]||"WAVE").trim(),idTrans:String(row[9]||"").trim(),nom:String(row[2]||eleve.nom||"").trim(),classe:String(row[3]||eleve.classe||"").trim()}));
