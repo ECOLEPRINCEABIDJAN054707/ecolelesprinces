@@ -2744,17 +2744,21 @@ if(dateRemiseRaw){
       }
     }catch(e1){}
 
-    // ── Fallback : lire HISTORIQUE_MAJ ──
-    // Colonnes : DATE_HEURE(0) MATRICULE(1) NOM(2) CLASSE(3) N°VERS(4) MONTANT_VERSE(5) CUMUL(6) DU(7) SOLDE(8) ID_TRANS(9) SOURCE(10)
+      // ── Fallback : lire HISTORIQUE_MAJ ──
+    // Structure variable selon l'école (avec ou sans ligne de titre) : on détecte la ligne d'en-tête dynamiquement
+    // Colonnes attendues : DATE_HEURE(0) MATRICULE(1) NOM(2) CLASSE(3) N°VERS(4) MONTANT_VERSE(5) CUMUL(6) DU(7) SOLDE(8) ID_TRANS(9) SOURCE(10)
     if(paiements.length===0){
       try{
-        const url2="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+encodeURIComponent("HISTORIQUE_MAJ!A3:K500")+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
+        const url2="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+encodeURIComponent("HISTORIQUE_MAJ!A1:K500")+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
         const r2=await fetch(url2);
         if(r2.ok){
           const d2=await r2.json();
           if(d2.values&&d2.values.length>0){
+            let ligneEntete=d2.values.findIndex(row=>row.some(c=>String(c).trim().toUpperCase()==='MATRICULE'));
+            if(ligneEntete===-1)ligneEntete=0;
+            const lignesDonnees=d2.values.slice(ligneEntete+1);
             const mat=eleve.matricule.trim().toUpperCase();
-            paiements=d2.values.filter(row=>String(row[1]||"").trim().toUpperCase()===mat&&(parseFloat(row[5])||0)>0)
+            paiements=lignesDonnees.filter(row=>String(row[1]||"").trim().toUpperCase()===mat&&(parseFloat(row[5])||0)>0)
               .map(row=>({date:serialToDate(row[0]),montant:parseFloat(row[5])||0,source:String(row[10]||"WAVE").trim(),idTrans:String(row[9]||"").trim(),nom:String(row[2]||eleve.nom||"").trim(),classe:String(row[3]||eleve.classe||"").trim()}));
           }
         }
