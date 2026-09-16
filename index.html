@@ -928,12 +928,9 @@ document.getElementById("loadingEtape").textContent = "Recherche en cours...";
       eleve = await chercherDansEcoleDirecte(mat, cacheEcole.ecoleCode, cacheEcole.sheetsId);
     }
     if (!eleve) {
-      document.getElementById("loadingEtape").textContent = "Recherche en cours dans le reseau...";
-      const [resultats2025, resultats2026] = await Promise.all([
-        Promise.all(TOUTES_ECOLES.map(ec => chercherDansEcoleDirecte(mat, ec.code, ec.id))),
-        Promise.all(TOUTES_ECOLES_2026.map(ec => chercherDansEcoleDirecte(mat, ec.code, ec.id)))
-      ]);
-      eleve = resultats2025.find(e => e) || resultats2026.find(e => e) || null;
+document.getElementById("loadingEtape").textContent = "Recherche en cours dans le reseau...";
+const resultats2026 = await Promise.all(TOUTES_ECOLES_2026.map(ec => chercherDansEcoleDirecte(mat, ec.code, ec.id)));
+eleve = resultats2026.find(e => e) || null;
     }
   document.getElementById("loadingDiv").style.display = "none";
   if (!eleve) {
