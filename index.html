@@ -931,6 +931,11 @@ document.getElementById("loadingEtape").textContent = "Recherche en cours...";
 document.getElementById("loadingEtape").textContent = "Recherche en cours dans le reseau...";
 const resultats2026 = await Promise.all(TOUTES_ECOLES_2026.map(ec => chercherDansEcoleDirecte(mat, ec.code, ec.id)));
 eleve = resultats2026.find(e => e) || null;
+if (!eleve) {
+  const resultats2025 = await Promise.all(TOUTES_ECOLES.map(ec => chercherDansEcoleDirecte(mat, ec.code, ec.id)));
+  eleve = resultats2025.find(e => e) || null;
+  if (eleve) eleve._ancienneAnnee = true;
+}
     }
   document.getElementById("loadingDiv").style.display = "none";
   if (!eleve) {
