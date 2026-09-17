@@ -12403,7 +12403,7 @@ let h = '<div style="font-weight:bold;margin-bottom:8px">Professeur Principal : 
   JOURS_LABELS.forEach(j => h += '<th style="border:1px solid var(--border);padding:6px;background:var(--gris-clair)">' + j + '</th>');
   h += '</tr></thead><tbody>';
   _edtClasseCourante.lignes.forEach(function(l) {
-    h += '<tr><td style="border:1px solid var(--border);padding:6px;font-weight:bold">' + l.creneau + '</td>';
+   h += '<tr><td style="border:1px solid var(--border);padding:2px"><input type="text" value="' + (l.creneau || '').replace(/"/g,'&quot;') + '" data-ligne="' + l.ligne + '" data-colonne="1" style="width:100%;border:none;padding:4px;font-size:0.95em;font-weight:bold" onchange="_marquerEdtModifie(this)"></td>';
     JOURS_EDT.forEach(function(j, idx) {
       const col = idx + 2; // B=2 (lundi) ... G=7 (samedi)
       h += '<td style="border:1px solid var(--border);padding:2px">' +
