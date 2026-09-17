@@ -347,7 +347,8 @@ table tr:nth-child(even){background:#F8FAFD}
       <select id="dirEdtClasseSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtClasseDir()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
       <button onclick="exporterEdtClassePDF()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
-      <button id="dirEdtSaveBtn" onclick="sauvegarderEdtClasseDir()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
+     <button id="dirEdtSaveBtn" onclick="sauvegarderEdtClasseDir()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
+      <button id="dirEdtAddBtn" onclick="ajouterLigneEdtDir()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px;display:none">&#10133; Ajouter une ligne</button>
       <div id="dirEdtClasseBody" style="padding:12px 0"></div>
     </div>
   </div>
@@ -12389,7 +12390,8 @@ async function chargerEdtClasseDir() {
   _edtClasseCourante = { classe: classe, lignes: res.lignes, profPrincipal: res.profPrincipal || '' };
 _renderEdtClasseTable();
   await peuplerProfPrincipalSelect();
-  saveBtn.style.display = 'inline-block';
+ saveBtn.style.display = 'inline-block';
+  document.getElementById('dirEdtAddBtn').style.display = 'inline-block';
 }
 
 function _renderEdtClasseTable() {
@@ -12419,8 +12421,20 @@ let h = '<div style="font-weight:bold;margin-bottom:8px">Professeur Principal : 
 }
 
 function _marquerEdtModifie(input) {
-  input.style.background = '#FFF3CD';
-}
+    input.style.background = '#FFF3CD';
+  }
+
+  function ajouterLigneEdtDir() {
+    if (!_edtClasseCourante) return;
+    const maxLigne = _edtClasseCourante.lignes.reduce((max, l) => Math.max(max, l.ligne), 2);
+    _edtClasseCourante.lignes.push({
+      ligne: maxLigne + 1,
+      creneau: '',
+      lundi: '', mardi: '', mercredi: '', jeudi: '', vendredi: '', samedi: ''
+    });
+    _renderEdtClasseTable();
+    document.getElementById('dirEdtSaveBtn').style.display = 'inline-block';
+  }
 
   async function sauvegarderEdtClasseDir() {
   if (!_edtClasseCourante) return;
