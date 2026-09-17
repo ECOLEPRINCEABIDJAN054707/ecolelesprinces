@@ -1041,7 +1041,7 @@ async function rechercherPaiementRapide() {
 async function chercherDansEcoleDirecte(matricule, codeEcole, sheetsIdDirect) {
   try {
     const range = encodeURIComponent("SYNTHESE!A2:R5000");
-    const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsIdDirect + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE&_cb=" + Date.now();
+    const url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsIdDirect + "/values/" + range + "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
     let res = null;
     for (let tentative = 0; tentative < 3; tentative++) {
       try { res = await fetch(url, {cache: "no-store"}); if (res.status !== 429) break; await new Promise(r => setTimeout(r, 2000*(tentative+1))); } catch(fe) { break; }
