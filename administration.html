@@ -12416,8 +12416,9 @@ JOURS_LABELS.forEach(j => h += '<th style="border:1px solid var(--border);paddin
         'style="width:100%;border:none;padding:4px;font-size:0.95em" ' +
         'onchange="_marquerEdtModifie(this)"></td>';
     });
-    h += '<td style="border:1px solid var(--border);padding:2px;text-align:center">' +
-      '<button onclick="insererLigneEdtDir(' + l.ligne + ')" title="Insérer une ligne après" style="background:var(--vert);color:#fff;border:none;border-radius:4px;padding:4px 8px;cursor:pointer">&#10133;</button></td>';
+h += '<td style="border:1px solid var(--border);padding:2px;text-align:center;white-space:nowrap">' +
+      '<button onclick="insererLigneEdtDir(' + l.ligne + ')" title="Insérer une ligne après" style="background:var(--vert);color:#fff;border:none;border-radius:4px;padding:4px 8px;cursor:pointer;margin-right:4px">&#10133;</button>' +
+      '<button onclick="supprimerLigneEdtDir(' + l.ligne + ')" title="Supprimer cette ligne" style="background:var(--rouge);color:#fff;border:none;border-radius:4px;padding:4px 8px;cursor:pointer">&#10005;</button></td>';
     h += '</tr>';
   });
   h += '</tbody></table>';
@@ -12455,6 +12456,28 @@ async function insererLigneEdtDir(apresLigne) {
   const result = await resp.json();
   if (result && result.ok) {
     showToast('✅ Ligne insérée', 'success');
+    await chargerEdtClasseDir();
+  } else {
+    showToast('❌ Erreur : ' + (result.error || 'inconnue'), 'error');
+  }
+}
+  
+async function supprimerLigneEdtDir(ligne) {
+  if (!_edtClasseCourante) return;
+  if (!confirm('Supprimer cette ligne de l\'emploi du temps ?')) return;
+  const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({
+      action: 'SUPPRIMER_LIGNE_EDT_CLASSE',
+      ecole: currentStaff.ecole,
+      classe: _edtClasseCourante.classe,
+      ligne: ligne
+    })
+  });
+  const result = await resp.json();
+  if (result && result.ok) {
+    showToast('✅ Ligne supprimée', 'success');
     await chargerEdtClasseDir();
   } else {
     showToast('❌ Erreur : ' + (result.error || 'inconnue'), 'error');
