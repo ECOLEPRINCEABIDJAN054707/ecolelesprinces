@@ -11494,17 +11494,17 @@ async function chargerCoursJourCom(s, dateChoisie) {
   const sheetsId = SHEETS_IDS_2026_2027[s.ecole];
   if (!sheetsId) { container.innerHTML = '<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configurée pour cette école.</p>'; return; }
 
-  const joursFR = ['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
-  const now = new Date();
-  const refDate = dateChoisie ? new Date(dateChoisie + 'T00:00:00') : now;
-  const jourAuj = joursFR[refDate.getDay()];
-  const dd = String(refDate.getDate()).padStart(2,'0');
-  const mm = String(refDate.getMonth()+1).padStart(2,'0');
-  const yyyy = refDate.getFullYear();
-  const dateFormats = [dd+'/'+mm+'/'+yyyy, yyyy+'-'+mm+'-'+dd];
-  const estAujourdhuiReel = dd === String(now.getDate()).padStart(2,'0') && mm === String(now.getMonth()+1).padStart(2,'0') && yyyy === now.getFullYear();
-  const maintenantMin = now.getHours()*60 + now.getMinutes();
-  const estFutur = refDate > now && !estAujourdhuiReel;
+const joursFR = ['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'];
+const now = new Date();
+const refDate = dateChoisie ? new Date(dateChoisie + 'T00:00:00Z') : now;
+const jourAuj = joursFR[refDate.getUTCDay()];
+const dd = String(refDate.getUTCDate()).padStart(2,'0');
+const mm = String(refDate.getUTCMonth()+1).padStart(2,'0');
+const yyyy = refDate.getUTCFullYear();
+const dateFormats = [dd+'/'+mm+'/'+yyyy, yyyy+'-'+mm+'-'+dd];
+const estAujourdhuiReel = dd === String(now.getUTCDate()).padStart(2,'0') && mm === String(now.getUTCMonth()+1).padStart(2,'0') && yyyy === now.getUTCFullYear();
+const maintenantMin = now.getUTCHours()*60 + now.getUTCMinutes();
+const estFutur = refDate > now && !estAujourdhuiReel;
 
   const norm = str => String(str||'').toUpperCase().trim()
     .replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U')
