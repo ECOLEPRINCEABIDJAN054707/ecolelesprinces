@@ -5463,8 +5463,22 @@ function peuplerNiveaux(ecole, selectId) {
     return;
   }
 
+  // ETL KOUIBLY — filières propres (G1/G2 + SMS)
+  if(ecole === 'ETL PRINCES KOUIBLY') {
+    sel.innerHTML += '<optgroup label="─── 2nde ───">';
+    ['2NDE G1','2NDE G2'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
+    sel.innerHTML += '</optgroup>';
+    sel.innerHTML += '<optgroup label="─── 1ère ───">';
+    ['1ERE G1','1ERE G2'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
+    sel.innerHTML += '</optgroup>';
+    sel.innerHTML += '<optgroup label="─── SMS (Sciences Médico-Sociales) ───">';
+    ['SMS 1A'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
+    sel.innerHTML += '</optgroup>';
+    return;
+  }
+
   // CPP TECHNIQUE — filières techniques
-  if(ecole === 'CPP TECH' || ecole === 'ETL PRINCES KOUIBLY') {
+  if(ecole === 'CPP TECH') {
     sel.innerHTML += '<optgroup label="─── 2nde ───">';
     ['2NDE AB','2NDE F2','2NDE G1','2NDE G2'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
     sel.innerHTML += '</optgroup>';
