@@ -586,6 +586,12 @@ table tr:nth-child(even){background:#F8FAFD}
       <div id="dirResTable" class="tbl-wrap"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement...</p></div>
     </div>
   </div>
+  <div class="section" id="secDIRAnnonces">
+    <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+      <h3>&#128226; Annonces aux parents</h3><span class="bdg bg-bleu" id="annDIRCompteur">0</span>
+    </div>
+    <div class="sec-body" id="annDIRBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement…</p></div>
+  </div>
   <div class="section">
     <div class="sec-head sec-violet" onclick="toggleSec(this)">
       <h3>&#128172; Messages parents <span id="dirMsgCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -2796,6 +2802,12 @@ async function sauvegarderPersonnelDir(idx) {
       <div id="comResTable" class="tbl-wrap"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement...</p></div>
     </div>
   </div>
+  <div class="section" id="secCOMAnnonces">
+    <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+      <h3>&#128226; Annonces aux parents</h3><span class="bdg bg-bleu" id="annCOMCompteur">0</span>
+    </div>
+    <div class="sec-body" id="annCOMBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement…</p></div>
+  </div>
   <div class="section">
     <div class="sec-head sec-violet" onclick="toggleSec(this)">
       <h3>&#128172; Messages parents <span id="comMsgCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -3965,6 +3977,12 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
   <!-- MESSAGES -->
+  <div class="section" id="secEDUAnnonces">
+    <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+      <h3>&#128226; Annonces aux parents</h3><span class="bdg bg-bleu" id="annEDUCompteur">0</span>
+    </div>
+    <div class="sec-body" id="annEDUBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement…</p></div>
+  </div>
   <div class="section">
     <div class="sec-head sec-violet" onclick="toggleSec(this)">
       <h3>&#128172; Messages parents <span id="eduMsgCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -5546,6 +5564,7 @@ setTimeout(function(){chargerMasseSalarialeDir(s.ecole);},600);
   document.getElementById('dirAgendaBody').innerHTML=hag;
   if(!isPRIM)chargerPointage();
   chargerResultatsEtMessages(s.ecole,'DIR');
+  setTimeout(function(){initAnnonces('DIR');},800);
   chargerSyntheseAvecCache(s.ecole).then(function(eleves){window._dirEleves=eleves||[];});
  mettreAJourLiensOutilsPedago('Dir');
   document.getElementById('espaceDir').style.display='block';
@@ -8259,6 +8278,7 @@ setTimeout(function(){chargerAffectationTousCom();},700);
   setTimeout(function(){chargerMasseSalarialeCom(s.ecole);},600);
   remplirMoisCom();
   chargerResultatsEtMessages(s.ecole,'COM');
+  setTimeout(function(){initAnnonces('COM');},800);
   let h4='';TACHES_DEMO.forEach((t,i)=>{const ps={haute:'prio-h',normale:'prio-n',basse:'prio-b'};const pl={haute:'Urgent',normale:'Normal',basse:'Faible'};h4+='<div class="tache"><div class="tache-check '+(t.done?'done':'')+'" onclick="toggleTache('+i+',this)">'+(t.done?'✓':'')+'</div><div class="tache-titre '+(t.done?'done':'')+'">'+t.titre+'<br><small style="color:var(--gris)">'+t.heure+'</small></div><span class="prio '+ps[t.prio]+'">'+pl[t.prio]+'</span></div>';});
   document.getElementById('comTachesBody').innerHTML=h4;
 setTimeout(function(){ _rechargerListeReception('Com'); }, 700);
@@ -8622,6 +8642,7 @@ function afficherEdu(s){
   let h2='';CHARTE.forEach((c,i)=>{h2+='<div class="charte-item"><div class="charte-num">'+(i+1)+'</div><div><div class="charte-titre">'+c.titre+'</div><div class="charte-desc">'+c.desc+'</div></div></div>';});
   document.getElementById('eduCharteBody').innerHTML=h2;
   chargerResultatsEtMessages(s.ecole,'EDU');
+  setTimeout(function(){initAnnonces('EDU');},800);
   chargerAbsencesElevesSigne(s.ecole, s.classes||[]);
   chargerPresencesEnseignants(s.ecole);
   setTimeout(function(){chargerAppelsEdu(s.ecole);},600);
@@ -17008,6 +17029,137 @@ if('serviceWorker' in navigator){
     .then(function(reg){console.log('SW staff enregistré:',reg.scope);})
     .catch(function(e){console.warn('SW staff:',e);});
 }
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// MODULE ANNONCES AUX PARENTS — espaces Directeur / Comptable / Éducateur
+// ═══════════════════════════════════════════════════════════════
+const ANN_CIBLES = [
+  ['ECOLE','Toute l\'école'],['NIVEAU','Un niveau'],['CLASSES','Une ou plusieurs classes'],
+  ['TYPE_CLASSE','Classes Excellence / Privilège / Standard'],['EXAMEN','Classes d\'examen (CEPE / BEPC / BAC)'],
+  ['CHEFS','Chefs et sous-chefs de classe'],['CLUB','Membres d\'un club'],['IMPAYES','Parents avec un solde impayé'],
+  ['ABSENTS','Élèves absents'],['DIFFICULTE','Élèves en difficulté']];
+window._annClasses = {}; window._annTels = {};
+function _annEsc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function _annJsonp(params){
+  return new Promise(resolve=>{
+    const cb='ann_'+Date.now()+'_'+Math.floor(Math.random()*1000);const s=document.createElement('script');
+    window[cb]=d=>{delete window[cb];try{document.body.removeChild(s);}catch(e){}resolve(d||{ok:false,error:'Réponse vide'});};
+    s.onerror=()=>{delete window[cb];try{document.body.removeChild(s);}catch(e){}resolve({ok:false,error:'Erreur de connexion'});};
+    s.src=APPS_SCRIPT_POINTAGE+'?'+new URLSearchParams(Object.assign({callback:cb},params)).toString();document.body.appendChild(s);
+    setTimeout(()=>{if(window[cb]){delete window[cb];resolve({ok:false,error:'Délai dépassé — vérifiez dans la liste avant de renvoyer'});}},35000);
+  });
+}
+function _annBase(esp){return {ecole:currentStaff.ecole||'',role:esp,auteur:currentStaff.nom||currentStaff.label||currentStaff.matricule||''};}
+function initAnnonces(esp){
+  const body=document.getElementById('ann'+esp+'Body');if(!body)return;
+  const inp='width:100%;padding:9px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box;margin-bottom:8px';
+  body.innerHTML='<div style="padding:14px">'
+   +'<div style="font-size:0.78em;color:var(--gris);margin-bottom:10px">'+(esp==='DIR'?'Vos annonces sont publiées immédiatement. Une copie est envoyée au Fondateur.':'Vos annonces seront publiées après validation par le Directeur.')+'</div>'
+   +'<input id="ann'+esp+'Titre" maxlength="80" placeholder="Titre (ex : Réunion des parents de 3EME)" style="'+inp+'">'
+   +'<select id="ann'+esp+'Type" style="'+inp+'"><option value="INFO">ℹ️ Information</option><option value="URGENT">⚠️ Urgent</option><option value="REUNION">📅 Réunion</option><option value="PAIEMENT">💰 Paiement</option><option value="PEDAGOGIE">📝 Pédagogie</option></select>'
+   +'<textarea id="ann'+esp+'Message" maxlength="1500" rows="4" placeholder="Votre message aux parents…" style="'+inp+'"></textarea>'
+   +'<div style="font-weight:700;font-size:0.82em;color:var(--bleu);margin:4px 0 6px">🎯 Destinataires</div>'
+   +'<select id="ann'+esp+'Cible" onchange="annMajValeur(\''+esp+'\')" style="'+inp+'">'+ANN_CIBLES.map(c=>'<option value="'+c[0]+'">'+c[1]+'</option>').join('')+'</select>'
+   +'<div id="ann'+esp+'Valeur"></div>'
+   +'<div style="display:flex;gap:8px;margin-top:6px"><button onclick="annApercu(\''+esp+'\')" style="flex:1;padding:10px;background:#E3F2FD;color:var(--bleu);border:none;border-radius:8px;font-weight:700;cursor:pointer">👁️ Aperçu</button>'
+   +'<button onclick="annEnvoyer(\''+esp+'\')" style="flex:1;padding:10px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">📢 Envoyer</button></div>'
+   +'<div id="ann'+esp+'Apercu" style="margin-top:10px"></div></div>'
+   +'<div style="border-top:1px solid var(--border);padding:10px 14px;display:flex;justify-content:space-between;align-items:center"><b style="font-size:0.85em;color:var(--bleu)">'+(esp==='DIR'?'Annonces de l\'école':'Annonces de l\'école')+'</b><button onclick="annLister(\''+esp+'\')" style="padding:5px 10px;border:1px solid var(--border);background:#fff;border-radius:6px;cursor:pointer;font-size:0.78em">🔄 Actualiser</button></div>'
+   +'<div id="ann'+esp+'Liste" style="padding:0 14px 14px"></div>';
+  annMajValeur(esp);annLister(esp);
+  _annJsonp(Object.assign(_annBase(esp),{type:'ANN_CIBLE',cible:JSON.stringify({type:'ECOLE'})})).then(r=>{if(r.ok){window._annClasses[esp]=r.classes||[];if(document.getElementById('ann'+esp+'Cible').value==='CLASSES')annMajValeur(esp);}});
+}
+function annMajValeur(esp){
+  const t=document.getElementById('ann'+esp+'Cible').value,z=document.getElementById('ann'+esp+'Valeur');
+  const st='width:100%;padding:9px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;box-sizing:border-box;margin-bottom:8px';
+  const sel=(opts)=>'<select id="ann'+esp+'V" style="'+st+'">'+opts.map(o=>'<option value="'+o[0]+'">'+o[1]+'</option>').join('')+'</select>';
+  let h='';
+  if(t==='NIVEAU')h=sel([['MATERNELLE','Maternelle'],['PRIMAIRE','Primaire'],['COLLEGE','Collège (6EME-3EME)'],['LYCEE','Lycée (2NDE-TLE)'],['CP1','CP1'],['CP2','CP2'],['CE1','CE1'],['CE2','CE2'],['CM1','CM1'],['CM2','CM2'],['6EME','6EME'],['5EME','5EME'],['4EME','4EME'],['3EME','3EME'],['2NDE','2NDE'],['1ERE','1ERE'],['TLE','TLE']]);
+  else if(t==='TYPE_CLASSE')h=sel([['EX','Excellence'],['PRIV','Privilège (CPP Les Princes)'],['STD','Standard (CPP Les Princes)']]);
+  else if(t==='EXAMEN')h=sel([['CEPE','CEPE — classes de CM2'],['BEPC','BEPC — classes de 3EME'],['BAC','BAC — classes de TLE']]);
+  else if(t==='CLUB')h='<input id="ann'+esp+'V" placeholder="Nom du club" style="'+st+'">';
+  else if(t==='IMPAYES')h='<label style="font-size:0.78em;color:var(--gris)">Solde restant minimum (F)</label><input id="ann'+esp+'V" type="number" value="20000" style="'+st+'">';
+  else if(t==='DIFFICULTE')h='<label style="font-size:0.78em;color:var(--gris)">Moyenne inférieure à</label><input id="ann'+esp+'V" type="number" value="10" step="0.5" style="'+st+'">';
+  else if(t==='ABSENTS')h='<label style="font-size:0.78em;color:var(--gris)">Absences depuis le</label><input id="ann'+esp+'V" type="date" style="'+st+'"><label style="font-size:0.78em;color:var(--gris)">Nombre minimum d\'absences</label><input id="ann'+esp+'V2" type="number" value="3" min="1" style="'+st+'">';
+  else if(t==='CLASSES'){const cl=window._annClasses[esp]||[];
+    h=cl.length?'<div style="max-height:170px;overflow:auto;border:1.5px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px;display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:4px">'
+      +cl.map(c=>'<label style="font-size:0.8em"><input type="checkbox" class="ann'+esp+'Cl" value="'+_annEsc(c)+'"> '+_annEsc(c)+'</label>').join('')+'</div>'
+      :'<p style="font-size:0.8em;color:var(--gris)">Chargement des classes…</p>';}
+  z.innerHTML=h;
+}
+function _annCible(esp){
+  const t=document.getElementById('ann'+esp+'Cible').value,v=document.getElementById('ann'+esp+'V');
+  if(t==='ECOLE'||t==='CHEFS')return {type:t};
+  if(t==='CLASSES'){const l=[...document.querySelectorAll('.ann'+esp+'Cl:checked')].map(x=>x.value);return l.length?{type:t,valeur:l}:null;}
+  if(t==='ABSENTS'){const d=v&&v.value;if(!d)return null;const p=d.split('-');return {type:t,valeur:{depuis:p[2]+'/'+p[1]+'/'+p[0],min:Number(document.getElementById('ann'+esp+'V2').value)||1}};}
+  if(!v||String(v.value).trim()==='')return null;
+  return {type:t,valeur:(t==='IMPAYES'||t==='DIFFICULTE')?Number(v.value):v.value};
+}
+async function annApercu(esp){
+  const c=_annCible(esp),z=document.getElementById('ann'+esp+'Apercu');
+  if(!c){z.innerHTML='<p style="color:var(--rouge);font-size:0.82em">Complétez les destinataires.</p>';return;}
+  z.innerHTML='<p style="font-size:0.82em;color:var(--gris)">Calcul en cours…</p>';
+  const r=await _annJsonp(Object.assign(_annBase(esp),{type:'ANN_CIBLE',cible:JSON.stringify(c)}));
+  if(!r.ok){z.innerHTML='<p style="color:var(--rouge);font-size:0.82em">'+_annEsc(r.error)+'</p>';return;}
+  window._annTels[esp]=r.telephones||[];
+  z.innerHTML='<div style="background:#E8F5E9;border-radius:8px;padding:10px;font-size:0.82em">✅ <b>'+r.nb+' élève(s)</b> concerné(s) — <b>'+(r.telephones||[]).length+'</b> numéro(s) de parents'
+    +'<div style="color:var(--gris);margin-top:4px">Classes : '+_annEsc((r.classes||[]).join(', ')||'—')+'</div>'
+    +((r.telephones||[]).length?'<button onclick="annCopierNumeros(\''+esp+'\')" style="margin-top:8px;padding:7px 12px;border:none;background:#25D366;color:#fff;border-radius:6px;font-weight:700;cursor:pointer">📋 Copier les numéros (WhatsApp / SMS)</button>':'')+'</div>';
+}
+function annCopierNumeros(esp){
+  const t=(window._annTels[esp]||[]).join(', ');
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>showToast((window._annTels[esp]||[]).length+' numéros copiés','success')).catch(()=>prompt('Copiez les numéros :',t));
+  else prompt('Copiez les numéros :',t);
+}
+async function annEnvoyer(esp){
+  const titre=document.getElementById('ann'+esp+'Titre').value.trim(),msg=document.getElementById('ann'+esp+'Message').value.trim(),c=_annCible(esp);
+  if(!msg){showToast('Écrivez le message','error');return;}
+  if(!c){showToast('Complétez les destinataires','error');return;}
+  if(!confirm((esp==='DIR'?'Publier':'Envoyer au Directeur')+' cette annonce ?\n\n'+(titre?titre+'\n':'')+msg.substring(0,200)))return;
+  const r=await _annJsonp(Object.assign(_annBase(esp),{type:'ANN_ENREGISTRER',titre:titre,typeAnnonce:document.getElementById('ann'+esp+'Type').value,message:msg,cible:JSON.stringify(c)}));
+  if(!r.ok){showToast(r.error||'Erreur','error');return;}
+  showToast(r.message||'Annonce enregistrée','success');
+  window._annTels[esp]=r.telephones||[];
+  document.getElementById('ann'+esp+'Apercu').innerHTML='<div style="background:#E8F5E9;border-radius:8px;padding:10px;font-size:0.82em">✅ '+_annEsc(r.message)+' — '+_annEsc(r.cible)
+    +((r.telephones||[]).length?'<br><button onclick="annCopierNumeros(\''+esp+'\')" style="margin-top:8px;padding:7px 12px;border:none;background:#25D366;color:#fff;border-radius:6px;font-weight:700;cursor:pointer">📋 Copier les '+r.telephones.length+' numéros</button>':'')+'</div>';
+  document.getElementById('ann'+esp+'Titre').value='';document.getElementById('ann'+esp+'Message').value='';
+  annLister(esp);
+}
+async function annLister(esp){
+  const z=document.getElementById('ann'+esp+'Liste');if(!z)return;
+  z.innerHTML='<p style="font-size:0.8em;color:var(--gris)">Chargement…</p>';
+  const r=await _annJsonp(Object.assign(_annBase(esp),{type:'ANN_LISTER'}));
+  if(!r.ok){z.innerHTML='<p style="color:var(--rouge);font-size:0.8em">'+_annEsc(r.error)+'</p>';return;}
+  const l=(r.annonces||[]).filter(a=>!/^\[TEST\]/.test(a.titre||'')).slice(0,30);
+  const nbAtt=l.filter(a=>a.statut==='EN ATTENTE').length;
+  const cpt=document.getElementById('ann'+esp+'Compteur');if(cpt)cpt.textContent=esp==='DIR'&&nbAtt?nbAtt+' à valider':l.length;
+  if(!l.length){z.innerHTML='<p style="font-size:0.8em;color:var(--gris);text-align:center;padding:10px">Aucune annonce</p>';return;}
+  const coul={'EN ATTENTE':'#E65100','VALIDÉE':'#2E7D32','REFUSÉE':'#C62828','RETIRÉE':'#757575'};
+  z.innerHTML=l.map(a=>{
+    let act='';
+    if(esp==='DIR'&&a.statut==='EN ATTENTE')act='<button onclick="annDecider(\''+esp+'\',\''+a.id+'\',\'VALIDER\')" style="padding:6px 10px;border:none;background:var(--vert);color:#fff;border-radius:6px;font-weight:700;cursor:pointer;margin-right:6px">✅ Valider</button><button onclick="annDecider(\''+esp+'\',\''+a.id+'\',\'REFUSER\')" style="padding:6px 10px;border:none;background:#FFEBEE;color:var(--rouge);border-radius:6px;font-weight:700;cursor:pointer">❌ Refuser</button>';
+    else if(esp==='DIR'&&a.statut==='VALIDÉE'&&a.id)act='<button onclick="annRetirer(\''+esp+'\',\''+a.id+'\')" style="padding:5px 10px;border:1px solid var(--border);background:#fff;border-radius:6px;cursor:pointer;font-size:0.78em">Retirer</button>';
+    return '<div style="border:1px solid var(--border);border-left:4px solid '+(coul[a.statut]||'#1F4E79')+';border-radius:8px;padding:10px;margin-top:8px;font-size:0.82em">'
+      +'<div style="display:flex;justify-content:space-between;gap:6px"><b>'+_annEsc(a.titre||a.type)+'</b><span style="color:'+(coul[a.statut]||'#1F4E79')+';font-weight:700;white-space:nowrap">'+_annEsc(a.statut||'—')+'</span></div>'
+      +'<div style="color:var(--gris);font-size:0.9em;margin:3px 0">'+_annEsc(a.date)+' · '+_annEsc(a.auteur)+' · '+_annEsc(a.cible)+'</div>'
+      +'<div style="white-space:pre-wrap">'+_annEsc(a.message)+'</div>'+(a.validePar?'<div style="color:var(--gris);font-size:0.85em;margin-top:4px">'+_annEsc(a.validePar)+'</div>':'')
+      +(act?'<div style="margin-top:8px">'+act+'</div>':'')+'</div>';
+  }).join('');
+}
+async function annDecider(esp,id,decision){
+  let motif='';
+  if(decision==='REFUSER'){motif=prompt('Motif du refus (facultatif) :')||'';}
+  else if(!confirm('Valider et publier cette annonce aux parents ?'))return;
+  const r=await _annJsonp(Object.assign(_annBase(esp),{type:'ANN_DECIDER',id:id,decision:decision,motif:motif}));
+  showToast(r.ok?r.message:(r.error||'Erreur'),r.ok?'success':'error');annLister(esp);
+}
+async function annRetirer(esp,id){
+  if(!confirm('Retirer cette annonce du portail Parents ?'))return;
+  const r=await _annJsonp(Object.assign(_annBase(esp),{type:'ANN_RETIRER',id:id}));
+  showToast(r.ok?r.message:(r.error||'Erreur'),r.ok?'success':'error');annLister(esp);
+}
+
 </script>
 </body>
 </html>
