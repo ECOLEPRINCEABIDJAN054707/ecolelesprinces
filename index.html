@@ -3355,8 +3355,13 @@ function _initFCM(){
     var messaging=firebase.messaging();
     // Demander permission notifications
     var _demande = window._forcerDemandeNotif ? Notification.requestPermission() : Promise.resolve(Notification.permission);
+    var _apresClic = !!window._forcerDemandeNotif;
     _demande.then(function(permission){
       window._forcerDemandeNotif=false; _majCarteNotifs();
+      if(_apresClic && permission==='default'){
+        var z=document.getElementById('carteNotifs');
+        if(z) z.innerHTML="<div style='background:#FFF3E0;border-left:4px solid #E65100;border-radius:8px;padding:12px 14px;font-size:0.85em;line-height:1.5;'><b>La demande d'autorisation ne s'est pas affichée.</b><br>Ouvrez le portail dans <b>Google Chrome</b> (et non depuis WhatsApp ou Facebook), reconnectez-vous et appuyez de nouveau sur « Activer les notifications ».<button onclick='activerNotifications()' style='display:block;width:100%;margin-top:10px;padding:10px;background:#1F4E79;color:#fff;border:none;border-radius:8px;font-weight:bold;cursor:pointer;'>🔔 Réessayer</button></div>";
+      }
       if(permission==='granted'){
         // Attendre que le service worker soit prêt
         navigator.serviceWorker.ready.then(function(swReg){
@@ -3403,6 +3408,11 @@ function _majCarteNotifs(){
   var carte=function(fond,bord,html){return "<div style='background:"+fond+";border-left:4px solid "+bord+";border-radius:8px;padding:12px 14px;font-size:0.85em;line-height:1.5;'>"+html+"</div>";};
   if(ios&&!installe){
     z.innerHTML=carte('#E3F2FD','#1F4E79',"<b>📱 Recevez les annonces de l'école sur votre iPhone</b><br>1. Ouvrez ce site dans <b>Safari</b><br>2. Touchez le bouton <b>Partager</b> (carré avec une flèche ⬆️)<br>3. Choisissez <b>« Sur l'écran d'accueil »</b>, puis <b>Ajouter</b><br>4. Ouvrez le portail depuis la <b>nouvelle icône</b>, reconnectez-vous et appuyez sur <b>« Activer les notifications »</b>");
+    return;
+  }
+  var interne=/WhatsApp|FBAN|FBAV|FB_IAB|Instagram|Messenger|; wv\)/i.test(navigator.userAgent);
+  if(interne){
+    z.innerHTML=carte('#FFF3E0','#E65100',"<b>🔔 Pour recevoir les notifications, ouvrez le portail dans Chrome</b><br>Vous êtes dans le navigateur de WhatsApp (ou Facebook), qui ne gère pas les notifications.<br>Touchez les <b>3 points ⋮</b> en haut à droite, puis <b>« Ouvrir dans Chrome »</b> (ou « Ouvrir dans le navigateur »). Reconnectez-vous, puis activez les notifications.");
     return;
   }
   if(!ok){ z.innerHTML=''; return; }
@@ -3598,6 +3608,18 @@ function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.
     var bloc = document.getElementById('sectionOrangeMoney');
     if (bloc) bloc.style.display = 'block';
   }
+})();
+</script>
+<script>
+// Restauration de la session : si la page se recharge (demande d'autorisation, retour dans l'application…),
+// le parent retrouve son espace sans devoir se reconnecter. La session s'efface à la déconnexion ou à la fermeture de l'onglet.
+(function(){
+  try{
+    var ec=JSON.parse(sessionStorage.getItem('eleveConnecte')||'null');
+    if(!ec||!ec.matricule||typeof afficherEspaceParent!=='function')return;
+    var lw=document.getElementById('loginWrapper'); if(lw) lw.style.display='none';
+    afficherEspaceParent(ec);
+  }catch(e){console.warn('Restauration session :',e);}
 })();
 </script>
 </body>
