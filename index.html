@@ -3068,11 +3068,14 @@ function ouvrirCentreNotifications() {
     + (notifs.length ? '<button onclick="_supprimerToutesNotifications()" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:4px 10px;border-radius:20px;font-size:0.7em;cursor:pointer;">Effacer tout</button>' : '')
     + '<button onclick="document.getElementById(\'centreNotifModal\').remove()" style="background:rgba(255,255,255,0.15);border:none;color:#fff;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:1em;">✕</button>'
     + '</div></div>'
+    + '<div id="centreNotifEtat" style="padding:10px 12px 0;flex-shrink:0;"></div>'
     + '<div style="overflow-y:auto;flex:1;">' + listeHTML + '</div>'
     + '</div>';
 
   modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
   document.body.appendChild(modal);
+  try { _majCarteNotifs(); var src = document.getElementById('carteNotifs'), dst = document.getElementById('centreNotifEtat');
+        if (src && dst) dst.innerHTML = src.innerHTML; } catch (e) {}
 }
 
 // Ajouter une notif de bienvenue au premier login
@@ -3082,7 +3085,7 @@ function _notifBienvenue(nomEleve) {
   if (!dejaBienvenu) {
     _ajouterNotification(
       'Bienvenue sur Princes Smart School',
-      'Bonjour ' + (nomEleve||'') + ' ! Activez les notifications pour recevoir les alertes absences et paiements en temps réel.',
+      'Bonjour ' + (nomEleve||'') + ' ! Pour recevoir les annonces et alertes de l\'école : appuyez sur « 🔔 Activer les notifications » (encadré bleu de votre espace), puis sur « Autoriser ».',
       'BIENVENUE'
     );
   }
@@ -3431,6 +3434,7 @@ function _majCarteNotifs(){
 }
 function activerNotifications(){
   try{ localStorage.setItem('pss_notif_diag', 'Appui le '+new Date().toLocaleString('fr-FR')+' — support : '+(('Notification' in window)?'oui':'non')+', état avant : '+(window.Notification?Notification.permission:'—')); }catch(e){}
+  var m=document.getElementById('centreNotifModal'); if(m) m.remove();
   window._forcerDemandeNotif=true; _initFCM();
 }
   function _sauvegarderTokenFCM(token){
