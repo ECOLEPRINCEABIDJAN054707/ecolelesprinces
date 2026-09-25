@@ -967,6 +967,7 @@ if (!eleve) {
   eleveComplet.ecole     = ecoleInfo;
   eleveComplet.ecoleCode = eleve.ecoleCode || "CPP";
   sessionStorage.setItem("eleveConnecte", JSON.stringify(eleveComplet));
+  try{localStorage.setItem("pss_session_parent", JSON.stringify({e:eleveComplet, t:Date.now()}));}catch(e){}
         _setCacheEcole(mat, eleve.ecoleCode, eleve.sheetsId);
   afficherEspaceParent(eleveComplet);
 }
@@ -1379,12 +1380,12 @@ async function afficherEspaceParent(eleve) {
     "<div class='eleve-infos'>" + (window._classe2026||eleve.classe) + " | " + nomEcole + "</div>" +
     "<div style='font-size:12px;color:rgba(255,255,255,0.85);margin-top:4px' id='anneeHeader'>&#128197; Annee scolaire " + (Object.values(SHEETS_IDS_COMPLET).map(function(v){return v.base2026;}).filter(Boolean).indexOf(eleve.sheetsId) >= 0 ? '2026-2027' : '2025-2026') + "</div>" +
     badgeHTML + "</div></div>" +
-    "<div style='position:absolute;top:12px;right:70px;'>" +
+    "<div style='position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:12px;'>" +
     "<button onclick='ouvrirCentreNotifications()' id='btnCloche' style='background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:50%;width:36px;height:36px;cursor:pointer;position:relative;font-size:16px;display:flex;align-items:center;justify-content:center;'>" +
     "&#128276;" +
     "<span id='badgeNotif' style='display:none;position:absolute;top:-4px;right:-4px;background:#C62828;color:#fff;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;border:2px solid white;'>0</span>" +
-    "</button></div>" +
-    "<button class='btn-logout' onclick='logout()'>Deconnexion</button></div>";
+    "</button>" +
+    "<button class='btn-logout' onclick='logout()' style='position:static;'>Deconnexion</button></div></div>";
   setTimeout(function() { const imgEl = document.getElementById("photoEleve"); if (imgEl) chargerPhotoEleve(eleve.matricule, imgEl, photoFallback); }, 500);
   setTimeout(function() { _mettreAJourBadge(); _notifBienvenue(eleve.nom.split(' ')[0]); }, 800);
   const pay = document.getElementById("statutPay");
@@ -3416,17 +3417,22 @@ function _majCarteNotifs(){
     return;
   }
   if(!ok){ z.innerHTML=''; return; }
+  var diag=''; try{ diag=localStorage.getItem('pss_notif_diag')||''; }catch(e){}
+  var _diagHtml = diag ? "<div style='font-size:0.72em;color:#888;margin-top:6px;'>Diagnostic : "+diag+" — état actuel : "+Notification.permission+" — navigateur : "+(navigator.userAgent.match(/(Chrome|Firefox|SamsungBrowser|Opera|Edg|Safari)\/[\d.]+/)||['?'])[0]+"</div>" : '';
   var p=Notification.permission;
-  if(p==='granted'){ z.innerHTML=carte('#E8F5E9','#2E7D32',"✅ <b>Notifications activées sur ce téléphone</b> — vous serez prévenu dès qu'une annonce concerne votre enfant."); return; }
+  if(p==='granted'){ z.innerHTML=carte('#E8F5E9','#2E7D32',"✅ <b>Notifications activées sur ce téléphone</b> — vous serez prévenu dès qu'une annonce concerne votre enfant."+_diagHtml); return; }
   if(p==='denied'){
-    z.innerHTML=carte('#FFF3E0','#E65100',"<b>⚠️ Les notifications sont bloquées sur ce téléphone</b><br>Pour les réactiver : appuyez sur le <b>cadenas 🔒</b> à gauche de l'adresse du site → <b>Autorisations</b> (ou « Paramètres du site ») → <b>Notifications</b> → <b>Autoriser</b>. Puis rechargez la page.");
+    z.innerHTML=carte('#FFF3E0','#E65100',"<b>⚠️ Les notifications sont bloquées sur ce téléphone</b><br>Pour les réactiver : appuyez sur le <b>cadenas 🔒</b> à gauche de l'adresse du site → <b>Autorisations</b> (ou « Paramètres du site ») → <b>Notifications</b> → <b>Autoriser</b>. Puis rechargez la page."+_diagHtml);
     return;
   }
   z.innerHTML=carte('#E3F2FD','#1F4E79',"<b>🔔 Soyez prévenu des annonces de l'école</b><br>Recevez une alerte sur ce téléphone dès qu'une annonce concerne votre enfant (réunion, paiement, information urgente…)."
     +"<button onclick='activerNotifications()' style='display:block;width:100%;margin-top:10px;padding:12px;background:#1F4E79;color:#fff;border:none;border-radius:8px;font-size:1em;font-weight:bold;cursor:pointer;'>🔔 Activer les notifications</button>"
-    +"<div style='font-size:0.85em;color:#555;margin-top:6px;text-align:center;'>Puis appuyez sur <b>« Autoriser »</b> dans la fenêtre qui s'ouvre.</div>");
+    +"<div style='font-size:0.85em;color:#555;margin-top:6px;text-align:center;'>Puis appuyez sur <b>« Autoriser »</b> dans la fenêtre qui s'ouvre.</div>"+_diagHtml);
 }
-function activerNotifications(){ window._forcerDemandeNotif=true; _initFCM(); }
+function activerNotifications(){
+  try{ localStorage.setItem('pss_notif_diag', 'Appui le '+new Date().toLocaleString('fr-FR')+' — support : '+(('Notification' in window)?'oui':'non')+', état avant : '+(window.Notification?Notification.permission:'—')); }catch(e){}
+  window._forcerDemandeNotif=true; _initFCM();
+}
   function _sauvegarderTokenFCM(token){
   try{
     var eleve=JSON.parse(sessionStorage.getItem('eleveConnecte')||'{}');
@@ -3457,7 +3463,7 @@ function activerNotifications(){ window._forcerDemandeNotif=true; _initFCM(); }
 } 
   function afficherErreur(msg){const el=document.getElementById("errorMsg");el.textContent=msg;el.style.display="block";}
 function toggleSec(header){const body=header.nextElementSibling;const arrow=header.querySelector("span");body.classList.toggle("open");arrow.textContent=body.classList.contains("open")?"^":"v";}
-function logout(){sessionStorage.removeItem("eleveConnecte");document.getElementById("parentSpace").style.display="none";document.getElementById("loginWrapper").style.display="block";const sp=document.getElementById("sectionPublique");if(sp)sp.style.display="block";document.getElementById("mainHeader").style.background="linear-gradient(135deg,#1F4E79,#1565C0)";document.getElementById("headerTitle").textContent="🏫 ECOLE LES PRINCES";document.getElementById("headerSub").textContent="Espace Parents - Suivi Scolaire en Ligne";document.getElementById("inputMat").value="";document.getElementById("inputTel").value="";document.getElementById("errorMsg").style.display="none";window.scrollTo(0,0);}
+function logout(){sessionStorage.removeItem("eleveConnecte");try{localStorage.removeItem("pss_session_parent");}catch(e){}document.getElementById("parentSpace").style.display="none";document.getElementById("loginWrapper").style.display="block";const sp=document.getElementById("sectionPublique");if(sp)sp.style.display="block";document.getElementById("mainHeader").style.background="linear-gradient(135deg,#1F4E79,#1565C0)";document.getElementById("headerTitle").textContent="🏫 ECOLE LES PRINCES";document.getElementById("headerSub").textContent="Espace Parents - Suivi Scolaire en Ligne";document.getElementById("inputMat").value="";document.getElementById("inputTel").value="";document.getElementById("errorMsg").style.display="none";window.scrollTo(0,0);}
 function demarrerBlocage(){document.getElementById("loginWrapper").style.display="none";document.getElementById("blockedMsg").style.display="block";let sec=CONFIG.BLOCAGE_MIN*60;const timerEl=document.getElementById("blockedTimer");blocageInterval=setInterval(()=>{sec--;const m=Math.floor(sec/60),s=sec%60;timerEl.textContent=m+":"+s.toString().padStart(2,"0");if(sec<=0){clearInterval(blocageInterval);tentatives=0;   _initFCM();document.getElementById("blockedMsg").style.display="none";document.getElementById("loginWrapper").style.display="block";}},1000);}
 function enregistrerVisite(eleve){try{var ec=eleve.ecoleCode||"CPP";var ua=navigator.userAgent||"";var appareil=/Mobile|Android|iPhone|iPad/.test(ua)?"Mobile":"Desktop";console.log("Visite:",eleve.matricule,appareil);}catch(e){}}
 window.addEventListener("load",()=>{
@@ -3616,6 +3622,11 @@ function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.
 (function(){
   try{
     var ec=JSON.parse(sessionStorage.getItem('eleveConnecte')||'null');
+    if(!ec){
+      var sv=JSON.parse(localStorage.getItem('pss_session_parent')||'null');
+      if(sv&&sv.e&&(Date.now()-sv.t)<12*3600*1000){ ec=sv.e; sessionStorage.setItem('eleveConnecte',JSON.stringify(ec)); }
+      else localStorage.removeItem('pss_session_parent');
+    }
     if(!ec||!ec.matricule||typeof afficherEspaceParent!=='function')return;
     var lw=document.getElementById('loginWrapper'); if(lw) lw.style.display='none';
     afficherEspaceParent(ec);
