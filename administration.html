@@ -5690,6 +5690,7 @@ function afficherTableauVideCom(){
   const tb=document.getElementById('tableBodyCom');if(tb)tb.innerHTML='<p style="text-align:center;padding:30px;color:var(--gris);font-size:0.82em">Aucun pointage valide ce mois</p>';
 }
 function afficherAttente(lignes,mois){
+ window._lignesPointageDir=lignes;
  coursEnAttente=lignes.filter(row=>{
   const st=String(row[9]||'').trim().toUpperCase();
   const mr=serielVersMois(row[6]);
@@ -5698,7 +5699,8 @@ function afficherAttente(lignes,mois){
   const estPrimaire=prefixesPrimaire.some(prefix=>classeUpper===prefix||classeUpper.indexOf(prefix+' ')===0||classeUpper.indexOf(prefix+'A')===0);
   const _dA=new Date(),aujStr=String(_dA.getUTCDate()).padStart(2,'0')+'/'+String(_dA.getUTCMonth()+1).padStart(2,'0')+'/'+_dA.getUTCFullYear();
   const sansCahier=st==='EN COURS'&&toDate(row[0])!==aujStr;   // appel fait, cahier jamais publié (jours précédents)
-  return (st==='EN ATTENTE'||sansCahier)&&mr===mois&&!estPrimaire&&String(row[4]||'').trim()!=='';
+  const aIdentifier=st==='INCOMPLET'&&String(row[4]||'').trim()==='';   // appel sans prof : le directeur l'identifie
+  return (st==='EN ATTENTE'||sansCahier||aIdentifier)&&mr===mois&&!estPrimaire&&(String(row[4]||'').trim()!==''||aIdentifier);
 });
   const sec=document.getElementById('dirSecAttente');if(sec)sec.style.display='block';
   const se=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
@@ -5722,9 +5724,13 @@ function afficherAttente(lignes,mois){
     const dureeEDT=edtD&&edtF?Math.max(0,parseH(edtF)-parseH(edtD)):0;
     const calc=calculerSalaireV2(dm,tarif,dureeEDT);
     const creneauTxt=edtD&&edtF?(edtD+' - '+edtF):'—';
-    h+='<tr><td>'+toDate(row[0])+'</td><td><strong>'+(row[4]||'')+'</strong></td><td>'+(row[2]||'')+'</td><td>'+(row[3]||'')+'</td><td style="font-size:0.75em;color:var(--bleu)">'+creneauTxt+'</td><td style="color:var(--orange);font-weight:700">'+(String(row[9]||'').trim()==='EN COURS'?'📕 Sans cahier':minStr(dm))+'</td><td style="font-weight:700;color:var(--vert)">'+calc.salaire.toLocaleString('fr-FR')+' F</td><td><button onclick="ouvrirModalAttente('+idx+')" style="padding:5px 10px;background:var(--bleu);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.75em;font-weight:600">Traiter</button></td></tr>';
+    h+='<tr><td>'+toDate(row[0])+'</td><td><strong>'+(row[4]||'<span style="color:var(--orange)">❓ Prof à identifier</span>')+'</strong></td><td>'+(row[2]||'')+'</td><td>'+(row[3]||'')+'</td><td style="font-size:0.75em;color:var(--bleu)">'+creneauTxt+'</td><td style="color:var(--orange);font-weight:700">'+(String(row[9]||'').trim()==='EN COURS'?'📕 Sans cahier':(String(row[9]||'').trim()==='INCOMPLET'?'❓ À identifier':minStr(dm)))+'</td><td style="font-weight:700;color:var(--vert)">'+calc.salaire.toLocaleString('fr-FR')+' F</td><td><button onclick="ouvrirModalAttente('+idx+')" style="padding:5px 10px;background:var(--bleu);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.75em;font-weight:600">Traiter</button></td></tr>';
   });
   h+='</tbody></table></div>';const ta=document.getElementById('tableAttente');if(ta)ta.innerHTML=h;
+}
+function _datalistProfsDir(){
+  const noms=[...new Set((window._lignesPointageDir||[]).map(r=>String(r[4]||'').trim()).filter(Boolean))].sort();
+  return '<datalist id="listeProfsIdent">'+noms.map(n=>'<option value="'+n.replace(/"/g,'&quot;')+'">').join('')+'</datalist>';
 }
 function ouvrirModalAttente(idx){
   coursCourant=coursEnAttente[idx];const row=coursCourant;
@@ -5734,7 +5740,7 @@ function ouvrirModalAttente(idx){
   const edtD=row[12]?String(row[12]).trim():'';const edtF=row[13]?String(row[13]).trim():'';
   const dureeEDT=edtD&&edtF?Math.max(0,parseH(edtF)-parseH(edtD)):0;
   const heuresCreneauEntier=dureeEDT>0?Math.floor(dureeEDT/60)+((dureeEDT%60)>=50?1:0):0;
-  document.getElementById('modalAttenteInfo').innerHTML='<div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:0.82em;line-height:1.9;margin-bottom:8px"><b>Enseignant:</b> '+(row[4]||'—')+'<br><b>Classe:</b> '+(row[2]||'—')+' · <b>Matiere:</b> '+(row[3]||'—')+'<br><b>Date:</b> '+toDate(row[0])+'</div>'
+  document.getElementById('modalAttenteInfo').innerHTML='<div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:0.82em;line-height:1.9;margin-bottom:8px"><b>Enseignant:</b> '+(row[4]||'<input id="modalProfIdent" list="listeProfsIdent" placeholder="✍️ Nom du prof (choisir ou écrire)" style="width:100%;margin-top:4px;padding:8px;border:2px solid var(--orange);border-radius:6px;font-size:0.95em">'+_datalistProfsDir())+'<br><b>Classe:</b> '+(row[2]||'—')+' · <b>Matiere:</b> '+(row[3]||'—')+'<br><b>Date:</b> '+toDate(row[0])+'</div>'
     +'<div class="calcul-bloc">'
     +(dureeEDT>0?'<div class="calcul-row"><span>Creneau prevu</span><span style="color:var(--bleu);font-weight:700">'+edtD+' - '+edtF+' ('+minStr(dureeEDT)+')</span></div>':'<div class="calcul-row"><span>Creneau prevu</span><span style="color:var(--rouge)">Non disponible</span></div>')
     +'<div class="calcul-row"><span>Appel</span><span style="color:var(--bleu)">'+(hAppel||'—')+'</span></div>'
@@ -5752,7 +5758,7 @@ function ouvrirModalAttente(idx){
       optsHtml+='<button onclick="validerAvecHeures('+h+')" style="width:100%;margin-bottom:6px;padding:11px;background:'+(estComplet?'var(--vert)':'#E3F2FD')+';color:'+(estComplet?'#fff':'var(--bleu)')+';border:none;border-radius:8px;font-weight:700;font-size:0.85em;cursor:pointer;text-align:left">'
         +'Valider '+h+'h'+(estComplet?' (creneau complet)':'')+' — '+sal.toLocaleString('fr-FR')+' F</button>';
     }
-  } else if(String(row[9]||'').trim()==='EN COURS'){
+  } else if(['EN COURS','INCOMPLET'].indexOf(String(row[9]||'').trim())>-1){
     optsHtml+='<p style="font-size:0.78em;color:var(--orange);margin:8px 0 6px">📕 Cours sans cahier de textes et sans créneau EDT — indiquez les heures réellement faites :</p>';
     for(let h=4;h>=1;h--){
       optsHtml+='<button onclick="validerAvecHeures('+h+')" style="width:100%;margin-bottom:6px;padding:11px;background:#E3F2FD;color:var(--bleu);border:none;border-radius:8px;font-weight:700;font-size:0.85em;cursor:pointer;text-align:left">'
@@ -5771,12 +5777,20 @@ function ouvrirModalAttente(idx){
   function validerAvecHeures(heures){
   if(!coursCourant)return;
   const row=coursCourant;
+  let ensNom=String(row[4]||'').trim(),profVide='';
+  if(!ensNom){                                   // appel à identifier : nom saisi par le directeur
+    const inp=document.getElementById('modalProfIdent');
+    ensNom=inp?inp.value.trim():'';
+    if(!ensNom&&heures>0){showToast('Écrivez ou choisissez le nom du prof','error');return;}
+    if(!ensNom)ensNom='NON IDENTIFIÉ';
+    profVide='1';
+  }
   const tarif=getTarif(currentStaff.ecole,String(row[2]||''));
   const salaire=heures*tarif;
   const decision=heures>0?'VALID\u00C9':'REJET\u00C9';
   const raison=document.getElementById('modalRaison').value||'';
   const cbName='dir_'+Date.now();
-  const params=new URLSearchParams({callback:cbName,type:'TRAITER_ATTENTE',ecole:currentStaff.ecole||'',enseignant:String(row[4]||''),classe:String(row[2]||''),date:toDate(row[0]),decision,raison,salaire,heures});
+  const params=new URLSearchParams({callback:cbName,type:'TRAITER_ATTENTE',ecole:currentStaff.ecole||'',enseignant:ensNom,profVide:profVide,heureAppel:toHeure(row[1]),classe:String(row[2]||''),date:toDate(row[0]),decision,raison,salaire,heures});
   const script=document.createElement('script');
   window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(res&&res.ok){showToast('Decision: '+salaire.toLocaleString('fr-FR')+' F ('+heures+'h)','success');fermerModalAttente();setTimeout(()=>chargerPointage(),2000);}else showToast('Erreur','error');};
   script.onerror=()=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}showToast('Erreur connexion','error');};
