@@ -5698,7 +5698,7 @@ function afficherAttente(lignes,mois){
   const estPrimaire=prefixesPrimaire.some(prefix=>classeUpper===prefix||classeUpper.indexOf(prefix+' ')===0||classeUpper.indexOf(prefix+'A')===0);
   const _dA=new Date(),aujStr=String(_dA.getUTCDate()).padStart(2,'0')+'/'+String(_dA.getUTCMonth()+1).padStart(2,'0')+'/'+_dA.getUTCFullYear();
   const sansCahier=st==='EN COURS'&&toDate(row[0])!==aujStr;   // appel fait, cahier jamais publié (jours précédents)
-  return (st==='EN ATTENTE'||sansCahier)&&mr===mois&&!estPrimaire;
+  return (st==='EN ATTENTE'||sansCahier)&&mr===mois&&!estPrimaire&&String(row[4]||'').trim()!=='';
 });
   const sec=document.getElementById('dirSecAttente');if(sec)sec.style.display='block';
   const se=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
@@ -5733,7 +5733,7 @@ function ouvrirModalAttente(idx){
   const dm=hAppel&&hPubli?Math.max(0,parseH(hPubli)-parseH(hAppel)):0;
   const edtD=row[12]?String(row[12]).trim():'';const edtF=row[13]?String(row[13]).trim():'';
   const dureeEDT=edtD&&edtF?Math.max(0,parseH(edtF)-parseH(edtD)):0;
-  const heuresCreneauEntier=dureeEDT>0?Math.floor(dureeEDT/60):0;
+  const heuresCreneauEntier=dureeEDT>0?Math.floor(dureeEDT/60)+((dureeEDT%60)>=50?1:0):0;
   document.getElementById('modalAttenteInfo').innerHTML='<div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:0.82em;line-height:1.9;margin-bottom:8px"><b>Enseignant:</b> '+(row[4]||'—')+'<br><b>Classe:</b> '+(row[2]||'—')+' · <b>Matiere:</b> '+(row[3]||'—')+'<br><b>Date:</b> '+toDate(row[0])+'</div>'
     +'<div class="calcul-bloc">'
     +(dureeEDT>0?'<div class="calcul-row"><span>Creneau prevu</span><span style="color:var(--bleu);font-weight:700">'+edtD+' - '+edtF+' ('+minStr(dureeEDT)+')</span></div>':'<div class="calcul-row"><span>Creneau prevu</span><span style="color:var(--rouge)">Non disponible</span></div>')
