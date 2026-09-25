@@ -5593,7 +5593,7 @@ async function chargerPointage(){
   if(tb)tb.innerHTML='<div style="text-align:center;padding:24px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try{
     const sheetsId=getSheetsIdPourEcole(currentStaff.ecole);if(!sheetsId)return;
-    const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL!A2:P2000?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL!A2:P5000?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
     const res=await fetch(url);const data=await res.json();
     if(!data.values||!data.values.length){afficherTableauVide();return;}
     const lignesDuMois=data.values.filter(row=>{const mr=serielVersMois(row[6]);return mr===mois;});
@@ -5656,7 +5656,7 @@ async function chargerPointageCom(){
   if(tb)tb.innerHTML='<div style="text-align:center;padding:24px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try{
     const sheetsId=getSheetsIdPourEcole(currentStaff.ecole);if(!sheetsId)return;
-    const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL!A2:P2000?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
+    const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL!A2:P5000?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
     const res=await fetch(url);const data=await res.json();
     if(!data.values||!data.values.length){afficherTableauVideCom();return;}
     const lignesDuMois=data.values.filter(row=>{const mr=serielVersMois(row[6]);return mr===mois;});
@@ -5696,7 +5696,9 @@ function afficherAttente(lignes,mois){
   const classeUpper=String(row[2]||'').trim().toUpperCase();
   const prefixesPrimaire=['CP1','CP2','CE1','CE2','CM1','CM2','PSA','MSA','GSA','MATERNELLE'];
   const estPrimaire=prefixesPrimaire.some(prefix=>classeUpper===prefix||classeUpper.indexOf(prefix+' ')===0||classeUpper.indexOf(prefix+'A')===0);
-  return st==='EN ATTENTE'&&mr===mois&&!estPrimaire;
+  const _dA=new Date(),aujStr=String(_dA.getUTCDate()).padStart(2,'0')+'/'+String(_dA.getUTCMonth()+1).padStart(2,'0')+'/'+_dA.getUTCFullYear();
+  const sansCahier=st==='EN COURS'&&toDate(row[0])!==aujStr;   // appel fait, cahier jamais publié (jours précédents)
+  return (st==='EN ATTENTE'||sansCahier)&&mr===mois&&!estPrimaire;
 });
   const sec=document.getElementById('dirSecAttente');if(sec)sec.style.display='block';
   const se=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
@@ -5720,7 +5722,7 @@ function afficherAttente(lignes,mois){
     const dureeEDT=edtD&&edtF?Math.max(0,parseH(edtF)-parseH(edtD)):0;
     const calc=calculerSalaireV2(dm,tarif,dureeEDT);
     const creneauTxt=edtD&&edtF?(edtD+' - '+edtF):'—';
-    h+='<tr><td>'+toDate(row[0])+'</td><td><strong>'+(row[4]||'')+'</strong></td><td>'+(row[2]||'')+'</td><td>'+(row[3]||'')+'</td><td style="font-size:0.75em;color:var(--bleu)">'+creneauTxt+'</td><td style="color:var(--orange);font-weight:700">'+minStr(dm)+'</td><td style="font-weight:700;color:var(--vert)">'+calc.salaire.toLocaleString('fr-FR')+' F</td><td><button onclick="ouvrirModalAttente('+idx+')" style="padding:5px 10px;background:var(--bleu);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.75em;font-weight:600">Traiter</button></td></tr>';
+    h+='<tr><td>'+toDate(row[0])+'</td><td><strong>'+(row[4]||'')+'</strong></td><td>'+(row[2]||'')+'</td><td>'+(row[3]||'')+'</td><td style="font-size:0.75em;color:var(--bleu)">'+creneauTxt+'</td><td style="color:var(--orange);font-weight:700">'+(String(row[9]||'').trim()==='EN COURS'?'📕 Sans cahier':minStr(dm))+'</td><td style="font-weight:700;color:var(--vert)">'+calc.salaire.toLocaleString('fr-FR')+' F</td><td><button onclick="ouvrirModalAttente('+idx+')" style="padding:5px 10px;background:var(--bleu);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.75em;font-weight:600">Traiter</button></td></tr>';
   });
   h+='</tbody></table></div>';const ta=document.getElementById('tableAttente');if(ta)ta.innerHTML=h;
 }
@@ -5749,6 +5751,12 @@ function ouvrirModalAttente(idx){
       const estComplet=h===heuresCreneauEntier;
       optsHtml+='<button onclick="validerAvecHeures('+h+')" style="width:100%;margin-bottom:6px;padding:11px;background:'+(estComplet?'var(--vert)':'#E3F2FD')+';color:'+(estComplet?'#fff':'var(--bleu)')+';border:none;border-radius:8px;font-weight:700;font-size:0.85em;cursor:pointer;text-align:left">'
         +'Valider '+h+'h'+(estComplet?' (creneau complet)':'')+' — '+sal.toLocaleString('fr-FR')+' F</button>';
+    }
+  } else if(String(row[9]||'').trim()==='EN COURS'){
+    optsHtml+='<p style="font-size:0.78em;color:var(--orange);margin:8px 0 6px">📕 Cours sans cahier de textes et sans créneau EDT — indiquez les heures réellement faites :</p>';
+    for(let h=4;h>=1;h--){
+      optsHtml+='<button onclick="validerAvecHeures('+h+')" style="width:100%;margin-bottom:6px;padding:11px;background:#E3F2FD;color:var(--bleu);border:none;border-radius:8px;font-weight:700;font-size:0.85em;cursor:pointer;text-align:left">'
+        +'Valider '+h+'h — '+(h*tarif).toLocaleString('fr-FR')+' F</button>';
     }
   } else {
     optsHtml+='<p style="font-size:0.78em;color:var(--orange);margin:8px 0 6px">⚠️ Creneau non disponible — validation basee sur la duree mesuree uniquement.</p>';
