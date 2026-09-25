@@ -281,7 +281,7 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
    <div id="badgeMenaPhoto" style="flex:1;text-align:center;padding:10px 4px;border-radius:8px;font-size:0.85em;font-weight:bold">Photo</div>
   </div>
   <div id="messageMenaAction" style="font-size:0.8em;padding:10px;border-radius:8px;text-align:center"></div>
-</div> <div id="sectionAnnonces" style="display:none;">
+</div> <div id="carteNotifs" style="margin:10px 0"></div><div id="sectionAnnonces" style="display:none;">
     <div class="section" style="border-left:4px solid #C62828;">
       <div class="sec-header" style="background:#C62828;" onclick="toggleSec(this)">&#128226; ANNONCES DE L'ECOLE <span>v</span></div>
       <div class="sec-body" id="annoncesBody"></div>
@@ -3341,6 +3341,7 @@ function genererFicheRenseignementPDF() {
   w.document.close();
 }
 function _initFCM(){
+  _majCarteNotifs();
   try{
     var firebaseConfig={
       apiKey:"AIzaSyDtH88yVNazbUtPH45-elt0lufBa3guad4",
@@ -3353,7 +3354,9 @@ function _initFCM(){
     if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
     var messaging=firebase.messaging();
     // Demander permission notifications
-    Notification.requestPermission().then(function(permission){
+    var _demande = window._forcerDemandeNotif ? Notification.requestPermission() : Promise.resolve(Notification.permission);
+    _demande.then(function(permission){
+      window._forcerDemandeNotif=false; _majCarteNotifs();
       if(permission==='granted'){
         // Attendre que le service worker soit prêt
         navigator.serviceWorker.ready.then(function(swReg){
@@ -3392,6 +3395,28 @@ function _initFCM(){
     });
   }catch(e){console.warn('FCM init:',e);}
 } 
+function _majCarteNotifs(){
+  var z=document.getElementById('carteNotifs'); if(!z) return;
+  var ios=/iPhone|iPad|iPod/.test(navigator.userAgent);
+  var installe=(window.navigator.standalone===true)||(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches);
+  var ok=('Notification' in window)&&('serviceWorker' in navigator);
+  var carte=function(fond,bord,html){return "<div style='background:"+fond+";border-left:4px solid "+bord+";border-radius:8px;padding:12px 14px;font-size:0.85em;line-height:1.5;'>"+html+"</div>";};
+  if(ios&&!installe){
+    z.innerHTML=carte('#E3F2FD','#1F4E79',"<b>📱 Recevez les annonces de l'école sur votre iPhone</b><br>1. Ouvrez ce site dans <b>Safari</b><br>2. Touchez le bouton <b>Partager</b> (carré avec une flèche ⬆️)<br>3. Choisissez <b>« Sur l'écran d'accueil »</b>, puis <b>Ajouter</b><br>4. Ouvrez le portail depuis la <b>nouvelle icône</b>, reconnectez-vous et appuyez sur <b>« Activer les notifications »</b>");
+    return;
+  }
+  if(!ok){ z.innerHTML=''; return; }
+  var p=Notification.permission;
+  if(p==='granted'){ z.innerHTML=carte('#E8F5E9','#2E7D32',"✅ <b>Notifications activées sur ce téléphone</b> — vous serez prévenu dès qu'une annonce concerne votre enfant."); return; }
+  if(p==='denied'){
+    z.innerHTML=carte('#FFF3E0','#E65100',"<b>⚠️ Les notifications sont bloquées sur ce téléphone</b><br>Pour les réactiver : appuyez sur le <b>cadenas 🔒</b> à gauche de l'adresse du site → <b>Autorisations</b> (ou « Paramètres du site ») → <b>Notifications</b> → <b>Autoriser</b>. Puis rechargez la page.");
+    return;
+  }
+  z.innerHTML=carte('#E3F2FD','#1F4E79',"<b>🔔 Soyez prévenu des annonces de l'école</b><br>Recevez une alerte sur ce téléphone dès qu'une annonce concerne votre enfant (réunion, paiement, information urgente…)."
+    +"<button onclick='activerNotifications()' style='display:block;width:100%;margin-top:10px;padding:12px;background:#1F4E79;color:#fff;border:none;border-radius:8px;font-size:1em;font-weight:bold;cursor:pointer;'>🔔 Activer les notifications</button>"
+    +"<div style='font-size:0.85em;color:#555;margin-top:6px;text-align:center;'>Puis appuyez sur <b>« Autoriser »</b> dans la fenêtre qui s'ouvre.</div>");
+}
+function activerNotifications(){ window._forcerDemandeNotif=true; _initFCM(); }
   function _sauvegarderTokenFCM(token){
   try{
     var eleve=JSON.parse(sessionStorage.getItem('eleveConnecte')||'{}');
