@@ -7250,6 +7250,13 @@ function telechargerPdfListeAttenteDir() {
     if (carte) carte.style.boxShadow = (k === quel) ? '0 0 0 3px rgba(31,78,121,0.4)' : 'none';
   });
 }
+  function _formatDateAnom(v){
+  if(!v)return '—';
+  const dt=new Date(v);
+  if(isNaN(dt.getTime()))return String(v);
+  const pad=n=>String(n).padStart(2,'0');
+  return pad(dt.getDate())+'/'+pad(dt.getMonth()+1)+'/'+dt.getFullYear()+' '+pad(dt.getHours())+':'+pad(dt.getMinutes());
+}
   async function chargerAnomaliesMenaDir(){
   const listeDiv=document.getElementById('dirAnomListe');
   const countSpan=document.getElementById('dirAnomCount');
@@ -7271,7 +7278,10 @@ function telechargerPdfListeAttenteDir() {
     return;
   }
 
-  const anomalies=data.anomalies||[];
+  // Directeur : uniquement les anomalies de SON école (le Fondateur voit tout le réseau)
+  const _normEcAnom=v=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+  const _voitReseau=currentStaff&&currentStaff.profil==='FOND';
+  const anomalies=(data.anomalies||[]).filter(a=>_voitReseau||_normEcAnom(a.ecole)===_normEcAnom(currentStaff&&currentStaff.ecole));
   window._anomaliesDirListe=anomalies;
   if(countSpan)countSpan.textContent=anomalies.length>0?'('+anomalies.length+')':'';
 
@@ -7294,7 +7304,7 @@ function telechargerPdfListeAttenteDir() {
       +'<td style="font-size:0.9em">'+a.classe+'</td>'
       +'<td style="font-size:0.85em">'+typeLabel+'</td>'
       +'<td style="font-size:0.8em">'+a.signalePar+'</td>'
-      +'<td style="font-size:0.8em;color:var(--gris)">'+a.dateSignalement+'</td>'
+      +'<td style="font-size:0.8em;color:var(--gris)">'+_formatDateAnom(a.dateSignalement)+'</td>'
       +'<td style="font-size:0.85em">'+(a.ecoleOrigine||'—')+'</td>'
       +'<td><button onclick="toggleResolutionAnomalieDir('+idx+')" style="padding:6px 10px;background:#2E7D32;color:#fff;border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer">Traiter</button></td>'
       +'</tr>';
@@ -7353,6 +7363,7 @@ async function resoudreAnomalieDirUI(idx){
   const params=new URLSearchParams({
     callback:cbName,type:'RESOUDRE_ANOMALIE_MENA',
     ecole:a.ecole,matricule:a.matricule,
+    ligneIndex:a.ligneIndex||'',typeAnomalie:a.type||'',
     ecoleOrigine:ecoleOrigine,contactDirecteurOrigine:contactDirecteurOrigine,
     cause:cause,observation:observation,resoluPar:resoluPar
   });
