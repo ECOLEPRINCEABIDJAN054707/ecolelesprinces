@@ -1671,7 +1671,7 @@ async function mettreAJourAppel() {
     showToast('✅ Appel mis à jour','success');
   } catch(e) {
     hideLoader();
-    sauvegarderHorsLigne('CORRECTION_APPEL', {date:coursActuel.dateAppel, classe:coursActuel.classe, absences, presents});
+    sauvegarderHorsLigne('CORRECTION_APPEL', {date:coursActuel.dateAppel, classe:coursActuel.classe, enseignant:user.nom, ecole:user.ecole, absences, presents});
     showToast('✅ Correction sauvegardée localement','success');
     document.getElementById('btnMajAppel').style.display = 'none';
   }
@@ -2544,10 +2544,20 @@ async function envoyerDonnees(type, data) {
   return res || {ok:true};
 }
 
+// Complète un élément hors ligne avec l'enseignant et l'école (sinon le serveur le rejette)
+function _completerDonneesHorsLigne(data) {
+  const d = Object.assign({}, data || {});
+  const abs0 = Array.isArray(d.absences) && d.absences.length ? d.absences[0] : null;
+  if (!d.enseignant) d.enseignant = (abs0 && abs0.enseignant) || (user && user.nom) || '';
+  if (!d.ecole) d.ecole = (user && user.ecole) || '';
+  if (!d.matiere && abs0 && abs0.matiere) d.matiere = abs0.matiere;
+  return d;
+}
+
 function sauvegarderHorsLigne(type, data) {
   try {
     const q = JSON.parse(localStorage.getItem('pss_offline') || '[]');
-    q.push({type, data, ts:new Date().toISOString()});
+    q.push({type, data:_completerDonneesHorsLigne(data), ts:new Date().toISOString()});
     localStorage.setItem('pss_offline', JSON.stringify(q));
     majBadgeOffline();
   } catch(e) {}
@@ -2562,7 +2572,7 @@ async function syncHorsLigne() {
     if (!q.length) return;
     const envoyes = [];
     for (const item of q) {
-      try { await envoyerDonnees(item.type, item.data); envoyes.push(item.ts + '|' + item.type); }
+      try { await envoyerDonnees(item.type, _completerDonneesHorsLigne(item.data)); envoyes.push(item.ts + '|' + item.type); }
       catch (e) { /* reste en file */ }
     }
     // Relire la file : ne retirer QUE les éléments envoyés (ne pas perdre ceux ajoutés pendant la synchro)
