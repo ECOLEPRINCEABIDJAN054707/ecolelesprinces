@@ -1204,7 +1204,7 @@ function setFiltrePersonnelActif(f) {
 }
 async function chargerPersonnelEnsCom() {
   const body = document.getElementById('comPersonnelEnsBody');
-  const sheetsId = SHEETS_IDS[currentStaff.ecole];
+  const sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole] || SHEETS_IDS[currentStaff.ecole];
   if (!sheetsId) { body.innerHTML = '<p style="padding:14px;color:var(--rouge)">École non configurée</p>'; return; }
   body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try {
@@ -1269,7 +1269,7 @@ if (spanMois) spanMois.textContent = '— ' + moisActuelLabel;
         + '<td>'+(p.type!=='PERMANENT'?'<button onclick="imprimerBulletinVacataireDepuisListe(\''+p.nom.replace(/'/g,"\\'")+'\')" style="padding:5px 10px;background:var(--or);color:#fff;border:none;border-radius:6px;font-size:0.72em;font-weight:700;cursor:pointer">🖨</button>':'—')+'</td>'
         + '</tr>';
     });
-       const totalMois = rows.filter(function(p){return p.type!=='PERMANENT';}).reduce(function(s,p){return s + (montantsMois[p.nom.toUpperCase()]||0);}, 0);
+       const _vusCom = {}; const totalMois = rows.filter(function(p){return p.type!=='PERMANENT';}).reduce(function(s,p){var k=p.nom.toUpperCase(); if(_vusCom[k]) return s; _vusCom[k]=true; return s + (montantsMois[k]||0);}, 0);
 h += '<tr style="border-top:2px solid var(--or)"><td colspan="4" style="font-weight:700;text-align:right">TOTAL MASSE SALARIALE VACATAIRES — ' + moisActuelLabel + '</td><td style="font-weight:700;color:var(--or)">' + Math.round(totalMois).toLocaleString('fr-FR') + ' F</td><td></td></tr>';
     h += '</tbody></table></div>';
               window._montantsMoisCom = montantsMois;
@@ -1281,7 +1281,7 @@ h += '<tr style="border-top:2px solid var(--or)"><td colspan="4" style="font-wei
 }
 async function chargerPersonnelEnsEdu() {
   const body = document.getElementById('eduPersonnelEnsBody');
-  const sheetsId = SHEETS_IDS[currentStaff.ecole];
+  const sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole] || SHEETS_IDS[currentStaff.ecole];
   if (!sheetsId) { body.innerHTML = '<p style="padding:14px;color:var(--rouge)">École non configurée</p>'; return; }
   body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try {
@@ -2384,7 +2384,7 @@ var lignes = cache.filter(function(l) {
 }
   async function chargerListePersonnelDir() {
   const body = document.getElementById('dirPersonnelBody');
-  const sheetsId = SHEETS_IDS[currentStaff.ecole];
+  const sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole] || SHEETS_IDS[currentStaff.ecole];
   if (!sheetsId) { body.innerHTML = '<p style="padding:14px;color:var(--rouge)">École non configurée</p>'; return; }
   body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try {
@@ -2480,7 +2480,7 @@ let h = hFiltre + '<div class="tbl-wrap"><table><thead><tr><th>Nom</th><th>Poste
       + '<td id="persStatut_'+idx+'" style="font-size:0.8em;color:var(--gris)">—</td>'
       + '</tr>';
   });
-      const totalMoisDir = rows.filter(function(p){return p.type!=='PERMANENT';}).reduce(function(s,p){return s + ((window._montantsMoisDir||{})[p.nom.toUpperCase()]||0);}, 0);
+      const _vusDir = {}; const totalMoisDir = rows.filter(function(p){return p.type!=='PERMANENT';}).reduce(function(s,p){var k=p.nom.toUpperCase(); if(_vusDir[k]) return s; _vusDir[k]=true; return s + ((window._montantsMoisDir||{})[k]||0);}, 0);
 h += '<tr style="border-top:2px solid var(--or)"><td colspan="5" style="font-weight:700;text-align:right">TOTAL MASSE SALARIALE VACATAIRES — ' + window._moisActuelLabelDir + '</td><td style="font-weight:700;color:var(--or)">' + Math.round(totalMoisDir).toLocaleString('fr-FR') + ' F</td><td></td><td></td></tr>';
    h += '</tbody></table></div>';
   h += '<div style="padding:10px 14px"><input type="text" id="persSearch" oninput="filtrerListePersonnelDir()" placeholder="Rechercher un nom..." style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"></div>';
@@ -2515,7 +2515,7 @@ async function sauvegarderPersonnelDir(idx) {
   const statutCell = document.getElementById('persStatut_'+idx);
   if (!nom || !poste) { statutCell.textContent = 'Nom/poste requis'; statutCell.style.color = 'var(--rouge)'; return; }
   statutCell.textContent = '...';
-  const sheetsId = SHEETS_IDS[currentStaff.ecole];
+  const sheetsId = SHEETS_IDS_2026_2027[currentStaff.ecole] || SHEETS_IDS[currentStaff.ecole];
   try {
    const estNouveau = !p.ligne;
     const params = new URLSearchParams(estNouveau
@@ -5860,7 +5860,7 @@ function confirmerValidationBulletin(){
 async function syncEnseignants(){
   showToast('Synchronisation...','');
   try{
-    const sheetsId=SHEETS_IDS[currentStaff.ecole];
+    const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole]||SHEETS_IDS[currentStaff.ecole];
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
     const r=await fetch(url);const data=await r.json();if(!data.values){showToast('Aucune donnee ENSEIGNANTS','error');return;}
     let nbA=0,nbP=0,nbV=0;
