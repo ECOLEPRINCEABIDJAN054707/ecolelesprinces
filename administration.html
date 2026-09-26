@@ -532,6 +532,22 @@ table tr:nth-child(even){background:#F8FAFD}
       </div>
     </div>
   </div>
+  <div class="section" id="dirSecEnsBloques">
+  <div class="sec-head sec-rouge" onclick="toggleSec(this); chargerEnseignantsBloquesDir()">
+    <h3>🔓 Enseignants bloqués (appel hors zone) <span id="dirEnsBloquesCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirEnsBloquesBody">
+    <div style="padding:8px 14px 6px;background:#FFEBEE;border-bottom:1px solid #FFCDD2">
+      <span style="font-size:0.72em;color:var(--rouge);font-weight:600">Comptes bloqués automatiquement après 3 tentatives d'appel hors de l'école — vérifiez la raison avec l'enseignant avant de débloquer (le Fondateur est informé par email)</span>
+    </div>
+    <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <button onclick="chargerEnseignantsBloquesDir()" style="padding:8px 14px;background:var(--rouge);color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Actualiser</button>
+    </div>
+    <div id="dirEnsBloquesListe">
+      <p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur "Actualiser" pour voir la liste.</p>
+    </div>
+  </div>
+</div>
   <div class="section" id="dirSecHeuresAbsence">
   <div class="sec-head sec-orange" onclick="toggleSec(this)">
     <h3>⏱️ Heures d'absence — Ce mois <span id="dirHeuresAbsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -9984,6 +10000,91 @@ window._heuresAbsFiltreClasse_com = classeChoisie;
 }
 
 function filtrerHeuresAbsenceCom() { /* rien — l'utilisateur reclique "Charger" après avoir changé de classe */ }
+
+// ══ ENSEIGNANTS BLOQUÉS (appel hors zone) — Directeur ══
+function _escHtmlBloq(s) {
+  return String(s || '').replace(/[&<>"']/g, function(c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+async function chargerEnseignantsBloquesDir() {
+  const container = document.getElementById('dirEnsBloquesListe');
+  const countEl = document.getElementById('dirEnsBloquesCount');
+  if (!container || !currentStaff) return;
+  container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Chargement…</p>';
+
+  const result = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LISTER_ENS_BLOQUES', ecole: currentStaff.ecole }, 20000);
+
+  if (!result || result.success !== true) {
+    const msg = (result && (result.message || result.error)) || 'Erreur de chargement';
+    container.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">⚠️ ' + _escHtmlBloq(msg) + '</p>';
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  const liste = result.liste || [];
+  if (countEl) countEl.textContent = liste.length ? '(' + liste.length + ')' : '';
+
+  if (!liste.length) {
+    container.innerHTML = '<p style="padding:14px;text-align:center;color:#1e8449;font-size:0.85em">✅ Aucun enseignant bloqué dans votre école.</p>';
+    return;
+  }
+
+  container.innerHTML = liste.map(function(ens) {
+    const nom = ens.nom || ens.matricule;
+    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);flex-wrap:wrap">' +
+             '<div>' +
+               '<div style="font-weight:600;font-size:0.9em">🚫 ' + _escHtmlBloq(nom) + '</div>' +
+               '<div style="font-size:0.75em;color:var(--gris)">Code : ' + _escHtmlBloq(ens.matricule) + ' — 3 tentatives d\'appel hors zone</div>' +
+             '</div>' +
+             '<button type="button" ' +
+               'data-mat="' + _escHtmlBloq(ens.matricule) + '" ' +
+               'data-nom="' + _escHtmlBloq(nom) + '" ' +
+               'onclick="debloquerEnseignantDir(this)" ' +
+               'style="padding:8px 14px;background:#1e8449;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">' +
+               '🔓 Débloquer' +
+             '</button>' +
+           '</div>';
+  }).join('');
+}
+
+async function debloquerEnseignantDir(btn) {
+  if (!currentStaff) return;
+  const mat = btn.getAttribute('data-mat');
+  const nom = btn.getAttribute('data-nom') || mat;
+
+  const ok = confirm(
+    'Débloquer ' + nom + ' ?\n\n' +
+    'Vérifiez d\'abord avec l\'enseignant pourquoi il a fait l\'appel hors de l\'école.\n' +
+    'Le Fondateur sera informé par email.'
+  );
+  if (!ok) return;
+
+  btn.disabled = true;
+  btn.textContent = '⏳ En cours…';
+
+  const roleLabels = { DIR: 'Directeur', FOND: 'Fondateur', COM: 'Comptable', EDU: 'Educateur' };
+  const directeur = (currentStaff.nom || currentStaff.matricule || 'inconnu') +
+    ' (' + (roleLabels[currentStaff.profil] || currentStaff.profil) + ' ' + currentStaff.ecole + ')';
+
+  const result = await appelJSONP(APPS_SCRIPT_POINTAGE, {
+    type: 'DEBLOQUER_ENSEIGNANT',
+    matricule: mat,
+    ecole: currentStaff.ecole,
+    directeur: directeur
+  }, 20000);
+
+  if (result && result.success === true) {
+    showToast('✅ ' + (result.message || 'Enseignant débloqué'), 'success');
+    chargerEnseignantsBloquesDir();
+  } else {
+    const msg = (result && (result.message || result.error)) || 'Échec du déblocage';
+    alert('⚠️ ' + msg);
+    btn.disabled = false;
+    btn.textContent = '🔓 Débloquer';
+  }
+}
 
 // ══ HEURES D'ABSENCE — Directeur (chargement par classe) ══
 async function chargerHeuresAbsenceDir() {
