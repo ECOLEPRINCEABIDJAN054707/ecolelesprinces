@@ -1727,6 +1727,25 @@ async function publierCahier() {
   const maintenant = new Date();
   const horodatagePubli = formatHeure(maintenant);
 
+  // ── Avertissement : cours pas encore terminé (secondaire uniquement) ──
+  if (!(user && user.niveau === 'primaire') && coursActuel && coursActuel.horodatageAppel) {
+    const minNow = parseMin(horodatagePubli);
+    const minFin = parseMin(coursActuel.heureFinEDT);
+    const estim = calculerSalaireRobuste(coursActuel.horodatageAppel, horodatagePubli, coursActuel.heureDebutEDT, coursActuel.heureFinEDT, user.ecole, coursActuel.classe||'');
+    const resteAvantFin = (minNow !== null && minFin !== null) ? (minFin - minNow) : null;
+    const coursPasFini = resteAvantFin !== null && resteAvantFin > 10;
+    const nonPaye = (estim.heuresValidees || 0) === 0;
+    if (coursPasFini || nonPaye) {
+      let txt = '⚠️ ATTENTION — VOTRE COURS N\'EST PAS TERMINÉ\n\n';
+      if (minFin !== null) txt += 'Fin prévue : ' + coursActuel.heureFinEDT + (resteAvantFin > 0 ? ' (dans ' + resteAvantFin + ' min)' : '') + '\n';
+      txt += 'Durée comptée si vous publiez maintenant : ' + (estim.dureeMin ? minStr(estim.dureeMin) : '0 min') + '\n';
+      txt += 'Montant : ' + (estim.salaire || 0).toLocaleString('fr-FR') + ' F CFA';
+      if (nonPaye) txt += ' → cours NON PAYÉ (moins de 50 min), transmis au Directeur';
+      txt += '\n\nLe cahier de textes se publie à la FIN du cours.\n\nOK = publier quand même\nAnnuler = revenir et publier plus tard';
+      if (!confirm(txt)) return;
+    }
+  }
+
   function finaliser(lat, lon, acc, gpsStatut) {
     // Verrou anti double-publication
     const cleEnvoi = (coursActuel?.classe||'') + '|' + lecon + '|' + contenu;
