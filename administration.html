@@ -548,6 +548,45 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div>
+  <div class="section" id="dirSecValidationPerm" style="display:none">
+  <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerPermissionsFond('dirVal')">
+    <h3>✅ Valider les permissions des Directeurs <span id="dirValPermCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirValPermBody">
+    <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="dirValPermFiltre" onchange="chargerPermissionsFond('dirVal')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+        <option value="EN ATTENTE">⏳ En attente</option><option value="">Toutes</option>
+      </select>
+      <button onclick="chargerPermissionsFond('dirVal')" style="padding:8px 14px;background:#1565C0;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Actualiser</button>
+    </div>
+    <div id="dirValPermListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur « Actualiser ».</p></div>
+  </div>
+</div>
+  <div class="section" id="dirSecPermissions">
+  <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerMesPermissionsDir()">
+    <h3>📝 Demande de permission d'absence <span id="dirPermCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirPermBody">
+    <div style="padding:8px 14px 6px;background:#E3F2FD;border-bottom:1px solid #BBDEFB">
+      <span style="font-size:0.72em;color:#1565C0;font-weight:600">Toute absence doit être demandée à l'avance et accordée par le Fondateur. Indiquez qui assure l'intérim.</span>
+    </div>
+    <div style="padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <label style="font-size:0.75em;font-weight:600">Du<input type="date" id="dirPermDebut" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+      <label style="font-size:0.75em;font-weight:600">Au (inclus)<input type="date" id="dirPermFin" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+      <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Motif
+        <select id="dirPermMotif" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px">
+          <option value="">— Choisir —</option><option>Maladie</option><option>Événement familial</option><option>Démarche administrative</option>
+          <option>Réunion / formation (DRENA, MENA…)</option><option>Mission pour le réseau</option><option>Autre</option>
+        </select></label>
+      <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Précisions<textarea id="dirPermDetail" rows="2" placeholder="Expliquez brièvement…" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></textarea></label>
+      <label style="font-size:0.75em;font-weight:600">Intérim assuré par<input type="text" id="dirPermInterim" placeholder="Nom et fonction" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+      <label style="font-size:0.75em;font-weight:600">Joignable au<input type="tel" id="dirPermTel" placeholder="07 xx xx xx xx" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+      <button type="button" onclick="envoyerPermissionDir(this)" style="grid-column:1/3;padding:10px;background:#1565C0;color:#fff;border:none;border-radius:8px;font-size:0.88em;font-weight:700;cursor:pointer">📤 Envoyer la demande au Fondateur</button>
+    </div>
+    <div style="padding:4px 14px 2px;font-size:0.78em;font-weight:700;color:var(--gris)">Mes demandes</div>
+    <div id="dirPermListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
+  </div>
+</div>
   <div class="section" id="dirSecHeuresAbsence">
   <div class="sec-head sec-orange" onclick="toggleSec(this)">
     <h3>⏱️ Heures d'absence — Ce mois <span id="dirHeuresAbsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -2609,6 +2648,20 @@ async function sauvegarderPersonnelDir(idx) {
     </div>
     <div class="sec-body" id="fondSoldesBody"></div>
   </div>
+  <div class="section" id="fondSecPermissions">
+  <div class="sec-head sec-bleu open" onclick="toggleSec(this); chargerPermissionsFond()">
+    <h3>📝 Demandes de permission des Directeurs <span id="fondPermCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body open" id="fondPermBody">
+    <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="fondPermFiltre" onchange="chargerPermissionsFond()" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+        <option value="EN ATTENTE">⏳ En attente</option><option value="">Toutes</option>
+      </select>
+      <button onclick="chargerPermissionsFond()" style="padding:8px 14px;background:#1565C0;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Actualiser</button>
+    </div>
+    <div id="fondPermListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur « Actualiser ».</p></div>
+  </div>
+</div>
   <div class="section" id="fondSecAlertePrecoce">
   <div class="sec-head sec-rouge open" onclick="chargerAlertePrecoceFond();toggleSec(this)">
     <h3>🚨 Élèves à risque de décrochage <span id="fondRisqueCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -5554,6 +5607,8 @@ function afficherDir(s){
   else if(isSEC)stats='<div class="stats-row s5"><div class="stat-box"><div class="stat-val" id="statEns">-</div><div class="stat-lbl">Enseignants</div></div><div class="stat-box vert"><div class="stat-val" id="statHeures">-</div><div class="stat-lbl">Heures mois</div></div><div class="stat-box or"><div class="stat-val" id="statSalaire">-</div><div class="stat-lbl">Masse sal.</div></div><div class="stat-box rouge"><div class="stat-val" id="statPerm">-</div><div class="stat-lbl">Permanents</div></div><div class="stat-box orange"><div class="stat-val" id="statAttente">-</div><div class="stat-lbl">En attente</div><div class="stat-lbl" id="statAttenteSub" style="font-size:0.55em"></div></div></div>';
   else stats='<div class="stats-row s6"><div class="stat-box"><div class="stat-val" id="statEns">-</div><div class="stat-lbl">Ens.</div></div><div class="stat-box or"><div class="stat-val" id="statSalaire">-</div><div class="stat-lbl">Masse sal.</div></div><div class="stat-box orange"><div class="stat-val" id="statAttente">-</div><div class="stat-lbl">Attente</div></div><div class="stat-box emeraude"><div class="stat-val" id="statBulletins">-</div><div class="stat-lbl">Bulletins</div></div><div class="stat-box rouge"><div class="stat-val" id="dStatAlert">0</div><div class="stat-lbl">Alertes</div></div><div class="stat-box vert"><div class="stat-val" id="statPerm">-</div><div class="stat-lbl">Perm.</div></div></div>';
   document.getElementById('dirStatsZone').innerHTML=stats;
+  // Validation des permissions : réservée à l'espace CPP LES PRINCES
+  var _secVal=document.getElementById('dirSecValidationPerm'); if(_secVal) _secVal.style.display=(String(s.ecole||'').toUpperCase().trim()==='CPP LES PRINCES')?'block':'none';
   document.getElementById('dirFiltresZone').style.display=!isPRIM?'block':'none';
   document.getElementById('dirSecAttente').style.display=!isPRIM?'block':'none';
   document.getElementById('dirSecSalaires').style.display=!isPRIM?'block':'none';
@@ -10013,6 +10068,110 @@ window._heuresAbsFiltreClasse_com = classeChoisie;
 }
 
 function filtrerHeuresAbsenceCom() { /* rien — l'utilisateur reclique "Charger" après avoir changé de classe */ }
+
+// ══ PERMISSIONS D'ABSENCE — Directeur → Fondateur ══
+function _fmtDatePerm(v) {
+  if (!v) return '';
+  var d = new Date(v); if (isNaN(d)) return String(v);
+  return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear();
+}
+function _badgePerm(st) {
+  var c = st === 'ACCORDÉE' ? '#1e8449' : st === 'REFUSÉE' ? '#c0392b' : '#E65100';
+  var i = st === 'ACCORDÉE' ? '✅' : st === 'REFUSÉE' ? '❌' : '⏳';
+  return '<span style="background:' + c + ';color:#fff;border-radius:10px;padding:2px 8px;font-size:0.72em;font-weight:700">' + i + ' ' + _escHtmlBloq(st) + '</span>';
+}
+async function _appelPerm(params) {
+  var q = Object.keys(params).map(function(k) { return k + '=' + encodeURIComponent(params[k] == null ? '' : params[k]); }).join('&');
+  var res = await fetch(APPS_SCRIPT_POINTAGE + '?' + q);
+  var raw = await res.json();
+  return (raw && raw.success !== undefined) ? raw : (raw.data || raw);
+}
+
+async function envoyerPermissionDir(btn) {
+  if (!currentStaff) return;
+  var debut = document.getElementById('dirPermDebut').value, fin = document.getElementById('dirPermFin').value;
+  var motif = document.getElementById('dirPermMotif').value, detail = document.getElementById('dirPermDetail').value.trim();
+  var interim = document.getElementById('dirPermInterim').value.trim(), tel = document.getElementById('dirPermTel').value.trim();
+  if (!debut || !fin || !motif || !interim) { alert('⚠️ Renseignez les dates, le motif et la personne qui assure l\'intérim.'); return; }
+  if (fin < debut) { alert('⚠️ La date de fin est avant la date de début.'); return; }
+  btn.disabled = true; btn.textContent = '⏳ Envoi…';
+  try {
+    var data = await _appelPerm({ type: 'DEMANDER_PERMISSION', ecole: currentStaff.ecole,
+      directeur: currentStaff.nom || currentStaff.name || 'Directeur', code: currentStaff.matricule || currentStaff.code || '',
+      debut: debut, fin: fin, motif: motif + (detail ? ' — ' + detail : ''), interim: interim, tel: tel });
+    if (data && data.success) {
+      alert('✅ Demande envoyée au Fondateur. Vous verrez sa réponse dans « Mes demandes ».');
+      ['dirPermDebut', 'dirPermFin', 'dirPermDetail', 'dirPermInterim', 'dirPermTel'].forEach(function(id) { document.getElementById(id).value = ''; });
+      document.getElementById('dirPermMotif').value = '';
+      chargerMesPermissionsDir();
+    } else alert('⚠️ ' + ((data && data.message) || 'Échec de l\'envoi'));
+  } catch (e) { alert('⚠️ Serveur inaccessible. Réessayez.'); console.error('envoyerPermissionDir', e); }
+  btn.disabled = false; btn.textContent = '📤 Envoyer la demande au Fondateur';
+}
+
+async function chargerMesPermissionsDir() {
+  var box = document.getElementById('dirPermListe');
+  if (!box || !currentStaff) return;
+  box.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Chargement…</p>';
+  try {
+    var data = await _appelPerm({ type: 'LISTER_PERMISSIONS', ecole: currentStaff.ecole });
+    var liste = (data && data.liste) || [];
+    var enAttente = liste.filter(function(p) { return p.statut === 'EN ATTENTE'; }).length;
+    document.getElementById('dirPermCount').textContent = enAttente ? '(' + enAttente + ' en attente)' : '';
+    if (!liste.length) { box.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucune demande.</p>'; return; }
+    box.innerHTML = liste.map(function(p) {
+      return '<div style="padding:10px 14px;border-bottom:1px solid #eee">' +
+        '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-size:0.85em">Du ' + _fmtDatePerm(p.debut) + ' au ' + _fmtDatePerm(p.fin) + '</b>' + _badgePerm(p.statut) + '</div>' +
+        '<div style="font-size:0.78em;color:var(--gris);margin-top:3px">' + _escHtmlBloq(p.motif) + ' — intérim : ' + _escHtmlBloq(p.interim) + '</div>' +
+        (p.commentaire ? '<div style="font-size:0.78em;margin-top:3px">💬 Fondateur : ' + _escHtmlBloq(p.commentaire) + '</div>' : '') +
+      '</div>';
+    }).join('');
+  } catch (e) { box.innerHTML = '<p style="padding:14px;color:#c0392b;font-size:0.82em">⚠️ Serveur inaccessible.</p>'; console.error('chargerMesPermissionsDir', e); }
+}
+
+async function chargerPermissionsFond(pfx) {
+  pfx = (typeof pfx === 'string' && pfx) ? pfx : 'fond';
+  var box = document.getElementById(pfx + 'PermListe');
+  if (!box) return;
+  var filtre = document.getElementById(pfx + 'PermFiltre').value;
+  box.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Chargement…</p>';
+  try {
+    var data = await _appelPerm({ type: 'LISTER_PERMISSIONS', ecole: 'TOUTES' });
+    var tout = (data && data.liste) || [];
+    var enAttente = tout.filter(function(p) { return p.statut === 'EN ATTENTE'; }).length;
+    document.getElementById(pfx + 'PermCount').textContent = enAttente ? '(' + enAttente + ' en attente)' : '';
+    var liste = filtre ? tout.filter(function(p) { return p.statut === filtre; }) : tout;
+    if (!liste.length) { box.innerHTML = '<p style="padding:14px;text-align:center;color:#1e8449;font-size:0.85em">✅ Aucune demande ' + (filtre ? 'en attente' : '') + '.</p>'; return; }
+    box.innerHTML = liste.map(function(p) {
+      var actions = p.statut === 'EN ATTENTE'
+        ? '<div style="display:flex;gap:8px;margin-top:8px">' +
+            '<button type="button" data-id="' + _escHtmlBloq(p.id) + '" data-d="ACCORDÉE" data-pfx="' + pfx + '" onclick="deciderPermissionFond(this)" style="flex:1;padding:8px;background:#1e8449;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">✅ Accorder</button>' +
+            '<button type="button" data-id="' + _escHtmlBloq(p.id) + '" data-d="REFUSÉE" data-pfx="' + pfx + '" onclick="deciderPermissionFond(this)" style="flex:1;padding:8px;background:#c0392b;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">❌ Refuser</button>' +
+          '</div>' : '';
+      return '<div style="padding:10px 14px;border-bottom:1px solid #eee">' +
+        '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-size:0.85em">🏫 ' + _escHtmlBloq(p.ecole) + ' — ' + _escHtmlBloq(p.directeur) + '</b>' + _badgePerm(p.statut) + '</div>' +
+        '<div style="font-size:0.82em;margin-top:3px">📅 Du <b>' + _fmtDatePerm(p.debut) + '</b> au <b>' + _fmtDatePerm(p.fin) + '</b> (' + (p.jours || '?') + ' jour(s))</div>' +
+        '<div style="font-size:0.78em;color:var(--gris);margin-top:2px">Motif : ' + _escHtmlBloq(p.motif) + '</div>' +
+        '<div style="font-size:0.78em;color:var(--gris)">Intérim : ' + _escHtmlBloq(p.interim) + (p.tel ? ' — joignable au ' + _escHtmlBloq(p.tel) : '') + '</div>' +
+        '<div style="font-size:0.72em;color:var(--gris)">Demandé le ' + _escHtmlBloq(p.dateDemande) + (p.commentaire ? ' — 💬 ' + _escHtmlBloq(p.commentaire) : '') + '</div>' +
+        actions + '</div>';
+    }).join('');
+  } catch (e) { box.innerHTML = '<p style="padding:14px;color:#c0392b;font-size:0.82em">⚠️ Serveur inaccessible.</p>'; console.error('chargerPermissionsFond', e); }
+}
+
+async function deciderPermissionFond(btn) {
+  var id = btn.getAttribute('data-id'), decision = btn.getAttribute('data-d');
+  var pfx = btn.getAttribute('data-pfx') || 'fond';
+  var commentaire = prompt((decision === 'ACCORDÉE' ? 'Accorder' : 'Refuser') + ' cette permission.\nCommentaire pour le Directeur (facultatif) :', '');
+  if (commentaire === null) return;
+  btn.disabled = true;
+  try {
+    var data = await _appelPerm({ type: 'DECIDER_PERMISSION', id: id, decision: decision, commentaire: commentaire,
+      par: ((currentStaff && (currentStaff.nom || currentStaff.name)) || 'Fondateur') + (pfx === 'dirVal' ? ' (Direction CPP LES PRINCES)' : ' (Fondateur)') });
+    if (data && data.success) { showToast('✅ Décision enregistrée', 'success'); chargerPermissionsFond(pfx); }
+    else { alert('⚠️ ' + ((data && data.message) || 'Échec')); btn.disabled = false; }
+  } catch (e) { alert('⚠️ Serveur inaccessible.'); btn.disabled = false; console.error('deciderPermissionFond', e); }
+}
 
 // ══ ENSEIGNANTS BLOQUÉS (appel hors zone) — Directeur ══
 function _escHtmlBloq(s) {
