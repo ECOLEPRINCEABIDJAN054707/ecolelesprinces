@@ -587,6 +587,40 @@ table tr:nth-child(even){background:#F8FAFD}
     <div id="dirPermListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
   </div>
 </div>
+  <div class="section" id="dirSecDemandesDG">
+  <div class="sec-head sec-violet" onclick="toggleSec(this); chargerMesDemandesDG()">
+    <h3>📨 Demandes et messages à la Direction Générale <span id="dirDGCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirDGBody">
+    <div style="padding:8px 14px 6px;background:#F3E5F5;border-bottom:1px solid #E1BEE7">
+      <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">Besoins, informations, demandes de bordereau… Chaque demande est numérotée et tous les échanges sont conservés.</span>
+    </div>
+    <div style="padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <label style="font-size:0.75em;font-weight:600">Type<select id="dirDGType" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="">— Type —</option><option>Besoin matériel / fournitures</option><option>Besoin financier / décaissement</option><option>Demande de bordereau</option><option>Information / rapport</option><option>Ressources humaines</option><option>Autre</option></select></label>
+      <label style="font-size:0.75em;font-weight:600">Priorité<select id="dirDGPrio" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="NORMALE">Normale</option><option value="URGENTE">🔴 Urgente</option></select></label>
+      <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Objet<input type="text" id="dirDGObjet" placeholder="Ex. : Demande de bordereau de versement — frais d'examen" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+      <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Message<textarea id="dirDGMessage" rows="3" placeholder="Décrivez le besoin ou l'information…" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></textarea></label>
+      <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Référence / montant (facultatif)<input type="text" id="dirDGRef" placeholder="Ex. : 250 000 F — BORD-2026-014" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+      <button type="button" onclick="envoyerDemandeDG(this)" style="grid-column:1/3;padding:10px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.88em;font-weight:700;cursor:pointer">📤 Envoyer à la Direction Générale</button>
+    </div>
+    <div style="padding:4px 14px 2px;font-size:0.78em;font-weight:700;color:var(--gris)">Mes demandes</div>
+    <div id="dirDGListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
+  </div>
+</div>
+  <div class="section" id="dirSecDGValidation" style="display:none">
+  <div class="sec-head sec-violet" onclick="toggleSec(this); chargerDemandesDGAdmin('dirDGA')">
+    <h3>📨 Demandes des Directeurs — Direction Générale <span id="dirDGACount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirDGABody">
+    <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="dirDGAFiltre" onchange="chargerDemandesDGAdmin('dirDGA')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+        <option value="OUVERTES">📬 Ouvertes (nouveau / en cours)</option><option value="NOUVEAU">🆕 Nouvelles</option><option value="EN COURS">⏳ En cours</option><option value="TRAITÉ">✅ Traitées</option><option value="REFUSÉ">❌ Refusées</option><option value="">Toutes</option>
+      </select>
+      <button onclick="chargerDemandesDGAdmin('dirDGA')" style="padding:8px 14px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Actualiser</button>
+    </div>
+    <div id="dirDGAListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur « Actualiser ».</p></div>
+  </div>
+</div>
   <div class="section" id="dirSecHeuresAbsence">
   <div class="sec-head sec-orange" onclick="toggleSec(this)">
     <h3>⏱️ Heures d'absence — Ce mois <span id="dirHeuresAbsCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -2660,6 +2694,20 @@ async function sauvegarderPersonnelDir(idx) {
       <button onclick="chargerPermissionsFond()" style="padding:8px 14px;background:#1565C0;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Actualiser</button>
     </div>
     <div id="fondPermListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur « Actualiser ».</p></div>
+  </div>
+</div>
+  <div class="section" id="fondSecDemandesDG">
+  <div class="sec-head sec-violet open" onclick="toggleSec(this); chargerDemandesDGAdmin('fondDG')">
+    <h3>📨 Demandes des Directeurs — Direction Générale <span id="fondDGCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body open" id="fondDGBody">
+    <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <select id="fondDGFiltre" onchange="chargerDemandesDGAdmin('fondDG')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+        <option value="OUVERTES">📬 Ouvertes (nouveau / en cours)</option><option value="NOUVEAU">🆕 Nouvelles</option><option value="EN COURS">⏳ En cours</option><option value="TRAITÉ">✅ Traitées</option><option value="REFUSÉ">❌ Refusées</option><option value="">Toutes</option>
+      </select>
+      <button onclick="chargerDemandesDGAdmin('fondDG')" style="padding:8px 14px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Actualiser</button>
+    </div>
+    <div id="fondDGListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur « Actualiser ».</p></div>
   </div>
 </div>
   <div class="section" id="fondSecAlertePrecoce">
@@ -5608,7 +5656,7 @@ function afficherDir(s){
   else stats='<div class="stats-row s6"><div class="stat-box"><div class="stat-val" id="statEns">-</div><div class="stat-lbl">Ens.</div></div><div class="stat-box or"><div class="stat-val" id="statSalaire">-</div><div class="stat-lbl">Masse sal.</div></div><div class="stat-box orange"><div class="stat-val" id="statAttente">-</div><div class="stat-lbl">Attente</div></div><div class="stat-box emeraude"><div class="stat-val" id="statBulletins">-</div><div class="stat-lbl">Bulletins</div></div><div class="stat-box rouge"><div class="stat-val" id="dStatAlert">0</div><div class="stat-lbl">Alertes</div></div><div class="stat-box vert"><div class="stat-val" id="statPerm">-</div><div class="stat-lbl">Perm.</div></div></div>';
   document.getElementById('dirStatsZone').innerHTML=stats;
   // Validation des permissions : réservée à l'espace CPP LES PRINCES
-  var _secVal=document.getElementById('dirSecValidationPerm'); if(_secVal) _secVal.style.display=(String(s.ecole||'').toUpperCase().trim()==='CPP LES PRINCES')?'block':'none';
+  var _secVal=document.getElementById('dirSecValidationPerm'); if(_secVal) _secVal.style.display=(String(s.ecole||'').toUpperCase().trim()==='CPP LES PRINCES')?'block':'none'; var _secDG=document.getElementById('dirSecDGValidation'); if(_secDG) _secDG.style.display=(String(s.ecole||'').toUpperCase().trim()==='CPP LES PRINCES')?'block':'none';
   document.getElementById('dirFiltresZone').style.display=!isPRIM?'block':'none';
   document.getElementById('dirSecAttente').style.display=!isPRIM?'block':'none';
   document.getElementById('dirSecSalaires').style.display=!isPRIM?'block':'none';
@@ -10171,6 +10219,101 @@ async function deciderPermissionFond(btn) {
     if (data && data.success) { showToast('✅ Décision enregistrée', 'success'); chargerPermissionsFond(pfx); }
     else { alert('⚠️ ' + ((data && data.message) || 'Échec')); btn.disabled = false; }
   } catch (e) { alert('⚠️ Serveur inaccessible.'); btn.disabled = false; console.error('deciderPermissionFond', e); }
+}
+
+// ══ DEMANDES / MESSAGERIE → DIRECTION GÉNÉRALE ══
+function _badgeDG(st) {
+  var m = { 'NOUVEAU': ['#1565C0', '🆕'], 'EN COURS': ['#E65100', '⏳'], 'TRAITÉ': ['#1e8449', '✅'], 'REFUSÉ': ['#c0392b', '❌'] }[st] || ['#777', '•'];
+  return '<span style="background:' + m[0] + ';color:#fff;border-radius:10px;padding:2px 8px;font-size:0.72em;font-weight:700">' + m[1] + ' ' + _escHtmlBloq(st) + '</span>';
+}
+function _filDG(fil) {
+  return (fil || []).map(function(m) {
+    var dg = /Direction|Fondateur/i.test(m.role);
+    return '<div style="margin:4px 0;padding:6px 9px;border-radius:8px;font-size:0.78em;background:' + (dg ? '#EDE7F6' : '#F5F5F5') + '">' +
+      '<b>' + _escHtmlBloq(m.auteur) + '</b> <span style="color:var(--gris)">(' + _escHtmlBloq(m.role) + ') — ' + _escHtmlBloq(m.date) + '</span>' +
+      (m.action && m.action !== 'RÉPONSE' && m.action !== 'CRÉATION' ? ' <i style="color:#6A1B9A">' + _escHtmlBloq(m.action) + '</i>' : '') +
+      (m.message ? '<div style="margin-top:2px;white-space:pre-wrap">' + _escHtmlBloq(m.message) + '</div>' : '') + '</div>';
+  }).join('');
+}
+function _carteDG(d, pfx, admin) {
+  var zid = pfx + '_' + d.id.replace(/[^A-Za-z0-9]/g, '');
+  var statutSel = admin ? '<select id="' + zid + '_st" style="padding:6px;border:1.5px solid var(--border);border-radius:8px;font-size:0.8em">' +
+      ['', 'EN COURS', 'TRAITÉ', 'REFUSÉ'].map(function(o) { return '<option value="' + o + '">' + (o || '— statut inchangé —') + '</option>'; }).join('') + '</select>' : '';
+  return '<div style="padding:10px 14px;border-bottom:1px solid #eee">' +
+    '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-size:0.85em">' + (d.priorite === 'URGENTE' ? '🔴 ' : '') +
+      (admin ? '🏫 ' + _escHtmlBloq(d.ecole) + ' — ' : '') + _escHtmlBloq(d.objet) + '</b>' + _badgeDG(d.statut) + '</div>' +
+    '<div style="font-size:0.74em;color:var(--gris);margin-top:2px">' + _escHtmlBloq(d.id) + ' · ' + _escHtmlBloq(d.type) + ' · ' + _escHtmlBloq(d.date) +
+      (d.ref ? ' · Réf./montant : ' + _escHtmlBloq(d.ref) : '') + (admin ? ' · ' + _escHtmlBloq(d.auteur) : '') + '</div>' +
+    '<details style="margin-top:6px"><summary style="font-size:0.78em;cursor:pointer;color:#6A1B9A">💬 Échanges (' + (d.fil || []).length + ')</summary>' + _filDG(d.fil) +
+      (d.statut !== 'TRAITÉ' && d.statut !== 'REFUSÉ' || admin ?
+        '<textarea id="' + zid + '_msg" rows="2" placeholder="Votre réponse…" style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;margin-top:6px"></textarea>' +
+        '<div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">' + statutSel +
+        '<button type="button" data-id="' + _escHtmlBloq(d.id) + '" data-z="' + zid + '" data-pfx="' + pfx + '" data-admin="' + (admin ? '1' : '') + '" onclick="repondreDemandeDG(this)" ' +
+        'style="padding:7px 14px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.8em;font-weight:700;cursor:pointer">📤 Envoyer</button></div>' : '') +
+    '</details></div>';
+}
+
+async function envoyerDemandeDG(btn) {
+  if (!currentStaff) return;
+  var g = function(id) { return document.getElementById(id).value.trim(); };
+  var type = g('dirDGType'), objet = g('dirDGObjet'), message = g('dirDGMessage');
+  if (!type || !objet || !message) { alert('⚠️ Renseignez le type, l\'objet et le message.'); return; }
+  btn.disabled = true; btn.textContent = '⏳ Envoi…';
+  try {
+    var data = await _appelPerm({ type: 'DG_ENVOYER', ecole: currentStaff.ecole, auteur: currentStaff.nom || currentStaff.name || 'Directeur',
+      role: 'Directeur ' + currentStaff.ecole, priorite: g('dirDGPrio'), objet: objet, message: message, ref: g('dirDGRef') });
+    if (data && data.success) {
+      alert('✅ Demande ' + data.id + ' envoyée à la Direction Générale.');
+      ['dirDGObjet', 'dirDGMessage', 'dirDGRef'].forEach(function(id) { document.getElementById(id).value = ''; });
+      document.getElementById('dirDGType').value = ''; document.getElementById('dirDGPrio').value = 'NORMALE';
+      chargerMesDemandesDG();
+    } else alert('⚠️ ' + ((data && data.message) || 'Échec de l\'envoi'));
+  } catch (e) { alert('⚠️ Serveur inaccessible. Réessayez.'); console.error('envoyerDemandeDG', e); }
+  btn.disabled = false; btn.textContent = '📤 Envoyer à la Direction Générale';
+}
+
+async function chargerMesDemandesDG() {
+  var box = document.getElementById('dirDGListe'); if (!box || !currentStaff) return;
+  box.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Chargement…</p>';
+  try {
+    var data = await _appelPerm({ type: 'DG_LISTER', ecole: currentStaff.ecole });
+    var liste = (data && data.liste) || [];
+    var ouvertes = liste.filter(function(d) { return d.statut === 'NOUVEAU' || d.statut === 'EN COURS'; }).length;
+    document.getElementById('dirDGCount').textContent = ouvertes ? '(' + ouvertes + ' ouverte(s))' : '';
+    box.innerHTML = liste.length ? liste.map(function(d) { return _carteDG(d, 'dirDG', false); }).join('')
+      : '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucune demande.</p>';
+  } catch (e) { box.innerHTML = '<p style="padding:14px;color:#c0392b;font-size:0.82em">⚠️ Serveur inaccessible.</p>'; console.error('chargerMesDemandesDG', e); }
+}
+
+async function chargerDemandesDGAdmin(pfx) {
+  var box = document.getElementById(pfx + 'Liste'); if (!box) return;
+  var filtre = document.getElementById(pfx + 'Filtre').value;
+  box.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Chargement…</p>';
+  try {
+    var data = await _appelPerm({ type: 'DG_LISTER', ecole: 'TOUTES' });
+    var tout = (data && data.liste) || [];
+    var ouvertes = tout.filter(function(d) { return d.statut === 'NOUVEAU' || d.statut === 'EN COURS'; });
+    document.getElementById(pfx + 'Count').textContent = ouvertes.length ? '(' + ouvertes.length + ' ouverte(s))' : '';
+    var liste = filtre === 'OUVERTES' ? ouvertes : filtre ? tout.filter(function(d) { return d.statut === filtre; }) : tout;
+    liste.sort(function(a, b) { return (b.priorite === 'URGENTE') - (a.priorite === 'URGENTE'); });
+    box.innerHTML = liste.length ? liste.map(function(d) { return _carteDG(d, pfx, true); }).join('')
+      : '<p style="padding:14px;text-align:center;color:#1e8449;font-size:0.85em">✅ Aucune demande dans cette catégorie.</p>';
+  } catch (e) { box.innerHTML = '<p style="padding:14px;color:#c0392b;font-size:0.82em">⚠️ Serveur inaccessible.</p>'; console.error('chargerDemandesDGAdmin', e); }
+}
+
+async function repondreDemandeDG(btn) {
+  var id = btn.getAttribute('data-id'), z = btn.getAttribute('data-z'), pfx = btn.getAttribute('data-pfx'), admin = btn.getAttribute('data-admin') === '1';
+  var msg = (document.getElementById(z + '_msg') || {}).value || '', st = admin ? ((document.getElementById(z + '_st') || {}).value || '') : '';
+  msg = msg.trim();
+  if (!msg && !st) { alert('⚠️ Écrivez une réponse ou choisissez un statut.'); return; }
+  var nom = (currentStaff && (currentStaff.nom || currentStaff.name)) || (admin ? 'Fondateur' : 'Directeur');
+  var role = admin ? (pfx === 'dirDGA' ? 'Direction Générale (CPP LES PRINCES)' : 'Fondateur') : 'Directeur ' + ((currentStaff && currentStaff.ecole) || '');
+  btn.disabled = true;
+  try {
+    var data = await _appelPerm({ type: 'DG_REPONDRE', id: id, auteur: nom, role: role, message: msg, statut: st });
+    if (data && data.success) { showToast('✅ Enregistré', 'success'); if (admin) chargerDemandesDGAdmin(pfx); else chargerMesDemandesDG(); }
+    else { alert('⚠️ ' + ((data && data.message) || 'Échec')); btn.disabled = false; }
+  } catch (e) { alert('⚠️ Serveur inaccessible.'); btn.disabled = false; console.error('repondreDemandeDG', e); }
 }
 
 // ══ ENSEIGNANTS BLOQUÉS (appel hors zone) — Directeur ══
