@@ -562,6 +562,19 @@ table tr:nth-child(even){background:#F8FAFD}
     <div id="dirValPermListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur « Actualiser ».</p></div>
   </div>
 </div>
+  <div class="section" id="dirSecCompletude">
+  <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerCompletude('dirCP', true)">
+    <h3>✏️ Compléter sexe et date de naissance <span id="dirCPCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirCPBody">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="dirCPClasse" onchange="chargerCompletude('dirCP')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"><option value="">— Classe —</option></select>
+      <label style="font-size:0.8em"><input type="checkbox" id="dirCPSeulInc" checked onchange="chargerCompletude('dirCP')"> Seulement les fiches incomplètes</label>
+      <button onclick="enregistrerCompletudeClasse('dirCP', this)" style="padding:8px 14px;background:#1e8449;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:700;cursor:pointer">💾 Enregistrer la classe</button>
+    </div>
+    <div id="dirCPZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Choisissez une classe.</p></div>
+  </div>
+</div>
   <div class="section" id="dirSecListesStats">
   <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerListeStats('dirLS', true)">
     <h3>📋 Listes et statistiques</h3><span class="arr">▼</span>
@@ -3478,6 +3491,19 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
 </div>
+  <div class="section" id="comSecCompletude">
+  <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerCompletude('comCP', true)">
+    <h3>✏️ Compléter sexe et date de naissance <span id="comCPCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="comCPBody">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="comCPClasse" onchange="chargerCompletude('comCP')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"><option value="">— Classe —</option></select>
+      <label style="font-size:0.8em"><input type="checkbox" id="comCPSeulInc" checked onchange="chargerCompletude('comCP')"> Seulement les fiches incomplètes</label>
+      <button onclick="enregistrerCompletudeClasse('comCP', this)" style="padding:8px 14px;background:#1e8449;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:700;cursor:pointer">💾 Enregistrer la classe</button>
+    </div>
+    <div id="comCPZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Choisissez une classe.</p></div>
+  </div>
+</div>
   <div class="section" id="comSecListesStats">
   <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerListeStats('comLS', true)">
     <h3>📋 Listes et statistiques</h3><span class="arr">▼</span>
@@ -3948,6 +3974,19 @@ async function attribuerMatriculeCom() {
       </div>
     </div>
   </div>
+  <div class="section" id="eduSecCompletude">
+  <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerCompletude('eduCP', true)">
+    <h3>✏️ Compléter sexe et date de naissance <span id="eduCPCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="eduCPBody">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="eduCPClasse" onchange="chargerCompletude('eduCP')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"><option value="">— Classe —</option></select>
+      <label style="font-size:0.8em"><input type="checkbox" id="eduCPSeulInc" checked onchange="chargerCompletude('eduCP')"> Seulement les fiches incomplètes</label>
+      <button onclick="enregistrerCompletudeClasse('eduCP', this)" style="padding:8px 14px;background:#1e8449;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:700;cursor:pointer">💾 Enregistrer la classe</button>
+    </div>
+    <div id="eduCPZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Choisissez une classe.</p></div>
+  </div>
+</div>
   <div class="section" id="eduSecListesStats">
   <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerListeStats('eduLS', true)">
     <h3>📋 Listes et statistiques</h3><span class="arr">▼</span>
@@ -10256,10 +10295,10 @@ function _badgePerm(st) {
   return '<span style="background:' + c + ';color:#fff;border-radius:10px;padding:2px 8px;font-size:0.72em;font-weight:700">' + i + ' ' + _escHtmlBloq(st) + '</span>';
 }
 async function _appelPerm(params) {
-  var q = Object.keys(params).map(function(k) { return k + '=' + encodeURIComponent(params[k] == null ? '' : params[k]); }).join('&');
-  var res = await fetch(APPS_SCRIPT_POINTAGE + '?' + q);
-  var raw = await res.json();
-  return (raw && raw.success !== undefined) ? raw : (raw.data || raw);
+  // Même méthode que les autres sections (JSONP) : fiable depuis le site
+  var raw = await appelJSONP(APPS_SCRIPT_POINTAGE, params, 30000);
+  if (raw && raw.error && raw.success === undefined) throw new Error(raw.error);
+  return (raw && raw.success !== undefined) ? raw : ((raw && raw.data) || raw);
 }
 
 async function envoyerPermissionDir(btn) {
@@ -10501,8 +10540,8 @@ async function chargerListeStats(pfx, auto) {
     var td = 'style="padding:5px 8px;border-bottom:1px solid #eee;font-size:0.8em;white-space:nowrap"';
     var tbl = function(ent, lignes, tot) {
       return '<table style="border-collapse:collapse;width:100%"><thead><tr>' + ent.map(function(e) { return '<th ' + th + '>' + e + '</th>'; }).join('') + '</tr></thead><tbody>' +
-        lignes.map(function(l) { return '<tr>' + l.map(function(v) { return '<td ' + td + '>' + _escHtmlBloq(v) + '</td>'; }).join('') + '</tr>'; }).join('') +
-        (tot ? '<tr style="font-weight:700;background:#E3F2FD">' + tot.map(function(v) { return '<td ' + td + '>' + _escHtmlBloq(v) + '</td>'; }).join('') + '</tr>' : '') + '</tbody></table>';
+        lignes.map(function(l) { return '<tr>' + l.map(function(v) { return '<td ' + td + '>' + _escHtmlBloq(v === 0 ? '0' : v) + '</td>'; }).join('') + '</tr>'; }).join('') +
+        (tot ? '<tr style="font-weight:700;background:#E3F2FD">' + tot.map(function(v) { return '<td ' + td + '>' + _escHtmlBloq(v === 0 ? '0' : v) + '</td>'; }).join('') + '</tr>' : '') + '</tbody></table>';
     };
     var html = '';
     if (type === 'CONTACTS') {
@@ -10530,6 +10569,62 @@ function imprimerListeStats(pfx) {
     '<h3 style="margin:0 0 4px">' + _escHtmlBloq((currentStaff && currentStaff.ecole) || '') + ' — 2026-2027</h3>' + zone.innerHTML +
     '<p style="font-size:11px;color:#777;margin-top:12px">Édité le ' + new Date().toLocaleDateString('fr-FR') + ' — Princes Smart School</p></body></html>');
   w.document.close(); w.focus(); setTimeout(function() { w.print(); }, 400);
+}
+
+// ══ SAISIE RAPIDE SEXE / DATE DE NAISSANCE PAR CLASSE ══
+var _cpDonnees = {};
+function _ddnVersIso(d) { var m = String(d || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2) : ''; }
+async function chargerCompletude(pfx, auto) {
+  if (!currentStaff) return;
+  var sel = document.getElementById(pfx + 'Classe'), classe = sel.value, zone = document.getElementById(pfx + 'Zone');
+  zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Chargement…</p>';
+  try {
+    var data = await _appelPerm({ type: 'LISTE_COMPLETUDE', ecole: currentStaff.ecole, classe: classe });
+    if (!data || !data.success) { zone.innerHTML = '<p style="padding:14px;color:#c0392b;font-size:0.82em">⚠️ ' + _escHtmlBloq((data && data.message) || 'Erreur') + '</p>'; return; }
+    var cls = data.classes || {}, noms = Object.keys(cls).sort(), totInc = 0;
+    noms.forEach(function(c) { totInc += cls[c].incomplets; });
+    document.getElementById(pfx + 'Count').textContent = totInc ? '(⚠️ ' + totInc + ' fiche(s) incomplète(s))' : '(✅ tout est complet)';
+    sel.innerHTML = '<option value="">— Classe —</option>' + noms.map(function(c) {
+      return '<option value="' + _escHtmlBloq(c) + '">' + _escHtmlBloq(c) + (cls[c].incomplets ? ' — ⚠️ ' + cls[c].incomplets + ' à compléter' : ' — ✅') + '</option>'; }).join('');
+    sel.value = classe;
+    if (!classe) { zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Choisissez une classe.</p>'; return; }
+    var seul = document.getElementById(pfx + 'SeulInc').checked;
+    var el = (data.eleves || []).filter(function(e) { return !seul || e.incomplet; });
+    _cpDonnees[pfx] = { classe: classe, eleves: el };
+    if (!el.length) { zone.innerHTML = '<p style="padding:14px;text-align:center;color:#1e8449;font-size:0.85em">✅ Toutes les fiches de cette classe sont complètes.</p>'; return; }
+    var th = 'style="background:#1F4E79;color:#fff;padding:6px 8px;font-size:0.78em;text-align:left"';
+    zone.innerHTML = '<table style="border-collapse:collapse;width:100%"><thead><tr><th ' + th + '>N°</th><th ' + th + '>Nom et prénoms</th><th ' + th + '>Sexe</th><th ' + th + '>Date de naissance</th></tr></thead><tbody>' +
+      el.map(function(e, i) {
+        return '<tr style="border-bottom:1px solid #eee"><td style="padding:5px 8px;font-size:0.8em">' + (i + 1) + '</td>' +
+          '<td style="padding:5px 8px;font-size:0.8em">' + _escHtmlBloq(e.nom) + '<div style="font-size:0.85em;color:var(--gris)">' + _escHtmlBloq(e.mat) + '</div></td>' +
+          '<td style="padding:5px 8px"><select id="' + pfx + '_s_' + i + '" style="padding:6px;border:1.5px solid ' + (e.sexe ? 'var(--border)' : '#E65100') + ';border-radius:6px">' +
+            '<option value="">—</option><option value="M"' + (e.sexe === 'M' ? ' selected' : '') + '>Garçon</option><option value="F"' + (e.sexe === 'F' ? ' selected' : '') + '>Fille</option></select></td>' +
+          '<td style="padding:5px 8px"><input type="date" id="' + pfx + '_d_' + i + '" value="' + _ddnVersIso(e.ddn) + '" style="padding:6px;border:1.5px solid ' + (e.ddn ? 'var(--border)' : '#E65100') + ';border-radius:6px"></td></tr>';
+      }).join('') + '</tbody></table>';
+  } catch (e) { zone.innerHTML = '<p style="padding:14px;color:#c0392b;font-size:0.82em">⚠️ Serveur inaccessible.</p>'; console.error('chargerCompletude', e); }
+}
+async function enregistrerCompletudeClasse(pfx, btn) {
+  var d = _cpDonnees[pfx]; if (!d || !d.eleves.length) { alert('Choisissez d\'abord une classe.'); return; }
+  var modifs = [];
+  d.eleves.forEach(function(e, i) {
+    var sx = document.getElementById(pfx + '_s_' + i).value, dd = document.getElementById(pfx + '_d_' + i).value;
+    var chS = sx && sx !== e.sexe, chD = dd && dd !== _ddnVersIso(e.ddn);
+    if (chS || chD) modifs.push({ mat: e.mat, sexe: chS ? sx : '', ddn: chD ? dd : '' });
+  });
+  if (!modifs.length) { alert('Aucune modification à enregistrer.'); return; }
+  btn.disabled = true; var t = btn.textContent; btn.textContent = '⏳ Enregistrement…';
+  try {
+    var total = 0;
+    for (var k = 0; k < modifs.length; k += 20) {   // envoi par paquets de 20 élèves
+      var data = await _appelPerm({ type: 'ENREGISTRER_COMPLETUDE', ecole: currentStaff.ecole, donnees: JSON.stringify(modifs.slice(k, k + 20)),
+        auteur: (currentStaff.nom || currentStaff.name || '') + ' (' + ({ DIR: 'Directeur', COM: 'Comptable', EDU: 'Éducateur' }[currentStaff.profil] || '') + ')' });
+      if (!data || !data.success) throw new Error((data && data.message) || 'Échec');
+      total += data.modifies || 0;
+    }
+    showToast('✅ ' + modifs.length + ' élève(s) enregistré(s)', 'success');
+    chargerCompletude(pfx);
+  } catch (e) { alert('⚠️ ' + e.message); console.error('enregistrerCompletudeClasse', e); }
+  btn.disabled = false; btn.textContent = t;
 }
 
 // ══ ENSEIGNANTS BLOQUÉS (appel hors zone) — Directeur ══
