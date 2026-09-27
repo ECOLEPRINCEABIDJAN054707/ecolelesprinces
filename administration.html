@@ -588,33 +588,48 @@ table tr:nth-child(even){background:#F8FAFD}
   </div>
 </div>
   <div class="section" id="dirSecDemandesDG">
-  <div class="sec-head sec-violet" onclick="toggleSec(this); chargerMesDemandesDG()">
-    <h3>📨 Demandes et messages à la Direction Générale <span id="dirDGCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  <div class="sec-head sec-violet" onclick="toggleSec(this); chargerMesDemandesDG('dirDG')">
+    <h3>📨 Demandes et messages — Direction Générale <span id="dirDGCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
   </div>
   <div class="sec-body" id="dirDGBody">
     <div style="padding:8px 14px 6px;background:#F3E5F5;border-bottom:1px solid #E1BEE7">
-      <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">Besoins, informations, demandes de bordereau… Chaque demande est numérotée et tous les échanges sont conservés.</span>
+      <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">Vos demandes à la Direction Générale et les demandes qu'elle vous adresse (rapports, informations). Tout est numéroté et conservé.</span>
     </div>
     <div style="padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <label style="font-size:0.75em;font-weight:600">Type<select id="dirDGType" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="">— Type —</option><option>Besoin matériel / fournitures</option><option>Besoin financier / décaissement</option><option>Demande de bordereau</option><option>Information / rapport</option><option>Ressources humaines</option><option>Autre</option></select></label>
       <label style="font-size:0.75em;font-weight:600">Priorité<select id="dirDGPrio" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="NORMALE">Normale</option><option value="URGENTE">🔴 Urgente</option></select></label>
-      <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Objet<input type="text" id="dirDGObjet" placeholder="Ex. : Demande de bordereau de versement — frais d'examen" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+      <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Objet<input type="text" id="dirDGObjet" placeholder="Ex. : Demande de bordereau de versement" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
       <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Message<textarea id="dirDGMessage" rows="3" placeholder="Décrivez le besoin ou l'information…" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></textarea></label>
       <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Référence / montant (facultatif)<input type="text" id="dirDGRef" placeholder="Ex. : 250 000 F — BORD-2026-014" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
-      <button type="button" onclick="envoyerDemandeDG(this)" style="grid-column:1/3;padding:10px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.88em;font-weight:700;cursor:pointer">📤 Envoyer à la Direction Générale</button>
+      <button type="button" data-pfx="dirDG" onclick="envoyerDemandeDG(this)" style="grid-column:1/3;padding:10px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.88em;font-weight:700;cursor:pointer">📤 Envoyer à la Direction Générale</button>
     </div>
-    <div style="padding:4px 14px 2px;font-size:0.78em;font-weight:700;color:var(--gris)">Mes demandes</div>
+    <div style="padding:4px 14px 2px;font-size:0.78em;font-weight:700;color:var(--gris)">Mes demandes et demandes reçues</div>
     <div id="dirDGListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
   </div>
 </div>
   <div class="section" id="dirSecDGValidation" style="display:none">
   <div class="sec-head sec-violet" onclick="toggleSec(this); chargerDemandesDGAdmin('dirDGA')">
-    <h3>📨 Demandes des Directeurs — Direction Générale <span id="dirDGACount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    <h3>📨 Messagerie Direction Générale — réseau <span id="dirDGACount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
   </div>
   <div class="sec-body" id="dirDGABody">
-    <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <details style="margin:10px 14px;border:1.5px solid #E1BEE7;border-radius:10px;padding:8px 10px">
+      <summary style="font-size:0.82em;font-weight:700;color:#6A1B9A;cursor:pointer">➕ Nouvelle demande de la Direction Générale (rapport, information…)</summary>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <label style="font-size:0.75em;font-weight:600">Destinataires<select id="dirDGANvRole" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="DIRECTEUR">Directeurs</option><option value="COMPTABLE">Comptables</option><option value="EDUCATEUR">Éducateurs</option><option value="TOUS">Tout le personnel</option></select></label>
+        <label style="font-size:0.75em;font-weight:600">École<select id="dirDGANvEcole" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="TOUTES">Toutes les écoles</option><option>CPP LES PRINCES</option><option>ACADEMIE</option><option>GUINGLO VILLE</option><option>GNONTINROU</option><option>KOUTOUAN</option><option>SOAKPE</option><option>AKEIKOI 1</option><option>AKEIKOI 2</option><option>CPP PRO</option><option>CPP TECH</option><option>ETL PRINCES KOUIBLY</option><option>GS RITA ROSANE</option><option>CPP DABOU</option><option>CPP ANYAMA</option></select></label>
+        <label style="font-size:0.75em;font-weight:600">Type<select id="dirDGANvType" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="">— Type —</option><option>Rapport à fournir</option><option>Information demandée</option><option>Document à transmettre</option><option>Instruction / note</option><option>Autre</option></select></label>
+        <label style="font-size:0.75em;font-weight:600">À rendre avant le<input type="date" id="dirDGANvEch" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+        <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Objet<input type="text" id="dirDGANvObjet" placeholder="Ex. : Rapport des effectifs au 30/09" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+        <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Message<textarea id="dirDGANvMessage" rows="3" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></textarea></label>
+        <button type="button" data-pfx="dirDGA" onclick="envoyerDemandeDGDescendante(this)" style="grid-column:1/3;padding:10px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.88em;font-weight:700;cursor:pointer">📤 Envoyer</button>
+      </div>
+    </details>
+    <div style="padding:6px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <select id="dirDGAFiltre" onchange="chargerDemandesDGAdmin('dirDGA')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
-        <option value="OUVERTES">📬 Ouvertes (nouveau / en cours)</option><option value="NOUVEAU">🆕 Nouvelles</option><option value="EN COURS">⏳ En cours</option><option value="TRAITÉ">✅ Traitées</option><option value="REFUSÉ">❌ Refusées</option><option value="">Toutes</option>
+        <option value="OUVERTES">📬 Ouvertes (nouveau / en cours)</option><option value="NOUVEAU">🆕 Nouvelles</option><option value="EN COURS">⏳ En cours</option><option value="TRAITÉ">✅ Traitées</option><option value="REFUSÉ">❌ Refusées</option><option value="">📚 Toutes</option>
+      </select>
+      <select id="dirDGASens" onchange="chargerDemandesDGAdmin('dirDGA')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+        <option value="">⇅ Reçues et envoyées</option><option value="MONTANTE">📥 Reçues du personnel</option><option value="DESCENDANTE">📤 Envoyées par la DG</option>
       </select>
       <button onclick="chargerDemandesDGAdmin('dirDGA')" style="padding:8px 14px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Actualiser</button>
     </div>
@@ -2698,12 +2713,27 @@ async function sauvegarderPersonnelDir(idx) {
 </div>
   <div class="section" id="fondSecDemandesDG">
   <div class="sec-head sec-violet open" onclick="toggleSec(this); chargerDemandesDGAdmin('fondDG')">
-    <h3>📨 Demandes des Directeurs — Direction Générale <span id="fondDGCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    <h3>📨 Messagerie Direction Générale — réseau <span id="fondDGCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
   </div>
   <div class="sec-body open" id="fondDGBody">
-    <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <details style="margin:10px 14px;border:1.5px solid #E1BEE7;border-radius:10px;padding:8px 10px">
+      <summary style="font-size:0.82em;font-weight:700;color:#6A1B9A;cursor:pointer">➕ Nouvelle demande de la Direction Générale (rapport, information…)</summary>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <label style="font-size:0.75em;font-weight:600">Destinataires<select id="fondDGNvRole" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="DIRECTEUR">Directeurs</option><option value="COMPTABLE">Comptables</option><option value="EDUCATEUR">Éducateurs</option><option value="TOUS">Tout le personnel</option></select></label>
+        <label style="font-size:0.75em;font-weight:600">École<select id="fondDGNvEcole" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="TOUTES">Toutes les écoles</option><option>CPP LES PRINCES</option><option>ACADEMIE</option><option>GUINGLO VILLE</option><option>GNONTINROU</option><option>KOUTOUAN</option><option>SOAKPE</option><option>AKEIKOI 1</option><option>AKEIKOI 2</option><option>CPP PRO</option><option>CPP TECH</option><option>ETL PRINCES KOUIBLY</option><option>GS RITA ROSANE</option><option>CPP DABOU</option><option>CPP ANYAMA</option></select></label>
+        <label style="font-size:0.75em;font-weight:600">Type<select id="fondDGNvType" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="">— Type —</option><option>Rapport à fournir</option><option>Information demandée</option><option>Document à transmettre</option><option>Instruction / note</option><option>Autre</option></select></label>
+        <label style="font-size:0.75em;font-weight:600">À rendre avant le<input type="date" id="fondDGNvEch" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+        <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Objet<input type="text" id="fondDGNvObjet" placeholder="Ex. : Rapport des effectifs au 30/09" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+        <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Message<textarea id="fondDGNvMessage" rows="3" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></textarea></label>
+        <button type="button" data-pfx="fondDG" onclick="envoyerDemandeDGDescendante(this)" style="grid-column:1/3;padding:10px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.88em;font-weight:700;cursor:pointer">📤 Envoyer</button>
+      </div>
+    </details>
+    <div style="padding:6px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <select id="fondDGFiltre" onchange="chargerDemandesDGAdmin('fondDG')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
-        <option value="OUVERTES">📬 Ouvertes (nouveau / en cours)</option><option value="NOUVEAU">🆕 Nouvelles</option><option value="EN COURS">⏳ En cours</option><option value="TRAITÉ">✅ Traitées</option><option value="REFUSÉ">❌ Refusées</option><option value="">Toutes</option>
+        <option value="OUVERTES">📬 Ouvertes (nouveau / en cours)</option><option value="NOUVEAU">🆕 Nouvelles</option><option value="EN COURS">⏳ En cours</option><option value="TRAITÉ">✅ Traitées</option><option value="REFUSÉ">❌ Refusées</option><option value="">📚 Toutes</option>
+      </select>
+      <select id="fondDGSens" onchange="chargerDemandesDGAdmin('fondDG')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
+        <option value="">⇅ Reçues et envoyées</option><option value="MONTANTE">📥 Reçues du personnel</option><option value="DESCENDANTE">📤 Envoyées par la DG</option>
       </select>
       <button onclick="chargerDemandesDGAdmin('fondDG')" style="padding:8px 14px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Actualiser</button>
     </div>
@@ -3429,6 +3459,26 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
 </div>
+  <div class="section" id="comSecDemandesDG">
+  <div class="sec-head sec-violet" onclick="toggleSec(this); chargerMesDemandesDG('comDG')">
+    <h3>📨 Demandes et messages — Direction Générale <span id="comDGCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="comDGBody">
+    <div style="padding:8px 14px 6px;background:#F3E5F5;border-bottom:1px solid #E1BEE7">
+      <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">Vos demandes à la Direction Générale et les demandes qu'elle vous adresse (rapports, informations). Tout est numéroté et conservé.</span>
+    </div>
+    <div style="padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <label style="font-size:0.75em;font-weight:600">Type<select id="comDGType" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="">— Type —</option><option>Besoin matériel / fournitures</option><option>Besoin financier / décaissement</option><option>Demande de bordereau</option><option>Information / rapport</option><option>Ressources humaines</option><option>Autre</option></select></label>
+      <label style="font-size:0.75em;font-weight:600">Priorité<select id="comDGPrio" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="NORMALE">Normale</option><option value="URGENTE">🔴 Urgente</option></select></label>
+      <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Objet<input type="text" id="comDGObjet" placeholder="Ex. : Demande de bordereau de versement" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+      <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Message<textarea id="comDGMessage" rows="3" placeholder="Décrivez le besoin ou l'information…" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></textarea></label>
+      <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Référence / montant (facultatif)<input type="text" id="comDGRef" placeholder="Ex. : 250 000 F — BORD-2026-014" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+      <button type="button" data-pfx="comDG" onclick="envoyerDemandeDG(this)" style="grid-column:1/3;padding:10px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.88em;font-weight:700;cursor:pointer">📤 Envoyer à la Direction Générale</button>
+    </div>
+    <div style="padding:4px 14px 2px;font-size:0.78em;font-weight:700;color:var(--gris)">Mes demandes et demandes reçues</div>
+    <div id="comDGListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
+  </div>
+</div>
   <div class="section" id="comSecAlertePrecoce">
   <div class="sec-head sec-rouge open" onclick="chargerAlertePrecoceCom();toggleSec(this)">
     <h3>🚨 Élèves à risque de décrochage <span id="comRisqueCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -3860,6 +3910,26 @@ async function attribuerMatriculeCom() {
       </div>
     </div>
   </div>
+  <div class="section" id="eduSecDemandesDG">
+  <div class="sec-head sec-violet" onclick="toggleSec(this); chargerMesDemandesDG('eduDG')">
+    <h3>📨 Demandes et messages — Direction Générale <span id="eduDGCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="eduDGBody">
+    <div style="padding:8px 14px 6px;background:#F3E5F5;border-bottom:1px solid #E1BEE7">
+      <span style="font-size:0.72em;color:#6A1B9A;font-weight:600">Vos demandes à la Direction Générale et les demandes qu'elle vous adresse (rapports, informations). Tout est numéroté et conservé.</span>
+    </div>
+    <div style="padding:12px 14px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <label style="font-size:0.75em;font-weight:600">Type<select id="eduDGType" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="">— Type —</option><option>Besoin matériel / fournitures</option><option>Besoin financier / décaissement</option><option>Demande de bordereau</option><option>Information / rapport</option><option>Ressources humaines</option><option>Autre</option></select></label>
+      <label style="font-size:0.75em;font-weight:600">Priorité<select id="eduDGPrio" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"><option value="NORMALE">Normale</option><option value="URGENTE">🔴 Urgente</option></select></label>
+      <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Objet<input type="text" id="eduDGObjet" placeholder="Ex. : Demande de bordereau de versement" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+      <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Message<textarea id="eduDGMessage" rows="3" placeholder="Décrivez le besoin ou l'information…" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></textarea></label>
+      <label style="font-size:0.75em;font-weight:600;grid-column:1/3">Référence / montant (facultatif)<input type="text" id="eduDGRef" placeholder="Ex. : 250 000 F — BORD-2026-014" style="width:100%;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em;margin-top:3px"></label>
+      <button type="button" data-pfx="eduDG" onclick="envoyerDemandeDG(this)" style="grid-column:1/3;padding:10px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.88em;font-weight:700;cursor:pointer">📤 Envoyer à la Direction Générale</button>
+    </div>
+    <div style="padding:4px 14px 2px;font-size:0.78em;font-weight:700;color:var(--gris)">Mes demandes et demandes reçues</div>
+    <div id="eduDGListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
+  </div>
+</div>
   <div class="section" id="eduSecAlertePrecoce">
   <div class="sec-head sec-rouge open" onclick="chargerAlertePrecoceEdu();toggleSec(this)">
     <h3>🚨 Élèves à risque de décrochage <span id="eduRisqueCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -10222,7 +10292,10 @@ async function deciderPermissionFond(btn) {
   } catch (e) { alert('⚠️ Serveur inaccessible.'); btn.disabled = false; console.error('deciderPermissionFond', e); }
 }
 
-// ══ DEMANDES / MESSAGERIE → DIRECTION GÉNÉRALE ══
+// ══ DEMANDES / MESSAGERIE → DIRECTION GÉNÉRALE (Directeurs, Comptables, Éducateurs) ══
+var ROLE_DG = { DIR: 'DIRECTEUR', COM: 'COMPTABLE', EDU: 'EDUCATEUR' };
+var ROLE_LIB = { DIRECTEUR: 'Directeur', COMPTABLE: 'Comptable', EDUCATEUR: 'Éducateur', TOUS: 'Tout le personnel', DG: 'Direction Générale' };
+function _monRoleDG() { return ROLE_DG[(currentStaff && currentStaff.profil) || ''] || 'DIRECTEUR'; }
 function _badgeDG(st) {
   var m = { 'NOUVEAU': ['#1565C0', '🆕'], 'EN COURS': ['#E65100', '⏳'], 'TRAITÉ': ['#1e8449', '✅'], 'REFUSÉ': ['#c0392b', '❌'] }[st] || ['#777', '•'];
   return '<span style="background:' + m[0] + ';color:#fff;border-radius:10px;padding:2px 8px;font-size:0.72em;font-weight:700">' + m[1] + ' ' + _escHtmlBloq(st) + '</span>';
@@ -10238,15 +10311,19 @@ function _filDG(fil) {
 }
 function _carteDG(d, pfx, admin) {
   var zid = pfx + '_' + d.id.replace(/[^A-Za-z0-9]/g, '');
+  var desc = d.sens === 'DESCENDANTE';
+  var sens = desc ? '📥 De la Direction Générale → ' + _escHtmlBloq(ROLE_LIB[d.destRole] || d.destRole) + (d.destEcole && d.destEcole !== 'TOUTES' ? ' — ' + _escHtmlBloq(d.destEcole) : ' — toutes les écoles')
+                  : '📤 ' + _escHtmlBloq(ROLE_LIB[d.roleAuteur] || 'Directeur') + (admin ? ' — ' + _escHtmlBloq(d.ecole) + ' — ' + _escHtmlBloq(d.auteur) : '');
+  var ouverte = d.statut !== 'TRAITÉ' && d.statut !== 'REFUSÉ';
   var statutSel = admin ? '<select id="' + zid + '_st" style="padding:6px;border:1.5px solid var(--border);border-radius:8px;font-size:0.8em">' +
       ['', 'EN COURS', 'TRAITÉ', 'REFUSÉ'].map(function(o) { return '<option value="' + o + '">' + (o || '— statut inchangé —') + '</option>'; }).join('') + '</select>' : '';
-  return '<div style="padding:10px 14px;border-bottom:1px solid #eee">' +
-    '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-size:0.85em">' + (d.priorite === 'URGENTE' ? '🔴 ' : '') +
-      (admin ? '🏫 ' + _escHtmlBloq(d.ecole) + ' — ' : '') + _escHtmlBloq(d.objet) + '</b>' + _badgeDG(d.statut) + '</div>' +
+  return '<div style="padding:10px 14px;border-bottom:1px solid #eee;' + (desc ? 'background:#FBF8FF' : '') + '">' +
+    '<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b style="font-size:0.85em">' + (d.priorite === 'URGENTE' ? '🔴 ' : '') + _escHtmlBloq(d.objet) + '</b>' + _badgeDG(d.statut) + '</div>' +
+    '<div style="font-size:0.74em;color:#6A1B9A;margin-top:2px">' + sens + '</div>' +
     '<div style="font-size:0.74em;color:var(--gris);margin-top:2px">' + _escHtmlBloq(d.id) + ' · ' + _escHtmlBloq(d.type) + ' · ' + _escHtmlBloq(d.date) +
-      (d.ref ? ' · Réf./montant : ' + _escHtmlBloq(d.ref) : '') + (admin ? ' · ' + _escHtmlBloq(d.auteur) : '') + '</div>' +
-    '<details style="margin-top:6px"><summary style="font-size:0.78em;cursor:pointer;color:#6A1B9A">💬 Échanges (' + (d.fil || []).length + ')</summary>' + _filDG(d.fil) +
-      (d.statut !== 'TRAITÉ' && d.statut !== 'REFUSÉ' || admin ?
+      (d.echeance ? ' · <b style="color:#c0392b">à rendre avant le ' + _escHtmlBloq(d.echeance) + '</b>' : '') + (d.ref ? ' · Réf./montant : ' + _escHtmlBloq(d.ref) : '') + '</div>' +
+    '<details style="margin-top:6px"' + (!admin && desc && ouverte ? ' open' : '') + '><summary style="font-size:0.78em;cursor:pointer;color:#6A1B9A">💬 Échanges (' + (d.fil || []).length + ')</summary>' + _filDG(d.fil) +
+      (ouverte || admin ?
         '<textarea id="' + zid + '_msg" rows="2" placeholder="Votre réponse…" style="width:100%;padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em;margin-top:6px"></textarea>' +
         '<div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">' + statutSel +
         '<button type="button" data-id="' + _escHtmlBloq(d.id) + '" data-z="' + zid + '" data-pfx="' + pfx + '" data-admin="' + (admin ? '1' : '') + '" onclick="repondreDemandeDG(this)" ' +
@@ -10254,48 +10331,78 @@ function _carteDG(d, pfx, admin) {
     '</details></div>';
 }
 
+// Personnel (Directeur / Comptable / Éducateur) → Direction Générale
 async function envoyerDemandeDG(btn) {
   if (!currentStaff) return;
-  var g = function(id) { return document.getElementById(id).value.trim(); };
-  var type = g('dirDGType'), objet = g('dirDGObjet'), message = g('dirDGMessage');
+  var pfx = btn.getAttribute('data-pfx') || 'dirDG';
+  var g = function(id) { return document.getElementById(pfx + id).value.trim(); };
+  var type = g('Type'), objet = g('Objet'), message = g('Message');
   if (!type || !objet || !message) { alert('⚠️ Renseignez le type, l\'objet et le message.'); return; }
+  var role = _monRoleDG();
   btn.disabled = true; btn.textContent = '⏳ Envoi…';
   try {
-    var data = await _appelPerm({ type: 'DG_ENVOYER', ecole: currentStaff.ecole, auteur: currentStaff.nom || currentStaff.name || 'Directeur',
-      role: 'Directeur ' + currentStaff.ecole, priorite: g('dirDGPrio'), objet: objet, message: message, ref: g('dirDGRef') });
+    var data = await _appelPerm({ type: 'DG_ENVOYER', sens: 'MONTANTE', ecole: currentStaff.ecole, auteur: currentStaff.nom || currentStaff.name || ROLE_LIB[role],
+      roleAuteur: role, role: ROLE_LIB[role] + ' ' + currentStaff.ecole, priorite: g('Prio'), objet: objet, message: message, ref: g('Ref') });
     if (data && data.success) {
       alert('✅ Demande ' + data.id + ' envoyée à la Direction Générale.');
-      ['dirDGObjet', 'dirDGMessage', 'dirDGRef'].forEach(function(id) { document.getElementById(id).value = ''; });
-      document.getElementById('dirDGType').value = ''; document.getElementById('dirDGPrio').value = 'NORMALE';
-      chargerMesDemandesDG();
+      ['Objet', 'Message', 'Ref'].forEach(function(id) { document.getElementById(pfx + id).value = ''; });
+      document.getElementById(pfx + 'Type').value = ''; document.getElementById(pfx + 'Prio').value = 'NORMALE';
+      chargerMesDemandesDG(pfx);
     } else alert('⚠️ ' + ((data && data.message) || 'Échec de l\'envoi'));
   } catch (e) { alert('⚠️ Serveur inaccessible. Réessayez.'); console.error('envoyerDemandeDG', e); }
   btn.disabled = false; btn.textContent = '📤 Envoyer à la Direction Générale';
 }
 
-async function chargerMesDemandesDG() {
-  var box = document.getElementById('dirDGListe'); if (!box || !currentStaff) return;
+async function chargerMesDemandesDG(pfx) {
+  pfx = (typeof pfx === 'string' && pfx) ? pfx : 'dirDG';
+  var box = document.getElementById(pfx + 'Liste'); if (!box || !currentStaff) return;
   box.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Chargement…</p>';
   try {
-    var data = await _appelPerm({ type: 'DG_LISTER', ecole: currentStaff.ecole });
+    var data = await _appelPerm({ type: 'DG_LISTER', ecole: currentStaff.ecole, role: _monRoleDG() });
     var liste = (data && data.liste) || [];
+    var aTraiter = liste.filter(function(d) { return d.sens === 'DESCENDANTE' && (d.statut === 'NOUVEAU' || d.statut === 'EN COURS'); }).length;
     var ouvertes = liste.filter(function(d) { return d.statut === 'NOUVEAU' || d.statut === 'EN COURS'; }).length;
-    document.getElementById('dirDGCount').textContent = ouvertes ? '(' + ouvertes + ' ouverte(s))' : '';
-    box.innerHTML = liste.length ? liste.map(function(d) { return _carteDG(d, 'dirDG', false); }).join('')
+    document.getElementById(pfx + 'Count').textContent = (aTraiter ? '(🔔 ' + aTraiter + ' demande(s) de la DG) ' : '') + (ouvertes ? '(' + ouvertes + ' ouverte(s))' : '');
+    liste.sort(function(a, b) { return (b.sens === 'DESCENDANTE') - (a.sens === 'DESCENDANTE'); });
+    box.innerHTML = liste.length ? liste.map(function(d) { return _carteDG(d, pfx, false); }).join('')
       : '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucune demande.</p>';
   } catch (e) { box.innerHTML = '<p style="padding:14px;color:#c0392b;font-size:0.82em">⚠️ Serveur inaccessible.</p>'; console.error('chargerMesDemandesDG', e); }
 }
 
+// Direction Générale → personnel (rapport, information…)
+async function envoyerDemandeDGDescendante(btn) {
+  var pfx = btn.getAttribute('data-pfx');
+  var g = function(id) { return document.getElementById(pfx + id).value.trim(); };
+  var type = g('NvType'), objet = g('NvObjet'), message = g('NvMessage');
+  if (!type || !objet || !message) { alert('⚠️ Renseignez le type, l\'objet et le message.'); return; }
+  var dest = g('NvRole'), ecole = g('NvEcole');
+  if (!confirm('Envoyer à : ' + ROLE_LIB[dest] + ' — ' + (ecole === 'TOUTES' ? 'toutes les écoles' : ecole) + ' ?')) return;
+  var nom = (currentStaff && (currentStaff.nom || currentStaff.name)) || 'Fondateur';
+  btn.disabled = true;
+  try {
+    var data = await _appelPerm({ type: 'DG_ENVOYER', sens: 'DESCENDANTE', ecole: ecole, destEcole: ecole, destRole: dest, echeance: g('NvEch'),
+      auteur: nom, roleAuteur: 'DG', role: pfx === 'dirDGA' ? 'Direction Générale (CPP LES PRINCES)' : 'Fondateur', priorite: 'NORMALE', objet: objet, message: message });
+    if (data && data.success) {
+      alert('✅ Demande ' + data.id + ' envoyée.');
+      ['NvObjet', 'NvMessage', 'NvEch'].forEach(function(id) { document.getElementById(pfx + id).value = ''; });
+      document.getElementById(pfx + 'NvType').value = '';
+      chargerDemandesDGAdmin(pfx);
+    } else alert('⚠️ ' + ((data && data.message) || 'Échec'));
+  } catch (e) { alert('⚠️ Serveur inaccessible.'); console.error('envoyerDemandeDGDescendante', e); }
+  btn.disabled = false;
+}
+
 async function chargerDemandesDGAdmin(pfx) {
   var box = document.getElementById(pfx + 'Liste'); if (!box) return;
-  var filtre = document.getElementById(pfx + 'Filtre').value;
+  var filtre = document.getElementById(pfx + 'Filtre').value, sens = document.getElementById(pfx + 'Sens').value;
   box.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Chargement…</p>';
   try {
     var data = await _appelPerm({ type: 'DG_LISTER', ecole: 'TOUTES' });
     var tout = (data && data.liste) || [];
-    var ouvertes = tout.filter(function(d) { return d.statut === 'NOUVEAU' || d.statut === 'EN COURS'; });
-    document.getElementById(pfx + 'Count').textContent = ouvertes.length ? '(' + ouvertes.length + ' ouverte(s))' : '';
-    var liste = filtre === 'OUVERTES' ? ouvertes : filtre ? tout.filter(function(d) { return d.statut === filtre; }) : tout;
+    var recuesOuvertes = tout.filter(function(d) { return d.sens !== 'DESCENDANTE' && (d.statut === 'NOUVEAU' || d.statut === 'EN COURS'); });
+    document.getElementById(pfx + 'Count').textContent = recuesOuvertes.length ? '(' + recuesOuvertes.length + ' à traiter)' : '';
+    var liste = tout.filter(function(d) { return !sens || (sens === 'DESCENDANTE' ? d.sens === 'DESCENDANTE' : d.sens !== 'DESCENDANTE'); });
+    liste = filtre === 'OUVERTES' ? liste.filter(function(d) { return d.statut === 'NOUVEAU' || d.statut === 'EN COURS'; }) : filtre ? liste.filter(function(d) { return d.statut === filtre; }) : liste;
     liste.sort(function(a, b) { return (b.priorite === 'URGENTE') - (a.priorite === 'URGENTE'); });
     box.innerHTML = liste.length ? liste.map(function(d) { return _carteDG(d, pfx, true); }).join('')
       : '<p style="padding:14px;text-align:center;color:#1e8449;font-size:0.85em">✅ Aucune demande dans cette catégorie.</p>';
@@ -10304,15 +10411,15 @@ async function chargerDemandesDGAdmin(pfx) {
 
 async function repondreDemandeDG(btn) {
   var id = btn.getAttribute('data-id'), z = btn.getAttribute('data-z'), pfx = btn.getAttribute('data-pfx'), admin = btn.getAttribute('data-admin') === '1';
-  var msg = (document.getElementById(z + '_msg') || {}).value || '', st = admin ? ((document.getElementById(z + '_st') || {}).value || '') : '';
-  msg = msg.trim();
+  var msg = ((document.getElementById(z + '_msg') || {}).value || '').trim(), st = admin ? ((document.getElementById(z + '_st') || {}).value || '') : '';
   if (!msg && !st) { alert('⚠️ Écrivez une réponse ou choisissez un statut.'); return; }
-  var nom = (currentStaff && (currentStaff.nom || currentStaff.name)) || (admin ? 'Fondateur' : 'Directeur');
-  var role = admin ? (pfx === 'dirDGA' ? 'Direction Générale (CPP LES PRINCES)' : 'Fondateur') : 'Directeur ' + ((currentStaff && currentStaff.ecole) || '');
+  var r = _monRoleDG();
+  var nom = (currentStaff && (currentStaff.nom || currentStaff.name)) || (admin ? 'Fondateur' : ROLE_LIB[r]);
+  var role = admin ? (pfx === 'dirDGA' ? 'Direction Générale (CPP LES PRINCES)' : 'Fondateur') : ROLE_LIB[r] + ' ' + ((currentStaff && currentStaff.ecole) || '');
   btn.disabled = true;
   try {
     var data = await _appelPerm({ type: 'DG_REPONDRE', id: id, auteur: nom, role: role, message: msg, statut: st });
-    if (data && data.success) { showToast('✅ Enregistré', 'success'); if (admin) chargerDemandesDGAdmin(pfx); else chargerMesDemandesDG(); }
+    if (data && data.success) { showToast('✅ Enregistré', 'success'); if (admin) chargerDemandesDGAdmin(pfx); else chargerMesDemandesDG(pfx); }
     else { alert('⚠️ ' + ((data && data.message) || 'Échec')); btn.disabled = false; }
   } catch (e) { alert('⚠️ Serveur inaccessible.'); btn.disabled = false; console.error('repondreDemandeDG', e); }
 }
