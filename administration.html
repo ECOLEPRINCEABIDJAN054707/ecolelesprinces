@@ -555,7 +555,7 @@ table tr:nth-child(even){background:#F8FAFD}
   <div class="sec-body" id="dirValPermBody">
     <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <select id="dirValPermFiltre" onchange="chargerPermissionsFond('dirVal')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
-        <option value="EN ATTENTE">⏳ En attente</option><option value="">Toutes</option>
+        <option value="EN ATTENTE">⏳ En attente</option><option value="ACCORDÉE">✅ Accordées</option><option value="REFUSÉE">❌ Refusées</option><option value="">📚 Toutes (historique)</option>
       </select>
       <button onclick="chargerPermissionsFond('dirVal')" style="padding:8px 14px;background:#1565C0;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Actualiser</button>
     </div>
@@ -2689,7 +2689,7 @@ async function sauvegarderPersonnelDir(idx) {
   <div class="sec-body open" id="fondPermBody">
     <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <select id="fondPermFiltre" onchange="chargerPermissionsFond()" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.82em">
-        <option value="EN ATTENTE">⏳ En attente</option><option value="">Toutes</option>
+        <option value="EN ATTENTE">⏳ En attente</option><option value="ACCORDÉE">✅ Accordées</option><option value="REFUSÉE">❌ Refusées</option><option value="">📚 Toutes (historique)</option>
       </select>
       <button onclick="chargerPermissionsFond()" style="padding:8px 14px;background:#1565C0;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Actualiser</button>
     </div>
@@ -10189,7 +10189,7 @@ async function chargerPermissionsFond(pfx) {
     var enAttente = tout.filter(function(p) { return p.statut === 'EN ATTENTE'; }).length;
     document.getElementById(pfx + 'PermCount').textContent = enAttente ? '(' + enAttente + ' en attente)' : '';
     var liste = filtre ? tout.filter(function(p) { return p.statut === filtre; }) : tout;
-    if (!liste.length) { box.innerHTML = '<p style="padding:14px;text-align:center;color:#1e8449;font-size:0.85em">✅ Aucune demande ' + (filtre ? 'en attente' : '') + '.</p>'; return; }
+    if (!liste.length) { box.innerHTML = '<p style="padding:14px;text-align:center;color:#1e8449;font-size:0.85em">Aucune demande ' + (filtre === 'EN ATTENTE' ? 'en attente' : filtre === 'ACCORDÉE' ? 'accordée' : filtre === 'REFUSÉE' ? 'refusée' : '') + '.</p>'; return; }
     box.innerHTML = liste.map(function(p) {
       var actions = p.statut === 'EN ATTENTE'
         ? '<div style="display:flex;gap:8px;margin-top:8px">' +
@@ -10201,7 +10201,8 @@ async function chargerPermissionsFond(pfx) {
         '<div style="font-size:0.82em;margin-top:3px">📅 Du <b>' + _fmtDatePerm(p.debut) + '</b> au <b>' + _fmtDatePerm(p.fin) + '</b> (' + (p.jours || '?') + ' jour(s))</div>' +
         '<div style="font-size:0.78em;color:var(--gris);margin-top:2px">Motif : ' + _escHtmlBloq(p.motif) + '</div>' +
         '<div style="font-size:0.78em;color:var(--gris)">Intérim : ' + _escHtmlBloq(p.interim) + (p.tel ? ' — joignable au ' + _escHtmlBloq(p.tel) : '') + '</div>' +
-        '<div style="font-size:0.72em;color:var(--gris)">Demandé le ' + _escHtmlBloq(p.dateDemande) + (p.commentaire ? ' — 💬 ' + _escHtmlBloq(p.commentaire) : '') + '</div>' +
+        '<div style="font-size:0.72em;color:var(--gris)">Demandé le ' + _escHtmlBloq(p.dateDemande) + '</div>' +
+        (p.statut !== 'EN ATTENTE' ? '<div style="font-size:0.75em;margin-top:2px">' + (p.statut === 'ACCORDÉE' ? '✅ Accordée' : '❌ Refusée') + ' par <b>' + _escHtmlBloq(p.par || '—') + '</b> le ' + _escHtmlBloq(p.dateDecision || '—') + (p.commentaire ? ' — 💬 ' + _escHtmlBloq(p.commentaire) : '') + '</div>' : '') +
         actions + '</div>';
     }).join('');
   } catch (e) { box.innerHTML = '<p style="padding:14px;color:#c0392b;font-size:0.82em">⚠️ Serveur inaccessible.</p>'; console.error('chargerPermissionsFond', e); }
