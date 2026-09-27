@@ -562,6 +562,25 @@ table tr:nth-child(even){background:#F8FAFD}
     <div id="dirValPermListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur « Actualiser ».</p></div>
   </div>
 </div>
+  <div class="section" id="dirSecListesStats">
+  <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerListeStats('dirLS', true)">
+    <h3>📋 Listes et statistiques</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirLSBody">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="dirLSType" onchange="chargerListeStats('dirLS')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em">
+        <option value="CONTACTS">📞 Liste de classe — contacts parents</option>
+        <option value="SEXE">👦👧 Récapitulatif des élèves par sexe</option>
+        <option value="AGES">🎂 Répartition des âges par classe (primaire)</option>
+        <option value="AGES_SEC">🎂 Répartition des âges par classe (collège / lycée)</option>
+      </select>
+      <select id="dirLSClasse" onchange="chargerListeStats('dirLS')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"><option value="">— Classe —</option></select>
+      <button onclick="chargerListeStats('dirLS')" style="padding:8px 14px;background:#1565C0;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Afficher</button>
+      <button onclick="imprimerListeStats('dirLS')" style="padding:8px 14px;background:#455A64;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🖨️ Imprimer / PDF</button>
+    </div>
+    <div id="dirLSZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Choisissez une liste.</p></div>
+  </div>
+</div>
   <div class="section" id="dirSecPermissions">
   <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerMesPermissionsDir()">
     <h3>📝 Demande de permission d'absence <span id="dirPermCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -3459,6 +3478,25 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
 </div>
+  <div class="section" id="comSecListesStats">
+  <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerListeStats('comLS', true)">
+    <h3>📋 Listes et statistiques</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="comLSBody">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="comLSType" onchange="chargerListeStats('comLS')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em">
+        <option value="CONTACTS">📞 Liste de classe — contacts parents</option>
+        <option value="SEXE">👦👧 Récapitulatif des élèves par sexe</option>
+        <option value="AGES">🎂 Répartition des âges par classe (primaire)</option>
+        <option value="AGES_SEC">🎂 Répartition des âges par classe (collège / lycée)</option>
+      </select>
+      <select id="comLSClasse" onchange="chargerListeStats('comLS')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"><option value="">— Classe —</option></select>
+      <button onclick="chargerListeStats('comLS')" style="padding:8px 14px;background:#1565C0;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Afficher</button>
+      <button onclick="imprimerListeStats('comLS')" style="padding:8px 14px;background:#455A64;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🖨️ Imprimer / PDF</button>
+    </div>
+    <div id="comLSZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Choisissez une liste.</p></div>
+  </div>
+</div>
   <div class="section" id="comSecDemandesDG">
   <div class="sec-head sec-violet" onclick="toggleSec(this); chargerMesDemandesDG('comDG')">
     <h3>📨 Demandes et messages — Direction Générale <span id="comDGCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -3910,6 +3948,25 @@ async function attribuerMatriculeCom() {
       </div>
     </div>
   </div>
+  <div class="section" id="eduSecListesStats">
+  <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerListeStats('eduLS', true)">
+    <h3>📋 Listes et statistiques</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="eduLSBody">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="eduLSType" onchange="chargerListeStats('eduLS')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em">
+        <option value="CONTACTS">📞 Liste de classe — contacts parents</option>
+        <option value="SEXE">👦👧 Récapitulatif des élèves par sexe</option>
+        <option value="AGES">🎂 Répartition des âges par classe (primaire)</option>
+        <option value="AGES_SEC">🎂 Répartition des âges par classe (collège / lycée)</option>
+      </select>
+      <select id="eduLSClasse" onchange="chargerListeStats('eduLS')" style="padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"><option value="">— Classe —</option></select>
+      <button onclick="chargerListeStats('eduLS')" style="padding:8px 14px;background:#1565C0;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🔄 Afficher</button>
+      <button onclick="imprimerListeStats('eduLS')" style="padding:8px 14px;background:#455A64;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:600;cursor:pointer">🖨️ Imprimer / PDF</button>
+    </div>
+    <div id="eduLSZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Choisissez une liste.</p></div>
+  </div>
+</div>
   <div class="section" id="eduSecDemandesDG">
   <div class="sec-head sec-violet" onclick="toggleSec(this); chargerMesDemandesDG('eduDG')">
     <h3>📨 Demandes et messages — Direction Générale <span id="eduDGCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -10422,6 +10479,57 @@ async function repondreDemandeDG(btn) {
     if (data && data.success) { showToast('✅ Enregistré', 'success'); if (admin) chargerDemandesDGAdmin(pfx); else chargerMesDemandesDG(pfx); }
     else { alert('⚠️ ' + ((data && data.message) || 'Échec')); btn.disabled = false; }
   } catch (e) { alert('⚠️ Serveur inaccessible.'); btn.disabled = false; console.error('repondreDemandeDG', e); }
+}
+
+// ══ LISTES ET STATISTIQUES (Directeur / Éducateur / Comptable) ══
+var _LS_TITRES = { CONTACTS: 'Liste de classe — contacts parents', SEXE: 'Récapitulatif des élèves par sexe', AGES: 'Répartition des âges par classe (primaire) — âge au 31/12/2026', AGES_SEC: 'Répartition des âges par classe (collège / lycée) — âge au 31/12/2026' };
+async function chargerListeStats(pfx, auto) {
+  if (!currentStaff) return;
+  var type = document.getElementById(pfx + 'Type').value, selC = document.getElementById(pfx + 'Classe'), classe = selC.value;
+  var zone = document.getElementById(pfx + 'Zone');
+  selC.style.display = type === 'CONTACTS' ? '' : 'none';
+  if (type === 'CONTACTS' && !classe && !auto && selC.options.length > 1) { zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Choisissez une classe.</p>'; return; }
+  zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Chargement…</p>';
+  try {
+    var data = await _appelPerm({ type: 'LISTES_STATS', ecole: currentStaff.ecole, liste: type, classe: type === 'CONTACTS' ? classe : '' });
+    if (!data || !data.success) { zone.innerHTML = '<p style="padding:14px;color:#c0392b;font-size:0.82em">⚠️ ' + _escHtmlBloq((data && data.message) || 'Erreur') + '</p>'; return; }
+    if (data.classes && selC.options.length <= 1) {
+      selC.innerHTML = '<option value="">— Classe —</option>' + data.classes.map(function(c) { return '<option>' + _escHtmlBloq(c) + '</option>'; }).join('');
+      if (classe) selC.value = classe;
+    }
+    var th = 'style="background:#1F4E79;color:#fff;padding:6px 8px;font-size:0.78em;text-align:left;white-space:nowrap"';
+    var td = 'style="padding:5px 8px;border-bottom:1px solid #eee;font-size:0.8em;white-space:nowrap"';
+    var tbl = function(ent, lignes, tot) {
+      return '<table style="border-collapse:collapse;width:100%"><thead><tr>' + ent.map(function(e) { return '<th ' + th + '>' + e + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        lignes.map(function(l) { return '<tr>' + l.map(function(v) { return '<td ' + td + '>' + _escHtmlBloq(v) + '</td>'; }).join('') + '</tr>'; }).join('') +
+        (tot ? '<tr style="font-weight:700;background:#E3F2FD">' + tot.map(function(v) { return '<td ' + td + '>' + _escHtmlBloq(v) + '</td>'; }).join('') + '</tr>' : '') + '</tbody></table>';
+    };
+    var html = '';
+    if (type === 'CONTACTS') {
+      if (!classe) { zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Choisissez une classe.</p>'; return; }
+      html = '<div style="font-size:0.85em;font-weight:700;margin:6px 0">' + _escHtmlBloq(classe) + ' — ' + data.lignes.length + ' élève(s)</div>' +
+        tbl(['N°', 'Matricule', 'Nom et prénoms', 'Tél. 1', 'Tél. 2', 'Tél. 3'], data.lignes);
+    } else if (type === 'SEXE') {
+      var t = data.total, pct = function(n) { return t[4] ? Math.round(n * 100 / t[4]) + ' %' : '—'; };
+      html = tbl(['Classe', 'Garçons', 'Filles', 'Non renseigné', 'Total'], data.lignes, t) +
+        '<p style="font-size:0.8em;margin-top:8px">Garçons : <b>' + t[1] + '</b> (' + pct(t[1]) + ') · Filles : <b>' + t[2] + '</b> (' + pct(t[2]) + ')' + (t[3] ? ' · Sexe non renseigné : <b>' + t[3] + '</b>' : '') + '</p>';
+    } else {
+      if (!data.lignes.length) { zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucune classe ' + (type === 'AGES' ? 'du primaire' : 'du secondaire') + ' dans cette école.</p>'; return; }
+      var tot = ['TOTAL'].concat(data.lignes[0].slice(1).map(function(_, j) { return data.lignes.reduce(function(s, l) { return s + (Number(l[j + 1]) || 0); }, 0); }));
+      html = tbl(['Classe'].concat(data.ages.map(function(a) { return a + ' ans'; }), ['Non renseigné', 'Total']), data.lignes, tot);
+    }
+    zone.innerHTML = '<div style="font-size:0.82em;color:var(--gris);margin:4px 0 8px">' + _LS_TITRES[type] + ' — ' + _escHtmlBloq(currentStaff.ecole) + '</div>' + html;
+  } catch (e) { zone.innerHTML = '<p style="padding:14px;color:#c0392b;font-size:0.82em">⚠️ Serveur inaccessible.</p>'; console.error('chargerListeStats', e); }
+}
+function imprimerListeStats(pfx) {
+  var zone = document.getElementById(pfx + 'Zone');
+  if (!zone || !zone.querySelector('table')) { alert('Affichez d\'abord une liste.'); return; }
+  var w = window.open('', '_blank');
+  w.document.write('<html><head><meta charset="utf-8"><title>' + _LS_TITRES[document.getElementById(pfx + 'Type').value] + '</title>' +
+    '<style>body{font-family:Arial,sans-serif;padding:18px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #999;padding:5px 7px;font-size:12px;text-align:left}th{background:#1F4E79;color:#fff}</style></head><body>' +
+    '<h3 style="margin:0 0 4px">' + _escHtmlBloq((currentStaff && currentStaff.ecole) || '') + ' — 2026-2027</h3>' + zone.innerHTML +
+    '<p style="font-size:11px;color:#777;margin-top:12px">Édité le ' + new Date().toLocaleDateString('fr-FR') + ' — Princes Smart School</p></body></html>');
+  w.document.close(); w.focus(); setTimeout(function() { w.print(); }, 400);
 }
 
 // ══ ENSEIGNANTS BLOQUÉS (appel hors zone) — Directeur ══
