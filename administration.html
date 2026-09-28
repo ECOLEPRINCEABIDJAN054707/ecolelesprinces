@@ -564,7 +564,7 @@ table tr:nth-child(even){background:#F8FAFD}
 </div>
   <div class="section" id="dirSecCompletude">
   <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerCompletude('dirCP', true)">
-    <h3>✏️ Compléter sexe et date de naissance <span id="dirCPCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    <h3>✏️ Compléter les fiches élèves (sexe, naissance, statut, nationalité, LV2) <span id="dirCPCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
   </div>
   <div class="sec-body" id="dirCPBody">
     <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -3499,7 +3499,7 @@ async function attribuerMatriculeCom() {
 </div>
   <div class="section" id="comSecCompletude">
   <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerCompletude('comCP', true)">
-    <h3>✏️ Compléter sexe et date de naissance <span id="comCPCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    <h3>✏️ Compléter les fiches élèves (sexe, naissance, statut, nationalité, LV2) <span id="comCPCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
   </div>
   <div class="sec-body" id="comCPBody">
     <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -3982,7 +3982,7 @@ async function attribuerMatriculeCom() {
   </div>
   <div class="section" id="eduSecCompletude">
   <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerCompletude('eduCP', true)">
-    <h3>✏️ Compléter sexe et date de naissance <span id="eduCPCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
+    <h3>✏️ Compléter les fiches élèves (sexe, naissance, statut, nationalité, LV2) <span id="eduCPCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
   </div>
   <div class="sec-body" id="eduCPBody">
     <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
@@ -10577,9 +10577,17 @@ function imprimerListeStats(pfx) {
   w.document.close(); w.focus(); setTimeout(function() { w.print(); }, 400);
 }
 
-// ══ SAISIE RAPIDE SEXE / DATE DE NAISSANCE PAR CLASSE ══
+// ══ SAISIE RAPIDE PAR CLASSE — sexe, naissance, statut AFF/NAFF, nationalité, LV2 ══
 var _cpDonnees = {};
+var _NATIONALITES = ['IVOIRIENNE', 'BURKINABE', 'MALIENNE', 'GUINEENNE', 'BENINOISE', 'TOGOLAISE', 'NIGERIENNE', 'GHANEENNE', 'NIGERIANE', 'LIBERIENNE', 'SENEGALAISE', 'AUTRE AFRICAINE', 'NON AFRICAINE'];
 function _ddnVersIso(d) { var m = String(d || '').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); return m ? m[3] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[1]).slice(-2) : ''; }
+function _cpNat(v) { var k = String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim(); return (k === 'IV' || /^IVOIR/.test(k)) ? 'IVOIRIENNE' : k; }
+function _cpSel(id, options, val, manque) {
+  var opts = options.slice(); if (val && opts.indexOf(val) === -1) opts.push(val);
+  return '<select id="' + id + '" style="padding:5px;border:1.5px solid ' + (manque ? '#E65100' : 'var(--border)') + ';border-radius:6px;font-size:0.82em;max-width:130px">' +
+    '<option value="">—</option>' + opts.map(function(o) { var v = typeof o === 'string' ? o : o[0], l = typeof o === 'string' ? o : o[1];
+      return '<option value="' + _escHtmlBloq(v) + '"' + (v === val ? ' selected' : '') + '>' + _escHtmlBloq(l) + '</option>'; }).join('') + '</select>';
+}
 async function chargerCompletude(pfx, auto) {
   if (!currentStaff) return;
   var sel = document.getElementById(pfx + 'Classe'), classe = sel.value, zone = document.getElementById(pfx + 'Zone');
@@ -10598,34 +10606,42 @@ async function chargerCompletude(pfx, auto) {
     var el = (data.eleves || []).filter(function(e) { return !seul || e.incomplet; });
     _cpDonnees[pfx] = { classe: classe, eleves: el };
     if (!el.length) { zone.innerHTML = '<p style="padding:14px;text-align:center;color:#1e8449;font-size:0.85em">✅ Toutes les fiches de cette classe sont complètes.</p>'; return; }
-    var th = 'style="background:#1F4E79;color:#fff;padding:6px 8px;font-size:0.78em;text-align:left"';
-    zone.innerHTML = '<table style="border-collapse:collapse;width:100%"><thead><tr><th ' + th + '>N°</th><th ' + th + '>Nom et prénoms</th><th ' + th + '>Sexe</th><th ' + th + '>Date de naissance</th></tr></thead><tbody>' +
+    var sec = el.some(function(e) { return e.sec; }), lv = el.some(function(e) { return e.lv2req; });
+    var th = 'style="background:#1F4E79;color:#fff;padding:6px 8px;font-size:0.78em;text-align:left;white-space:nowrap"';
+    zone.innerHTML = '<table style="border-collapse:collapse;width:100%"><thead><tr><th ' + th + '>N°</th><th ' + th + '>Nom et prénoms</th><th ' + th + '>Sexe</th><th ' + th + '>Date de naissance</th>' +
+      (sec ? '<th ' + th + '>Statut</th><th ' + th + '>Nationalité</th>' : '') + (lv ? '<th ' + th + '>LV2</th>' : '') + '</tr></thead><tbody>' +
       el.map(function(e, i) {
+        var nat = _cpNat(e.nat);
         return '<tr style="border-bottom:1px solid #eee"><td style="padding:5px 8px;font-size:0.8em">' + (i + 1) + '</td>' +
           '<td style="padding:5px 8px;font-size:0.8em">' + _escHtmlBloq(e.nom) + '<div style="font-size:0.85em;color:var(--gris)">' + _escHtmlBloq(e.mat) + '</div></td>' +
-          '<td style="padding:5px 8px"><select id="' + pfx + '_s_' + i + '" style="padding:6px;border:1.5px solid ' + (e.sexe ? 'var(--border)' : '#E65100') + ';border-radius:6px">' +
-            '<option value="">—</option><option value="M"' + (e.sexe === 'M' ? ' selected' : '') + '>Garçon</option><option value="F"' + (e.sexe === 'F' ? ' selected' : '') + '>Fille</option></select></td>' +
-          '<td style="padding:5px 8px"><input type="date" id="' + pfx + '_d_' + i + '" value="' + _ddnVersIso(e.ddn) + '" style="padding:6px;border:1.5px solid ' + (e.ddn ? 'var(--border)' : '#E65100') + ';border-radius:6px"></td></tr>';
+          '<td style="padding:5px 6px">' + _cpSel(pfx + '_s_' + i, [['M', 'Garçon'], ['F', 'Fille']], e.sexe, !e.sexe) + '</td>' +
+          '<td style="padding:5px 6px"><input type="date" id="' + pfx + '_d_' + i + '" value="' + _ddnVersIso(e.ddn) + '" style="padding:5px;border:1.5px solid ' + (e.ddn ? 'var(--border)' : '#E65100') + ';border-radius:6px;font-size:0.82em"></td>' +
+          (sec ? '<td style="padding:5px 6px">' + (e.sec ? _cpSel(pfx + '_st_' + i, [['AFF', 'Affecté'], ['NAFF', 'Non affecté']], e.statut, !e.statut) : '') + '</td>' +
+                 '<td style="padding:5px 6px">' + (e.sec ? _cpSel(pfx + '_n_' + i, _NATIONALITES, nat, !nat) : '') + '</td>' : '') +
+          (lv ? '<td style="padding:5px 6px">' + (e.lv2req ? _cpSel(pfx + '_l_' + i, [['ESP', 'Espagnol'], ['ALL', 'Allemand']], e.lv2, !e.lv2) : '') + '</td>' : '') + '</tr>';
       }).join('') + '</tbody></table>';
   } catch (e) { zone.innerHTML = '<p style="padding:14px;color:#c0392b;font-size:0.82em">⚠️ Serveur inaccessible.</p>'; console.error('chargerCompletude', e); }
 }
 async function enregistrerCompletudeClasse(pfx, btn) {
   var d = _cpDonnees[pfx]; if (!d || !d.eleves.length) { alert('Choisissez d\'abord une classe.'); return; }
+  var v = function(id) { var x = document.getElementById(id); return x ? x.value : ''; };
   var modifs = [];
   d.eleves.forEach(function(e, i) {
-    var sx = document.getElementById(pfx + '_s_' + i).value, dd = document.getElementById(pfx + '_d_' + i).value;
-    var chS = sx && sx !== e.sexe, chD = dd && dd !== _ddnVersIso(e.ddn);
-    if (chS || chD) modifs.push({ mat: e.mat, sexe: chS ? sx : '', ddn: chD ? dd : '' });
+    var m = { mat: e.mat }, ch = false;
+    var sx = v(pfx + '_s_' + i); if (sx && sx !== e.sexe) { m.sexe = sx; ch = true; }
+    var dd = v(pfx + '_d_' + i); if (dd && dd !== _ddnVersIso(e.ddn)) { m.ddn = dd; ch = true; }
+    var st = v(pfx + '_st_' + i); if (st && st !== e.statut) { m.statut = st; ch = true; }
+    var na = v(pfx + '_n_' + i); if (na && na !== _cpNat(e.nat)) { m.nat = na; ch = true; }
+    var l2 = v(pfx + '_l_' + i); if (l2 && l2 !== e.lv2) { m.lv2 = l2; ch = true; }
+    if (ch) modifs.push(m);
   });
   if (!modifs.length) { alert('Aucune modification à enregistrer.'); return; }
   btn.disabled = true; var t = btn.textContent; btn.textContent = '⏳ Enregistrement…';
   try {
-    var total = 0;
-    for (var k = 0; k < modifs.length; k += 20) {   // envoi par paquets de 20 élèves
-      var data = await _appelPerm({ type: 'ENREGISTRER_COMPLETUDE', ecole: currentStaff.ecole, donnees: JSON.stringify(modifs.slice(k, k + 20)),
+    for (var k = 0; k < modifs.length; k += 15) {   // envoi par paquets de 15 élèves
+      var data = await _appelPerm({ type: 'ENREGISTRER_COMPLETUDE', ecole: currentStaff.ecole, donnees: JSON.stringify(modifs.slice(k, k + 15)),
         auteur: (currentStaff.nom || currentStaff.name || '') + ' (' + ({ DIR: 'Directeur', COM: 'Comptable', EDU: 'Éducateur' }[currentStaff.profil] || '') + ')' });
       if (!data || !data.success) throw new Error((data && data.message) || 'Échec');
-      total += data.modifies || 0;
     }
     showToast('✅ ' + modifs.length + ' élève(s) enregistré(s)', 'success');
     chargerCompletude(pfx);
