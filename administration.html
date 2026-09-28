@@ -983,6 +983,12 @@ table tr:nth-child(even){background:#F8FAFD}
     </p>
     <button onclick="genererEnqueteRentree('xlsx')" style="margin-right:8px">📥 Enquête de rentrée — Excel</button>
     <button onclick="genererEnqueteRentree('pdf')">📄 Enquête de rentrée — PDF</button>
+    <div style="margin-top:12px;padding:12px;border:2px solid #1F4E79;border-radius:10px;background:#F4F8FC">
+      <div style="font-weight:800;font-size:0.9em;color:#1F4E79">📑 Rapport de rentrée 2026-2027 — format officiel DRENA (Word)</div>
+      <div style="font-size:0.76em;color:var(--gris);margin:4px 0 8px">Tableaux chiffrés remplis automatiquement depuis PSS (pyramide, statut, LV2, nationalités, enseignants, masse horaire, comparaison N-1). Complétez ensuite les parties rédigées directement dans Word. <b>À déposer avant le 05/10/2026.</b></div>
+      <button onclick="genererRapportRentreeDRENA(this)" style="padding:10px 16px;background:#1F4E79;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">📄 Générer le rapport (Word)</button>
+      <div id="rrDrenaStatus" style="margin-top:8px;font-size:0.8em"></div>
+    </div>
     <div id="drenaStatus" style="margin-top:10px;font-size:0.85em"></div>
     <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
 <div style="font-weight:700;font-size:0.85em;color:var(--bleu);padding:0 0 8px">📋 Rapport de rentrée — Infrastructures & Personnel</div>
@@ -10626,6 +10632,171 @@ async function enregistrerCompletudeClasse(pfx, btn) {
   } catch (e) { alert('⚠️ ' + e.message); console.error('enregistrerCompletudeClasse', e); }
   btn.disabled = false; btn.textContent = t;
 }
+
+// ══ RAPPORT DE RENTRÉE — FORMAT OFFICIEL DRENA (Word) ══
+async function genererRapportRentreeDRENA(btn) {
+  if (!currentStaff) return;
+  var st = document.getElementById('rrDrenaStatus');
+  btn.disabled = true; st.innerHTML = '⏳ Calcul des tableaux…';
+  try {
+    var d = await _appelPerm({ type: 'RAPPORT_RENTREE_V2', ecole: currentStaff.ecole });
+    if (!d || !d.ok) throw new Error((d && (d.error || d.message)) || 'Erreur serveur');
+    var html = _rrConstruireDoc(d);
+    var blob = new Blob(['\ufeff' + html], { type: 'application/msword' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'Rapport_rentree_2026-2027_' + String(d.ecole).replace(/[^A-Za-z0-9]+/g, '_') + '.doc';
+    document.body.appendChild(a); a.click(); a.remove();
+    var c = d.couverture, pc = function(n) { return c.total ? Math.round(n * 100 / c.total) + ' %' : '—'; };
+    var alertes = [];
+    if (c.sexe < c.total) alertes.push('Sexe renseigné : ' + c.sexe + '/' + c.total + ' (' + pc(c.sexe) + ') — les élèves sans sexe apparaissent dans « non renseigné »');
+    if (c.statut < c.total) alertes.push('Statut AFF/NAFF renseigné : ' + c.statut + '/' + c.total + ' (' + pc(c.statut) + ')');
+    if (c.nat < c.total) alertes.push('Nationalité renseignée : ' + c.nat + '/' + c.total + ' (' + pc(c.nat) + ')');
+    var sd = Object.keys(d.seriesDevinees || {});
+    if (sd.length) alertes.push('Classes sans série (comptées en série A) : ' + sd.join(', '));
+    st.innerHTML = '✅ Rapport téléchargé. Ouvrez-le dans Word pour compléter les parties rédigées.' +
+      (alertes.length ? '<div style="margin-top:6px;padding:8px;background:#FFF3E0;border-radius:8px;color:#E65100"><b>À améliorer avant dépôt :</b><br>• ' + alertes.join('<br>• ') + '<br><i>Complétez via « ✏️ Compléter sexe et date de naissance », puis régénérez.</i></div>' : '');
+  } catch (e) { st.innerHTML = '<span style="color:#c0392b">⚠️ ' + _escHtmlBloq(e.message) + '</span>'; console.error('genererRapportRentreeDRENA', e); }
+  btn.disabled = false;
+}
+
+function _rrConstruireDoc(d) {
+  var E = function(v) { return _escHtmlBloq(v === 0 ? '0' : (v === undefined || v === null ? '' : v)); };
+  var P = d.pyramide, M = d.champsManuels || {};
+  var cle1 = ['6E', '5E', '4E', '3E'], s2 = ['2A', '2C'], p1 = ['1A', '1C', '1D'], tl = ['TA', 'TC', 'TD'];
+  var som = function(cles, f) { return cles.reduce(function(t, c) { return t + (f(c) || 0); }, 0); };
+  var th = function(t, cs, rs) { return '<th' + (cs ? ' colspan="' + cs + '"' : '') + (rs ? ' rowspan="' + rs + '"' : '') + '>' + t + '</th>'; };
+  var td = function(v, b) { return '<td' + (b ? ' style="font-weight:bold;background:#EEF3F9"' : '') + '>' + E(v) + '</td>'; };
+  var manuel = function(re) { var k = Object.keys(M).filter(function(x) { return re.test(x); })[0]; return k ? M[k] : ''; };
+  var vide = function(n) { var h = ''; for (var i = 0; i < n; i++) h += '<td>&nbsp;</td>'; return h; };
+
+  // Ligne de la pyramide (18 colonnes de valeurs)
+  var lignePyr = function(f) {
+    var h = cle1.map(function(c) { return td(f(c)); }).join('') + td(som(cle1, f), 1);
+    h += s2.map(function(c) { return td(f(c)); }).join('') + td(som(s2, f), 1);
+    h += p1.map(function(c) { return td(f(c)); }).join('') + td(som(p1, f), 1);
+    h += tl.map(function(c) { return td(f(c)); }).join('') + td(som(tl, f), 1);
+    var t2 = som(s2.concat(p1, tl), f);
+    return h + td(t2, 1) + td(som(cle1, f) + t2, 1);
+  };
+  var entetePyr = '<tr>' + th('', 0, 2) + th('6ème') + th('5ème') + th('4ème') + th('3ème') + th('Total 1er cycle', 0, 2) + th('SECONDE', 3) + th('PREMIÈRE', 4) + th('TERMINALE', 4) + th('Total 2nd cycle', 0, 2) + th('Total 1er + 2nd cycle', 0, 2) + '</tr>' +
+    '<tr>' + th('') + th('') + th('') + th('') + th('A') + th('C') + th('Tot') + th('A') + th('C') + th('D') + th('Tot') + th('A') + th('C') + th('D') + th('Tot') + '</tr>';
+  // (la 1re ligne d'en-tête « 6ème…3ème » occupe 1 colonne chacune ; la 2e ligne est laissée vide pour ces colonnes)
+  entetePyr = '<tr>' + th('') + th('6ème') + th('5ème') + th('4ème') + th('3ème') + th('Total 1er cycle') + th('2nde A') + th('2nde C') + th('Tot 2nde') +
+    th('1ère A') + th('1ère C') + th('1ère D') + th('Tot 1ère') + th('Tle A') + th('Tle C') + th('Tle D') + th('Tot Tle') + th('Total 2nd cycle') + th('Total 1er + 2nd') + '</tr>';
+
+  var h = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Rapport de rentrée</title>' +
+    '<style>@page Section1{size:841.9pt 595.3pt;mso-page-orientation:landscape;margin:1.5cm 1.3cm}div.Section1{page:Section1}' +
+    'body{font-family:"Times New Roman",serif;font-size:11pt}h1{font-size:16pt;text-align:center;margin:6pt 0}h2{font-size:12.5pt;margin:14pt 0 6pt;text-decoration:underline}' +
+    'table{border-collapse:collapse;width:100%;margin:4pt 0}th,td{border:1px solid #000;padding:2pt 3pt;font-size:9pt;text-align:center}th{background:#D9E2F3}' +
+    '.g td{border:none;text-align:left;font-size:10.5pt}.note{font-size:8.5pt;font-style:italic;color:#444}.saisie{color:#7F7F7F;font-style:italic}</style></head><body><div class="Section1">';
+  h += '<table class="g"><tr><td><b>MINISTÈRE DE L\'ÉDUCATION NATIONALE<br>ET DE L\'ALPHABÉTISATION</b><br>--------------------<br><b>DIRECTION RÉGIONALE DE DUÉKOUÉ</b></td>' +
+       '<td style="text-align:right"><b>RÉPUBLIQUE DE CÔTE D\'IVOIRE</b><br>Union - Discipline - Travail<br>--------------------</td></tr></table>';
+  h += '<h1>RAPPORT DE RENTRÉE 2026-2027</h1><p style="text-align:center;font-size:13pt"><b>' + E(d.etablissement) + '</b></p>';
+
+  h += '<h2>SOMMAIRE</h2><p>Identification — Introduction — I. Organisation matérielle — II. Statut des élèves et activités parascolaires — III. Enseignement de la seconde langue — IV. Pyramide et effectifs par niveau — V. Répartition des enseignants par discipline et par grade — VI. Récapitulatif des élèves par nationalité — VII. Résultats aux examens — VIII. État comparatif des effectifs et des pyramides — Conclusion</p>';
+
+  h += '<h2>IDENTIFICATION DE L\'ÉTABLISSEMENT</h2><table><tr><td style="text-align:left;width:35%">Nom de l\'établissement</td><td style="text-align:left">' + E(d.etablissement) + '</td></tr>' +
+    ['Code de l\'établissement', 'N° autorisation de création / d\'ouverture', 'Localité / situation géographique', 'Contacts de l\'établissement', 'Nom et prénoms du Promoteur', 'Nom et prénoms du Directeur des Études', 'Contact du Directeur des Études'].map(function(l) {
+      return '<tr><td style="text-align:left">' + l + '</td><td class="saisie" style="text-align:left">[à compléter]</td></tr>'; }).join('') + '</table>';
+  h += '<h2>INTRODUCTION</h2><p class="saisie">[À rédiger par le Directeur des Études : conditions de la rentrée, date effective de reprise des cours, faits marquants…]</p>';
+
+  // I. Organisation matérielle
+  var labo = function(re) { var v = manuel(re); return v === '' ? '' : v; };
+  h += '<h2>I. ORGANISATION MATÉRIELLE</h2><table><tr>' + th('', 0, 2) + th('Salles de classe ordinaires', 0, 2) + th('Salles de classes spécialisées', 6) + th('Autres salles', 0, 2) + th('Total salles ordinaires + spécialisées', 0, 2) + '</tr><tr>' +
+    th('SVT') + th('PC') + th('HG') + th('LV') + th('Autres') + th('Total') + '</tr>' +
+    '<tr><td><b>EXISTANT</b></td><td></td>' + td(labo(/LABO_SVT/)) + td(labo(/LABO_PC/)) + td(labo(/SALLE_HG/)) + vide(5) + '</tr>' +
+    '<tr><td><b>BESOIN</b></td>' + vide(9) + '</tr></table>';
+
+  // II. Statut des élèves
+  var S = d.statut, tot = function(k) { return S.AFF[k] + S.NAFF[k] + S.ND[k]; };
+  h += '<h2>II. STATUT DES ÉLÈVES ET ACTIVITÉS PARASCOLAIRES</h2><table><tr>' + th('STATUT', 0, 2) + th('SEXE', 3) + '</tr><tr>' + th('G') + th('F') + th('T') + '</tr>' +
+    '<tr><td><b>AFFECTÉ</b></td>' + td(S.AFF.G) + td(S.AFF.F) + td(S.AFF.G + S.AFF.F + S.AFF.ND, 1) + '</tr>' +
+    '<tr><td><b>NON AFFECTÉ</b></td>' + td(S.NAFF.G) + td(S.NAFF.F) + td(S.NAFF.G + S.NAFF.F + S.NAFF.ND, 1) + '</tr>' +
+    (S.ND.G + S.ND.F + S.ND.ND ? '<tr><td><i>Statut non renseigné</i></td>' + td(S.ND.G) + td(S.ND.F) + td(S.ND.G + S.ND.F + S.ND.ND, 1) + '</tr>' : '') +
+    '<tr><td><b>EXTERNE</b></td>' + vide(3) + '</tr><tr><td><b>INTERNE</b></td>' + vide(3) + '</tr>' +
+    '<tr><td><b>TOTAL</b></td>' + td(tot('G'), 1) + td(tot('F'), 1) + td(tot('G') + tot('F') + tot('ND'), 1) + '</tr></table>';
+  if (tot('ND')) h += '<p class="note">Dont ' + tot('ND') + ' élève(s) dont le sexe n\'est pas encore renseigné dans la base (comptés uniquement dans le total).</p>';
+  var act = [['INFIRMERIE', /INFIRM/], ['BIBLIOTHÈQUE', /BIBLIO/], ['FOYER', /FOYER/], ['COOPÉRATIVE', /COOP/], ['THÉÂTRE', /THEATRE/], ['CLUB', /CLUB/]];
+  h += '<table><tr>' + th('') + th('OUI') + th('NON') + th('FONCTIONNEL') + th('NON FONCTIONNEL') + '</tr>' + act.map(function(a) {
+    var ex = _rrU_(manuel(new RegExp('PARA_.*' + a[1].source + '.*_EXISTANT'))), fo = _rrU_(manuel(new RegExp('PARA_.*' + a[1].source + '.*_FONCTIONNEL')));
+    return '<tr><td style="text-align:left"><b>' + a[0] + '</b></td>' + td(ex === 'OUI' ? 'X' : '') + td(ex === 'NON' ? 'X' : '') + td(fo === 'OUI' ? 'X' : '') + td(fo === 'NON' ? 'X' : '') + '</tr>'; }).join('') + '</table>';
+  h += '<p class="note">NB : préciser le(s) club(s) existant(s) (ex. : mathématiques, anglais, espagnol…) : <span class="saisie">[à compléter]</span></p>';
+
+  // III. LV2
+  var L = d.lv2, lv = function(cles, k) { return som(cles, function(c) { return L[c][k]; }); };
+  h += '<h2>III. ENSEIGNEMENT DE LA SECONDE LANGUE</h2><table><tr>' + th('CLASSE') + th('4ème', 2) + th('3ème', 2) + th('Total 1er cycle', 2) + th('2nde A', 2) + th('2nde C', 2) + th('1ère A', 2) + th('Tle A', 2) + th('Total 2nd cycle', 2) + th('Total 1er + 2nd cycle', 2) + '</tr>' +
+    '<tr>' + th('2nde langue') + '<th>ALL</th><th>ESP</th>'.repeat(9) + '</tr><tr><td><b>Nombre d\'élèves</b></td>' +
+    [['4E'], ['3E'], ['4E', '3E'], ['2A'], ['2C'], ['1A'], ['TA'], ['2A', '2C', '1A', 'TA'], ['4E', '3E', '2A', '2C', '1A', 'TA']].map(function(g, i) {
+      return td(lv(g, 'ALL'), i === 2 || i >= 7) + td(lv(g, 'ESP'), i === 2 || i >= 7); }).join('') + '</tr></table>';
+
+  // IV. Pyramide
+  h += '<h2>IV. PYRAMIDE ET EFFECTIFS PAR NIVEAU (1er et 2nd cycle)</h2><table>' + entetePyr +
+    '<tr><td style="text-align:left"><b>Nombre de classes</b></td>' + lignePyr(function(c) { return P[c].nbClasses; }) + '</tr>' +
+    '<tr><td style="text-align:left">Élèves (y compris redoublants) — G</td>' + lignePyr(function(c) { return P[c].G; }) + '</tr>' +
+    '<tr><td style="text-align:left">Élèves — F</td>' + lignePyr(function(c) { return P[c].F; }) + '</tr>' +
+    '<tr><td style="text-align:left"><b>Élèves — T</b></td>' + lignePyr(function(c) { return P[c].T; }) + '</tr>' +
+    '<tr><td style="text-align:left">Redoublants — G</td>' + lignePyr(function(c) { return P[c].rG; }) + '</tr>' +
+    '<tr><td style="text-align:left">Redoublants — F</td>' + lignePyr(function(c) { return P[c].rF; }) + '</tr>' +
+    '<tr><td style="text-align:left"><b>Redoublants — T</b></td>' + lignePyr(function(c) { return P[c].rT; }) + '</tr></table>';
+  var nd = som(Object.keys(P), function(c) { return P[c].ND; });
+  if (nd) h += '<p class="note">Le total T comprend ' + nd + ' élève(s) dont le sexe n\'est pas encore renseigné.</p>';
+
+  // V. Enseignants
+  var EN = d.enseignants, sT = { perm: 0, vac: 0, h1: 0, h2: 0 };
+  h += '<h2>V. RÉPARTITION DES ENSEIGNANTS PAR DISCIPLINE ET PAR GRADE</h2><table><tr>' + th('DISCIPLINE', 0, 2) + th('PERMANENT', 5) + th('VACATAIRE', 4) + th('TOTAL', 0, 2) + th('Masse horaire 1er cycle', 0, 2) + th('Masse horaire 2nd cycle', 0, 2) + th('Total général', 0, 2) + '</tr><tr>' +
+    th('Maîtrise') + th('Licence') + th('Deug') + th('Autre') + th('S/total') + th('Capes') + th('CAP/CPL') + th('CAP/CM') + th('S/total') + '</tr>' +
+    d.disciplines.map(function(x) {
+      var e = EN[x]; sT.perm += e.perm; sT.vac += e.vac; sT.h1 += e.h1; sT.h2 += e.h2;
+      return '<tr><td style="text-align:left"><b>' + x + '</b></td>' + vide(4) + td(e.perm, 1) + vide(3) + td(e.vac, 1) + td(e.perm + e.vac, 1) + td(e.h1) + td(e.h2) + td(Math.round((e.h1 + e.h2) * 10) / 10, 1) + '</tr>'; }).join('') +
+    '<tr><td><b>TOTAL</b></td>' + vide(4) + td(sT.perm, 1) + vide(3) + td(sT.vac, 1) + td(sT.perm + sT.vac, 1) + td(Math.round(sT.h1 * 10) / 10, 1) + td(Math.round(sT.h2 * 10) / 10, 1) + td(Math.round((sT.h1 + sT.h2) * 10) / 10, 1) + '</tr></table>' +
+    '<p class="note">Effectifs issus de la liste des enseignants actifs ; masse horaire hebdomadaire issue de l\'emploi du temps. Répartition par diplôme (Maîtrise, Licence…) à compléter.</p>';
+
+  // VI. Nationalités
+  var N = d.nat, NIV = [['6E', '6ème'], ['5E', '5ème'], ['4E', '4ème'], ['3E', '3ème']], NIV2 = [['2NDE', '2nde'], ['1ERE', '1ère'], ['TLE', 'Tle']];
+  var ligneNat = function(lib, niveaux, gras) {
+    var f = function(cat, sx) { return niveaux.reduce(function(t, n) { return t + N[n][cat][sx]; }, 0); };
+    return '<tr><td style="text-align:left">' + (gras ? '<b>' + lib + '</b>' : lib) + '</td>' + td(f('IV', 'G'), gras) + td(f('IV', 'F'), gras) + td(f('AF', 'G'), gras) + td(f('AF', 'F'), gras) + td(f('NA', 'G'), gras) + td(f('NA', 'F'), gras) +
+      td(f('IV', 'G') + f('AF', 'G') + f('NA', 'G'), 1) + td(f('IV', 'F') + f('AF', 'F') + f('NA', 'F'), 1) + '</tr>';
+  };
+  h += '<h2>VI. RÉCAPITULATIF DES ÉLÈVES PAR NATIONALITÉ</h2><table><tr>' + th('NIVEAU', 0, 2) + th('IVOIRIENS', 2) + th('ÉTRANGERS AFRICAINS', 2) + th('ÉTRANGERS NON AFRICAINS', 2) + th('NOMBRE TOTAL ÉLÈVES', 2) + '</tr><tr>' + '<th>Garçons</th><th>Filles</th>'.repeat(4) + '</tr>' +
+    NIV.map(function(n) { return ligneNat(n[1], [n[0]]); }).join('') + ligneNat('Total 1er cycle', ['6E', '5E', '4E', '3E'], true) +
+    NIV2.map(function(n) { return ligneNat(n[1], [n[0]]); }).join('') + ligneNat('Total 2nd cycle', ['2NDE', '1ERE', 'TLE'], true) +
+    ligneNat('TOTAL GÉNÉRAL', ['6E', '5E', '4E', '3E', '2NDE', '1ERE', 'TLE'], true) + '</table>';
+  var ndNat = Object.keys(N).reduce(function(t, n) { return t + N[n].ND; }, 0);
+  if (ndNat) h += '<p class="note">' + ndNat + ' élève(s) dont la nationalité ou le sexe n\'est pas encore renseigné ne figurent pas dans ce tableau.</p>';
+
+  // VII. Examens (saisie)
+  var gf = '<th>Garçons</th><th>Filles</th>';
+  h += '<h2>VII. A/ RÉSULTATS AUX EXAMENS (année précédente)</h2><table><tr>' + th('', 0, 3) + th('NOMBRE DE CANDIDATS', 4) + th('NOMBRE D\'ADMIS', 4) + th('% D\'ADMIS', 4) + '</tr><tr>' +
+    (th('IVOIRIENS', 2) + th('ÉTRANGERS', 2)).repeat(3) + '</tr><tr>' + gf.repeat(6) + '</tr>' +
+    ['BEPC', 'BAC A', 'BAC C', 'BAC D', 'BAC (A+C+D)'].map(function(x) { return '<tr><td><b>' + x + '</b></td>' + vide(12) + '</tr>'; }).join('') + '</table>';
+  h += '<h2>VII. B/ RÉSULTATS AUX EXAMENS</h2><p><b>BAC</b></p><table><tr>' + th('SÉRIE') + th('INSCRITS') + th('PRÉSENTS') + th('ABSENTS') + th('ADMIS') + th('% ADMIS') + '</tr>' +
+    ['A', 'C', 'D', 'TOTAL'].map(function(x) { return '<tr><td><b>' + x + '</b></td>' + vide(5) + '</tr>'; }).join('') + '</table>' +
+    '<p><b>BEPC</b></p><table><tr>' + th('INSCRITS') + th('PRÉSENTS') + th('ABSENTS') + th('ADMIS') + th('% ADMIS') + '</tr><tr>' + vide(5) + '</tr></table>';
+
+  // VIII. Comparatif N-1 / N
+  var PR = d.precedente;
+  h += '<h2>VIII. ÉTAT COMPARATIF DES EFFECTIFS DES ÉLÈVES ET DES PYRAMIDES</h2><table>' + entetePyr;
+  if (PR) {
+    h += '<tr><td style="text-align:left"><b>2025-2026</b> — Nombre de classes</td>' + lignePyr(function(c) { return PR[c].nbClasses; }) + '</tr>' +
+         '<tr><td style="text-align:left">2025-2026 — Effectif / niveau</td>' + lignePyr(function(c) { return PR[c].T; }) + '</tr>';
+  } else {
+    h += '<tr><td style="text-align:left"><b>2025-2026</b> — Nombre de classes</td>' + vide(18) + '</tr><tr><td style="text-align:left">2025-2026 — Effectif / niveau</td>' + vide(18) + '</tr>';
+  }
+  h += '<tr><td style="text-align:left"><b>2026-2027</b> — Nombre de classes</td>' + lignePyr(function(c) { return P[c].nbClasses; }) + '</tr>' +
+       '<tr><td style="text-align:left">2026-2027 — Effectif / niveau</td>' + lignePyr(function(c) { return P[c].T; }) + '</tr>';
+  if (PR) h += '<tr><td style="text-align:left"><b>ÉCART</b> — Nombre de classes</td>' + lignePyr(function(c) { return P[c].nbClasses - PR[c].nbClasses; }) + '</tr>' +
+               '<tr><td style="text-align:left"><b>ÉCART</b> — Effectif / niveau</td>' + lignePyr(function(c) { return P[c].T - PR[c].T; }) + '</tr>';
+  else h += '<tr><td style="text-align:left"><b>ÉCART</b></td>' + vide(18) + '</tr>';
+  h += '</table>';
+
+  h += '<h2>CONCLUSION</h2><p class="saisie">[À rédiger par le Directeur des Études]</p>' +
+       '<p style="text-align:right;margin-top:30pt"><b>Le Directeur des Études</b><br><br><br>(Cachet et signature)</p>' +
+       '<p class="note" style="margin-top:20pt">Document généré par Princes Smart School le ' + new Date().toLocaleDateString('fr-FR') + '.</p></div></body></html>';
+  return h;
+}
+function _rrU_(x) { return String(x || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trim(); }
 
 // ══ ENSEIGNANTS BLOQUÉS (appel hors zone) — Directeur ══
 function _escHtmlBloq(s) {
