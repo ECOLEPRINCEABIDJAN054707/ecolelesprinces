@@ -1762,7 +1762,7 @@ async function publierCahier() {
       devoir:document.getElementById('cahierDevoir').value.trim(),
      dateRemise:document.getElementById('cahierDateRemise').value||'',
       docs:document.getElementById('cahierDocs').value.trim(),
-      obs:(document.getElementById('cahierObs').value.trim() + (gpsStatut && gpsStatut !== 'GPS_OK' && gpsStatut !== 'GPS_IMPRECIS' ? ' [GPS : ' + gpsStatut + ']' : '')).trim(),
+      obs:document.getElementById('cahierObs').value.trim(),
       horodatageAppel:coursActuel?.horodatageAppel||'',
       horodatagePubli, heureDebutEDT:coursActuel?.heureDebutEDT||'',
       heureFinEDT:coursActuel?.heureFinEDT||'',
@@ -1777,7 +1777,6 @@ async function publierCahier() {
       window._cahierEnvoi = false;
       hideLoader();
       let msg = `📝 Cours publié — ${calcul.heuresValidees}h — ${(calcul.salaire||0).toLocaleString('fr-FR')} F CFA`;
-      if (gpsStatut === 'GPS_REFUSE' || gpsStatut === 'GPS_INDISPONIBLE' || gpsStatut === 'GPS_NON_DISPO') msg += ' · 📍 sans GPS (signalé à la direction)';
       if (calcul.heuresAttente > 0) msg += ` | ${calcul.resteMin}min → DIRECTION`;
       showToast(msg, calcul.heuresAttente > 0 ? 'warn' : 'success');
       resetCahier();
@@ -1799,28 +1798,20 @@ async function publierCahier() {
     });
   }
 
-  // ── Localisation : 2 essais (précis puis approximatif), puis publication même sans GPS ──
-  // (le cours n'est plus bloqué : le statut GPS est tracé dans l'observation du cahier)
-  const essaiGPS = (opts) => new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, opts));
-  (async () => {
-    if (!navigator.geolocation) { finaliser(null, null, null, 'GPS_NON_DISPO'); return; }
-    showLoader('Localisation en cours...');
-    let refuse = false;
-    try {
-      const pos = await essaiGPS({ enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+  if (!navigator.geolocation) { finaliser(null, null, null, 'GPS_NON_DISPO'); return; }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      fermerGPS();
       const acc = Math.round(pos.coords.accuracy);
       finaliser(pos.coords.latitude, pos.coords.longitude, acc, acc > 150 ? 'GPS_IMPRECIS' : 'GPS_OK');
-      return;
-    } catch (e1) { refuse = !!(e1 && e1.code === 1); }
-    if (!refuse) {
-      try {
-        const pos2 = await essaiGPS({ enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 });
-        finaliser(pos2.coords.latitude, pos2.coords.longitude, Math.round(pos2.coords.accuracy), 'GPS_IMPRECIS');
-        return;
-      } catch (e2) {}
-    }
-    finaliser(null, null, null, refuse ? 'GPS_REFUSE' : 'GPS_INDISPONIBLE');
-  })();
+    },
+    err => {
+      hideLoader();
+      if (err.code === 1) afficherGPS('GPS_REFUSE');
+      else afficherGPS('GPS_INDISPONIBLE');
+    },
+    {enableHighAccuracy:true, timeout:15000, maximumAge:0}
+  );
 }
 
 function resetCahier() {
