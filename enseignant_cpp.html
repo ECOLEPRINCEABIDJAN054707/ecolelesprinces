@@ -724,7 +724,8 @@ const ECOLES_TECH = ['CPP PRO','CPP TECH','ETL PRINCES KOUIBLY'];
 const TARIFS = {
   'CPP LES PRINCES':    {college:1200,lycee:1500},
   'CPP PRO':            {college:1200,lycee:1500},
-  'CPP TECH':           {college:1200,lycee:1500}
+  'CPP TECH':           {college:1200,lycee:1500},
+  'GS RITA ROSANE':     {college:1200,lycee:1200}
 };
 const TARIF_DEFAUT = {college:1000,lycee:1200};
 
@@ -1247,7 +1248,17 @@ if (statut.indexOf('VALID') !== -1) {
   coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures, salaire, statut: '✅' });
 } else if (statut === 'EN ATTENTE') {
           nbAttente++;
-          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures, salaire:0, statut: '⏰' });
+          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures, salaire:0, statut: '⏰ en attente Directeur' });
+        } else if (statut === 'EN COURS') {
+          nbAttente++;
+          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures:0, salaire:0, statut: '📝 cahier non publié' });
+        } else if (statut.indexOf('VOIR DIRECTION') !== -1) {
+          nbAttente++;
+          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures:0, salaire:0, statut: '👁 à voir avec le Directeur' });
+        } else if (statut.indexOf('REJET') !== -1) {
+          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures:0, salaire:0, statut: '❌ rejeté' });
+        } else if (statut.indexOf('PRÉSENCE') !== -1 || statut.indexOf('PRESENCE') !== -1) {
+          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures, salaire:0, statut: '✅ présence (salaire fixe)' });
         }
       });
     }
@@ -1292,7 +1303,7 @@ function afficherBilan(nbCours, totalH, totalS, nbAttente, coursDetails) {
   document.getElementById('bilanHeures').textContent = h + 'h' + String(m).padStart(2,'0');
   document.getElementById('bilanSalaire').textContent = totalS.toLocaleString('fr-FR') + ' F CFA';
   document.getElementById('bilanAttenteZone').innerHTML = nbAttente > 0
-    ? `<span class="badge badge-amber">⏰ ${nbAttente} cours en attente validation</span>`
+    ? `<span class="badge badge-amber">⏰ ${nbAttente} cours non validé(s) — voir le détail ci-dessous</span>`
     : (nbCours > 0 ? `<span class="badge badge-green">✅ Tous les cours validés</span>` : '');
 
   // Historique des cours
@@ -1302,6 +1313,8 @@ function afficherBilan(nbCours, totalH, totalS, nbAttente, coursDetails) {
     zone.innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px;font-size:13px">Aucun cours enregistré ce mois</p>';
     return;
   }
+  const _cle = d => { const p = String(d||'').split('/'); return p.length === 3 ? p[2] + p[1] + p[0] : String(d||''); };
+  coursDetails.sort((a, b) => _cle(b.date) < _cle(a.date) ? -1 : 1);
   zone.innerHTML = coursDetails.map(c => `
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
       <div>
@@ -1346,33 +1359,36 @@ function initOngletsTrimestre() {
 // CALCUL SALAIRE
 // ══════════════════════════════════════════════
 function calculerSalaireRobuste(heureAppel, heurePublication, heureDebutEDT, heureFinEDT, ecole, classe) {
-  const TOLERANCE_DEBUT = 5, TOLERANCE_FIN = 10, SEUIL_ATTENTE = 50;
-  const minAppel = parseMin(heureAppel);
-  const minPubli = parseMin(heurePublication);
-  const minDebutEDT = parseMin(heureDebutEDT);
-  const minFinEDT = parseMin(heureFinEDT);
-  if (minAppel === null || minDebutEDT === null || minFinEDT === null) {
+  // Règle réseau (29/09/2026) : chaque créneau de l'EDT = 1 h payée s'il est fait en entier (tolérance 10 min).
+  // Estimation côté téléphone : le bloc EDT est découpé en créneaux d'environ 55 min ; le serveur fait le calcul exact.
+  const TOLERANCE_DEBUT = 5, TOL = 10, SEUIL_ATTENTE = 15;
+  const minAppel = parseMin(heureAppel), minPubli = parseMin(heurePublication);
+  const minDebutEDT = parseMin(heureDebutEDT), minFinEDT = parseMin(heureFinEDT);
+  if (minAppel === null || minDebutEDT === null || minFinEDT === null || minFinEDT <= minDebutEDT) {
     return {heuresValidees:0,heuresAttente:0,salaire:0,statut:'ERREUR',detail:'données manquantes'};
   }
   const debutRetenu = Math.max(minAppel, minDebutEDT - TOLERANCE_DEBUT);
-  const finRetenueMax = minFinEDT + TOLERANCE_FIN;
-  const finRetenue = minPubli !== null ? Math.min(minPubli, finRetenueMax) : minFinEDT;
-  const dureeEDT = minFinEDT - minDebutEDT;
-  const dureeReelle = Math.max(0, finRetenue - debutRetenu);
-  const duree = Math.min(dureeReelle, dureeEDT);
-  if (duree <= 0) return {heuresValidees:0,heuresAttente:0,salaire:0,statut:'VOIR DIRECTION',debutRetenu:minStr(debutRetenu),finRetenue:minStr(finRetenue),dureeMin:0};
+  const finRetenue = minPubli !== null ? Math.min(minPubli, minFinEDT + TOL) : minFinEDT;
+  const dureeMin = Math.max(0, Math.min(finRetenue, minFinEDT) - debutRetenu);
+  if (user && user.niveau === 'primaire') {
+    return {heuresValidees:0,heuresAttente:0,salaire:0,tarif:0,dureeMin,debutRetenu:minStr(debutRetenu),finRetenue:minStr(finRetenue),resteMin:0,
+            statut:'PRESENCE',detail:'Présence enregistrée — salaire fixe', primaire:true};
+  }
+  const nb = Math.max(1, Math.round((minFinEDT - minDebutEDT) / 57)), pas = (minFinEDT - minDebutEDT) / nb;
+  let payes = 0, enAttente = 0, resteMin = 0;
+  for (let k = 0; k < nb; k++) {
+    const a = Math.round(minDebutEDT + k * pas), b = Math.round(minDebutEDT + (k + 1) * pas);
+    const present = Math.max(0, Math.min(b, finRetenue) - Math.max(a, debutRetenu));
+    if (present >= (b - a) - TOL) payes++;
+    else if (present >= SEUIL_ATTENTE) { enAttente++; resteMin = present; }
+  }
   const tarif = getTarif(ecole||'', classe||'');
-  const heuresCompletes = Math.floor(duree/60);
-  const resteMin = duree % 60;
-  let heuresValidees = heuresCompletes, heuresAttente = 0;
-  if (resteMin >= SEUIL_ATTENTE) heuresValidees += 1;
-  else if (resteMin > 0) heuresAttente = 1;
-  const salaire = heuresValidees * tarif;
+  const salaire = payes * tarif;
   return {
-    heuresValidees, heuresAttente, salaire, tarif, dureeMin: duree,
-    debutRetenu: minStr(debutRetenu), finRetenue: minStr(finRetenue), resteMin,
-    statut: heuresAttente > 0 ? 'EN ATTENTE' : 'VALIDE',
-    detail: `${minStr(duree)}·${heuresValidees}h×${tarif}F=${salaire}F`
+    heuresValidees: payes, heuresAttente: enAttente, salaire, tarif, dureeMin,
+    debutRetenu: minStr(debutRetenu), finRetenue: minStr(finRetenue), resteMin, nbCreneaux: nb,
+    statut: payes > 0 ? 'VALIDE' : (enAttente > 0 ? 'EN ATTENTE' : 'VOIR DIRECTION'),
+    detail: `${payes}/${nb} créneau(x)·${payes}h×${tarif}F=${salaire}F`
   };
 }
 
@@ -1688,7 +1704,7 @@ function afficherEstimAppel(calcul, horodatage) {
   const atRow = document.getElementById('ca_attenteRow');
   if (calcul.heuresAttente > 0 && calcul.resteMin > 0) {
     atRow.style.display = 'block';
-    atRow.textContent = `⏰ ${calcul.resteMin} min < 50 min → soumis à la direction`;
+    atRow.textContent = `⏰ 1 créneau incomplet (${calcul.resteMin} min faites) → soumis au Directeur`;
   } else atRow.style.display = 'none';
 }
 
@@ -1703,7 +1719,7 @@ function afficherEstimCahier() {
   const att = document.getElementById('cc_attente');
   if (calcul.heuresAttente > 0 && calcul.resteMin > 0) {
     att.style.display = 'block';
-    att.textContent = `⏰ ${calcul.resteMin} min < 50 min → soumis à la direction`;
+    att.textContent = `⏰ 1 créneau incomplet (${calcul.resteMin} min faites) → soumis au Directeur`;
   } else att.style.display = 'none';
 }
 
@@ -1741,7 +1757,7 @@ async function publierCahier() {
       if (minFin !== null) txt += 'Fin prévue : ' + coursActuel.heureFinEDT + (resteAvantFin > 0 ? ' (dans ' + resteAvantFin + ' min)' : '') + '\n';
       txt += 'Durée comptée si vous publiez maintenant : ' + (estim.dureeMin ? minStr(estim.dureeMin) : '0 min') + '\n';
       txt += 'Montant : ' + (estim.salaire || 0).toLocaleString('fr-FR') + ' F CFA';
-      if (nonPaye) txt += ' → cours NON PAYÉ (moins de 50 min), transmis au Directeur';
+      if (nonPaye) txt += ' → aucun créneau complet : cours NON PAYÉ automatiquement, transmis au Directeur';
       txt += '\n\nLe cahier de textes se publie à la FIN du cours.\n\nOK = publier quand même\nAnnuler = revenir et publier plus tard';
       if (!confirm(txt)) return;
     }
@@ -1780,7 +1796,8 @@ async function publierCahier() {
       hideLoader();
       let msg = `📝 Cours publié — ${calcul.heuresValidees}h — ${(calcul.salaire||0).toLocaleString('fr-FR')} F CFA`;
       if (gpsStatut === 'GPS_REFUSE' || gpsStatut === 'GPS_INDISPONIBLE' || gpsStatut === 'GPS_NON_DISPO') msg += ' · 📍 sans GPS (signalé à la direction)';
-      if (calcul.heuresAttente > 0) msg += ` | ${calcul.resteMin}min → DIRECTION`;
+      if (calcul.heuresAttente > 0) msg += ` | ${calcul.heuresAttente} créneau(x) incomplet(s) → DIRECTEUR`;
+      if (calcul.primaire) msg = '📝 Cours publié — présence enregistrée (salaire fixe)';
       showToast(msg, calcul.heuresAttente > 0 ? 'warn' : 'success');
       resetCahier();
       coursActuel = null;
