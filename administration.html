@@ -575,6 +575,20 @@ table tr:nth-child(even){background:#F8FAFD}
     <div id="dirCPZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Choisissez une classe.</p></div>
   </div>
 </div>
+  <div class="section" id="dirSecPointPaie">
+  <div class="sec-head sec-vert" onclick="toggleSec(this); chargerPointPaie('dir', true)">
+    <h3>💰 Point de paie des enseignants — jour et mois de paie</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirPPBody">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <label style="font-size:0.82em;font-weight:600">Jour :</label>
+      <input type="date" id="dirPPDate" onchange="chargerPointPaie('dir')" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em">
+      <button onclick="chargerPointPaie('dir')" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
+      <button onclick="imprimerPointPaie('dir')" style="padding:7px 12px;background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ PDF</button>
+    </div>
+    <div id="dirPPZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
+  </div>
+</div>
   <div class="section" id="dirSecListesStats">
   <div class="sec-head sec-bleu" onclick="toggleSec(this); chargerListeStats('dirLS', true)">
     <h3>📋 Listes et statistiques</h3><span class="arr">▼</span>
@@ -2735,6 +2749,20 @@ async function sauvegarderPersonnelDir(idx) {
     </div>
     <div class="sec-body" id="fondSoldesBody"></div>
   </div>
+  <div class="section" id="fondSecPointPaie">
+  <div class="sec-head sec-vert" onclick="toggleSec(this); chargerPointPaie('fond', true)">
+    <h3>💰 Point de paie du réseau — jour et mois de paie</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="fondPPBody">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <label style="font-size:0.82em;font-weight:600">Jour :</label>
+      <input type="date" id="fondPPDate" onchange="chargerPointPaie('fond')" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em">
+      <button onclick="chargerPointPaie('fond')" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
+      <button onclick="imprimerPointPaie('fond')" style="padding:7px 12px;background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ PDF</button>
+    </div>
+    <div id="fondPPZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
+  </div>
+</div>
   <div class="section" id="fondSecPermissions">
   <div class="sec-head sec-bleu open" onclick="toggleSec(this); chargerPermissionsFond()">
     <h3>📝 Demandes de permission des Directeurs <span id="fondPermCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -3508,6 +3536,20 @@ async function attribuerMatriculeCom() {
       <button onclick="enregistrerCompletudeClasse('comCP', this)" style="padding:8px 14px;background:#1e8449;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:700;cursor:pointer">💾 Enregistrer la classe</button>
     </div>
     <div id="comCPZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Choisissez une classe.</p></div>
+  </div>
+</div>
+  <div class="section" id="comSecPointPaie">
+  <div class="sec-head sec-vert" onclick="toggleSec(this); chargerPointPaie('com', true)">
+    <h3>💰 Point de paie des enseignants — jour et mois de paie</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="comPPBody">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <label style="font-size:0.82em;font-weight:600">Jour :</label>
+      <input type="date" id="comPPDate" onchange="chargerPointPaie('com')" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em">
+      <button onclick="chargerPointPaie('com')" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
+      <button onclick="imprimerPointPaie('com')" style="padding:7px 12px;background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ PDF</button>
+    </div>
+    <div id="comPPZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
   </div>
 </div>
   <div class="section" id="comSecListesStats">
@@ -8988,7 +9030,7 @@ async function chargerClassesEdu(s){
       const nc=norm(e.classe), ncl=norm(cl);
       return nc===ncl || nc.startsWith(ncl+' ') || nc.endsWith(' '+ncl) || ncl.startsWith(nc+' ') || nc===ncl.replace(/\s/g,'') || ncl===nc.replace(/\s/g,'');
     }));
-    if(elevesF.length===0&&classesEdu.length===0){
+    if(classesEdu.length===0){   // aucune classe assignée dans STAFF (colonne CLASSES) → ne jamais afficher toute l'école
       // Classes non configurées - afficher message
       container.innerHTML='<div style="padding:16px;background:#FFF3E0;border-radius:8px;margin:12px"><div style="font-size:0.84em;font-weight:700;color:var(--orange);margin-bottom:6px">Classes non configurees</div><div style="font-size:0.78em;color:#555;line-height:1.6">Demandez au directeur dajouter vos classes dans onglet EDUCATEURS du Google Sheets.<br>Colonne D : liste des classes separees par des virgules.<br>Exemple : 6EME 3,6EME 4,5EME 5,5EME 6</div></div>';
       return;
@@ -11962,7 +12004,7 @@ function renderMessages(data,bodyId,canReply){
   if(!data.length){body.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun message</p>';return;}
   const msgs=data.filter(m=>m.message);const connexions=data.filter(m=>m.statut==='CONNEXION'&&!m.message);
   let h='';if(connexions.length)h+='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">'+connexions.length+' connexion(s) parent recente(s)</div>';
-  if(msgs.length){msgs.forEach((m,i)=>{const nonLu=!m.reponse;const repId='rep-msg-'+i;h+='<div style="padding:12px 16px;border-bottom:1px solid var(--border);background:'+(nonLu?'#FFF8E1':'#fff')+'"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><div style="font-size:0.82em;font-weight:700">'+m.nom+' <span style="font-size:0.8em;color:var(--gris)">· '+m.classe+'</span></div><div style="font-size:0.7em;color:var(--gris)">'+m.date+(nonLu?' <span style="color:var(--orange);font-weight:700">Non lu</span>':'')+'</div></div><div style="font-size:0.8em;margin-bottom:6px">'+m.message+'</div>';if(m.reponse){h+='<div style="background:#E8F5E9;border-radius:6px;padding:6px 10px;font-size:0.76em;color:var(--vert)">Reponse: '+m.reponse+'</div>';}else if(canReply){h+='<div style="display:flex;gap:6px;margin-top:6px"><input id="'+repId+'" type="text" placeholder="Votre reponse..." style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;outline:none"><button onclick="envoyerReponse(this)" data-mat="'+m.matricule+'" data-id="'+(m.idMessage||'')+'" data-rep="'+repId+'" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">Repondre</button></div>';}h+='</div>';});}
+  if(msgs.length){msgs.forEach((m,i)=>{const nonLu=!m.reponse;const repId='rep-msg-'+i;h+='<div style="padding:12px 16px;border-bottom:1px solid var(--border);background:'+(nonLu?'#FFF8E1':'#fff')+'"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><div style="font-size:0.82em;font-weight:700">'+m.nom+' <span style="font-size:0.8em;color:var(--gris)">· '+m.classe+'</span></div><div style="font-size:0.7em;color:var(--gris)">'+fmtDateMsg(m.date)+(nonLu?' <span style="color:var(--orange);font-weight:700">Non lu</span>':'')+'</div></div><div style="font-size:0.8em;margin-bottom:6px">'+m.message+'</div>';if(m.reponse){h+='<div style="background:#E8F5E9;border-radius:6px;padding:6px 10px;font-size:0.76em;color:var(--vert)">Reponse: '+m.reponse+'</div>';}else if(canReply){h+='<div style="display:flex;gap:6px;margin-top:6px"><input id="'+repId+'" type="text" placeholder="Votre reponse..." style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;outline:none"><button onclick="envoyerReponse(this)" data-mat="'+m.matricule+'" data-id="'+(m.idMessage||'')+'" data-rep="'+repId+'" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">Repondre</button></div>';}h+='</div>';});}
   else if(!connexions.length)h='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun message parent</p>';
   body.innerHTML=h;
 }
@@ -18074,6 +18116,73 @@ async function annRetirer(esp,id){
   showToast(r.ok?r.message:(r.error||'Erreur'),r.ok?'success':'error');annLister(esp);
 }
 
+
+// Date des messages parents : la feuille enregistre parfois « 01/10/2026 » comme un nombre de série
+// lu à l'américaine (mois/jour) → on reconvertit et on remet jour/mois dans le bon ordre.
+function fmtDateMsg(v){
+  var s=String(v==null?'':v).trim();
+  if(!/^\d{5}(\.\d+)?$/.test(s)) return s;
+  var n=parseFloat(s), ms=Math.round((n-25569)*86400000), d=new Date(ms);
+  if(isNaN(d.getTime())) return s;
+  var p=function(x){return String(x).padStart(2,'0');};
+  var jour=d.getUTCMonth()+1, mois=d.getUTCDate();          // inversion jour/mois
+  if(mois>12){ jour=d.getUTCDate(); mois=d.getUTCMonth()+1; } // pas d'inversion possible
+  return p(jour)+'/'+p(mois)+'/'+d.getUTCFullYear()+' '+p(d.getUTCHours())+':'+p(d.getUTCMinutes());
+}
+
+// ══ POINT DE PAIE (jour + mois de paie) — Directeur, Comptable, Fondateur ══
+function _ppF(n){ return Math.round(Number(n)||0).toLocaleString('fr-FR'); }
+function _ppH(n){ return (Math.round((Number(n)||0)*10)/10).toLocaleString('fr-FR'); }
+function _ppTable(titre, bloc){
+  var th='style="padding:6px 8px;background:var(--bleu);color:#fff;font-size:0.75em;text-align:left"', td='style="padding:5px 8px;border-bottom:1px solid var(--border);font-size:0.78em"';
+  var h='<div style="font-weight:700;color:var(--bleu);margin:12px 0 6px;font-size:0.9em">'+titre+'</div>';
+  if(!bloc||!bloc.profs||!bloc.profs.length) return h+'<p style="font-size:0.8em;color:var(--gris)">Aucun cours enregistré.</p>';
+  h+='<table style="width:100%;border-collapse:collapse"><tr><th '+th+'>Enseignant</th><th '+th+'>Cours</th><th '+th+'>Heures validées</th><th '+th+'>Montant</th><th '+th+'>⏰ En attente</th><th '+th+'>📝 Sans cahier</th></tr>';
+  bloc.profs.forEach(function(p){ h+='<tr><td '+td+'>'+p.nom+'</td><td '+td+'>'+p.cours+'</td><td '+td+'>'+_ppH(p.heures)+' h</td><td '+td+'><b>'+_ppF(p.montant)+' F</b></td><td '+td+'>'+(p.attente||'')+'</td><td '+td+'>'+(p.sansCahier||'')+'</td></tr>'; });
+  var t=bloc.total; h+='<tr style="background:#E8F5E9;font-weight:700"><td '+td+'>TOTAL</td><td '+td+'>'+t.cours+'</td><td '+td+'>'+_ppH(t.heures)+' h</td><td '+td+'>'+_ppF(t.montant)+' F</td><td '+td+'>'+(t.attente||0)+'</td><td '+td+'>'+(t.sansCahier||0)+'</td></tr></table>';
+  return h;
+}
+function _ppEcoleHtml(r){
+  var per=r.periode, pt=r.point||{};
+  var h='<div style="background:#FFF8E1;border-radius:8px;padding:8px 12px;font-size:0.8em;margin-top:4px">📅 Mois de paie : <b>'+(per?per.libelle+'</b> (du '+per.debut+' au '+per.fin+')':'—</b>')+'</div>';
+  h+=_ppTable('📅 Point du jour — '+r.date, pt.jour);
+  h+=_ppTable('📊 Point du mois de paie — '+(per?per.libelle:''), pt.mois);
+  if(pt.mois&&pt.mois.total&&(pt.mois.total.attente||pt.mois.total.sansCahier))
+    h+='<p style="font-size:0.75em;color:var(--orange);margin-top:6px">⚠️ '+(pt.mois.total.attente||0)+' cours en attente et '+(pt.mois.total.sansCahier||0)+' cours sans cahier ce mois-ci : ils ne sont pas encore payés. Les cours en attente se valident dans « Cours en attente ».</p>';
+  return h;
+}
+async function chargerPointPaie(px, premier){
+  if(premier && window['_ppCharge_'+px]) return; window['_ppCharge_'+px]=true;
+  var inp=document.getElementById(px+'PPDate'), zone=document.getElementById(px+'PPZone');
+  if(!inp.value) inp.value=new Date().toISOString().slice(0,10);
+  var q=inp.value.split('-'), date=q[2]+'/'+q[1]+'/'+q[0];
+  zone.innerHTML='<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Calcul du point de paie…'+(px==='fond'?' (14 écoles, environ 20 secondes)':'')+'</p>';
+  try{
+    var r=await _appelPerm({type:'POINT_PAIE', ecole: px==='fond'?'RESEAU':currentStaff.ecole, date:date});
+    if(!r||!r.ok) throw new Error((r&&r.error)||'réponse vide');
+    if(px!=='fond'){ zone.innerHTML=_ppEcoleHtml(r); return; }
+    var per=r.periode, th='style="padding:6px 8px;background:var(--bleu);color:#fff;font-size:0.75em;text-align:left"', td='style="padding:5px 8px;border-bottom:1px solid var(--border);font-size:0.78em"';
+    var h='<div style="background:#FFF8E1;border-radius:8px;padding:8px 12px;font-size:0.8em;margin-top:4px">📅 Mois de paie : <b>'+(per?per.libelle+'</b> (du '+per.debut+' au '+per.fin+')':'—</b>')+' — jour : <b>'+r.date+'</b></div>';
+    h+='<table style="width:100%;border-collapse:collapse;margin-top:8px"><tr><th '+th+'>École</th><th '+th+'>Cours du jour</th><th '+th+'>Montant du jour</th><th '+th+'>Cours du mois</th><th '+th+'>Heures du mois</th><th '+th+'>Montant du mois</th><th '+th+'>⏰ Attente</th><th '+th+'>📝 Sans cahier</th></tr>';
+    (r.ecoles||[]).forEach(function(e){ if(e.erreur){ h+='<tr><td '+td+'>'+e.ecole+'</td><td '+td+' colspan="7">Erreur : '+e.erreur+'</td></tr>'; return; }
+      h+='<tr style="cursor:pointer" onclick="detailPointPaieFond(\''+e.ecole+'\')"><td '+td+'><u>'+e.ecole+'</u></td><td '+td+'>'+e.jour.cours+'</td><td '+td+'>'+_ppF(e.jour.montant)+' F</td><td '+td+'>'+e.mois.cours+'</td><td '+td+'>'+_ppH(e.mois.heures)+' h</td><td '+td+'><b>'+_ppF(e.mois.montant)+' F</b></td><td '+td+'>'+(e.mois.attente||'')+'</td><td '+td+'>'+(e.mois.sansCahier||'')+'</td></tr>'; });
+    var t=r.total; h+='<tr style="background:#E8F5E9;font-weight:700"><td '+td+'>RÉSEAU</td><td '+td+'>'+t.jour.cours+'</td><td '+td+'>'+_ppF(t.jour.montant)+' F</td><td '+td+'>'+t.mois.cours+'</td><td '+td+'>'+_ppH(t.mois.heures)+' h</td><td '+td+'>'+_ppF(t.mois.montant)+' F</td><td '+td+'>'+t.mois.attente+'</td><td '+td+'>'+t.mois.sansCahier+'</td></tr></table>';
+    h+='<p style="font-size:0.72em;color:var(--gris);margin-top:4px">Touchez une école pour voir le détail par enseignant.</p><div id="fondPPDetail"></div>';
+    zone.innerHTML=h;
+  }catch(err){ zone.innerHTML='<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur : '+err.message+'. Vérifiez que le serveur a été redéployé.</p>'; }
+}
+async function detailPointPaieFond(ecole){
+  var d=document.getElementById('fondPPDetail'), q=document.getElementById('fondPPDate').value.split('-');
+  d.innerHTML='<p style="padding:10px;color:var(--gris);font-size:0.8em">⏳ '+ecole+'…</p>';
+  try{ var r=await _appelPerm({type:'POINT_PAIE', ecole:ecole, date:q[2]+'/'+q[1]+'/'+q[0]});
+    d.innerHTML='<div style="margin-top:12px;border-top:2px solid var(--bleu);padding-top:8px"><b>'+ecole+'</b>'+_ppEcoleHtml(r)+'</div>';
+  }catch(err){ d.innerHTML='<p style="color:var(--rouge);font-size:0.8em">Erreur : '+err.message+'</p>'; }
+}
+function imprimerPointPaie(px){
+  var z=document.getElementById(px+'PPZone'), w=window.open('','_blank');
+  w.document.write('<html><head><title>Point de paie</title><style>body{font-family:Arial,sans-serif;font-size:12px;padding:16px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:4px 6px;text-align:left}th{background:#1F4E79;color:#fff}</style></head><body><h2>Point de paie — '+(px==='fond'?'Réseau CPP Les Princes':(currentStaff.ecole||''))+'</h2>'+z.innerHTML+'</body></html>');
+  w.document.close(); setTimeout(function(){ w.print(); }, 400);
+}
 </script>
 </body>
 </html>
