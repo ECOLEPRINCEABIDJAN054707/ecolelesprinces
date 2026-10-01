@@ -321,6 +321,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
     <button class="quick-btn" onclick="goTo('bilan')"><div class="quick-icon">📊</div><div class="quick-label">Mon bilan</div><div class="quick-sub" id="bilanMoisLabel">—</div></button>
     <button class="quick-btn" onclick="goTo('moyennes')"><div class="quick-icon">📈</div><div class="quick-label">Moyennes</div><div class="quick-sub" id="moyennesSubLabel">—</div></button>
   </div>
+  <div id="accueilPointZone" style="padding:0 16px"></div>
   <div class="section-label" style="display:none">▶ Démarrer un cours</div>
  <div style="padding:0 16px 16px;display:none">
     <div class="card"><div class="card-body">
@@ -359,6 +360,8 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
     <div class="bilan-card"><div class="bilan-val" id="bilanHeures">—</div><div class="bilan-label">Heures validées</div></div>
   </div>
   <div class="bilan-salaire"><div class="bilan-sal-label">💰 Salaire acquis ce mois</div><div class="bilan-sal-val" id="bilanSalaire">—</div></div>
+  <div style="padding:0 16px;margin-bottom:12px" id="bilanJourZone"></div>
+  <div style="padding:0 16px;margin-bottom:12px"><select class="select" id="bilanMoisSelect" onchange="chargerBilan()"></select></div>
   <div style="padding:0 16px;text-align:center;margin-bottom:16px" id="bilanAttenteZone"></div>
   <!-- Historique cours du mois -->
   <div style="padding:0 16px 16px">
@@ -1220,24 +1223,49 @@ function signalerProblemeEDT() {
 // ══════════════════════════════════════════════
 async function chargerBilan() {
   if (!user) return;
-  const moisCode = getMoisCode();
-  document.getElementById('bilanMoisTitre').textContent = getMoisLabel();
+  const selM = document.getElementById('bilanMoisSelect');
+  const perAuj = periodePaie(formatDate(new Date())) || CAL_PAIE[0];
+  if (selM && !selM.options.length) {
+    CAL_PAIE.filter(c => _cleDate(c[1]) <= _cleDate(perAuj[1])).reverse().forEach(c => {
+      const o = document.createElement('option'); o.value = c[0];
+      o.textContent = (c[0] === perAuj[0] ? 'Mois en cours : ' : '') + c[3] + ' (du ' + c[1].slice(0, 5) + ' au ' + c[2].slice(0, 5) + ')';
+      selM.appendChild(o);
+    });
+  }
+  const moisCode = (selM && selM.value) || perAuj[0];
+  const perSel = CAL_PAIE.filter(c => c[0] === moisCode)[0] || perAuj;
+  document.getElementById('bilanMoisTitre').textContent = perSel[3] + ' — du ' + perSel[1] + ' au ' + perSel[2];
+  document.getElementById('bilanMoisLabel').textContent = perAuj[3];
   try {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${getIdEcole(user.ecole, '2026-2027')}/values/POINTAGE_MENSUEL!A2:L2000?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${getIdEcole(user.ecole, '2026-2027')}/values/POINTAGE_MENSUEL!A2:L?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     let totalH = 0, totalS = 0, nbCours = 0, nbAttente = 0;
     const coursDetails = [];
     const nomEns = user.nom.toUpperCase().trim();
+    const aujourdhui = formatDate(new Date());
+    const jour = { n: 0, h: 0, s: 0, enCours: 0, attente: 0, liste: [] };
 
     if (data.values) {
       data.values.forEach(row => {
         if (!row || row.length < 5) return;
         const ens = (row[4] || '').toString().trim().toUpperCase();
         if (ens !== nomEns) return;
+        const dTxt = dateTexte(row[0]);
+        if (dTxt === aujourdhui) {
+          const stJ = (row[9] || '').toString().trim().toUpperCase();
+          jour.n++;
+          let etat = '⏰ en attente';
+          if (stJ.indexOf('VALID') !== -1) { jour.h += safeFloat(row[8]); jour.s += safeFloat(row[11]); etat = '✅ ' + safeFloat(row[8]) + 'h — ' + safeFloat(row[11]).toLocaleString('fr-FR') + ' F'; }
+          else if (stJ === 'EN COURS') { jour.enCours++; etat = '📝 cahier à publier'; }
+          else if (stJ.indexOf('PRESENCE') !== -1 || stJ.indexOf('PRÉSENCE') !== -1) etat = '✅ présence';
+          else jour.attente++;
+          jour.liste.push('<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px dashed var(--border)"><span>' + esc(row[1] || '') + ' · ' + esc(row[2] || '') + ' · ' + esc(row[3] || '') + '</span><span>' + etat + '</span></div>');
+        }
         // FIX : conversion robuste de la date
-        const moisRow = serielVersMois(row[6]);
+        const perRow = periodePaie(dTxt);
+        const moisRow = perRow ? perRow[0] : serielVersMois(row[6]);
         if (moisRow !== moisCode) return;
         const statut = (row[9] || '').toString().trim().toUpperCase();
         // FIX : safeFloat évite les NaN
@@ -1245,28 +1273,65 @@ async function chargerBilan() {
         const salaire = safeFloat(row[11]);
 if (statut.indexOf('VALID') !== -1) {
   totalH += heures; totalS += salaire; nbCours++;
-  coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures, salaire, statut: '✅' });
+  coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: dTxt||'—', heures, salaire, statut: '✅' });
 } else if (statut === 'EN ATTENTE') {
           nbAttente++;
-          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures, salaire:0, statut: '⏰ en attente Directeur' });
+          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: dTxt||'—', heures, salaire:0, statut: '⏰ en attente Directeur' });
         } else if (statut === 'EN COURS') {
           nbAttente++;
-          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures:0, salaire:0, statut: '📝 cahier non publié' });
+          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: dTxt||'—', heures:0, salaire:0, statut: '📝 cahier non publié' });
         } else if (statut.indexOf('VOIR DIRECTION') !== -1) {
           nbAttente++;
-          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures:0, salaire:0, statut: '👁 à voir avec le Directeur' });
+          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: dTxt||'—', heures:0, salaire:0, statut: '👁 à voir avec le Directeur' });
         } else if (statut.indexOf('REJET') !== -1) {
-          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures:0, salaire:0, statut: '❌ rejeté' });
+          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: dTxt||'—', heures:0, salaire:0, statut: '❌ rejeté' });
         } else if (statut.indexOf('PRÉSENCE') !== -1 || statut.indexOf('PRESENCE') !== -1) {
-          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: row[0]||'—', heures, salaire:0, statut: '✅ présence (salaire fixe)' });
+          coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: dTxt||'—', heures, salaire:0, statut: '✅ présence (salaire fixe)' });
         }
       });
     }
     afficherBilan(nbCours, totalH, totalS, nbAttente, coursDetails);
+    const za = document.getElementById('accueilPointZone');
+    if (za && moisCode === perAuj[0]) za.innerHTML = '<div onclick="goTo(\'bilan\')" style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:4px;box-shadow:var(--shadow-sm)">' +
+      '<div style="display:flex;justify-content:space-between;font-size:13px"><span>📅 <b>Aujourd\'hui</b> : ' + jour.n + ' cours</span><span style="font-weight:700;color:var(--green)">' + jour.s.toLocaleString('fr-FR') + ' F</span></div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span>📊 <b>' + perAuj[3] + '</b> : ' + nbCours + ' cours · ' + Math.round(totalH * 10) / 10 + ' h</span><span style="font-weight:700;color:var(--green)">' + totalS.toLocaleString('fr-FR') + ' F</span></div>' +
+      '<div style="font-size:10px;color:var(--text2);margin-top:4px">Mois de paie du ' + perAuj[1] + ' au ' + perAuj[2] + (nbAttente ? ' · ⏰ ' + nbAttente + ' cours non validé(s)' : '') + ' — toucher pour le détail</div></div>';
+    const zj = document.getElementById('bilanJourZone');
+    if (zj) zj.innerHTML = '<div class="card"><div class="card-title">📅 Aujourd\'hui — ' + aujourdhui + '</div><div class="card-body">' +
+      (jour.n ? '<div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:6px"><span>' + jour.n + ' cours</span><span style="color:var(--green)">' + jour.h + 'h · ' + jour.s.toLocaleString('fr-FR') + ' F</span></div>' + jour.liste.join('') +
+        (jour.enCours ? '<div style="font-size:11px;color:var(--amber);margin-top:6px">📝 ' + jour.enCours + ' cours sans cahier publié : publiez-le à la fin du cours pour être payé.</div>' : '')
+      : '<p style="font-size:13px;color:var(--text2);text-align:center">Aucun cours enregistré aujourd\'hui pour le moment.</p>') + '</div></div>';
   } catch(e) {
     console.warn('chargerBilan:', e);
     afficherBilan(0, 0, 0, 0, []);
   }
+}
+
+
+// ── Calendrier de paie 2026-2027 (décidé par le Fondateur) : [code, début, fin, libellé]
+// Un cours appartient au dernier mois de paie commencé (les jours de congé entre deux périodes restent dans la précédente).
+const CAL_PAIE = [
+  ['2026-09','01/09/2026','04/10/2026','Septembre 2026'], ['2026-10','05/10/2026','30/10/2026','Octobre 2026'],
+  ['2026-11','02/11/2026','27/11/2026','Novembre 2026'], ['2026-12','30/11/2026','18/12/2026','Décembre 2026'],
+  ['2027-01','04/01/2027','29/01/2027','Janvier 2027'],  ['2027-02','01/02/2027','26/02/2027','Février 2027'],
+  ['2027-03','01/03/2027','19/03/2027','Mars 2027'],     ['2027-04','05/04/2027','30/04/2027','Avril 2027'],
+  ['2027-05','03/05/2027','28/05/2027','Mai 2027'],      ['2027-06','31/05/2027','15/06/2027','Juin 2027']
+];
+function _cleDate(t) { const p = String(t || '').split('/'); return p.length === 3 ? p[2] + p[1].padStart(2, '0') + p[0].padStart(2, '0') : ''; }
+function periodePaie(dateTxt) {
+  const k = _cleDate(dateTxt); if (!k) return null;
+  let res = null; CAL_PAIE.forEach(c => { if (_cleDate(c[1]) <= k) res = c; }); return res;
+}
+
+// Date d'une ligne de pointage en texte JJ/MM/AAAA (texte ou numéro de série Sheets)
+function dateTexte(v) {
+  if (v === null || v === undefined || v === '') return '';
+  const n = parseFloat(v);
+  if (typeof v === 'number' || (/^\d{5}(\.\d+)?$/.test(String(v).trim()) && n > 40000)) {
+    const d = new Date(Math.round((n - 25569) * 86400000));
+    return String(d.getUTCDate()).padStart(2, '0') + '/' + String(d.getUTCMonth() + 1).padStart(2, '0') + '/' + d.getUTCFullYear();
+  }
+  return String(v).trim().slice(0, 10);
 }
 
 // CORRECTION ROBUSTE de la date numérique Sheets
