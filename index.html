@@ -215,10 +215,10 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
 <!-- SECTION PUBLIQUE INSCRIPTION 2026-2027 -->
 <div id="sectionPublique" style="display:none">
   <div style="background:#C62828;padding:10px 12px">
-    <div style="color:#fff;font-size:0.78em;font-weight:bold;text-align:center;margin-bottom:8px">🎓 INSCRIPTIONS 2026-2027 OUVERTES</div>
+    <div style="color:#fff;font-size:0.78em;font-weight:bold;text-align:center;margin-bottom:8px">💳 SCOLARITÉ 2026-2027 — PAIEMENT PAR WAVE</div>
     <a href="https://pay.wave.com/m/M_nIgf2a67TXMn/c/ci/" target="_blank" style="display:block;background:#1F9AE0;border-radius:10px;padding:13px;text-align:center;text-decoration:none;margin-bottom:6px">
       <div style="color:#fff;font-size:0.65em;margin-bottom:2px">ANNÉE SCOLAIRE 2026-2027</div>
-      <div style="color:#fff;font-size:0.92em;font-weight:bold;margin-bottom:2px">💙 INSCRIVEZ VOTRE ENFANT ICI</div>
+       <div style="color:#fff;font-size:0.92em;font-weight:bold;margin-bottom:2px">💙 PAYER LA SCOLARITÉ ICI</div>
       <div style="color:rgba(255,255,255,0.85);font-size:0.65em">PAYER VIA WAVE</div>
     </a>
     <div style="font-size:0.65em;color:rgba(255,255,255,0.85);text-align:center;margin-bottom:8px">
@@ -347,6 +347,8 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
           <div class="step"><div class="step-n" style="background:#1F6FEB;">6</div><p>Entrez votre <strong>Nom, Prenom</strong> et <strong>Contact</strong></p></div>
           <div class="step"><div class="step-n" style="background:#1F6FEB;">7</div><p>Entrez le <strong>montant</strong> que vous pouvez payer</p></div>
           <div class="step"><div class="step-n" style="background:#1F6FEB;">8</div><p>Confirmez avec votre <strong>code PIN</strong></p></div>
+                    <a href="https://pay.wave.com/m/M_nIgf2a67TXMn/c/ci/" target="_blank" rel="noopener" style="display:block;margin-top:12px;padding:13px;background:#1DC8FF;color:#fff;font-weight:800;font-size:0.95em;border-radius:24px;text-align:center;text-decoration:none;">💙 Payer maintenant avec Wave</a>
+          <p style="font-size:0.74em;color:#555;text-align:center;margin-top:6px;">Choisissez l'école, puis indiquez le <strong>matricule</strong> et le <strong>nom de l'élève</strong>.</p>
         </div>
         <div id="sectionOrangeMoney" style="background:#FFF3E0;border-radius:10px;padding:14px;margin-bottom:12px;border-left:4px solid #FF6600;display:none;">
           <p style="font-weight:bold;color:#FF6600;font-size:0.9em;margin-bottom:12px;">&#127820; PAYER VIA ORANGE MONEY (Max It)</p>
@@ -3485,7 +3487,7 @@ window.addEventListener("load",()=>{
   // Afficher section inscription uniquement avant le 30 septembre 2026
   const fin = new Date('2026-09-30T23:59:59');
   const sp = document.getElementById('sectionPublique');
-  if(sp && new Date() <= fin) sp.style.display = 'block';
+  if(sp) sp.style.display = 'block';
 });
 document.addEventListener("keypress",e=>{if(e.key==="Enter")login();});
 let deferredPrompt;
