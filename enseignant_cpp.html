@@ -1259,7 +1259,7 @@ async function chargerBilan() {
           let etat = '⏰ en attente';
           if (stJ.indexOf('VALID') !== -1) { jour.h += safeFloat(row[8]); jour.s += safeFloat(row[11]); etat = '✅ ' + safeFloat(row[8]) + 'h — ' + safeFloat(row[11]).toLocaleString('fr-FR') + ' F'; }
           else if (stJ === 'EN COURS') { jour.enCours++; etat = '📝 cahier à publier'; }
-          else if (stJ.indexOf('PRESENCE') !== -1 || stJ.indexOf('PRÉSENCE') !== -1) etat = '✅ présence';
+          else if (stJ.indexOf('PRESENCE') !== -1 || stJ.indexOf('PRÉSENCE') !== -1) { etat = '✅ présence'; jour.h += safeFloat(row[8]); }
           else jour.attente++;
           jour.liste.push('<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px dashed var(--border)"><span>' + esc(row[1] || '') + ' · ' + esc(row[2] || '') + ' · ' + esc(row[3] || '') + '</span><span>' + etat + '</span></div>');
         }
@@ -1286,6 +1286,7 @@ if (statut.indexOf('VALID') !== -1) {
         } else if (statut.indexOf('REJET') !== -1) {
           coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: dTxt||'—', heures:0, salaire:0, statut: '❌ rejeté' });
         } else if (statut.indexOf('PRÉSENCE') !== -1 || statut.indexOf('PRESENCE') !== -1) {
+          nbCours++; totalH += heures;
           coursDetails.push({ classe: row[2]||'—', matiere: row[3]||'—', date: dTxt||'—', heures, salaire:0, statut: '✅ présence (salaire fixe)' });
         }
       });
@@ -1293,12 +1294,12 @@ if (statut.indexOf('VALID') !== -1) {
     afficherBilan(nbCours, totalH, totalS, nbAttente, coursDetails);
     const za = document.getElementById('accueilPointZone');
     if (za && moisCode === perAuj[0]) za.innerHTML = '<div onclick="goTo(\'bilan\')" style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:4px;box-shadow:var(--shadow-sm)">' +
-      '<div style="display:flex;justify-content:space-between;font-size:13px"><span>📅 <b>Aujourd\'hui</b> : ' + jour.n + ' cours</span><span style="font-weight:700;color:var(--green)">' + jour.s.toLocaleString('fr-FR') + ' F</span></div>' +
-      '<div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span>📊 <b>' + perAuj[3] + '</b> : ' + nbCours + ' cours · ' + Math.round(totalH * 10) / 10 + ' h</span><span style="font-weight:700;color:var(--green)">' + totalS.toLocaleString('fr-FR') + ' F</span></div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:13px"><span>📅 <b>Aujourd\'hui</b> : ' + jour.n + ' cours</span><span style="font-weight:700;color:var(--green)">' + (estSalaireFixe() ? 'présence ✅' : jour.s.toLocaleString('fr-FR') + ' F') + '</span></div>' +
+      '<div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span>📊 <b>' + perAuj[3] + '</b> : ' + nbCours + ' cours · ' + Math.round(totalH * 10) / 10 + ' h</span><span style="font-weight:700;color:var(--green)">' + (estSalaireFixe() ? 'salaire fixe' : totalS.toLocaleString('fr-FR') + ' F') + '</span></div>' +
       '<div style="font-size:10px;color:var(--text2);margin-top:4px">Mois de paie du ' + perAuj[1] + ' au ' + perAuj[2] + (nbAttente ? ' · ⏰ ' + nbAttente + ' cours non validé(s)' : '') + ' — toucher pour le détail</div></div>';
     const zj = document.getElementById('bilanJourZone');
     if (zj) zj.innerHTML = '<div class="card"><div class="card-title">📅 Aujourd\'hui — ' + aujourdhui + '</div><div class="card-body">' +
-      (jour.n ? '<div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:6px"><span>' + jour.n + ' cours</span><span style="color:var(--green)">' + jour.h + 'h · ' + jour.s.toLocaleString('fr-FR') + ' F</span></div>' + jour.liste.join('') +
+      (jour.n ? '<div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:6px"><span>' + jour.n + ' cours</span><span style="color:var(--green)">' + jour.h + 'h · ' + (estSalaireFixe() ? 'présence ✅' : jour.s.toLocaleString('fr-FR') + ' F') + '</span></div>' + jour.liste.join('') +
         (jour.enCours ? '<div style="font-size:11px;color:var(--amber);margin-top:6px">📝 ' + jour.enCours + ' cours sans cahier publié : publiez-le à la fin du cours pour être payé.</div>' : '')
       : '<p style="font-size:13px;color:var(--text2);text-align:center">Aucun cours enregistré aujourd\'hui pour le moment.</p>') + '</div></div>';
   } catch(e) {
@@ -1308,6 +1309,9 @@ if (statut.indexOf('VALID') !== -1) {
 }
 
 
+// ── Écoles dont les enseignants sont permanents (salaire fixe) : le pointage sert au contrôle de présence
+const ECOLES_SALAIRE_FIXE = ['ACADEMIE','GUINGLO VILLE','GNONTINROU','SOAKPE','AKEIKOI 1','AKEIKOI 2','ETL PRINCES KOUIBLY','CPP DABOU'];
+function estSalaireFixe() { return !!(user && (user.niveau === 'primaire' || ECOLES_SALAIRE_FIXE.indexOf(String(user.ecole || '').toUpperCase()) !== -1)); }
 // ── Calendrier de paie 2026-2027 (décidé par le Fondateur) : [code, début, fin, libellé]
 // Un cours appartient au dernier mois de paie commencé (les jours de congé entre deux périodes restent dans la précédente).
 const CAL_PAIE = [
@@ -1366,7 +1370,8 @@ function afficherBilan(nbCours, totalH, totalS, nbAttente, coursDetails) {
   const m = Math.round((totalH - h) * 60);
   document.getElementById('bilanNbCours').textContent = nbCours;
   document.getElementById('bilanHeures').textContent = h + 'h' + String(m).padStart(2,'0');
-  document.getElementById('bilanSalaire').textContent = totalS.toLocaleString('fr-FR') + ' F CFA';
+  document.getElementById('bilanSalaire').textContent = estSalaireFixe() ? 'Salaire fixe' : totalS.toLocaleString('fr-FR') + ' F CFA';
+  const lblSal = document.querySelector('.bilan-sal-label'); if (lblSal) lblSal.textContent = estSalaireFixe() ? '✅ Présence enregistrée — payé au salaire fixe' : '💰 Salaire acquis ce mois';
   document.getElementById('bilanAttenteZone').innerHTML = nbAttente > 0
     ? `<span class="badge badge-amber">⏰ ${nbAttente} cours non validé(s) — voir le détail ci-dessous</span>`
     : (nbCours > 0 ? `<span class="badge badge-green">✅ Tous les cours validés</span>` : '');
@@ -1435,7 +1440,7 @@ function calculerSalaireRobuste(heureAppel, heurePublication, heureDebutEDT, heu
   const debutRetenu = Math.max(minAppel, minDebutEDT - TOLERANCE_DEBUT);
   const finRetenue = minPubli !== null ? Math.min(minPubli, minFinEDT + TOL) : minFinEDT;
   const dureeMin = Math.max(0, Math.min(finRetenue, minFinEDT) - debutRetenu);
-  if (user && user.niveau === 'primaire') {
+  if (estSalaireFixe()) {
     return {heuresValidees:0,heuresAttente:0,salaire:0,tarif:0,dureeMin,debutRetenu:minStr(debutRetenu),finRetenue:minStr(finRetenue),resteMin:0,
             statut:'PRESENCE',detail:'Présence enregistrée — salaire fixe', primaire:true};
   }
