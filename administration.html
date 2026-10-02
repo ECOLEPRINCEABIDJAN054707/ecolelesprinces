@@ -18145,6 +18145,7 @@ function _ppTable(titre, bloc){
 function _ppEcoleHtml(r){
   var per=r.periode, pt=r.point||{};
   var h='<div style="background:#FFF8E1;border-radius:8px;padding:8px 12px;font-size:0.8em;margin-top:4px">📅 Mois de paie : <b>'+(per?per.libelle+'</b> (du '+per.debut+' au '+per.fin+')':'—</b>')+'</div>';
+  if(pt.fixe) h+='<div style="background:#E3F2FD;border-radius:8px;padding:8px 12px;font-size:0.8em;margin-top:6px">👔 Enseignants <b>permanents</b> : payés au <b>salaire fixe</b>. Ce tableau sert au <b>contrôle de présence</b> (cours faits, cours sans cahier) ; les montants horaires ne s\'appliquent pas.</div>';
   h+=_ppTable('📅 Point du jour — '+r.date, pt.jour);
   h+=_ppTable('📊 Point du mois de paie — '+(per?per.libelle:''), pt.mois);
   if(pt.mois&&pt.mois.total&&(pt.mois.total.attente||pt.mois.total.sansCahier))
@@ -18165,7 +18166,7 @@ async function chargerPointPaie(px, premier){
     var h='<div style="background:#FFF8E1;border-radius:8px;padding:8px 12px;font-size:0.8em;margin-top:4px">📅 Mois de paie : <b>'+(per?per.libelle+'</b> (du '+per.debut+' au '+per.fin+')':'—</b>')+' — jour : <b>'+r.date+'</b></div>';
     h+='<table style="width:100%;border-collapse:collapse;margin-top:8px"><tr><th '+th+'>École</th><th '+th+'>Cours du jour</th><th '+th+'>Montant du jour</th><th '+th+'>Cours du mois</th><th '+th+'>Heures du mois</th><th '+th+'>Montant du mois</th><th '+th+'>⏰ Attente</th><th '+th+'>📝 Sans cahier</th></tr>';
     (r.ecoles||[]).forEach(function(e){ if(e.erreur){ h+='<tr><td '+td+'>'+e.ecole+'</td><td '+td+' colspan="7">Erreur : '+e.erreur+'</td></tr>'; return; }
-      h+='<tr style="cursor:pointer" onclick="detailPointPaieFond(\''+e.ecole+'\')"><td '+td+'><u>'+e.ecole+'</u></td><td '+td+'>'+e.jour.cours+'</td><td '+td+'>'+_ppF(e.jour.montant)+' F</td><td '+td+'>'+e.mois.cours+'</td><td '+td+'>'+_ppH(e.mois.heures)+' h</td><td '+td+'><b>'+_ppF(e.mois.montant)+' F</b></td><td '+td+'>'+(e.mois.attente||'')+'</td><td '+td+'>'+(e.mois.sansCahier||'')+'</td></tr>'; });
+      h+='<tr style="cursor:pointer" onclick="detailPointPaieFond(\''+e.ecole+'\')"><td '+td+'><u>'+e.ecole+'</u></td><td '+td+'>'+e.jour.cours+'</td><td '+td+'>'+(e.fixe?'<i>fixe</i>':_ppF(e.jour.montant)+' F')+'</td><td '+td+'>'+e.mois.cours+'</td><td '+td+'>'+_ppH(e.mois.heures)+' h</td><td '+td+'><b>'+(e.fixe?'<i>salaire fixe</i>':_ppF(e.mois.montant)+' F')+'</b></td><td '+td+'>'+(e.mois.attente||'')+'</td><td '+td+'>'+(e.mois.sansCahier||'')+'</td></tr>'; });
     var t=r.total; h+='<tr style="background:#E8F5E9;font-weight:700"><td '+td+'>RÉSEAU</td><td '+td+'>'+t.jour.cours+'</td><td '+td+'>'+_ppF(t.jour.montant)+' F</td><td '+td+'>'+t.mois.cours+'</td><td '+td+'>'+_ppH(t.mois.heures)+' h</td><td '+td+'>'+_ppF(t.mois.montant)+' F</td><td '+td+'>'+t.mois.attente+'</td><td '+td+'>'+t.mois.sansCahier+'</td></tr></table>';
     h+='<p style="font-size:0.72em;color:var(--gris);margin-top:4px">Touchez une école pour voir le détail par enseignant.</p><div id="fondPPDetail"></div>';
     zone.innerHTML=h;
