@@ -321,7 +321,6 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
     <button class="quick-btn" onclick="goTo('bilan')"><div class="quick-icon">📊</div><div class="quick-label">Mon bilan</div><div class="quick-sub" id="bilanMoisLabel">—</div></button>
     <button class="quick-btn" onclick="goTo('moyennes')"><div class="quick-icon">📈</div><div class="quick-label">Moyennes</div><div class="quick-sub" id="moyennesSubLabel">—</div></button>
   </div>
-  <div id="accueilPointZone" style="padding:0 16px"></div>
   <div class="section-label" style="display:none">▶ Démarrer un cours</div>
  <div style="padding:0 16px 16px;display:none">
     <div class="card"><div class="card-body">
@@ -1292,11 +1291,6 @@ if (statut.indexOf('VALID') !== -1) {
       });
     }
     afficherBilan(nbCours, totalH, totalS, nbAttente, coursDetails);
-    const za = document.getElementById('accueilPointZone');
-    if (za && moisCode === perAuj[0]) za.innerHTML = '<div onclick="goTo(\'bilan\')" style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:4px;box-shadow:var(--shadow-sm)">' +
-      '<div style="display:flex;justify-content:space-between;font-size:13px"><span>📅 <b>Aujourd\'hui</b> : ' + jour.n + ' cours</span><span style="font-weight:700;color:var(--green)">' + (estSalaireFixe() ? 'présence ✅' : jour.s.toLocaleString('fr-FR') + ' F') + '</span></div>' +
-      '<div style="display:flex;justify-content:space-between;font-size:13px;margin-top:6px"><span>📊 <b>' + perAuj[3] + '</b> : ' + nbCours + ' cours · ' + Math.round(totalH * 10) / 10 + ' h</span><span style="font-weight:700;color:var(--green)">' + (estSalaireFixe() ? 'salaire fixe' : totalS.toLocaleString('fr-FR') + ' F') + '</span></div>' +
-      '<div style="font-size:10px;color:var(--text2);margin-top:4px">Mois de paie du ' + perAuj[1] + ' au ' + perAuj[2] + (nbAttente ? ' · ⏰ ' + nbAttente + ' cours non validé(s)' : '') + ' — toucher pour le détail</div></div>';
     const zj = document.getElementById('bilanJourZone');
     if (zj) zj.innerHTML = '<div class="card"><div class="card-title">📅 Aujourd\'hui — ' + aujourdhui + '</div><div class="card-body">' +
       (jour.n ? '<div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:6px"><span>' + jour.n + ' cours</span><span style="color:var(--green)">' + jour.h + 'h · ' + (estSalaireFixe() ? 'présence ✅' : jour.s.toLocaleString('fr-FR') + ' F') + '</span></div>' + jour.liste.join('') +
