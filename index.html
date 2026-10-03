@@ -288,6 +288,7 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
     </div>
   </div>
 <div id="alerteRisqueParentZone"></div>
+<div id="circulaireExamenZone"></div>
   <div class="section" id="sectionResultats" style="display:none">
     <div class="sec-header" style="background:linear-gradient(135deg,#D4AF37,#B8860B);color:#fff" onclick="toggleSec(this)" id="titreResultats">&#127942; RESULTATS DE FIN D'ANNEE <span>v</span></div>
     <div class="sec-body open" id="resultatsBody"></div>
@@ -1435,7 +1436,7 @@ var soldeAccesParsed = _pm(eleve.solde);
     document.getElementById("sectionBulletinsMensuels").style.display = "none";
     afficherSectionBloquee(eleve, soldeAccesParsed, verseParsed);
   }
-  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerStatutMenaParent(eleve);chargerAlerteRisqueParent(eleve);chargerProgrammeTrimestrielParent(eleve);chargerCarnetNotes(eleve);
+  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerStatutMenaParent(eleve);chargerAlerteRisqueParent(eleve);chargerProgrammeTrimestrielParent(eleve);chargerCirculaireExamen(eleve);chargerCarnetNotes(eleve);
   window._eleveActuel = eleve;
   var calP = document.getElementById('calPrimaire'); if (calP) calP.style.display = estPrimaire(window._classe2026 || eleve.classe) ? 'block' : 'none';
   document.getElementById("loginWrapper").style.display = "none";
@@ -1812,12 +1813,12 @@ async function chargerAbsences(eleve){
 
   try{
     const mat=eleve.matricule;
-    const range=encodeURIComponent("ABSENCES!A2:K");
-    const url="https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
+    const range=encodeURIComponent("ABSENCES!A2:M");
+    const url="https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=FORMATTED_VALUE";
 
     const [res, heuresMoisRes] = await Promise.all([fetch(url), chargerHeuresAbsenceMois()]);
     const data = await res.json();
-    const carteH = carteHeuresAbsence(heuresMoisRes);
+    let carteH = carteHeuresAbsence(heuresMoisRes);
 
     if(!data.values||data.values.length===0){
       ecrire(carteH+"<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>Aucune absence enregistree</p>");
@@ -1828,9 +1829,20 @@ async function chargerAbsences(eleve){
       ecrire(carteH+"<p style='text-align:center;color:#2E7D32;font-size:0.85em;padding:15px;'>&#10003; Aucune absence enregistree</p>");
       return;
     }
-    let totalH=0,justH=0,nonJustH=0;
-    absEleve.forEach(row=>{totalH++;if(String(row[8]||"").toUpperCase()==="OUI")justH++;else nonJustH++;});
+    var _min=function(x){var m=String(x==null?"":x).match(/(\d{1,2})\s*[hH:]\s*(\d{2})/);return m?(+m[1])*60+(+m[2]):null;};
+    var _duree=function(row){var d=_min(row[11]),f=_min(row[12]);return (d!==null&&f!==null&&f>d)?f-d:null;};
+    var _hTxt=function(mn){var h=Math.floor(mn/60),m=mn%60;return h+"h"+(m<10?"0":"")+m;};
+    let totalH=0,justH=0,nonJustH=0,totalMin=0,sansDuree=0,minMois=0;
+    var _auj=new Date();
+    absEleve.forEach(row=>{totalH++;if(String(row[8]||"").toUpperCase()==="OUI")justH++;else nonJustH++;
+      if(String(row[5]||"").trim().toUpperCase()==="RETARD")return;
+      var du=_duree(row);if(du===null){sansDuree++;return;}
+      totalMin+=du;
+      var dm=String(row[0]||"").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if(dm&&(+dm[2])===_auj.getMonth()+1&&(+dm[3])===_auj.getFullYear())minMois+=du;});
+    if(!carteH)carteH=carteHeuresAbsence({ok:true,totalMinutes:minMois,totalTxt:_hTxt(minMois)});
     var htmlStats="<div style='display:flex;gap:8px;margin-bottom:14px;'><div style='flex:1;background:#FFEBEE;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#C62828;margin-bottom:2px;'>TOTAL</p><p style='font-size:1.6em;font-weight:bold;color:#C62828;'>"+totalH+"</p></div><div style='flex:1;background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#2E7D32;margin-bottom:2px;'>JUSTIFIEES</p><p style='font-size:1.6em;font-weight:bold;color:#2E7D32;'>"+justH+"</p></div><div style='flex:1;background:#FFF3E0;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#E65100;margin-bottom:2px;'>NON JUST.</p><p style='font-size:1.6em;font-weight:bold;color:#E65100;'>"+nonJustH+"</p></div></div>";
+    htmlStats+="<div style='background:#F3E5F5;border-radius:8px;padding:10px;text-align:center;margin-bottom:14px;'><p style='font-size:0.75em;color:#6A1B9A;margin-bottom:2px;'>HEURES D'ABSENCE DEPUIS LA RENTREE</p><p style='font-size:1.6em;font-weight:bold;color:#6A1B9A;'>"+_hTxt(totalMin)+"</p>"+(sansDuree?"<p style='font-size:0.7em;color:#888;'>"+sansDuree+" absence(s) sans horaire de cours enregistré</p>":"")+"</div>";
     var htmlDetail="<div style='margin-top:4px;'>";
     absEleve.slice().reverse().forEach(function(row){
       var date=String(row[0]||"—").trim();
@@ -1847,6 +1859,8 @@ async function chargerAbsences(eleve){
       htmlDetail+="<span style='font-size:0.85em;font-weight:bold;color:"+col+";'>"+(estRetard?"⏰ Retard":"❌ Absence")+"</span>";
       htmlDetail+="<span style='font-size:0.78em;color:#555;'>"+date+" à "+heure+"</span></div>";
       if(matiere)htmlDetail+="<div style='font-size:0.8em;color:#333;'>Matière : <strong>"+matiere+"</strong></div>";
+      var _du=_duree(row);
+      if(_du!==null)htmlDetail+="<div style='font-size:0.8em;color:#333;'>Cours de <strong>"+String(row[11]).trim()+"</strong> à <strong>"+String(row[12]).trim()+"</strong> — durée : <strong>"+_hTxt(_du)+"</strong></div>";
       if(enseignant)htmlDetail+="<div style='font-size:0.76em;color:#666;'>Enseignant : "+enseignant+"</div>";
       if(motif)htmlDetail+="<div style='font-size:0.76em;color:#666;'>Motif : "+motif+"</div>";
       htmlDetail+="</div>";
@@ -2721,6 +2735,119 @@ function _cardPasInscrit2026(eleve, info) {
     '<div style="background:#1A3A5C;border-radius:10px;padding:10px;text-align:center;">' +
     '<p style="color:#D4AF37;font-weight:bold;font-size:0.85em;margin-bottom:4px;">📞 Contact & Inscription</p>' +
     '<p style="color:#fff;font-size:1em;font-weight:bold;">' + tel + '</p></div></div>';
+}
+
+// ═══ CIRCULAIRE « EXAMEN BLANC » + COUPON-RÉPONSE EN LIGNE (classes d'examen : CM2, 3ème, Terminale) ═══
+var CIRC_EB = { id: 'EB1-2026', finAffichage: '2026-10-28',
+  serveur: 'https://script.google.com/macros/s/AKfycbx7nBhAMxM_zAMAHCPfPQPkktJ9avtOXm2igfzgOuw9PF1jW0Y7ElUApPoeHvw_F-pT/exec' };
+function circEbClasseExamen(classe){ return /^(CM2|3E|TLE|TERM)/.test(String(classe||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z0-9]/g,'')); }
+function circEbEsc(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function circEbAppel(params){
+  return new Promise(function(resolve){
+    var cb='circEbCb_'+Date.now()+'_'+Math.floor(Math.random()*1000000), script=document.createElement('script'), fini=false;
+    var fin=function(v){ if(fini)return; fini=true; clearTimeout(t); try{delete window[cb];}catch(e){window[cb]=undefined;} try{document.body.removeChild(script);}catch(e){} resolve(v); };
+    var t=setTimeout(function(){fin(null);},25000);
+    window[cb]=function(data){fin(data);};
+    script.onerror=function(){fin(null);};
+    script.src=CIRC_EB.serveur+'?callback='+cb+'&'+Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&');
+    document.body.appendChild(script);
+  });
+}
+function circEbHtml(eleve, classe){
+  var signature = (eleve.ecoleCode==='CPP') ? 'Madame BOTI, Directrice du CPP Les Princes' : 'La Direction de l\u2019\u00e9cole';
+  var champ="width:100%;padding:11px;border:1px solid #CFD8DC;border-radius:8px;font-size:0.95em;box-sizing:border-box;margin-top:4px;";
+  return ""
+  +"<div style='margin:0 0 12px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 18px rgba(183,28,28,0.18);border:2px solid #B71C1C;'>"
+  +"<div style='background:linear-gradient(135deg,#B71C1C,#D32F2F);color:#fff;padding:14px 16px;'>"
+  +"<div style='font-weight:bold;font-size:1em;'>EXAMEN BLANC N\u00b01 \u2014 26, 27 ET 28 OCTOBRE 2026</div>"
+  +"<div style='font-size:0.82em;opacity:0.95;margin-top:3px;'>Pendant les cong\u00e9s de Toussaint \u00b7 pr\u00e9sence obligatoire \u00b7 r\u00e9ponse attendue avant le vendredi 16 octobre</div></div>"
+  +"<div style='padding:14px 16px;'>"
+  +"<div id='circEbEtat' style='background:#FFF8E1;border:1px solid #FFB300;border-radius:10px;padding:10px 12px;font-size:0.88em;color:#8D6E00;margin-bottom:12px;'>V\u00e9rification de votre r\u00e9ponse\u2026</div>"
+  +"<details style='margin-bottom:12px;'><summary style='cursor:pointer;font-weight:bold;color:#B71C1C;font-size:0.92em;'>Lire la circulaire</summary>"
+  +"<div style='font-size:0.88em;color:#333;line-height:1.55;margin-top:10px;'>"
+  +"<p style='margin-bottom:8px;'>Chers parents,</p>"
+  +"<p style='margin-bottom:8px;'>Le premier examen blanc de l\u2019ann\u00e9e se tiendra les <strong>lundi 26, mardi 27 et mercredi 28 octobre 2026</strong>, pendant les cong\u00e9s de Toussaint. La pr\u00e9sence de votre enfant est obligatoire.</p>"
+  +"<p style='margin-bottom:8px;'>Nous avons retenu ces dates pour ne retirer aucun jour de cours aux \u00e9l\u00e8ves. L\u2019examen blanc place votre enfant dans les conditions r\u00e9elles du CEPE, du BEPC ou du baccalaur\u00e9at, et permet de rep\u00e9rer ses difficult\u00e9s d\u00e8s le premier trimestre.</p>"
+  +"<ul style='margin:0 0 8px 18px;'>"
+  +"<li><strong>Classes concern\u00e9es :</strong> CM2, 3\u00e8me et Terminale</li>"
+  +"<li><strong>Horaires :</strong> affich\u00e9s \u00e0 l\u2019\u00e9cole \u00e0 partir du mercredi 21 octobre et remis \u00e0 chaque \u00e9l\u00e8ve</li>"
+  +"<li><strong>Tenue :</strong> tenue scolaire compl\u00e8te</li>"
+  +"<li><strong>Mat\u00e9riel :</strong> stylos, crayon, r\u00e8gle, mat\u00e9riel de g\u00e9om\u00e9trie</li>"
+  +"<li><strong>R\u00e9sultats :</strong> visibles dans cet Espace Parents \u00e0 partir de la semaine du 9 novembre</li></ul>"
+  +"<p style='margin-bottom:8px;'>Merci de garder votre enfant disponible ces trois jours, sans d\u00e9part en voyage avant le mercredi 28 octobre au soir. Toute absence \u00e0 une \u00e9preuve vous sera signal\u00e9e le jour m\u00eame. Les cours reprennent pour tous le lundi 2 novembre 2026.</p>"
+  +"<p style='font-weight:bold;'>"+circEbEsc(signature)+"</p></div></details>"
+  +"<div id='circEbForm' style='display:none;'>"
+  +"<div style='font-weight:bold;color:#1F4E79;font-size:0.92em;margin-bottom:8px;'>Coupon-r\u00e9ponse pour "+circEbEsc(eleve.nom||'')+" ("+circEbEsc(classe||'')+")</div>"
+  +"<label style='display:block;padding:10px;border:1px solid #C8E6C9;border-radius:8px;margin-bottom:8px;font-size:0.9em;cursor:pointer;'><input type='radio' name='circEbChoix' value='PRESENT' onchange='circEbChoix()'> Mon enfant sera pr\u00e9sent les 26, 27 et 28 octobre</label>"
+  +"<label style='display:block;padding:10px;border:1px solid #FFCDD2;border-radius:8px;margin-bottom:8px;font-size:0.9em;cursor:pointer;'><input type='radio' name='circEbChoix' value='EMPECHEMENT' onchange='circEbChoix()'> Je signale un emp\u00eachement</label>"
+  +"<div id='circEbMotifZone' style='display:none;margin-bottom:8px;'><label style='font-size:0.82em;color:#555;'>Motif de l\u2019emp\u00eachement</label><textarea id='circEbMotif' rows='2' maxlength='300' style='"+champ+"'></textarea></div>"
+  +"<div style='margin-bottom:8px;'><label style='font-size:0.82em;color:#555;'>Nom du parent ou tuteur</label><input id='circEbParent' type='text' maxlength='80' style='"+champ+"'></div>"
+  +"<div style='margin-bottom:10px;'><label style='font-size:0.82em;color:#555;'>T\u00e9l\u00e9phone joignable pendant ces trois jours</label><input id='circEbTel' type='tel' maxlength='20' style='"+champ+"'></div>"
+  +"<button id='circEbBtn' onclick='circEbEnvoyer()' style='width:100%;padding:13px;background:#B71C1C;color:#fff;border:none;border-radius:10px;font-weight:bold;font-size:0.95em;cursor:pointer;'>Envoyer ma r\u00e9ponse</button>"
+  +"<div id='circEbMsg' style='font-size:0.85em;margin-top:8px;text-align:center;'></div>"
+  +"</div></div></div>";
+}
+function circEbChoix(){
+  var c=document.querySelector("input[name='circEbChoix']:checked"), z=document.getElementById('circEbMotifZone');
+  if(z) z.style.display=(c&&c.value==='EMPECHEMENT')?'block':'none';
+}
+function circEbAfficherEtat(rep, panne){
+  var etat=document.getElementById('circEbEtat'), form=document.getElementById('circEbForm'); if(!etat||!form) return;
+  window._circEb=window._circEb||{}; window._circEb.reponse=rep||null;
+  if(rep){
+    var present=(rep.reponse==='PRESENT');
+    etat.style.background=present?'#E8F5E9':'#FFEBEE'; etat.style.borderColor=present?'#2E7D32':'#C62828'; etat.style.color=present?'#1B5E20':'#B71C1C';
+    etat.innerHTML="<strong>R\u00e9ponse enregistr\u00e9e le "+circEbEsc(rep.date)+"</strong><br>"
+      +(present?"Pr\u00e9sence confirm\u00e9e":"Emp\u00eachement signal\u00e9 : "+circEbEsc(rep.motif))
+      +"<br>Parent : "+circEbEsc(rep.parent)+(rep.telephone?" \u00b7 T\u00e9l. "+circEbEsc(rep.telephone):"")
+      +"<br><a href='#' onclick='circEbModifier();return false;' style='color:inherit;font-weight:bold;'>Modifier ma r\u00e9ponse</a>";
+    form.style.display='none';
+  } else {
+    etat.style.background='#FFF8E1'; etat.style.borderColor='#FFB300'; etat.style.color='#8D6E00';
+    etat.innerHTML=panne?"Nous n\u2019avons pas pu v\u00e9rifier si vous avez d\u00e9j\u00e0 r\u00e9pondu. Vous pouvez remplir le coupon ci-dessous."
+                        :"<strong>Votre r\u00e9ponse est attendue.</strong> Merci de remplir le coupon ci-dessous.";
+    form.style.display='block';
+  }
+}
+function circEbModifier(){
+  var form=document.getElementById('circEbForm'), rep=(window._circEb||{}).reponse; if(!form) return;
+  form.style.display='block';
+  if(rep){
+    var r=document.querySelector("input[name='circEbChoix'][value='"+rep.reponse+"']"); if(r) r.checked=true;
+    document.getElementById('circEbMotif').value=rep.motif||''; document.getElementById('circEbParent').value=rep.parent||''; document.getElementById('circEbTel').value=rep.telephone||'';
+    circEbChoix();
+  }
+}
+async function circEbEnvoyer(){
+  var c=document.querySelector("input[name='circEbChoix']:checked"), msg=document.getElementById('circEbMsg'), btn=document.getElementById('circEbBtn');
+  var motif=(document.getElementById('circEbMotif').value||'').trim(), parent=(document.getElementById('circEbParent').value||'').trim(), tel=(document.getElementById('circEbTel').value||'').trim();
+  var erreur=function(t){ msg.style.color='#C62828'; msg.textContent=t; };
+  if(!c) return erreur('Choisissez une r\u00e9ponse : pr\u00e9sent ou emp\u00eachement.');
+  if(c.value==='PRESENT') motif='';
+  if(c.value==='EMPECHEMENT'&&!motif) return erreur('Merci de pr\u00e9ciser le motif de l\u2019emp\u00eachement.');
+  if(!parent) return erreur('Merci d\u2019indiquer le nom du parent ou tuteur.');
+  if(tel.replace(/[^0-9]/g,'').length<8) return erreur('Merci d\u2019indiquer un num\u00e9ro de t\u00e9l\u00e9phone valide.');
+  var ctx=window._circEb||{};
+  btn.disabled=true; btn.style.opacity='0.6'; msg.style.color='#555'; msg.textContent='Envoi en cours\u2026';
+  var res=await circEbAppel({ type:'COUPON_EB_ENREGISTRER', sheetsId:ctx.sheetsId, matricule:ctx.matricule, circulaire:CIRC_EB.id, reponse:c.value, motif:motif, parent:parent, tel:tel });
+  btn.disabled=false; btn.style.opacity='1';
+  if(res&&res.ok){ msg.textContent=''; circEbAfficherEtat(res.reponse,false); }
+  else erreur(res&&res.erreur ? res.erreur : 'La r\u00e9ponse n\u2019a pas pu \u00eatre envoy\u00e9e. V\u00e9rifiez votre connexion et r\u00e9essayez.');
+}
+async function chargerCirculaireExamen(eleve){
+  var zone=document.getElementById('circulaireExamenZone'); if(!zone) return;
+  zone.innerHTML='';
+  try{
+    var classe=window._classe2026||eleve.classe;
+    if(!circEbClasseExamen(classe)) return;
+    var d=new Date(), auj=d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);
+    if(auj>CIRC_EB.finAffichage) return;
+    var sheetsId=window._sheetsId2026||eleve.sheetsId||CONFIG.SHEETS_ID;
+    window._circEb={ sheetsId:sheetsId, matricule:eleve.matricule, reponse:null };
+    zone.innerHTML=circEbHtml(eleve, classe);
+    var res=await circEbAppel({ type:'COUPON_EB_LIRE', sheetsId:sheetsId, matricule:eleve.matricule, circulaire:CIRC_EB.id });
+    circEbAfficherEtat(res&&res.ok?res.reponse:null, !(res&&res.ok));
+  }catch(e){ zone.innerHTML=''; }
 }
 
 async function chargerAnnonces(eleve){
