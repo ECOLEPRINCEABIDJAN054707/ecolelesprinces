@@ -280,6 +280,7 @@ table tr:nth-child(even){background:#F8FAFD}
       <button class="btn-logout" onclick="logout()">D&eacute;connexion</button>
     </div>
   </div>
+  <div id="examBlancZoneDir" style="padding:0 14px"></div>
   <div id="dirStatsZone"></div>
   <div id="dirFiltresZone" style="display:none">
     <div class="filters-bar">
@@ -573,6 +574,18 @@ table tr:nth-child(even){background:#F8FAFD}
       <button onclick="enregistrerCompletudeClasse('dirCP', this)" style="padding:8px 14px;background:#1e8449;color:#fff;border:none;border-radius:8px;font-size:0.82em;font-weight:700;cursor:pointer">💾 Enregistrer la classe</button>
     </div>
     <div id="dirCPZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Choisissez une classe.</p></div>
+  </div>
+</div>
+  <div class="section" id="dirSecCoupons">
+  <div class="sec-head sec-rouge" onclick="toggleSec(this); chargerCouponsDir(true)">
+    <h3>📝 Examen blanc n°1 — réponses des parents</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body" id="dirCouponsBody">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <span style="font-size:0.82em;font-weight:600">26, 27 et 28 octobre 2026 · réponses attendues avant le vendredi 16 octobre</span>
+      <button onclick="chargerCouponsDir(false)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
+    </div>
+    <div id="dirCouponsZone" style="padding:0 14px 14px"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
   </div>
 </div>
   <div class="section" id="dirSecPointPaie">
@@ -10344,6 +10357,47 @@ function _badgePerm(st) {
   var i = st === 'ACCORDÉE' ? '✅' : st === 'REFUSÉE' ? '❌' : '⏳';
   return '<span style="background:' + c + ';color:#fff;border-radius:10px;padding:2px 8px;font-size:0.72em;font-weight:700">' + i + ' ' + _escHtmlBloq(st) + '</span>';
 }
+// ═══ ESPACE DIRECTEUR : réponses des parents à la circulaire « examen blanc » ═══
+var _couponsDirCharge = false;
+function _cpEsc(x){ return String(x==null?'':x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function couponsDirHtml(r){
+  var pct = r.total ? Math.round((r.presents + r.empechements) * 100 / r.total) : 0;
+  var boite = function(t, n, fond, coul){ return '<div style="flex:1;min-width:90px;background:'+fond+';border-radius:10px;padding:10px;text-align:center"><div style="font-size:0.7em;color:'+coul+';font-weight:600">'+t+'</div><div style="font-size:1.5em;font-weight:700;color:'+coul+'">'+n+'</div></div>'; };
+  var h = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
+    + boite('ÉLÈVES CONCERNÉS', r.total, '#E3F2FD', '#1565C0') + boite('PRÉSENCE CONFIRMÉE', r.presents, '#E8F5E9', '#2E7D32')
+    + boite('EMPÊCHEMENT', r.empechements, '#FFEBEE', '#C62828') + boite('SANS RÉPONSE', r.sansReponse, '#FFF3E0', '#E65100') + '</div>'
+    + '<p style="font-size:0.8em;color:var(--gris);margin-bottom:10px">' + pct + ' % des parents ont répondu. Touchez une classe pour voir le détail et les parents à relancer.</p>';
+  if (!r.classes || !r.classes.length) return h + '<p style="font-size:0.85em;padding:10px">Aucune classe d\'examen (CM2, 3ème, Terminale) dans cette école.</p>';
+  r.classes.forEach(function(c, k){
+    var pres = c.eleves.filter(function(e){ return e.r === 'PRESENT'; }), emp = c.eleves.filter(function(e){ return e.r === 'EMPECHEMENT'; }), sans = c.eleves.filter(function(e){ return !e.r; });
+    var ligne = function(e, extra){ return '<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:0.8em"><strong>'+_cpEsc(e.n)+'</strong> <span style="color:var(--gris)">'+_cpEsc(e.m)+'</span>'+extra+'</div>'; };
+    h += '<div style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden">'
+      + '<div onclick="var b=document.getElementById(\'cpCl'+k+'\');b.style.display=b.style.display===\'none\'?\'block\':\'none\'" style="padding:10px 12px;background:#F5F7FA;cursor:pointer;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:0.85em">'
+      + '<strong>'+_cpEsc(c.classe)+' — '+c.eleves.length+' élèves</strong>'
+      + '<span><span style="color:#2E7D32">'+pres.length+' présents</span> · <span style="color:#C62828">'+emp.length+' empêchement(s)</span> · <span style="color:#E65100;font-weight:700">'+sans.length+' sans réponse</span></span></div>'
+      + '<div id="cpCl'+k+'" style="display:none;padding:8px 12px">'
+      + (sans.length ? '<div style="font-weight:700;color:#E65100;font-size:0.8em;margin:4px 0">À relancer ('+sans.length+')</div>' + sans.map(function(e){ return ligne(e, e.t ? ' · Tél. '+_cpEsc(e.t) : ''); }).join('') : '')
+      + (emp.length ? '<div style="font-weight:700;color:#C62828;font-size:0.8em;margin:10px 0 4px">Empêchements ('+emp.length+')</div>' + emp.map(function(e){ return ligne(e, '<br>Motif : '+_cpEsc(e.motif)+'<br>Parent : '+_cpEsc(e.parent)+(e.telp?' · Tél. '+_cpEsc(e.telp):'')); }).join('') : '')
+      + (pres.length ? '<div style="font-weight:700;color:#2E7D32;font-size:0.8em;margin:10px 0 4px">Présence confirmée ('+pres.length+')</div>' + pres.map(function(e){ return ligne(e, ' · '+_cpEsc(e.parent)+(e.telp?' · Tél. '+_cpEsc(e.telp):'')); }).join('') : '')
+      + '</div></div>';
+  });
+  return h;
+}
+async function chargerCouponsDir(premiereOuverture){
+  if (premiereOuverture && _couponsDirCharge) return;
+  var zone = document.getElementById('dirCouponsZone'); if (!zone || !currentStaff) return;
+  _couponsDirCharge = true;
+  zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Chargement des réponses…</p>';
+  try {
+    var r = await _appelPerm({ type: 'COUPON_EB_BILAN', ecole: currentStaff.ecole, circulaire: 'EB1-2026' });
+    if (!r || !r.ok) throw new Error((r && (r.erreur || r.error)) || 'réponse vide');
+    zone.innerHTML = couponsDirHtml(r);
+  } catch (e) {
+    _couponsDirCharge = false;
+    zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Impossible de charger les réponses : ' + _cpEsc(e.message) + '</p>';
+  }
+}
+
 async function _appelPerm(params) {
   // Même méthode que les autres sections (JSONP) : fiable depuis le site
   var raw = await appelJSONP(APPS_SCRIPT_POINTAGE, params, 30000);
@@ -18205,6 +18259,7 @@ function examensBlancsHtml(role) {
   var consigne = '';
   if (p.n === 1 && role === 'ENS') consigne = 'Sujets et bar\u00e8mes \u00e0 remettre au Directeur au plus tard le vendredi 16 octobre.';
   if (p.n === 1 && role === 'EDU') consigne = 'Planning des salles et des surveillants affich\u00e9 le mercredi 21 octobre. Appel chaque matin de l\u2019examen.';
+  if (p.n === 1 && role === 'DIR') consigne = 'Sujets valid\u00e9s et mis sous cl\u00e9 le vendredi 16 octobre. Planning des salles et des surveillants affich\u00e9 le mercredi 21 octobre. Suivez les r\u00e9ponses des parents dans la section \u00ab Examen blanc \u00bb ci-dessous.';
   var suivants = aVenir.slice(1).map(function(x) { return 'n\u00b0' + x.n + ' : ' + x.court; }).join(' \u00b7 ');
   return '<div style="background:#fff;border-radius:12px;border-left:5px solid #B71C1C;box-shadow:0 2px 10px rgba(0,0,0,0.08);padding:12px 14px;margin:10px 0;text-align:left;">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
@@ -18217,7 +18272,7 @@ function examensBlancsHtml(role) {
     + '</div>';
 }
 (function() {
-  [['examBlancZoneEns', 'ENS'], ['examBlancZoneCom', 'COM'], ['examBlancZoneEdu', 'EDU']].forEach(function(z) {
+  [['examBlancZoneEns', 'ENS'], ['examBlancZoneCom', 'COM'], ['examBlancZoneEdu', 'EDU'], ['examBlancZoneDir', 'DIR']].forEach(function(z) {
     var el = document.getElementById(z[0]); if (el) el.innerHTML = examensBlancsHtml(z[1]);
   });
 })();
