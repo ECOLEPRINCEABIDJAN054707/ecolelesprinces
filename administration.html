@@ -2962,6 +2962,7 @@ async function sauvegarderPersonnelDir(idx) {
       <button class="btn-logout" onclick="logout()">D&eacute;connexion</button>
     </div>
   </div>
+  <div id="examBlancZoneCom" style="padding:0 14px"></div>
   <div class="stats-row s3">
     <div class="stat-box rouge"><div class="stat-val" id="cStatImpaye">0</div><div class="stat-lbl">Soldes impay&eacute;s</div></div>
     <div class="stat-box or"><div class="stat-val" id="cStatInsc">0</div><div class="stat-lbl">El&egrave;ves inscrits</div></div>
@@ -3842,6 +3843,7 @@ async function attribuerMatriculeCom() {
       <button class="btn-logout" onclick="logout()">D&eacute;connexion</button>
     </div>
   </div>
+  <div id="examBlancZoneEdu" style="padding:0 14px"></div>
   <div class="stats-row s3">
     <div class="stat-box rouge"><div class="stat-val" id="eStatAlert">0</div><div class="stat-lbl">En difficult&eacute;</div></div>
     <div class="stat-box or"><div class="stat-val" id="eStatEleves">0</div><div class="stat-lbl">Mes &eacute;l&egrave;ves</div></div>
@@ -18184,6 +18186,41 @@ function imprimerPointPaie(px){
   w.document.write('<html><head><title>Point de paie</title><style>body{font-family:Arial,sans-serif;font-size:12px;padding:16px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:4px 6px;text-align:left}th{background:#1F4E79;color:#fff}</style></head><body><h2>Point de paie — '+(px==='fond'?'Réseau CPP Les Princes':(currentStaff.ecole||''))+'</h2>'+z.innerHTML+'</body></html>');
   w.document.close(); setTimeout(function(){ w.print(); }, 400);
 }
+</script>
+<script>
+// ═══ EXAMENS BLANCS 2026-2027 : rappel des dates (ils se tiennent pendant les congés) ═══
+var EXAMENS_BLANCS = [
+  { n: 1, debut: '2026-10-26', fin: '2026-10-28', dates: 'lundi 26, mardi 27 et mercredi 28 octobre 2026', court: '26-28 oct. 2026', conge: 'cong\u00e9s de Toussaint' },
+  { n: 2, debut: '2026-12-21', fin: '2026-12-23', dates: 'lundi 21, mardi 22 et mercredi 23 d\u00e9cembre 2026', court: '21-23 d\u00e9c. 2026', conge: 'cong\u00e9s de No\u00ebl' },
+  { n: 3, debut: '2027-02-08', fin: '2027-02-10', dates: 'lundi 8, mardi 9 et mercredi 10 f\u00e9vrier 2027', court: '8-10 f\u00e9vr. 2027', conge: 'cong\u00e9s de f\u00e9vrier' },
+  { n: 4, debut: '2027-03-22', fin: '2027-03-24', dates: 'lundi 22, mardi 23 et mercredi 24 mars 2027', court: '22-24 mars 2027', conge: 'cong\u00e9s de P\u00e2ques' }
+];
+function examensBlancsHtml(role) {
+  var d = new Date(), auj = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  var aVenir = EXAMENS_BLANCS.filter(function(x) { return x.fin >= auj; });
+  if (!aVenir.length) return '';
+  var p = aVenir[0];
+  var jours = Math.round((Date.UTC(+p.debut.slice(0, 4), +p.debut.slice(5, 7) - 1, +p.debut.slice(8)) - Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+  var quand = jours > 1 ? 'dans ' + jours + ' jours' : (jours === 1 ? 'demain' : 'en cours');
+  var consigne = '';
+  if (p.n === 1 && role === 'ENS') consigne = 'Sujets et bar\u00e8mes \u00e0 remettre au Directeur au plus tard le vendredi 16 octobre.';
+  if (p.n === 1 && role === 'EDU') consigne = 'Planning des salles et des surveillants affich\u00e9 le mercredi 21 octobre. Appel chaque matin de l\u2019examen.';
+  var suivants = aVenir.slice(1).map(function(x) { return 'n\u00b0' + x.n + ' : ' + x.court; }).join(' \u00b7 ');
+  return '<div style="background:#fff;border-radius:12px;border-left:5px solid #B71C1C;box-shadow:0 2px 10px rgba(0,0,0,0.08);padding:12px 14px;margin:10px 0;text-align:left;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
+    + '<div style="font-weight:700;color:#B71C1C;font-size:14px;">EXAMEN BLANC N\u00b0' + p.n + '</div>'
+    + '<div style="background:#FFEBEE;color:#B71C1C;font-weight:700;font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap;">' + quand + '</div></div>'
+    + '<div style="font-size:14px;font-weight:600;color:#1F2937;margin-top:5px;">' + p.dates.charAt(0).toUpperCase() + p.dates.slice(1) + '</div>'
+    + '<div style="font-size:12px;color:#555;margin-top:3px;">Pendant les ' + p.conge + ' \u00b7 Classes d\u2019examen : CM2, 3\u00e8me, Terminale \u00b7 Pr\u00e9sence obligatoire des \u00e9l\u00e8ves</div>'
+    + (consigne ? '<div style="font-size:12px;color:#B71C1C;font-weight:600;margin-top:5px;">' + consigne + '</div>' : '')
+    + (suivants ? '<div style="font-size:11px;color:#777;margin-top:6px;border-top:1px solid #EEE;padding-top:5px;">Examens blancs suivants \u2014 ' + suivants + '</div>' : '')
+    + '</div>';
+}
+(function() {
+  [['examBlancZoneEns', 'ENS'], ['examBlancZoneCom', 'COM'], ['examBlancZoneEdu', 'EDU']].forEach(function(z) {
+    var el = document.getElementById(z[0]); if (el) el.innerHTML = examensBlancsHtml(z[1]);
+  });
+})();
 </script>
 </body>
 </html>
