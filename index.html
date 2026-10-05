@@ -281,7 +281,7 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
    <div id="badgeMenaPhoto" style="flex:1;text-align:center;padding:10px 4px;border-radius:8px;font-size:0.85em;font-weight:bold">Photo</div>
   </div>
   <div id="messageMenaAction" style="font-size:0.8em;padding:10px;border-radius:8px;text-align:center"></div>
-</div> <div id="carteNotifs" style="margin:10px 0"></div><div id="sectionAnnonces" style="display:none;">
+</div> <div id="compoZoneParent" style="margin:10px 0"></div><div id="carteNotifs" style="margin:10px 0"></div><div id="sectionAnnonces" style="display:none;">
     <div class="section" style="border-left:4px solid #C62828;">
       <div class="sec-header" style="background:#C62828;" onclick="toggleSec(this)">&#128226; ANNONCES DE L'ECOLE <span>v</span></div>
       <div class="sec-body" id="annoncesBody"></div>
@@ -390,7 +390,8 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
         <div style="background:#EDE7F6;border-radius:10px;padding:12px;border-left:4px solid #4A148C;"><p style="font-weight:bold;color:#4A148C;font-size:0.9em;margin-bottom:8px;">1er Trimestre</p><div style="font-size:0.82em;color:#444;display:grid;gap:4px;"><div style="display:flex;justify-content:space-between;"><span>&#128218; Rentrée officielle (MENA)</span><strong>Lundi 14 sept. 2026</strong></div><div style="display:flex;justify-content:space-between;"><span>&#127810; Congés de Toussaint</span><strong>23 oct. (soir) - 1er nov. 2026</strong></div><div style="display:flex;justify-content:space-between;"><span>&#127937; Fin du 1er trimestre</span><strong>Vendredi 4 déc. 2026</strong></div></div></div>
         <div style="background:#E8F5E9;border-radius:10px;padding:12px;border-left:4px solid #2E7D32;"><p style="font-weight:bold;color:#2E7D32;font-size:0.9em;margin-bottom:8px;">2ème Trimestre</p><div style="font-size:0.82em;color:#444;display:grid;gap:4px;"><div style="display:flex;justify-content:space-between;"><span>&#9654; Début</span><strong>Lundi 7 déc. 2026</strong></div><div style="display:flex;justify-content:space-between;"><span>&#127876; Congés de Noël</span><strong>18 déc. 2026 (soir) - 3 janv. 2027</strong></div><div style="display:flex;justify-content:space-between;"><span>&#10052; Congés de février</span><strong>5 févr. (soir) - 14 févr. 2027</strong></div><div style="display:flex;justify-content:space-between;"><span>&#127937; Fin du 2ème trimestre</span><strong>Vendredi 12 mars 2027</strong></div></div></div>
         <div style="background:#E3F2FD;border-radius:10px;padding:12px;border-left:4px solid #1F4E79;"><p style="font-weight:bold;color:#1F4E79;font-size:0.9em;margin-bottom:8px;">3ème Trimestre</p><div style="font-size:0.82em;color:#444;display:grid;gap:4px;"><div style="display:flex;justify-content:space-between;"><span>&#9654; Début</span><strong>Lundi 15 mars 2027</strong></div><div style="display:flex;justify-content:space-between;"><span>&#128035; Congés de Pâques</span><strong>19 mars (soir) - lundi 5 avril 2027</strong></div><div style="display:flex;justify-content:space-between;"><span>&#127937; Fin des cours</span><strong>Vendredi 11 juin 2027</strong></div><div style="display:flex;justify-content:space-between;"><span>&#128221; Examens CEPE / BEPC / BAC</span><strong>Juin - juillet 2027</strong></div></div></div>
-        <div id="calPrimaire" style="display:none;background:#FCE4EC;border-radius:10px;padding:12px;border-left:4px solid #AD1457;"><p style="font-weight:bold;color:#AD1457;font-size:0.9em;margin-bottom:8px;">&#128221; Compositions du primaire (arrêté n° 3547 du 03/09/2026)</p><div style="font-size:0.82em;color:#444;display:grid;gap:4px;"><div style="font-weight:bold;color:#AD1457;margin-top:2px;">CP1 au CM1</div><div style="display:flex;justify-content:space-between;"><span>Compositions</span><strong>10 déc. 2026 · 4 févr. 2027 · 6 avril 2027</strong></div><div style="display:flex;justify-content:space-between;"><span>Composition de passage</span><strong>Jeudi 3 juin 2027</strong></div><div style="font-weight:bold;color:#AD1457;margin-top:6px;">CM2</div><div style="display:flex;justify-content:space-between;"><span>Compositions</span><strong>10 déc. 2026 · 4 févr. 2027</strong></div><div style="display:flex;justify-content:space-between;"><span>Examens blancs</span><strong>8 avril 2027 · 20 mai 2027</strong></div></div></div>
+        <div id="calPrimaire" style="display:none;background:#FCE4EC;border-radius:10px;padding:12px;border-left:4px solid #AD1457;"><p style="font-weight:bold;color:#AD1457;font-size:0.9em;margin-bottom:8px;">&#128221; Compositions officielles du primaire (arrêté n° 3547 du 03/09/2026)</p><div style="font-size:0.82em;color:#444;display:grid;gap:4px;"><div style="font-weight:bold;color:#AD1457;margin-top:2px;">CP1 au CM1</div><div style="display:flex;justify-content:space-between;"><span>Compositions</span><strong>10 déc. 2026 · 4 févr. 2027 · 6 avril 2027</strong></div><div style="display:flex;justify-content:space-between;"><span>Composition de passage</span><strong>Jeudi 3 juin 2027</strong></div><div style="font-weight:bold;color:#AD1457;margin-top:6px;">CM2</div><div style="display:flex;justify-content:space-between;"><span>Compositions</span><strong>10 déc. 2026 · 4 févr. 2027</strong></div><div style="display:flex;justify-content:space-between;"><span>Examens blancs</span><strong>8 avril 2027 · 20 mai 2027</strong></div></div></div>
+        <div id="calCompoEcole" style="display:none;background:#E3F2FD;border-radius:10px;padding:12px;border-left:4px solid #1565C0;"></div>
         <div style="background:#FFF8E1;border-radius:10px;padding:12px;border-left:4px solid #B8860B;"><p style="font-weight:bold;color:#B8860B;font-size:0.9em;margin-bottom:6px;">Fin d'année</p><div style="font-size:0.82em;color:#444;display:grid;gap:3px;"><p>Fin de l'année scolaire : <strong>Vendredi 30 juillet 2027</strong></p><p>Grandes vacances : <strong>30 juillet - 12 septembre 2027</strong></p><p>Conseils de classe : <strong>fin de chaque trimestre</strong></p></div></div>
       </div>
       <p style="font-size:0.73em;color:#aaa;margin-top:10px;text-align:center;">Calendrier officiel MENA 2026-2027 — arrêtés n° 3547 et n° 3550/MENAET/CAB/DELC du 03/09/2026. Les dates des examens seront précisées dès leur publication.</p>
@@ -1439,6 +1440,7 @@ var soldeAccesParsed = _pm(eleve.solde);
   chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerStatutMenaParent(eleve);chargerAlerteRisqueParent(eleve);chargerProgrammeTrimestrielParent(eleve);chargerCirculaireExamen(eleve);chargerCarnetNotes(eleve);
   window._eleveActuel = eleve;
   var calP = document.getElementById('calPrimaire'); if (calP) calP.style.display = estPrimaire(window._classe2026 || eleve.classe) ? 'block' : 'none';
+  if (typeof afficherCompositionsParent === 'function') afficherCompositionsParent(window._classe2026 || eleve.classe);
   document.getElementById("loginWrapper").style.display = "none";
   document.getElementById("parentSpace").style.display = "block";
   const sp = document.getElementById("sectionPublique"); if(sp) sp.style.display = "none";
@@ -3622,6 +3624,55 @@ document.addEventListener("keypress",e=>{if(e.key==="Enter")login();});
 let deferredPrompt;
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;document.getElementById("pwaBanner").style.display="flex";});
 function installPWA(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{document.getElementById("pwaBanner").style.display="none";deferredPrompt=null;});}}
+// ═══ COMPOSITIONS 2026-2027 : calendrier du réseau pour la maternelle et le primaire ═══
+var COMPOSITIONS_PRIMAIRE = [
+  { mois: 'octobre',     debut: '2026-10-22', fin: '2026-10-23', dates: 'jeudi 22 et vendredi 23 octobre 2026',          court: '22-23 oct.' },
+  { mois: 'novembre',    debut: '2026-11-25', fin: '2026-11-27', dates: 'du mercredi 25 au vendredi 27 novembre 2026',   court: '25-27 nov.', detail: 'Mercredi 25 : classes de CM · Jeudi 26 et vendredi 27 : classes intermédiaires' },
+  { mois: 'décembre',    debut: '2026-12-09', fin: '2026-12-11', dates: 'du mercredi 9 au vendredi 11 décembre 2026',    court: '9-11 déc.', detail: 'Mercredi 9 : classes de CM · Jeudi 10 et vendredi 11 : classes intermédiaires' },
+  { mois: 'janvier',     debut: '2027-01-27', fin: '2027-01-29', dates: 'du mercredi 27 au vendredi 29 janvier 2027',    court: '27-29 janv.', detail: 'Mercredi 27 : classes de CM · Jeudi 28 et vendredi 29 : classes intermédiaires' },
+  { mois: 'février',     debut: '2027-02-24', fin: '2027-02-26', dates: 'du mercredi 24 au vendredi 26 février 2027',    court: '24-26 févr.', detail: 'Mercredi 24 : classes de CM · Jeudi 25 et vendredi 26 : classes intermédiaires' },
+  { mois: 'mars',        debut: '2027-03-17', fin: '2027-03-19', dates: 'du mercredi 17 au vendredi 19 mars 2027',       court: '17-19 mars', detail: 'Mercredi 17 : classes de CM · Jeudi 18 et vendredi 19 : classes intermédiaires' },
+  { mois: 'avril',       debut: '2027-04-28', fin: '2027-04-30', dates: 'du mercredi 28 au vendredi 30 avril 2027',      court: '28-30 avr.', detail: 'Mercredi 28 : classes de CM · Jeudi 29 et vendredi 30 : classes intermédiaires' },
+  { mois: 'mai et juin', debut: '2027-06-03', fin: '2027-06-03', dates: 'jeudi 3 juin 2027',                              court: '3 juin' }
+];
+function compositionsHtml() {
+  var d = new Date(), auj = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  var aVenir = COMPOSITIONS_PRIMAIRE.filter(function(x) { return x.fin >= auj; });
+  if (!aVenir.length) return '';
+  var p = aVenir[0];
+  var jours = Math.round((Date.UTC(+p.debut.slice(0, 4), +p.debut.slice(5, 7) - 1, +p.debut.slice(8)) - Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+  var quand = jours > 1 ? 'dans ' + jours + ' jours' : (jours === 1 ? 'demain' : 'en cours');
+  var titre = 'COMPOSITION ' + (/^[aeiouyéèê]/i.test(p.mois) ? 'D\u2019' : 'DE ') + p.mois.toUpperCase();
+  var suivantes = aVenir.slice(1, 4).map(function(x) { return x.mois + ' : ' + x.court; }).join(' · ') + (aVenir.length > 4 ? ' · …' : '');
+  return '<div style="background:#fff;border-radius:12px;border-left:5px solid #1565C0;box-shadow:0 2px 10px rgba(0,0,0,0.08);padding:12px 14px;margin:10px 0;text-align:left;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
+    + '<div style="font-weight:700;color:#1565C0;font-size:14px;">' + titre + '</div>'
+    + '<div style="background:#E3F2FD;color:#1565C0;font-weight:700;font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap;">' + quand + '</div></div>'
+    + '<div style="font-size:14px;font-weight:600;color:#1F2937;margin-top:5px;">' + p.dates.charAt(0).toUpperCase() + p.dates.slice(1) + '</div>'
+    + '<div style="font-size:12px;color:#555;margin-top:3px;">' + (p.detail || 'Maternelle et primaire') + '</div>'
+    + (suivantes ? '<div style="font-size:11px;color:#777;margin-top:6px;border-top:1px solid #EEE;padding-top:5px;">Compositions suivantes — ' + suivantes + '</div>' : '')
+    + '</div>';
+}
+// Espace Parents : carte de la prochaine composition et calendrier des compositions de l'école (maternelle et primaire)
+function estMaternelleOuPrimaire(classe) {
+  var c = String(classe || '').toUpperCase().replace(/\s+/g, ' ').trim();
+  return /^(PS|MS|GS)[A-Z]?([- ]|$)/.test(c) || /MATERNELLE|PETITE SECTION|MOYENNE SECTION|GRANDE SECTION/.test(c) || /^(CP|CE|CM) ?[12]/.test(c);
+}
+function calendrierCompositionsHtml() {
+  var d = new Date(), auj = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  var lignes = COMPOSITIONS_PRIMAIRE.map(function(x) {
+    return '<div style="display:flex;justify-content:space-between;gap:10px;' + (x.fin < auj ? 'opacity:.45;' : '') + '"><span>' + x.mois.charAt(0).toUpperCase() + x.mois.slice(1) + '</span><strong style="text-align:right;">' + x.court + ' ' + x.debut.slice(0, 4) + '</strong></div>';
+  }).join('');
+  return '<p style="font-weight:bold;color:#1565C0;font-size:0.9em;margin-bottom:8px;">&#128221; Compositions mensuelles de l\u2019école (maternelle et primaire)</p>'
+    + '<div style="font-size:0.82em;color:#444;display:grid;gap:4px;">' + lignes + '</div>'
+    + '<p style="font-size:0.78em;color:#555;margin-top:8px;">Quand la composition commence un mercredi : le mercredi pour les classes de CM, le jeudi et le vendredi pour les classes intermédiaires.</p>'
+    + '<p style="font-size:0.74em;color:#888;margin-top:4px;">Compositions organisées par l\u2019école, en plus des compositions officielles du ministère.</p>';
+}
+function afficherCompositionsParent(classe) {
+  var ok = estMaternelleOuPrimaire(classe);
+  var carte = document.getElementById('compoZoneParent'); if (carte) carte.innerHTML = ok ? compositionsHtml() : '';
+  var cal = document.getElementById('calCompoEcole'); if (cal) { cal.innerHTML = ok ? calendrierCompositionsHtml() : ''; cal.style.display = ok ? 'block' : 'none'; }
+}
 </script>
 <!-- ============================================================
      LIEN DISCRET FOOTER — vers le règlement intérieur
