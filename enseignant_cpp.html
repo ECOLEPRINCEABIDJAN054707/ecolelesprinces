@@ -148,6 +148,14 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--
 .bilan-salaire{margin:0 16px 16px;background:linear-gradient(135deg,var(--green),#388E3C);color:#fff;border-radius:var(--radius);padding:20px;text-align:center;box-shadow:0 4px 12px rgba(46,125,50,0.3);}
 .bilan-sal-label{font-size:12px;opacity:0.85;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;}
 .bilan-sal-val{font-size:32px;font-weight:900;}
+/* Salaire masqué par défaut : affiché seulement à la demande de l'enseignant */
+.bilan-voir-btn{display:block;width:calc(100% - 32px);margin:0 16px 16px;padding:14px;background:var(--surface);border:1.5px dashed var(--border);border-radius:var(--radius);font-family:inherit;font-size:14px;font-weight:700;color:var(--navy);cursor:pointer;}
+.bilan-masquer{display:inline-block;margin-top:10px;padding:4px 10px;font-size:12px;color:#fff;background:rgba(255,255,255,0.18);border:none;border-radius:20px;font-family:inherit;cursor:pointer;}
+#screen-bilan.montants-caches .bilan-salaire{display:none;}
+#screen-bilan:not(.montants-caches) .bilan-voir-btn{display:none;}
+#screen-bilan.salaire-fixe .bilan-masquer{display:none;}
+#screen-bilan.montants-caches .montant{font-size:0;}
+#screen-bilan.montants-caches .montant::after{content:'••••';font-size:12px;letter-spacing:2px;color:var(--text2);}
 
 /* ── CAHIER ── */
 .field-block{margin-bottom:12px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;}
@@ -350,7 +358,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
 <!-- ══════════════════════════════════════════════
      BILAN
 ══════════════════════════════════════════════ -->
-<div class="screen" id="screen-bilan">
+<div class="screen montants-caches" id="screen-bilan">
   <div class="header">
     <button class="header-btn" onclick="goTo('accueil')">← Retour</button>
     <div class="header-title"><h1>📊 Mon bilan</h1><p id="bilanMoisTitre">—</p></div>
@@ -360,7 +368,8 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
     <div class="bilan-card"><div class="bilan-val" id="bilanNbCours">—</div><div class="bilan-label">Cours effectués</div></div>
     <div class="bilan-card"><div class="bilan-val" id="bilanHeures">—</div><div class="bilan-label">Heures validées</div></div>
   </div>
-  <div class="bilan-salaire"><div class="bilan-sal-label">💰 Salaire acquis ce mois</div><div class="bilan-sal-val" id="bilanSalaire">—</div></div>
+  <div class="bilan-salaire"><div class="bilan-sal-label">💰 Salaire acquis ce mois</div><div class="bilan-sal-val" id="bilanSalaire">—</div><button type="button" class="bilan-masquer" onclick="appliquerMasqueSalaire(true)">🙈 Masquer</button></div>
+  <button type="button" class="bilan-voir-btn" onclick="appliquerMasqueSalaire(false)">👁 Afficher mon salaire</button>
   <div style="padding:0 16px;margin-bottom:12px" id="bilanJourZone"></div>
   <div style="padding:0 16px;margin-bottom:12px"><select class="select" id="bilanMoisSelect" onchange="chargerBilan()"></select></div>
   <div style="padding:0 16px;text-align:center;margin-bottom:16px" id="bilanAttenteZone"></div>
@@ -1259,7 +1268,7 @@ async function chargerBilan() {
           const stJ = (row[9] || '').toString().trim().toUpperCase();
           jour.n++;
           let etat = '⏰ en attente';
-          if (stJ.indexOf('VALID') !== -1) { jour.h += safeFloat(row[8]); jour.s += safeFloat(row[11]); etat = '✅ ' + safeFloat(row[8]) + 'h — ' + safeFloat(row[11]).toLocaleString('fr-FR') + ' F'; }
+          if (stJ.indexOf('VALID') !== -1) { jour.h += safeFloat(row[8]); jour.s += safeFloat(row[11]); etat = '✅ ' + safeFloat(row[8]) + 'h — <span class="montant">' + safeFloat(row[11]).toLocaleString('fr-FR') + ' F</span>'; }
           else if (stJ === 'EN COURS') { jour.enCours++; etat = '📝 cahier à publier'; }
           else if (stJ.indexOf('PRESENCE') !== -1 || stJ.indexOf('PRÉSENCE') !== -1) { etat = '✅ présence'; jour.h += safeFloat(row[8]); }
           else jour.attente++;
@@ -1296,7 +1305,7 @@ if (statut.indexOf('VALID') !== -1) {
     afficherBilan(nbCours, totalH, totalS, nbAttente, coursDetails);
     const zj = document.getElementById('bilanJourZone');
     if (zj) zj.innerHTML = '<div class="card"><div class="card-title">📅 Aujourd\'hui — ' + aujourdhui + '</div><div class="card-body">' +
-      (jour.n ? '<div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:6px"><span>' + jour.n + ' cours</span><span style="color:var(--green)">' + jour.h + 'h · ' + (estSalaireFixe() ? 'présence ✅' : jour.s.toLocaleString('fr-FR') + ' F') + '</span></div>' + jour.liste.join('') +
+      (jour.n ? '<div style="display:flex;justify-content:space-between;font-weight:700;margin-bottom:6px"><span>' + jour.n + ' cours</span><span style="color:var(--green)">' + jour.h + 'h · ' + (estSalaireFixe() ? 'présence ✅' : '<span class="montant">' + jour.s.toLocaleString('fr-FR') + ' F</span>') + '</span></div>' + jour.liste.join('') +
         (jour.enCours ? '<div style="font-size:11px;color:var(--amber);margin-top:6px">📝 ' + jour.enCours + ' cours sans cahier publié : publiez-le à la fin du cours pour être payé.</div>' : '')
       : '<p style="font-size:13px;color:var(--text2);text-align:center">Aucun cours enregistré aujourd\'hui pour le moment.</p>') + '</div></div>';
   } catch(e) {
@@ -1308,6 +1317,13 @@ if (statut.indexOf('VALID') !== -1) {
 
 // ── Écoles dont les enseignants sont permanents (salaire fixe) : le pointage sert au contrôle de présence
 const ECOLES_SALAIRE_FIXE = ['ACADEMIE','GUINGLO VILLE','GNONTINROU','SOAKPE','AKEIKOI 1','AKEIKOI 2','ETL PRINCES KOUIBLY','CPP DABOU'];
+// Salaire masqué par défaut sur l'écran « Mon bilan » : l'enseignant l'affiche lui-même, et il se remasque quand il quitte l'écran.
+function appliquerMasqueSalaire(cache) {
+  const sc = document.getElementById('screen-bilan'); if (!sc) return;
+  const fixe = estSalaireFixe();
+  sc.classList.toggle('salaire-fixe', fixe);
+  sc.classList.toggle('montants-caches', !!cache && !fixe);   // salaire fixe : aucun montant affiché, rien à masquer
+}
 function estSalaireFixe() { return !!(user && (user.niveau === 'primaire' || ECOLES_SALAIRE_FIXE.indexOf(String(user.ecole || '').toUpperCase()) !== -1)); }
 // ── Calendrier de paie 2026-2027 (décidé par le Fondateur) : [code, début, fin, libellé]
 // Un cours appartient au dernier mois de paie commencé (les jours de congé entre deux périodes restent dans la précédente).
@@ -1389,7 +1405,7 @@ function afficherBilan(nbCours, totalH, totalS, nbAttente, coursDetails) {
         <div style="font-size:11px;color:var(--text2);margin-top:2px">${esc(c.date)} · ${c.heures}h</div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:12px;font-weight:700;color:var(--green)">${c.salaire > 0 ? c.salaire.toLocaleString('fr-FR')+' F' : '—'}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--green)">${c.salaire > 0 ? '<span class="montant">'+c.salaire.toLocaleString('fr-FR')+' F</span>' : '—'}</div>
         <div style="font-size:11px">${c.statut}</div>
       </div>
     </div>`).join('');
@@ -2736,7 +2752,8 @@ function goToScreen(nom) {
   if (nom === 'cahier') { restaurerCoursActuel(); afficherEstimCahier(); }
   if (nom === 'bulletin') initBulletin();
   if (nom === 'chefs') initChefs();
-  if (nom === 'bilan') chargerBilan();
+  if (nom === 'bilan') { appliquerMasqueSalaire(true); chargerBilan(); }
+  else appliquerMasqueSalaire(true);
   // Sync offline si connecté
   if (navigator.onLine && nom !== 'login') syncHorsLigne();
   window.scrollTo(0, 0);
