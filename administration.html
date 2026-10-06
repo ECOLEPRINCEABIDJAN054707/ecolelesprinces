@@ -12288,6 +12288,46 @@ function renderNotesDevoirs(data) {
 let donneesEDT = [];
 let donneesEDT_filtrees = [];
 
+// ══ CORRECTIF 06/10/2026 — « Cours du jour » : un cours n'est « Fait » que si un pointage couvre SON horaire ══
+// Avant : un seul pointage du jour (même classe, même matière, même enseignant) marquait « Fait » TOUS les
+// créneaux de ce cours dans la journée, y compris ceux dont l'heure n'était pas encore arrivée.
+const _HORAIRES_FAITS = new WeakMap();
+function _noterHoraireFait(faits, cle, onglet, headers, row) {
+  let m = _HORAIRES_FAITS.get(faits);
+  if (!m) { m = {}; _HORAIRES_FAITS.set(faits, m); }
+  const min = nom => {
+    const i = headers.indexOf(nom);
+    if (i < 0 || row[i] === undefined || row[i] === null || row[i] === '') return null;
+    const t = parseH(toHeure(row[i]));
+    return t > 0 ? t : null;
+  };
+  const liste = (m[cle] = m[cle] || []);
+  const ajouter = (a, b, pointage) => {
+    if (a === null) return;
+    if (b === null || b <= a) b = a + 55;
+    liste.push({ a: a, b: b, pointage: pointage });
+  };
+  if (onglet === 'POINTAGE_MENSUEL') {
+    ajouter(min('EDT_DEBUT'), min('EDT_FIN'), true);        // créneau prévu
+    ajouter(min('HEURE_DEBUT'), min('HEURE_FIN'), true);    // horaire réel de l'appel
+  } else {
+    const fin = min('HEURE');                               // cahier de textes : heure de publication = fin du cours
+    if (fin !== null) ajouter(fin - 55, fin, false);
+  }
+}
+function _creneauEstFait(faits, cle, c, maintenantMin) {
+  if (!faits.has(cle)) return false;
+  const d = parseH(c.heureDebut);
+  const f = parseH(c.heureFin) > d ? parseH(c.heureFin) : d + 55;
+  // 1) Un cours dont l'heure n'est pas encore arrivée ne peut pas être « Fait » (l'appel ouvre 10 min avant)
+  if (maintenantMin !== null && d > 0 && maintenantMin < d - 10) return false;
+  let liste = (_HORAIRES_FAITS.get(faits) || {})[cle] || [];
+  if (liste.some(x => x.pointage)) liste = liste.filter(x => x.pointage);   // le pointage fait foi sur le cahier
+  if (!liste.length || !d) return true;     // aucun horaire exploitable : comportement d'origine
+  // 2) Il faut un enregistrement qui recouvre l'horaire de CE créneau (au moins 10 min en commun)
+  return liste.some(x => Math.min(x.b, f) - Math.max(x.a, d) >= 10);
+}
+
 async function chargerCoursJourEdu(s, dateChoisie) {
   const container = document.getElementById('eduCoursJourListe');
   const countEl = document.getElementById('eduCoursJourCount');
@@ -12371,14 +12411,14 @@ async function chargerCoursJourEdu(s, dateChoisie) {
           const classe = iClasse>=0 ? String(row[iClasse]||'').trim() : '';
           const matiere = iMat>=0 ? String(row[iMat]||'').trim() : '';
           const ens = iEns>=0 ? String(row[iEns]||'').trim() : '';
-          if (classe && ens) faits.add(norm(classe)+'|'+norm(matiere)+'|'+norm(ens));
+          if (classe && ens) { const cleF = norm(classe)+'|'+norm(matiere)+'|'+norm(ens); faits.add(cleF); _noterHoraireFait(faits, cleF, sn, headers, row); }
         });
       } catch(e) {}
     }
 
     creneaux.forEach(c => {
       const cle = norm(c.classe)+'|'+norm(c.matiere)+'|'+norm(c.enseignant);
-      c.fait = faits.has(cle);
+      c.fait = _creneauEstFait(faits, cle, c, estAujourdhuiReel ? maintenantMin : null);
       if (!estAujourdhuiReel) {
         c.statut = c.fait ? 'FAIT' : (estFutur ? 'A_VENIR' : 'MANQUANT');
       } else {
@@ -12500,14 +12540,14 @@ async function chargerCoursJourDir(s, dateChoisie) {
           const classe = iClasse>=0 ? String(row[iClasse]||'').trim() : '';
           const matiere = iMat>=0 ? String(row[iMat]||'').trim() : '';
           const ens = iEns>=0 ? String(row[iEns]||'').trim() : '';
-          if (classe && ens) faits.add(norm(classe)+'|'+norm(matiere)+'|'+norm(ens));
+          if (classe && ens) { const cleF = norm(classe)+'|'+norm(matiere)+'|'+norm(ens); faits.add(cleF); _noterHoraireFait(faits, cleF, sn, headers, row); }
         });
       } catch(e) {}
     }
 
     creneaux.forEach(c => {
       const cle = norm(c.classe)+'|'+norm(c.matiere)+'|'+norm(c.enseignant);
-      c.fait = faits.has(cle);
+      c.fait = _creneauEstFait(faits, cle, c, estAujourdhuiReel ? maintenantMin : null);
       if (!estAujourdhuiReel) {
         c.statut = c.fait ? 'FAIT' : (estFutur ? 'A_VENIR' : 'MANQUANT');
       } else {
@@ -12630,14 +12670,14 @@ const estFutur = refDate > now && !estAujourdhuiReel;
           const classe = iClasse>=0 ? String(row[iClasse]||'').trim() : '';
           const matiere = iMat>=0 ? String(row[iMat]||'').trim() : '';
           const ens = iEns>=0 ? String(row[iEns]||'').trim() : '';
-          if (classe && ens) faits.add(norm(classe)+'|'+norm(matiere)+'|'+norm(ens));
+          if (classe && ens) { const cleF = norm(classe)+'|'+norm(matiere)+'|'+norm(ens); faits.add(cleF); _noterHoraireFait(faits, cleF, sn, headers, row); }
         });
       } catch(e) {}
     }
 
     creneaux.forEach(c => {
       const cle = norm(c.classe)+'|'+norm(c.matiere)+'|'+norm(c.enseignant);
-      c.fait = faits.has(cle);
+      c.fait = _creneauEstFait(faits, cle, c, estAujourdhuiReel ? maintenantMin : null);
       if (!estAujourdhuiReel) {
         c.statut = c.fait ? 'FAIT' : (estFutur ? 'A_VENIR' : 'MANQUANT');
       } else {
