@@ -328,6 +328,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
   <div class="quick-actions">
     <button class="quick-btn" onclick="goTo('bilan')"><div class="quick-icon">📊</div><div class="quick-label">Mon bilan</div><div class="quick-sub" id="bilanMoisLabel">—</div></button>
     <button class="quick-btn" onclick="goTo('moyennes')"><div class="quick-icon">📈</div><div class="quick-label">Moyennes</div><div class="quick-sub" id="moyennesSubLabel">—</div></button>
+    <button class="quick-btn" style="grid-column:1 / -1;flex-direction:row;align-items:center;gap:12px" onclick="goTo('edt')"><div class="quick-icon">📅</div><div><div class="quick-label">Mon emploi du temps</div><div class="quick-sub">Tous mes cours de la semaine</div></div></button>
   </div>
   <div id="examBlancZoneEns" style="padding:0 16px 6px"></div>
   <div id="compoZoneEns" style="padding:0 16px 6px"></div>
@@ -358,6 +359,16 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
 <!-- ══════════════════════════════════════════════
      BILAN
 ══════════════════════════════════════════════ -->
+<!-- ⚠️ NOUVEAU 07/10/2026 — MON EMPLOI DU TEMPS -->
+<div class="screen" id="screen-edt">
+  <div class="header">
+    <button class="header-btn" onclick="goTo('accueil')">← Retour</button>
+    <div class="header-title"><h1>📅 Mon emploi du temps</h1><p id="edtSousTitre">—</p></div>
+    <button class="header-btn" onclick="chargerMonEdt(true)">↻</button>
+  </div>
+  <div id="edtZone" style="padding:16px 16px 32px"></div>
+</div>
+
 <div class="screen montants-caches" id="screen-bilan">
   <div class="header">
     <button class="header-btn" onclick="goTo('accueil')">← Retour</button>
@@ -2908,6 +2919,142 @@ function clearSig() { if(sigCtx){const c=document.getElementById('sigCanvas');if
 // ══════════════════════════════════════════════
 // NAVIGATION
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+// ⚠️ NOUVEAU 07/10/2026 — MON EMPLOI DU TEMPS (semaine complète)
+// Secondaire : tous les cours du professeur, jour par jour. Primaire / maternelle : la grille de sa classe.
+// Les données viennent du serveur (type MON_EDT_SEMAINE) et sont gardées dans le téléphone :
+// l'emploi du temps reste consultable sans connexion.
+// ══════════════════════════════════════════════
+let _edtJourChoisi = null;
+function _edtJourActuel() { return ['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'][new Date().getDay()]; }
+function _edtNomJour(j) { return String(j || '').charAt(0) + String(j || '').slice(1).toLowerCase(); }
+function _edtLireCache() {
+  try {
+    const s = JSON.parse(localStorage.getItem('pss_edt_semaine') || 'null');
+    if (s && user && s.prof === user.nom && s.ecole === user.ecole && s.data) return s;
+  } catch (e) {}
+  return (window._edtMemoire && user && window._edtMemoire.prof === user.nom && window._edtMemoire.ecole === user.ecole) ? window._edtMemoire : null;
+}
+function _edtMessage(texte, avecBouton) {
+  document.getElementById('edtZone').innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:24px">' +
+    '<p style="font-size:13px;color:var(--text2);line-height:1.5">' + texte + '</p>' +
+    (avecBouton ? '<button class="btn btn-outline" style="margin-top:14px" onclick="chargerMonEdt(true)">↻ Réessayer</button>' : '') + '</div></div>';
+}
+async function chargerMonEdt(force) {
+  if (!user) return;
+  const cache = _edtLireCache();
+  if (cache) _afficherMonEdt(cache.data, cache.date);
+  else _edtMessage('<span class="loader-ring" style="display:block;width:28px;height:28px;margin:0 auto 10px"></span>Chargement de votre emploi du temps...', false);
+  // Relu sur le serveur une fois par jour, ou quand l'enseignant touche ↻
+  if (cache && !force && cache.date === formatDate(new Date())) return;
+  if (window._edtEnCours) return;
+  window._edtEnCours = true;
+  try {
+    const primaire = user.niveau === 'primaire' && !!user.classeDefaut;
+    // Primaire : on demande la grille de la classe (nom d'enseignant laissé vide) ; secondaire : les cours au nom du professeur
+    const url = APPS_SCRIPT_URL + '?type=MON_EDT_SEMAINE&ecole=' + encodeURIComponent(user.ecole) +
+      '&enseignant=' + encodeURIComponent(primaire ? '' : user.nom) + '&classe=' + encodeURIComponent(primaire ? user.classeDefaut : '');
+    const cbName = 'edt_' + Date.now();
+    const script = document.createElement('script');
+    const promise = new Promise((resolve) => {
+      window[cbName] = (d) => { resolve(d); delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); };
+      script.onerror = () => { resolve({ ok: false }); delete window[cbName]; };
+    });
+    script.src = url + '&callback=' + cbName;
+    document.body.appendChild(script);
+    const data = await Promise.race([promise, new Promise(r => setTimeout(() => r({ ok: false }), 45000))]);
+    if (data && data.ok && (data.type === 'PROF' || data.type === 'CLASSE' || data.type === 'VIDE')) {
+      const s = { prof: user.nom, ecole: user.ecole, date: formatDate(new Date()), data };
+      window._edtMemoire = s;
+      try { localStorage.setItem('pss_edt_semaine', JSON.stringify(s)); } catch (e) {}
+      _afficherMonEdt(data, s.date);
+      if (force) showToast('✅ Emploi du temps à jour', 'success');
+    } else if (!cache) {
+      _edtMessage('Emploi du temps indisponible pour le moment.<br>Vérifiez votre connexion puis réessayez.', true);
+    } else if (force) {
+      showToast('Connexion impossible — dernier emploi du temps enregistré affiché', 'warn');
+    }
+  } catch (e) {
+    console.warn('chargerMonEdt:', e);
+    if (!cache) _edtMessage('Emploi du temps indisponible pour le moment.', true);
+  }
+  window._edtEnCours = false;
+}
+function _edtChoisirJour(j) {
+  _edtJourChoisi = j;
+  const c = _edtLireCache();
+  if (c) _afficherMonEdt(c.data, c.date);
+}
+function _afficherMonEdt(data, dateMaj) {
+  const zone = document.getElementById('edtZone');
+  const sous = document.getElementById('edtSousTitre');
+  if (!zone || !data) return;
+  const auj = _edtJourActuel();
+  sous.textContent = (ECOLE_NOMS[user.ecole] || user.ecole) + (dateMaj ? ' · à jour le ' + dateMaj : '');
+
+  // ── Professeur : ses cours jour par jour ──
+  if (data.type === 'PROF' && Array.isArray(data.cours) && data.cours.length) {
+    const classes = {};
+    data.cours.forEach(c => { classes[c.classe] = true; });
+    const nbClasses = Object.keys(classes).length;
+    let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">' +
+      '<div class="card"><div class="card-body" style="text-align:center;padding:12px"><div style="font-size:22px;font-weight:800;color:var(--navy)">' + (data.totalSeances || 0) + ' h</div><div style="font-size:11px;color:var(--text2)">de cours par semaine</div></div></div>' +
+      '<div class="card"><div class="card-body" style="text-align:center;padding:12px"><div style="font-size:22px;font-weight:800;color:var(--navy)">' + nbClasses + '</div><div style="font-size:11px;color:var(--text2)">classe' + (nbClasses > 1 ? 's' : '') + '</div></div></div></div>';
+    const jours = ['LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI'];
+    if (data.cours.some(c => c.jour === 'SAMEDI')) jours.push('SAMEDI');
+    jours.forEach(j => {
+      const liste = data.cours.filter(c => c.jour === j);
+      const estAuj = j === auj;
+      html += '<div class="card" style="margin-bottom:12px' + (estAuj ? ';border:2px solid var(--blue)' : '') + '">' +
+        '<div class="card-title"' + (estAuj ? ' style="background:var(--blue)"' : '') + '>' + _edtNomJour(j) + (estAuj ? ' · aujourd\'hui' : '') +
+        (liste.length ? '<span style="float:right;font-weight:600;text-transform:none;letter-spacing:0">' + liste.reduce((t, c) => t + (c.seances || 0), 0) + ' h</span>' : '') + '</div>' +
+        '<div class="card-body" style="padding:6px 14px">';
+      if (!liste.length) html += '<div style="padding:10px 0;font-size:12px;color:var(--text3)">Pas de cours</div>';
+      liste.forEach((c, i) => {
+        html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 0' + (i ? ';border-top:1px solid var(--border)' : '') + '">' +
+          '<div style="flex:0 0 96px;font-size:12px;font-weight:700;color:var(--blue)">' + esc(c.heureDebut) + ' → ' + esc(c.heureFin) + '</div>' +
+          '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text)">' + esc(c.classe) + '</div>' +
+          '<div style="font-size:12px;color:var(--text2)">' + esc(c.matiere) + '</div></div></div>';
+      });
+      html += '</div></div>';
+    });
+    zone.innerHTML = html;
+    return;
+  }
+
+  // ── Maître du primaire / de la maternelle : la grille de sa classe, un jour à la fois ──
+  if (data.type === 'CLASSE' && Array.isArray(data.jours) && data.jours.length && Array.isArray(data.lignes)) {
+    let jour = (_edtJourChoisi && data.jours.indexOf(_edtJourChoisi) !== -1) ? _edtJourChoisi : (data.jours.indexOf(auj) !== -1 ? auj : data.jours[0]);
+    const k = data.jours.indexOf(jour);
+    let html = '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:10px">Classe ' + esc(data.classe) + '</div>' +
+      '<div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px">';
+    data.jours.forEach(j => {
+      const actif = j === jour;
+      html += '<button onclick="_edtChoisirJour(\'' + j + '\')" style="flex:1 0 auto;padding:9px 12px;border-radius:999px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid ' +
+        (actif ? 'var(--navy);background:var(--navy);color:#fff' : 'var(--border);background:var(--surface);color:var(--text2)') + '">' + _edtNomJour(j).slice(0, 3) + (j === auj ? ' •' : '') + '</button>';
+    });
+    html += '</div><div class="card"><div class="card-title">' + _edtNomJour(jour) + (jour === auj ? ' · aujourd\'hui' : '') + '</div><div class="card-body" style="padding:6px 14px">';
+    let premier = true;
+    data.lignes.forEach(l => {
+      if (l.pause) {
+        html += '<div style="padding:8px 0;text-align:center;font-size:11px;font-weight:700;color:var(--amber);background:var(--amber-lt);border-radius:8px;margin:6px 0">' + esc(l.pause) + '</div>';
+        premier = true;
+        return;
+      }
+      const t = (l.cases && l.cases[k]) || '';
+      html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 0' + (premier ? '' : ';border-top:1px solid var(--border)') + '">' +
+        '<div style="flex:0 0 96px;font-size:12px;font-weight:700;color:var(--blue)">' + esc(l.horaire) + '</div>' +
+        '<div style="flex:1;min-width:0;font-size:13px;color:' + (t ? 'var(--text)' : 'var(--text3)') + '">' + (t ? esc(t) : '—') + '</div></div>';
+      premier = false;
+    });
+    html += '</div></div>';
+    zone.innerHTML = html;
+    return;
+  }
+
+  _edtMessage('Aucun emploi du temps n\'est enregistré à votre nom pour le moment.<br>Signalez-le à la Direction.', true);
+}
+
 function goTo(nom) { goToScreen(nom); }
 
 function goToScreen(nom) {
@@ -2916,6 +3063,7 @@ function goToScreen(nom) {
   if (sc) sc.classList.add('active');
   // Actions spécifiques à chaque écran
   if (nom === 'accueil') _dessinerMesCoursDuJour(); // ⚠️ 07/10/2026 — cours terminés grisés à chaque retour à l'accueil
+  if (nom === 'edt') chargerMonEdt();               // ⚠️ 07/10/2026 — mon emploi du temps de la semaine
   if (nom === 'notes') initNotes();
   if (nom === 'cahier') { restaurerCoursActuel(); afficherEstimCahier(); }
   if (nom === 'bulletin') initBulletin();
