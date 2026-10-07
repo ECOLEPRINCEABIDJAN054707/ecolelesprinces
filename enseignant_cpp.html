@@ -3074,10 +3074,11 @@ function _edtMessage(texte, avecBouton) {
 async function chargerMonEdt(force) {
   if (!user) return;
   const cache = _edtLireCache();
-  if (cache) _afficherMonEdt(cache.data, cache.date);
+  if (cache) _afficherMonEdt(cache.data, cache.date + (cache.heure ? ' à ' + cache.heure : ''));
   else _edtMessage('<span class="loader-ring" style="display:block;width:28px;height:28px;margin:0 auto 10px"></span>Chargement de votre emploi du temps...', false);
-  // Relu sur le serveur une fois par jour, ou quand l'enseignant touche ↻
-  if (cache && !force && cache.date === formatDate(new Date())) return;
+  // ⚠️ 07/10/2026 — Relu sur le serveur à l'ouverture de l'écran dès que la copie a plus de 10 minutes, ou quand
+  // l'enseignant touche ↻ (avant : une seule fois par jour, une grille corrigée dans la journée n'apparaissait que le lendemain)
+  if (cache && !force && cache.date === formatDate(new Date()) && cache.ts && (Date.now() - cache.ts) >= 0 && (Date.now() - cache.ts) < 10 * 60 * 1000) return;
   if (window._edtEnCours) return;
   window._edtEnCours = true;
   try {
@@ -3095,10 +3096,10 @@ async function chargerMonEdt(force) {
     document.body.appendChild(script);
     const data = await Promise.race([promise, new Promise(r => setTimeout(() => r({ ok: false }), 45000))]);
     if (data && data.ok && (data.type === 'PROF' || data.type === 'CLASSE' || data.type === 'VIDE')) {
-      const s = { prof: user.nom, ecole: user.ecole, date: formatDate(new Date()), data };
+      const s = { prof: user.nom, ecole: user.ecole, date: formatDate(new Date()), heure: formatHeure(new Date()), ts: Date.now(), data };
       window._edtMemoire = s;
       try { localStorage.setItem('pss_edt_semaine', JSON.stringify(s)); } catch (e) {}
-      _afficherMonEdt(data, s.date);
+      _afficherMonEdt(data, s.date + ' à ' + s.heure);
       if (force) showToast('✅ Emploi du temps à jour', 'success');
     } else if (!cache) {
       _edtMessage('Emploi du temps indisponible pour le moment.<br>Vérifiez votre connexion puis réessayez.', true);
