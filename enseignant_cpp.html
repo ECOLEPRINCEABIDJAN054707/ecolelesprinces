@@ -481,6 +481,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
 <div class="screen" id="screen-cahier">
   <div class="header"><div class="header-icon">📝</div><div class="header-title"><h1>Cahier de textes</h1><p><span id="cahierClasse">—</span> · <span id="cahierMatiere">—</span></p></div></div>
   <div style="padding:16px" class="has-nav">
+    <div id="cahierInfo" style="display:none;margin-bottom:12px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.45"></div>
     <div class="field-block"><div class="field-header required">📖 Leçon du jour ●</div><textarea class="textarea" id="cahierLecon" placeholder="Titre de la leçon..." style="border:none;border-radius:0;background:var(--surface)"></textarea></div>
     <div class="field-block"><div class="field-header required">📚 Contenu détaillé ●</div><textarea class="textarea" id="cahierContenu" placeholder="Contenu enseigné..." style="border:none;border-radius:0;background:var(--surface);min-height:90px"></textarea></div>
     <div class="field-block">
@@ -508,7 +509,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
     </div>
     <p id="obligMsg" style="font-size:12px;color:var(--red);text-align:center;padding:8px;display:none">⚠️ Veuillez remplir la leçon et le contenu</p>
   </div>
-  <div class="sticky-bottom"><button class="btn btn-green" onclick="publierCahier()">📤 Publier et terminer le cours</button></div>
+  <div class="sticky-bottom"><button class="btn btn-green" id="btnPublierCahier" onclick="publierCahier()">📤 Publier et terminer le cours</button></div>
   <nav class="bottom-nav">
     <button class="nav-item" onclick="goTo('accueil')"><div class="nav-icon">🏠</div><span>Accueil</span></button>
     <button class="nav-item" onclick="goTo('appel')"><div class="nav-icon">✅</div><span>Appel</span></button>
@@ -1990,6 +1991,130 @@ function setAv(val) {
 }
 
 // ══════════════════════════════════════════════
+// ⚠️ 07/10/2026 — CORRIGER LE DERNIER CAHIER PUBLIÉ
+// Pendant 30 minutes après la publication, tant qu'aucun autre cours n'a commencé, l'enseignant peut
+// rouvrir l'écran « Cahier » : son dernier cahier est rechargé, il le corrige et l'enregistre.
+// Le serveur corrige alors la ligne d'origine (il n'ajoute pas de seconde ligne).
+// ══════════════════════════════════════════════
+const CAHIER_DELAI_CORRECTION_MIN = 30;
+let _cahierCorrection = null;     // le cahier en cours de correction (null = publication normale)
+let _cahierPrerempli = false;     // le formulaire contient le texte rechargé d'un cahier déjà publié
+
+function _noterDernierCahier(data) {
+  try {
+    if (!data || !data.classe || data.classe === '—' || data.classe === '-') return;
+    localStorage.setItem('pss_dernier_cahier', JSON.stringify({
+      jour: data.date, prof: (user && user.nom) || '', ecole: (user && user.ecole) || '', ts: Date.now(),
+      classe: data.classe, matiere: data.matiere, heure: data.heure,
+      lecon: data.lecon || '', contenu: data.contenu || '', avancement: data.avancement || 'dans les temps',
+      devoir: data.devoir || '', dateRemise: data.dateRemise || '', docs: data.docs || '',
+      obs: String(data.obs || '').replace(/\s*\[GPS : [^\]]*\]\s*$/, '')
+    }));
+  } catch (e) {}
+}
+
+// Le dernier cahier publié, s'il est encore corrigeable (même jour, même enseignant, moins de 30 minutes)
+function _lireDernierCahier() {
+  try {
+    const d = JSON.parse(localStorage.getItem('pss_dernier_cahier') || 'null');
+    if (!d || !user) return null;
+    if (d.jour !== formatDate(new Date()) || d.prof !== user.nom || d.ecole !== user.ecole) return null;
+    const ecoule = (Date.now() - (d.ts || 0)) / 60000;
+    if (ecoule < 0 || ecoule > CAHIER_DELAI_CORRECTION_MIN) return null;
+    d.resteMin = Math.max(1, Math.ceil(CAHIER_DELAI_CORRECTION_MIN - ecoule));
+    return d;
+  } catch (e) { return null; }
+}
+
+// Appelée à chaque ouverture de l'écran « Cahier »
+function _preparerEcranCahier() {
+  const zone = document.getElementById('cahierInfo');
+  const btn = document.getElementById('btnPublierCahier');
+  if (!zone || !btn) return;
+  const normal = () => { btn.textContent = '📤 Publier et terminer le cours'; };
+  // 1. Un cours est en cours : publication normale
+  if (coursActuel) {
+    if (_cahierPrerempli) resetCahier();       // on ne laisse pas le texte d'un ancien cahier dans le cahier du nouveau cours
+    _cahierCorrection = null; _cahierPrerempli = false;
+    zone.style.display = 'none'; normal();
+    return;
+  }
+  // 2. Pas de cours en cours, mais un cahier vient d'être publié : on propose de le corriger
+  const d = _lireDernierCahier();
+  if (d) {
+    const vide = !document.getElementById('cahierLecon').value.trim() && !document.getElementById('cahierContenu').value.trim();
+    if (vide || !_cahierCorrection) {
+      document.getElementById('cahierLecon').value = d.lecon;
+      document.getElementById('cahierContenu').value = d.contenu;
+      document.getElementById('cahierDevoir').value = d.devoir;
+      document.getElementById('cahierDateRemise').value = d.dateRemise;
+      document.getElementById('cahierDocs').value = d.docs;
+      document.getElementById('cahierObs').value = d.obs;
+      setAv(d.avancement);
+    }
+    _cahierCorrection = d; _cahierPrerempli = true;
+    document.getElementById('cahierClasse').textContent = d.classe;
+    document.getElementById('cahierMatiere').textContent = d.matiere;
+    zone.style.cssText = 'display:block;margin-bottom:12px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.45;background:var(--amber-lt);color:var(--text);border:1.5px solid var(--amber)';
+    zone.innerHTML = '<b>✏️ Correction de votre cahier</b><br>' + esc(d.classe) + ' · ' + esc(d.matiere) + ', publié à ' + esc(d.heure) +
+      '.<br>Corrigez le texte puis enregistrez. Votre cours et votre paie ne changent pas.<br><span style="color:var(--text2)">Possible encore ' + d.resteMin + ' min.</span>';
+    btn.textContent = '✅ Enregistrer la correction';
+    return;
+  }
+  // 3. Ni cours en cours, ni cahier récent
+  if (_cahierPrerempli) resetCahier();
+  _cahierCorrection = null; _cahierPrerempli = false;
+  document.getElementById('cahierClasse').textContent = '—';
+  document.getElementById('cahierMatiere').textContent = '—';
+  zone.style.cssText = 'display:block;margin-bottom:12px;padding:12px 14px;border-radius:12px;font-size:13px;line-height:1.45;background:var(--surface);color:var(--text2);border:1.5px solid var(--border)';
+  zone.innerHTML = '<b>ℹ️ Aucun cours en cours</b><br>Le cahier de textes se publie à la fin d\'un cours commencé. Faites d\'abord l\'appel de votre classe.';
+  normal();
+}
+
+function _envoyerCorrectionCahier(lecon, contenu) {
+  const d = _lireDernierCahier();
+  if (!d) {
+    showToast('Le délai de ' + CAHIER_DELAI_CORRECTION_MIN + ' minutes est dépassé : ce cahier ne peut plus être corrigé ici', 'warn');
+    _cahierCorrection = null; _cahierPrerempli = false; resetCahier(); _preparerEcranCahier();
+    return;
+  }
+  if (window._cahierEnvoi) return;
+  window._cahierEnvoi = true;
+  showLoader('Enregistrement de la correction...');
+  const maintenant = new Date(), heure = formatHeure(maintenant);
+  // Envoyé « sans classe » : le serveur reconnaît la correction du dernier cahier de l'enseignant et corrige sa ligne
+  const data = {
+    date: formatDate(maintenant), heure, classe: '—', matiere: d.matiere,
+    enseignant: user.nom, ecole: user.ecole, lecon, contenu, avancement,
+    devoir: document.getElementById('cahierDevoir').value.trim(),
+    dateRemise: document.getElementById('cahierDateRemise').value || '',
+    docs: document.getElementById('cahierDocs').value.trim(),
+    obs: document.getElementById('cahierObs').value.trim(),
+    horodatagePubli: heure, correction: true, classeOrigine: d.classe, heureOrigine: d.heure
+  };
+  const apres = (horsLigne) => {
+    window._cahierEnvoi = false;
+    hideLoader();
+    try {   // le cahier mémorisé prend le texte corrigé ; son heure de publication et son délai ne changent pas
+      localStorage.setItem('pss_dernier_cahier', JSON.stringify(Object.assign({}, d, { resteMin: undefined,
+        lecon, contenu, avancement, devoir: data.devoir, dateRemise: data.dateRemise, docs: data.docs, obs: data.obs })));
+    } catch (e) {}
+    showToast(horsLigne ? 'Correction sauvegardée localement' : 'Cahier corrigé — ' + d.classe, 'success');
+    _cahierCorrection = null; _cahierPrerempli = false;
+    resetCahier();
+    setTimeout(() => goToScreen('accueil'), 1500);
+  };
+  envoyerDonnees('CAHIER', data).then((res) => {
+    if (res && res.ok === false) {
+      window._cahierEnvoi = false; hideLoader();
+      showToast('Correction non enregistrée : ' + (res.error || res.message || 'réessayez'), 'error');
+      return;
+    }
+    apres(false);
+  }).catch(() => { sauvegarderHorsLigne('CAHIER', data); apres(true); });
+}
+
+// ══════════════════════════════════════════════
 // PUBLIER CAHIER
 // ══════════════════════════════════════════════
 async function publierCahier() {
@@ -1999,6 +2124,11 @@ async function publierCahier() {
     document.getElementById('obligMsg').style.display = 'block';
     setTimeout(() => document.getElementById('obligMsg').style.display = 'none', 3000);
     return;
+  }
+  // ⚠️ 07/10/2026 — pas de cours en cours : soit c'est la correction du dernier cahier, soit on prévient
+  if (!coursActuel && _cahierCorrection) { _envoyerCorrectionCahier(lecon, contenu); return; }
+  if (!coursActuel) {
+    if (!confirm('⚠️ AUCUN COURS EN COURS SUR CE TÉLÉPHONE\n\nLe cahier de textes se publie à la fin d\'un cours commencé par l\'appel.\n\nSi vous avez fait l\'appel sur un autre téléphone, vous pouvez publier : le cahier sera rattaché à votre cours.\n\nOK = publier quand même\nAnnuler = revenir')) return;
   }
   const maintenant = new Date();
   const horodatagePubli = formatHeure(maintenant);
@@ -2052,7 +2182,7 @@ async function publierCahier() {
     };
     envoyerDonnees('CAHIER', data).then((res) => {
       window._cahierEnvoi = false;
-      if (!(res && res.ok === false)) _noterCoursClos(coursActuel); // ⚠️ 07/10/2026 — cahier publié : ce cours ne peut plus être rouvert
+      if (!(res && res.ok === false)) { _noterCoursClos(coursActuel); _noterDernierCahier(data); } // ⚠️ 07/10/2026 — cahier publié : ce cours ne peut plus être rouvert ; le cahier reste corrigeable 30 min
       hideLoader();
       let msg = `📝 Cours publié — ${calcul.heuresValidees}h — ${(calcul.salaire||0).toLocaleString('fr-FR')} F CFA`;
       if (gpsStatut === 'GPS_REFUSE' || gpsStatut === 'GPS_INDISPONIBLE' || gpsStatut === 'GPS_NON_DISPO') msg += ' · 📍 sans GPS (signalé à la direction)';
@@ -2070,6 +2200,7 @@ async function publierCahier() {
       hideLoader();
       sauvegarderHorsLigne('CAHIER', data);
       _noterCoursClos(coursActuel); // ⚠️ 07/10/2026 — cahier enregistré (hors ligne) : ce cours ne peut plus être rouvert
+      _noterDernierCahier(data);
       showToast('📝 Cahier sauvegardé localement','success');
       resetCahier();
       coursActuel = null;
@@ -3083,7 +3214,7 @@ function goToScreen(nom) {
   if (nom === 'accueil') _dessinerMesCoursDuJour(); // ⚠️ 07/10/2026 — cours terminés grisés à chaque retour à l'accueil
   if (nom === 'edt') chargerMonEdt();               // ⚠️ 07/10/2026 — mon emploi du temps de la semaine
   if (nom === 'notes') initNotes();
-  if (nom === 'cahier') { restaurerCoursActuel(); afficherEstimCahier(); }
+  if (nom === 'cahier') { restaurerCoursActuel(); _preparerEcranCahier(); afficherEstimCahier(); }
   if (nom === 'bulletin') initBulletin();
   if (nom === 'chefs') initChefs();
   if (nom === 'bilan') { appliquerMasqueSalaire(true); chargerBilan(); }
