@@ -6067,7 +6067,8 @@ function afficherAttente(lignes,mois){
   const _dA=new Date(),aujStr=String(_dA.getUTCDate()).padStart(2,'0')+'/'+String(_dA.getUTCMonth()+1).padStart(2,'0')+'/'+_dA.getUTCFullYear();
   const sansCahier=st==='EN COURS'&&toDate(row[0])!==aujStr;   // appel fait, cahier jamais publié (jours précédents)
   const aIdentifier=st==='INCOMPLET'&&String(row[4]||'').trim()==='';   // appel sans prof : le directeur l'identifie
-  return (st==='EN ATTENTE'||sansCahier||aIdentifier)&&mr===mois&&!estPrimaire&&(String(row[4]||'').trim()!==''||aIdentifier);
+  const voirDirection=st==='VOIR DIRECTION';   // 07/10/2026 : cours renvoyé à la Direction par le serveur (aucune heure acquise d'office) — le Directeur doit le voir et le traiter
+  return (st==='EN ATTENTE'||voirDirection||sansCahier||aIdentifier)&&mr===mois&&!estPrimaire&&(String(row[4]||'').trim()!==''||aIdentifier);
 });
   const sec=document.getElementById('dirSecAttente');if(sec)sec.style.display='block';
   const se=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
@@ -6092,7 +6093,7 @@ function afficherAttente(lignes,mois){
     const calc=calculerSalaireV2(dm,tarif,dureeEDT);
     const creneauTxt=edtD&&edtF?(edtD+' - '+edtF):'—';
     const _hz=String(row[15]||'').trim();
-    h+='<tr'+(_hz?' style="background:#FFF5F5"':'')+'><td>'+toDate(row[0])+'</td><td><strong>'+(row[4]||'<span style="color:var(--orange)">❓ Prof à identifier</span>')+'</strong>'+(_hz?'<br><span style="display:inline-block;margin-top:3px;padding:2px 7px;background:#C62828;color:#fff;border-radius:10px;font-size:0.72em;font-weight:700">'+_hz+'</span>':'')+'</td><td>'+(row[2]||'')+'</td><td>'+(row[3]||'')+'</td><td style="font-size:0.75em;color:var(--bleu)">'+creneauTxt+'</td><td style="color:var(--orange);font-weight:700">'+(String(row[9]||'').trim()==='EN COURS'?'📕 Sans cahier':(String(row[9]||'').trim()==='INCOMPLET'?'❓ À identifier':minStr(dm)))+'</td><td style="font-weight:700;color:var(--vert)">'+calc.salaire.toLocaleString('fr-FR')+' F</td><td><button onclick="ouvrirModalAttente('+idx+')" style="padding:5px 10px;background:var(--bleu);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.75em;font-weight:600">Traiter</button></td></tr>';
+    h+='<tr'+(_hz?' style="background:#FFF5F5"':'')+'><td>'+toDate(row[0])+'</td><td><strong>'+(row[4]||'<span style="color:var(--orange)">❓ Prof à identifier</span>')+'</strong>'+(_hz?'<br><span style="display:inline-block;margin-top:3px;padding:2px 7px;background:#C62828;color:#fff;border-radius:10px;font-size:0.72em;font-weight:700">'+_hz+'</span>':'')+'</td><td>'+(row[2]||'')+'</td><td>'+(row[3]||'')+'</td><td style="font-size:0.75em;color:var(--bleu)">'+creneauTxt+'</td><td style="color:var(--orange);font-weight:700">'+(String(row[9]||'').trim()==='EN COURS'?'📕 Sans cahier':(String(row[9]||'').trim()==='INCOMPLET'?'❓ À identifier':minStr(dm)+(String(row[9]||'').trim().toUpperCase()==='VOIR DIRECTION'?'<br><span style="font-size:0.8em;color:var(--rouge)">⚠️ Voir direction</span>':'')))+'</td><td style="font-weight:700;color:var(--vert)">'+calc.salaire.toLocaleString('fr-FR')+' F</td><td><button onclick="ouvrirModalAttente('+idx+')" style="padding:5px 10px;background:var(--bleu);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.75em;font-weight:600">Traiter</button></td></tr>';
   });
   h+='</tbody></table></div>';const ta=document.getElementById('tableAttente');if(ta)ta.innerHTML=h;
 }
