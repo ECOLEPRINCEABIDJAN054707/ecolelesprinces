@@ -1049,6 +1049,11 @@ classes.sort((a, b) => a.localeCompare(b, 'fr'));
   // ⚠️ NOUVEAU — Mes cours du jour, avec créneaux cliquables uniquement à mon nom
 async function chargerMesCoursDuJour() {
   const zone = document.getElementById('modalClasse').closest('.card') || document.getElementById('modalClasse').parentElement.parentElement;
+  // ⚠️ 07/10/2026 — une seule zone à l'écran, et on repart d'une liste vide à chaque chargement
+  const _ancienneZone = document.getElementById('mesCoursJourZone');
+  if (_ancienneZone) _ancienneZone.remove();
+  window._mesCoursJour = null;
+  window._mesCoursJourDate = formatDate(new Date());
   const container = document.createElement('div');
   container.id = 'mesCoursJourZone';
   container.style.cssText = 'padding:0 16px 16px';
@@ -1090,39 +1095,127 @@ async function chargerMesCoursDuJour() {
       return;
     }
 
-let html = '<div class="card"><div class="card-title">📅 Mes cours aujourd\'hui</div><div class="card-body" style="padding:12px">';
-const maintenant = new Date();
-const minMaintenant = maintenant.getHours() * 60 + maintenant.getMinutes();
-data.cours.sort((a, b) => parseMin(a.heureDebut) - parseMin(b.heureDebut));
-    data.cours.forEach((c, i) => {
-  const [hF, mF] = (c.heureFin || '00:00').split(':').map(Number);
-  const minFin = (hF||0) * 60 + (mF||0);
-  const estTermine = minFin > 0 && minMaintenant > minFin;
-  if (estTermine) {
-    html += '<div style="width:100%;text-align:left;padding:12px;margin-bottom:8px;background:#F0F0F0;border:1.5px solid #DDD;border-radius:10px;opacity:0.55">' +
-      '<div style="font-weight:700;font-size:14px;color:#888">' + esc(c.classe) + ' <span style="font-size:11px;font-weight:400">(terminé)</span></div>' +
-      '<div style="font-size:12px;color:#999;margin-top:2px">' + esc(c.matiere) + ' · ' + esc(c.heureDebut) + ' → ' + esc(c.heureFin) + '</div>' +
-      '</div>';
-  } else {
-    html += '<button onclick="demarrerCoursDepuisEDT(' + i + ')" style="width:100%;text-align:left;padding:12px;margin-bottom:8px;background:var(--blue-lt);border:1.5px solid #90CAF9;border-radius:10px;font-family:inherit;cursor:pointer">' +
-      '<div style="font-weight:700;font-size:14px;color:var(--navy)">' + esc(c.classe) + '</div>' +
-      '<div style="font-size:12px;color:var(--text2);margin-top:2px">' + esc(c.matiere) + ' · ' + esc(c.heureDebut) + ' → ' + esc(c.heureFin) + '</div>' +
-      '</button>';
-  }
-});
-    html += '<button class="btn btn-ghost" style="margin-top:4px" onclick="signalerProblemeEDT()">🚩 Je ne trouve pas mon cours</button>';
-    html += '</div></div>';
-    container.innerHTML = html;
+    // ⚠️ 07/10/2026 — la liste est mémorisée puis dessinée par _dessinerMesCoursDuJour(),
+    // qui est rejouée à chaque retour à l'accueil : un cours terminé ne reste plus cliquable
+    data.cours.sort((a, b) => parseMin(a.heureDebut) - parseMin(b.heureDebut));
     window._mesCoursJour = data.cours;
+    window._mesCoursJourDate = formatDate(new Date());
+    _dessinerMesCoursDuJour();
 } catch(e) {
      console.error('DEBUG chargerMesCoursDuJour:', e);
      container.innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:20px"><p style="font-size:13px;color:var(--text2)">Erreur de chargement.</p></div></div>';
    }
 }
 
+// ══════════════════════════════════════════════
+// ⚠️ NOUVEAU 07/10/2026 — UN COURS TERMINÉ NE PEUT PLUS ÊTRE ROUVERT
+// Avant : la liste « Mes cours aujourd'hui » était dessinée une seule fois, à l'ouverture de l'application.
+// Un cours fini restait donc cliquable si l'application était restée ouverte, et un nouvel appel partait
+// avec le créneau du cours déjà terminé (le cours suivant était alors pris pour un doublon et non payé).
+// ══════════════════════════════════════════════
+function _cleCours(classe, hD) {
+  const n = String(classe || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '');
+  const m = parseMin(hD);
+  return (n && m !== null) ? n + '|' + m : '';
+}
+// Cours dont le cahier a été publié aujourd'hui par cet enseignant (mémoire + téléphone)
+function _lireCoursClos() {
+  const auj = formatDate(new Date()), prof = (user && user.nom) || '';
+  const bon = s => s && s.jour === auj && s.prof === prof && Array.isArray(s.cles);
+  if (bon(window._coursClos)) return window._coursClos.cles;
+  try {
+    const s = JSON.parse(localStorage.getItem('pss_cours_clos') || 'null');
+    if (bon(s)) { window._coursClos = s; return s.cles; }
+  } catch (e) {}
+  return [];
+}
+function _noterCoursClos(c) {
+  try {
+    if (!c || !c.horodatageAppel) return;
+    const cle = _cleCours(c.classe, c.heureDebutEDT);
+    if (!cle) return;
+    const cles = _lireCoursClos().slice();
+    if (cles.indexOf(cle) === -1) cles.push(cle);
+    window._coursClos = { jour: formatDate(new Date()), prof: (user && user.nom) || '', cles };
+    try { localStorage.setItem('pss_cours_clos', JSON.stringify(window._coursClos)); } catch (e) {}
+  } catch (e) {}
+}
+function _coursEstClos(classe, hD) {
+  const cle = _cleCours(classe, hD);
+  return !!cle && _lireCoursClos().indexOf(cle) !== -1;
+}
+// État d'un cours de la liste, calculé à l'instant présent :
+//  'clos'    = cahier déjà publié                      → ne peut plus être rouvert
+//  'appele'  = appel fait, cahier pas encore publié    → on peut y revenir (même après l'heure de fin)
+//  'termine' = heure de fin dépassée, aucun appel fait → l'appel n'est plus possible
+//  'ouvert'  = cours à venir ou en cours
+function _etatCoursDuJour(c) {
+  if (_coursEstClos(c.classe, c.heureDebut)) return 'clos';
+  if (_coursDejaAppele(c.classe, c.heureDebut)) return 'appele';
+  const now = new Date(), minNow = now.getHours() * 60 + now.getMinutes();
+  const minFin = parseMin(c.heureFin);
+  if (minFin !== null && minFin > 0 && minNow > minFin) return 'termine';
+  return 'ouvert';
+}
+function _dessinerMesCoursDuJour() {
+  try {
+    const container = document.getElementById('mesCoursJourZone');
+    const cours = window._mesCoursJour;
+    if (!container || !user || !Array.isArray(cours) || !cours.length) return;
+    // Application restée ouverte depuis la veille : on recharge les cours du jour
+    if (window._mesCoursJourDate !== formatDate(new Date())) {
+      if (Date.now() - (window._mesCoursRechargeTs || 0) > 120000) { window._mesCoursRechargeTs = Date.now(); chargerMesCoursDuJour(); }
+      return;
+    }
+    let html = '<div class="card"><div class="card-title">📅 Mes cours aujourd\'hui</div><div class="card-body" style="padding:12px">';
+    cours.forEach((c, i) => {
+      const etat = _etatCoursDuJour(c);
+      const horaire = esc(c.matiere) + ' · ' + esc(c.heureDebut) + ' → ' + esc(c.heureFin);
+      if (etat === 'clos' || etat === 'termine') {
+        html += '<div style="width:100%;text-align:left;padding:12px;margin-bottom:8px;background:#F0F0F0;border:1.5px solid #DDD;border-radius:10px;opacity:0.55">' +
+          '<div style="font-weight:700;font-size:14px;color:#888">' + esc(c.classe) + ' <span style="font-size:11px;font-weight:400">' + (etat === 'clos' ? '(cahier publié)' : '(terminé)') + '</span></div>' +
+          '<div style="font-size:12px;color:#999;margin-top:2px">' + horaire + '</div>' +
+          '</div>';
+      } else {
+        html += '<button onclick="demarrerCoursDepuisEDT(' + i + ')" style="width:100%;text-align:left;padding:12px;margin-bottom:8px;background:var(--blue-lt);border:1.5px solid #90CAF9;border-radius:10px;font-family:inherit;cursor:pointer">' +
+          '<div style="font-weight:700;font-size:14px;color:var(--navy)">' + esc(c.classe) + (etat === 'appele' ? ' <span style="font-size:11px;font-weight:400">(appel fait — cahier à compléter)</span>' : '') + '</div>' +
+          '<div style="font-size:12px;color:var(--text2);margin-top:2px">' + horaire + '</div>' +
+          '</button>';
+      }
+    });
+    html += '<button class="btn btn-ghost" style="margin-top:4px" onclick="signalerProblemeEDT()">🚩 Je ne trouve pas mon cours</button>';
+    html += '</div></div>';
+    container.innerHTML = html;
+  } catch (e) { console.warn('_dessinerMesCoursDuJour:', e); }
+}
+// La liste est recalculée chaque minute et à chaque retour sur l'application
+setInterval(function () {
+  const acc = document.getElementById('screen-accueil');
+  if (acc && acc.classList.contains('active')) _dessinerMesCoursDuJour();
+}, 60000);
+document.addEventListener('visibilitychange', function () { if (!document.hidden) _dessinerMesCoursDuJour(); });
+
 async function demarrerCoursDepuisEDT(idx) {
-  const c = window._mesCoursJour[idx];
+  const c = (window._mesCoursJour || [])[idx];
   if (!c) return;
+
+  // ⚠️ NOUVEAU 07/10/2026 — contrôle fait AU MOMENT DU CLIC (et non plus seulement à l'affichage de la liste)
+  if (window._mesCoursJourDate !== formatDate(new Date())) {
+    showToast('📅 Cette liste date d\'hier — chargement des cours d\'aujourd\'hui...', 'warn');
+    _dessinerMesCoursDuJour();
+    return;
+  }
+  const _etat = _etatCoursDuJour(c);
+  if (_etat === 'clos') {
+    showToast('📝 Le cahier de ce cours est déjà publié — il ne peut plus être rouvert', 'warn');
+    _dessinerMesCoursDuJour();
+    return;
+  }
+  if (_etat === 'termine') {
+    showToast('⏰ Ce cours est terminé depuis ' + c.heureFin + ' — l\'appel n\'est plus possible. Voyez la Direction.', 'warn');
+    _dessinerMesCoursDuJour();
+    return;
+  }
 
   // ⚠️ NOUVEAU — bloque l'appel si l'heure prévue du cours n'est pas encore arrivée
   const TOLERANCE_AVANT = 10; // minutes de marge autorisée avant l'heure EDT
@@ -1946,8 +2039,9 @@ async function publierCahier() {
       detailSalaire:calcul.detail||'',
       gps_lat:lat, gps_lon:lon, gps_prec:acc, gps_statut:gpsStatut
     };
-    envoyerDonnees('CAHIER', data).then(() => {
+    envoyerDonnees('CAHIER', data).then((res) => {
       window._cahierEnvoi = false;
+      if (!(res && res.ok === false)) _noterCoursClos(coursActuel); // ⚠️ 07/10/2026 — cahier publié : ce cours ne peut plus être rouvert
       hideLoader();
       let msg = `📝 Cours publié — ${calcul.heuresValidees}h — ${(calcul.salaire||0).toLocaleString('fr-FR')} F CFA`;
       if (gpsStatut === 'GPS_REFUSE' || gpsStatut === 'GPS_INDISPONIBLE' || gpsStatut === 'GPS_NON_DISPO') msg += ' · 📍 sans GPS (signalé à la direction)';
@@ -1964,6 +2058,7 @@ async function publierCahier() {
       window._cahierEnvoi = false;
       hideLoader();
       sauvegarderHorsLigne('CAHIER', data);
+      _noterCoursClos(coursActuel); // ⚠️ 07/10/2026 — cahier enregistré (hors ligne) : ce cours ne peut plus être rouvert
       showToast('📝 Cahier sauvegardé localement','success');
       resetCahier();
       coursActuel = null;
@@ -2820,6 +2915,7 @@ function goToScreen(nom) {
   const sc = document.getElementById('screen-' + nom);
   if (sc) sc.classList.add('active');
   // Actions spécifiques à chaque écran
+  if (nom === 'accueil') _dessinerMesCoursDuJour(); // ⚠️ 07/10/2026 — cours terminés grisés à chaque retour à l'accueil
   if (nom === 'notes') initNotes();
   if (nom === 'cahier') { restaurerCoursActuel(); afficherEstimCahier(); }
   if (nom === 'bulletin') initBulletin();
