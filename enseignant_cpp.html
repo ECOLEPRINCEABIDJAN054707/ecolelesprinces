@@ -1505,6 +1505,64 @@ function calculerEstim() {
 // ══════════════════════════════════════════════
 // DÉMARRER UN COURS
 // ══════════════════════════════════════════════
+// ⚠️ NOUVEAU 07/10/2026 — UN SEUL APPEL PAR COURS
+// Absents et retards du cours en cours (mémorisés avec le cours pour être retrouvés si l'enseignant revient sur l'appel)
+function _statutsAppel() {
+  return eleves.filter(e => e.statut !== 'present').map(e => ({ m: e.matricule, s: e.statut, h: e.heure || '', mo: e.motif || '', o: e.obs || '' }));
+}
+// Renvoie le cours déjà appelé aujourd'hui pour cette classe et ce créneau (sinon null)
+function _coursDejaAppele(classe, hD) {
+  try {
+    const auj = formatDate(new Date());
+    let s = (coursActuel && coursActuel.horodatageAppel && coursActuel.dateAppel === auj) ? coursActuel : null;
+    if (!s) {
+      const m = JSON.parse(localStorage.getItem('pss_cours_actuel') || 'null');
+      if (m && m.horodatageAppel && m.jour === auj && m.prof === ((user && user.nom) || '')) s = m;
+    }
+    if (!s) return null;
+    const n = x => String(x || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '');
+    if (n(s.classe) !== n(classe)) return null;
+    const debut = parseMin(s.heureDebutEDT), fin = parseMin(s.heureFinEDT);
+    const memeCreneau = debut !== null && debut === parseMin(hD);
+    const now = new Date(), minNow = now.getHours() * 60 + now.getMinutes();
+    // Primaire : l'heure de début est l'heure du clic, on se fie donc à la demi-journée encore ouverte
+    const primaireOuvert = !!(user && user.niveau === 'primaire') && fin !== null && minNow <= fin + 30;
+    return (memeCreneau || primaireOuvert) ? s : null;
+  } catch (e) { return null; }
+}
+// Rouvre l'écran d'appel d'un cours déjà appelé : pas de second appel, seulement « Mettre à jour » ou « Compléter le cahier »
+function _reprendreCoursAppele(s) {
+  coursActuel = { classe: s.classe, matiere: s.matiere, heureDebutEDT: s.heureDebutEDT, heureFinEDT: s.heureFinEDT,
+                  horodatageAppel: s.horodatageAppel, dateAppel: s.dateAppel || formatDate(new Date()), statuts: s.statuts };
+  sauverCoursActuel();
+  document.getElementById('appelClasse').textContent = coursActuel.classe;
+  document.getElementById('appelMatiere').textContent = coursActuel.matiere;
+  document.getElementById('appelDebut').textContent = coursActuel.heureDebutEDT;
+  document.getElementById('appelFin').textContent = coursActuel.heureFinEDT;
+  document.getElementById('cahierClasse').textContent = coursActuel.classe;
+  document.getElementById('cahierMatiere').textContent = coursActuel.matiere;
+  document.getElementById('notesSousTitre').textContent = (coursActuel.matiere || user.matiere) + ' · ' + coursActuel.classe;
+  document.getElementById('heureAppelAffiche').textContent = coursActuel.horodatageAppel;
+  document.getElementById('resumeAppel').textContent = 'Appel déjà enregistré pour ce cours. Corrigez un retard ou une absence si besoin, puis complétez le cahier.';
+  document.getElementById('carteValidation').style.display = 'block';
+  document.getElementById('btnValiderAppel').style.display = 'none';
+  document.getElementById('btnMajAppel').style.display = 'none';
+  document.getElementById('btnCahierAppel').style.display = 'flex';
+  try {
+    afficherEstimAppel(calculerSalaireRobuste(coursActuel.horodatageAppel, null, coursActuel.heureDebutEDT, coursActuel.heureFinEDT, user.ecole, coursActuel.classe || ''), coursActuel.horodatageAppel);
+    afficherEstimCahier();
+  } catch (e) {}
+  const classeReprise = coursActuel.classe;
+  chargerEleves(classeReprise).then(() => {
+    const st = coursActuel && coursActuel.classe === classeReprise ? coursActuel.statuts : null;
+    if (!Array.isArray(st)) return;
+    const parMat = {}; st.forEach(x => { parMat[x.m] = x; });
+    eleves.forEach(e => { const x = parMat[e.matricule]; if (x) { e.statut = x.s; e.heure = x.h || ''; e.motif = x.mo || ''; e.obs = x.o || ''; } });
+    elevesFiltres = [...eleves]; afficherEleves(); majStats();
+  });
+  goToScreen('appel');
+  showToast('✅ Appel déjà fait à ' + coursActuel.horodatageAppel + ' — pas de second appel', 'success');
+}
 function confirmerCours() {
   const classe = document.getElementById('modalClasse').value;
   const matiere = document.getElementById('modalMatiere').value.trim();
@@ -1513,6 +1571,9 @@ function confirmerCours() {
   if (!classe || !matiere || !hD || !hF) { showToast('Remplissez tous les champs','error'); return; }
   const dMin = parseMin(hD), fMin = parseMin(hF);
   if (dMin === null || fMin === null || fMin <= dMin) { showToast('Heures EDT incorrectes','error'); return; }
+  // ⚠️ NOUVEAU 07/10/2026 — un seul appel par cours : si l'appel de ce cours est déjà validé, on le reprend
+  const _deja = _coursDejaAppele(classe, hD);
+  if (_deja) { _reprendreCoursAppele(_deja); return; }
   coursActuel = { classe, matiere, heureDebutEDT:hD, heureFinEDT:hF, horodatageAppel:null, dateAppel:null };
   document.getElementById('appelClasse').textContent = classe;
   document.getElementById('appelMatiere').textContent = matiere;
@@ -1694,9 +1755,16 @@ async function _validerAppelInterne() {
   }
 
   // ── Suite normale de validerAppel, inchangée ──
-  if (coursActuel) { coursActuel.horodatageAppel = horodatage; coursActuel.dateAppel = formatDate(maintenant); }
+  // ⚠️ CORRECTIF 07/10/2026 — un cours garde l'heure de son PREMIER appel (avant : un second appel la remplaçait,
+  // et le calcul des heures partait du dernier appel → cours « VOIR DIRECTION » à tort)
+  if (coursActuel) {
+    const _auj = formatDate(maintenant);
+    if (!coursActuel.horodatageAppel || coursActuel.dateAppel !== _auj) coursActuel.horodatageAppel = horodatage;
+    coursActuel.dateAppel = _auj;
+    coursActuel.statuts = _statutsAppel();
+  }
   sauverCoursActuel();
-  document.getElementById('heureAppelAffiche').textContent = horodatage;
+  document.getElementById('heureAppelAffiche').textContent = (coursActuel && coursActuel.horodatageAppel) || horodatage;
   const nbP = eleves.filter(e=>e.statut==='present').length;
   const nbR = eleves.filter(e=>e.statut==='retard').length;
   const nbA = eleves.filter(e=>e.statut==='absent').length;
@@ -1751,7 +1819,11 @@ async function mettreAJourAppel() {
     classe:coursActuel.classe, statut:e.statut, heureArrivee:e.heure||'',
     motif:e.motif||'', obs:e.obs||'', enseignant:user.nom, matiere:coursActuel.matiere
   }));
-  const presents = eleves.filter(e=>e.statut==='present').map(e=>e.matricule);
+  // ⚠️ 07/10/2026 — la liste des présents n'est envoyée que si le téléphone connaît les absents du premier appel
+  // (sinon la mise à jour effacerait des absences déjà enregistrées)
+  const _statutsConnus = Array.isArray(coursActuel.statuts);
+  const presents = _statutsConnus ? eleves.filter(e=>e.statut==='present').map(e=>e.matricule) : [];
+  if (_statutsConnus) { coursActuel.statuts = _statutsAppel(); sauverCoursActuel(); }
   try {
     const res = await envoyerDonnees('CORRECTION_APPEL', {
       date:coursActuel.dateAppel, classe:coursActuel.classe, enseignant:user.nom,
