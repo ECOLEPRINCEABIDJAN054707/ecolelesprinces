@@ -12287,11 +12287,16 @@ function renderNotesDevoirs(data) {
 // ══ EDT & SUIVI HEURES (ESPACE EDU) ══
 let donneesEDT = [];
 let donneesEDT_filtrees = [];
-
 // ══ CORRECTIF 06/10/2026 — « Cours du jour » : un cours n'est « Fait » que si un pointage couvre SON horaire ══
 // Avant : un seul pointage du jour (même classe, même matière, même enseignant) marquait « Fait » TOUS les
 // créneaux de ce cours dans la journée, y compris ceux dont l'heure n'était pas encore arrivée.
+// ══ CORRECTIF 07/10/2026 — primaire et maternelle : les créneaux « Matin » / « Après-midi » de l'EDT sont
+// rapprochés par ENSEIGNANT (et non plus par matière), car le maître saisit son appel et son cahier avec le nom
+// de sa classe comme matière : la clé classe|matière|enseignant ne correspondait jamais → « rien saisi » à tort.
 const _HORAIRES_FAITS = new WeakMap();
+function _cleProfCoursJour(cle) {
+  return '§PROF|' + String(cle.split('|')[2] || '').replace(/[^A-Z0-9]/g, '');
+}
 function _noterHoraireFait(faits, cle, onglet, headers, row) {
   let m = _HORAIRES_FAITS.get(faits);
   if (!m) { m = {}; _HORAIRES_FAITS.set(faits, m); }
@@ -12301,11 +12306,15 @@ function _noterHoraireFait(faits, cle, onglet, headers, row) {
     const t = parseH(toHeure(row[i]));
     return t > 0 ? t : null;
   };
+  const cleProf = _cleProfCoursJour(cle);
+  faits.add(cleProf);
   const liste = (m[cle] = m[cle] || []);
+  const listeProf = (m[cleProf] = m[cleProf] || []);
   const ajouter = (a, b, pointage) => {
     if (a === null) return;
     if (b === null || b <= a) b = a + 55;
     liste.push({ a: a, b: b, pointage: pointage });
+    listeProf.push({ a: a, b: b, pointage: pointage });
   };
   if (onglet === 'POINTAGE_MENSUEL') {
     ajouter(min('EDT_DEBUT'), min('EDT_FIN'), true);        // créneau prévu
@@ -12316,14 +12325,17 @@ function _noterHoraireFait(faits, cle, onglet, headers, row) {
   }
 }
 function _creneauEstFait(faits, cle, c, maintenantMin) {
+  // Créneau de demi-journée (primaire / maternelle) : on cherche les saisies de l'enseignant, quelle que soit la matière
+  const demiJournee = /^(MATIN|MATINEE|APRES MIDI|JOURNEE)$/.test(String(cle.split('|')[1] || '').trim());
+  if (demiJournee) cle = _cleProfCoursJour(cle);
   if (!faits.has(cle)) return false;
   const d = parseH(c.heureDebut);
   const f = parseH(c.heureFin) > d ? parseH(c.heureFin) : d + 55;
   // 1) Un cours dont l'heure n'est pas encore arrivée ne peut pas être « Fait » (l'appel ouvre 10 min avant)
   if (maintenantMin !== null && d > 0 && maintenantMin < d - 10) return false;
   let liste = (_HORAIRES_FAITS.get(faits) || {})[cle] || [];
-  if (liste.some(x => x.pointage)) liste = liste.filter(x => x.pointage);   // le pointage fait foi sur le cahier
-  if (!liste.length || !d) return true;     // aucun horaire exploitable : comportement d'origine
+  if (!demiJournee && liste.some(x => x.pointage)) liste = liste.filter(x => x.pointage);   // le pointage fait foi sur le cahier
+  if (!liste.length || !d) return !demiJournee;     // aucun horaire exploitable : comportement d'origine (secondaire)
   // 2) Il faut un enregistrement qui recouvre l'horaire de CE créneau (au moins 10 min en commun)
   return liste.some(x => Math.min(x.b, f) - Math.max(x.a, d) >= 10);
 }
