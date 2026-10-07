@@ -2985,6 +2985,14 @@ function _edtChoisirJour(j) {
   const c = _edtLireCache();
   if (c) _afficherMonEdt(c.data, c.date);
 }
+// ⚠️ 07/10/2026 — Cycle d'une classe : 1 = premier cycle (6e à 3e), 2 = second cycle (2nde à Tle), 0 = autre
+function _edtCycle(classe) {
+  const c = String(classe == null ? '' : classe).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z0-9]/g, '');
+  if (/^[6543](E|IEME)/.test(c)) return 1;
+  if (/^(2N|2DE|SECONDE|1E|1RE|PREMIERE|TLE|TERM)/.test(c)) return 2;
+  return 0;
+}
+
 function _afficherMonEdt(data, dateMaj) {
   const zone = document.getElementById('edtZone');
   const sous = document.getElementById('edtSousTitre');
@@ -2997,9 +3005,19 @@ function _afficherMonEdt(data, dateMaj) {
     const classes = {};
     data.cours.forEach(c => { classes[c.classe] = true; });
     const nbClasses = Object.keys(classes).length;
-    let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">' +
-      '<div class="card"><div class="card-body" style="text-align:center;padding:12px"><div style="font-size:22px;font-weight:800;color:var(--navy)">' + (data.totalSeances || 0) + ' h</div><div style="font-size:11px;color:var(--text2)">de cours par semaine</div></div></div>' +
-      '<div class="card"><div class="card-body" style="text-align:center;padding:12px"><div style="font-size:22px;font-weight:800;color:var(--navy)">' + nbClasses + '</div><div style="font-size:11px;color:var(--text2)">classe' + (nbClasses > 1 ? 's' : '') + '</div></div></div></div>';
+    // ⚠️ 07/10/2026 — heures par cycle : 1er cycle (6e à 3e) et 2nd cycle (2nde à Tle)
+    const hCycle = { 1: 0, 2: 0, 0: 0 };
+    data.cours.forEach(c => { hCycle[_edtCycle(c.classe)] += (c.seances || 0); });
+    const tuileEdt = (valeur, libelle) => '<div class="card"><div class="card-body" style="text-align:center;padding:12px"><div style="font-size:22px;font-weight:800;color:var(--navy)">' + valeur + '</div><div style="font-size:11px;color:var(--text2)">' + libelle + '</div></div></div>';
+    let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:' + ((hCycle[1] + hCycle[2]) > 0 ? '12' : '14') + 'px">' +
+      tuileEdt((data.totalSeances || 0) + ' h', 'de cours par semaine') +
+      tuileEdt(nbClasses, 'classe' + (nbClasses > 1 ? 's' : '')) + '</div>';
+    if ((hCycle[1] + hCycle[2]) > 0) {
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:' + (hCycle[0] > 0 ? '6' : '14') + 'px">' +
+        tuileEdt(hCycle[1] + ' h', '1er cycle · 6e à 3e') +
+        tuileEdt(hCycle[2] + ' h', '2nd cycle · 2nde à Tle') + '</div>';
+      if (hCycle[0] > 0) html += '<div style="font-size:11px;color:var(--text2);text-align:center;margin-bottom:14px">+ ' + hCycle[0] + ' h dans d\'autres classes</div>';
+    }
     const jours = ['LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI'];
     if (data.cours.some(c => c.jour === 'SAMEDI')) jours.push('SAMEDI');
     jours.forEach(j => {
