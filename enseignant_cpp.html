@@ -292,14 +292,15 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
       <div class="form-group" id="groupClasse" style="display:none"><label class="label">Classe (primaire)</label>
         <select class="select" id="loginClassePrimaire">
           <option value="">— Sélectionner —</option>
-          <optgroup label="Maternelle"><option>PSA</option><option>MSA</option><option>GSA</option></optgroup>
+          <!-- ⚠️ 08/10/2026 — sections C et grande section B ajoutées (elles manquaient : les maîtres de CE1 C et CE2 C ne pouvaient pas choisir leur classe) -->
+          <optgroup label="Maternelle"><option>PSA</option><option>MSA</option><option>GSA</option><option>GSB</option></optgroup>
           <optgroup label="Primaire">
-            <option>CP1 A</option><option>CP1 B</option><option>CP1</option>
-            <option>CP2 A</option><option>CP2 B</option><option>CP2</option>
-            <option>CE1 A</option><option>CE1 B</option><option>CE1</option>
-            <option>CE2 A</option><option>CE2 B</option><option>CE2</option>
-            <option>CM1 A</option><option>CM1 B</option><option>CM1</option>
-            <option>CM2 A</option><option>CM2 B</option><option>CM2</option>
+            <option>CP1 A</option><option>CP1 B</option><option>CP1 C</option><option>CP1</option>
+            <option>CP2 A</option><option>CP2 B</option><option>CP2 C</option><option>CP2</option>
+            <option>CE1 A</option><option>CE1 B</option><option>CE1 C</option><option>CE1</option>
+            <option>CE2 A</option><option>CE2 B</option><option>CE2 C</option><option>CE2</option>
+            <option>CM1 A</option><option>CM1 B</option><option>CM1 C</option><option>CM1</option>
+            <option>CM2 A</option><option>CM2 B</option><option>CM2 C</option><option>CM2</option>
           </optgroup>
         </select>
       </div>
@@ -1059,6 +1060,32 @@ async function lireBase(quoi, extra, urlDirecte, cle, dureeMin) {
 // ══════════════════════════════════════════════
 // CLASSES
 // ══════════════════════════════════════════════
+// ⚠️ 08/10/2026 — PRIMAIRE : la classe choisie à la connexion doit être une vraie classe de l'école.
+// La liste de l'écran de connexion n'avait que les sections A et B : les maîtres de CE1 C et CE2 C (Akéïkoï 1)
+// choisissaient « CE1 » ou « CE2 », classes qui n'existent pas → « Classe introuvable », appel impossible.
+// Si la classe choisie n'existe pas dans l'école, on la remplace par la vraie classe du maître :
+//   1) sa classe dans l'emploi du temps (réponse du serveur), s'il n'en a qu'une ;
+//   2) sinon la classe inscrite sur son compte (ex. « CE1 C »).
+// Une classe choisie qui existe n'est JAMAIS modifiée. Le maître n'a pas besoin de se reconnecter.
+function _corrigerClasseDefaut_(toutesLesClasses, mesClasses) {
+  if (!user || user.niveau !== 'primaire' || !Array.isArray(toutesLesClasses) || !toutesLesClasses.length) return false;
+  const n = s => String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+  const reelle = x => {
+    const a = n(x); if (!a) return null;
+    return toutesLesClasses.find(t => n(t) === a) || toutesLesClasses.find(t => n(t).replace(/ /g, '') === a.replace(/ /g, '')) || null;
+  };
+  if (reelle(user.classeDefaut)) return false;                       // la classe choisie existe : rien à changer
+  const mes = (mesClasses || []).map(reelle).filter((v, i, t) => v && t.indexOf(v) === i);
+  const bonne = mes.length === 1 ? mes[0] : reelle(user.matiere);
+  if (!bonne) return false;                                           // aucune certitude : on ne devine pas
+  console.log('Classe du maître corrigée : « ' + user.classeDefaut + ' » → « ' + bonne + ' »');
+  user.classeDefaut = bonne;
+  try { localStorage.setItem('pss_ens_v3', JSON.stringify(user)); } catch (e) {}
+  try { localStorage.removeItem('pss_edt_semaine'); } catch (e) {}   // l'emploi du temps gardé était celui de l'ancienne classe
+  window._edtMemoire = null;
+  return true;
+}
+
 async function chargerClasses() {
   if (!user) return;
   const sels = ['modalClasse','notesClasse','moyennesClasse'];
@@ -1069,6 +1096,8 @@ async function chargerClasses() {
     let classes = data.sheets
       .map(s => s.properties.title)
       .filter(t => !estOngletSysteme(t) && t.length > 1);
+    const toutesLesClasses = classes.slice();   // 08/10/2026 : toutes les classes de l'école, avant restriction
+    let mesClassesServeur = null;
 
     // ⚠️ NOUVEAU — restreindre aux seules classes de ce prof (toute la semaine)
     try {
@@ -1087,11 +1116,15 @@ function normaliser(s) {
         return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/^(\dEME)(\d)/, '$1 $2').replace(/\s+/g, ' ').trim().replace(/\b([CD])1\b/g, '$1');
       }
       if (dataMC && dataMC.ok && dataMC.classes && dataMC.classes.length) {
+        mesClassesServeur = dataMC.classes;
+        // 08/10/2026 — primaire : si la classe choisie à la connexion n'existe pas dans l'école, on prend la vraie classe du maître
+        if (_corrigerClasseDefaut_(toutesLesClasses, mesClassesServeur)) chargerMesCoursDuJour();
         const mesClassesNorm = dataMC.classes.map(normaliser);
         classes = classes.filter(c => mesClassesNorm.includes(normaliser(c)));
       } else if (user.niveau === 'primaire' && user.classeDefaut) {
         // Repli de sécurité — EDT vide ou indisponible : on restreint
         // à la classe déclarée au login, plutôt que d'afficher tout.
+        if (_corrigerClasseDefaut_(toutesLesClasses, null)) chargerMesCoursDuJour();   // 08/10/2026
         classes = classes.filter(c => normaliser(c) === normaliser(user.classeDefaut));
       }
     } catch(e2) {
@@ -1354,8 +1387,8 @@ async function demarrerCoursPrimaireDirect() {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
   }
   const sel = document.getElementById('modalClasse');
-  const cible = user.classeDefaut;
-  const cibleNorm = normaliser(cible);
+  let cible = user.classeDefaut;
+  let cibleNorm = normaliser(cible);
   let trouve = false;
   for (let i = 0; i < sel.options.length; i++) {
     if (normaliser(sel.options[i].value) === cibleNorm) { sel.selectedIndex = i; trouve = true; break; }
@@ -1365,6 +1398,7 @@ async function demarrerCoursPrimaireDirect() {
     showLoader('Chargement de la classe...');
     await chargerClasses();
     hideLoader();
+    cible = user.classeDefaut; cibleNorm = normaliser(cible);   // 08/10/2026 : la classe a pu être corrigée par chargerClasses
     for (let i = 0; i < sel.options.length; i++) {
       if (normaliser(sel.options[i].value) === cibleNorm) { sel.selectedIndex = i; trouve = true; break; }
     }
