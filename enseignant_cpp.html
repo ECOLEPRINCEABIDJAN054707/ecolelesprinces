@@ -1002,6 +1002,61 @@ function demarrerSession() {
 }
 
 // ══════════════════════════════════════════════
+// LECTURES PAR LE SERVEUR — 08/10/2026
+// L'application ne lit plus la base directement : elle demande au serveur, qui vérifie le nom et le code
+// du professeur et ne renvoie que ce qui le concerne. Tant que les bases restent ouvertes, si le serveur
+// ne répond pas, l'ancienne lecture directe sert de secours (elle sera retirée à la fermeture des bases).
+// ══════════════════════════════════════════════
+const LECTURE_DELAI_MS = 15000;
+function _lireServeur(quoi, extra) {
+  return new Promise(resolve => {
+    if (!user || !user.code || !user.nom) { resolve(null); return; }
+    const cb = 'lp_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+    const script = document.createElement('script');
+    let fini = false;
+    const fin = (d, tardif) => {
+      if (fini) return; fini = true;
+      clearTimeout(minuterie);
+      if (tardif) window[cb] = function () { try { delete window[cb]; } catch (e) {} };   // une réponse en retard ne provoque pas d'erreur
+      else { try { delete window[cb]; } catch (e) {} }
+      if (script.parentNode) script.parentNode.removeChild(script);
+      resolve(d);
+    };
+    const minuterie = setTimeout(() => fin(null, true), LECTURE_DELAI_MS);
+    window[cb] = d => fin(d, false);
+    script.onerror = () => fin(null, false);
+    const params = new URLSearchParams(Object.assign({ callback: cb, type: 'LIRE_PROF', ecole: user.ecole, nom: user.nom, code: user.code, quoi: quoi }, extra || {}));
+    script.src = APPS_SCRIPT_URL + '?' + params.toString();
+    document.body.appendChild(script);
+  });
+}
+function _lectureCache(cle, dureeMin) {
+  if (!cle || !dureeMin || !user) return null;
+  try {
+    const c = JSON.parse(localStorage.getItem('pss_lect_' + cle) || 'null');
+    if (c && c.prof === user.nom && c.ecole === user.ecole && c.ts && (Date.now() - c.ts) >= 0 && (Date.now() - c.ts) < dureeMin * 60000) return c.data;
+  } catch (e) {}
+  return null;
+}
+// quoi + extra : la demande au serveur — urlDirecte : l'ancienne lecture, en secours — cle, dureeMin : copie gardée sur le téléphone
+async function lireBase(quoi, extra, urlDirecte, cle, dureeMin) {
+  const garde = _lectureCache(cle, dureeMin);
+  if (garde) return garde;
+  let data = await _lireServeur(quoi, extra);
+  // Une réponse du serveur ne compte que si elle porte bien des données (un serveur pas encore à jour répond « ok » sans rien)
+  if (!data || !data.ok || !(Array.isArray(data.values) || Array.isArray(data.sheets))) {
+    const res = await fetch(urlDirecte);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    data = await res.json();
+    window._lecturesDirectes = (window._lecturesDirectes || 0) + 1;
+  }
+  if (cle && dureeMin && user && ((data.values && data.values.length) || (data.sheets && data.sheets.length))) {
+    try { localStorage.setItem('pss_lect_' + cle, JSON.stringify({ prof: user.nom, ecole: user.ecole, ts: Date.now(), data: data })); } catch (e) {}
+  }
+  return data;
+}
+
+// ══════════════════════════════════════════════
 // CLASSES
 // ══════════════════════════════════════════════
 async function chargerClasses() {
@@ -1009,9 +1064,7 @@ async function chargerClasses() {
   const sels = ['modalClasse','notesClasse','moyennesClasse'];
   try {
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_IDS_2026_2027[user.ecole]}?key=${API_KEY}&fields=sheets.properties.title`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
+    const data = await lireBase('ONGLETS', {}, url, 'onglets', 30);
     if (!data.sheets) return;
     let classes = data.sheets
       .map(s => s.properties.title)
@@ -1354,9 +1407,7 @@ async function chargerBilan() {
   document.getElementById('bilanMoisLabel').textContent = perAuj[3];
   try {
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${getIdEcole(user.ecole, '2026-2027')}/values/POINTAGE_MENSUEL!A2:L?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
+    const data = await lireBase('POINTAGE', {}, url);
     let totalH = 0, totalS = 0, nbCours = 0, nbAttente = 0;
     const coursDetails = [];
     const nomEns = user.nom.toUpperCase().trim();
@@ -1705,9 +1756,7 @@ async function chargerEleves(classe) {
     showLoader('Chargement des élèves...');
     const range = encodeURIComponent(`${classe}!B3:C300`);
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
+    const data = await lireBase('ELEVES', { classe: classe }, url, 'eleves_' + classe, 20);
     if (!data.values || !data.values.length) {
       eleves = [];
     } else {
@@ -2335,9 +2384,7 @@ async function chargerElevesNotes() {
     showLoader('Chargement des élèves...');
     const range = encodeURIComponent(`${classe}!B3:C300`);
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
+    const data = await lireBase('ELEVES', { classe: classe }, url, 'eleves_' + classe, 20);
     if (!data.values || !data.values.length) {
       hideLoader();
       document.getElementById('notesListe').innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px">Aucun élève dans cette classe</p>';
@@ -2383,10 +2430,9 @@ async function majSelecteurDevoirs(classe, matiere, trimestre) {
   try {
     const range = encodeURIComponent(`${trimestre}!A2:J2000`);
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
-    const res = await fetch(url);
-    if (!res.ok) return;
-    const data = await res.json();
-    if (!data.values) return;
+    let data;
+    try { data = await lireBase('NOTES', { trimestre: trimestre, classe: classe, matiere: matiere }, url); } catch (eLect) { return; }
+    if (!data || !data.values) return;
 
     const devoirsFaits = new Set();
     data.values.forEach(row => {
@@ -2645,8 +2691,8 @@ async function chargerMoyennes() {
   try {
     showLoader('Chargement...');
     const [resEl, resN] = await Promise.all([
-      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${encodeURIComponent(`${classe}!B3:C300`)}?key=${API_KEY}`).then(r=>r.json()),
-     fetch(`https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${encodeURIComponent(`${trimestreActif}_MOYENNES!A2:F2000`)}?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`).then(r=>r.json())
+      lireBase('ELEVES', { classe: classe }, `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${encodeURIComponent(`${classe}!B3:C300`)}?key=${API_KEY}`, 'eleves_' + classe, 20),
+      lireBase('MOYENNES', { trimestre: trimestreActif, classe: classe }, `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${encodeURIComponent(`${trimestreActif}_MOYENNES!A2:F2000`)}?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`)
     ]);
     let elevesListe = [];
     if (resEl.values) elevesListe = resEl.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({matricule:(r[0]||'').toString().trim(),nom:(r[1]||'').toString().trim(),moyenne:''}));
@@ -2814,9 +2860,7 @@ async function initBulletin() {
   if (sel.options.length > 1) return;
   try {
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}?key=${API_KEY}&fields=sheets.properties.title`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
+    const data = await lireBase('ONGLETS', {}, url, 'onglets', 30);
     if (data.sheets) {
       const classes = data.sheets.map(s=>s.properties.title).filter(t => !estOngletSysteme(t) && !t.toUpperCase().startsWith('NOTES_PRIMAIRE') && t.length > 1 && getBulletinNiveau(t) !== '');
       classes.forEach(c => { const opt=document.createElement('option'); opt.value=c; opt.textContent=c; sel.appendChild(opt); });
@@ -2847,8 +2891,7 @@ async function selectionnerMoisBulletin(mois, classe, niveau) {
     showLoader('Chargement des élèves...');
     const range = encodeURIComponent(classe + '!B3:C300');
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}`;
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await lireBase('ELEVES', { classe: classe }, url, 'eleves_' + classe, 20);
     hideLoader();
     bulletinElevesData = (!data.values||!data.values.length) ?
       [{matricule:'MAT001',nom:'KOUASSI Aya'},{matricule:'MAT002',nom:'BAMBA Moussa'}] :
