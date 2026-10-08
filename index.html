@@ -879,6 +879,36 @@ async function chargerPhotoEleve(matricule, imgElement, fallback) {
   imgElement.src = fallback;
 }
 
+// ══════════════════════════════════════════════
+// DEMANDES AU SERVEUR — 08/10/2026
+// La connexion et la recherche « paiement rapide » passent par le serveur : il cherche l'élève, vérifie le
+// téléphone et ne renvoie que la fiche de l'enfant. Le portail ne télécharge plus la liste des élèves.
+// Tant que les bases restent ouvertes, si le serveur ne répond pas, l'ancienne recherche sert de secours.
+// ══════════════════════════════════════════════
+const PSS_SERVEUR_URL = 'https://script.google.com/macros/s/AKfycbx7nBhAMxM_zAMAHCPfPQPkktJ9avtOXm2igfzgOuw9PF1jW0Y7ElUApPoeHvw_F-pT/exec';
+function _pssServeur(type, params, delaiMs) {
+  return new Promise(function (resolve) {
+    var cb = 'pss_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+    var script = document.createElement('script');
+    var fini = false;
+    var fin = function (d, tardif) {
+      if (fini) return; fini = true;
+      clearTimeout(minuterie);
+      if (tardif) window[cb] = function () { try { delete window[cb]; } catch (e) {} };   // une réponse en retard ne provoque pas d'erreur
+      else { try { delete window[cb]; } catch (e) {} }
+      if (script.parentNode) script.parentNode.removeChild(script);
+      resolve(d);
+    };
+    var minuterie = setTimeout(function () { fin(null, true); }, delaiMs || 30000);
+    window[cb] = function (d) { fin(d, false); };
+    script.onerror = function () { fin(null, false); };
+    var q = 'callback=' + cb + '&type=' + encodeURIComponent(type);
+    Object.keys(params || {}).forEach(function (k) { q += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); });
+    script.src = PSS_SERVEUR_URL + '?' + q;
+    document.body.appendChild(script);
+  });
+}
+
 async function login() {
  document.getElementById("eleveCard").innerHTML = "";
   document.getElementById("statutPay").innerHTML = "";
@@ -928,7 +958,23 @@ async function login() {
   {code:"ANYAMA",id:"1IaW7Z9O5ik_4Wl9k5xc39wcR3jnDzpCcA6K3VnWc-xE"},
 ];
 document.getElementById("loadingEtape").textContent = "Recherche en cours...";
-    const cacheEcole = _getCacheEcole(mat);
+    // ⚠️ 08/10/2026 — Le serveur cherche l'élève et vérifie le téléphone. Sa réponse fait foi, bonne ou mauvaise.
+    let viaServeur = false;
+    const rep = await _pssServeur('PARENT_CONNEXION', { matricule: mat, tel: tel }, 30000);
+    if (rep && rep.ok && rep.eleve && rep.jeton) {
+      eleve = rep.eleve; eleve._jeton = rep.jeton; viaServeur = true;
+    } else if (rep && rep.ok === false && rep.raison && rep.raison !== 'ERREUR') {
+      document.getElementById("loadingDiv").style.display = "none";
+      document.getElementById("loginWrapper").style.display = "block";
+      if (rep.raison === 'BLOQUE') { afficherErreur("Trop d'essais pour ce matricule. Reessayez dans " + (rep.minutes || 15) + " minutes."); return; }
+      if (rep.raison === 'SANS_TELEPHONE') { afficherErreur("Aucun numero de telephone n'est enregistre pour cet eleve. Adressez-vous a l'ecole pour le faire ajouter."); return; }
+      tentatives++;
+      afficherErreur((rep.raison === 'TELEPHONE' ? "Numero de telephone incorrect." : "Matricule introuvable.") + " Tentative " + tentatives + "/" + CONFIG.MAX_TENTATIVES);
+      if (tentatives >= CONFIG.MAX_TENTATIVES) demarrerBlocage();
+      return;
+    }
+    // Secours (serveur muet) : l'ancienne recherche directe, tant que les bases restent ouvertes
+    const cacheEcole = viaServeur ? null : _getCacheEcole(mat);
     if (cacheEcole) {
       eleve = await chercherDansEcoleDirecte(mat, cacheEcole.ecoleCode, cacheEcole.sheetsId);
     }
@@ -956,7 +1002,7 @@ if (!eleve) {
   const tels_valides = [t1,t2,t3].filter(t => t && t.length >= 8);
   const telFin = telClean.slice(-8);
   const telMatch = tels_valides.some(t => t.slice(-8) === telFin);
-  if (tels_valides.length > 0 && !telMatch) {
+  if (!viaServeur && tels_valides.length > 0 && !telMatch) {      // par le serveur, le téléphone est déjà vérifié
     tentatives++;
     document.getElementById("loginWrapper").style.display = "block";
     afficherErreur("Numero de telephone incorrect. Tentative " + tentatives + "/" + CONFIG.MAX_TENTATIVES);
@@ -994,9 +1040,12 @@ async function rechercherPaiementRapide() {
     return;
   }
   resEl.innerHTML = '<p style="text-align:center;color:#FF6600;font-size:0.85em;">Recherche en cours...</p>';
+  // ⚠️ 08/10/2026 — Le serveur donne l'école et le nom ; l'ancienne recherche ne sert plus que de secours
+  const repRapide = await _pssServeur('PARENT_RECHERCHE', { matricule: mat }, 30000);
+  const serveurARepondu = !!(repRapide && (repRapide.eleve || repRapide.ok === false));
   const TOUTES_ECOLES_2026_RAPIDE = [
     {code:"CPP",id:"1e37v34kcYXh0etsPjGo7rF7SyH0i1Xpj20azcirDUEY"},
-    {code:"ACADEMIE",id:"17EuXUJ4ej_brSwDhTJV1c_TtmhxI3YkPI053YJAE9Es"},
+    {code:"ACADEMIE",id:"17EuXUJ4ej_brSwDhTJV1c_Ttmhxl3YkPI053YJAE9Es"},
     {code:"GNONTINROU",id:"1izyFW1pksAY5tHc-Y6TqsvcH3GMb29dz6NGyctW9M1M"},
     {code:"GUINGLO_V",id:"1B_ynuBLsVJbTzjtyezraayR813stEuPQm3GGtatuRD8"},
     {code:"KOUTOUAN",id:"15pnAjnfC7UKD-pxMwk8Nw4fbOZQX39KRnXSZMcNeYSc"},
@@ -1029,7 +1078,8 @@ async function rechercherPaiementRapide() {
   const TOUTES_ECOLES_PAIEMENT = TOUTES_ECOLES_2026_RAPIDE.concat(TOUTES_ECOLES_2025_RAPIDE);
   let resultats;
   try {
-    resultats = await Promise.all(TOUTES_ECOLES_PAIEMENT.map(ec => chercherDansEcoleDirecte(mat, ec.code, ec.id)));
+    resultats = serveurARepondu ? [repRapide.eleve || null]
+      : await Promise.all(TOUTES_ECOLES_PAIEMENT.map(ec => chercherDansEcoleDirecte(mat, ec.code, ec.id)));
   } catch(e) {
     resEl.innerHTML = "";
     errEl.textContent = "Erreur technique : " + e.message + " (fais une capture d'ecran de ce message)";
