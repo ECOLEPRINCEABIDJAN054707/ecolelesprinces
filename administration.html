@@ -1289,6 +1289,90 @@ table tr:nth-child(even){background:#F8FAFD}
 </div>
 
 <script>
+// ══════════════════════════════════════════════
+// LECTURES PAR LE SERVEUR — 08/10/2026
+// pssFetch remplace fetch dans toute la page. Pour une lecture de Google Sheets, la demande part au serveur avec
+// le matricule et le code du compte connecté : le serveur vérifie le compte et ne lit que les bases de son école.
+// Les lectures lancées en même temps voyagent ensemble. Tout le reste (envois au serveur, lecture de documents)
+// passe comme avant. Tant que les bases restent ouvertes, si le serveur ne répond pas, l'ancienne lecture sert de secours.
+// ══════════════════════════════════════════════
+var PSS_SERVEUR_LECTURE = 'https://script.google.com/macros/s/AKfycbx7nBhAMxM_zAMAHCPfPQPkktJ9avtOXm2igfzgOuw9PF1jW0Y7ElUApPoeHvw_F-pT/exec';
+var _pssFile = [], _pssMinuterie = null, _pssNumero = 0;
+function _pssCompte() {
+  try { if (typeof currentStaff !== 'undefined' && currentStaff && currentStaff.matricule && currentStaff.code) return currentStaff; } catch (e) {}
+  return null;
+}
+function pssFetch(url, options) {
+  var compte = _pssCompte();
+  var m = /^https:\/\/sheets\.googleapis\.com\/v4\/spreadsheets\/([^\/?:]+)(\/values:batchGet|\/values\/([^?]+)|)\?(.*)$/.exec(String(url));
+  if (!compte || !m || (options && options.method && String(options.method).toUpperCase() !== 'GET')) return fetch(url, options);
+  var d = { s: m[1] }, q = m[4];
+  try {
+    if (m[2] === '') { if (!/(^|&)fields=sheets\.properties\.title(&|$)/.test(q)) return fetch(url, options); d.m = 1; }
+    else if (m[2] === '/values:batchGet') {
+      d.g = [];
+      q.split('&').forEach(function (kv) { if (kv.indexOf('ranges=') === 0) d.g.push(decodeURIComponent(kv.slice(7))); });
+      if (!d.g.length) return fetch(url, options);
+      // Une longue liste de classes est coupée en plusieurs demandes : l'adresse envoyée au serveur doit rester courte
+      var morceaux = [[]], taille = 0, reste = q.split('&').filter(function (kv) { return kv.indexOf('ranges=') !== 0; }).join('&');
+      d.g.forEach(function (plage) {
+        var t = encodeURIComponent(JSON.stringify(plage)).length + 3;
+        if (taille + t > 2500 && morceaux[morceaux.length - 1].length) { morceaux.push([]); taille = 0; }
+        morceaux[morceaux.length - 1].push(plage); taille += t;
+      });
+      if (morceaux.length > 1) {
+        return Promise.all(morceaux.map(function (mc) {
+          return pssFetch('https://sheets.googleapis.com/v4/spreadsheets/' + m[1] + '/values:batchGet?' + mc.map(function (plage) { return 'ranges=' + encodeURIComponent(plage); }).join('&') + (reste ? '&' + reste : ''), options);
+        })).then(function (reps) {
+          for (var i = 0; i < reps.length; i++) if (!reps[i].ok) return reps[i];
+          return Promise.all(reps.map(function (r) { return r.json(); })).then(function (js) {
+            var tout = []; js.forEach(function (j) { tout = tout.concat(j.valueRanges || []); });
+            var corps = { spreadsheetId: m[1], valueRanges: tout };
+            return { ok: true, status: 200, json: function () { return Promise.resolve(corps); } };
+          });
+        });
+      }
+    } else d.a = decodeURIComponent(m[3]);
+  } catch (e) { return fetch(url, options); }
+  if (!d.m && !/valueRenderOption=UNFORMATTED_VALUE/.test(q)) d.r = 'F';
+  return new Promise(function (resolve, reject) {
+    _pssFile.push({ d: d, url: url, options: options, resolve: resolve, reject: reject });
+    if (_pssFile.length >= 10 || d.g) { clearTimeout(_pssMinuterie); _pssMinuterie = null; _pssEnvoyer(); }
+    else if (!_pssMinuterie) _pssMinuterie = setTimeout(function () { _pssMinuterie = null; _pssEnvoyer(); }, 60);
+  });
+}
+function _pssEnvoyer() {
+  var lot = _pssFile; _pssFile = [];
+  var compte = _pssCompte();
+  if (!lot.length) return;
+  var direct = function (x) { window._pssLecturesDirectes = (window._pssLecturesDirectes || 0) + 1; fetch(x.url, x.options).then(x.resolve, x.reject); };
+  if (!compte) { lot.forEach(direct); return; }
+  var bases = [];
+  var demandes = lot.map(function (x) {
+    var i = bases.indexOf(x.d.s); if (i < 0) { bases.push(x.d.s); i = bases.length - 1; }
+    var c = { s: i }; if (x.d.m) c.m = 1; if (x.d.a) c.a = x.d.a; if (x.d.g) c.g = x.d.g; if (x.d.r) c.r = x.d.r; return c;
+  });
+  var cb = 'pssl_' + (++_pssNumero) + '_' + Date.now() + '_' + Math.floor(Math.random() * 1000000), script = document.createElement('script'), fini = false;
+  var fin = function (rep, tardif) {
+    if (fini) return; fini = true;
+    clearTimeout(minuterie);
+    if (tardif) window[cb] = function () { try { delete window[cb]; } catch (e) {} }; else { try { delete window[cb]; } catch (e) {} }
+    if (script.parentNode) script.parentNode.removeChild(script);
+    var r = (rep && rep.ok && rep.r && rep.r.length === lot.length) ? rep.r : null;
+    lot.forEach(function (x, i) {
+      var u = r ? r[i] : null;
+      if (!u || u.erreur || u.refus) { direct(x); return; }       // secours : l'ancienne lecture directe
+      if (u.absent) { x.resolve({ ok: false, status: 400, json: function () { return Promise.resolve({ error: { code: 400, status: 'INVALID_ARGUMENT' } }); } }); return; }
+      x.resolve({ ok: true, status: 200, json: function () { return Promise.resolve(u); } });
+    });
+  };
+  var minuterie = setTimeout(function () { fin(null, true); }, 30000);
+  window[cb] = function (rep) { fin(rep, false); };
+  script.onerror = function () { fin(null, false); };
+  script.src = PSS_SERVEUR_LECTURE + '?callback=' + cb + '&type=STAFF_LIRE&matricule=' + encodeURIComponent(compte.matricule) + '&code=' + encodeURIComponent(compte.code) +
+               '&b=' + encodeURIComponent(bases.join(',')) + '&l=' + encodeURIComponent(JSON.stringify(demandes));
+  document.body.appendChild(script);
+}
 async function ajouterPersonnelDir() {
   const nom = document.getElementById('apNom').value.trim();
   const poste = document.getElementById('apPoste').value.trim();
@@ -1362,7 +1446,7 @@ async function chargerPersonnelEnsCom() {
   body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try {
     const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r = await fetch(url); const data = await r.json();
+    const r = await pssFetch(url); const data = await r.json();
     let rows = (data.values || []).map(row => ({
       nom: String(row[0]||'').trim(),
       poste: String(row[1]||'').trim(),
@@ -1378,7 +1462,7 @@ async function chargerPersonnelEnsCom() {
     if (sheetsId2026) {
       try {
         const urlP = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId2026+'/values/POINTAGE_MENSUEL?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-        const rP = await fetch(urlP); const dataP = await rP.json();
+        const rP = await pssFetch(urlP); const dataP = await rP.json();
         const now = new Date();
         const moisActuel = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
             moisActuelLabel = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
@@ -1439,7 +1523,7 @@ async function chargerPersonnelEnsEdu() {
   body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try {
     const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r = await fetch(url); const data = await r.json();
+    const r = await pssFetch(url); const data = await r.json();
     const rows = (data.values || []).map(row => ({
       nom: String(row[0]||'').trim(),
       poste: String(row[1]||'').trim(),
@@ -1475,7 +1559,7 @@ async function chargerPersonnelAdminDir(){
   body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+STAFF_SHEETS_ID+'/values/STAFF!A2:H500?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r=await fetch(url);const data=await r.json();
+    const r=await pssFetch(url);const data=await r.json();
     const rows=[];
     (data.values||[]).forEach((row,idx)=>{
       const ecole=String(row[3]||'').trim().toUpperCase();
@@ -1544,7 +1628,7 @@ async function sauvegarderPersonnelAdminDir(idx){
   body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+STAFF_SHEETS_ID+'/values/STAFF!A2:H500?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r=await fetch(url);const data=await r.json();
+    const r=await pssFetch(url);const data=await r.json();
     const rows=[];
     (data.values||[]).forEach(row=>{
       const ecole=String(row[3]||'').trim().toUpperCase();
@@ -1583,7 +1667,7 @@ async function sauvegarderPersonnelAdminDir(idx){
   body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+STAFF_SHEETS_ID+'/values/STAFF!A2:H500?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r=await fetch(url);const data=await r.json();
+    const r=await pssFetch(url);const data=await r.json();
     const rows=[];
     (data.values||[]).forEach(row=>{
       const ecole=String(row[3]||'').trim().toUpperCase();
@@ -1751,7 +1835,7 @@ async function chargerProgrammeTrimestrielCom() {
 
   try {
     var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/PROGRAMME_TRIMESTRE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    var res = await fetch(url);
+    var res = await pssFetch(url);
     var data = await res.json();
     var rows = data.values || [];
     if (rows.length < 2) {
@@ -1930,7 +2014,7 @@ async function chargerProgrammeTrimestrielDir() {
   }
   try {
     var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/PROGRAMME_TRIMESTRE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    var res = await fetch(url);
+    var res = await pssFetch(url);
     var data = await res.json();
     var rows = data.values || [];
     if (rows.length < 2) {
@@ -2542,7 +2626,7 @@ var lignes = cache.filter(function(l) {
   body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try {
     const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r = await fetch(url); const data = await r.json();
+    const r = await pssFetch(url); const data = await r.json();
     const rows = (data.values || []).map((row, i) => ({
       ligne: i + 2,
       nom: String(row[0]||'').trim(),
@@ -2565,7 +2649,7 @@ var lignes = cache.filter(function(l) {
       if (sheetsId2026) {
         try {
           const urlP = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId2026+'/values/POINTAGE_MENSUEL?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-          const rP = await fetch(urlP); const dataP = await rP.json();
+          const rP = await pssFetch(urlP); const dataP = await rP.json();
           const now = new Date();
           const moisActuel = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0');
          const moisActuelLabel = now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
@@ -3382,7 +3466,7 @@ async function chargerMatriculesPrimaireCom() {
   if (sec) sec.style.display = 'block';
   try {
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/MATRICULES_RESERVE!A4:G1000?key=${API_KEY}`;
-    const res = await fetch(url);
+    const res = await pssFetch(url);
     const data = await res.json();
     const rows = (data.values || []).filter(r => r[0]);
     _comMatCache = rows;
@@ -5708,7 +5792,7 @@ async function verifierEducateurSheets(mat,code,ecole){
   try{
     const sheetsId=SHEETS_IDS[ecole];if(!sheetsId){hideLoader();affErr('Ecole non configuree.');return;}
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/EDUCATEURS!A2:G200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r=await fetch(url);const data=await r.json();
+    const r=await pssFetch(url);const data=await r.json();
     if(!data.values||!data.values.length){hideLoader();affErr('Onglet EDUCATEURS introuvable.');return;}
     const ligne=data.values.find(row=>String(row[0]||'').trim().toUpperCase()===mat&&String(row[2]||'').trim()===code&&String(row[6]||'').trim().toUpperCase()==='OUI');
     if(!ligne){hideLoader();tentativesPin++;if(tentativesPin>=3){affErr('Acces bloque.');return;}affErr('Code incorrect. ('+tentativesPin+'/3)');document.getElementById('inputCode').value='';return;}
@@ -5961,7 +6045,7 @@ async function chargerPointage(){
   try{
     const sheetsId=getSheetsIdPourEcole(currentStaff.ecole);if(!sheetsId)return;
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL!A2:P5000?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const res=await fetch(url);const data=await res.json();
+    const res=await pssFetch(url);const data=await res.json();
     if(!data.values||!data.values.length){afficherTableauVide();return;}
     const lignesDuMois=data.values.filter(row=>{const mr=serielVersMois(row[6]);return mr===mois;});
         const valides=lignesDuMois.filter(row=>{const st=String(row[9]||'').trim().toUpperCase();return st.indexOf('VALID')!==-1||st==='PARTIEL';});
@@ -5976,7 +6060,7 @@ async function chargerPermanents(recap){
   try{
     const sheetsId=getSheetsIdPourEcole(currentStaff.ecole);
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const res=await fetch(url);const data=await res.json();if(!data.values)return;
+    const res=await pssFetch(url);const data=await res.json();if(!data.values)return;
     data.values.forEach(row=>{const nom=String(row[0]||'').trim();const actif=String(row[3]||'').trim().toUpperCase();const type=String(row[4]||'').trim().toUpperCase();const fixe=parseFloat(row[5])||0;if(actif!=='OUI'||type!=='PERMANENT'||fixe<=0)return;if(!recap[nom]){recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],type:'PERMANENT'};donneesPointage.push(recap[nom]);}recap[nom].totalSalaire=fixe;recap[nom].type='PERMANENT';});
   }catch(e){}
 }
@@ -6024,7 +6108,7 @@ async function chargerPointageCom(){
   try{
     const sheetsId=getSheetsIdPourEcole(currentStaff.ecole);if(!sheetsId)return;
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL!A2:P5000?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const res=await fetch(url);const data=await res.json();
+    const res=await pssFetch(url);const data=await res.json();
     if(!data.values||!data.values.length){afficherTableauVideCom();return;}
     const lignesDuMois=data.values.filter(row=>{const mr=serielVersMois(row[6]);return mr===mois;});
     const valides=lignesDuMois.filter(row=>{const st=String(row[9]||'').trim().toUpperCase();return st.indexOf('VALID')!==-1||st==='PARTIEL';});
@@ -6040,7 +6124,7 @@ async function chargerPermanentsCom(recap,donneesPointageCom){
   try{
     const sheetsId=getSheetsIdPourEcole(currentStaff.ecole);
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const res=await fetch(url);const data=await res.json();if(!data.values)return;
+    const res=await pssFetch(url);const data=await res.json();if(!data.values)return;
     data.values.forEach(row=>{const nom=String(row[0]||'').trim();const actif=String(row[3]||'').trim().toUpperCase();const type=String(row[4]||'').trim().toUpperCase();const fixe=parseFloat(row[5])||0;if(actif!=='OUI'||type!=='PERMANENT'||fixe<=0)return;if(!recap[nom]){recap[nom]={nom,totalHeures:0,totalSalaire:0,nbCours:0,classes:[],details:[],type:'PERMANENT'};donneesPointageCom.push(recap[nom]);}recap[nom].totalSalaire=fixe;recap[nom].type='PERMANENT';});
   }catch(e){}
 }
@@ -6197,7 +6281,7 @@ async function syncEnseignants(){
   try{
     const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole]||SHEETS_IDS[currentStaff.ecole];
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r=await fetch(url);const data=await r.json();if(!data.values){showToast('Aucune donnee ENSEIGNANTS','error');return;}
+    const r=await pssFetch(url);const data=await r.json();if(!data.values){showToast('Aucune donnee ENSEIGNANTS','error');return;}
     let nbA=0,nbP=0,nbV=0;
     data.values.forEach(row=>{if(String(row[3]||'').trim().toUpperCase()!=='OUI')return;nbA++;if(String(row[4]||'').trim().toUpperCase()==='PERMANENT')nbP++;else nbV++;});
     const res=document.getElementById('syncResult');if(res){res.innerHTML='<b>'+nbA+' enseignants actifs</b> : '+nbP+' permanent(s) · '+nbV+' vacataire(s)';res.style.display='block';}
@@ -6256,7 +6340,7 @@ async function chargerSuiviPedagogique(){
   if(!sheetsId){donneesSheetPeda=[];renderDashboardPeda();return;}
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent('CAHIER_TEXTES!A2:N5000')+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const res=await fetch(url);
+    const res=await pssFetch(url);
     const data=await res.json();
     const rows=data.values||[];
     // On garde uniquement la DERNIERE entree par (enseignant + classe + matiere)
@@ -6305,7 +6389,7 @@ async function sauvegarderCahierDir(){
   const vals={date:(g('pf-date')||{}).value||'',heure:(g('pf-heure')||{}).value||'',classe:(g('pf-classe')||{}).value||'',matiere:(g('pf-matiere')||{}).value||'',enseignant:(g('pf-enseignant')||{}).value||'',lecon:(g('pf-lecon')||{}).value||''};
   if(!vals.date||!vals.classe||!vals.matiere||!vals.enseignant){showToast('Champs obligatoires manquants','error');return;}
   const fb=g('pf-feedback');if(fb)fb.innerHTML='<p style="font-size:0.78em;color:var(--bleu)">Enregistrement...</p>';
-  try{await fetch(APPS_SCRIPT_PEDA,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({type:'CAHIER',...vals,ecole:currentStaff.ecole})});if(fb)fb.innerHTML='<div style="padding:7px 10px;background:#E8F5E9;border-radius:8px;color:var(--vert);font-size:0.78em;font-weight:600">Enregistre !</div>';showToast('Cahier enregistre !','success');resetCahierDir();}catch(e){if(fb)fb.innerHTML='<div style="padding:7px 10px;background:#FFEBEE;border-radius:8px;color:var(--rouge);font-size:0.78em">Erreur</div>';}
+  try{await pssFetch(APPS_SCRIPT_PEDA,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({type:'CAHIER',...vals,ecole:currentStaff.ecole})});if(fb)fb.innerHTML='<div style="padding:7px 10px;background:#E8F5E9;border-radius:8px;color:var(--vert);font-size:0.78em;font-weight:600">Enregistre !</div>';showToast('Cahier enregistre !','success');resetCahierDir();}catch(e){if(fb)fb.innerHTML='<div style="padding:7px 10px;background:#FFEBEE;border-radius:8px;color:var(--rouge);font-size:0.78em">Erreur</div>';}
 }
 function resetCahierDir(){['pf-classe','pf-matiere','pf-enseignant','pf-lecon','pf-avancement','pf-obs'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});}
 function initSaisiePedago(){
@@ -6317,7 +6401,7 @@ async function chargerVueReseauConnexionsStaff() {
   if (!zone) return;
   zone.innerHTML = '<p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement...</p>';
   try {
-    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+    const resp = await pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: {'Content-Type':'text/plain'},
       body: JSON.stringify({ action:'GET_VUE_RESEAU_CONNEXIONS' })
@@ -6539,7 +6623,7 @@ function invaliderCacheSynthese(ecole){
   const sheetsId=getSheetsIdPourEcole(ecole);if(!sheetsId)return null;
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r=await fetch(url);const data=await r.json();
+    const r=await pssFetch(url);const data=await r.json();
     if(!data.values||data.values.length<2)return null;
     return data.values.slice(1).filter(row=>row[2]&&String(row[2]).trim()).map(row=>{
       const solde=parseFloat(row[5])||0,verse=parseFloat(row[4])||0,sco=parseFloat(row[3])||0,moy=parseFloat(row[15])||0;
@@ -6608,7 +6692,7 @@ async function chargerAffectationTous(){
   zone.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Chargement...</td></tr>';
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r=await fetch(url);const data=await r.json();
+    const r=await pssFetch(url);const data=await r.json();
     if(!data.values||data.values.length<2){zone.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Aucune donnee</td></tr>';return;}
     const rows=[];
     const regexSEC=/^(6|5|4|3|2NDE|1[EÈ]RE|TLE)/i;
@@ -7813,7 +7897,7 @@ async function chargerAffectationTousCom(){
   zone.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Chargement...</td></tr>';
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r=await fetch(url);const data=await r.json();
+    const r=await pssFetch(url);const data=await r.json();
     if(!data.values||data.values.length<2){zone.innerHTML='<tr><td colspan="8" style="text-align:center;padding:16px;color:var(--gris)">Aucune donnee</td></tr>';return;}
     const rows=[];
     const regexSEC=/^(6|5|4|3|2NDE|1[EÈ]RE|TLE)/i;
@@ -8200,7 +8284,7 @@ async function enregistrerChecklistMenaCom(idx){
   const modifiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
 
   try{
-    const response = await fetch(APPS_SCRIPT_POINTAGE, {
+    const response = await pssFetch(APPS_SCRIPT_POINTAGE, {
       method:'POST',
       headers:{'Content-Type':'text/plain'},
       body: JSON.stringify({ type:'IMPORT_MENA_ZONE_A', ecole:currentStaff.ecole, texte:texte, modifiePar:modifiePar })
@@ -8388,7 +8472,7 @@ async function chargerAffectationTousEdu(){
   };
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r=await fetch(url);const data=await r.json();
+    const r=await pssFetch(url);const data=await r.json();
     if(!data.values||data.values.length<2){zone.innerHTML='<tr><td colspan="7" style="text-align:center;padding:16px;color:var(--gris)">Aucune donnee</td></tr>';return;}
     const rows=[];
     const regexSEC=/^(6|5|4|3|2NDE|1[EÈ]RE|TLE)/i;
@@ -8673,7 +8757,7 @@ setTimeout(function(){ _rechargerListeReception('Com'); }, 700);
 
   try {
     const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/' + encodeURIComponent(ongletTrim) + '?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    const res = await fetch(url);
+    const res = await pssFetch(url);
     const data = await res.json();
     const rows = data.values || [];
     if (rows.length < 2) {
@@ -8729,7 +8813,7 @@ var lignesFiltrees = lignes.filter(function(l){
      var absMap_com = {};
       try {
         var urlAbsCom = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/ABSENCES?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-        var resAbsCom = await fetch(urlAbsCom);
+        var resAbsCom = await pssFetch(urlAbsCom);
         var dataAbsCom = await resAbsCom.json();
         var rowsAbsCom = dataAbsCom.values || [];
         for (var aiCom = 1; aiCom < rowsAbsCom.length; aiCom++) {
@@ -8871,7 +8955,7 @@ function renderAlertePrecoceCom() {
   try {
     const urlNotes = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/' + encodeURIComponent(ongletTrim) + '?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
     const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    const [resNotes, resSynth] = await Promise.all([fetch(urlNotes), fetch(urlSynth)]);
+    const [resNotes, resSynth] = await Promise.all([pssFetch(urlNotes), pssFetch(urlSynth)]);
     const dataNotes = await resNotes.json();
     const dataSynth = await resSynth.json();
     const rows = dataNotes.values || [];
@@ -9027,7 +9111,7 @@ async function chargerClassesEdu(s){
   try{
     const sheetsId=SHEETS_IDS_2026_2027[s.ecole];if(!sheetsId){container.innerHTML='<p style="padding:14px;color:var(--gris);font-size:0.82em">Base 2026-2027 non configuree pour cette ecole.</p>';return;}
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r=await fetch(url);const data=await r.json();
+    const r=await pssFetch(url);const data=await r.json();
     let eleves=[];
     if(data.values&&data.values.length>1){
       eleves=data.values.slice(1).filter(row=>row[2]&&String(row[2]).trim()).map(row=>{
@@ -9086,7 +9170,7 @@ async function resoudreClassesReelles(ecole, classesAssignees) {
   if (!sheetsId) return classesAssignees;
   try {
     const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r = await fetch(url);
+    const r = await pssFetch(url);
     const data = await r.json();
     if (!data.values || data.values.length < 2) return classesAssignees;
 
@@ -9219,7 +9303,7 @@ async function sauvegarderChefsClasseBrouillonUI(classe,idx){
   const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
   const saisiPar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
   try{
-    const resp=await fetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
+    const resp=await pssFetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
       action:'SAUVEGARDER_CHEFS_CLASSE_BROUILLON',ecole:currentStaff.ecole,classe:classe,
       chefNom:chef?chef.nom:'',chefMatricule:chefMat,chefTelPere:chef?chef.telPere:'',chefTelMere:chef?chef.telMere:'',chefTelTuteur:chef?chef.telTuteur:'',
       sousChefNom:sousChef?sousChef.nom:'',sousChefMatricule:sousChefMat,sousChefTelPere:sousChef?sousChef.telPere:'',sousChefTelMere:sousChef?sousChef.telMere:'',sousChefTelTuteur:sousChef?sousChef.telTuteur:'',
@@ -9239,7 +9323,7 @@ async function publierChefsClasseUI(classe,idx){
   const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
   const publiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
   try{
-    const resp=await fetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
+    const resp=await pssFetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
       action:'PUBLIER_CHEFS_CLASSE',ecole:currentStaff.ecole,classe:classe,publiePar:publiePar
     })});
     const result=await resp.json();
@@ -9345,7 +9429,7 @@ async function sauvegarderPresidentClubUI(clubId,idx){
   const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
   const saisiPar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
   try{
-    const resp=await fetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
+    const resp=await pssFetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
       action:'SAUVEGARDER_PRESIDENT_CLUB_BROUILLON',ecole:currentStaff.ecole,club:clubId,
       presidentNom:eleve?eleve.nom:'',presidentMatricule:mat,presidentClasse:eleve?eleve.classe:'',
       telPere:eleve?eleve.telPere:'',telMere:eleve?eleve.telMere:'',telTuteur:eleve?eleve.telTuteur:'',
@@ -9365,7 +9449,7 @@ async function publierPresidentClubUI(clubId,idx){
   const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
   const publiePar=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
   try{
-    const resp=await fetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
+    const resp=await pssFetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
       action:'PUBLIER_PRESIDENT_CLUB',ecole:currentStaff.ecole,club:clubId,publiePar:publiePar
     })});
     const result=await resp.json();
@@ -9389,7 +9473,7 @@ async function ouvrirModalNotesProf(type){
     try{
       const sheetsId=SHEETS_IDS_2026_2027[s.ecole];
       const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'?key='+API_KEY+'&fields=sheets.properties.title';
-      const r=await fetch(url);const data=await r.json();
+      const r=await pssFetch(url);const data=await r.json();
       if(data.sheets){const excl=['SYNTHESE','ENSEIGNANTS','ABSENCES','POINTAGE','RESULTATS','MESSAGES','CAHIER','EDUCATEURS','NOTES_T'];const isPRIM=currentStaff&&currentStaff.type==='PRIM';const regexSEC=/^(6|5|4|3|2NDE|1[EÈ]RE|TLE|2NDE|BT)/i;const regexPRIM=/^(CP|CE|CM|GS|MS|PS|TPS|SIL|CI|CP1|CP2|CE1|CE2|CM1|CM2|MATERNELLE)/i;const regex=isPRIM?regexPRIM:regexSEC;classes=data.sheets.map(sh=>sh.properties.title).filter(t=>!excl.some(ex=>t.toUpperCase().includes(ex))&&regex.test(t));}
     }catch(e){}
   }
@@ -9422,7 +9506,7 @@ async function genererListeNotesPDF(){
     try{
       const sheetsId=SHEETS_IDS_2026_2027[currentStaff.ecole];
       const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-      const r=await fetch(url);const data=await r.json();
+      const r=await pssFetch(url);const data=await r.json();
       if(data.values&&data.values.length>1){const normCl=s=>s.toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U').replace(/[ÔÖÓÒÕ]/g,'O').replace(/[ÎÏÍÌ]/g,'I'); eleves=data.values.slice(1).filter(row=>normCl(String(row[0]||'').trim())===normCl(classe)&&row[2]&&String(row[2]).trim()).map((row,i)=>({num:i+1,matricule:String(row[1]||'').trim(),nom:String(row[2]||'').trim()}));notesElevesCache[classe]=eleves;}
     }catch(e){}
   }
@@ -9502,7 +9586,7 @@ function validerAppelDir(){
 // ⚠️ NOUVEAU — Appels enseignants réels pour l'espace Directeur
 // ⚠️ NOUVEAU — Journal de connexion staff (Directeur/Comptable/Éducateur)
 function enregistrerConnexionStaff(role, ecole) {
-  fetch(APPS_SCRIPT_POINTAGE, {
+  pssFetch(APPS_SCRIPT_POINTAGE, {
     method: 'POST',
     headers: {'Content-Type':'text/plain'},
     body: JSON.stringify({ action:'CONNEXION_STAFF', nom: currentStaff.nom || role, role: role, ecole: ecole })
@@ -9523,7 +9607,7 @@ async function chargerNotesSaisiesDir() {
 
   try {
     const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/' + encodeURIComponent(ongletTrim) + '?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    const res = await fetch(url);
+    const res = await pssFetch(url);
     const data = await res.json();
     const rows = data.values || [];
     if (rows.length < 2) {
@@ -9582,7 +9666,7 @@ async function chargerNotesSaisiesDir() {
  var absMap_dir = {};
       try {
         var urlAbsDir = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/ABSENCES?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-        var resAbsDir = await fetch(urlAbsDir);
+        var resAbsDir = await pssFetch(urlAbsDir);
         var dataAbsDir = await resAbsDir.json();
         var rowsAbsDir = dataAbsDir.values || [];
         for (var aiDir = 1; aiDir < rowsAbsDir.length; aiDir++) {
@@ -9729,7 +9813,7 @@ function renderAlertePrecoceDir() {
   try {
     const urlNotes = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/' + encodeURIComponent(ongletTrim) + '?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
     const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    const [resNotes, resSynth] = await Promise.all([fetch(urlNotes), fetch(urlSynth)]);
+    const [resNotes, resSynth] = await Promise.all([pssFetch(urlNotes), pssFetch(urlSynth)]);
     const dataNotes = await resNotes.json();
     const dataSynth = await resSynth.json();
     const rows = dataNotes.values || [];
@@ -9841,7 +9925,7 @@ function filtrerSousMoyenneDir() {
   let appels = [];
   try {
     const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/APPELS?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r = await fetch(url); const data = await r.json();
+    const r = await pssFetch(url); const data = await r.json();
     if (data.values && data.values.length >= 2) {
       const headers = data.values[0].map(h => String(h||'').toUpperCase().trim());
       const iDate = headers.findIndex(h => h.includes('DATE'));
@@ -9918,7 +10002,7 @@ async function chargerNotesSaisiesEdu() {
 
   try {
     const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/' + encodeURIComponent(ongletTrim) + '?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    const res = await fetch(url);
+    const res = await pssFetch(url);
     const data = await res.json();
     const rows = data.values || [];
     if (rows.length < 2) {
@@ -9979,7 +10063,7 @@ async function chargerNotesSaisiesEdu() {
    var absMap_edu = {};
       try {
         var urlAbsEdu = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/ABSENCES?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-        var resAbsEdu = await fetch(urlAbsEdu);
+        var resAbsEdu = await pssFetch(urlAbsEdu);
         var dataAbsEdu = await resAbsEdu.json();
         var rowsAbsEdu = dataAbsEdu.values || [];
         for (var aiEdu = 1; aiEdu < rowsAbsEdu.length; aiEdu++) {
@@ -10150,7 +10234,7 @@ function renderAlertePrecoceEdu() {
   try {
     const urlNotes = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/' + encodeURIComponent(ongletTrim) + '?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
     const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    const [resNotes, resSynth] = await Promise.all([fetch(urlNotes), fetch(urlSynth)]);
+    const [resNotes, resSynth] = await Promise.all([pssFetch(urlNotes), pssFetch(urlSynth)]);
     const dataNotes = await resNotes.json();
     const dataSynth = await resSynth.json();
     const rows = dataNotes.values || [];
@@ -10265,7 +10349,7 @@ async function chargerHeuresAbsenceCom() {
   if (!window._heuresAbsClassesPeuplees_com) {
     try {
       const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-      const resSynth = await fetch(urlSynth);
+      const resSynth = await pssFetch(urlSynth);
       const dataSynth = await resSynth.json();
       const rows = dataSynth.values || [];
       var classesUniques = [...new Set(rows.slice(1).map(function(r) { return String(r[0] || '').trim(); }))].filter(Boolean).sort();
@@ -10285,7 +10369,7 @@ async function chargerHeuresAbsenceCom() {
 
   try {
     const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    const resSynth = await fetch(urlSynth);
+    const resSynth = await pssFetch(urlSynth);
     const dataSynth = await resSynth.json();
     const rows = dataSynth.values || [];
 
@@ -11014,7 +11098,7 @@ async function chargerHeuresAbsenceDir() {
   if (!window._heuresAbsClassesPeuplees_dir) {
     try {
       const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-      const resSynth = await fetch(urlSynth);
+      const resSynth = await pssFetch(urlSynth);
       const dataSynth = await resSynth.json();
       const rows = dataSynth.values || [];
       var classesUniques = [...new Set(rows.slice(1).map(function(r) { return String(r[0] || '').trim(); }))].filter(Boolean).sort();
@@ -11034,7 +11118,7 @@ async function chargerHeuresAbsenceDir() {
 
   try {
     const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    const resSynth = await fetch(urlSynth);
+    const resSynth = await pssFetch(urlSynth);
     const dataSynth = await resSynth.json();
     const rows = dataSynth.values || [];
 
@@ -11122,7 +11206,7 @@ async function chargerHeuresAbsenceEdu() {
   if (!window._heuresAbsClassesPeuplees_edu) {
     try {
       const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-      const resSynth = await fetch(urlSynth);
+      const resSynth = await pssFetch(urlSynth);
       const dataSynth = await resSynth.json();
       const rows = dataSynth.values || [];
       var classesUniques = [...new Set(rows.slice(1).map(function(r) { return String(r[0] || '').trim(); }).filter(appartientHA))].filter(Boolean).sort();
@@ -11142,7 +11226,7 @@ async function chargerHeuresAbsenceEdu() {
 
   try {
     const urlSynth = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    const resSynth = await fetch(urlSynth);
+    const resSynth = await pssFetch(urlSynth);
     const dataSynth = await resSynth.json();
     const rows = dataSynth.values || [];
 
@@ -11232,7 +11316,7 @@ function filtrerHeuresAbsenceEdu() { /* rien — l'utilisateur reclique "Charger
   let appels = [];
   try {
     const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/APPELS?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r = await fetch(url); const data = await r.json();
+    const r = await pssFetch(url); const data = await r.json();
     if (data.values && data.values.length >= 2) {
       const headers = data.values[0].map(h => String(h||'').toUpperCase().trim());
       const iDate = headers.findIndex(h => h.includes('DATE'));
@@ -11306,7 +11390,7 @@ async function confirmerChangerEnseignant() {
   msgDiv.textContent = '⏳ Modification en cours...';
 
   try {
-    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+    const resp = await pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
@@ -11412,7 +11496,7 @@ async function chargerCoursDuJourAnnulation() {
     const dateAuj = dd + '/' + mm + '/' + yyyy;
 
     const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/POINTAGE_MENSUEL?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    const r = await fetch(url);
+    const r = await pssFetch(url);
     const data = await r.json();
     if (!data.values || data.values.length < 2) { div.innerHTML = 'Aucun cours trouvé.'; return; }
 
@@ -11488,7 +11572,7 @@ async function chargerAppelsCom(ecole) {
   let appels = [];
   try {
     const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/APPELS?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r = await fetch(url); const data = await r.json();
+    const r = await pssFetch(url); const data = await r.json();
     if (data.values && data.values.length >= 2) {
       const headers = data.values[0].map(h => String(h||'').toUpperCase().trim());
       const iDate = headers.findIndex(h => h.includes('DATE'));
@@ -11596,7 +11680,7 @@ async function chargerProgrammeTrimestrielEdu(s) {
 
   try {
     var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/PROGRAMME_TRIMESTRE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    var res = await fetch(url);
+    var res = await pssFetch(url);
     var data = await res.json();
     var rows = data.values || [];
     if (rows.length < 2) {
@@ -11718,7 +11802,7 @@ var items = matieres[mat].slice().sort(function(a, b) {
   try{
     for(const sn of['ABSENCES','ABSENCES_JOUR','APPELS']){
       const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-      const r=await fetch(url);const data=await r.json();
+      const r=await pssFetch(url);const data=await r.json();
       if(data.values&&data.values.length>=2){
         const h2=data.values[0].map(h=>String(h||'').toUpperCase().trim());
         const iDate=h2.findIndex(h=>h.includes('DATE'));
@@ -11762,7 +11846,7 @@ if(classesEdu.length > 0) {
   if(absences.length>0){
     try{
       const urlSyn='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-      const rSyn=await fetch(urlSyn);const dSyn=await rSyn.json();
+      const rSyn=await pssFetch(urlSyn);const dSyn=await rSyn.json();
       if(dSyn.values&&dSyn.values.length>=2){
         const contacts={};
         dSyn.values.slice(1).forEach(row=>{
@@ -11835,7 +11919,7 @@ async function chargerPresencesEnseignants(ecole){
   let appels=[];
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/APPELS?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r=await fetch(url);const data=await r.json();
+    const r=await pssFetch(url);const data=await r.json();
     if(data.values&&data.values.length>=2){
       const headers=data.values[0].map(h=>String(h||'').toUpperCase().trim());
       const iDate=headers.findIndex(h=>h.includes('DATE'));
@@ -11871,7 +11955,7 @@ async function chargerPresencesEnseignants(ecole){
   let tousEnseignants=[];
   try{
     const url2='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/ENSEIGNANTS!A2:F200?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r2=await fetch(url2);const data2=await r2.json();
+    const r2=await pssFetch(url2);const data2=await r2.json();
     if(data2.values)tousEnseignants=data2.values.filter(row=>row[0]&&String(row[3]||'').trim().toUpperCase()==='OUI').map(row=>String(row[0]||'').trim());
   }catch(e){}
   const aFaitAppel=new Set(appels.map(a=>a.enseignant));
@@ -11945,7 +12029,7 @@ async function chargerResultats(ecole){
   for(const sn of['RESULTATS_2025_2026','RESULTATS','DELIBERATIONS','RESULTAT']){
     try{
       const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-      const r=await fetch(url);const data=await r.json();
+      const r=await pssFetch(url);const data=await r.json();
       if(!data.values||data.values.length<2)continue;
       const entetes=data.values[0];
       const iNiv=trouverCol(entetes,['NIVEAU','CLASSE']);
@@ -11978,7 +12062,7 @@ async function chargerResultats(ecole){
   let resultatsSynthese=[];
   try{
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const r=await fetch(url);const data=await r.json();
+    const r=await pssFetch(url);const data=await r.json();
     if(data.values&&data.values.length>=2){
       const entetesS=data.values[0];
       const sNiv=trouverCol(entetesS,['NIVEAU','CLASSE']);
@@ -12009,7 +12093,7 @@ async function chargerResultats(ecole){
 }
 async function chargerMessages(ecole){
  const sheetsId=SHEETS_IDS_2026_2027[ecole];if(!sheetsId)return[];
-  for(const sn of['MESSAGES','CONTACTS','JOURNAL']){try{const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';const r=await fetch(url);const data=await r.json();if(data.values&&data.values.length>=2)return data.values.slice(1).filter(row=>row[0]).map(row=>({date:String(row[0]||'').trim(),message:String(row[3]||'').trim(),nom:String(row[4]||'').trim(),matricule:String(row[5]||'').trim(),classe:String(row[6]||'').trim(),statut:String(row[8]||'').trim()||'CONNEXION',reponse:String(row[9]||'').trim(),idMessage:String(row[10]||'').trim()}));}catch(e){}}
+  for(const sn of['MESSAGES','CONTACTS','JOURNAL']){try{const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';const r=await pssFetch(url);const data=await r.json();if(data.values&&data.values.length>=2)return data.values.slice(1).filter(row=>row[0]).map(row=>({date:String(row[0]||'').trim(),message:String(row[3]||'').trim(),nom:String(row[4]||'').trim(),matricule:String(row[5]||'').trim(),classe:String(row[6]||'').trim(),statut:String(row[8]||'').trim()||'CONNEXION',reponse:String(row[9]||'').trim(),idMessage:String(row[10]||'').trim()}));}catch(e){}}
   return[];
 }
 function _niveauSeulDir(classe){var c=String(classe||'').trim().toUpperCase();var m=c.match(/^(MATERNELLE|PS|MS|GS|CP1|CP2|CP|CE1|CE2|CE|CM1|CM2|CM|6EME|5EME|4EME|3EME|2NDE|1ERE|1ÈRE|TLE)/);return m?m[1].replace('È','E'):c;}
@@ -12137,7 +12221,7 @@ async function chargerNotesDevoir() {
   for(const sn of sheetNames) {
     try {
       const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-      const r = await fetch(url); const d = await r.json();
+      const r = await pssFetch(url); const d = await r.json();
       if(d.values && d.values.length >= 2) {
         const headers = d.values[0].map(h => String(h||'').toUpperCase().trim());
         const iDate   = headers.findIndex(h => h.includes('DATE'));
@@ -12376,7 +12460,7 @@ async function chargerCoursJourEdu(s, dateChoisie) {
 
   try {
     const urlEdt = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/EDT_PAR_PROF?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const rEdt = await fetch(urlEdt); const dEdt = await rEdt.json();
+    const rEdt = await pssFetch(urlEdt); const dEdt = await rEdt.json();
     let creneaux = [];
     if (dEdt.values && dEdt.values.length > 1) {
       creneaux = dEdt.values.slice(1).filter(row => {
@@ -12403,7 +12487,7 @@ async function chargerCoursJourEdu(s, dateChoisie) {
     for (const sn of ['CAHIER_TEXTES', 'POINTAGE_MENSUEL']) {
       try {
         const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-        const r = await fetch(url); const d = await r.json();
+        const r = await pssFetch(url); const d = await r.json();
         if (!d.values || d.values.length < 2) continue;
         const headers = d.values[0].map(h => String(h||'').toUpperCase().trim());
         const iDate = headers.findIndex(h => h.includes('DATE'));
@@ -12505,7 +12589,7 @@ async function chargerCoursJourDir(s, dateChoisie) {
 
   try {
     const urlEdt = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/EDT_PAR_PROF?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const rEdt = await fetch(urlEdt); const dEdt = await rEdt.json();
+    const rEdt = await pssFetch(urlEdt); const dEdt = await rEdt.json();
     let creneaux = [];
     if (dEdt.values && dEdt.values.length > 1) {
       creneaux = dEdt.values.slice(1).filter(row => {
@@ -12532,7 +12616,7 @@ async function chargerCoursJourDir(s, dateChoisie) {
     for (const sn of ['CAHIER_TEXTES', 'POINTAGE_MENSUEL']) {
       try {
         const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-        const r = await fetch(url); const d = await r.json();
+        const r = await pssFetch(url); const d = await r.json();
         if (!d.values || d.values.length < 2) continue;
         const headers = d.values[0].map(h => String(h||'').toUpperCase().trim());
         const iDate = headers.findIndex(h => h.includes('DATE'));
@@ -12635,7 +12719,7 @@ const estFutur = refDate > now && !estAujourdhuiReel;
 
   try {
     const urlEdt = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/EDT_PAR_PROF?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const rEdt = await fetch(urlEdt); const dEdt = await rEdt.json();
+    const rEdt = await pssFetch(urlEdt); const dEdt = await rEdt.json();
     let creneaux = [];
     if (dEdt.values && dEdt.values.length > 1) {
       creneaux = dEdt.values.slice(1).filter(row => {
@@ -12662,7 +12746,7 @@ const estFutur = refDate > now && !estAujourdhuiReel;
     for (const sn of ['CAHIER_TEXTES', 'POINTAGE_MENSUEL']) {
       try {
         const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-        const r = await fetch(url); const d = await r.json();
+        const r = await pssFetch(url); const d = await r.json();
         if (!d.values || d.values.length < 2) continue;
         const headers = d.values[0].map(h => String(h||'').toUpperCase().trim());
         const iDate = headers.findIndex(h => h.includes('DATE'));
@@ -12759,7 +12843,7 @@ async function chargerEDT() {
   for(const sn of sheetNames) {
     try {
       const url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(sn)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-      const r = await fetch(url); const d = await r.json();
+      const r = await pssFetch(url); const d = await r.json();
       if(d.values && d.values.length >= 2) {
         const headers = d.values[0].map(h => String(h||'').toUpperCase().trim());
         const iDate    = headers.findIndex(h => h.includes('DATE'));
@@ -13039,7 +13123,7 @@ function getNiv(nom){if(!nom||typeof nom!=="string")return"AUTRES";var n=nom.toU
 function estOngletValide(nom){if(!nom||typeof nom!=="string")return false;var u=nom.toUpperCase().trim();if(!u)return false;for(var i=0;i<EXCLUS_ONGLETS.length;i++){if(u.indexOf(EXCLUS_ONGLETS[i])>=0)return false;}return true;}
 
 async function diagColonnes(sheetsId,nomClasse){
-  try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(nomClasse)+'!A1:Z3?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';var r=await fetch(url);var data=await r.json();if(!data.values||!data.values.length){showToast('Sheet introuvable : '+nomClasse,'error');return;}var row0=data.values[0];var row1=data.values[1]||[];var html='<div style="position:fixed;bottom:60px;left:10px;right:10px;background:#1A0A2E;color:#fff;border-radius:10px;padding:12px;z-index:9999;font-size:0.72em;max-height:220px;overflow-y:auto"><b style="color:var(--or)">Colonnes : '+nomClasse+'</b><br><br>';row0.forEach(function(h,i){var valEx=String(row1[i]||'').substring(0,18);html+='<span style="color:#A5D6A7">COL '+i+'</span> : <b>'+String(h||'(vide)')+'</b> ex: '+valEx+'<br>';});html+='<br><button onclick="this.parentElement.remove()" style="background:var(--rouge);color:#fff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer">Fermer</button></div>';document.body.insertAdjacentHTML('beforeend',html);}catch(e){}
+  try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(nomClasse)+'!A1:Z3?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';var r=await pssFetch(url);var data=await r.json();if(!data.values||!data.values.length){showToast('Sheet introuvable : '+nomClasse,'error');return;}var row0=data.values[0];var row1=data.values[1]||[];var html='<div style="position:fixed;bottom:60px;left:10px;right:10px;background:#1A0A2E;color:#fff;border-radius:10px;padding:12px;z-index:9999;font-size:0.72em;max-height:220px;overflow-y:auto"><b style="color:var(--or)">Colonnes : '+nomClasse+'</b><br><br>';row0.forEach(function(h,i){var valEx=String(row1[i]||'').substring(0,18);html+='<span style="color:#A5D6A7">COL '+i+'</span> : <b>'+String(h||'(vide)')+'</b> ex: '+valEx+'<br>';});html+='<br><button onclick="this.parentElement.remove()" style="background:var(--rouge);color:#fff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer">Fermer</button></div>';document.body.insertAdjacentHTML('beforeend',html);}catch(e){}
 }
 
 async function lireOngletClasse(sheetsId,nomClasse){
@@ -13072,7 +13156,7 @@ async function _getContactsSynthese(sheetsId){
   var map={};
   try{
     var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    var r=await fetch(url);var data=await r.json();
+    var r=await pssFetch(url);var data=await r.json();
     if(data.values){
       data.values.slice(1).forEach(function(row){
         var mat=normaliserMatriculeListes(row[1]);
@@ -13086,7 +13170,7 @@ async function _getContactsSynthese(sheetsId){
   return map;
 }
 async function _lireOngletDirect(sheetsId,nomClasse){
-  try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(nomClasse)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';var r=await fetch(url);if(!r.ok)return[];var data=await r.json();if(!data.values||data.values.length<2)return[];
+  try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/'+encodeURIComponent(nomClasse)+'?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';var r=await pssFetch(url);if(!r.ok)return[];var data=await r.json();if(!data.values||data.values.length<2)return[];
   var headerIdx=-1;for(var li=0;li<Math.min(5,data.values.length);li++){var testRow=data.values[li].map(function(h){return String(h||'').toUpperCase().trim();});if(testRow.some(function(h){return h==='MATRICULE'||h==='N';})){headerIdx=li;break;}}
   var iMat=-1,iNom=-1,iPrenom=-1,iDu=-1,iVerse=-1,iSolde=-1,iTel1=-1,iTel2=-1,iTel3=-1,dataRows;
   if(headerIdx>=0){var headers=data.values[headerIdx].map(function(h){return String(h||'').toUpperCase().trim();});dataRows=data.values.slice(headerIdx+1);
@@ -13105,7 +13189,7 @@ async function _lireOngletDirect(sheetsId,nomClasse){
   }catch(e){return[];}
 }
 async function _lireDepuisSynthese(sheetsId,nomClasse){
-  try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';var r=await fetch(url);if(!r.ok)return[];var data=await r.json();if(!data.values||data.values.length<2)return[];
+  try{var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';var r=await pssFetch(url);if(!r.ok)return[];var data=await r.json();if(!data.values||data.values.length<2)return[];
   var norm=function(s){return s.toUpperCase().trim().replace(/[ÈÉÊËẼ]/g,'E').replace(/[ÀÂÃÄ]/g,'A').replace(/[ÙÛÜÚ]/g,'U').replace(/[ÔÖÓÒÕ]/g,'O').replace(/[ÎÏÍÌ]/g,'I').replace(/[-_]/g,' ').replace(/\s+/g,' ');};
   var nc=norm(nomClasse);
   // En-tête ligne 0 : CLASSE=0, MATRICULE=1, NOM=2, MONTANT_DU=3, VERSEMENT=4, SOLDE=5, TEL1=6, TEL2=7, TEL3=8
@@ -13125,7 +13209,7 @@ function _parseEleves(dataRows,iMat,iNom,iPrenom,iDu,iVerse,iSolde,iTel1,iTel2,i
     }).join('&');
     var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId
       + '/values:batchGet?' + ranges + '&key=' + API_KEY;
-    var r = await fetch(url);
+    var r = await pssFetch(url);
     var data = await r.json();
     
     if (!data.valueRanges) return onglets;
@@ -13154,7 +13238,7 @@ function _parseEleves(dataRows,iMat,iNom,iPrenom,iDu,iVerse,iSolde,iTel1,iTel2,i
 async function listerOnglets(sheetsId){
   try{
     var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'?key='+API_KEY+'&fields=sheets.properties.title';
-    var r=await fetch(url);
+    var r=await pssFetch(url);
     var data=await r.json();
     if(!data.sheets)return[];
     var tous=data.sheets.map(function(s){return s.properties.title;}).filter(estOngletValide);
@@ -13350,7 +13434,7 @@ async function chargerPointageEdu(periode) {
   try {
     // Lire CAHIER_TEXTES (cours publiés)
     const urlCT = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/CAHIER_TEXTES?key='+API_KEY;
-    const rCT = await fetch(urlCT); const dCT = await rCT.json();
+    const rCT = await pssFetch(urlCT); const dCT = await rCT.json();
     let coursCahier = [];
     if(dCT.values&&dCT.values.length>1) {
       coursCahier = dCT.values.slice(1).map(row=>({
@@ -13368,7 +13452,7 @@ async function chargerPointageEdu(periode) {
 
     // Lire POINTAGE_MENSUEL (cours validés)
     const urlPM = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    const rPM = await fetch(urlPM); const dPM = await rPM.json();
+    const rPM = await pssFetch(urlPM); const dPM = await rPM.json();
     let coursValides = [];
     if(dPM.values&&dPM.values.length>1) {
       const h = dPM.values[0].map(x=>String(x||'').toUpperCase().trim());
@@ -13565,7 +13649,7 @@ function _marquerEdtModifie(input) {
 
 async function insererLigneEdtDir(apresLigne) {
   if (!_edtClasseCourante) return;
-  const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+  const resp = await pssFetch(APPS_SCRIPT_POINTAGE, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({
@@ -13587,7 +13671,7 @@ async function insererLigneEdtDir(apresLigne) {
 async function supprimerLigneEdtDir(ligne) {
   if (!_edtClasseCourante) return;
   if (!confirm('Supprimer cette ligne de l\'emploi du temps ?')) return;
-  const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+  const resp = await pssFetch(APPS_SCRIPT_POINTAGE, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify({
@@ -13617,7 +13701,7 @@ async function supprimerLigneEdtDir(ligne) {
   saveBtn.disabled = true;
 
   try {
-    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+    const resp = await pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
@@ -13741,7 +13825,7 @@ async function sauvegarderProfPrincipalDir() {
   const enseignant = sel.value;
 
   try {
-    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+    const resp = await pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
@@ -13852,7 +13936,7 @@ function _marquerEdtProfModifie(input) {
   saveBtn.disabled = true;
 
   try {
-    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+    const resp = await pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
@@ -14020,7 +14104,7 @@ async function sauvegarderEdtClasseCom() {
   saveBtn.disabled = true;
 
   try {
-    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+    const resp = await pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
@@ -14201,7 +14285,7 @@ async function sauvegarderEdtProfCom() {
   saveBtn.disabled = true;
 
   try {
-    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+    const resp = await pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
@@ -14366,7 +14450,7 @@ async function sauvegarderEdtClasseEdu() {
   saveBtn.disabled = true;
 
   try {
-    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+    const resp = await pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
@@ -14547,7 +14631,7 @@ async function sauvegarderEdtProfEdu() {
   saveBtn.disabled = true;
 
   try {
-    const resp = await fetch(APPS_SCRIPT_POINTAGE, {
+    const resp = await pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
@@ -14950,7 +15034,7 @@ async function _chargerBulletinsSalaire(ecole, bodyId) {
   body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try {
     const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/PERSONNEL_SALAIRES?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    const r = await fetch(url);
+    const r = await pssFetch(url);
     const data = await r.json();
     if (!data.values || data.values.length < 5) { body.innerHTML = '<p style="text-align:center;padding:20px;color:var(--gris);font-size:0.82em">Aucune donnée</p>'; return; }
 
@@ -15003,7 +15087,7 @@ function _logoutReel(){
   // ⚠️ NOUVEAU — enregistrer l'heure de déconnexion avant de tout effacer
   if(currentStaff && currentStaff.profil && currentStaff.profil !== 'FOND'){
     var roleLabel = currentStaff.profil==='DIR'?'Directeur':currentStaff.profil==='COM'?'Comptable':currentStaff.profil==='EDU'?'Educateur':currentStaff.profil;
-    fetch(APPS_SCRIPT_POINTAGE, {
+    pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: {'Content-Type':'text/plain'},
       body: JSON.stringify({ action:'DECONNEXION_STAFF', nom: currentStaff.nom || roleLabel, role: roleLabel, ecole: currentStaff.ecole })
@@ -15668,7 +15752,7 @@ async function chargerProgrammeDir() {
 
   try {
     var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/PROGRAMME_TRIMESTRE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    var r = await fetch(url);
+    var r = await pssFetch(url);
     var data = await r.json();
     _progLignes = [];
     if (data.values && data.values.length > 1) {
@@ -15776,7 +15860,7 @@ async function enregistrerProgrammeDir() {
   msgDiv.style.cssText = 'display:block;background:#E3F2FD;color:var(--bleu);border:1px solid #90CAF9;padding:10px;border-radius:6px';
   msgDiv.textContent = '⏳ Enregistrement...';
   try {
-    var resp = await fetch(APPS_SCRIPT_POINTAGE, {
+    var resp = await pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
@@ -15858,7 +15942,7 @@ async function chargerRecepParentsDir(ecole) {
   if (!listeEl) return;
   try {
     var url = APPS_SCRIPT_POINTAGE + '?type=GET_RECEPTIONS_JOUR&ecole=' + encodeURIComponent(ecole);
-    var r = await fetch(url);
+    var r = await pssFetch(url);
     var data = await r.json();
     var liste = (data && data.receptions) || [];
     if (countEl) countEl.textContent = '(' + liste.length + ' aujourd\'hui)';
@@ -15881,7 +15965,7 @@ async function chargerRecepParentsDir(ecole) {
   if (!listeEl || !currentStaff) return;
   try {
     var url = APPS_SCRIPT_POINTAGE + '?type=GET_RECEPTIONS_JOUR&ecole=' + encodeURIComponent(currentStaff.ecole);
-    var r = await fetch(url);
+    var r = await pssFetch(url);
     var data = await r.json();
     var liste = (data && data.receptions) || [];
     if (countEl) countEl.textContent = '(' + liste.length + ' aujourd\'hui)';
@@ -15966,7 +16050,7 @@ eleve: eleve, classe: classe, motif: motif, rdvDate: rdvAffiche
   };
 
   try {
-    await fetch(APPS_SCRIPT_POINTAGE, {
+    await pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: {'Content-Type':'text/plain'},
       body: JSON.stringify(payload)
@@ -16015,7 +16099,7 @@ async function _chercherMatriculeDansBase(sheetsId, mat) {
   if (!sheetsId) return null;
   try {
     var url = 'https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    var r = await fetch(url);
+    var r = await pssFetch(url);
     var data = await r.json();
     if (data.values) {
       for (var i = 1; i < data.values.length; i++) {
@@ -16107,7 +16191,7 @@ async function debloquerPublicationChefsDir(){
   const roleLabels={DIR:'Directeur',FOND:'Fondateur',COM:'Comptable',EDU:'Educateur'};
   const directeur=(currentStaff.nom||currentStaff.matricule||'inconnu')+' ('+(roleLabels[currentStaff.profil]||currentStaff.profil)+')';
   try{
-    const resp=await fetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
+    const resp=await pssFetch(APPS_SCRIPT_POINTAGE,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({
       action:'DEBLOQUER_PUBLICATION_CHEFS',ecole:currentStaff.ecole,directeur:directeur
     })});
     const result=await resp.json();
@@ -16260,7 +16344,7 @@ async function analyserEtImporterZoneBDir() {
   const modifiePar = (currentStaff.nom || currentStaff.matricule || 'inconnu') + ' (' + (roleLabels[currentStaff.profil] || currentStaff.profil) + ')';
 
   try {
-    const response = await fetch(APPS_SCRIPT_POINTAGE, {
+    const response = await pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: {'Content-Type': 'text/plain'},
       body: JSON.stringify({ type: 'IMPORT_MENA_ZONE_B', ecole: currentStaff.ecole, texte: texte, modifiePar: modifiePar })
@@ -16321,7 +16405,7 @@ async function analyserEtImporterZoneADir() {
   const modifiePar = (currentStaff.nom || currentStaff.matricule || 'inconnu') + ' (' + (roleLabels[currentStaff.profil] || currentStaff.profil) + ')';
 
   try {
-    const response = await fetch(APPS_SCRIPT_POINTAGE, {
+    const response = await pssFetch(APPS_SCRIPT_POINTAGE, {
       method: 'POST',
       headers: {'Content-Type': 'text/plain'},
       body: JSON.stringify({ type: 'IMPORT_MENA_ZONE_A', ecole: currentStaff.ecole, texte: texte, modifiePar: modifiePar })
@@ -16421,7 +16505,7 @@ async function _analyserAvecClaude(base64,mimeType){
   // POST avec Content-Type: text/plain -> evite le preflight CORS
   // (le serveur analyse le corps avec JSON.parse quel que soit l'en-tete)
   // La cle API Claude reste cote serveur (PropertiesService), jamais exposee au navigateur
-  const resp=await fetch(APP_SCRIPT_URL_ADMIN,{
+  const resp=await pssFetch(APP_SCRIPT_URL_ADMIN,{
     method:'POST',
     headers:{'Content-Type':'text/plain'},
     body:JSON.stringify({action:'analyserDocumentMENA',base64:base64,mimeType:mimeType})
@@ -16439,7 +16523,7 @@ async function _analyserClaudeDirecte(base64,mimeType){
 
 
 async function _analyserAvecVision(base64,mimeType){
-  var resp=await fetch('https://vision.googleapis.com/v1/images:annotate?key='+VISION_API_KEY_DIR,{
+  var resp=await pssFetch('https://vision.googleapis.com/v1/images:annotate?key='+VISION_API_KEY_DIR,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({requests:[{image:{content:base64},features:[{type:'DOCUMENT_TEXT_DETECTION'}]}]})
@@ -16740,7 +16824,7 @@ async function _inscrireNouvelEleve(data, ecoleCible, labelEcole){
 
     // Chercher l'eleve dans la SYNTHESE par matricule
     var urlSyn='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    var rSyn=await fetch(urlSyn);
+    var rSyn=await pssFetch(urlSyn);
     var dSyn=await rSyn.json();
     var ligneEleve=-1;
     if(dSyn.values){
@@ -16758,7 +16842,7 @@ async function _inscrireNouvelEleve(data, ecoleCible, labelEcole){
         ligne:ligneEleve,classe2026:niveau,statutEleve:statut,
         matricule:data.matricule,nom:data.nom_prenoms};
       try{
-        var resp=await fetch(urlScript,{method:'POST',
+        var resp=await pssFetch(urlScript,{method:'POST',
           headers:{'Content-Type':'text/plain'},
           body:JSON.stringify(payload)});
         var result=await resp.json();
@@ -16780,7 +16864,7 @@ async function _inscrireNouvelEleve(data, ecoleCible, labelEcole){
         ecoleNom:labelEcole,sheetsId:sheetsId,source:data.source||'IMPORT',
         inscritPar:inscritPar};
       try{
-        var resp2=await fetch(urlScript2,{method:'POST',
+        var resp2=await pssFetch(urlScript2,{method:'POST',
           headers:{'Content-Type':'text/plain'},
           body:JSON.stringify(payload2)});
         var result2=await resp2.json();
@@ -17264,7 +17348,7 @@ async function verifierMontantsDuReseau() {
 
     try {
       const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-      const r = await fetch(url);
+      const r = await pssFetch(url);
       const data = await r.json();
       if (!data.values || data.values.length < 2) continue;
 
@@ -17763,7 +17847,7 @@ async function comparerOngletsReseau() {
 
 async function _listerOngletsSheet(sheetsId) {
   const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '?key=' + API_KEY + '&fields=sheets.properties.title';
-  const r = await fetch(url);
+  const r = await pssFetch(url);
   if (!r.ok) throw new Error('HTTP ' + r.status);
   const data = await r.json();
   if (!data.sheets) return [];
@@ -17807,7 +17891,7 @@ async function verifierContactsManquantsDir(s){
     var sheetsId=SHEETS_IDS[s.ecole];
     if(!sheetsId)return;
     var url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/SYNTHESE?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
-    var r=await fetch(url);
+    var r=await pssFetch(url);
     var data=await r.json();
     if(!data.values||data.values.length<2)return;
     var sansContacts=[];
@@ -17909,7 +17993,7 @@ async function chargerMatriculesPrimaire() {
   if(sec) sec.style.display = 'block';
   try {
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/MATRICULES_RESERVE!A4:G1000?key=${API_KEY}`;
-    const res = await fetch(url);
+    const res = await pssFetch(url);
     const data = await res.json();
     const rows = (data.values || []).filter(r => r[0]);
     _matCache = rows;
