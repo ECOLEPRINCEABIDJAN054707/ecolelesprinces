@@ -873,7 +873,7 @@ async function chargerPhotoEleve(matricule, imgElement, fallback) {
   if (PHOTOS_CACHE[matUpper]) { imgElement.src = 'https://drive.google.com/thumbnail?id=' + PHOTOS_CACHE[matUpper] + '&sz=w200'; imgElement.onerror = function() { this.src = fallback; }; return; }
   try {
     const url = 'https://sheets.googleapis.com/v4/spreadsheets/' + CONFIG.SHEETS_ID + '/values/PHOTOS!A2:B5000?key=' + CONFIG.API_KEY;
-    const res = await fetch(url);
+    const res = await pssFetch(url);
     if (res.ok) { const data = await res.json(); if (data.values) { for (const row of data.values) { const mat = String(row[0]||'').trim().toUpperCase().replace(/\.(JPG|JPEG|PNG|JFIF|WEBP|GIF)$/i,''); const fid = String(row[1]||'').trim(); if (mat && fid) PHOTOS_CACHE[mat] = fid; } if (PHOTOS_CACHE[matUpper]) { imgElement.src = 'https://drive.google.com/thumbnail?id=' + PHOTOS_CACHE[matUpper] + '&sz=w200'; imgElement.onerror = function() { this.src = fallback; }; return; } } }
   } catch(e) {}
   imgElement.src = fallback;
@@ -906,6 +906,56 @@ function _pssServeur(type, params, delaiMs) {
     Object.keys(params || {}).forEach(function (k) { q += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); });
     script.src = PSS_SERVEUR_URL + '?' + q;
     document.body.appendChild(script);
+  });
+}
+
+// ══════════════════════════════════════════════
+// LECTURES DE L'ESPACE PARENT PAR LE SERVEUR — 08/10/2026
+// pssFetch remplace fetch pour les lectures de Google Sheets : même adresse en entrée, même forme de réponse.
+// Le portail présente le jeton reçu à la connexion ; le serveur ne renvoie que les lignes de l'enfant.
+// Les lectures lancées en même temps voyagent dans une seule demande. Sans jeton (session ouverte par
+// l'ancienne recherche) ou si le serveur ne répond pas, l'ancienne lecture directe sert de secours.
+// ══════════════════════════════════════════════
+var _pssFile = [], _pssMinuterie = null;
+function _pssJeton() {
+  try { var e = JSON.parse(sessionStorage.getItem('eleveConnecte') || 'null'); return (e && e._jeton) ? e._jeton : ''; } catch (x) { return ''; }
+}
+function pssFetch(url, options) {
+  var jeton = _pssJeton(), m = /\/spreadsheets\/([^\/?]+)\/values\/([^?]+)\?(.*)$/.exec(String(url));
+  if (!jeton || !m) return fetch(url, options);
+  var cible;
+  try { cible = decodeURIComponent(m[2]); } catch (e) { return fetch(url, options); }
+  var k = cible.lastIndexOf('!');
+  if (k < 1) return fetch(url, options);
+  var d = { s: m[1], o: cible.slice(0, k), p: cible.slice(k + 1) };
+  if (!/valueRenderOption=UNFORMATTED_VALUE/.test(m[3])) d.r = 'F';
+  return new Promise(function (resolve, reject) {
+    _pssFile.push({ d: d, url: url, options: options, resolve: resolve, reject: reject });
+    if (_pssFile.length >= 12) { clearTimeout(_pssMinuterie); _pssMinuterie = null; _pssEnvoyer(); }
+    else if (!_pssMinuterie) _pssMinuterie = setTimeout(function () { _pssMinuterie = null; _pssEnvoyer(); }, 60);
+  });
+}
+function _pssEnvoyer() {
+  var lot = _pssFile; _pssFile = [];
+  if (!lot.length) return;
+  var bases = [];
+  var demandes = lot.map(function (x) {
+    var i = bases.indexOf(x.d.s); if (i < 0) { bases.push(x.d.s); i = bases.length - 1; }
+    var q = { s: i, o: x.d.o, p: x.d.p }; if (x.d.r) q.r = x.d.r; return q;
+  });
+  _pssServeur('PARENT_LIRE', { jeton: _pssJeton(), b: bases.join(','), l: JSON.stringify(demandes) }, 25000).then(function (rep) {
+    var r = (rep && rep.ok && rep.r && rep.r.length === lot.length) ? rep.r : null;
+    lot.forEach(function (x, i) {
+      var u = r ? r[i] : null;
+      if (!u || u.erreur || u.refus) {            // secours : l'ancienne lecture directe, tant que les bases restent ouvertes
+        window._pssLecturesDirectes = (window._pssLecturesDirectes || 0) + 1;
+        fetch(x.url, x.options).then(x.resolve, x.reject);
+        return;
+      }
+      if (u.absent) { x.resolve({ ok: false, status: 400, json: function () { return Promise.resolve({ error: { code: 400 } }); } }); return; }
+      var corps = u.values ? { values: u.values } : {};
+      x.resolve({ ok: true, status: 200, json: function () { return Promise.resolve(corps); } });
+    });
   });
 }
 
@@ -1381,7 +1431,7 @@ async function afficherEspaceParent(eleve) {
       const rangeBasc = encodeURIComponent('SYNTHESE!A2:J5000');
       const urlBasc = 'https://sheets.googleapis.com/v4/spreadsheets/' + base2026 +
         '/values/' + rangeBasc + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-      const resBasc = await fetch(urlBasc);
+      const resBasc = await pssFetch(urlBasc);
       if (resBasc.ok) {
         const dataBasc = await resBasc.json();
         const rowsBasc = dataBasc.values || [];
@@ -1516,7 +1566,7 @@ function estCM2(classe){var c=(classe||"").trim().toUpperCase().replace(/[ÈÉÊ
 
 
 
-async function chargerResultatExamen(eleve){var onglet=estCM2(eleve.classe)?"CEPE_2026":estTerminale(eleve.classe)?"BAC_2026":"BEPC_2026";try{var mat=eleve.matricule.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");var url="https://sheets.googleapis.com/v4/spreadsheets/"+eleve.sheetsId+"/values/"+encodeURIComponent(onglet+"!A2:H500")+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";var res=await fetch(url);if(!res.ok)return null;var data=await res.json();if(!data.values)return null;for(var i=0;i<data.values.length;i++){var row=data.values[i];var colMat=estCM2(eleve.classe)?2:2;var colScore=estCM2(eleve.classe)?4:4;var colStatut=estCM2(eleve.classe)?5:5;var colMoy=estCM2(eleve.classe)?6:6;var colDec=estCM2(eleve.classe)?7:7;var m=String(row[colMat]||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");if(m!==mat)continue;return{score:(row[colScore]!==undefined&&row[colScore]!=="")? parseFloat(String(row[colScore]).replace(",",".")):null,statut:String(row[colStatut]||"").trim().toUpperCase(),dec:String(row[colDec]||"").trim().toUpperCase(),type:estCM2(eleve.classe)?"CEPE":estTerminale(eleve.classe)?"BAC":"BEPC"};}}catch(e){console.warn("Examen:",e.message);}return null;}
+async function chargerResultatExamen(eleve){var onglet=estCM2(eleve.classe)?"CEPE_2026":estTerminale(eleve.classe)?"BAC_2026":"BEPC_2026";try{var mat=eleve.matricule.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");var url="https://sheets.googleapis.com/v4/spreadsheets/"+eleve.sheetsId+"/values/"+encodeURIComponent(onglet+"!A2:H500")+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";var res=await pssFetch(url);if(!res.ok)return null;var data=await res.json();if(!data.values)return null;for(var i=0;i<data.values.length;i++){var row=data.values[i];var colMat=estCM2(eleve.classe)?2:2;var colScore=estCM2(eleve.classe)?4:4;var colStatut=estCM2(eleve.classe)?5:5;var colMoy=estCM2(eleve.classe)?6:6;var colDec=estCM2(eleve.classe)?7:7;var m=String(row[colMat]||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");if(m!==mat)continue;return{score:(row[colScore]!==undefined&&row[colScore]!=="")? parseFloat(String(row[colScore]).replace(",",".")):null,statut:String(row[colStatut]||"").trim().toUpperCase(),dec:String(row[colDec]||"").trim().toUpperCase(),type:estCM2(eleve.classe)?"CEPE":estTerminale(eleve.classe)?"BAC":"BEPC"};}}catch(e){console.warn("Examen:",e.message);}return null;}
 function _cardRNO_Attente(prenom,moy,tel,typeExamen,ecoleCode,classeReelle){var isBac=typeExamen==="BAC";var examLabel=isBac?"BAC":"BEPC";var destBepc=DESTINATIONS_BEPC[ecoleCode]||"College Les Princes d\u0027Abidjan";var prochaineInfo=isBac?"Vous serez informe(e) de votre orientation apres les resultats":"Votre enfant sera oriente(e) en 2NDE au "+destBepc;return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#1565C0,#1976D2)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-float-soft\">&#9203;</span><div class=\"cpp-titre\">Resultats "+examLabel+" en attente</div><div class=\"cpp-sous\">"+prenom+(moy>0?", Moyenne annuelle : <strong>"+moy.toFixed(2)+"/20</strong>":"")+"</div><div class=\"cpp-msg-box\">Vos resultats du "+examLabel+" seront publies ici des qu\u0027ils seront disponibles.</div><div class=\"cpp-next-class\" style=\"background:rgba(255,255,255,0.2)\"><div class=\"cpp-nc-label\" style=\"color:rgba(255,255,255,0.8)\">"+(isBac?"APRES LES RESULTATS":"EN CAS DE REUSSITE AU "+examLabel)+"</div><div class=\"cpp-nc-value\" style=\"color:#fff\">"+prochaineInfo+"</div></div></div>"+_blocContact(tel);}
 function _cardRNO_Admis_BEPC(prenom,moy,score,tel,typeExamen,ecoleCode){var isBac=typeExamen==="BAC";var examLabel=isBac?"BAC":"BEPC";var scoreLabel=score!==null?"Score "+examLabel+" : "+score+" points":"ADMIS(E) AU "+examLabel;return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#2E7D32,#388E3C)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-bounce\">&#127881;</span><div class=\"cpp-titre\">Felicitations ! Admis(e) au "+examLabel+" !</div><div style=\"display:inline-block;background:#D4AF37;color:#1A3A5C;font-weight:bold;font-size:1em;padding:6px 20px;border-radius:20px;margin-bottom:10px;\">"+scoreLabel+"</div><div class=\"cpp-sous\">"+prenom+(moy>0?", Moyenne annuelle : <strong>"+moy.toFixed(2)+"/20</strong>":"")+"</div></div>"+_blocInscription(tel,ecoleCode)+_blocContact(tel);}
 function _cardRNO_Refuse_BEPC(prenom,moy,score,tel,typeExamen,nomEcole,classe){var isBac=typeExamen==="BAC";var examLabel=isBac?"BAC":"BEPC";var scoreLabel=score!==null?"Score "+examLabel+" : "+score+" points":"Non admis(e) cette annee";return "<div class=\"cpp-decision-card cpp-slide\" style=\"background:linear-gradient(135deg,#E65100,#F57C00)\" id=\"cardDecision\"><span class=\"cpp-emoji-big cpp-pulse\">&#128170;</span><div class=\"cpp-titre\">Courage "+prenom+" !</div><div style=\"display:inline-block;background:rgba(255,255,255,0.2);color:#fff;font-weight:bold;font-size:0.95em;padding:5px 16px;border-radius:20px;margin-bottom:10px;\">"+scoreLabel+"</div><div class=\"cpp-msg-box\">Avec du travail et de la methode, vous reussirez a la prochaine session !</div></div>"+_blocContact(tel);}
@@ -1597,7 +1647,7 @@ async function afficherSectionResultats(eleve) {
 
 function bascSection(idSec,idArr,idDst,idSrc){var el=document.getElementById(idSec);var ar=document.getElementById(idArr);if(!el)return;var ouvert=el.style.display!=="none";el.style.display=ouvert?"none":"block";if(ar)ar.textContent=ouvert?"\u25BC":"\u25B2";if(!ouvert){var src=document.getElementById(idSrc);var dst=document.getElementById(idDst);if(src&&dst&&src.innerHTML.trim())dst.innerHTML=src.innerHTML;}}
 
-async function dlBulletin(onglet,btn){var eleve=window._eleveActuel;if(!eleve)return;var orig=btn.innerHTML;var origBg=btn.style.background;btn.innerHTML="&#9203; Recherche...";btn.disabled=true;btn.style.background="#9E9E9E";try{var matClean=eleve.matricule.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");var sid=eleve.sheetsId||CONFIG.SHEETS_ID;var url="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+encodeURIComponent(onglet+"!A1:F5000")+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";var res=await fetch(url);if(res.status===400||res.status===404){btn.innerHTML="&#9203;<br>Bientot dispo";setTimeout(function(){btn.innerHTML=orig;btn.style.background=origBg;btn.disabled=false;},2000);return;}if(!res.ok)throw new Error("HTTP "+res.status);var data=await res.json();if(!data.values||data.values.length===0)throw new Error("Vide");var lien=null;for(var i=0;i<data.values.length;i++){var row=data.values[i];var m=String(row[0]||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");if(m!==matClean)continue;for(var c=0;c<row.length;c++){var v=String(row[c]||"").trim();if(v.indexOf("https://drive.google.com")===0||v.indexOf("http")===0){lien=v;break;}}if(!lien){for(var c=0;c<row.length;c++){var v=String(row[c]||"").trim();if(v.length>=25&&v.indexOf("http")<0&&v.indexOf(" ")<0&&v.indexOf("@")<0){lien="https://drive.google.com/file/d/"+v+"/view";break;}}}break;}if(lien){window.open(lien,"_blank");btn.innerHTML=orig;btn.style.background=origBg;btn.disabled=false;}else{btn.innerHTML="&#9203;<br>Bientot dispo";setTimeout(function(){btn.innerHTML=orig;btn.style.background=origBg;btn.disabled=false;},3000);}}catch(e){btn.innerHTML="&#10060;<br>Erreur";setTimeout(function(){btn.innerHTML=orig;btn.style.background=origBg;btn.disabled=false;},3000);}}
+async function dlBulletin(onglet,btn){var eleve=window._eleveActuel;if(!eleve)return;var orig=btn.innerHTML;var origBg=btn.style.background;btn.innerHTML="&#9203; Recherche...";btn.disabled=true;btn.style.background="#9E9E9E";try{var matClean=eleve.matricule.trim().toUpperCase().replace(/[^A-Z0-9]/g,"");var sid=eleve.sheetsId||CONFIG.SHEETS_ID;var url="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+encodeURIComponent(onglet+"!A1:F5000")+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";var res=await pssFetch(url);if(res.status===400||res.status===404){btn.innerHTML="&#9203;<br>Bientot dispo";setTimeout(function(){btn.innerHTML=orig;btn.style.background=origBg;btn.disabled=false;},2000);return;}if(!res.ok)throw new Error("HTTP "+res.status);var data=await res.json();if(!data.values||data.values.length===0)throw new Error("Vide");var lien=null;for(var i=0;i<data.values.length;i++){var row=data.values[i];var m=String(row[0]||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");if(m!==matClean)continue;for(var c=0;c<row.length;c++){var v=String(row[c]||"").trim();if(v.indexOf("https://drive.google.com")===0||v.indexOf("http")===0){lien=v;break;}}if(!lien){for(var c=0;c<row.length;c++){var v=String(row[c]||"").trim();if(v.length>=25&&v.indexOf("http")<0&&v.indexOf(" ")<0&&v.indexOf("@")<0){lien="https://drive.google.com/file/d/"+v+"/view";break;}}}break;}if(lien){window.open(lien,"_blank");btn.innerHTML=orig;btn.style.background=origBg;btn.disabled=false;}else{btn.innerHTML="&#9203;<br>Bientot dispo";setTimeout(function(){btn.innerHTML=orig;btn.style.background=origBg;btn.disabled=false;},3000);}}catch(e){btn.innerHTML="&#10060;<br>Erreur";setTimeout(function(){btn.innerHTML=orig;btn.style.background=origBg;btn.disabled=false;},3000);}}
 
 var EDT_HORAIRES=[{type:"cours",h:"07h45 - 08h55"},{type:"cours",h:"08h55 - 09h50"},{type:"pause",h:"&#9208; Recreation  09h50 - 10h10"},{type:"cours",h:"10h10 - 11h05"},{type:"cours",h:"11h05 - 12h00"},{type:"pause",h:"&#127860; Dejeuner  12h00 - 13h05"},{type:"cours",h:"13h05 - 14h00"},{type:"cours",h:"14h00 - 14h55"},{type:"cours",h:"14h55 - 15h50"},{type:"cours",h:"15h50 - 16h45"},{type:"cours",h:"16h45 - 17h40"}];
 
@@ -1620,7 +1670,7 @@ async function tenter(sid,ongletNom){
       try{
         var urlBase="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/";
         var urlParams="?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
-        var res=await fetch(urlBase+encodeURIComponent(ongletNom+"!A1:G15")+urlParams);
+        var res=await pssFetch(urlBase+encodeURIComponent(ongletNom+"!A1:G15")+urlParams);
         if(!res.ok) return null;
         var data=await res.json();
         if(!data.values) return null;
@@ -1686,7 +1736,7 @@ function genererEdtPDF() {
   w.document.write('</body></html>');
   w.document.close();
 }
-  async function chargerNotes(eleve){const div=document.getElementById("noteBody");div.innerHTML="<div style='text-align:center;padding:20px;color:#1F4E79;'><div class='spinner' style='width:24px;height:24px;border:3px solid #D6E4F0;border-top-color:#1F4E79;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;'></div><p style='font-size:0.82em;'>Chargement des notes...</p></div>";try{const mat=eleve.matricule;const trimestres=['NOTES_T3','NOTES_T2','NOTES_T1'];const trimNoms=['3eme Trimestre','2eme Trimestre','1er Trimestre'];let rowTrouve=null,trimNom="",toutesLesRows=null;for(let t=0;t<trimestres.length;t++){const range=encodeURIComponent(trimestres[t]+"!A1:V2000");const sheetsId=eleve.sheetsId||CONFIG.SHEETS_ID;const url="https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";try{const res=await fetch(url);const data=await res.json();if(!data.values)continue;for(const row of data.values){if(String(row[1]||"").trim().toUpperCase()===mat.toUpperCase()){rowTrouve=row;trimNom=trimNoms[t];break;}}if(rowTrouve){toutesLesRows=data.values;break;}}catch(e){}}if(!rowTrouve){afficherNotesVides(div);return;}const row=rowTrouve;let groupes=[{titre:"&#128218; FRANCAIS",couleur:"#1565C0",matieres:[{nom:"Comp. Française",val:row[5],col:5},{nom:"Oral Français",val:row[6],col:6},{nom:"Orthographe",val:row[7],col:7}]},{titre:"&#127757; LETTRES & SCIENCES HUMAINES",couleur:"#2E7D32",matieres:[{nom:"Anglais",val:row[8],col:8},{nom:"Histoire-Geographie",val:row[11],col:11}]},{titre:"&#128300; SCIENCES",couleur:"#C62828",matieres:[{nom:"Mathematiques",val:row[12],col:12},{nom:"Sciences Physiques",val:row[13],col:13},{nom:"SVT",val:row[14],col:14}]},{titre:"&#11088; AUTRES MATIERES",couleur:"#E65100",matieres:[{nom:"EPS",val:row[15],col:15},{nom:"EDHC",val:row[16],col:16},{nom:"Conduite",val:row[17],col:17}]}];let html="<div style='background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;border-left:4px solid #1F4E79;'><p style='font-size:0.82em;color:#1F4E79;font-weight:bold;margin-bottom:2px;'>&#128203; RELEVE DE NOTES - "+trimNom+" 2025-2026</p><p style='font-size:0.76em;color:#666;font-weight:bold;'>Classe : <strong>"+eleve.classe+"</strong> - Matricule : <strong>"+mat+"</strong></p></div>";groupes.forEach(g=>{const aDesNotes=g.matieres.some(m=>{const f=parseFloat(String(m.val||"").replace(",","."));return !isNaN(f)&&f!==22;});if(!aDesNotes)return;html+="<div style='margin-bottom:14px;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);'><div style='background:"+g.couleur+";padding:9px 12px;'><span style='font-weight:bold;color:white;font-size:0.88em;'>"+g.titre+"</span></div>";g.matieres.forEach(m=>{const f=parseFloat(String(m.val||"").replace(",","."));if(isNaN(f)||f===22)return;const cn=f>=14?"#2E7D32":f>=10?"#B8860B":"#C62828";const bn=f>=14?"#E8F5E9":f>=10?"#FFFDE7":"#FFEBEE";html+="<div style='display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid #f0f0f0;'><div style='flex:1;font-size:0.86em;font-weight:bold;color:#333;'>"+m.nom+"</div><div style='text-align:center;min-width:54px;background:"+bn+";border-radius:8px;padding:6px 8px;'><div style='font-size:1.1em;font-weight:bold;color:"+cn+";'>"+f.toFixed(2)+"</div><div style='font-size:0.65em;color:"+cn+";font-weight:bold;'>/20</div></div></div>";});html+="</div>";});window._notesHtmlActuel=html;var btnPdfN="<div style='margin-top:12px;'><button onclick='genererNotesPDF()' style='width:100%;padding:11px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;border:none;border-radius:8px;font-size:0.88em;font-weight:bold;cursor:pointer;'>🖨 Télécharger le relevé de notes en PDF</button></div>";div.innerHTML=html+btnPdfN;}catch(e){afficherNotesVides(div);}}
+  async function chargerNotes(eleve){const div=document.getElementById("noteBody");div.innerHTML="<div style='text-align:center;padding:20px;color:#1F4E79;'><div class='spinner' style='width:24px;height:24px;border:3px solid #D6E4F0;border-top-color:#1F4E79;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 10px;'></div><p style='font-size:0.82em;'>Chargement des notes...</p></div>";try{const mat=eleve.matricule;const trimestres=['NOTES_T3','NOTES_T2','NOTES_T1'];const trimNoms=['3eme Trimestre','2eme Trimestre','1er Trimestre'];let rowTrouve=null,trimNom="",toutesLesRows=null;for(let t=0;t<trimestres.length;t++){const range=encodeURIComponent(trimestres[t]+"!A1:V2000");const sheetsId=eleve.sheetsId||CONFIG.SHEETS_ID;const url="https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";try{const res=await pssFetch(url);const data=await res.json();if(!data.values)continue;for(const row of data.values){if(String(row[1]||"").trim().toUpperCase()===mat.toUpperCase()){rowTrouve=row;trimNom=trimNoms[t];break;}}if(rowTrouve){toutesLesRows=data.values;break;}}catch(e){}}if(!rowTrouve){afficherNotesVides(div);return;}const row=rowTrouve;let groupes=[{titre:"&#128218; FRANCAIS",couleur:"#1565C0",matieres:[{nom:"Comp. Française",val:row[5],col:5},{nom:"Oral Français",val:row[6],col:6},{nom:"Orthographe",val:row[7],col:7}]},{titre:"&#127757; LETTRES & SCIENCES HUMAINES",couleur:"#2E7D32",matieres:[{nom:"Anglais",val:row[8],col:8},{nom:"Histoire-Geographie",val:row[11],col:11}]},{titre:"&#128300; SCIENCES",couleur:"#C62828",matieres:[{nom:"Mathematiques",val:row[12],col:12},{nom:"Sciences Physiques",val:row[13],col:13},{nom:"SVT",val:row[14],col:14}]},{titre:"&#11088; AUTRES MATIERES",couleur:"#E65100",matieres:[{nom:"EPS",val:row[15],col:15},{nom:"EDHC",val:row[16],col:16},{nom:"Conduite",val:row[17],col:17}]}];let html="<div style='background:#F0F4F8;border-radius:8px;padding:10px 12px;margin-bottom:14px;border-left:4px solid #1F4E79;'><p style='font-size:0.82em;color:#1F4E79;font-weight:bold;margin-bottom:2px;'>&#128203; RELEVE DE NOTES - "+trimNom+" 2025-2026</p><p style='font-size:0.76em;color:#666;font-weight:bold;'>Classe : <strong>"+eleve.classe+"</strong> - Matricule : <strong>"+mat+"</strong></p></div>";groupes.forEach(g=>{const aDesNotes=g.matieres.some(m=>{const f=parseFloat(String(m.val||"").replace(",","."));return !isNaN(f)&&f!==22;});if(!aDesNotes)return;html+="<div style='margin-bottom:14px;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);'><div style='background:"+g.couleur+";padding:9px 12px;'><span style='font-weight:bold;color:white;font-size:0.88em;'>"+g.titre+"</span></div>";g.matieres.forEach(m=>{const f=parseFloat(String(m.val||"").replace(",","."));if(isNaN(f)||f===22)return;const cn=f>=14?"#2E7D32":f>=10?"#B8860B":"#C62828";const bn=f>=14?"#E8F5E9":f>=10?"#FFFDE7":"#FFEBEE";html+="<div style='display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid #f0f0f0;'><div style='flex:1;font-size:0.86em;font-weight:bold;color:#333;'>"+m.nom+"</div><div style='text-align:center;min-width:54px;background:"+bn+";border-radius:8px;padding:6px 8px;'><div style='font-size:1.1em;font-weight:bold;color:"+cn+";'>"+f.toFixed(2)+"</div><div style='font-size:0.65em;color:"+cn+";font-weight:bold;'>/20</div></div></div>";});html+="</div>";});window._notesHtmlActuel=html;var btnPdfN="<div style='margin-top:12px;'><button onclick='genererNotesPDF()' style='width:100%;padding:11px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;border:none;border-radius:8px;font-size:0.88em;font-weight:bold;cursor:pointer;'>🖨 Télécharger le relevé de notes en PDF</button></div>";div.innerHTML=html+btnPdfN;}catch(e){afficherNotesVides(div);}}
 function appreciationNote(moy) {
   if (moy === null) return null;
   var pct = moy / 20;
@@ -1710,7 +1760,7 @@ async function chargerCarnetNotes(eleve) {
       var trim = trimestres[t];
       var range = encodeURIComponent(trim + '!A2:S5000');
       var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sid + '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-      var res = await fetch(url);
+      var res = await pssFetch(url);
       if (!res.ok) continue;
       var data = await res.json();
       var rows = (data.values || []).filter(function(r) {
@@ -1868,7 +1918,7 @@ async function chargerAbsences(eleve){
     const range=encodeURIComponent("ABSENCES!A2:M");
     const url="https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=FORMATTED_VALUE";
 
-    const [res, heuresMoisRes] = await Promise.all([fetch(url), chargerHeuresAbsenceMois()]);
+    const [res, heuresMoisRes] = await Promise.all([pssFetch(url), chargerHeuresAbsenceMois()]);
     const data = await res.json();
     let carteH = carteHeuresAbsence(heuresMoisRes);
 
@@ -2128,7 +2178,7 @@ const BULLETINS_KOUTOUAN = {
     var url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId +
               "/values/" + encodeURIComponent("BULLETINS_CPP_TECH!A2:C500") +
               "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
-    var res = await fetch(url);
+    var res = await pssFetch(url);
     if (!res.ok) return "";
     var data = await res.json();
     if (!data.values) return "";
@@ -2152,7 +2202,7 @@ async function getBulletinAnnuelCPPPro(matricule, sheetsId) {
     var url = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId +
               "/values/" + encodeURIComponent("BULLETINS_ANNUEL!A2:E500") +
               "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
-    var res = await fetch(url);
+    var res = await pssFetch(url);
     if (!res.ok) return "";
     var data = await res.json();
     if (!data.values) return "";
@@ -2174,7 +2224,7 @@ async function getBulletinAnnuelCPPPro(matricule, sheetsId) {
         var urlSyn = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetsId +
                      "/values/" + encodeURIComponent("SYNTHESE!A3:S2000") +
                      "?key=" + CONFIG.API_KEY + "&valueRenderOption=UNFORMATTED_VALUE";
-        var resSyn = await fetch(urlSyn);
+        var resSyn = await pssFetch(urlSyn);
         var dataSyn = await resSyn.json();
         if (dataSyn.values) {
           for (var j=0; j<dataSyn.values.length; j++) {
@@ -2274,7 +2324,7 @@ async function chargerHistoriquePaiements2026(eleve, base2026) {
     const range = encodeURIComponent('HISTORIQUE_MAJ!A1:L2000');
     const url   = 'https://sheets.googleapis.com/v4/spreadsheets/' + base2026 +
                   '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    const res   = await fetch(url);
+    const res   = await pssFetch(url);
     if (!res.ok) return [];
     const data  = await res.json();
     if (!data.values) return [];
@@ -2382,7 +2432,7 @@ async function chargerProgrammeTrimestrielParent(eleve) {
   try {
     var range = encodeURIComponent('PROGRAMME_TRIMESTRE!A2:L5000');
     var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + base2026 + '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    var res = await fetch(url);
+    var res = await pssFetch(url);
     if (!res.ok) return;
     var data = await res.json();
     var rows = data.values || [];
@@ -2602,7 +2652,7 @@ if (!data.trouve) {
     const range = encodeURIComponent('SYNTHESE!A2:J5000');
     const url   = 'https://sheets.googleapis.com/v4/spreadsheets/' + base2026 +
                   '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
-    const res   = await fetch(url);
+    const res   = await pssFetch(url);
     if (!res.ok) return;
     const data  = await res.json();
     const rows  = data.values || [];
@@ -2909,7 +2959,7 @@ async function chargerAnnonces(eleve){
   try{
     const sheetsId=window._sheetsId2026||eleve.sheetsId||CONFIG.SHEETS_ID;
     const url="https://sheets.googleapis.com/v4/spreadsheets/"+sheetsId+"/values/"+encodeURIComponent("ANNONCES!A4:P2000")+"?key="+CONFIG.API_KEY+"&valueRenderOption=FORMATTED_VALUE";
-    const res=await fetch(url,{cache:"no-store"});const data=await res.json();if(!data.values)return;
+    const res=await pssFetch(url,{cache:"no-store"});const data=await res.json();if(!data.values)return;
     const norm=x=>String(x||"").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g,"").trim();
     const mat=norm(eleve.matricule),classeEleve=norm(eleve.classe);
     const annonces=data.values.filter(row=>{
@@ -2933,7 +2983,7 @@ async function chargerAnnonces(eleve){
     }).join("");
   }catch(e){console.warn("Annonces:",e.message);}
 }
-async function chargerCahierTextes(eleve){const div=document.getElementById("cahierBody");if(!div)return;try{const range=encodeURIComponent("CAHIER_TEXTES!A2:O");const sid=window._sheetsId2026||eleve.sheetsId||CONFIG.SHEETS_ID;const url="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";const res=await fetch(url);if(!res.ok){div.innerHTML="";return;}const data=await res.json();if(!data.values||data.values.length===0){div.innerHTML="<p style='text-align:center;color:#6A1B9A;font-size:0.85em;padding:15px;'>Aucun cours enregistre.</p>";return;}const classe=(window._classe2026||eleve.classe||"").trim().toUpperCase();const cours=data.values.filter(row=>String(row[2]||"").trim().toUpperCase()===classe);if(cours.length===0){div.innerHTML="<p style='text-align:center;color:#6A1B9A;font-size:0.85em;padding:15px;'>Aucun cours enregistre pour "+classe+"</p>";return;}cours.sort((a,b)=>String(b[0]||"").localeCompare(String(a[0]||"")));let html="";cours.slice(0,20).forEach(function(row){const date=serialToDate(row[0]);const matiere=String(row[3]||"").trim();const lecon=String(row[5]||"").trim();const contenu=String(row[6]||"").trim();const devoir=String(row[8]||"").trim();const dateRemiseRaw=String(row[14]||"").trim();html+="<div style='border:1px solid #E1BEE7;border-radius:10px;margin-bottom:10px;overflow:hidden;'><div style='background:#4A148C;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;'><div style='color:white;font-weight:bold;font-size:0.88em;'>"+matiere+"</div><div style='color:rgba(255,255,255,0.8);font-size:0.75em;'>"+date+"</div></div><div style='padding:12px 14px;background:white;'>";if(lecon)html+="<div style='font-size:0.85em;font-weight:bold;color:#333;margin-bottom:4px;'>&#128218; "+lecon+"</div>";if(contenu)html+="<div style='font-size:0.82em;color:#555;margin-bottom:8px;line-height:1.5;'>"+contenu+"</div>";if(devoir){
+async function chargerCahierTextes(eleve){const div=document.getElementById("cahierBody");if(!div)return;try{const range=encodeURIComponent("CAHIER_TEXTES!A2:O");const sid=window._sheetsId2026||eleve.sheetsId||CONFIG.SHEETS_ID;const url="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";const res=await pssFetch(url);if(!res.ok){div.innerHTML="";return;}const data=await res.json();if(!data.values||data.values.length===0){div.innerHTML="<p style='text-align:center;color:#6A1B9A;font-size:0.85em;padding:15px;'>Aucun cours enregistre.</p>";return;}const classe=(window._classe2026||eleve.classe||"").trim().toUpperCase();const cours=data.values.filter(row=>String(row[2]||"").trim().toUpperCase()===classe);if(cours.length===0){div.innerHTML="<p style='text-align:center;color:#6A1B9A;font-size:0.85em;padding:15px;'>Aucun cours enregistre pour "+classe+"</p>";return;}cours.sort((a,b)=>String(b[0]||"").localeCompare(String(a[0]||"")));let html="";cours.slice(0,20).forEach(function(row){const date=serialToDate(row[0]);const matiere=String(row[3]||"").trim();const lecon=String(row[5]||"").trim();const contenu=String(row[6]||"").trim();const devoir=String(row[8]||"").trim();const dateRemiseRaw=String(row[14]||"").trim();html+="<div style='border:1px solid #E1BEE7;border-radius:10px;margin-bottom:10px;overflow:hidden;'><div style='background:#4A148C;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;'><div style='color:white;font-weight:bold;font-size:0.88em;'>"+matiere+"</div><div style='color:rgba(255,255,255,0.8);font-size:0.75em;'>"+date+"</div></div><div style='padding:12px 14px;background:white;'>";if(lecon)html+="<div style='font-size:0.85em;font-weight:bold;color:#333;margin-bottom:4px;'>&#128218; "+lecon+"</div>";if(contenu)html+="<div style='font-size:0.82em;color:#555;margin-bottom:8px;line-height:1.5;'>"+contenu+"</div>";if(devoir){
 var dateRemiseAffichee="";
 if(dateRemiseRaw){
   if(/^\d{4}-\d{2}-\d{2}$/.test(dateRemiseRaw)){
@@ -2956,7 +3006,7 @@ if(dateRemiseRaw){
     // Colonnes : DATE(0) MATRICULE(1) NOM(2) CLASSE(3) MONTANT(4) SOURCE(5) ID_TRANSACTION(6)
     try{
     const url1="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+encodeURIComponent("HISTORIQUE_PAIEMENTS!A1:G500")+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
-const r1=await fetch(url1);
+const r1=await pssFetch(url1);
 if(r1.ok){
   const d1=await r1.json();
   if(d1.values&&d1.values.length>0){
@@ -2975,7 +3025,7 @@ if(r1.ok){
     if(paiements.length===0){
       try{
 const url2="https://sheets.googleapis.com/v4/spreadsheets/"+sid+"/values/"+encodeURIComponent("HISTORIQUE_MAJ!A1:K5000")+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
-      const r2=await fetch(url2);
+      const r2=await pssFetch(url2);
       if(r2.ok){
         const d2=await r2.json();
         if(d2.values&&d2.values.length>0){
@@ -3411,7 +3461,7 @@ async function chargerFicheRenseignement(eleve){
   try{
     const range=encodeURIComponent("CONFIGURATION_TARIF!A1:I200");
     const url="https://sheets.googleapis.com/v4/spreadsheets/"+eleve.sheetsId+"/values/"+range+"?key="+CONFIG.API_KEY+"&valueRenderOption=UNFORMATTED_VALUE";
-    const res=await fetch(url);
+    const res=await pssFetch(url);
     if(res.ok){
       const data=await res.json();
       if(data.values&&data.values.length>0){
