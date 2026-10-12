@@ -870,6 +870,46 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div>
+<!-- SUIVI_V1 — 📞 Élèves à appeler -->
+<div class="section" id="dirSecSuiviEleves">
+  <div class="sec-head sec-violet" onclick="toggleSec(this)">
+    <h3>📞 Élèves à appeler</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+      <button onclick="chargerSuiviEleves('dir')" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.92em;font-weight:600;cursor:pointer">🔄 Charger les listes</button>
+    </div>
+    <div id="dirSuiviStats" style="display:none;padding:10px 14px;flex-direction:row;flex-wrap:wrap;gap:8px">
+      <div onclick="afficherSuivi('dir',1)" id="dirSuiviCarte1" style="cursor:pointer;flex:1;min-width:150px;border:2px solid #1565C0;border-radius:8px;padding:10px 12px;background:#E3F2FD">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+          <div style="font-size:0.82em;font-weight:700;color:#1565C0">🔵 Affectés en classe, pas inscrits en ligne</div>
+          <div style="font-size:1.3em;font-weight:700;color:#1565C0" id="dirSuiviNb1">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Dans une classe, affectés, inscription MENA pas faite</div>
+        <div style="font-size:0.72em;color:#1565C0;margin-top:2px;font-weight:600" id="dirSuiviFait1"></div>
+      </div>
+      <div onclick="afficherSuivi('dir',2)" id="dirSuiviCarte2" style="cursor:pointer;flex:1;min-width:150px;border:2px solid #6A1B9A;border-radius:8px;padding:10px 12px;background:#F3E5F5">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+          <div style="font-size:0.82em;font-weight:700;color:#6A1B9A">🟣 Nouveaux affectés pas encore venus</div>
+          <div style="font-size:1.3em;font-weight:700;color:#6A1B9A" id="dirSuiviNb2">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Affectés à l'école, dans aucune classe du réseau</div>
+        <div style="font-size:0.72em;color:#6A1B9A;margin-top:2px;font-weight:600" id="dirSuiviFait2"></div>
+      </div>
+      <div onclick="afficherSuivi('dir',3)" id="dirSuiviCarte3" style="cursor:pointer;flex:1;min-width:150px;border:2px solid #37474F;border-radius:8px;padding:10px 12px;background:#ECEFF1">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+          <div style="font-size:0.82em;font-weight:700;color:#37474F">⚫ Élèves de l'an dernier pas revenus</div>
+          <div style="font-size:1.3em;font-weight:700;color:#37474F" id="dirSuiviNb3">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Inscrits en 2025-2026, absents en 2026-2027</div>
+        <div style="font-size:0.72em;color:#37474F;margin-top:2px;font-weight:600" id="dirSuiviFait3"></div>
+      </div>
+    </div>
+    <div id="dirSuiviContenu">
+      <p style="padding:14px;font-size:0.85em;color:var(--gris)">Cliquez sur "Charger les listes" pour voir les élèves à appeler.</p>
+    </div>
+  </div>
+</div>
   <div class="section" id="dirSecAnomaliesMena">
   <div class="sec-head sec-rouge" onclick="toggleSec(this)">
     <h3>⚠️ Anomalies MENA à régler <span id="dirAnomCount" style="font-size:0.9em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -3921,6 +3961,46 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
 </div>
+<!-- SUIVI_V1 — 📞 Élèves à appeler -->
+<div class="section" id="comSecSuiviEleves">
+  <div class="sec-head sec-violet" onclick="toggleSec(this)">
+    <h3>📞 Élèves à appeler</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+      <button onclick="chargerSuiviEleves('com')" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.92em;font-weight:600;cursor:pointer">🔄 Charger les listes</button>
+    </div>
+    <div id="comSuiviStats" style="display:none;padding:10px 14px;flex-direction:row;flex-wrap:wrap;gap:8px">
+      <div onclick="afficherSuivi('com',1)" id="comSuiviCarte1" style="cursor:pointer;flex:1;min-width:150px;border:2px solid #1565C0;border-radius:8px;padding:10px 12px;background:#E3F2FD">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+          <div style="font-size:0.82em;font-weight:700;color:#1565C0">🔵 Affectés en classe, pas inscrits en ligne</div>
+          <div style="font-size:1.3em;font-weight:700;color:#1565C0" id="comSuiviNb1">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Dans une classe, affectés, inscription MENA pas faite</div>
+        <div style="font-size:0.72em;color:#1565C0;margin-top:2px;font-weight:600" id="comSuiviFait1"></div>
+      </div>
+      <div onclick="afficherSuivi('com',2)" id="comSuiviCarte2" style="cursor:pointer;flex:1;min-width:150px;border:2px solid #6A1B9A;border-radius:8px;padding:10px 12px;background:#F3E5F5">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+          <div style="font-size:0.82em;font-weight:700;color:#6A1B9A">🟣 Nouveaux affectés pas encore venus</div>
+          <div style="font-size:1.3em;font-weight:700;color:#6A1B9A" id="comSuiviNb2">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Affectés à l'école, dans aucune classe du réseau</div>
+        <div style="font-size:0.72em;color:#6A1B9A;margin-top:2px;font-weight:600" id="comSuiviFait2"></div>
+      </div>
+      <div onclick="afficherSuivi('com',3)" id="comSuiviCarte3" style="cursor:pointer;flex:1;min-width:150px;border:2px solid #37474F;border-radius:8px;padding:10px 12px;background:#ECEFF1">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+          <div style="font-size:0.82em;font-weight:700;color:#37474F">⚫ Élèves de l'an dernier pas revenus</div>
+          <div style="font-size:1.3em;font-weight:700;color:#37474F" id="comSuiviNb3">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Inscrits en 2025-2026, absents en 2026-2027</div>
+        <div style="font-size:0.72em;color:#37474F;margin-top:2px;font-weight:600" id="comSuiviFait3"></div>
+      </div>
+    </div>
+    <div id="comSuiviContenu">
+      <p style="padding:14px;font-size:0.85em;color:var(--gris)">Cliquez sur "Charger les listes" pour voir les élèves à appeler.</p>
+    </div>
+  </div>
+</div>
 </div>
 </div>
 
@@ -4751,6 +4831,46 @@ async function attribuerMatriculeCom() {
     </div>
     <div id="eduListesAttenteContenu">
       <p style="padding:14px;font-size:0.85em;color:var(--gris)">Cliquez sur "Charger" pour voir les élèves en attente.</p>
+    </div>
+  </div>
+</div>
+<!-- SUIVI_V1 — 📞 Élèves à appeler -->
+<div class="section" id="eduSecSuiviEleves">
+  <div class="sec-head sec-violet" onclick="toggleSec(this)">
+    <h3>📞 Élèves à appeler</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:10px 14px;border-bottom:1px solid var(--border)">
+      <button onclick="chargerSuiviEleves('edu')" style="padding:8px 14px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.92em;font-weight:600;cursor:pointer">🔄 Charger les listes</button>
+    </div>
+    <div id="eduSuiviStats" style="display:none;padding:10px 14px;flex-direction:row;flex-wrap:wrap;gap:8px">
+      <div onclick="afficherSuivi('edu',1)" id="eduSuiviCarte1" style="cursor:pointer;flex:1;min-width:150px;border:2px solid #1565C0;border-radius:8px;padding:10px 12px;background:#E3F2FD">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+          <div style="font-size:0.82em;font-weight:700;color:#1565C0">🔵 Affectés en classe, pas inscrits en ligne</div>
+          <div style="font-size:1.3em;font-weight:700;color:#1565C0" id="eduSuiviNb1">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Dans une classe, affectés, inscription MENA pas faite</div>
+        <div style="font-size:0.72em;color:#1565C0;margin-top:2px;font-weight:600" id="eduSuiviFait1"></div>
+      </div>
+      <div onclick="afficherSuivi('edu',2)" id="eduSuiviCarte2" style="cursor:pointer;flex:1;min-width:150px;border:2px solid #6A1B9A;border-radius:8px;padding:10px 12px;background:#F3E5F5">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+          <div style="font-size:0.82em;font-weight:700;color:#6A1B9A">🟣 Nouveaux affectés pas encore venus</div>
+          <div style="font-size:1.3em;font-weight:700;color:#6A1B9A" id="eduSuiviNb2">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Affectés à l'école, dans aucune classe du réseau</div>
+        <div style="font-size:0.72em;color:#6A1B9A;margin-top:2px;font-weight:600" id="eduSuiviFait2"></div>
+      </div>
+      <div onclick="afficherSuivi('edu',3)" id="eduSuiviCarte3" style="cursor:pointer;flex:1;min-width:150px;border:2px solid #37474F;border-radius:8px;padding:10px 12px;background:#ECEFF1">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+          <div style="font-size:0.82em;font-weight:700;color:#37474F">⚫ Élèves de l'an dernier pas revenus</div>
+          <div style="font-size:1.3em;font-weight:700;color:#37474F" id="eduSuiviNb3">-</div>
+        </div>
+        <div style="font-size:0.72em;color:var(--gris);margin-top:2px">Inscrits en 2025-2026, absents en 2026-2027</div>
+        <div style="font-size:0.72em;color:#37474F;margin-top:2px;font-weight:600" id="eduSuiviFait3"></div>
+      </div>
+    </div>
+    <div id="eduSuiviContenu">
+      <p style="padding:14px;font-size:0.85em;color:var(--gris)">Cliquez sur "Charger les listes" pour voir les élèves à appeler.</p>
     </div>
   </div>
 </div>
@@ -18411,6 +18531,183 @@ function examensBlancsHtml(role) {
     var el = document.getElementById(z[0]); if (el) el.innerHTML = examensBlancsHtml(z[1]);
   });
 })();
+</script>
+<script>
+// ═══ SUIVI_V1 — 📞 ÉLÈVES À APPELER (Directeur, Comptable, Éducateur) — 12/10/2026 ═══
+// Serveur : SUIVI_ELEVES.gs (actions GET_SUIVI_ELEVES et SAVE_SUIVI_APPEL)
+var _SV = { dir: null, com: null, edu: null }, _SV_ACTIVE = { dir: 1, com: 1, edu: 1 }, _SV_MAX = { dir: 100, com: 100, edu: 100 };
+var _SV_TITRES = {
+  1: { t: 'Affectés en classe, pas inscrits en ligne', s: 'Ils sont dans une classe de l\'école, ils sont affectés, mais leur inscription en ligne (MENA) n\'est pas faite.', c: '#1565C0', bg: '#E3F2FD', i: '🔵' },
+  2: { t: 'Nouveaux affectés pas encore venus', s: 'Affectés à l\'école par le Ministère, ils ne sont dans aucune classe du réseau et pas inscrits en ligne.', c: '#6A1B9A', bg: '#F3E5F5', i: '🟣' },
+  3: { t: 'Élèves de l\'an dernier pas revenus', s: 'Inscrits ici en 2025-2026, ils ne sont dans aucune classe du réseau en 2026-2027.', c: '#37474F', bg: '#ECEFF1', i: '⚫' }
+};
+var _SV_REPONSES = [['REVIENT', 'Revient à l\'école'], ['INSCRIPTION FAITE', 'Inscription en ligne faite'], ['PARTI', 'Parti dans une autre école'], ['INJOIGNABLE', 'Injoignable'], ['AUTRE', 'Autre']];
+var _SV_NIVEAUX = ['6EME', '5EME', '4EME', '3EME', '2NDE', '1ERE', 'TLE'];
+
+function _svE(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function _svNorm(s) { return String(s || '').toUpperCase().trim().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[-_]/g, ' ').replace(/\s+/g, ' '); }
+function _svJsonp(p) {
+  return new Promise(function (resolve) {
+    var cb = 'sv_' + Date.now() + '_' + Math.floor(Math.random() * 1000), sc = document.createElement('script');
+    p.callback = cb;
+    window[cb] = function (r) { delete window[cb]; try { document.body.removeChild(sc); } catch (e) {} resolve(r); };
+    sc.onerror = function () { delete window[cb]; resolve({ ok: false, error: 'connexion impossible' }); };
+    sc.src = APPS_SCRIPT_POINTAGE + '?' + new URLSearchParams(p).toString();
+    document.body.appendChild(sc);
+    setTimeout(function () { if (window[cb]) { delete window[cb]; resolve({ ok: false, error: 'délai dépassé, réessayez' }); } }, 45000);
+  });
+}
+// Niveau 2026-2027 attendu d'un élève de l'an dernier (pour le filtre de l'Éducateur)
+function _svNiveauAttendu(e) {
+  var c = _svNorm(e.classe).replace(/^TERM\w*/, 'TLE').replace(/^(\d)E(ME)?\b/, '$1EME').replace(/^1ERE|^1 ERE/, '1ERE').replace(/^2NDE|^2 NDE/, '2NDE');
+  var k = -1; _SV_NIVEAUX.forEach(function (n, i) { if (c.indexOf(n) === 0) k = i; });
+  if (k < 0) return c;
+  var d = _svNorm(e.decision), passe = /ADMIS|PASS|ORIENT/.test(d) && !/REDOUBL|NON ADMIS|EXCLU/.test(d);
+  return passe && k < _SV_NIVEAUX.length - 1 ? _SV_NIVEAUX[k + 1] : _SV_NIVEAUX[k];
+}
+function _svPourEdu(niv) {
+  var cls = (currentStaff && currentStaff.classes) || [];
+  if (!cls.length) return true;
+  var nc = _svNorm(niv);
+  return cls.some(function (cl) { var ncl = _svNorm(cl); return nc === ncl || nc.indexOf(ncl + ' ') === 0 || nc.indexOf(' ' + ncl) >= 0 || ncl.indexOf(nc + ' ') === 0; });
+}
+
+async function chargerSuiviEleves(esp) {
+  var z = document.getElementById(esp + 'SuiviContenu');
+  z.innerHTML = '<p style="padding:14px;font-size:0.85em;color:var(--gris)">Chargement… (jusqu\'à 30 secondes)</p>';
+  var d = await _svJsonp({ type: 'GET_SUIVI_ELEVES', ecole: currentStaff.ecole });
+  if (!d || !d.ok) { z.innerHTML = '<p style="padding:14px;font-size:0.85em;color:var(--rouge)">Erreur de chargement : ' + _svE(d && d.error || 'inconnue') + '</p>'; return; }
+  if (esp === 'edu') {
+    d.liste1 = d.liste1.filter(function (e) { return _svPourEdu(e.classe); });
+    d.liste2 = d.liste2.filter(function (e) { return _svPourEdu(e.classe); });
+    d.liste3 = d.liste3.filter(function (e) { return _svPourEdu(_svNiveauAttendu(e)); });
+  }
+  _SV[esp] = d;
+  document.getElementById(esp + 'SuiviStats').style.display = 'flex';
+  [1, 2, 3].forEach(function (n) {
+    var l = d['liste' + n], faits = l.filter(function (e) { return e.suivi; }).length;
+    document.getElementById(esp + 'SuiviNb' + n).textContent = (n === 3 && d.noteListe3) ? '—' : l.length;
+    document.getElementById(esp + 'SuiviFait' + n).textContent = (n === 3 && d.noteListe3) ? d.noteListe3 : (faits + ' appel(s) noté(s)');
+  });
+  afficherSuivi(esp, _SV_ACTIVE[esp] || 1);
+}
+
+function afficherSuivi(esp, n) {
+  _SV_ACTIVE[esp] = n; _SV_MAX[esp] = 100;
+  [1, 2, 3].forEach(function (k) { var c = document.getElementById(esp + 'SuiviCarte' + k); if (c) c.style.boxShadow = k === n ? '0 0 0 3px rgba(31,78,121,0.4)' : 'none'; });
+  var d = _SV[esp], z = document.getElementById(esp + 'SuiviContenu');
+  if (!d) return;
+  var T = _SV_TITRES[n];
+  var h = '<div style="padding:10px 14px;background:' + T.bg + ';border-bottom:1px solid var(--border)"><div style="font-weight:700;color:' + T.c + ';font-size:0.9em">' + T.i + ' ' + T.t + '</div>'
+    + '<div style="font-size:0.75em;color:#555;margin-top:2px">' + T.s + (esp === 'edu' ? ' Seules vos classes sont affichées.' : '') + ' Liste mise à jour le ' + _svE(d.maj) + ' (GMT).</div></div>';
+  h += '<div style="padding:8px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border)">'
+    + '<input type="search" id="' + esp + 'SuiviCherche" placeholder="Nom, matricule ou classe…" oninput="_SV_MAX[\'' + esp + '\']=100;_svDessiner(\'' + esp + '\')" style="flex:1;min-width:150px;padding:7px 9px;border:1.5px solid var(--border);border-radius:6px;box-sizing:border-box;font-size:0.85em">'
+    + '<select id="' + esp + 'SuiviFiltre" onchange="_SV_MAX[\'' + esp + '\']=100;_svDessiner(\'' + esp + '\')" style="padding:7px;border:1.5px solid var(--border);border-radius:6px;box-sizing:border-box;font-size:0.85em"><option value="">Tous</option><option value="A">Pas encore appelés</option><option value="F">Déjà appelés</option><option value="INJOIGNABLE">Injoignables</option></select>'
+    + '<button onclick="pdfSuivi(\'' + esp + '\')" style="padding:7px 12px;background:linear-gradient(135deg,#2E7D32,#388E3C);color:#fff;border:none;border-radius:6px;font-size:0.82em;font-weight:700;cursor:pointer">🖨 PDF</button></div>';
+  h += '<div id="' + esp + 'SuiviTable"></div>';
+  z.innerHTML = h;
+  _svDessiner(esp);
+}
+
+function _svFiltrer(esp) {
+  var d = _SV[esp], n = _SV_ACTIVE[esp], l = (d && d['liste' + n]) || [];
+  var q = _svNorm((document.getElementById(esp + 'SuiviCherche') || {}).value), f = (document.getElementById(esp + 'SuiviFiltre') || {}).value || '';
+  return l.filter(function (e) {
+    if (q && _svNorm(e.nom + ' ' + e.matricule + ' ' + e.classe).indexOf(q) < 0) return false;
+    if (f === 'A' && e.suivi) return false;
+    if (f === 'F' && !e.suivi) return false;
+    if (f === 'INJOIGNABLE' && !(e.suivi && e.suivi.reponse === 'INJOIGNABLE')) return false;
+    return true;
+  });
+}
+
+function _svBadge(s) {
+  if (!s) return '<span style="color:var(--gris);font-size:0.78em">Pas encore appelé</span>';
+  var col = { 'REVIENT': '#2E7D32', 'INSCRIPTION FAITE': '#2E7D32', 'PARTI': '#B71C1C', 'INJOIGNABLE': '#E65100', 'AUTRE': '#555' }[s.reponse] || '#555';
+  var lib = (_SV_REPONSES.filter(function (r) { return r[0] === s.reponse; })[0] || [0, s.reponse])[1];
+  return '<span style="background:' + col + ';color:#fff;border-radius:10px;padding:2px 7px;font-size:0.72em;font-weight:700">' + _svE(lib) + '</span>'
+    + (s.nouvelleEcole ? '<div style="font-size:0.74em;color:#B71C1C">→ ' + _svE(s.nouvelleEcole) + '</div>' : '')
+    + (s.resultat ? '<div style="font-size:0.74em;color:#333">' + _svE(s.resultat) + '</div>' : '')
+    + '<div style="font-size:0.68em;color:var(--gris)">' + _svE(s.par) + ' · ' + _svE(s.date) + '</div>';
+}
+
+function _svDessiner(esp) {
+  var n = _SV_ACTIVE[esp], l = _svFiltrer(esp), z = document.getElementById(esp + 'SuiviTable');
+  if (!z) return;
+  if (n === 3 && _SV[esp].noteListe3) { z.innerHTML = '<p style="padding:12px 14px;font-size:0.8em;color:var(--gris)">' + _svE(_SV[esp].noteListe3) + '.</p>'; return; }
+  if (!l.length) { z.innerHTML = '<p style="padding:12px 14px;font-size:0.8em;color:var(--gris)">Aucun élève dans cette liste.</p>'; return; }
+  var h = '<div style="padding:4px 14px;font-size:0.75em;color:var(--gris)">' + l.length + ' élève(s)</div><div class="tbl-wrap"><table><thead><tr><th>' + (n === 3 ? 'Classe 2025-2026' : (n === 2 ? 'Niveau' : 'Classe')) + '</th><th>Élève</th>'
+    + (n === 3 ? '<th>Reste 2025-26</th>' : '') + '<th>Contact(s)</th><th>Appel</th></tr></thead><tbody>';
+  var tout = l.length; l = l.slice(0, _SV_MAX[esp]);
+  l.forEach(function (e) {
+    var tels = (e.tels || []).length ? e.tels.map(function (t) { return '<a href="tel:' + _svE(t) + '" style="color:var(--bleu2);text-decoration:none;font-weight:600;white-space:nowrap">📞 ' + _svE(t) + '</a>'; }).join('<br>') : '<span style="color:var(--gris)">—</span>';
+    var info = (n === 3 ? [e.decision, e.affecte ? 'Affecté' : ''] : []).concat([e.note]).filter(String).join(' · ');
+    h += '<tr><td>' + _svE(e.classe) + '</td><td><b>' + _svE(e.nom) + '</b><div style="font-size:0.74em;color:var(--gris)">' + _svE(e.matricule) + '</div>'
+      + (info ? '<div style="font-size:0.72em;color:#6D4C41">' + _svE(info) + '</div>' : '') + '</td>'
+      + (n === 3 ? '<td style="white-space:nowrap;' + (e.reste > 0 ? 'color:#B71C1C;font-weight:700' : 'color:var(--gris)') + '">' + (e.reste > 0 ? Number(e.reste).toLocaleString('fr-FR') + ' F' : '0') + '</td>' : '')
+      + '<td>' + tels + '</td><td>' + _svBadge(e.suivi)
+      + '<div><button onclick="ouvrirAppelSuivi(\'' + esp + '\',\'' + _svE(e.matricule) + '\')" style="margin-top:4px;padding:4px 9px;background:var(--bleu);color:#fff;border:none;border-radius:6px;font-size:0.75em;font-weight:600;cursor:pointer">✍ Noter l\'appel</button></div></td></tr>';
+  });
+  h += '</tbody></table></div>';
+  if (tout > l.length) h += '<div style="padding:10px 14px"><button onclick="_SV_MAX[\'' + esp + '\']+=100;_svDessiner(\'' + esp + '\')" style="width:100%;padding:9px;background:#ECEFF1;border:1px solid var(--border);border-radius:8px;font-weight:600;cursor:pointer">Afficher les suivants (' + l.length + ' sur ' + tout + ')</button></div>';
+  z.innerHTML = h;
+}
+
+function ouvrirAppelSuivi(esp, mat) {
+  var n = _SV_ACTIVE[esp], e = (_SV[esp]['liste' + n] || []).filter(function (x) { return x.matricule === mat; })[0];
+  if (!e) return;
+  var old = document.getElementById('svModal'); if (old) old.remove();
+  var m = document.createElement('div');
+  m.id = 'svModal';
+  m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  var opts = _SV_REPONSES.map(function (r) { return '<option value="' + r[0] + '"' + (e.suivi && e.suivi.reponse === r[0] ? ' selected' : '') + '>' + _svE(r[1]) + '</option>'; }).join('');
+  m.innerHTML = '<div style="background:#fff;border-radius:12px;max-width:440px;width:100%;padding:16px;max-height:90vh;overflow:auto">'
+    + '<h3 style="font-size:1em;color:var(--bleu);margin-bottom:4px">✍ Appel — ' + _svE(e.nom) + '</h3>'
+    + '<div style="font-size:0.78em;color:var(--gris);margin-bottom:10px">' + _svE(e.matricule) + ' · ' + _svE(e.classe) + ' · ' + ((e.tels || []).map(_svE).join(' / ') || 'pas de téléphone') + '</div>'
+    + '<label style="font-size:0.8em;font-weight:600">Réponse *</label><select id="svRep" onchange="document.getElementById(\'svEcoleZone\').style.display=this.value===\'PARTI\'?\'block\':\'none\'" style="width:100%;padding:8px;margin:3px 0 10px;border:1.5px solid var(--border);border-radius:6px;box-sizing:border-box">' + '<option value="">— choisir —</option>' + opts + '</select>'
+    + '<div id="svEcoleZone" style="display:' + (e.suivi && e.suivi.reponse === 'PARTI' ? 'block' : 'none') + '"><label style="font-size:0.8em;font-weight:600">Nouvelle école</label><input id="svEcole" maxlength="100" value="' + _svE(e.suivi ? e.suivi.nouvelleEcole : '') + '" style="width:100%;padding:8px;margin:3px 0 10px;border:1.5px solid var(--border);border-radius:6px;box-sizing:border-box"></div>'
+    + '<label style="font-size:0.8em;font-weight:600">Ce qui a été dit (date de retour, raison…)</label><textarea id="svRes" maxlength="300" style="width:100%;min-height:70px;padding:8px;margin:3px 0 6px;border:1.5px solid var(--border);border-radius:6px;box-sizing:border-box;font-family:inherit">' + _svE(e.suivi ? e.suivi.resultat : '') + '</textarea>'
+    + (n === 1 ? '<div style="font-size:0.72em;color:#1565C0;margin-bottom:8px">Si l\'inscription en ligne est faite, cochez-la aussi dans la vérification MENA : l\'élève sortira alors de cette liste.</div>' : '')
+    + '<div style="display:flex;gap:8px;margin-top:6px"><button id="svOk" onclick="enregistrerAppelSuivi(\'' + esp + '\',\'' + _svE(mat) + '\')" style="flex:1;padding:10px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">Enregistrer</button>'
+    + '<button onclick="document.getElementById(\'svModal\').remove()" style="padding:10px 14px;background:#888;color:#fff;border:none;border-radius:8px;cursor:pointer">Annuler</button></div></div>';
+  m.addEventListener('click', function (ev) { if (ev.target === m) m.remove(); });
+  document.body.appendChild(m);
+}
+
+async function enregistrerAppelSuivi(esp, mat) {
+  var n = _SV_ACTIVE[esp], e = (_SV[esp]['liste' + n] || []).filter(function (x) { return x.matricule === mat; })[0];
+  var rep = document.getElementById('svRep').value, res = document.getElementById('svRes').value.trim(), ec = rep === 'PARTI' ? document.getElementById('svEcole').value.trim() : '';
+  if (!rep) { showToast('Choisissez la réponse', 'error'); return; }
+  var b = document.getElementById('svOk'); b.disabled = true; b.textContent = 'Enregistrement…';
+  var roles = { DIR: 'Directeur', FOND: 'Fondateur', COM: 'Comptable', EDU: 'Éducateur' };
+  var par = (currentStaff.nom || currentStaff.matricule || 'inconnu') + ' (' + (roles[currentStaff.profil] || currentStaff.profil || '') + ')';
+  var r = await _svJsonp({ type: 'SAVE_SUIVI_APPEL', ecole: currentStaff.ecole, matricule: mat, liste: String(n), nom: e ? e.nom : '', reponse: rep, resultat: res, nouvelleEcole: ec, par: par });
+  if (r && r.ok) {
+    [1, 2, 3].forEach(function (k) { (_SV[esp]['liste' + k] || []).forEach(function (x) { if (x.matricule === mat) x.suivi = r.suivi; }); });
+    document.getElementById('svModal').remove();
+    var l = _SV[esp]['liste' + n];
+    document.getElementById(esp + 'SuiviFait' + n).textContent = l.filter(function (x) { return x.suivi; }).length + ' appel(s) noté(s)';
+    _svDessiner(esp);
+    showToast('Appel enregistré', 'success');
+  } else { b.disabled = false; b.textContent = 'Enregistrer'; showToast('Erreur : ' + ((r && r.error) || 'inconnue'), 'error'); }
+}
+
+function pdfSuivi(esp) {
+  var d = _SV[esp], n = _SV_ACTIVE[esp]; if (!d) { showToast('Aucune donnée à exporter', 'error'); return; }
+  var T = _SV_TITRES[n], l = _svFiltrer(esp), nomEcole = (currentStaff && (currentStaff.label || currentStaff.ecole)) || 'École';
+  var lignes = l.map(function (e, i) {
+    var s = e.suivi ? ((_SV_REPONSES.filter(function (r) { return r[0] === e.suivi.reponse; })[0] || [0, e.suivi.reponse])[1] + (e.suivi.resultat ? ' — ' + e.suivi.resultat : '') + ' (' + e.suivi.date + ')') : '';
+    return '<tr><td>' + (i + 1) + '</td><td>' + _svE(e.classe) + '</td><td>' + _svE(e.matricule) + '</td><td>' + _svE(e.nom) + '</td>'
+      + (n === 3 ? '<td>' + (e.reste > 0 ? Number(e.reste).toLocaleString('fr-FR') + ' F' : '0') + '</td>' : '')
+      + '<td>' + _svE((e.tels || []).join(' / ')) + '</td><td style="min-width:150px">' + _svE(s) + '</td></tr>';
+  }).join('');
+  var w = window.open('', '_blank'); if (!w) { showToast('Autorisez les fenêtres (popups)', 'error'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + _svE(T.t) + '</title><style>body{font-family:Arial,sans-serif;padding:16px;font-size:12px}table{width:100%;border-collapse:collapse;margin-top:10px}th{background:#1F4E79;color:#fff;padding:6px;text-align:left}td{padding:5px 6px;border:1px solid #ccc}tr:nth-child(even) td{background:#f5f5f5}@media print{.no-print{display:none!important}}</style></head><body>'
+    + '<div class="no-print" style="text-align:center;margin-bottom:14px"><button onclick="window.print()" style="background:#1F4E79;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:bold;margin-right:8px">🖨 Imprimer / PDF</button><button onclick="window.close()" style="background:#888;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer">Fermer</button></div>'
+    + '<h2 style="color:#1F4E79">' + _svE(nomEcole) + '</h2><h3>' + _svE(T.t) + ' (' + l.length + ')</h3><p style="color:#666">' + _svE(T.s) + ' — Document interne, à ne pas diffuser — ' + new Date().toLocaleDateString('fr-FR') + '</p>'
+    + '<table><thead><tr><th>#</th><th>' + (n === 3 ? 'Classe 2025-26' : 'Classe') + '</th><th>Matricule</th><th>Nom</th>' + (n === 3 ? '<th>Reste 2025-26</th>' : '') + '<th>Contact(s)</th><th>Résultat de l\'appel</th></tr></thead><tbody>' + lignes + '</tbody></table></body></html>');
+  w.document.close();
+}
 </script>
 </body>
 </html>
