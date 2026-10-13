@@ -1292,6 +1292,7 @@ setInterval(function () {
   if (acc && acc.classList.contains('active')) _dessinerMesCoursDuJour();
 }, 60000);
 document.addEventListener('visibilitychange', function () { if (!document.hidden) _dessinerMesCoursDuJour(); });
+
 // ══════════════════════════════════════════════
 // ⚠️ NOUVEAU 13/10/2026 — CONTRÔLE DE POSITION À L'OUVERTURE DE LA CLASSE
 // Au-delà de 150 m de l'école : la classe ne s'ouvre pas, l'appel est impossible.
@@ -1344,6 +1345,7 @@ async function _controlerPositionOuverture(classe, heureDebut) {
     window._ouvertureEnCours = false;
   }
 }
+
 async function demarrerCoursDepuisEDT(idx) {
   const c = (window._mesCoursJour || [])[idx];
   if (!c) return;
@@ -1379,6 +1381,7 @@ async function demarrerCoursDepuisEDT(idx) {
 
   // ⚠️ NOUVEAU 13/10/2026 — contrôle de position à l'ouverture (sauf si l'appel de ce cours est déjà fait)
   if (_etat !== 'appele' && !(await _controlerPositionOuverture(c.classe, c.heureDebut))) return;
+
   function normaliser(s) {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
   }
@@ -1436,7 +1439,7 @@ async function demarrerCoursDepuisEDT(idx) {
   confirmerCours();
 }
 async function demarrerCoursPrimaireDirect() {
-   // ⚠️ NOUVEAU 13/10/2026 — contrôle de position à l'ouverture (sauf si l'appel de la classe est déjà fait)
+  // ⚠️ NOUVEAU 13/10/2026 — contrôle de position à l'ouverture (sauf si l'appel de la classe est déjà fait)
   if (!_coursDejaAppele(user.classeDefaut, formatHeure(new Date()))
       && !(await _controlerPositionOuverture(user.classeDefaut, formatHeure(new Date())))) return;
   function normaliser(s) {
