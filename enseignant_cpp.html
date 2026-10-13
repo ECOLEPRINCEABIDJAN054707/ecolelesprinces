@@ -1292,7 +1292,58 @@ setInterval(function () {
   if (acc && acc.classList.contains('active')) _dessinerMesCoursDuJour();
 }, 60000);
 document.addEventListener('visibilitychange', function () { if (!document.hidden) _dessinerMesCoursDuJour(); });
-
+// ══════════════════════════════════════════════
+// ⚠️ NOUVEAU 13/10/2026 — CONTRÔLE DE POSITION À L'OUVERTURE DE LA CLASSE
+// Au-delà de 150 m de l'école : la classe ne s'ouvre pas, l'appel est impossible.
+// Position inconnue, école sans coordonnées ou serveur injoignable : la classe s'ouvre comme avant.
+// ══════════════════════════════════════════════
+async function _controlerPositionOuverture(classe, heureDebut) {
+  if (window._ouvertureEnCours) return false;          // anti double appui
+  window._ouvertureEnCours = true;
+  showLoader('Vérification de votre position...');
+  try {
+    let lat = null, lon = null, prec = null, ip = null;
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        if (!navigator.geolocation) { reject(new Error('GPS non supporté')); return; }
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000, enableHighAccuracy: true, maximumAge: 60000 });
+      });
+      lat = pos.coords.latitude; lon = pos.coords.longitude; prec = Math.round(pos.coords.accuracy);
+    } catch (e) { console.warn('GPS ouverture :', e.message); }
+    try {
+      const r = await Promise.race([
+        fetch('https://api.ipify.org?format=json').then(x => x.json()),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('délai')), 4000))
+      ]);
+      ip = r && r.ip ? r.ip : null;
+    } catch (e) {}
+    let rep = null;
+    try {
+      rep = await Promise.race([
+        envoyerDonnees('VERIFIER_OUVERTURE', {
+          matriculeEnseignant: user.code, nomEnseignant: user.nom, nomEcole: user.ecole,
+          latEnseignant: lat, lonEnseignant: lon, precision: prec, ipEnseignant: ip,
+          classe: classe || '', heureDebut: heureDebut || ''
+        }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('délai')), 15000))
+      ]);
+    } catch (e) {
+      console.warn('Vérification ouverture indisponible :', e.message);
+      return true;                                      // serveur injoignable : on ne bloque pas le cours
+    }
+    if (rep && rep.autorise === false) {
+      const d = Number(rep.distance) || 0;
+      const txt = d >= 1000 ? (d / 1000).toFixed(1).replace('.', ',') + ' km' : d + ' m';
+      hideLoader();
+      showToast('🚫 Vous êtes à ' + txt + ' de l\'établissement — ouverture du cours impossible. Rendez-vous à l\'école pour faire l\'appel.', 'error');
+      return false;
+    }
+    return true;
+  } finally {
+    hideLoader();
+    window._ouvertureEnCours = false;
+  }
+}
 async function demarrerCoursDepuisEDT(idx) {
   const c = (window._mesCoursJour || [])[idx];
   if (!c) return;
@@ -1326,6 +1377,8 @@ async function demarrerCoursDepuisEDT(idx) {
     return;
   }
 
+  // ⚠️ NOUVEAU 13/10/2026 — contrôle de position à l'ouverture (sauf si l'appel de ce cours est déjà fait)
+  if (_etat !== 'appele' && !(await _controlerPositionOuverture(c.classe, c.heureDebut))) return;
   function normaliser(s) {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
   }
@@ -1383,6 +1436,9 @@ async function demarrerCoursDepuisEDT(idx) {
   confirmerCours();
 }
 async function demarrerCoursPrimaireDirect() {
+   // ⚠️ NOUVEAU 13/10/2026 — contrôle de position à l'ouverture (sauf si l'appel de la classe est déjà fait)
+  if (!_coursDejaAppele(user.classeDefaut, formatHeure(new Date()))
+      && !(await _controlerPositionOuverture(user.classeDefaut, formatHeure(new Date())))) return;
   function normaliser(s) {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
   }
