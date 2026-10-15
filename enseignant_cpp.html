@@ -2910,6 +2910,12 @@ const CONFIG_BULLETIN = {
   CM2:{matieres:['EXPLOITATION_TEXTE','DICTEE','AEM','MATHEMATIQUE','LECTURE','ANGLAIS','INFORMATIQUE'],labels:['Exploitation de texte','Dictée','AEM','Mathématique','Lecture','Anglais','Informatique'],bareme:[50,20,50,50,10,10,10],sur:20}
 };
 let bulletinMoisActuel = '', bulletinElevesData = [], bulletinNiveauActuel = '';
+// ⚠️ 15/10/2026 — Examens blancs du CM2 : 4 matières du CEPE (total /170, moyenne /20), sans conduite
+const CONFIG_CEPE_EB = {matieres:['EXPLOITATION_TEXTE','DICTEE','AEM','MATHEMATIQUE'],labels:['Exploitation de texte','Dictée','AEM','Mathématique'],bareme:[50,20,50,50],sur:20,eb:true};
+const MOIS_EB_CM2 = ['EB1','EB2','EB3','EB4'];
+function _cfgBulletin(niveau, mois) {
+  return (MOIS_EB_CM2.indexOf(mois) >= 0 && niveau === 'CM2') ? CONFIG_CEPE_EB : CONFIG_BULLETIN[niveau];
+}
 function recalculerMoyennes() {
   const classe = document.getElementById('moyennesClasse').value;
   if (!classe || !trimestreActif) { showToast('Sélectionnez une classe', 'error'); return; }
@@ -2969,6 +2975,19 @@ function changerClasseBulletin(classe) {
     };
     grid.appendChild(btn);
   });
+  if (niveau === 'CM2') {                       // 15/10/2026 : examens blancs (CEPE)
+    MOIS_EB_CM2.forEach(m => {
+      const btn = document.createElement('button');
+      btn.className = 'mois-btn'; btn.textContent = '📝 Examen blanc n°' + m.slice(2); btn.dataset.mois = m;
+      btn.style.borderColor = '#B71C1C'; btn.style.color = '#B71C1C';
+      btn.onclick = function() {
+        document.querySelectorAll('.mois-btn').forEach(b=>b.classList.remove('actif'));
+        btn.classList.add('actif');
+        selectionnerMoisBulletin(m, classe, niveau);
+      };
+      grid.appendChild(btn);
+    });
+  }
   document.getElementById('bulletinSaisieZone').style.display = 'none';
   document.getElementById('bulletinVide').style.display = 'block';
 }
@@ -3001,11 +3020,11 @@ async function selectionnerMoisBulletin(mois, classe, niveau) {
   document.getElementById('bulletinVide').style.display = 'none';
   document.getElementById('bulletinSaisieZone').style.display = 'block';
   document.getElementById('bulletinListe').innerHTML = '<p style="text-align:center;padding:20px;color:var(--text2)">⏳ Chargement...</p>';
-  const cfg = CONFIG_BULLETIN[niveau];
+  const cfg = _cfgBulletin(niveau, mois);
   if (!cfg) { document.getElementById('bulletinListe').innerHTML = '<p style="color:var(--red);padding:12px">Niveau non reconnu : ' + esc(niveau) + '</p>'; return; }
   let legendeHtml = '<strong>Barèmes :</strong> ';
   cfg.matieres.forEach((m,i) => { legendeHtml += cfg.labels[i] + ' <strong>/' + cfg.bareme[i] + '</strong>'; if(i<cfg.matieres.length-1) legendeHtml+=' · '; });
-  legendeHtml += ' + <strong>Conduite /10</strong>';
+  legendeHtml += cfg.eb ? ' — <strong>Examen blanc : total /170</strong>' : ' + <strong>Conduite /10</strong>';
   document.getElementById('bulletinLegende').innerHTML = legendeHtml;
   try {
     showLoader('Chargement des élèves...');
@@ -3040,10 +3059,10 @@ function afficherTableauBulletin(cfg) {
             <div class="bul-note-label">${esc(cfg.labels[i])} <span style="color:var(--navy)">/${cfg.bareme[i]}</span></div>
             <input type="number" min="0" max="${cfg.bareme[i]}" step="0.25" placeholder="—" data-idx="${idx}" data-mat="${m}" data-max="${cfg.bareme[i]}" oninput="validerNoteBulletin(this)" class="bul-note-input">
           </div>`).join('')}
-        <div style="grid-column:1/-1">
+        ${cfg.eb ? '' : `<div style="grid-column:1/-1">
           <div class="bul-note-label" style="color:var(--amber)">Conduite /10 (hors moyenne)</div>
           <input type="number" min="0" max="10" step="1" placeholder="—" data-idx="${idx}" data-mat="CONDUITE" data-max="10" oninput="validerNoteBulletin(this)" class="bul-note-input" style="border-color:#FFB74D;background:var(--amber-lt)">
-        </div>
+        </div>`}
       </div>
     </div>`).join('');
 }
@@ -3053,7 +3072,7 @@ function validerNoteBulletin(input) {
   const val = parseFloat(input.value);
   if (!isNaN(val)) { if(val>max) input.value=max; if(val<0) input.value=0; input.classList.add('ok'); }
   else input.classList.remove('ok');
-  const cfg = CONFIG_BULLETIN[bulletinNiveauActuel];
+  const cfg = _cfgBulletin(bulletinNiveauActuel, bulletinMoisActuel);
   if (!cfg) return;
   let nbComplets = 0;
   bulletinElevesData.forEach((_,idx) => {
@@ -3064,7 +3083,7 @@ function validerNoteBulletin(input) {
 }
 
 async function soumettreNotesBulletin() {
-  const cfg = CONFIG_BULLETIN[bulletinNiveauActuel];
+  const cfg = _cfgBulletin(bulletinNiveauActuel, bulletinMoisActuel);
   if (!cfg || !bulletinMoisActuel) { showToast('Choisissez un mois','error'); return; }
   const classeEnvoi = document.getElementById('bulletinClasseSelect').value;
   const elevesNotesBul = bulletinElevesData.map((el,idx) => {
