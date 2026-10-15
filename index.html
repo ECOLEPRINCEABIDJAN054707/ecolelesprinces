@@ -545,8 +545,10 @@ chargerConfigEcolesParent();
 // BULLETINS MENSUELS PRIMAIRE
 // ═══════════════════════════════════════════════════════
 var ECOLES_PRIMAIRES_EP = ['AKEIKOI_1','AKEIKOI_2','ACADEMIE','RITA','GNONTINROU','KOUTOUAN'];
-var APPS_SCRIPT_PRIM = 'https://script.google.com/macros/s/AKfycbz3ysjn61A8miP847OqJt8Mj4GhYuVvINNPL8eJNsXYrlOwvn5PXeIoYdOBDhOTwFGH/exec';
-var MOIS_LABELS_EP = {OCT:'Octobre',NOV:'Novembre',DEC:'Decembre',JAN:'Janvier',FEV:'Fevrier',MAR:'Mars',AVR:'Avril',MAI:'Mai'};
+// 15/10/2026 : même serveur que la saisie des maîtres et la validation de la Directrice (il lit aussi les examens blancs du CM2).
+// Ancienne adresse, en cas de retour arrière : https://script.google.com/macros/s/AKfycbz3ysjn61A8miP847OqJt8Mj4GhYuVvINNPL8eJNsXYrlOwvn5PXeIoYdOBDhOTwFGH/exec
+var APPS_SCRIPT_PRIM = 'https://script.google.com/macros/s/AKfycbx7nBhAMxM_zAMAHCPfPQPkktJ9avtOXm2igfzgOuw9PF1jW0Y7ElUApPoeHvw_F-pT/exec';
+var MOIS_LABELS_EP = {OCT:'Octobre',NOV:'Novembre',DEC:'Decembre',JAN:'Janvier',FEV:'Fevrier',MAR:'Mars',AVR:'Avril',MAI:'Mai',EB1:'Examen blanc n°1',EB2:'Examen blanc n°2',EB3:'Examen blanc n°3',EB4:'Examen blanc n°4'};
 
 function estElevePrimaire(eleve) {
   if (ECOLES_PRIMAIRES_EP.includes(eleve.ecoleCode)) return true;
@@ -630,7 +632,7 @@ function voirBulletin(idx) {
   html += '<div style="text-align:center;flex:1;">';
   html += '<div style="font-size:0.95em;font-weight:bold;margin-bottom:4px;">'+nomEcole+'</div>';
   html += '<div style="font-size:0.65em;opacity:0.85;margin-bottom:4px;">ANNEE SCOLAIRE '+ANNEE_SCOLAIRE_ACTIVE+'</div>';
-  html += '<div style="background:rgba(255,255,255,0.2);border-radius:20px;display:inline-block;padding:4px 16px;font-size:0.82em;font-weight:bold;">BULLETIN MENSUEL — '+moisLabel+'</div>';
+  html += '<div style="background:rgba(255,255,255,0.2);border-radius:20px;display:inline-block;padding:4px 16px;font-size:0.82em;font-weight:bold;">'+(b.examenBlanc ? moisLabel+' — PRÉPARATION AU CEPE' : 'BULLETIN MENSUEL — '+moisLabel)+'</div>';
   html += '</div>';
   // Armoirie à droite avec textes
   html += '<div style="text-align:center;flex-shrink:0;">';
@@ -679,17 +681,25 @@ function voirBulletin(idx) {
     html += '</tr>';
   });
 
-  // Conduite
+  // Conduite (pas d'examen blanc) ; pour l'examen blanc : total des points /170
+  if (b.examenBlanc) {
+    html += '<tr style="background:#FFEBEE;border-bottom:2px solid #B71C1C;">';
+    html += '<td style="padding:7px 10px;font-size:12px;font-weight:bold;color:#B71C1C;">TOTAL</td>';
+    html += '<td style="padding:7px 5px;text-align:center;font-weight:bold;color:#B71C1C;font-size:13px;">'+b.total+'/'+(b.total_max||170)+'</td>';
+    html += '<td colspan="4"></td></tr>';
+  } else {
   html += '<tr style="background:#FFF8E1;border-bottom:2px solid #1F4E79;">';
   html += '<td style="padding:7px 10px;font-size:12px;font-weight:bold;color:#E65100;">CONDUITE /10 <em style="font-size:10px;font-weight:normal;">(hors moyenne)</em></td>';
   html += '<td style="padding:7px 5px;text-align:center;font-weight:bold;color:#E65100;font-size:13px;">'+b.conduite+'</td>';
   html += '<td colspan="4"></td></tr>';
+  }
   html += '</tbody></table></div>';
 
   // Stats générales
   var moyPct = sur > 0 ? (b.moyenne/sur) : 0;
   var couleurMoy = moyPct >= 0.7 ? '#2E7D32' : moyPct >= 0.5 ? '#B8860B' : '#C62828';
   var mention = moyPct >= 0.80 ? 'Tres Bien' : moyPct >= 0.70 ? 'Bien' : moyPct >= 0.60 ? 'Assez Bien' : moyPct >= 0.50 ? 'Passable' : 'Insuffisant';
+  if (b.examenBlanc) mention = '<b style="font-size:1.15em">' + (b.moyenne >= 10 ? 'ADMIS' : 'NON ADMIS') + '</b>';   // examen blanc du CM2 : admis à 10/20 (85/170)
 
   html += '<div style="padding:12px 14px;background:#F0F4F8;">';
   html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">';
