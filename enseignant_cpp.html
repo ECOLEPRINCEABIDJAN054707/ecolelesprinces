@@ -1700,7 +1700,8 @@ function calculerSalaireRobuste(heureAppel, heurePublication, heureDebutEDT, heu
     return {heuresValidees:0,heuresAttente:0,salaire:0,statut:'ERREUR',detail:'données manquantes'};
   }
   const debutRetenu = Math.max(minAppel, minDebutEDT - TOLERANCE_DEBUT);
-  const finRetenue = minPubli !== null ? Math.min(minPubli, minFinEDT + TOL) : minFinEDT;
+  // ⚠️ 15/10/2026 — fin = heure de publication, mais jamais après la fin EDT (avant : fin EDT + 10 min)
+  const finRetenue = minPubli !== null ? Math.min(minPubli, minFinEDT) : minFinEDT;
   const dureeMin = Math.max(0, Math.min(finRetenue, minFinEDT) - debutRetenu);
   if (estSalaireFixe()) {
     return {heuresValidees:0,heuresAttente:0,salaire:0,tarif:0,dureeMin,debutRetenu:minStr(debutRetenu),finRetenue:minStr(finRetenue),resteMin:0,
