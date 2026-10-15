@@ -595,6 +595,19 @@ table tr:nth-child(even){background:#F8FAFD}
     <div id="dirCouponsZone" style="padding:0 14px 14px"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
   </div>
 </div>
+  <!-- EXAMEN BLANC — saisie et résultats (15/10/2026) -->
+  <div class="section" id="dirSecEB">
+  <div class="sec-head sec-rouge" onclick="toggleSec(this); chargerExamenBlanc('dir')">
+    <h3>📝 Examen blanc — saisie des notes et résultats</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="dirEBNum" onchange="chargerExamenBlanc('dir')" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"><option value="1">Examen blanc n°1</option><option value="2">Examen blanc n°2</option><option value="3">Examen blanc n°3</option><option value="4">Examen blanc n°4</option></select>
+      <button onclick="chargerExamenBlanc('dir', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
+    </div>
+    <div id="dirEBZone" style="padding:0 14px 14px"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
+  </div>
+</div>
   <div class="section" id="dirSecPointPaie">
   <div class="sec-head sec-vert" onclick="toggleSec(this); chargerPointPaie('dir', true)">
     <h3>💰 Point de paie des enseignants — jour et mois de paie</h3><span class="arr">▼</span>
@@ -2957,6 +2970,19 @@ async function sauvegarderPersonnelDir(idx) {
     <div id="fondDGListe"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Cliquez sur « Actualiser ».</p></div>
   </div>
 </div>
+  <!-- EXAMEN BLANC — saisie et résultats (15/10/2026) -->
+  <div class="section" id="fondSecEB">
+  <div class="sec-head sec-rouge" onclick="toggleSec(this); chargerExamenBlancFond()">
+    <h3>📝 Examen blanc — saisie des notes et résultats</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="fondEBNum" onchange="chargerExamenBlancFond()" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"><option value="1">Examen blanc n°1</option><option value="2">Examen blanc n°2</option><option value="3">Examen blanc n°3</option><option value="4">Examen blanc n°4</option></select>
+      <button onclick="chargerExamenBlancFond(true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
+    </div>
+    <div id="fondEBZone" style="padding:0 14px 14px"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
+  </div>
+</div>
   <div class="section" id="fondSecAlertePrecoce">
   <div class="sec-head sec-rouge open" onclick="chargerAlertePrecoceFond();toggleSec(this)">
     <h3>🚨 Élèves à risque de décrochage <span id="fondRisqueCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">▼</span>
@@ -3114,6 +3140,19 @@ async function sauvegarderPersonnelDir(idx) {
     </div>
   </div>
   <div id="examBlancZoneCom" style="padding:0 14px"></div>
+  <!-- EXAMEN BLANC — saisie et résultats (15/10/2026) -->
+  <div class="section" id="comSecEB">
+  <div class="sec-head sec-rouge" onclick="toggleSec(this); chargerExamenBlanc('com')">
+    <h3>📝 Examen blanc — saisie des notes et résultats</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="comEBNum" onchange="chargerExamenBlanc('com')" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"><option value="1">Examen blanc n°1</option><option value="2">Examen blanc n°2</option><option value="3">Examen blanc n°3</option><option value="4">Examen blanc n°4</option></select>
+      <button onclick="chargerExamenBlanc('com', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
+    </div>
+    <div id="comEBZone" style="padding:0 14px 14px"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
+  </div>
+</div>
   <!-- NOUVEAUX ÉLÈVES 2026-2027 — contrôle cursus (15/10/2026) -->
   <div class="section" id="comSecNouv">
     <div class="sec-head sec-orange" onclick="chargerNouveauxControle('com');toggleSec(this)">
@@ -4050,6 +4089,19 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
   <div id="examBlancZoneEdu" style="padding:0 14px"></div>
+  <!-- EXAMEN BLANC — saisie et résultats (15/10/2026) -->
+  <div class="section" id="eduSecEB">
+  <div class="sec-head sec-rouge" onclick="toggleSec(this); chargerExamenBlanc('edu')">
+    <h3>📝 Examen blanc — saisie des notes et résultats</h3><span class="arr">▼</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select id="eduEBNum" onchange="chargerExamenBlanc('edu')" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"><option value="1">Examen blanc n°1</option><option value="2">Examen blanc n°2</option><option value="3">Examen blanc n°3</option><option value="4">Examen blanc n°4</option></select>
+      <button onclick="chargerExamenBlanc('edu', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
+    </div>
+    <div id="eduEBZone" style="padding:0 14px 14px"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Chargement…</p></div>
+  </div>
+</div>
   <!-- NOUVEAUX ÉLÈVES 2026-2027 — contrôle cursus (15/10/2026) -->
   <div class="section" id="eduSecNouv">
     <div class="sec-head sec-orange" onclick="chargerNouveauxControle('edu');toggleSec(this)">
@@ -18871,5 +18923,148 @@ function _nouvImprimer(pfx) {
 }
 </script>
 
+<script>
+// ═══ EXAMEN BLANC — avancement de la saisie et résultats (15/10/2026) ═══
+// Lit les onglets NOTES_EBn_AVANCEMENT et NOTES_EBn_RESULTATS calculés par le serveur (EXAMEN_BLANC.gs).
+// Directeur et Comptable : toute l'école. Éducateur : ses classes. Fondateur : les 14 écoles.
+var _ebAdmCache = {};
+function _ebEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function _ebNorm(s) { return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+function _ebFmt(v) { var n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? '—' : n.toFixed(2).replace('.', ','); }
+
+async function _ebLireOnglet(sheetsId, onglet) {
+  var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sheetsId + '/values/' + encodeURIComponent(onglet + '!A1:O3000') + '?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+  var r = await pssFetch(url);
+  if (!r.ok) return [];
+  var d = await r.json();
+  return (d.values || []).slice(1);
+}
+async function _ebDonneesEcole(ecole, n) {
+  var id = SHEETS_IDS_2026_2027[ecole]; if (!id) return null;
+  var cle = id + '|' + n;
+  if (_ebAdmCache[cle] && Date.now() - _ebAdmCache[cle].t < 120000) return _ebAdmCache[cle];
+  var res = await Promise.all([_ebLireOnglet(id, 'NOTES_EB' + n + '_RESULTATS'), _ebLireOnglet(id, 'NOTES_EB' + n + '_AVANCEMENT')]);
+  return (_ebAdmCache[cle] = { t: Date.now(), resultats: res[0], avancement: res[1] });
+}
+
+// Statistiques d'une liste de lignes RESULTATS
+function _ebStats(lignes) {
+  var s = { cand: lignes.length, compl: 0, admis: 0, somme: 0, max: null, mentions: {} };
+  lignes.forEach(function (r) {
+    if (r[8] === 'ADMIS' || r[8] === 'NON ADMIS') { s.compl++; var m = parseFloat(r[5]); if (!isNaN(m)) { s.somme += m; if (s.max === null || m > s.max) s.max = m; } }
+    if (r[8] === 'ADMIS') s.admis++;
+    if (r[9]) s.mentions[r[9]] = (s.mentions[r[9]] || 0) + 1;
+  });
+  s.taux = s.compl ? Math.round(s.admis * 1000 / s.compl) / 10 : null;
+  s.moy = s.compl ? s.somme / s.compl : null;
+  return s;
+}
+
+// ── Directeur, Comptable, Éducateur ──
+async function chargerExamenBlanc(pfx, force) {
+  var zone = document.getElementById(pfx + 'EBZone'); if (!zone || !currentStaff) return;
+  var n = (document.getElementById(pfx + 'EBNum') || {}).value || '1';
+  if (force) _ebAdmCache = {};
+  zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Chargement…</p>';
+  try {
+    var d = await _ebDonneesEcole(currentStaff.ecole, n);
+    if (!d) throw new Error('base de l\'école introuvable');
+    var res = d.resultats, av = d.avancement;
+    if (pfx === 'edu') {                                     // l'éducateur ne voit que ses classes
+      var mes = (currentStaff.classes || []).map(_ebNorm);
+      res = res.filter(function (r) { return mes.indexOf(_ebNorm(r[2])) >= 0; });
+      av = av.filter(function (r) { return mes.indexOf(_ebNorm(r[0])) >= 0; });
+    }
+    if (!res.length && !av.length) {
+      zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucune note de l\'examen blanc n°' + n + ' saisie pour le moment. Les résultats apparaîtront dès que les enseignants publieront leurs notes « Examen blanc n°' + n + ' ».</p>';
+      return;
+    }
+    var classes = {};
+    av.forEach(function (r) { (classes[r[0]] = classes[r[0]] || { av: [], res: [] }).av.push(r); });
+    res.forEach(function (r) { (classes[r[2]] = classes[r[2]] || { av: [], res: [] }).res.push(r); });
+    var g = _ebStats(res);
+    var h = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;padding:10px 0">'
+      + '<div class="stat-box"><div class="stat-val">' + g.cand + '</div><div class="stat-lbl">Candidats</div></div>'
+      + '<div class="stat-box"><div class="stat-val">' + g.compl + '</div><div class="stat-lbl">Notes complètes</div></div>'
+      + '<div class="stat-box"><div class="stat-val">' + g.admis + '</div><div class="stat-lbl">Admis</div></div>'
+      + '<div class="stat-box"><div class="stat-val">' + (g.taux === null ? '—' : String(g.taux).replace('.', ',') + ' %') + '</div><div class="stat-lbl">Taux de réussite</div></div>'
+      + '</div>';
+    Object.keys(classes).sort().forEach(function (cl, k) {
+      var c = classes[cl], st = _ebStats(c.res);
+      var matOk = c.av.filter(function (a) { return a[7] === 'COMPLET'; }).length;
+      var matTot = c.av.filter(function (a) { return a[7] !== 'NON COMPTÉE'; }).length;
+      var aFaire = c.av.filter(function (a) { return a[7] !== 'COMPLET'; });
+      var idc = pfx + 'EBcl' + k;
+      h += '<div style="border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden">'
+        + '<div onclick="var x=document.getElementById(\'' + idc + '\');x.style.display=x.style.display===\'none\'?\'block\':\'none\'" style="cursor:pointer;padding:10px 12px;background:#FAFAFA;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:0.82em">'
+        + '<b>' + _ebEsc(cl) + '</b>'
+        + '<span>Saisie : <b style="color:' + (matOk === matTot && matTot ? '#2E7D32' : '#E65100') + '">' + matOk + '/' + matTot + ' matières</b> · '
+        + (st.compl ? 'Admis : <b>' + st.admis + '/' + st.compl + '</b> (' + String(st.taux).replace('.', ',') + ' %)' : 'Résultats : en attente') + '</span></div>'
+        + '<div id="' + idc + '" style="display:none;padding:8px 12px;font-size:0.8em">';
+      if (aFaire.length) {
+        h += '<div style="font-weight:700;color:#E65100;margin:4px 0">Notes à saisir</div>'
+          + aFaire.map(function (a) {
+            return '<div style="padding:3px 0;border-bottom:1px dotted #eee">' + _ebEsc(a[3]) + (a[4] !== '' ? ' (coef ' + _ebEsc(a[4]) + ')' : '') + ' — <b>' + _ebEsc(a[7]) + '</b>'
+              + (a[7] === 'EN COURS' ? ' · ' + _ebEsc(a[5]) + '/' + _ebEsc(a[6]) + ' notes' : '') + (a[8] ? ' · ' + _ebEsc(a[8]) : '') + '</div>';
+          }).join('');
+      }
+      if (c.res.length) {
+        h += '<div style="font-weight:700;color:var(--bleu);margin:10px 0 4px">Résultats</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.95em">'
+          + '<tr style="background:#F1F5F9"><th style="text-align:left;padding:4px">Rang</th><th style="text-align:left;padding:4px">Élève</th><th style="padding:4px">Moyenne</th><th style="text-align:left;padding:4px">Résultat</th></tr>'
+          + c.res.map(function (r) {
+            var coul = r[8] === 'ADMIS' ? '#2E7D32' : (r[8] === 'NON ADMIS' ? '#C62828' : '#E65100');
+            return '<tr style="border-bottom:1px solid #eee"><td style="padding:4px">' + _ebEsc(r[6] || '—') + '</td><td style="padding:4px">' + _ebEsc(r[1]) + '<br><span style="color:var(--gris);font-size:0.85em">' + _ebEsc(r[0]) + '</span></td>'
+              + '<td style="padding:4px;text-align:center">' + (r[5] !== '' ? _ebFmt(r[5]) + (r[8] === 'INCOMPLET' ? '<br><span style="color:var(--gris);font-size:0.85em">partielle</span>' : '') : '—') + '</td>'
+              + '<td style="padding:4px;color:' + coul + ';font-weight:700">' + _ebEsc(r[8]) + (r[9] ? ' — ' + _ebEsc(r[9]) : '')
+              + (r[12] ? '<br><span style="font-weight:400;color:var(--gris);font-size:0.85em">Manque : ' + _ebEsc(r[12]) + '</span>' : '') + '</td></tr>';
+          }).join('') + '</table></div>';
+      }
+      h += '</div></div>';
+    });
+    zone.innerHTML = h;
+  } catch (e) {
+    zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Impossible de charger l\'examen blanc : ' + _ebEsc(e.message) + '</p>';
+  }
+}
+
+// ── Fondateur : les 14 écoles ──
+async function chargerExamenBlancFond(force) {
+  var zone = document.getElementById('fondEBZone'); if (!zone) return;
+  var n = (document.getElementById('fondEBNum') || {}).value || '1';
+  if (force) _ebAdmCache = {};
+  zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Lecture des 14 écoles…</p>';
+  var vus = {}, ecoles = Object.keys(SHEETS_IDS_2026_2027).filter(function (e) { var id = SHEETS_IDS_2026_2027[e]; if (vus[id]) return false; vus[id] = true; return true; });
+  var lignes = await Promise.all(ecoles.map(async function (e) {
+    try {
+      var d = await _ebDonneesEcole(e, n), st = _ebStats(d.resultats);
+      var avc = d.avancement.filter(function (a) { return a[7] !== 'NON COMPTÉE'; });
+      var ok = avc.filter(function (a) { return a[7] === 'COMPLET'; }).length;
+      return { e: e, st: st, saisie: avc.length ? Math.round(ok * 100 / avc.length) : null, retard: avc.filter(function (a) { return a[7] === 'NON SAISI'; }).length };
+    } catch (err) { return { e: e, erreur: err.message }; }
+  }));
+  lignes = lignes.filter(function (l) { return l.erreur || l.st.cand; });
+  if (!lignes.length) { zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucune note de l\'examen blanc n°' + n + ' saisie dans le réseau pour le moment.</p>'; return; }
+  var tot = { cand: 0, compl: 0, admis: 0 };
+  lignes.forEach(function (l) { if (l.st) { tot.cand += l.st.cand; tot.compl += l.st.compl; tot.admis += l.st.admis; } });
+  lignes.sort(function (a, b) { return (b.st ? b.st.taux || 0 : -1) - (a.st ? a.st.taux || 0 : -1); });
+  var h = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;padding:10px 0">'
+    + '<div class="stat-box"><div class="stat-val">' + tot.cand + '</div><div class="stat-lbl">Candidats (réseau)</div></div>'
+    + '<div class="stat-box"><div class="stat-val">' + tot.compl + '</div><div class="stat-lbl">Notes complètes</div></div>'
+    + '<div class="stat-box"><div class="stat-val">' + tot.admis + '</div><div class="stat-lbl">Admis</div></div>'
+    + '<div class="stat-box"><div class="stat-val">' + (tot.compl ? String(Math.round(tot.admis * 1000 / tot.compl) / 10).replace('.', ',') + ' %' : '—') + '</div><div class="stat-lbl">Taux de réussite</div></div></div>'
+    + '<p style="font-size:0.75em;color:var(--gris);margin:0 0 6px">Chaque école a ses propres sujets : ce tableau sert à suivre chaque école, pas à les comparer entre elles.</p>'
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.8em">'
+    + '<tr style="background:#F1F5F9"><th style="text-align:left;padding:6px">École</th><th style="padding:6px">Saisie</th><th style="padding:6px">Candidats</th><th style="padding:6px">Complets</th><th style="padding:6px">Admis</th><th style="padding:6px">Taux</th><th style="padding:6px">Moyenne</th></tr>';
+  lignes.forEach(function (l) {
+    if (l.erreur) { h += '<tr><td style="padding:6px">' + _ebEsc(ECOLE_LABELS[l.e] || l.e) + '</td><td colspan="6" style="padding:6px;color:var(--rouge)">⚠️ ' + _ebEsc(l.erreur) + '</td></tr>'; return; }
+    h += '<tr style="border-bottom:1px solid #eee"><td style="padding:6px">' + _ebEsc(ECOLE_LABELS[l.e] || l.e) + '</td>'
+      + '<td style="padding:6px;text-align:center;color:' + (l.saisie === 100 ? '#2E7D32' : '#E65100') + ';font-weight:700">' + (l.saisie === null ? '—' : l.saisie + ' %') + (l.retard ? '<br><span style="font-weight:400;font-size:0.85em">' + l.retard + ' matière(s) non saisie(s)</span>' : '') + '</td>'
+      + '<td style="padding:6px;text-align:center">' + l.st.cand + '</td><td style="padding:6px;text-align:center">' + l.st.compl + '</td><td style="padding:6px;text-align:center">' + l.st.admis + '</td>'
+      + '<td style="padding:6px;text-align:center;font-weight:700">' + (l.st.taux === null ? '—' : String(l.st.taux).replace('.', ',') + ' %') + '</td>'
+      + '<td style="padding:6px;text-align:center">' + (l.st.moy === null ? '—' : _ebFmt(l.st.moy)) + '</td></tr>';
+  });
+  zone.innerHTML = h + '</table></div>';
+}
+</script>
 </body>
 </html>
