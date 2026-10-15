@@ -3987,7 +3987,8 @@ async function chargerExamenBlancParent(eleve) {
   }
   if (!html) {
     // 15/10/2026 : classe d'examen sans résultat encore → annonce du prochain examen blanc
-    var cl = String(eleve.classe || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    var cl = String(window._classe2026 || eleve.classe || '').toUpperCase()   // classe 2026-2027 en priorité (eleve.classe peut être celle de l'an dernier)
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     var estCM2 = cl.indexOf('CM2') >= 0, estExamen = estCM2 || /^(3\s*EME|TLE|TERMINALE)/.test(cl.trim());
     if (!estExamen) { section.style.display = 'none'; return; }
     var EBS = [
