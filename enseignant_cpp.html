@@ -2458,9 +2458,28 @@ function changerMatiereNotes() {
   if (classe) majSelecteurDevoirs(classe, matiereActiveNotes, trimestre);
 }
 
+// ⚠️ 15/10/2026 — Examen blanc : « EB » n'est proposé que pour les classes d'examen (3ème, Terminale)
+function _estClasseExamenEB(classe) {
+  return /^(3\s*[EÈ]ME|TLE|TERMINALE)/i.test(String(classe || '').trim());
+}
+function majPeriodesNotes(classe) {
+  const selT = document.getElementById('notesTrimestre');
+  if (!selT || !user) return;
+  const avant = selT.value;
+  const onglets = getOnglets(user.ecole).filter(o => !/^NOTES_EB/.test(o.id) || _estClasseExamenEB(classe));
+  selT.innerHTML = '';
+  onglets.forEach(o => {
+    const opt = document.createElement('option'); opt.value = o.id;
+    opt.textContent = /^NOTES_EB/.test(o.id) ? '📝 ' + o.label.replace('EB', 'Examen blanc n°').replace('n° ', 'n°') : o.label;
+    selT.appendChild(opt);
+  });
+  if (onglets.some(o => o.id === avant)) selT.value = avant;
+}
+
 async function chargerElevesNotes() {
   const classe = document.getElementById('notesClasse').value;
   if (!classe) return;
+  majPeriodesNotes(classe);
   await verifierMatieresClasse(classe, 'notes');
   document.getElementById('notesSousTitre').textContent = ((coursActuel && coursActuel.matiere) || user.matiere || '') + ' · ' + classe;
   document.getElementById('btnPublierNotes').style.display = 'none';
@@ -2516,6 +2535,17 @@ const trimestreVal = document.getElementById('notesTrimestre').value;
   } catch(e) { hideLoader(); showToast('Erreur chargement élèves','error'); }
 }
 async function majSelecteurDevoirs(classe, matiere, trimestre) {
+  // ⚠️ 15/10/2026 — Examen blanc : une seule épreuve (enregistrée en D1) ; sinon Devoir N°1 à N°6
+  const estEB = /^NOTES_EB/.test(String(trimestre || ''));
+  const selN = document.getElementById('notesNumero');
+  if (selN) {
+    const voulu = estEB ? 1 : 6;
+    if (selN.options.length !== voulu || selN.dataset.mode !== (estEB ? 'EB' : 'DEVOIRS')) {
+      selN.innerHTML = '';
+      for (let d = 1; d <= voulu; d++) { const o = document.createElement('option'); o.value = String(d); o.textContent = `Devoir N°${d}`; selN.appendChild(o); }
+      selN.dataset.mode = estEB ? 'EB' : 'DEVOIRS';
+    }
+  }
   try {
     const range = encodeURIComponent(`${trimestre}!A2:J2000`);
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
@@ -2537,14 +2567,15 @@ async function majSelecteurDevoirs(classe, matiere, trimestre) {
     const sel = document.getElementById('notesNumero');
     Array.from(sel.options).forEach(opt => {
       const n = parseInt(opt.value, 10);
+      const libelle = estEB ? 'Épreuve de l\'examen blanc' : `Devoir N°${n}`;
       if (devoirsFaits.has(n)) {
         opt.disabled = false;
         opt.dataset.dejaSaisi = '1';
-        opt.textContent = `Devoir N°${n} — ✅ déjà saisi`;
+        opt.textContent = `${libelle} — ✅ déjà saisi${estEB ? 'e' : ''}`;
       } else {
         opt.disabled = false;
         opt.dataset.dejaSaisi = '';
-        opt.textContent = `Devoir N°${n}`;
+        opt.textContent = libelle;
       }
     });
     onChangeDevoirNotes();
