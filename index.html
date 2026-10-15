@@ -289,6 +289,10 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
   </div>
 <div id="alerteRisqueParentZone"></div>
 <div id="circulaireExamenZone"></div>
+ <div class="section" id="sectionExamenBlanc" style="display:none">
+  <div class="sec-header" style="background:#B71C1C" onclick="toggleSec(this)">&#128221; EXAMENS BLANCS &mdash; R&Eacute;SULTATS <span>v</span></div>
+  <div class="sec-body open" id="examenBlancBody"></div>
+</div>
   <div class="section" id="sectionResultats" style="display:none">
     <div class="sec-header" style="background:linear-gradient(135deg,#D4AF37,#B8860B);color:#fff" onclick="toggleSec(this)" id="titreResultats">&#127942; RESULTATS DE FIN D'ANNEE <span>v</span></div>
     <div class="sec-body open" id="resultatsBody"></div>
@@ -296,10 +300,6 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
  <div class="section" id="sectionCarnetNotes" style="display:none">
   <div class="sec-header" style="background:#1565C0" onclick="toggleSec(this)">&#128202; MES NOTES DU TRIMESTRE (Suivi provisoire) <span>v</span></div>
   <div class="sec-body open" id="carnetNotesBody"></div>
-</div>
- <div class="section" id="sectionExamenBlanc" style="display:none">
-  <div class="sec-header" style="background:#B71C1C" onclick="toggleSec(this)">&#128221; EXAMENS BLANCS &mdash; R&Eacute;SULTATS <span>v</span></div>
-  <div class="sec-body open" id="examenBlancBody"></div>
 </div>
   <div class="section" id="sectionInscription2026" style="display:none;">
     <div class="sec-header" style="background:linear-gradient(135deg,#1A3A5C,#1565C0);color:#D4AF37;" onclick="toggleSection('inscription2026Body','arInscription2026')">
@@ -3944,13 +3944,14 @@ function afficherCompositionsParent(classe) {
 async function chargerExamenBlancParent(eleve) {
   var section = document.getElementById('sectionExamenBlanc'), body = document.getElementById('examenBlancBody');
   if (!section || !body) return;
+  // EXAMEN_BLANC_PARENT_V3 (15/10/2026) — l'annonce s'affiche même si la base 2026-2027 n'est pas encore trouvée
   var sid = window._sheetsId2026;
-  if (!sid || !eleve || !eleve.matricule) { section.style.display = 'none'; return; }
-  var mat = String(eleve.matricule).trim().toUpperCase();
+  if (!eleve) { section.style.display = 'none'; return; }
+  var mat = String(eleve.matricule || '').trim().toUpperCase();
   var esc = function (x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var fmt = function (v) { var n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? '—' : n.toFixed(2).replace('.', ','); };
   var html = '';
-  for (var n = 4; n >= 1; n--) {
+  for (var n = 4; n >= 1 && sid && mat; n--) {
     try {
       var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sid + '/values/' + encodeURIComponent('NOTES_EB' + n + '_RESULTATS!A2:O3000') + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
       var res = await pssFetch(url);
