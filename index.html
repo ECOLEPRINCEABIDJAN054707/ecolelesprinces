@@ -3985,7 +3985,31 @@ async function chargerExamenBlancParent(eleve) {
       html += '</div>';
     } catch (e) { console.warn('examen blanc parent', e); }
   }
-  if (!html) { section.style.display = 'none'; return; }
+  if (!html) {
+    // 15/10/2026 : classe d'examen sans résultat encore → annonce du prochain examen blanc
+    var cl = String(eleve.classe || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    var estCM2 = cl.indexOf('CM2') >= 0, estExamen = estCM2 || /^(3\s*EME|TLE|TERMINALE)/.test(cl.trim());
+    if (!estExamen) { section.style.display = 'none'; return; }
+    var EBS = [
+      { n: 1, fin: '2026-10-28', dates: 'du lundi 26 au mercredi 28 octobre 2026' },
+      { n: 2, fin: '2026-12-23', dates: 'du lundi 21 au mercredi 23 décembre 2026' },
+      { n: 3, fin: '2027-02-10', dates: 'du lundi 8 au mercredi 10 février 2027' },
+      { n: 4, fin: '2027-03-24', dates: 'du lundi 22 au mercredi 24 mars 2027' }
+    ];
+    var d = new Date(), auj = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+    var p = EBS.filter(function (x) { return x.fin >= auj; })[0];
+    if (!p) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    body.innerHTML = '<div style="text-align:center;padding:18px 14px;">'
+      + '<div style="font-size:2em;margin-bottom:6px;">&#128221;</div>'
+      + '<div style="font-weight:800;color:#B71C1C;font-size:0.95em;">Examen blanc n°' + p.n + ' ' + p.dates + '</div>'
+      + '<p style="font-size:0.82em;color:#555;margin-top:8px;line-height:1.6;">'
+      + (estCM2
+          ? 'Préparation au CEPE. Les résultats de votre enfant apparaîtront dans la rubrique « Bulletins mensuels », dès leur validation par la Direction.'
+          : 'Les résultats de votre enfant (moyenne, rang dans la classe, admis ou non) apparaîtront ici après la correction.')
+      + '</p><p style="font-size:0.76em;color:#888;margin-top:6px;">La présence de l\'élève à toutes les épreuves est obligatoire.</p></div>';
+    return;
+  }
   section.style.display = 'block';
   body.innerHTML = '<div style="background:#FFF3E0;border-left:4px solid #E65100;padding:8px 12px;margin-bottom:12px;border-radius:0 8px 8px 0;"><p style="font-size:0.78em;color:#E65100;">Moyenne calculée avec les coefficients officiels de l\'examen. La note de chaque matière compte aussi dans la moyenne du trimestre, comme un devoir.</p></div>' + html;
 }
