@@ -281,6 +281,13 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
   <div id="examBlancZoneDir" style="padding:0 14px"></div>
+  <!-- NOUVEAUX ÉLÈVES 2026-2027 — contrôle cursus (15/10/2026) -->
+  <div class="section" id="dirSecNouv">
+    <div class="sec-head sec-orange" onclick="chargerNouveauxControle('dir');toggleSec(this)">
+      <h3>&#127381; Nouveaux &eacute;l&egrave;ves 2026-2027 &mdash; contr&ocirc;le cursus <span id="dirNouvCount" style="font-size:0.78em;opacity:0.9"></span></h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="dirNouvBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour afficher les nouveaux &eacute;l&egrave;ves venus d'un autre &eacute;tablissement.</p></div>
+  </div>
   <div id="dirStatsZone"></div>
   <div id="dirFiltresZone" style="display:none">
     <div class="filters-bar">
@@ -3107,6 +3114,13 @@ async function sauvegarderPersonnelDir(idx) {
     </div>
   </div>
   <div id="examBlancZoneCom" style="padding:0 14px"></div>
+  <!-- NOUVEAUX ÉLÈVES 2026-2027 — contrôle cursus (15/10/2026) -->
+  <div class="section" id="comSecNouv">
+    <div class="sec-head sec-orange" onclick="chargerNouveauxControle('com');toggleSec(this)">
+      <h3>&#127381; Nouveaux &eacute;l&egrave;ves 2026-2027 &mdash; contr&ocirc;le cursus <span id="comNouvCount" style="font-size:0.78em;opacity:0.9"></span></h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="comNouvBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour afficher les nouveaux &eacute;l&egrave;ves venus d'un autre &eacute;tablissement.</p></div>
+  </div>
   <div class="stats-row s3">
     <div class="stat-box rouge"><div class="stat-val" id="cStatImpaye">0</div><div class="stat-lbl">Soldes impay&eacute;s</div></div>
     <div class="stat-box or"><div class="stat-val" id="cStatInsc">0</div><div class="stat-lbl">El&egrave;ves inscrits</div></div>
@@ -4036,6 +4050,13 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
   <div id="examBlancZoneEdu" style="padding:0 14px"></div>
+  <!-- NOUVEAUX ÉLÈVES 2026-2027 — contrôle cursus (15/10/2026) -->
+  <div class="section" id="eduSecNouv">
+    <div class="sec-head sec-orange" onclick="chargerNouveauxControle('edu');toggleSec(this)">
+      <h3>&#127381; Nouveaux &eacute;l&egrave;ves 2026-2027 &mdash; contr&ocirc;le cursus <span id="eduNouvCount" style="font-size:0.78em;opacity:0.9"></span></h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="eduNouvBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez pour afficher les nouveaux &eacute;l&egrave;ves venus d'un autre &eacute;tablissement.</p></div>
+  </div>
   <div class="stats-row s3">
     <div class="stat-box rouge"><div class="stat-val" id="eStatAlert">0</div><div class="stat-lbl">En difficult&eacute;</div></div>
     <div class="stat-box or"><div class="stat-val" id="eStatEleves">0</div><div class="stat-lbl">Mes &eacute;l&egrave;ves</div></div>
@@ -18739,5 +18760,116 @@ function pdfSuivi(esp) {
   w.document.close();
 }
 </script>
+<script>
+// ══════════════════════════════════════════════
+// NOUVEAUX ÉLÈVES 2026-2027 — CONTRÔLE CURSUS — 15/10/2026
+// Espaces Directeur (dir), Comptable (com), Éducateur (edu).
+// Lit l'onglet NOUVEAUX_CONTROLE de la base 2026-2027 de l'école (rempli chaque nuit par EXPORT_Nouveaux2026,
+// projet CENTRALE PAIE). Lecture seule. L'éducateur ne voit que ses classes (STAFF → currentStaff.classes).
+// Colonnes de l'onglet : MATRICULE | NOM ET PRÉNOMS | CLASSE | CONTACT 1 | CONTACT 2 | PROVENANCE | CLASSE MENA | POINT À VÉRIFIER
+// ══════════════════════════════════════════════
+window._nouvCache = {};
+function _nouvEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+async function chargerNouveauxControle(pfx, forcer) {
+  var body = document.getElementById(pfx + 'NouvBody');
+  if (!body || !currentStaff) return;
+  if (window._nouvCache[pfx] && !forcer) { _nouvAfficher(pfx); return; }
+  body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div><p style="font-size:0.85em;color:var(--gris)">Chargement des nouveaux élèves…</p></div>';
+  var sid = SHEETS_IDS_2026_2027[currentStaff.ecole];
+  if (!sid) { body.innerHTML = '<p style="padding:14px;color:var(--rouge)">École non trouvée.</p>'; return; }
+  try {
+    var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sid + '/values/NOUVEAUX_CONTROLE!A1:J4000?key=' + API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+    var r = await pssFetch(url), data = await r.json();
+    var v = data.values || [];
+    if (!v.length) {
+      body.innerHTML = '<p style="padding:14px;font-size:0.85em;color:var(--gris)">La liste n\'est pas encore disponible pour votre école. Elle est mise à jour chaque nuit.</p>';
+      return;
+    }
+    var maj = String((v[0] || [])[9] || '');
+    var rows = v.slice(1).filter(function (x) { return String(x[0] || '').trim(); }).map(function (x) {
+      return { mat: x[0], nom: x[1], classe: String(x[2] || '').trim(), tel1: x[3], tel2: x[4], prov: x[5], mena: x[6], point: String(x[7] || '').trim() };
+    });
+    if (currentStaff.profil === 'EDU') {
+      var mes = (currentStaff.classes || []).map(function (c) { return String(c).trim(); });
+      rows = rows.filter(function (x) { return mes.indexOf(x.classe) >= 0; });
+    }
+    window._nouvCache[pfx] = { rows: rows, maj: maj };
+    _nouvAfficher(pfx);
+  } catch (e) {
+    body.innerHTML = '<p style="padding:14px;color:var(--rouge)">Erreur de chargement. Réessayez.</p>';
+  }
+}
+
+function _nouvAfficher(pfx) {
+  var body = document.getElementById(pfx + 'NouvBody'), c = window._nouvCache[pfx];
+  if (!body || !c) return;
+  var cnt = document.getElementById(pfx + 'NouvCount');
+  var nbV = c.rows.filter(function (x) { return x.point; }).length;
+  if (cnt) cnt.textContent = '(' + c.rows.length + (nbV ? ' — ' + nbV + ' à vérifier' : '') + ')';
+  var classes = []; c.rows.forEach(function (x) { if (classes.indexOf(x.classe) < 0) classes.push(x.classe); }); classes.sort();
+  var h = '<div style="padding:10px 12px">' +
+    '<p style="font-size:0.8em;color:var(--gris);margin-bottom:8px;line-height:1.5">Élèves venus <b>d\'un autre établissement</b> cette année (hors affectés 6ème / 2nde et liste des transferts). ' +
+    'En <span style="background:#FFF2CC;padding:0 4px">jaune</span> : cursus à contrôler (classe différente de celle du MENA, élève absent de la vérification MENA, classe non attribuée).' +
+    (c.maj ? ' <i>Mise à jour : ' + _nouvEsc(c.maj) + '</i>' : '') + '</p>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">' +
+    '<select id="' + pfx + 'NouvClasse" onchange="_nouvFiltrer(\'' + pfx + '\')" style="padding:7px;border:1px solid var(--border);border-radius:8px"><option value="">Toutes les classes</option>' +
+    classes.map(function (k) { return '<option>' + _nouvEsc(k) + '</option>'; }).join('') + '</select>' +
+    '<input id="' + pfx + 'NouvRech" oninput="_nouvFiltrer(\'' + pfx + '\')" placeholder="Nom ou matricule…" style="flex:1;min-width:140px;padding:7px;border:1px solid var(--border);border-radius:8px">' +
+    '<label style="display:flex;align-items:center;gap:4px;font-size:0.85em"><input type="checkbox" id="' + pfx + 'NouvVerif" onchange="_nouvFiltrer(\'' + pfx + '\')"> À vérifier seulement</label>' +
+    '<button class="btn-f btn-f-bleu" onclick="_nouvImprimer(\'' + pfx + '\')">&#128424; Imprimer</button>' +
+    '<button class="btn-f btn-f-vert" onclick="window._nouvCache[\'' + pfx + '\']=null;chargerNouveauxControle(\'' + pfx + '\',true)">&#128260; Actualiser</button>' +
+    '</div><div id="' + pfx + 'NouvTable" style="overflow-x:auto"></div></div>';
+  body.innerHTML = h;
+  _nouvFiltrer(pfx);
+}
+
+function _nouvLignesFiltrees(pfx) {
+  var c = window._nouvCache[pfx]; if (!c) return [];
+  var cl = (document.getElementById(pfx + 'NouvClasse') || {}).value || '';
+  var q = String((document.getElementById(pfx + 'NouvRech') || {}).value || '').toUpperCase().trim();
+  var seul = (document.getElementById(pfx + 'NouvVerif') || {}).checked;
+  return c.rows.filter(function (x) {
+    if (cl && x.classe !== cl) return false;
+    if (seul && !x.point) return false;
+    if (q && (String(x.nom).toUpperCase().indexOf(q) < 0 && String(x.mat).toUpperCase().indexOf(q) < 0)) return false;
+    return true;
+  });
+}
+
+function _nouvTableHTML(rows, impression) {
+  var th = 'style="background:#1F4E79;color:#fff;padding:6px 5px;text-align:left;font-size:0.8em;white-space:nowrap"';
+  var td = 'style="padding:5px;border-bottom:1px solid #E0E4EF;font-size:0.82em;vertical-align:top"';
+  var h = '<table style="width:100%;border-collapse:collapse"><thead><tr><th ' + th + '>N°</th><th ' + th + '>Matricule</th><th ' + th + '>Nom et prénoms</th><th ' + th + '>Classe</th><th ' + th + '>Contacts</th><th ' + th + '>Provenance</th><th ' + th + '>Classe MENA</th><th ' + th + '>Point à vérifier</th></tr></thead><tbody>';
+  rows.forEach(function (x, i) {
+    var bg = x.point ? ' style="background:#FFF2CC"' : (impression ? '' : (i % 2 ? ' style="background:#F7F9FC"' : ''));
+    var tels = [x.tel1, x.tel2].filter(function (t) { return String(t || '').trim(); }).map(function (t) {
+      return impression ? _nouvEsc(t) : '<a href="tel:' + _nouvEsc(t) + '" style="color:var(--bleu2)">' + _nouvEsc(t) + '</a>';
+    }).join('<br>');
+    h += '<tr' + bg + '><td ' + td + '>' + (i + 1) + '</td><td ' + td + '>' + _nouvEsc(x.mat) + '</td><td ' + td + '><b>' + _nouvEsc(x.nom) + '</b></td><td ' + td + '>' + _nouvEsc(x.classe) +
+      '</td><td ' + td + '>' + (tels || '—') + '</td><td ' + td + '>' + _nouvEsc(x.prov || '—') + '</td><td ' + td + '>' + _nouvEsc(x.mena || '—') + '</td><td ' + td + '>' + _nouvEsc(x.point) + '</td></tr>';
+  });
+  return h + '</tbody></table>';
+}
+
+function _nouvFiltrer(pfx) {
+  var z = document.getElementById(pfx + 'NouvTable'); if (!z) return;
+  var rows = _nouvLignesFiltrees(pfx);
+  z.innerHTML = rows.length ? '<p style="font-size:0.8em;color:var(--gris);margin:0 0 6px">' + rows.length + ' élève(s)</p>' + _nouvTableHTML(rows, false)
+                            : '<p style="padding:12px;font-size:0.85em;color:var(--gris)">Aucun élève pour ces critères.</p>';
+}
+
+function _nouvImprimer(pfx) {
+  var rows = _nouvLignesFiltrees(pfx), cl = (document.getElementById(pfx + 'NouvClasse') || {}).value || 'Toutes les classes';
+  var titre = 'Nouveaux élèves 2026-2027 — contrôle cursus — ' + (currentStaff.ecole || '') + ' — ' + cl;
+  var w = window.open('', '_blank'); if (!w) { showToast('Autorisez les fenêtres pour imprimer', 'error'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + _nouvEsc(titre) + '</title><style>body{font-family:Arial,sans-serif;margin:0;padding:10px;color:#000}@media print{.np{display:none!important}@page{size:A4 landscape;margin:8mm}}a{color:#000;text-decoration:none}</style></head><body>' +
+    '<div class="np" style="background:#f5f5f5;padding:10px;border-bottom:3px solid #000;margin-bottom:10px"><button onclick="window.print()" style="background:#000;color:#fff;border:none;padding:9px 18px;font-weight:bold;border-radius:4px;margin-right:8px">Imprimer</button><button onclick="window.close()" style="background:#555;color:#fff;border:none;padding:9px 14px;font-weight:bold;border-radius:4px">Fermer</button></div>' +
+    '<h3 style="margin:0 0 4px">' + _nouvEsc(titre) + '</h3><p style="margin:0 0 8px;font-size:12px">' + rows.length + ' élève(s) — ' + new Date().toLocaleDateString('fr-FR') + '</p>' +
+    _nouvTableHTML(rows, true) + '</body></html>');
+  w.document.close();
+}
+</script>
+
 </body>
 </html>
