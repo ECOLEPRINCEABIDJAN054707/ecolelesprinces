@@ -6468,19 +6468,21 @@ function ouvrirModalAttente(idx){
 }
 function fermerModalAttente(){document.getElementById('modalAttente').style.display='none';coursCourant=null;}
 
+// 15/10/2026 : libellé des « mois » du primaire, dont les examens blancs du CM2 (EB1…EB4)
+function _libMoisPrim(m){m=String(m||'');return /^EB[1-4]$/.test(m)?'📝 Examen blanc n°'+m.slice(2)+' (CEPE)':m;}
 function chargerBulletinsPrimaire(){
   const body=document.getElementById('dirBulBody');if(!body)return;
   body.innerHTML='<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   const sec=document.getElementById('dirSecBulletins');if(sec){sec.style.display='block';const b=sec.querySelector('.sec-body');if(b)b.classList.add('open');const h=sec.querySelector('.sec-head');if(h)h.classList.add('open');}
   const cbName='bul_dir_'+Date.now();const script=document.createElement('script');
-  window[cbName]=data=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(!data||!data.ok){body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur</p>';return;}const bulletins=data.bulletins||data.enAttente||[];const bc=document.getElementById('bulletinCompteur');if(bc)bc.textContent=bulletins.length;const bs=document.getElementById('statBulletins');if(bs)bs.textContent=bulletins.length;if(!bulletins.length){body.innerHTML='<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun bulletin en attente</p>';return;}let html='';bulletins.forEach((b,idx)=>{html+='<div class="bul-card"><div class="bul-info"><div class="bul-classe">'+b.classe+' — '+b.mois+'</div><div class="bul-meta">'+(b.nb||0)+' eleve(s)</div></div><span class="bul-nb">'+(b.nb||0)+'</span><button class="btn-val-bul" onclick="ouvrirModalBulletin('+idx+')">Valider</button></div>';});body.innerHTML=html;window._bulletinsEnAttente=bulletins;};
+  window[cbName]=data=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(!data||!data.ok){body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur</p>';return;}const bulletins=data.bulletins||data.enAttente||[];const bc=document.getElementById('bulletinCompteur');if(bc)bc.textContent=bulletins.length;const bs=document.getElementById('statBulletins');if(bs)bs.textContent=bulletins.length;if(!bulletins.length){body.innerHTML='<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun bulletin en attente</p>';return;}let html='';bulletins.forEach((b,idx)=>{html+='<div class="bul-card"><div class="bul-info"><div class="bul-classe">'+b.classe+' — '+_libMoisPrim(b.mois)+'</div><div class="bul-meta">'+(b.nb||0)+' eleve(s)</div></div><span class="bul-nb">'+(b.nb||0)+'</span><button class="btn-val-bul" onclick="ouvrirModalBulletin('+idx+')">Valider</button></div>';});body.innerHTML=html;window._bulletinsEnAttente=bulletins;};
   script.onerror=()=>{delete window[cbName];body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur reseau</p>';};
   setTimeout(()=>{if(window[cbName]){delete window[cbName];body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Delai depasse</p>';}},10000);
   script.src=APPS_SCRIPT_POINTAGE+'?callback='+cbName+'&type=GET_ATTENTE_PRIMAIRE&ecole='+encodeURIComponent(currentStaff.ecole||'');document.body.appendChild(script);
 }
 function ouvrirModalBulletin(idx){
   bulletinEnCours=window._bulletinsEnAttente[idx];const b=bulletinEnCours;
-  document.getElementById('modalBulletinInfo').innerHTML='<div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:0.82em;line-height:2;margin-bottom:10px"><b>Classe:</b> '+b.classe+' | <b>Mois:</b> '+b.mois+'<br><b>Eleves:</b> '+(b.nb||0)+'</div>';
+  document.getElementById('modalBulletinInfo').innerHTML='<div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:0.82em;line-height:2;margin-bottom:10px"><b>Classe:</b> '+b.classe+' | <b>Mois:</b> '+_libMoisPrim(b.mois)+'<br><b>Eleves:</b> '+(b.nb||0)+'</div>';
   document.getElementById('modalBulletin').style.display='flex';
 }
 function confirmerValidationBulletin(){
