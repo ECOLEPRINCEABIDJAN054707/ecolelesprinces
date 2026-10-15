@@ -297,6 +297,10 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
   <div class="sec-header" style="background:#1565C0" onclick="toggleSec(this)">&#128202; MES NOTES DU TRIMESTRE (Suivi provisoire) <span>v</span></div>
   <div class="sec-body open" id="carnetNotesBody"></div>
 </div>
+ <div class="section" id="sectionExamenBlanc" style="display:none">
+  <div class="sec-header" style="background:#B71C1C" onclick="toggleSec(this)">&#128221; EXAMENS BLANCS &mdash; R&Eacute;SULTATS <span>v</span></div>
+  <div class="sec-body open" id="examenBlancBody"></div>
+</div>
   <div class="section" id="sectionInscription2026" style="display:none;">
     <div class="sec-header" style="background:linear-gradient(135deg,#1A3A5C,#1565C0);color:#D4AF37;" onclick="toggleSection('inscription2026Body','arInscription2026')">
       <span>🏫 INSCRIPTION ANNÉE SCOLAIRE 2026-2027</span>
@@ -1537,7 +1541,7 @@ var soldeAccesParsed = _pm(eleve.solde);
     document.getElementById("sectionBulletinsMensuels").style.display = "none";
     afficherSectionBloquee(eleve, soldeAccesParsed, verseParsed);
   }
-  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerStatutMenaParent(eleve);chargerAlerteRisqueParent(eleve);chargerProgrammeTrimestrielParent(eleve);chargerCirculaireExamen(eleve);chargerCarnetNotes(eleve);
+  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerStatutMenaParent(eleve);chargerAlerteRisqueParent(eleve);chargerProgrammeTrimestrielParent(eleve);chargerCirculaireExamen(eleve);chargerCarnetNotes(eleve);chargerExamenBlancParent(eleve);
   window._eleveActuel = eleve;
   var calP = document.getElementById('calPrimaire'); if (calP) calP.style.display = estPrimaire(window._classe2026 || eleve.classe) ? 'block' : 'none';
   if (typeof afficherCompositionsParent === 'function') afficherCompositionsParent(window._classe2026 || eleve.classe);
@@ -1758,7 +1762,7 @@ async function chargerCarnetNotes(eleve) {
   try {
     for (var t = 0; t < trimestres.length; t++) {
       var trim = trimestres[t];
-      var range = encodeURIComponent(trim + '!A2:S5000');
+      var range = encodeURIComponent(trim + '!A2:T5000');   // T = EXAMENS BLANCS (15/10/2026)
       var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sid + '/values/' + range + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
       var res = await pssFetch(url);
       if (!res.ok) continue;
@@ -1777,6 +1781,11 @@ async function chargerCarnetNotes(eleve) {
           if (noteVal === '' || noteVal === null || noteVal === undefined) continue;
           devoirs.push({ devoir: d+1, note: noteVal, commentaire: r[13+d] || '' });
         }
+        // 15/10/2026 : notes d'examen blanc (colonne T, ex. « EB1 : 14 | EB2 : 12 »), comptées dans la moyenne
+        String(r[19] || '').split(' | ').forEach(function(x) {
+          var m = x.match(/^EB(\d) : (.*)$/); if (!m) return;
+          devoirs.push({ devoir: 'EB' + m[1], note: /absent/i.test(m[2]) ? 'Abs.' : m[2], commentaire: /absent/i.test(m[2]) ? 'absent (justifié)' : '' });
+        });
         if (!devoirs.length) return;
         parMatiere[matiere] = { devoirs: devoirs, moyenneServeur: r[10] };
       });
@@ -1803,7 +1812,7 @@ devoirs.forEach(function(d) {
           var bg = isNaN(n) ? '#F5F5F5' : n>=14 ? '#E8F5E9' : n>=10 ? '#FFFDE7' : '#FFEBEE';
           var comEsc = String(d.commentaire||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
           html += '<div style="background:'+bg+';border-radius:6px;padding:4px 10px;text-align:center;max-width:140px;">';
-          html += '<div style="font-size:0.8em;color:#888;">Devoir '+(d.devoir||'')+'</div>';
+          html += '<div style="font-size:0.8em;color:#888;">'+(String(d.devoir).indexOf('EB')===0 ? 'Examen blanc n°'+String(d.devoir).slice(2) : 'Devoir '+(d.devoir||''))+'</div>';
           html += '<div style="font-size:1.15em;font-weight:bold;color:'+color+';">'+(isNaN(n)?'—':n)+'</div>';
           if (comEsc) html += '<div style="font-size:0.7em;color:#666;margin-top:2px;white-space:normal;">'+comEsc+'</div>';
           html += '</div>';
@@ -3918,6 +3927,58 @@ function afficherCompositionsParent(classe) {
     afficherEspaceParent(ec);
   }catch(e){console.warn('Restauration session :',e);}
 })();
+</script>
+<script>
+// ═══ EXAMENS BLANCS — résultats de l'enfant (15/10/2026) ═══
+// Lit NOTES_EB1…4_RESULTATS (calculés par le serveur) ; le serveur ne renvoie que les lignes de cet élève.
+async function chargerExamenBlancParent(eleve) {
+  var section = document.getElementById('sectionExamenBlanc'), body = document.getElementById('examenBlancBody');
+  if (!section || !body) return;
+  var sid = window._sheetsId2026;
+  if (!sid || !eleve || !eleve.matricule) { section.style.display = 'none'; return; }
+  var mat = String(eleve.matricule).trim().toUpperCase();
+  var esc = function (x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var fmt = function (v) { var n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? '—' : n.toFixed(2).replace('.', ','); };
+  var html = '';
+  for (var n = 4; n >= 1; n--) {
+    try {
+      var url = 'https://sheets.googleapis.com/v4/spreadsheets/' + sid + '/values/' + encodeURIComponent('NOTES_EB' + n + '_RESULTATS!A2:O3000') + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
+      var res = await pssFetch(url);
+      if (!res.ok) continue;
+      var data = await res.json();
+      var r = (data.values || []).filter(function (l) { return String(l[0] || '').trim().toUpperCase() === mat; })[0];
+      if (!r) continue;
+      var resultat = String(r[8] || ''), mention = String(r[9] || '');
+      var couleur = resultat === 'ADMIS' ? '#2E7D32' : (resultat === 'NON ADMIS' ? '#C62828' : '#E65100');
+      var fond = resultat === 'ADMIS' ? '#E8F5E9' : (resultat === 'NON ADMIS' ? '#FFEBEE' : '#FFF3E0');
+      var titre = resultat === 'INCOMPLET' ? 'Résultats en attente' : (resultat === 'COEFFICIENTS À COMPLÉTER' || resultat === 'SÉRIE SANS GRILLE' ? 'Résultats en préparation' : resultat + (mention ? ' — ' + mention : ''));
+      html += '<div style="margin-bottom:14px;border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.1);">';
+      html += '<div style="background:#B71C1C;color:#fff;padding:8px 12px;font-weight:700;font-size:0.9em;">Examen blanc n°' + n + ' · ' + esc(r[3]) + (r[4] ? ' série ' + esc(r[4]) : '') + '</div>';
+      html += '<div style="background:' + fond + ';padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">'
+        + '<div><div style="font-size:1.6em;font-weight:800;color:' + couleur + ';">' + (r[5] !== '' && r[5] != null ? fmt(r[5]) + '<span style="font-size:0.55em">/20</span>' : '—') + '</div>'
+        + '<div style="font-size:0.78em;color:#555;">' + (r[6] ? 'Rang : <b>' + esc(r[6]) + (r[7] ? ' / ' + esc(r[7]) : '') + '</b> dans la classe' : (resultat === 'INCOMPLET' ? 'Moyenne partielle' : '')) + '</div></div>'
+        + '<div style="font-weight:800;color:' + couleur + ';font-size:0.95em;text-align:right;">' + esc(titre) + '</div></div>';
+      var detail = String(r[13] || '').split(' | ').filter(String);
+      if (detail.length) {
+        html += '<div style="background:#fff;padding:8px 12px;">';
+        detail.forEach(function (d) {
+          var m = d.match(/^(.*) ([\d.,]+)\/20 \(coef ([\d.,]+)\)$/);
+          var note = m ? parseFloat(m[2]) : NaN;
+          var c = isNaN(note) ? '#555' : note >= 14 ? '#2E7D32' : note >= 10 ? '#B8860B' : '#C62828';
+          html += '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dotted #eee;font-size:0.84em;">'
+            + '<span>' + esc(m ? m[1] : d) + (m ? ' <span style="color:#999;font-size:0.85em">(coef ' + esc(m[3]) + ')</span>' : '') + '</span>'
+            + '<b style="color:' + c + '">' + (m ? fmt(m[2]) + '/20' : '') + '</b></div>';
+        });
+        html += '</div>';
+      }
+      if (r[12]) html += '<div style="background:#FFF8E1;padding:6px 12px;font-size:0.76em;color:#8D6E00;">Notes pas encore publiées : ' + esc(r[12]) + '</div>';
+      html += '</div>';
+    } catch (e) { console.warn('examen blanc parent', e); }
+  }
+  if (!html) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  body.innerHTML = '<div style="background:#FFF3E0;border-left:4px solid #E65100;padding:8px 12px;margin-bottom:12px;border-radius:0 8px 8px 0;"><p style="font-size:0.78em;color:#E65100;">Moyenne calculée avec les coefficients officiels de l\'examen. La note de chaque matière compte aussi dans la moyenne du trimestre, comme un devoir.</p></div>' + html;
+}
 </script>
 </body>
 </html>
