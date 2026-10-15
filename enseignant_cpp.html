@@ -1303,21 +1303,8 @@ async function _controlerPositionOuverture(classe, heureDebut) {
   window._ouvertureEnCours = true;
   showLoader('Vérification de votre position...');
   try {
-    let lat = null, lon = null, prec = null, ip = null;
-    try {
-      const pos = await new Promise((resolve, reject) => {
-        if (!navigator.geolocation) { reject(new Error('GPS non supporté')); return; }
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000, enableHighAccuracy: true, maximumAge: 60000 });
-      });
-      lat = pos.coords.latitude; lon = pos.coords.longitude; prec = Math.round(pos.coords.accuracy);
-    } catch (e) { console.warn('GPS ouverture :', e.message); }
-    try {
-      const r = await Promise.race([
-        fetch('https://api.ipify.org?format=json').then(x => x.json()),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('délai')), 4000))
-      ]);
-      ip = r && r.ip ? r.ip : null;
-    } catch (e) {}
+    // 15/10/2026 : même recherche que l'appel — 2 essais GPS (précis, puis approximatif) + IP publique
+    const { lat, lon, prec, ip } = await _positionPourAppel();
     let rep = null;
     try {
       rep = await Promise.race([
@@ -1379,8 +1366,7 @@ async function demarrerCoursDepuisEDT(idx) {
     return;
   }
 
-  // ⚠️ NOUVEAU 13/10/2026 — contrôle de position à l'ouverture (sauf si l'appel de ce cours est déjà fait)
-  if (_etat !== 'appele' && !(await _controlerPositionOuverture(c.classe, c.heureDebut))) return;
+  // (15/10/2026 : le contrôle de position à l'ouverture est fait dans confirmerCours, pour TOUS les chemins)
 
   function normaliser(s) {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
@@ -1439,9 +1425,7 @@ async function demarrerCoursDepuisEDT(idx) {
   confirmerCours();
 }
 async function demarrerCoursPrimaireDirect() {
-  // ⚠️ NOUVEAU 13/10/2026 — contrôle de position à l'ouverture (sauf si l'appel de la classe est déjà fait)
-  if (!_coursDejaAppele(user.classeDefaut, formatHeure(new Date()))
-      && !(await _controlerPositionOuverture(user.classeDefaut, formatHeure(new Date())))) return;
+  // (15/10/2026 : le contrôle de position à l'ouverture est fait dans confirmerCours, pour TOUS les chemins)
   function normaliser(s) {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
   }
@@ -1813,7 +1797,7 @@ function _reprendreCoursAppele(s) {
   goToScreen('appel');
   showToast('✅ Appel déjà fait à ' + coursActuel.horodatageAppel + ' — pas de second appel', 'success');
 }
-function confirmerCours() {
+async function confirmerCours() {
   const classe = document.getElementById('modalClasse').value;
   const matiere = document.getElementById('modalMatiere').value.trim();
   const hD = document.getElementById('modalHeureDebut').value;
@@ -1824,6 +1808,9 @@ function confirmerCours() {
   // ⚠️ NOUVEAU 07/10/2026 — un seul appel par cours : si l'appel de ce cours est déjà validé, on le reprend
   const _deja = _coursDejaAppele(classe, hD);
   if (_deja) { _reprendreCoursAppele(_deja); return; }
+  // ⚠️ 15/10/2026 — hors zone (GPS au-delà de 150 m) : la classe NE S'AFFICHE PAS. Vaut pour tous les chemins
+  // (emploi du temps, primaire, choix manuel « Démarrer le cours »).
+  if (!(await _controlerPositionOuverture(classe, hD))) return;
   coursActuel = { classe, matiere, heureDebutEDT:hD, heureFinEDT:hF, horodatageAppel:null, dateAppel:null };
   document.getElementById('appelClasse').textContent = classe;
   document.getElementById('appelMatiere').textContent = matiere;
@@ -1942,6 +1929,44 @@ function majStats() {
 // ══════════════════════════════════════════════
 // VALIDER APPEL
 // ══════════════════════════════════════════════
+// ⚠️ NOUVEAU 15/10/2026 — position pour l'appel : 2 essais GPS (précis, puis approximatif) + IP publique
+async function _positionPourAppel() {
+  let lat = null, lon = null, prec = null, ip = null;
+  const essaiGPS = (opts) => new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, opts));
+  if (navigator.geolocation) {
+    let refuse = false;
+    try {
+      const p1 = await essaiGPS({ enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+      lat = p1.coords.latitude; lon = p1.coords.longitude; prec = Math.round(p1.coords.accuracy);
+    } catch (e1) { refuse = !!(e1 && e1.code === 1); console.warn('GPS précis :', e1 && e1.message); }
+    if (lat === null && !refuse) {
+      try {
+        const p2 = await essaiGPS({ enableHighAccuracy: false, timeout: 10000, maximumAge: 120000 });
+        lat = p2.coords.latitude; lon = p2.coords.longitude; prec = Math.round(p2.coords.accuracy);
+      } catch (e2) { console.warn('GPS approximatif :', e2 && e2.message); }
+    }
+  }
+  try {
+    const r = await Promise.race([
+      fetch('https://api.ipify.org?format=json').then(x => x.json()),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('délai')), 5000))
+    ]);
+    ip = r && r.ip ? r.ip : null;
+  } catch (e) { console.warn('IP publique non récupérée :', e.message); }
+  return { lat, lon, prec, ip };
+}
+async function _verifierPositionAppel(pos) {
+  try {
+    return await envoyerDonnees('VERIFIER_POSITION', {
+      matriculeEnseignant: user.code, nomEnseignant: user.nom, nomEcole: user.ecole,
+      latEnseignant: pos.lat, lonEnseignant: pos.lon, precision: pos.prec, ipEnseignant: pos.ip
+    });
+  } catch (e) {
+    console.warn('Vérification position indisponible (hors ligne ?) :', e.message);
+    return { autorise: true, motif: 'ERREUR_RESEAU' }; // pas de réseau : on ne bloque pas le cours
+  }
+}
+
 async function validerAppel() {
   // Verrou anti double-appui (GPS + IP + serveur peuvent prendre plus de 10 s)
   if (window._appelEnCours) return;
@@ -1955,51 +1980,21 @@ async function _validerAppelInterne() {
   const maintenant = new Date();
   const horodatage = formatHeure(maintenant);
 
-  // ── Capture GPS + IP AVANT tout traitement de l'appel ──
+  // ── ⚠️ MODIFIÉ 15/10/2026 — Contrôle de position AVANT l'appel ──
+  // Accepté si : Wifi de l'école, OU GPS à 150 m ou moins d'un site de l'école.
+  // GPS au-delà de 150 m → appel impossible.
+  // Pas de position (ni GPS ni Wifi de l'école) → appel accepté, marqué « POSITION INCONNUE » côté serveur.
   showLoader("Vérification de la position...");
-  let latEnseignant = null, lonEnseignant = null, ipEnseignant = null;
-
-  try {
-    const position = await new Promise((resolve, reject) => {
-      if (!navigator.geolocation) { reject(new Error('GPS non supporté')); return; }
-      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000, enableHighAccuracy: true });
-    });
-    latEnseignant = position.coords.latitude;
-    lonEnseignant = position.coords.longitude;
-  } catch (e) {
-    console.warn('GPS indisponible ou refusé :', e.message);
-  }
-
-  try {
-    const ipRes = await fetch('https://api.ipify.org?format=json');
-    const ipData = await ipRes.json();
-    ipEnseignant = ipData.ip;
-  } catch (e) {
-    console.warn('IP publique non récupérée :', e.message);
-  }
-
-  let verifPosition;
-  try {
-    verifPosition = await envoyerDonnees('VERIFIER_POSITION', {
-     matriculeEnseignant: user.code,
-      nomEnseignant: user.nom,
-      nomEcole: user.ecole,
-      latEnseignant, lonEnseignant, ipEnseignant
-    });
-  } catch (e) {
-    console.warn('Vérification position indisponible (hors ligne ?) :', e.message);
-    verifPosition = { autorise: true, motif: 'ERREUR_RESEAU' }; // fail-open si pas de réseau
-  }
-
+  const pos = await _positionPourAppel();
+  const verifPosition = await _verifierPositionAppel(pos);
   hideLoader();
 
   if (verifPosition && verifPosition.autorise === false) {
-    if (verifPosition.bloque) {
-      showToast('🚫 Compte bloqué — trop de tentatives d\'appel hors zone. Contactez la direction.', 'error');
-    } else {
-      showToast(`⚠️ Position hors zone — tentative ${verifPosition.tentatives}/3. Rendez-vous dans l'établissement pour faire l'appel.`, 'warn');
-    }
-    return; // on arrête ici, l'appel n'est PAS enregistré
+    const d = Number(verifPosition.distance) || 0;
+    const txt = d >= 1000 ? (d / 1000).toFixed(1).replace('.', ',') + ' km' : d + ' m';
+    showToast(d ? ('🚫 Vous êtes à ' + txt + " de l'établissement — appel impossible. Rendez-vous à l'école pour faire l'appel.")
+                : "🚫 Appel impossible : position hors de l'établissement.", 'error');
+    return; // l'appel n'est PAS enregistré
   }
 
   // ── Suite normale de validerAppel, inchangée ──
