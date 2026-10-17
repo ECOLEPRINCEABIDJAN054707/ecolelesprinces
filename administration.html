@@ -281,6 +281,8 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
   <div id="examBlancZoneDir" style="padding:0 14px"></div>
+  <!-- 17/10/2026 — EXAMEN BLANC N°1 : organisation (EXAMEN_BLANC_ORGA.gs) -->
+  <div class="section"><div class="sec-head sec-violet" onclick="eboOuvrir('Dir');toggleSec(this)"><h3>&#128221; Examen blanc n&deg;1 &mdash; salles, surveillances, notes</h3><span class="arr">&#9660;</span></div><div class="sec-body"><div id="eboBodyDir"></div></div></div>
   <!-- NOUVEAUX ÉLÈVES 2026-2027 — contrôle cursus (15/10/2026) -->
   <div class="section" id="dirSecNouv">
     <div class="sec-head sec-orange" onclick="chargerNouveauxControle('dir');toggleSec(this)">
@@ -3140,6 +3142,8 @@ async function sauvegarderPersonnelDir(idx) {
     </div>
   </div>
   <div id="examBlancZoneCom" style="padding:0 14px"></div>
+  <!-- 17/10/2026 — EXAMEN BLANC N°1 : organisation (EXAMEN_BLANC_ORGA.gs) -->
+  <div class="section"><div class="sec-head sec-violet" onclick="eboOuvrir('Com');toggleSec(this)"><h3>&#128221; Examen blanc n&deg;1 &mdash; salles, surveillances, notes</h3><span class="arr">&#9660;</span></div><div class="sec-body"><div id="eboBodyCom"></div></div></div>
   <!-- EXAMEN BLANC — saisie et résultats (15/10/2026) -->
   <div class="section" id="comSecEB">
   <div class="sec-head sec-rouge" onclick="toggleSec(this); chargerExamenBlanc('com')">
@@ -4089,6 +4093,8 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
   <div id="examBlancZoneEdu" style="padding:0 14px"></div>
+  <!-- 17/10/2026 — EXAMEN BLANC N°1 : organisation (EXAMEN_BLANC_ORGA.gs) -->
+  <div class="section"><div class="sec-head sec-violet" onclick="eboOuvrir('Edu');toggleSec(this)"><h3>&#128221; Examen blanc n&deg;1 &mdash; salles, surveillances, notes</h3><span class="arr">&#9660;</span></div><div class="sec-body"><div id="eboBodyEdu"></div></div></div>
   <!-- EXAMEN BLANC — saisie et résultats (15/10/2026) -->
   <div class="section" id="eduSecEB">
   <div class="sec-head sec-rouge" onclick="toggleSec(this); chargerExamenBlanc('edu')">
@@ -19100,5 +19106,313 @@ async function chargerExamenBlancFond(force) {
   zone.innerHTML = h + '</table></div>';
 }
 </script>
+<!-- ═══ EXAMEN BLANC N°1 — ORGANISATION (17/10/2026) ═══ -->
+<script>
+// ═══ EXAMEN BLANC N°1 — ORGANISATION (17/10/2026) : salles, répartition, surveillances, notes par N° de table, fraudes ═══
+// Directeur, Éducateur et Comptable de l'école. Lever une fraude : Directeur seulement.
+// Lit et écrit par le serveur COLLEGE (EXAMEN_BLANC_ORGA.gs, appels EBO_*). Les écritures envoient le matricule et le code du compte.
+var EBO = { data: null, onglet: 'salles', zone: null, salles: null, jour: '', saisie: null };
+var EBO_URL = 'https://script.google.com/macros/s/AKfycbx7nBhAMxM_zAMAHCPfPQPkktJ9avtOXm2igfzgOuw9PF1jW0Y7ElUApPoeHvw_F-pT/exec';
+var EBO_ADMIN_NOM = 'ÉDUCATEUR / DIRECTEUR';
+var EBO_GROUPES_UI = ['3EME', 'TLE A', 'TLE C/D', 'TLE A+C/D', 'CM2'];
+
+function eboStaff_() { try { return currentStaff || null; } catch (e) { return null; } }
+function eboEsc_(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function eboToast_(m, t) { try { showToast(m, t); } catch (e) { alert(m); } }
+function eboMin_(h) { var m = String(h || '').match(/(\d{1,2})\D+(\d{2})/); return m ? +m[1] * 60 + +m[2] : 0; }
+function eboAppel_(params, delai) {
+  return new Promise(function (resolve) {
+    var cb = 'ebo_' + Date.now() + '_' + Math.floor(Math.random() * 100000), s = document.createElement('script'), fini = false;
+    var fin = function (d) { if (fini) return; fini = true; window[cb] = function () {}; try { s.parentNode.removeChild(s); } catch (e) {} resolve(d); };
+    window[cb] = fin;
+    s.onerror = function () { fin({ ok: false, error: 'Serveur injoignable' }); };
+    var st = eboStaff_() || {}, p = Object.assign({ callback: cb, ecole: st.ecole || '' }, params);
+    if (params._ecrit) { delete p._ecrit; p.staffMat = st.matricule || ''; p.staffCode = st.code || ''; }
+    s.src = EBO_URL + '?' + new URLSearchParams(p).toString();
+    document.body.appendChild(s);
+    setTimeout(function () { fin({ ok: false, error: 'Le serveur met trop de temps à répondre. Réessayez.' }); }, delai || 90000);
+  });
+}
+
+// Ouverture de la section (une par espace : Dir, Com, Edu)
+function eboOuvrir(suffixe) {
+  EBO.zone = document.getElementById('eboBody' + suffixe);
+  if (!EBO.zone) return;
+  if (EBO.data && EBO.data.ecole === (eboStaff_() || {}).ecole) { eboRendre_(); return; }
+  eboCharger_();
+}
+async function eboCharger_() {
+  if (!EBO.zone) return;
+  EBO.zone.innerHTML = '<div style="padding:16px;text-align:center;color:#666">⏳ Chargement de l\'organisation de l\'examen blanc…</div>';
+  var r = await eboAppel_({ type: 'EBO_LIRE' }, 120000);
+  if (!r || !r.ok) { EBO.zone.innerHTML = '<div style="padding:14px;color:#C62828">❌ ' + eboEsc_(r && r.error || 'Erreur') + ' <button class="ebo-btn" onclick="eboCharger_()">Réessayer</button></div>'; return; }
+  EBO.data = r; EBO.salles = null; EBO.saisie = null;
+  eboRendre_();
+}
+function eboRendre_() {
+  var d = EBO.data, z = EBO.zone; if (!d || !z) return;
+  if (!d.repartition || !d.repartition.length) { z.innerHTML = '<div style="padding:14px;color:#555">Aucune classe d\'examen (CM2, 3ème, Terminale A, C, D) dans cette école.</div>'; return; }
+  var tabs = [['salles', '🏫 Salles'], ['repartition', '👥 Répartition'], ['surveillances', '🕒 Surveillances'], ['notes', '✍️ Notes'], ['fraudes', '⚠️ Fraudes']];
+  var h = '<div style="padding:10px 12px 4px;font-size:12px;color:#555">' + (d.enregistre ? '✅ Organisation enregistrée' : '⚠️ Aperçu non enregistré') +
+    ' · ' + d.repartition.length + ' candidats · ' + d.salles.length + ' salles · ' + d.surveillances.length + ' surveillances' +
+    ' <button class="ebo-btn ebo-btn-l" onclick="eboCharger_()">↻ Actualiser</button></div>';
+  h += '<div class="ebo-tabs">' + tabs.map(function (t) { return '<button class="ebo-tab' + (EBO.onglet === t[0] ? ' on' : '') + '" onclick="EBO.onglet=\'' + t[0] + '\';eboRendre_()">' + t[1] + '</button>'; }).join('') + '</div>';
+  h += '<div id="eboContenu" style="padding:10px 12px 14px"></div>';
+  z.innerHTML = h;
+  ({ salles: eboSalles_, repartition: eboRepartition_, surveillances: eboSurveillances_, notes: eboNotes_, fraudes: eboFraudes_ })[EBO.onglet]();
+}
+function eboC_() { return document.getElementById('eboContenu'); }
+function eboNb_(salle) { return EBO.data.repartition.filter(function (x) { return x.salle === salle; }).length; }
+
+// ─── 1. SALLES ───
+function eboSalles_() {
+  if (!EBO.salles) EBO.salles = EBO.data.salles.map(function (s) { return { salle: s.salle, groupe: s.groupe, site: s.site || '', bancs: s.bancs || '', parBanc: s.parBanc || 1, ancien: s.salle }; });
+  var sites = {}; EBO.salles.forEach(function (s) { if (s.site) sites[s.site] = 1; });
+  var h = '<div class="ebo-aide">Nom de la salle, site, nombre de bancs et élèves par banc. Sans bancs : 30 places. Le niveau est attribué automatiquement si vous laissez « auto ». ' +
+    '<b>Enregistrer recalcule la répartition ET les surveillances</b> (les changements faits à la main sont perdus).</div>';
+  h += '<div class="ebo-scroll"><table class="ebo-t"><tr><th>Salle</th><th>Niveau</th><th>Site</th><th>Bancs</th><th>Él./banc</th><th>Places</th><th>Élèves</th><th></th></tr>';
+  EBO.salles.forEach(function (s, i) {
+    var cap = Number(s.bancs) > 0 ? Number(s.bancs) * (Number(s.parBanc) || 1) : 30;
+    h += '<tr><td><input class="ebo-in" style="width:110px" value="' + eboEsc_(s.salle) + '" onchange="EBO.salles[' + i + '].salle=this.value.trim()"></td>' +
+      '<td><select class="ebo-in" onchange="EBO.salles[' + i + '].groupe=this.value"><option value="">auto</option>' + EBO_GROUPES_UI.map(function (g) { return '<option' + (s.groupe === g ? ' selected' : '') + '>' + g + '</option>'; }).join('') + '</select></td>' +
+      '<td><input class="ebo-in" style="width:70px" list="eboSites" value="' + eboEsc_(s.site) + '" onchange="EBO.salles[' + i + '].site=this.value.trim().toUpperCase()"></td>' +
+      '<td><input class="ebo-in" type="number" min="0" style="width:52px" value="' + eboEsc_(s.bancs) + '" onchange="EBO.salles[' + i + '].bancs=this.value;eboSalles_()"></td>' +
+      '<td><input class="ebo-in" type="number" min="1" max="4" style="width:44px" value="' + eboEsc_(s.parBanc) + '" onchange="EBO.salles[' + i + '].parBanc=this.value;eboSalles_()"></td>' +
+      '<td style="text-align:center">' + cap + '</td><td style="text-align:center">' + (s.ancien ? eboNb_(s.ancien) : '—') + '</td>' +
+      '<td><button class="ebo-btn ebo-btn-l" title="Retirer" onclick="EBO.salles.splice(' + i + ',1);eboSalles_()">✕</button></td></tr>';
+  });
+  h += '</table></div><datalist id="eboSites">' + Object.keys(sites).map(function (s) { return '<option value="' + eboEsc_(s) + '">'; }).join('') + '</datalist>';
+  h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="ebo-btn ebo-btn-l" onclick="EBO.salles.push({salle:\'\',groupe:\'\',site:\'\',bancs:\'\',parBanc:1});eboSalles_()">+ Ajouter une salle</button>' +
+    '<button class="ebo-btn ebo-btn-l" onclick="EBO.salles=null;eboSalles_()">Annuler mes changements</button>' +
+    '<button class="ebo-btn" onclick="eboCalculer_(true)">👁 Aperçu</button><button class="ebo-btn ebo-btn-v" onclick="eboCalculer_(false)">💾 Enregistrer</button></div>';
+  h += '<div id="eboApercu" style="margin-top:10px"></div>';
+  eboC_().innerHTML = h;
+}
+function eboSallesEnvoi_() {
+  var noms = {}, err = '';
+  var l = EBO.salles.map(function (s, i) {
+    var n = String(s.salle || '').trim().toUpperCase();
+    if (!n) err = 'Salle ligne ' + (i + 1) + ' sans nom'; else if (noms[n]) err = 'Nom de salle en double : ' + n; noms[n] = 1;
+    return { salle: n, groupe: s.groupe || '', site: s.site || '', bancs: Number(s.bancs) || 0, parBanc: Number(s.parBanc) || 1, ordre: i + 1 };
+  });
+  return err ? { err: err } : { salles: l };
+}
+async function eboCalculer_(apercu) {
+  var e = eboSallesEnvoi_(); if (e.err) { eboToast_(e.err, 'error'); return; }
+  if (!apercu && !confirm('Enregistrer ces salles ?\n\nLa répartition des élèves (N° de table) et les surveillances seront RECALCULÉES pour toute l\'école. Les changements faits à la main seront perdus.')) return;
+  var z = document.getElementById('eboApercu'); z.innerHTML = '⏳ Calcul en cours (jusqu\'à 2 minutes)…';
+  var p = { type: 'EBO_CALCULER', salles: JSON.stringify(e.salles), apercu: apercu ? 1 : 0 };
+  if (!apercu) p._ecrit = 1;
+  var r = await eboAppel_(p, 300000);
+  if (!r || !r.ok) { z.innerHTML = '<span style="color:#C62828">❌ ' + eboEsc_(r && r.error || 'Erreur') + '</span>'; return; }
+  var h = '<div class="ebo-aide" style="background:' + (apercu ? '#FFF8E1' : '#E8F5E9') + '">' + (apercu ? '👁 Aperçu (rien n\'est enregistré)' : '✅ Enregistré') + ' : ' +
+    r.effectifs.filter(function (x) { return x.eleves; }).map(function (x) { return x.groupe + ' ' + x.eleves + ' él. / ' + x.salles + ' salle(s)'; }).join(' · ') +
+    ' · ' + r.surveillances.length + ' surveillances' + (r.sallesLibres && r.sallesLibres.length ? '<br>Salles non utilisées : ' + eboEsc_(r.sallesLibres.join(', ')) : '') +
+    (r.alertes && r.alertes.length ? '<br>ℹ️ ' + r.alertes.map(eboEsc_).join('<br>ℹ️ ') : '') + '</div>';
+  z.innerHTML = h;
+  if (!apercu) { eboToast_('Organisation enregistrée', 'success'); setTimeout(eboCharger_, 800); }
+}
+
+// ─── 2. RÉPARTITION ───
+function eboRepartition_() {
+  var d = EBO.data, sal = EBO.salleSel || (d.salles[0] || {}).salle;
+  var h = '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><select class="ebo-in" onchange="EBO.salleSel=this.value;eboRepartition_()">' +
+    d.salles.map(function (s) { return '<option value="' + eboEsc_(s.salle) + '"' + (s.salle === sal ? ' selected' : '') + '>' + eboEsc_(s.salle) + ' — ' + s.groupe + (s.site ? ' · ' + s.site : '') + ' (' + eboNb_(s.salle) + '/' + s.capacite + ')</option>'; }).join('') + '</select>' +
+    '<button class="ebo-btn" onclick="eboImprimer_(\'emargement\')">🖨 Liste d\'émargement</button><button class="ebo-btn" onclick="eboImprimer_(\'porte\')">🖨 Affiche de porte</button>' +
+    '<button class="ebo-btn ebo-btn-l" onclick="eboImprimer_(\'toutes\')">🖨 Toutes les salles</button></div>';
+  h += '<input class="ebo-in" style="width:100%;margin-bottom:6px" placeholder="🔎 Chercher un élève (nom, matricule, N° de table) dans toute l\'école" oninput="eboChercher_(this.value)"><div id="eboRes"></div>';
+  var l = d.repartition.filter(function (x) { return x.salle === sal; }).sort(function (a, b) { return a.place - b.place; });
+  h += '<div class="ebo-scroll"><table class="ebo-t"><tr><th>Pl.</th><th>N° table</th><th>Nom</th><th>Classe</th><th></th></tr>' + l.map(eboLigneEleve_).join('') + '</table></div>';
+  eboC_().innerHTML = h;
+}
+function eboLigneEleve_(x) {
+  return '<tr><td>' + x.place + '</td><td><b>' + eboEsc_(x.table) + '</b></td><td>' + eboEsc_(x.nom) + '</td><td>' + eboEsc_(x.classe) + (x.salle !== EBO.salleSel && EBO.salleSel ? '<br><small>' + eboEsc_(x.salle) + '</small>' : '') + '</td>' +
+    '<td><button class="ebo-btn ebo-btn-l" onclick="eboDeplacer_(\'' + eboEsc_(x.matricule) + '\')">Déplacer</button></td></tr>';
+}
+function eboChercher_(q) {
+  var z = document.getElementById('eboRes'); q = String(q || '').trim().toUpperCase();
+  if (q.length < 2) { z.innerHTML = ''; return; }
+  var l = EBO.data.repartition.filter(function (x) { return (x.nom + ' ' + x.matricule + ' ' + x.table).toUpperCase().indexOf(q) >= 0; }).slice(0, 15);
+  z.innerHTML = l.length ? '<table class="ebo-t" style="margin-bottom:8px">' + l.map(function (x) { return '<tr><td><b>' + eboEsc_(x.table) + '</b></td><td>' + eboEsc_(x.nom) + '</td><td>' + eboEsc_(x.classe) + '</td><td>' + eboEsc_(x.salle) + ' pl.' + x.place + '</td><td><button class="ebo-btn ebo-btn-l" onclick="eboDeplacer_(\'' + eboEsc_(x.matricule) + '\')">Déplacer</button></td></tr>'; }).join('') + '</table>' : '<small>Aucun élève trouvé</small>';
+}
+async function eboDeplacer_(mat) {
+  var x = EBO.data.repartition.filter(function (e) { return e.matricule === mat; })[0]; if (!x) return;
+  var possibles = EBO.data.salles.filter(function (s) { return s.salle !== x.salle && (!s.groupe || s.groupe === x.groupe); });
+  if (!possibles.length) { eboToast_('Aucune autre salle de ce niveau', 'error'); return; }
+  var choix = prompt(x.nom + ' (' + x.table + ') est en ' + x.salle + '.\nVers quelle salle ? Tapez le numéro :\n' +
+    possibles.map(function (s, i) { return (i + 1) + '. ' + s.salle + ' (' + eboNb_(s.salle) + '/' + s.capacite + ')'; }).join('\n'));
+  var s = possibles[(parseInt(choix, 10) || 0) - 1]; if (!s) return;
+  var r = await eboAppel_({ type: 'EBO_DEPLACER', matricule: mat, salle: s.salle, _ecrit: 1 });
+  if (!r || !r.ok) { eboToast_('❌ ' + (r && r.error || 'Erreur'), 'error'); return; }
+  x.salle = s.salle; x.site = s.site; x.place = r.place;
+  eboToast_(x.nom + ' → ' + s.salle + ' place ' + r.place, 'success'); eboRepartition_();
+}
+function eboImprimer_(quoi) {
+  var d = EBO.data, st = eboStaff_() || {};
+  var salles = quoi === 'toutes' ? d.salles : d.salles.filter(function (s) { return s.salle === (EBO.salleSel || d.salles[0].salle); });
+  var css = 'body{font-family:Arial,sans-serif;font-size:12px;margin:18px}h1{font-size:17px;margin:0}h2{font-size:14px;margin:4px 0 10px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #444;padding:5px}th{background:#eee}.page{page-break-after:always}.porte td{font-size:16px;padding:7px}';
+  var html = salles.map(function (s) {
+    var l = d.repartition.filter(function (x) { return x.salle === s.salle; }).sort(function (a, b) { return a.place - b.place; });
+    var ep = (d.programme || []).filter(function (e) { return l.some(function (x) { return e.h[x.niveau]; }); });
+    var tete = '<h1>' + eboEsc_(st.ecole || '') + ' — EXAMEN BLANC N°1 (26-28 octobre 2026)</h1><h2>' + eboEsc_(s.salle) + (s.site ? ' · ' + eboEsc_(s.site) : '') + ' · ' + eboEsc_(s.groupe) + ' · ' + l.length + ' candidats</h2>';
+    if (quoi === 'porte') return '<div class="page porte">' + tete + '<table><tr><th>Place</th><th>N° de table</th><th>Nom et prénoms</th><th>Classe</th></tr>' +
+      l.map(function (x) { return '<tr><td>' + x.place + '</td><td><b>' + eboEsc_(x.table) + '</b></td><td>' + eboEsc_(x.nom) + '</td><td>' + eboEsc_(x.classe) + '</td></tr>'; }).join('') + '</table></div>';
+    return '<div class="page">' + tete + '<table><tr><th>Pl.</th><th>N° table</th><th>Nom et prénoms</th><th>Classe</th>' + ep.map(function (e) { return '<th style="font-size:9px">' + eboEsc_(e.epreuve) + '<br>' + e.date.slice(8) + '/10</th>'; }).join('') + '</tr>' +
+      l.map(function (x) { return '<tr><td>' + x.place + '</td><td>' + eboEsc_(x.table) + '</td><td>' + eboEsc_(x.nom) + '</td><td>' + eboEsc_(x.classe) + '</td>' + ep.map(function (e) { return '<td style="background:' + (e.h[x.niveau] ? '#fff' : '#ccc') + '"></td>'; }).join('') + '</tr>'; }).join('') +
+      '</table><p>Signature du surveillant : ______________________ &nbsp; Copies : N° de table SEUL (nom ou matricule écrit = FRAUDE).</p></div>';
+  }).join('');
+  eboFenetre_(html, css);
+}
+function eboFenetre_(html, css) {
+  var w = window.open('', '_blank'); if (!w) { eboToast_('Autorisez les fenêtres pour imprimer', 'error'); return; }
+  w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Examen blanc n°1</title><style>' + css + '</style></head><body>' + html + '<script>setTimeout(function(){print()},400)<\/script></body></html>');
+  w.document.close();
+}
+
+// ─── 3. SURVEILLANCES ───
+function eboSurveillances_() {
+  var d = EBO.data, jours = Object.keys(d.jours || {}).sort(), j = EBO.jour || jours[0];
+  var h = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">' + jours.map(function (x) { return '<button class="ebo-tab' + (x === j ? ' on' : '') + '" onclick="EBO.jour=\'' + x + '\';eboSurveillances_()">' + eboEsc_(d.jours[x].split(' ').slice(0, 2).join(' ')) + '</button>'; }).join('') +
+    '<button class="ebo-tab' + (j === 'HEURES' ? ' on' : '') + '" onclick="EBO.jour=\'HEURES\';eboSurveillances_()">⏱ Heures par enseignant</button>' +
+    '<button class="ebo-btn" onclick="eboImprimerPlanning_()">🖨 Planning</button></div>';
+  if (j === 'HEURES') {
+    var t = {};
+    d.surveillances.forEach(function (c) { var k = c.surveillant || '?'; t[k] = t[k] || { h: 0, n: 0, demi: {} }; t[k].h += (eboMin_(c.fin) - eboMin_(c.debut)) / 60; t[k].n++; t[k].demi[c.date + (eboMin_(c.debut) < 780 ? 'M' : 'S')] = 1; });
+    h += '<div class="ebo-aide">Maximum 1 jour et demi (3 demi-journées) par enseignant, toutes écoles comprises.</div><div class="ebo-scroll"><table class="ebo-t"><tr><th>Surveillant</th><th>Surveillances</th><th>Heures</th><th>Demi-journées</th></tr>' +
+      Object.keys(t).sort(function (a, b) { return t[b].h - t[a].h; }).map(function (k) { return '<tr><td>' + eboEsc_(k) + '</td><td style="text-align:center">' + t[k].n + '</td><td style="text-align:center">' + t[k].h + ' h</td><td style="text-align:center">' + Object.keys(t[k].demi).length + '</td></tr>'; }).join('') + '</table></div>';
+    eboC_().innerHTML = h; return;
+  }
+  var l = d.surveillances.filter(function (c) { return c.date === j; }).sort(function (a, b) { return (a.debut + a.salle).localeCompare(b.debut + b.salle, 'fr', { numeric: true }); });
+  h += '<div class="ebo-scroll"><table class="ebo-t"><tr><th>Heure</th><th>Épreuve</th><th>Salle</th><th>Surveillant</th><th></th></tr>' + l.map(function (c) {
+    return '<tr><td>' + eboEsc_(c.debut) + '-' + eboEsc_(c.fin) + '</td><td>' + eboEsc_(c.epreuve) + '<br><small>' + eboEsc_(c.groupe) + '</small></td><td>' + eboEsc_(c.salle) + (c.site ? '<br><small>' + eboEsc_(c.site) + '</small>' : '') + '</td>' +
+      '<td' + (c.surveillant === EBO_ADMIN_NOM ? ' style="color:#C62828;font-weight:600"' : '') + '>' + eboEsc_(c.surveillant) + (c.ramassage ? '<br><small>Ramassage : ' + eboEsc_(c.ramassage) + '</small>' : '') + (c.modifiePar ? '<br><small style="color:#888">modifié par ' + eboEsc_(c.modifiePar) + '</small>' : '') + '</td>' +
+      '<td><button class="ebo-btn ebo-btn-l" onclick="eboChangerSurv_(\'' + eboEsc_(c.id) + '\')">Changer</button></td></tr>';
+  }).join('') + '</table></div>';
+  eboC_().innerHTML = h;
+}
+async function eboChangerSurv_(id) {
+  var c = EBO.data.surveillances.filter(function (x) { return x.id === id; })[0]; if (!c) return;
+  var ens = (EBO.data.enseignants || {}), liste = (c.groupe === 'CM2' ? (ens.primaire || []).concat(ens.secondaire || []) : (ens.secondaire || []).concat(ens.primaire || []));
+  liste = [EBO_ADMIN_NOM].concat(liste.filter(function (n, i) { return liste.indexOf(n) === i; }));
+  var choix = prompt(c.epreuve + ' · ' + c.salle + ' · ' + c.debut + '-' + c.fin + '\nActuel : ' + c.surveillant + '\n\nNouveau surveillant — tapez le numéro (ou le nom) :\n' + liste.map(function (n, i) { return (i + 1) + '. ' + n; }).join('\n'));
+  if (!choix) return;
+  var nom = /^\d+$/.test(choix.trim()) ? liste[parseInt(choix, 10) - 1] : choix.trim();
+  if (!nom) return;
+  var r = await eboAppel_({ type: 'EBO_SURVEILLANT', id: id, surveillant: nom, _ecrit: 1 });
+  if (!r || !r.ok) { eboToast_('❌ ' + (r && r.error || 'Erreur'), 'error'); alert('Refusé : ' + (r && r.error || 'Erreur')); return; }
+  c.surveillant = r.surveillant; c.modifiePar = (eboStaff_() || {}).nom || '';
+  eboToast_('Surveillant changé : ' + r.surveillant, 'success'); eboSurveillances_();
+}
+function eboImprimerPlanning_() {
+  var d = EBO.data, st = eboStaff_() || {};
+  var html = Object.keys(d.jours).sort().map(function (j) {
+    var l = d.surveillances.filter(function (c) { return c.date === j; }).sort(function (a, b) { return (a.debut + a.salle).localeCompare(b.debut + b.salle, 'fr', { numeric: true }); });
+    return '<div class="page"><h1>' + eboEsc_(st.ecole || '') + ' — EXAMEN BLANC N°1 — SURVEILLANCES</h1><h2>' + eboEsc_(d.jours[j]) + '</h2><table><tr><th>Heure</th><th>Épreuve</th><th>Niveau</th><th>Salle</th><th>Site</th><th>Surveillant</th><th>Ramassage des copies</th><th>Émargement</th></tr>' +
+      l.map(function (c) { return '<tr><td>' + c.debut + '-' + c.fin + '</td><td>' + eboEsc_(c.epreuve) + '</td><td>' + eboEsc_(c.groupe) + '</td><td>' + eboEsc_(c.salle) + '</td><td>' + eboEsc_(c.site) + '</td><td>' + eboEsc_(c.surveillant) + '</td><td>' + eboEsc_(c.ramassage) + '</td><td style="width:90px"></td></tr>'; }).join('') + '</table></div>';
+  }).join('');
+  eboFenetre_(html, 'body{font-family:Arial,sans-serif;font-size:11px;margin:16px}h1{font-size:15px;margin:0}h2{font-size:13px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #444;padding:4px}th{background:#eee}.page{page-break-after:always}');
+}
+
+// ─── 4. NOTES PAR N° DE TABLE ───
+function eboNotes_() {
+  var d = EBO.data, S = EBO.saisie || (EBO.saisie = { epreuve: '', salle: '', lignes: [] });
+  var eps = (d.programme || []).filter(function (e) { return e.matiere && d.repartition.some(function (x) { return e.h[x.niveau]; }); });
+  var ep = eps.filter(function (e) { return e.cle === S.epreuve; })[0];
+  var salles = ep ? d.salles.filter(function (s) { return d.repartition.some(function (x) { return x.salle === s.salle && ep.h[x.niveau]; }); }) : [];
+  var h = '<div class="ebo-aide">Les copies portent le N° de table SEUL. Choisissez l\'épreuve et la salle, tapez les notes (0 à 20, virgule acceptée), puis <b>Vérifier</b> et <b>Enregistrer</b>. ' +
+    'Rien n\'est enregistré tant qu\'une ligne est fausse. Nom ou matricule écrit sur la copie : cochez <b>Fraude</b> (la note est gardée, le résultat devient FRAUDE). CM2 : écran du primaire.</div>';
+  h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><select class="ebo-in" onchange="EBO.saisie={epreuve:this.value,salle:\'\',lignes:[]};eboNotes_()"><option value="">— Épreuve —</option>' +
+    eps.map(function (e) { return '<option value="' + e.cle + '"' + (e.cle === S.epreuve ? ' selected' : '') + '>' + eboEsc_(e.epreuve) + ' (' + Object.keys(e.h).join(', ') + ')</option>'; }).join('') + '</select>';
+  if (ep) h += '<select class="ebo-in" onchange="eboNotesSalle_(this.value)"><option value="">— Salle —</option>' + salles.map(function (s) { return '<option' + (s.salle === S.salle ? ' selected' : '') + '>' + eboEsc_(s.salle) + '</option>'; }).join('') + '</select>';
+  h += '</div>';
+  if (ep && S.salle) {
+    h += '<div class="ebo-scroll"><table class="ebo-t"><tr><th>N° table</th><th>Élève</th><th>Note /20</th><th>Absent</th><th>Fraude</th><th></th></tr>' + S.lignes.map(function (l, i) {
+      return '<tr id="eboL' + i + '"' + (l.erreur ? ' style="background:#FFEBEE"' : '') + '><td><input class="ebo-in" style="width:96px" value="' + eboEsc_(l.table) + '" onchange="eboNoteTable_(' + i + ',this.value)"></td>' +
+        '<td><small>' + eboEsc_(l.nom || '') + (l.classe ? ' · ' + eboEsc_(l.classe) : '') + '</small>' + (l.erreur ? '<br><b style="color:#C62828;font-size:11px">' + eboEsc_(l.erreur) + '</b>' : '') + '</td>' +
+        '<td><input class="ebo-in" inputmode="decimal" style="width:58px" value="' + eboEsc_(l.note) + '"' + (l.absence ? ' disabled' : '') + ' onchange="EBO.saisie.lignes[' + i + '].note=this.value;EBO.saisie.verifie=false"></td>' +
+        '<td><select class="ebo-in" onchange="EBO.saisie.lignes[' + i + '].absence=this.value;EBO.saisie.verifie=false;eboNotes_()"><option value="">—</option><option value="NON_JUSTIFIEE"' + (l.absence === 'NON_JUSTIFIEE' ? ' selected' : '') + '>Absent (0)</option><option value="JUSTIFIEE"' + (l.absence === 'JUSTIFIEE' ? ' selected' : '') + '>Absent justifié</option></select></td>' +
+        '<td style="text-align:center"><input type="checkbox"' + (l.fraude ? ' checked' : '') + ' onchange="EBO.saisie.lignes[' + i + '].fraude=this.checked;EBO.saisie.verifie=false"></td>' +
+        '<td><button class="ebo-btn ebo-btn-l" onclick="EBO.saisie.lignes.splice(' + i + ',1);eboNotes_()">✕</button></td></tr>';
+    }).join('') + '</table></div>';
+    h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="ebo-btn ebo-btn-l" onclick="EBO.saisie.lignes.push({table:\'\',note:\'\',absence:\'\',fraude:false});eboNotes_()">+ Ligne</button>' +
+      '<button class="ebo-btn" onclick="eboEnvoyerNotes_(true)">✔ Vérifier</button><button class="ebo-btn ebo-btn-v" onclick="eboEnvoyerNotes_(false)"' + (S.verifie ? '' : ' disabled title="Vérifiez d\'abord"') + '>💾 Enregistrer</button></div><div id="eboNotesMsg" style="margin-top:8px"></div>';
+  }
+  eboC_().innerHTML = h;
+}
+function eboNotesSalle_(salle) {
+  var S = EBO.saisie, ep = (EBO.data.programme || []).filter(function (e) { return e.cle === S.epreuve; })[0];
+  S.salle = salle; S.verifie = false;
+  S.lignes = EBO.data.repartition.filter(function (x) { return x.salle === salle && ep && ep.h[x.niveau]; }).sort(function (a, b) { return a.table.localeCompare(b.table, 'fr', { numeric: true }); })
+    .map(function (x) { return { table: x.table, nom: x.nom, classe: x.classe, note: '', absence: '', fraude: false }; });
+  eboNotes_();
+}
+function eboNoteTable_(i, v) {
+  var l = EBO.saisie.lignes[i], t = String(v || '').trim().toUpperCase(), x = EBO.data.repartition.filter(function (e) { return e.table.toUpperCase() === t; })[0];
+  l.table = t; l.nom = x ? x.nom : ''; l.classe = x ? x.classe : ''; l.erreur = x ? '' : (t ? 'N° de table inconnu' : ''); EBO.saisie.verifie = false; eboNotes_();
+}
+async function eboEnvoyerNotes_(verifier) {
+  var S = EBO.saisie, msg = document.getElementById('eboNotesMsg');
+  if (!S.lignes.length) return;
+  var vides = S.lignes.filter(function (l) { return !l.absence && String(l.note).trim() === ''; }).length;
+  if (vides) { msg.innerHTML = '<span style="color:#C62828">❌ ' + vides + ' note(s) vide(s) : tapez la note ou choisissez « Absent ».</span>'; return; }
+  if (!verifier && !confirm('Enregistrer ' + S.lignes.length + ' note(s) de ' + S.salle + ' ?')) return;
+  msg.innerHTML = '⏳ ' + (verifier ? 'Vérification' : 'Enregistrement') + '…';
+  var notes = S.lignes.map(function (l) { return { table: l.table, note: String(l.note).replace(',', '.'), absence: l.absence, fraude: !!l.fraude }; });
+  var p = { type: 'EBO_SAISIR_NOTES', epreuve: S.epreuve, salle: S.salle, notes: JSON.stringify(notes), verifier: verifier ? 1 : 0 };
+  if (!verifier) p._ecrit = 1;
+  var r = await eboAppel_(p, 240000);
+  if (r && r.lignes) r.lignes.forEach(function (x, i) { if (S.lignes[i]) { S.lignes[i].erreur = x.erreur || ''; if (x.nom) { S.lignes[i].nom = x.nom; S.lignes[i].classe = x.classe; } } });
+  S.verifie = !!(r && r.ok && verifier);
+  eboNotes_(); msg = document.getElementById('eboNotesMsg');
+  if (!r || !r.ok) { msg.innerHTML = '<span style="color:#C62828">❌ ' + eboEsc_(r && r.error || 'Erreur') + '</span>'; return; }
+  if (verifier) msg.innerHTML = '<span style="color:#2E7D32">✅ ' + S.lignes.length + ' ligne(s) justes. Vous pouvez enregistrer.</span>';
+  else { msg.innerHTML = '<span style="color:#2E7D32">✅ Notes enregistrées dans ' + eboEsc_(r.matiere) + (r.fraudes ? ' · ' + r.fraudes + ' fraude(s) signalée(s)' : '') + '. Moyennes et résultats recalculés.</span>'; eboToast_('Notes enregistrées', 'success'); }
+}
+
+// ─── 5. FRAUDES ───
+function eboFraudes_() {
+  var d = EBO.data, dir = /^(DIR|FOND)$/.test((eboStaff_() || {}).profil || '');
+  var f = (d.fraudes || []).slice().reverse();
+  var eps = (d.programme || []).filter(function (e) { return e.matiere; });
+  var h = '<div class="ebo-aide">Une fraude dans une matière = résultat « FRAUDE » pour tout l\'examen. Seul le Directeur peut lever une fraude (motif obligatoire, tracé).</div>';
+  h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"><input id="eboFrT" class="ebo-in" style="width:110px" placeholder="N° de table"><select id="eboFrE" class="ebo-in">' + eps.map(function (e) { return '<option value="' + e.cle + '">' + eboEsc_(e.epreuve) + ' (' + Object.keys(e.h).join(', ') + ')</option>'; }).join('') + '</select>' +
+    '<input id="eboFrM" class="ebo-in" style="flex:1;min-width:140px" placeholder="Motif (ex. nom écrit sur la copie)"><button class="ebo-btn ebo-btn-r" onclick="eboSignaler_()">⚠️ Signaler</button></div>';
+  h += f.length ? '<div class="ebo-scroll"><table class="ebo-t"><tr><th>Date</th><th>Élève</th><th>Épreuve</th><th>Motif</th><th>Statut</th><th></th></tr>' + f.map(function (x) {
+    var act = x.STATUT === 'ACTIVE';
+    return '<tr><td><small>' + eboEsc_(x.DATE) + '</small></td><td><b>' + eboEsc_(x.N_TABLE) + '</b><br>' + eboEsc_(x.NOM) + '<br><small>' + eboEsc_(x.CLASSE) + '</small></td><td>' + eboEsc_(x.EPREUVE) + '</td><td><small>' + eboEsc_(x.MOTIF) + '<br>par ' + eboEsc_(x.SIGNALE_PAR) + '</small></td>' +
+      '<td style="color:' + (act ? '#C62828' : '#2E7D32') + ';font-weight:600">' + eboEsc_(x.STATUT) + (act ? '' : '<br><small style="font-weight:400">' + eboEsc_(x.LEVEE_PAR) + ' : ' + eboEsc_(x.MOTIF_LEVEE) + '</small>') + '</td>' +
+      '<td>' + (act && dir ? '<button class="ebo-btn ebo-btn-l" onclick="eboLever_(\'' + eboEsc_(x.MATRICULE) + '\',\'' + eboEsc_(x.NOM).replace(/'/g, '') + '\')">Lever</button>' : '') + '</td></tr>';
+  }).join('') + '</table></div>' : '<small>Aucune fraude signalée.</small>';
+  eboC_().innerHTML = h;
+}
+async function eboSignaler_() {
+  var t = document.getElementById('eboFrT').value.trim().toUpperCase(), e = document.getElementById('eboFrE').value, m = document.getElementById('eboFrM').value.trim();
+  var x = EBO.data.repartition.filter(function (r) { return r.table.toUpperCase() === t; })[0];
+  if (!x) { eboToast_('N° de table inconnu', 'error'); return; }
+  if (!confirm('Signaler une FRAUDE pour ' + x.nom + ' (' + x.classe + ') ?\nSon résultat de l\'examen blanc deviendra « FRAUDE ».')) return;
+  var r = await eboAppel_({ type: 'EBO_FRAUDE', table: t, epreuve: e, motif: m, _ecrit: 1 }, 180000);
+  if (!r || !r.ok) { eboToast_('❌ ' + (r && r.error || 'Erreur'), 'error'); return; }
+  eboToast_('Fraude enregistrée', 'success'); eboCharger_();
+}
+async function eboLever_(mat, nom) {
+  var m = prompt('Lever la fraude de ' + nom + ' ?\nMotif de la levée (obligatoire) :'); if (!m || !m.trim()) return;
+  var r = await eboAppel_({ type: 'EBO_LEVER_FRAUDE', matricule: mat, motif: m.trim(), _ecrit: 1 }, 180000);
+  if (!r || !r.ok) { eboToast_('❌ ' + (r && r.error || 'Erreur'), 'error'); return; }
+  eboToast_('Fraude levée', 'success'); eboCharger_();
+}
+</script>
+<style>
+.ebo-tabs{display:flex;gap:4px;flex-wrap:wrap;padding:6px 12px 0}
+.ebo-tab{border:1px solid #D1C4E9;background:#F3E5F5;color:#4A148C;border-radius:16px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:inherit}
+.ebo-tab.on{background:#4A148C;color:#fff;border-color:#4A148C}
+.ebo-btn{border:none;background:#1565C0;color:#fff;border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit}
+.ebo-btn:disabled{opacity:.45;cursor:not-allowed}
+.ebo-btn-l{background:#ECEFF1;color:#37474F}.ebo-btn-v{background:#2E7D32}.ebo-btn-r{background:#C62828}
+.ebo-in{border:1px solid #CFD8DC;border-radius:6px;padding:5px 6px;font-size:12px;font-family:inherit;background:#fff}
+.ebo-t{border-collapse:collapse;width:100%;font-size:12px}.ebo-t th{background:#F3E5F5;color:#4A148C;text-align:left;padding:5px}.ebo-t td{border-top:1px solid #EEE;padding:4px 5px;vertical-align:top}
+.ebo-scroll{overflow-x:auto;max-width:100%}
+.ebo-aide{background:#F5F5F5;border-radius:8px;padding:8px 10px;font-size:11.5px;color:#444;margin-bottom:8px;line-height:1.5}
+</style>
+
 </body>
 </html>
