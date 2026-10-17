@@ -293,6 +293,10 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
   <div class="sec-header" style="background:#B71C1C" onclick="toggleSec(this)">&#128221; EXAMENS BLANCS &mdash; R&Eacute;SULTATS <span>v</span></div>
   <div class="sec-body open" id="examenBlancBody"></div>
 </div>
+ <div class="section" id="sectionEboProgramme" style="display:none">
+  <div class="sec-header" style="background:#4A148C" onclick="toggleSec(this)">&#128197; EXAMEN BLANC N&deg;1 &mdash; PROGRAMME, N&deg; DE TABLE ET SALLE <span>v</span></div>
+  <div class="sec-body open" id="eboProgrammeBody"></div>
+</div>
   <div class="section" id="sectionResultats" style="display:none">
     <div class="sec-header" style="background:linear-gradient(135deg,#D4AF37,#B8860B);color:#fff" onclick="toggleSec(this)" id="titreResultats">&#127942; RESULTATS DE FIN D'ANNEE <span>v</span></div>
     <div class="sec-body open" id="resultatsBody"></div>
@@ -4016,5 +4020,45 @@ async function chargerExamenBlancParent(eleve) {
   body.innerHTML = '<div style="background:#FFF3E0;border-left:4px solid #E65100;padding:8px 12px;margin-bottom:12px;border-radius:0 8px 8px 0;"><p style="font-size:0.78em;color:#E65100;">Moyenne calculée avec les coefficients officiels de l\'examen. La note de chaque matière compte aussi dans la moyenne du trimestre, comme un devoir.</p></div>' + html;
 }
 </script>
+<!-- ═══ EXAMEN BLANC N°1 — PROGRAMME DE L'ENFANT (17/10/2026) ═══ -->
+<script>
+// ═══ EXAMEN BLANC N°1 — PROGRAMME, N° DE TABLE ET SALLE DE L'ENFANT (17/10/2026) ═══
+// Lecture seule (EXAMEN_BLANC_ORGA.gs, appel EBO_PROGRAMME). Visible jusqu'au dernier jour de l'examen, pour CM2, 3ème et Terminale.
+function eboProgrammeParent(eleve) {
+  var sec = document.getElementById('sectionEboProgramme'), body = document.getElementById('eboProgrammeBody');
+  if (!sec || !body || !eleve) return;
+  sec.style.display = 'none';
+  var d = new Date(), auj = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  if (auj > '2026-10-28') return;
+  var classe = String(window._classe2026 || eleve.classe || '').trim(), base = window._sheetsId2026 || '';
+  if (!classe || !base) return;
+  _pssServeur('EBO_PROGRAMME', { base: base, classe: classe, matricule: String(eleve.matricule || '').trim().toUpperCase() }, 30000).then(function (r) {
+    if (!r || !r.ok || !r.concerne || !r.epreuves || !r.epreuves.length) return;
+    var e = function (x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+    var h = '<div style="padding:12px;">';
+    if (r.table) h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'
+      + '<div style="flex:1;min-width:120px;background:#F3E5F5;border-radius:10px;padding:10px;text-align:center;"><div style="font-size:0.72em;color:#4A148C;">N° DE TABLE</div><div style="font-size:1.35em;font-weight:800;color:#4A148C;">' + e(r.table) + '</div></div>'
+      + '<div style="flex:1;min-width:120px;background:#E3F2FD;border-radius:10px;padding:10px;text-align:center;"><div style="font-size:0.72em;color:#1565C0;">SALLE</div><div style="font-size:1.1em;font-weight:800;color:#1565C0;">' + e(r.salle) + '</div>' + (r.site ? '<div style="font-size:0.75em;color:#1565C0;">' + e(r.site) + '</div>' : '') + '</div></div>';
+    else h += '<p style="font-size:0.8em;color:#888;margin-bottom:10px;">Le N° de table et la salle seront affichés ici dès qu\'ils seront fixés par l\'école.</p>';
+    var jour = '';
+    r.epreuves.forEach(function (p) {
+      if (p.jour !== jour) { jour = p.jour; h += '<div style="font-weight:700;color:#B71C1C;font-size:0.85em;margin:10px 0 4px;">' + e(jour) + '</div>'; }
+      h += '<div style="display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dotted #eee;font-size:0.84em;"><span>' + e(p.epreuve) + '</span><b>' + e(p.debut) + ' – ' + e(p.fin) + '</b></div>';
+    });
+    h += '<p style="font-size:0.76em;color:#555;margin-top:10px;line-height:1.6;">L\'élève arrive 30 minutes avant la première épreuve. <b>Il écrit seulement son N° de table sur la copie</b> : un nom ou un matricule écrit sur la copie est une fraude, et le résultat de tout l\'examen devient « FRAUDE ». Présence obligatoire à toutes les épreuves.</p></div>';
+    body.innerHTML = h;
+    sec.style.display = 'block';
+  });
+}
+(function () {
+  if (typeof chargerExamenBlancParent === 'function' && !chargerExamenBlancParent._ebo) {
+    var avant = chargerExamenBlancParent;
+    chargerExamenBlancParent = function (eleve) { try { eboProgrammeParent(eleve); } catch (x) {} return avant.apply(this, arguments); };
+    chargerExamenBlancParent._ebo = true;
+  }
+  if (window._eleveActuel) try { eboProgrammeParent(window._eleveActuel); } catch (x) {}   // espace déjà affiché (session restaurée)
+})();
+</script>
+
 </body>
 </html>
