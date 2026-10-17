@@ -12631,9 +12631,14 @@ function _noterHoraireFait(faits, cle, onglet, headers, row) {
 // La clé CLASSE|MATIERE|ENSEIGNANT exigeait une égalité exacte → « Rien enregistré » à tort (cas MENEY, GS Rita Rosane).
 // Désormais (secondaire) : même classe, matière dont l'une commence par l'autre, nom dont l'un commence par l'autre (mot entier).
 function _nomCompatibleCoursJour(a, b) {
-  a = String(a || '').replace(/[^A-Z0-9 ]/g, '').trim(); b = String(b || '').replace(/[^A-Z0-9 ]/g, '').trim();
+  a = String(a || '').replace(/[^A-Z0-9 ]/g, '').replace(/\s+/g, ' ').trim(); b = String(b || '').replace(/[^A-Z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
   if (!a || !b) return false;
-  return a === b || (a + ' ').indexOf(b + ' ') === 0 || (b + ' ').indexOf(a + ' ') === 0;
+  if (a === b) return true;
+  const wa = a.split(' ').filter(w => w.length > 1), wb = b.split(' ').filter(w => w.length > 1);   // initiales (« J. ») ignorées
+  if (!wa.length || !wb.length) return false;
+  const court = wa.length <= wb.length ? wa : wb, long = court === wa ? wb : wa;
+  const communs = court.filter(w => long.indexOf(w) >= 0).length;
+  return communs === court.length || communs >= 2;   // tous les mots du nom court présents, ou au moins 2 mots communs
 }
 function _matiereCompatibleCoursJour(a, b) {
   a = String(a || '').replace(/[^A-Z0-9]/g, ''); b = String(b || '').replace(/[^A-Z0-9]/g, '');
