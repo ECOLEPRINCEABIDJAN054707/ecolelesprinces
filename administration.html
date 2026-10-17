@@ -12626,16 +12626,43 @@ function _noterHoraireFait(faits, cle, onglet, headers, row) {
     if (fin !== null) ajouter(fin - 55, fin, false);
   }
 }
+// ══ CORRECTIF 17/10/2026 — « Cours du jour » : l'EDT donne le nom COURT de l'enseignant (« MENEY ») alors que
+// l'appel et le cahier de textes enregistrent son nom COMPLET (« MENEY EDOUPKEU ») ; de même « MATH » / « MATHEMATIQUES ».
+// La clé CLASSE|MATIERE|ENSEIGNANT exigeait une égalité exacte → « Rien enregistré » à tort (cas MENEY, GS Rita Rosane).
+// Désormais (secondaire) : même classe, matière dont l'une commence par l'autre, nom dont l'un commence par l'autre (mot entier).
+function _nomCompatibleCoursJour(a, b) {
+  a = String(a || '').replace(/[^A-Z0-9 ]/g, '').trim(); b = String(b || '').replace(/[^A-Z0-9 ]/g, '').trim();
+  if (!a || !b) return false;
+  return a === b || (a + ' ').indexOf(b + ' ') === 0 || (b + ' ').indexOf(a + ' ') === 0;
+}
+function _matiereCompatibleCoursJour(a, b) {
+  a = String(a || '').replace(/[^A-Z0-9]/g, ''); b = String(b || '').replace(/[^A-Z0-9]/g, '');
+  if (a === b) return true;
+  return a.length >= 3 && b.length >= 3 && (a.indexOf(b) === 0 || b.indexOf(a) === 0);
+}
+function _clesFaitesCoursJour(faits, cle) {
+  if (faits.has(cle)) return [cle];
+  const p = cle.split('|'), res = [];
+  faits.forEach(k => {
+    if (k.indexOf('§PROF|') === 0) return;
+    const q = k.split('|');
+    if (q[0] === p[0] && _matiereCompatibleCoursJour(q[1], p[1]) && _nomCompatibleCoursJour(q[2], p[2])) res.push(k);
+  });
+  return res;
+}
 function _creneauEstFait(faits, cle, c, maintenantMin) {
   // Créneau de demi-journée (primaire / maternelle) : on cherche les saisies de l'enseignant, quelle que soit la matière
   const demiJournee = /^(MATIN|MATINEE|APRES MIDI|JOURNEE)$/.test(String(cle.split('|')[1] || '').trim());
-  if (demiJournee) cle = _cleProfCoursJour(cle);
-  if (!faits.has(cle)) return false;
+  let cles;
+  if (demiJournee) { cle = _cleProfCoursJour(cle); cles = faits.has(cle) ? [cle] : []; }
+  else cles = _clesFaitesCoursJour(faits, cle);
+  if (!cles.length) return false;
   const d = parseH(c.heureDebut);
   const f = parseH(c.heureFin) > d ? parseH(c.heureFin) : d + 55;
   // 1) Un cours dont l'heure n'est pas encore arrivée ne peut pas être « Fait » (l'appel ouvre 10 min avant)
   if (maintenantMin !== null && d > 0 && maintenantMin < d - 10) return false;
-  let liste = (_HORAIRES_FAITS.get(faits) || {})[cle] || [];
+  const m = _HORAIRES_FAITS.get(faits) || {};
+  let liste = [].concat.apply([], cles.map(k => m[k] || []));
   if (!demiJournee && liste.some(x => x.pointage)) liste = liste.filter(x => x.pointage);   // le pointage fait foi sur le cahier
   if (!liste.length || !d) return !demiJournee;     // aucun horaire exploitable : comportement d'origine (secondaire)
   // 2) Il faut un enregistrement qui recouvre l'horaire de CE créneau (au moins 10 min en commun)
