@@ -3682,6 +3682,12 @@ function eboMesSurveillances(force) {
   window[cb] = function (r) {
     try { delete window[cb]; s.parentNode.removeChild(s); } catch (e) {}
     if (!r || !r.ok) { _eboSurvCharge = 0; return; }
+    if (r.ambigu && r.ambigu.length) {      // nom de connexion qui correspond à plusieurs surveillants : on n'affiche rien de faux
+      z.innerHTML = '<div style="background:#FFF8E1;border-radius:12px;border-left:5px solid #E65100;padding:10px 14px;margin:10px 0;font-size:12px;color:#5D4037;">'
+        + '<b>EXAMEN BLANC N°1 — Mes surveillances</b><br>Votre nom de connexion correspond à plusieurs enseignants du planning ('
+        + r.ambigu.map(function (n) { return String(n).replace(/[<>&]/g, ''); }).join(', ') + '). Reconnectez-vous avec votre <b>nom complet</b> ou demandez votre planning à l\'Éducateur.</div>';
+      return;
+    }
     z.innerHTML = eboMesSurvHtml(r.surveillances || []);
   };
   s.onerror = function () { _eboSurvCharge = 0; };
