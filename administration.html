@@ -19146,20 +19146,20 @@ async function eboCharger_() {
   EBO.zone.innerHTML = '<div style="padding:16px;text-align:center;color:#666">⏳ Chargement de l\'organisation de l\'examen blanc…</div>';
   var r = await eboAppel_({ type: 'EBO_LIRE' }, 120000);
   if (!r || !r.ok) { EBO.zone.innerHTML = '<div style="padding:14px;color:#C62828">❌ ' + eboEsc_(r && r.error || 'Erreur') + ' <button class="ebo-btn" onclick="eboCharger_()">Réessayer</button></div>'; return; }
-  EBO.data = r; EBO.salles = null; EBO.saisie = null;
+  EBO.data = r; EBO.salles = null; EBO.saisie = null; EBO.corr = null;
   eboRendre_();
 }
 function eboRendre_() {
   var d = EBO.data, z = EBO.zone; if (!d || !z) return;
   if (!d.repartition || !d.repartition.length) { z.innerHTML = '<div style="padding:14px;color:#555">Aucune classe d\'examen (CM2, 3ème, Terminale A, C, D) dans cette école.</div>'; return; }
-  var tabs = [['salles', '🏫 Salles'], ['repartition', '👥 Répartition'], ['surveillances', '🕒 Surveillances'], ['notes', '✍️ Notes'], ['fraudes', '⚠️ Fraudes']];
+  var tabs = [['salles', '🏫 Salles'], ['repartition', '👥 Répartition'], ['surveillances', '🕒 Surveillances'], ['corrections', '📦 Corrections'], ['notes', '✍️ Notes'], ['fraudes', '⚠️ Fraudes']];
   var h = '<div style="padding:10px 12px 4px;font-size:12px;color:#555">' + (d.enregistre ? '✅ Organisation enregistrée' : '⚠️ Aperçu non enregistré') +
     ' · ' + d.repartition.length + ' candidats · ' + d.salles.length + ' salles · ' + d.surveillances.length + ' surveillances' +
     ' <button class="ebo-btn ebo-btn-l" onclick="eboCharger_()">↻ Actualiser</button></div>';
   h += '<div class="ebo-tabs">' + tabs.map(function (t) { return '<button class="ebo-tab' + (EBO.onglet === t[0] ? ' on' : '') + '" onclick="EBO.onglet=\'' + t[0] + '\';eboRendre_()">' + t[1] + '</button>'; }).join('') + '</div>';
   h += '<div id="eboContenu" style="padding:10px 12px 14px"></div>';
   z.innerHTML = h;
-  ({ salles: eboSalles_, repartition: eboRepartition_, surveillances: eboSurveillances_, notes: eboNotes_, fraudes: eboFraudes_ })[EBO.onglet]();
+  ({ salles: eboSalles_, repartition: eboRepartition_, surveillances: eboSurveillances_, corrections: eboCorrections_, notes: eboNotes_, fraudes: eboFraudes_ })[EBO.onglet]();
 }
 function eboC_() { return document.getElementById('eboContenu'); }
 function eboNb_(salle) { return EBO.data.repartition.filter(function (x) { return x.salle === salle; }).length; }
@@ -19311,6 +19311,76 @@ function eboImprimerPlanning_() {
       l.map(function (c) { return '<tr><td>' + c.debut + '-' + c.fin + '</td><td>' + eboEsc_(c.epreuve) + '</td><td>' + eboEsc_(c.groupe) + '</td><td>' + eboEsc_(c.salle) + '</td><td>' + eboEsc_(c.site) + '</td><td>' + eboEsc_(c.surveillant) + '</td><td>' + eboEsc_(c.ramassage) + '</td><td style="width:90px"></td></tr>'; }).join('') + '</table></div>';
   }).join('');
   eboFenetre_(html, 'body{font-family:Arial,sans-serif;font-size:11px;margin:16px}h1{font-size:15px;margin:0}h2{font-size:13px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #444;padding:4px}th{background:#eee}.page{page-break-after:always}');
+}
+
+// ─── 3 bis. CORRECTIONS : lots de copies, correcteurs, dépôts (18/10/2026) ───
+function eboCorrections_() {
+  var z = eboC_();
+  if (!EBO.corr) {
+    z.innerHTML = '⏳ Chargement des corrections…';
+    eboAppel_({ type: 'EBO_CORR_LIRE' }, 120000).then(function (r) {
+      if (!r || !r.ok) { z.innerHTML = '<span style="color:#C62828">❌ ' + eboEsc_(r && r.error || 'Erreur') + '</span>'; return; }
+      EBO.corr = r; eboCorrections_();
+    });
+    return;
+  }
+  var C = EBO.corr, grp = {}, ordre = [];
+  if (!C.lots.length) { z.innerHTML = '<small>Aucun lot de copies enregistré pour cette école.</small>'; return; }
+  C.lots.forEach(function (l) { var k = l.date + '|' + l.debut + '|' + l.epreuve + '|' + l.niveau; if (!grp[k]) { grp[k] = []; ordre.push(k); } grp[k].push(l); });
+  var tot = C.lots.reduce(function (t, l) { return t + l.nb; }, 0), fait = C.lots.reduce(function (t, l) { return t + (l.saisies || 0); }, 0);
+  var adesig = C.lots.filter(function (l) { return /DÉSIGNER/.test(l.correcteur); }).length;
+  var h = '<div class="ebo-aide">Correcteurs : professeurs de la matière et du niveau. Fin d\'épreuve : le surveillant compte les copies, ferme l\'enveloppe et la dépose au lieu indiqué (signature au registre) ; le correcteur la retire (signature). '
+    + 'Notes saisies par le correcteur dans son espace avant le <b>' + eboEsc_(C.dateLimite) + '</b>. Notes saisies : <b>' + fait + '/' + tot + '</b>.'
+    + (adesig ? '<br><b style="color:#C62828">' + adesig + ' lot(s) sans correcteur : cliquez « Changer » pour désigner un enseignant.</b>' : '') + '</div>';
+  h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px"><button class="ebo-btn" onclick="eboImprimerEtiquettes_()">🖨 Étiquettes d\'enveloppe</button><button class="ebo-btn" onclick="eboImprimerRegistre_()">🖨 Registre dépôt / retrait</button>'
+    + '<button class="ebo-btn ebo-btn-l" onclick="EBO.corr=null;eboCorrections_()">↻ Actualiser</button></div>';
+  ordre.forEach(function (k) {
+    var g = grp[k], l0 = g[0];
+    h += '<div style="margin:10px 0 4px;font-weight:700;color:#4A148C;font-size:12.5px">' + eboEsc_(l0.jour || l0.date) + ' · ' + eboEsc_(l0.debut) + '-' + eboEsc_(l0.fin) + ' · ' + eboEsc_(l0.epreuve) + ' · ' + eboEsc_(l0.niveau) + '</div>'
+      + '<div class="ebo-scroll"><table class="ebo-t"><tr><th>Salle</th><th>Copies</th><th>Correcteur</th><th>Dépôt</th><th>Saisies</th><th></th></tr>'
+      + g.map(function (l) {
+        var ad = /DÉSIGNER/.test(l.correcteur), ok = l.saisies >= l.nb && l.nb;
+        return '<tr><td>' + eboEsc_(l.salle) + '</td><td style="text-align:center">' + l.nb + '</td><td' + (ad ? ' style="color:#C62828;font-weight:700"' : '') + '>' + eboEsc_(l.correcteur) + '</td><td><small>' + eboEsc_(l.depot) + '</small></td>'
+          + '<td style="text-align:center;color:' + (ok ? '#2E7D32' : '#555') + '">' + (ok ? '✓ ' : '') + (l.saisies || 0) + '/' + l.nb + '</td>'
+          + '<td><button class="ebo-btn ebo-btn-l" onclick="eboChangerCorrecteur_(\'' + eboEsc_(l.id) + '\')">Changer</button></td></tr>';
+      }).join('') + '</table></div>';
+  });
+  z.innerHTML = h;
+}
+async function eboChangerCorrecteur_(id) {
+  var l = EBO.corr.lots.filter(function (x) { return x.id === id; })[0]; if (!l) return;
+  var liste = (EBO.corr.enseignants || []).slice().sort();
+  var choix = prompt(l.epreuve + ' · ' + l.niveau + ' · ' + l.salle + ' (' + l.nb + ' copies)\nCorrecteur actuel : ' + l.correcteur
+    + '\n\nRègle : un professeur de cette matière qui enseigne ce niveau.\nNouveau correcteur — tapez le numéro (ou le nom) :\n' + liste.map(function (n, i) { return (i + 1) + '. ' + n; }).join('\n'));
+  if (!choix) return;
+  var nom = /^\d+$/.test(choix.trim()) ? liste[parseInt(choix, 10) - 1] : choix.trim(); if (!nom) return;
+  var r = await eboAppel_({ type: 'EBO_CORR_CHANGER', id: id, correcteur: nom, _ecrit: 1 });
+  if (!r || !r.ok) { eboToast_('❌ ' + (r && r.error || 'Erreur'), 'error'); return; }
+  l.correcteur = r.correcteur; eboToast_('Correcteur : ' + r.correcteur, 'success'); eboCorrections_();
+}
+function eboImprimerEtiquettes_() {
+  var st = eboStaff_() || {};
+  var html = '<div class="grille">' + EBO.corr.lots.map(function (l) {
+    return '<div class="etq"><div class="t">' + eboEsc_(st.ecole || '') + ' — EXAMEN BLANC N°1</div>'
+      + '<div class="g">' + eboEsc_(l.epreuve) + ' · ' + eboEsc_(l.niveau) + '</div>'
+      + '<div>' + eboEsc_(l.jour || l.date) + ' · ' + eboEsc_(l.debut) + '-' + eboEsc_(l.fin) + '</div>'
+      + '<div class="g">' + eboEsc_(l.salle) + ' — ' + l.nb + ' copie(s)</div>'
+      + '<div>Copies remises : ______ &nbsp; Absents : ______</div>'
+      + '<div>Correcteur : <b>' + eboEsc_(l.correcteur) + '</b></div><div>Dépôt : <b>' + eboEsc_(l.depot) + '</b></div>'
+      + '<div class="s">Surveillant (dépôt) : ____________ h ____ &nbsp; Correcteur (retrait) : ____________ le ___/___</div></div>';
+  }).join('') + '</div>';
+  eboFenetre_(html, 'body{font-family:Arial,sans-serif;font-size:11px;margin:10px}.grille{display:flex;flex-wrap:wrap;gap:8px}.etq{width:48%;box-sizing:border-box;border:2px solid #000;padding:7px;page-break-inside:avoid;line-height:1.55}.t{font-size:10px;font-weight:bold}.g{font-size:14px;font-weight:bold}.s{font-size:10px;margin-top:4px}');
+}
+function eboImprimerRegistre_() {
+  var st = eboStaff_() || {}, dep = {};
+  EBO.corr.lots.forEach(function (l) { (dep[l.depot] = dep[l.depot] || []).push(l); });
+  var html = Object.keys(dep).sort().map(function (d) {
+    return '<div class="page"><h1>' + eboEsc_(st.ecole || '') + ' — EXAMEN BLANC N°1 — REGISTRE DES COPIES</h1><h2>Dépôt : ' + eboEsc_(d) + '</h2>'
+      + '<table><tr><th>Date / heure</th><th>Épreuve</th><th>Salle</th><th>Copies</th><th>Remises</th><th>Surveillant (dépôt)</th><th>Signature</th><th>Correcteur</th><th>Retrait le</th><th>Signature</th></tr>'
+      + dep[d].map(function (l) { return '<tr><td>' + eboEsc_(l.date.slice(8) + '/10') + ' ' + eboEsc_(l.fin) + '</td><td>' + eboEsc_(l.epreuve) + ' ' + eboEsc_(l.niveau) + '</td><td>' + eboEsc_(l.salle) + '</td><td>' + l.nb + '</td><td></td><td></td><td></td><td>' + eboEsc_(l.correcteur) + '</td><td></td><td></td></tr>'; }).join('')
+      + '</table></div>';
+  }).join('');
+  eboFenetre_(html, 'body{font-family:Arial,sans-serif;font-size:10.5px;margin:12px}h1{font-size:14px;margin:0}h2{font-size:13px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #444;padding:4px;height:18px}th{background:#eee}.page{page-break-after:always}');
 }
 
 // ─── 4. NOTES PAR N° DE TABLE ───
