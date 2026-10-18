@@ -3757,8 +3757,7 @@ function eboMesCopiesHtml(lots, limite) {
       var fini = l.saisies >= l.nb && l.nb > 0;
       h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;">'
         + '<div><b>' + e(l.salle) + '</b> · ' + l.nb + ' copie(s)<br><span style="font-size:11.5px;color:#E65100">Dépôt : ' + e(l.depot) + '</span></div>'
-        + (autre ? '<span style="font-size:11px;color:#777;text-align:right">Saisie depuis l\'application de ' + e(l.ecole) + '</span>'
-          : '<button onclick="eboOuvrirSaisie(\'' + e(l.id) + '\')" style="border:none;border-radius:8px;padding:7px 10px;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap;background:' + (fini ? '#E8F5E9;color:#2E7D32' : '#2E7D32;color:#fff') + '">' + (fini ? '✓ ' : '') + l.saisies + '/' + l.nb + ' · Saisir</button>')
+        + ('<button onclick="eboOuvrirSaisie(\'' + e(l.id) + '\')" style="border:none;border-radius:8px;padding:7px 10px;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap;background:' + (fini ? '#E8F5E9;color:#2E7D32' : '#2E7D32;color:#fff') + '">' + (fini ? '✓ ' : '') + l.saisies + '/' + l.nb + ' · Saisir</button>')
         + '</div>';
     });
     h += '</div>';
@@ -3813,7 +3812,7 @@ function eboEnvoyerSaisie(verifier) {
   if (!aEnvoyer.length) { msg.innerHTML = '<span style="color:#C62828">Tapez au moins une note.</span>'; return; }
   if (!verifier && !confirm('Enregistrer ' + aEnvoyer.length + ' note(s) — ' + S.lot.epreuve + ' ' + S.lot.salle + ' ?')) return;
   msg.innerHTML = '⏳ ' + (verifier ? 'Vérification' : 'Enregistrement') + '…';
-  _eboJsonp({ type: 'EBO_CORR_SAISIR', ecole: S.lot.ecole, id: S.lot.id, notes: JSON.stringify(aEnvoyer), verifier: verifier ? 1 : 0, enseignant: user.nom, code: user.code || '' }, function (r) {
+  _eboJsonp({ type: 'EBO_CORR_SAISIR', ecole: S.lot.ecole, id: S.lot.id, notes: JSON.stringify(aEnvoyer), verifier: verifier ? 1 : 0, enseignant: user.nom, code: user.code || '', ecoleCnx: user.ecole || '' }, function (r) {
     S.lignes.forEach(function (x) { x.erreur = ''; x.info = ''; });
     (r && r.lignes || []).forEach(function (y) {
       var x = S.lignes[idx[y.ligne - 1]]; if (!x) return;
