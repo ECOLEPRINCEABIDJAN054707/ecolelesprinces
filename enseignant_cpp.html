@@ -333,6 +333,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
   </div>
   <div id="examBlancZoneEns" style="padding:0 16px 6px"></div>
   <div id="eboMesSurvZone" style="padding:0 16px 6px"></div>
+  <div id="eboCopiesZone" style="padding:0 16px 6px"></div>
   <div id="compoZoneEns" style="padding:0 16px 6px"></div>
   <div class="section-label" style="display:none">▶ Démarrer un cours</div>
  <div style="padding:0 16px 16px;display:none">
@@ -3666,59 +3667,169 @@ function afficherCompositions() {
 }
 afficherCompositions();
 </script>
-<!-- ═══ EXAMEN BLANC N°1 — MES SURVEILLANCES (17/10/2026) ═══ -->
+<!-- ═══ EXAMEN BLANC N°1 — MES SURVEILLANCES ET MES COPIES À CORRIGER (17-18/10/2026) ═══ -->
 <script>
-// ═══ EXAMEN BLANC N°1 — MES SURVEILLANCES (17/10/2026) ═══
-// Carte de l'accueil : surveillances et ramassages de copies de l'enseignant, dans toutes les écoles du réseau.
-// Lecture seule (EXAMEN_BLANC_ORGA.gs, appel EBO_MES_SURV). La carte n'apparaît que si l'enseignant a des surveillances.
-var _eboSurvCharge = 0;
+// ═══ EXAMEN BLANC N°1 — MES SURVEILLANCES + MES COPIES À CORRIGER (17-18/10/2026) ═══
+// Accueil : (1) surveillances de l'enseignant (toutes écoles), avec le lieu de dépôt des copies et le correcteur ;
+//           (2) copies à corriger : épreuve, salles, nombre de copies, dépôt, date limite, notes déjà saisies.
+// Écran « Saisie examen blanc » : le correcteur tape les notes de SES copies par N° de table ; une copie qui porte un
+// matricule ou un nom à la place du N° est acceptée et passe en FRAUDE. Vérifier, puis Enregistrer.
+// Serveur : EXAMEN_BLANC_ORGA.gs (EBO_MES_SURV) et EXAMEN_BLANC_CORRECTIONS.gs (EBO_CORR_MES_COPIES, EBO_CORR_SAISIR).
+var _eboSurvCharge = 0, EBO_LOTS = [], EBO_SAISIE = null;
+function _eboE(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function _eboAuj() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+function _eboJsonp(params, rappel, delai) {
+  var cb = 'ebo_' + Date.now() + '_' + Math.floor(Math.random() * 1e5), s = document.createElement('script'), fini = false;
+  var fin = function (r) { if (fini) return; fini = true; window[cb] = function () {}; try { s.parentNode.removeChild(s); } catch (e) {} rappel(r); };
+  window[cb] = fin; s.onerror = function () { fin({ ok: false, error: 'Serveur injoignable' }); };
+  s.src = APPS_SCRIPT_URL + '?callback=' + cb + '&' + new URLSearchParams(params).toString();
+  document.body.appendChild(s);
+  setTimeout(function () { fin({ ok: false, error: 'Le serveur met trop de temps à répondre. Réessayez.' }); }, delai || 60000);
+}
+
+// ─── 1. Mes surveillances ───
 function eboMesSurveillances(force) {
   var z = document.getElementById('eboMesSurvZone');
   if (!z || typeof user === 'undefined' || !user || !user.nom) return;
   if (!force && Date.now() - _eboSurvCharge < 10 * 60000) return;      // au plus une lecture toutes les 10 minutes
   _eboSurvCharge = Date.now();
-  if (force) z.innerHTML = '';
-  var cb = 'ebos_' + Date.now(), s = document.createElement('script');
-  window[cb] = function (r) {
-    try { delete window[cb]; s.parentNode.removeChild(s); } catch (e) {}
+  if (force) { z.innerHTML = ''; var zc = document.getElementById('eboCopiesZone'); if (zc) zc.innerHTML = ''; }
+  _eboJsonp({ type: 'EBO_MES_SURV', ecole: user.ecole || '', enseignant: user.nom }, function (r) {
     if (!r || !r.ok) { _eboSurvCharge = 0; return; }
     if (r.ambigu && r.ambigu.length) {      // nom de connexion qui correspond à plusieurs surveillants : on n'affiche rien de faux
       z.innerHTML = '<div style="background:#FFF8E1;border-radius:12px;border-left:5px solid #E65100;padding:10px 14px;margin:10px 0;font-size:12px;color:#5D4037;">'
         + '<b>EXAMEN BLANC N°1 — Mes surveillances</b><br>Votre nom de connexion correspond à plusieurs enseignants du planning ('
-        + r.ambigu.map(function (n) { return String(n).replace(/[<>&]/g, ''); }).join(', ') + '). Reconnectez-vous avec votre <b>nom complet</b> ou demandez votre planning à l\'Éducateur.</div>';
+        + r.ambigu.map(_eboE).join(', ') + '). Reconnectez-vous avec votre <b>nom complet</b> ou demandez votre planning à l\'Éducateur.</div>';
       return;
     }
     z.innerHTML = eboMesSurvHtml(r.surveillances || []);
-  };
-  s.onerror = function () { _eboSurvCharge = 0; };
-  s.src = APPS_SCRIPT_URL + '?callback=' + cb + '&type=EBO_MES_SURV&ecole=' + encodeURIComponent(user.ecole || '') + '&enseignant=' + encodeURIComponent(user.nom);
-  document.body.appendChild(s);
+  });
+  eboMesCopies();
 }
 function eboMesSurvHtml(l) {
-  var d = new Date(), auj = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
-  l = l.filter(function (c) { return c.date >= auj; });
+  var auj = _eboAuj(), e = _eboE;
+  l = l.filter(function (c) { return c.date >= auj && (!c.role || c.role === 'SURVEILLANCE'); });
   if (!l.length) return '';
-  var e = function (x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
-  var nbS = l.filter(function (c) { return c.role === 'SURVEILLANCE'; }).length;
-  var heures = l.filter(function (c) { return c.role === 'SURVEILLANCE'; }).reduce(function (t, c) { var a = String(c.debut).split(':'), b = String(c.fin).split(':'); return t + ((+b[0] * 60 + +b[1]) - (+a[0] * 60 + +a[1])) / 60; }, 0);
+  var heures = l.reduce(function (t, c) { var a = String(c.debut).split(':'), b = String(c.fin).split(':'); return t + ((+b[0] * 60 + +b[1]) - (+a[0] * 60 + +a[1])) / 60; }, 0);
   var parJour = {}; l.forEach(function (c) { (parJour[c.date] = parJour[c.date] || []).push(c); });
   var h = '<div style="background:#fff;border-radius:12px;border-left:5px solid #4A148C;box-shadow:0 2px 10px rgba(0,0,0,0.08);padding:12px 14px;margin:10px 0;text-align:left;">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-weight:700;color:#4A148C;font-size:14px;">&#128221; MES SURVEILLANCES — EXAMEN BLANC N°1</div>'
-    + '<div style="background:#F3E5F5;color:#4A148C;font-weight:700;font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap;">' + nbS + ' surv. · ' + heures + ' h' + (l.length > nbS ? ' · ' + (l.length - nbS) + ' ramassage(s)' : '') + '</div></div>';
+    + '<div style="background:#F3E5F5;color:#4A148C;font-weight:700;font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap;">' + l.length + ' surv. · ' + heures + ' h</div></div>';
   Object.keys(parJour).sort().forEach(function (j) {
     h += '<div style="font-size:12px;font-weight:700;color:#1F2937;margin:9px 0 3px;">' + e(parJour[j][0].jour) + '</div>';
     parJour[j].forEach(function (c) {
-      var ram = c.role !== 'SURVEILLANCE';
       var autre = c.ecole && user && c.ecole !== user.ecole;
       h += '<div style="display:flex;gap:10px;padding:6px 0;border-top:1px solid #F0F0F0;font-size:12.5px;">'
-        + '<div style="min-width:78px;font-weight:700;color:' + (ram ? '#E65100' : '#4A148C') + '">' + e(ram ? c.fin : c.debut + '-' + c.fin) + '</div>'
+        + '<div style="min-width:78px;font-weight:700;color:#4A148C">' + e(c.debut + '-' + c.fin) + '</div>'
         + '<div><b>' + e(c.epreuve) + '</b> · ' + e(c.groupe) + '<br><span style="color:#555">' + e(c.salle) + (c.site ? ' · ' + e(c.site) : '') + (autre ? ' · <b>' + e(c.ecole) + '</b>' : '') + '</span>'
-        + (ram ? '<br><span style="color:#E65100;font-weight:600">Ramassage des copies à la fin de l\'épreuve (surveillant : ' + e(c.surveillant) + ')</span>' : '') + '</div></div>';
+        + (c.depot ? '<br><span style="color:#E65100;font-weight:600">Fin : comptez les copies, enveloppe fermée → dépôt : ' + e(c.depot) + '</span>' : '')
+        + (c.correcteurs && c.correcteurs.length ? '<br><span style="color:#555;font-size:11.5px">Correcteur : ' + c.correcteurs.map(e).join(' · ') + '</span>' : '') + '</div></div>';
     });
   });
-  h += '<div style="font-size:11px;color:#777;margin-top:6px;border-top:1px solid #EEE;padding-top:5px;">Soyez dans la salle 15 minutes avant le début. Les copies portent le N° de table seul : un nom ou un matricule écrit est une fraude à signaler. Changement de surveillant : voir le Directeur ou l\'Éducateur.</div></div>';
+  h += '<div style="font-size:11px;color:#777;margin-top:6px;border-top:1px solid #EEE;padding-top:5px;">Soyez dans la salle 15 minutes avant le début. Les copies portent le N° de table seul : un nom ou un matricule écrit est une fraude à signaler. Signez le registre au dépôt. Changement de surveillant : voir le Directeur ou l\'Éducateur.</div></div>';
   return h;
 }
+
+// ─── 2. Mes copies à corriger ───
+function eboMesCopies() {
+  var z = document.getElementById('eboCopiesZone');
+  if (!z || typeof user === 'undefined' || !user || !user.nom) return;
+  _eboJsonp({ type: 'EBO_CORR_MES_COPIES', ecole: user.ecole || '', enseignant: user.nom }, function (r) {
+    if (!r || !r.ok) return;
+    EBO_LOTS = r.lots || [];
+    z.innerHTML = eboMesCopiesHtml(EBO_LOTS, r.dateLimite);
+  });
+}
+function eboMesCopiesHtml(lots, limite) {
+  if (!lots.length) return '';
+  var e = _eboE, grp = {}, ordre = [];
+  lots.forEach(function (l) { var k = l.ecole + '|' + l.epreuve + '|' + l.niveau; if (!grp[k]) { grp[k] = []; ordre.push(k); } grp[k].push(l); });
+  var total = lots.reduce(function (t, l) { return t + l.nb; }, 0), faites = lots.reduce(function (t, l) { return t + (l.saisies || 0); }, 0);
+  var h = '<div style="background:#fff;border-radius:12px;border-left:5px solid #2E7D32;box-shadow:0 2px 10px rgba(0,0,0,0.08);padding:12px 14px;margin:10px 0;text-align:left;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-weight:700;color:#2E7D32;font-size:14px;">&#9998; MES COPIES À CORRIGER — EXAMEN BLANC N°1</div>'
+    + '<div style="background:#E8F5E9;color:#2E7D32;font-weight:700;font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap;">' + faites + '/' + total + ' notes</div></div>'
+    + '<div style="font-size:12px;color:#B71C1C;font-weight:600;margin-top:4px;">Notes à saisir avant le ' + e(limite || 'mardi 3 novembre 2026') + '</div>';
+  ordre.forEach(function (k) {
+    var g = grp[k], l0 = g[0], autre = l0.ecole !== user.ecole;
+    h += '<div style="border-top:1px solid #EEE;margin-top:8px;padding-top:7px;font-size:12.5px;"><b>' + e(l0.epreuve) + '</b> · ' + e(l0.niveau) + (autre ? ' · <b>' + e(l0.ecole) + '</b>' : '')
+      + '<br><span style="color:#555">' + e(l0.jour) + ' — copies à retirer à partir de ' + e(l0.fin) + '</span>';
+    g.forEach(function (l) {
+      var fini = l.saisies >= l.nb && l.nb > 0;
+      h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;">'
+        + '<div><b>' + e(l.salle) + '</b> · ' + l.nb + ' copie(s)<br><span style="font-size:11.5px;color:#E65100">Dépôt : ' + e(l.depot) + '</span></div>'
+        + (autre ? '<span style="font-size:11px;color:#777;text-align:right">Saisie depuis l\'application de ' + e(l.ecole) + '</span>'
+          : '<button onclick="eboOuvrirSaisie(\'' + e(l.id) + '\')" style="border:none;border-radius:8px;padding:7px 10px;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap;background:' + (fini ? '#E8F5E9;color:#2E7D32' : '#2E7D32;color:#fff') + '">' + (fini ? '✓ ' : '') + l.saisies + '/' + l.nb + ' · Saisir</button>')
+        + '</div>';
+    });
+    h += '</div>';
+  });
+  h += '<div style="font-size:11px;color:#777;margin-top:6px;border-top:1px solid #EEE;padding-top:5px;">Retirez vos enveloppes au dépôt en signant le registre. Corrigez d\'après le barème commun. Copie avec un nom ou un matricule : tapez ce nom ou ce matricule, la fraude est signalée d\'office.</div></div>';
+  return h;
+}
+
+// ─── 3. Écran de saisie du correcteur ───
+function eboOuvrirSaisie(id) {
+  var l = EBO_LOTS.filter(function (x) { return x.id === id; })[0]; if (!l) return;
+  var faites = {}; (l.faites || []).forEach(function (t) { faites[t] = 1; });
+  EBO_SAISIE = { lot: l, verifie: false, lignes: (l.tables || []).map(function (t) { return { cle: t, note: '', absence: '', fraude: false, deja: !!faites[t] }; }) };
+  var sc = document.getElementById('screen-ebo-saisie');
+  if (!sc) {
+    sc = document.createElement('div'); sc.className = 'screen'; sc.id = 'screen-ebo-saisie';
+    document.body.appendChild(sc);
+  }
+  eboRendreSaisie();
+  goTo('ebo-saisie');
+}
+function eboRendreSaisie() {
+  var S = EBO_SAISIE, l = S.lot, e = _eboE, sc = document.getElementById('screen-ebo-saisie');
+  var h = '<div class="header"><div class="header-icon">✍️</div><div class="header-title"><h1>Examen blanc n°1 — mes copies</h1><p>' + e(l.epreuve) + ' · ' + e(l.niveau) + ' · ' + e(l.salle) + ' · ' + l.nb + ' copie(s)</p></div></div>'
+    + '<div style="padding:14px 14px 90px">'
+    + '<div style="background:#F5F5F5;border-radius:10px;padding:9px 11px;font-size:12px;color:#444;line-height:1.5;margin-bottom:10px;">Tapez la note de chaque copie en face de son <b>N° de table</b> (0 à 20, virgule acceptée). '
+    + 'Les lignes laissées vides ne sont pas envoyées : vous pouvez saisir en plusieurs fois. Copie avec un <b>nom ou un matricule</b> à la place du N° : ajoutez une ligne et tapez ce nom ou ce matricule — elle passe en <b>FRAUDE</b>. '
+    + 'Nom ou matricule écrit EN PLUS du N° : cochez Fraude. Puis <b>Vérifier</b> et <b>Enregistrer</b>. Date limite : mardi 3 novembre 2026.</div>'
+    + '<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#E8F5E9;color:#1B5E20"><th style="text-align:left;padding:6px">N° table / matricule / nom</th><th style="padding:6px">Note</th><th style="padding:6px">Absent</th><th style="padding:6px">Fraude</th></tr>';
+  S.lignes.forEach(function (x, i) {
+    h += '<tr style="border-top:1px solid #EEE;' + (x.erreur ? 'background:#FFEBEE' : '') + '"><td style="padding:5px">'
+      + '<input value="' + e(x.cle) + '" onchange="EBO_SAISIE.lignes[' + i + '].cle=this.value.trim();EBO_SAISIE.verifie=false;eboBoutonsSaisie()" style="width:100%;max-width:170px;padding:6px;border:1px solid #CFD8DC;border-radius:6px;font-size:13px;font-family:inherit">'
+      + (x.deja ? '<div style="font-size:10.5px;color:#2E7D32">déjà saisie (une nouvelle note remplace l\'ancienne)</div>' : '')
+      + (x.info ? '<div style="font-size:11px;color:#555">' + e(x.info) + '</div>' : '')
+      + (x.erreur ? '<div style="font-size:11px;color:#C62828;font-weight:600">' + e(x.erreur) + '</div>' : '') + '</td>'
+      + '<td style="padding:5px;text-align:center"><input inputmode="decimal" value="' + e(x.note) + '"' + (x.absence ? ' disabled' : '') + ' onchange="EBO_SAISIE.lignes[' + i + '].note=this.value.trim();EBO_SAISIE.verifie=false;eboBoutonsSaisie()" style="width:58px;padding:6px;border:1px solid #CFD8DC;border-radius:6px;font-size:14px;text-align:center;font-family:inherit"></td>'
+      + '<td style="padding:5px;text-align:center"><select onchange="EBO_SAISIE.lignes[' + i + '].absence=this.value;EBO_SAISIE.verifie=false;eboRendreSaisie()" style="padding:5px;border:1px solid #CFD8DC;border-radius:6px;font-size:12px;font-family:inherit"><option value="">—</option><option value="NON_JUSTIFIEE"' + (x.absence === 'NON_JUSTIFIEE' ? ' selected' : '') + '>Absent (0)</option><option value="JUSTIFIEE"' + (x.absence === 'JUSTIFIEE' ? ' selected' : '') + '>Justifié</option></select></td>'
+      + '<td style="padding:5px;text-align:center"><input type="checkbox"' + (x.fraude ? ' checked' : '') + ' onchange="EBO_SAISIE.lignes[' + i + '].fraude=this.checked;EBO_SAISIE.verifie=false;eboBoutonsSaisie()" style="width:20px;height:20px"></td></tr>';
+  });
+  h += '</table><button onclick="EBO_SAISIE.lignes.push({cle:\'\',note:\'\',absence:\'\',fraude:false});EBO_SAISIE.verifie=false;eboRendreSaisie()" style="margin-top:8px;border:1px dashed #90A4AE;background:#fff;border-radius:8px;padding:8px 12px;font-size:12.5px;font-family:inherit;cursor:pointer">+ Copie avec un nom ou un matricule</button>'
+    + '<div id="eboSaisieMsg" style="margin:10px 0;font-size:13px"></div>'
+    + '<div style="display:flex;gap:8px"><button class="btn btn-primary" id="eboBtnVerif" onclick="eboEnvoyerSaisie(true)">✔ Vérifier</button><button class="btn btn-green" id="eboBtnEnr" onclick="eboEnvoyerSaisie(false)">💾 Enregistrer</button></div>'
+    + '<button class="btn" style="margin-top:8px;background:#ECEFF1;color:#37474F" onclick="goTo(\'accueil\');eboMesCopies()">← Retour à l\'accueil</button></div>';
+  sc.innerHTML = h;
+  eboBoutonsSaisie();
+}
+function eboBoutonsSaisie() { var b = document.getElementById('eboBtnEnr'); if (b) b.disabled = !EBO_SAISIE.verifie; }
+function eboEnvoyerSaisie(verifier) {
+  var S = EBO_SAISIE, msg = document.getElementById('eboSaisieMsg');
+  var aEnvoyer = [], idx = [];
+  S.lignes.forEach(function (x, i) { if (String(x.cle).trim() && (String(x.note).trim() !== '' || x.absence)) { aEnvoyer.push({ cle: x.cle, note: String(x.note).replace(',', '.'), absence: x.absence, fraude: !!x.fraude }); idx.push(i); } });
+  if (!aEnvoyer.length) { msg.innerHTML = '<span style="color:#C62828">Tapez au moins une note.</span>'; return; }
+  if (!verifier && !confirm('Enregistrer ' + aEnvoyer.length + ' note(s) — ' + S.lot.epreuve + ' ' + S.lot.salle + ' ?')) return;
+  msg.innerHTML = '⏳ ' + (verifier ? 'Vérification' : 'Enregistrement') + '…';
+  _eboJsonp({ type: 'EBO_CORR_SAISIR', ecole: S.lot.ecole, id: S.lot.id, notes: JSON.stringify(aEnvoyer), verifier: verifier ? 1 : 0, enseignant: user.nom, code: user.code || '' }, function (r) {
+    S.lignes.forEach(function (x) { x.erreur = ''; x.info = ''; });
+    (r && r.lignes || []).forEach(function (y) {
+      var x = S.lignes[idx[y.ligne - 1]]; if (!x) return;
+      x.erreur = y.erreur || '';
+      if (y.par && y.par !== 'table') { x.fraude = true; x.info = '→ ' + y.table + ' · ' + (y.par === 'nom' ? 'nom' : 'matricule') + ' sur la copie : FRAUDE'; }
+    });
+    S.verifie = !!(r && r.ok && verifier);
+    if (r && r.ok && !verifier) S.lignes.forEach(function (x, i) { if (idx.indexOf(i) >= 0) x.deja = true; });
+    eboRendreSaisie(); msg = document.getElementById('eboSaisieMsg');
+    if (!r || !r.ok) { msg.innerHTML = '<span style="color:#C62828;font-weight:600">❌ ' + _eboE(r && r.error || 'Erreur') + '</span>'; return; }
+    msg.innerHTML = verifier ? '<span style="color:#2E7D32;font-weight:600">✅ ' + aEnvoyer.length + ' note(s) justes' + (r.fraudes ? ' · ' + r.fraudes + ' fraude(s)' : '') + '. Vous pouvez enregistrer.</span>'
+      : '<span style="color:#2E7D32;font-weight:600">✅ ' + aEnvoyer.length + ' note(s) enregistrée(s). Moyennes et résultats recalculés.</span>';
+    if (!verifier) { try { showToast('Notes enregistrées', 'success'); } catch (x) {} }
+  }, 240000);
+}
+
 (function () {
   if (typeof demarrerSession === 'function' && !demarrerSession._ebo) {
     var avant = demarrerSession;
@@ -3726,6 +3837,18 @@ function eboMesSurvHtml(l) {
     demarrerSession._ebo = true;
   }
   document.addEventListener('visibilitychange', function () { if (!document.hidden) try { eboMesSurveillances(false); } catch (e) {} });
+  // 18/10/2026 : l'examen blanc n°1 se saisit par N° de table (carte « Mes copies à corriger ») → retiré de l'écran Notes
+  //            (seulement dans l'écran Notes ; les moyennes et bulletins gardent l'examen blanc n°1)
+  if (typeof majPeriodesNotes === 'function' && !majPeriodesNotes._ebo) {
+    var mp = majPeriodesNotes;
+    majPeriodesNotes = function () {
+      var r = mp.apply(this, arguments);
+      var sel = document.getElementById('notesTrimestre');
+      if (sel) Array.prototype.slice.call(sel.options).forEach(function (o) { if (o.value === 'NOTES_EB1') sel.removeChild(o); });
+      return r;
+    };
+    majPeriodesNotes._ebo = true;
+  }
 })();
 </script>
 
