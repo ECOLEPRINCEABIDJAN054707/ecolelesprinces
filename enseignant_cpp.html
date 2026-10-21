@@ -3330,12 +3330,17 @@ function clearSig() { if(sigCtx){const c=document.getElementById('sigCanvas');if
 let _edtJourChoisi = null;
 function _edtJourActuel() { return ['DIMANCHE','LUNDI','MARDI','MERCREDI','JEUDI','VENDREDI','SAMEDI'][new Date().getDay()]; }
 function _edtNomJour(j) { return String(j || '').charAt(0) + String(j || '').slice(1).toLowerCase(); }
+// 21/10/2026 — espace unique : l'emploi du temps couvre toutes les écoles du professeur (clé « MULTI »)
+function _edtCle() {
+  return (user && user.multi) ? { prof: user.code, ecole: 'MULTI_' + user.multi } : { prof: user && user.nom, ecole: user && user.ecole };
+}
 function _edtLireCache() {
+  const k = _edtCle();
   try {
     const s = JSON.parse(localStorage.getItem('pss_edt_semaine') || 'null');
-    if (s && user && s.prof === user.nom && s.ecole === user.ecole && s.data) return s;
+    if (s && user && s.prof === k.prof && s.ecole === k.ecole && s.data) return s;
   } catch (e) {}
-  return (window._edtMemoire && user && window._edtMemoire.prof === user.nom && window._edtMemoire.ecole === user.ecole) ? window._edtMemoire : null;
+  return (window._edtMemoire && user && window._edtMemoire.prof === k.prof && window._edtMemoire.ecole === k.ecole) ? window._edtMemoire : null;
 }
 function _edtMessage(texte, avecBouton) {
   document.getElementById('edtZone').innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:24px">' +
@@ -3355,8 +3360,10 @@ async function chargerMonEdt(force) {
   try {
     const primaire = user.niveau === 'primaire' && !!user.classeDefaut;
     // Primaire : on demande la grille de la classe (nom d'enseignant laissé vide) ; secondaire : les cours au nom du professeur
-    const url = APPS_SCRIPT_URL + '?type=MON_EDT_SEMAINE&ecole=' + encodeURIComponent(user.ecole) +
-      '&enseignant=' + encodeURIComponent(primaire ? '' : user.nom) + '&classe=' + encodeURIComponent(primaire ? user.classeDefaut : '');
+    const url = (user.multi && !primaire)   // 21/10/2026 — espace unique : la semaine dans toutes les écoles
+      ? APPS_SCRIPT_URL + '?type=MON_EDT_SEMAINE_MULTI&nom=' + encodeURIComponent(user.nomSaisi || user.nom) + '&code=' + encodeURIComponent(user.code)
+      : APPS_SCRIPT_URL + '?type=MON_EDT_SEMAINE&ecole=' + encodeURIComponent(user.ecole) +
+        '&enseignant=' + encodeURIComponent(primaire ? '' : user.nom) + '&classe=' + encodeURIComponent(primaire ? user.classeDefaut : '');
     const cbName = 'edt_' + Date.now();
     const script = document.createElement('script');
     const promise = new Promise((resolve) => {
@@ -3367,7 +3374,7 @@ async function chargerMonEdt(force) {
     document.body.appendChild(script);
     const data = await Promise.race([promise, new Promise(r => setTimeout(() => r({ ok: false }), 45000))]);
     if (data && data.ok && (data.type === 'PROF' || data.type === 'CLASSE' || data.type === 'VIDE')) {
-      const s = { prof: user.nom, ecole: user.ecole, date: formatDate(new Date()), heure: formatHeure(new Date()), ts: Date.now(), data };
+      const s = { prof: _edtCle().prof, ecole: _edtCle().ecole, date: formatDate(new Date()), heure: formatHeure(new Date()), ts: Date.now(), data };
       window._edtMemoire = s;
       try { localStorage.setItem('pss_edt_semaine', JSON.stringify(s)); } catch (e) {}
       _afficherMonEdt(data, s.date + ' à ' + s.heure);
@@ -3401,7 +3408,7 @@ function _afficherMonEdt(data, dateMaj) {
   const sous = document.getElementById('edtSousTitre');
   if (!zone || !data) return;
   const auj = _edtJourActuel();
-  sous.textContent = (ECOLE_NOMS[user.ecole] || user.ecole) + (dateMaj ? ' · à jour le ' + dateMaj : '');
+  sous.textContent = ((user.multi && GROUPES_MULTI[user.multi]) ? GROUPES_MULTI[user.multi].nom : (ECOLE_NOMS[user.ecole] || user.ecole)) + (dateMaj ? ' · à jour le ' + dateMaj : '');
 
   // ── Professeur : ses cours jour par jour ──
   if (data.type === 'PROF' && Array.isArray(data.cours) && data.cours.length) {
@@ -3435,7 +3442,7 @@ function _afficherMonEdt(data, dateMaj) {
         html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 0' + (i ? ';border-top:1px solid var(--border)' : '') + '">' +
           '<div style="flex:0 0 96px;font-size:12px;font-weight:700;color:var(--blue)">' + esc(c.heureDebut) + ' → ' + esc(c.heureFin) + '</div>' +
           '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text)">' + esc(c.classe) + '</div>' +
-          '<div style="font-size:12px;color:var(--text2)">' + esc(c.matiere) + '</div></div></div>';
+          '<div style="font-size:12px;color:var(--text2)">' + (c.ecole && user.multi ? '<b>' + esc(ECOLE_COURT[c.ecole] || c.ecole) + '</b> · ' : '') + esc(c.matiere) + '</div></div></div>';
       });
       html += '</div></div>';
     });
