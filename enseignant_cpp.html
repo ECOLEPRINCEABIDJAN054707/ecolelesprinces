@@ -3403,6 +3403,39 @@ function _edtCycle(classe) {
   return 0;
 }
 
+// ⚠️ 21/10/2026 — HEURES RÉELLES : des cours qui se chevauchent le même jour (classes regroupées,
+// ou même heure dans deux écoles) ne comptent qu'UNE fois. On additionne la durée de la réunion des créneaux.
+function _edtHeures(liste) {
+  const parJour = {};
+  (liste || []).forEach(c => {
+    const a = parseMin(c.heureDebut), b = parseMin(c.heureFin);
+    if (a === null || b === null || b <= a) return;
+    (parJour[c.jour] = parJour[c.jour] || []).push([a, b]);
+  });
+  let total = 0;
+  Object.keys(parJour).forEach(j => {
+    const iv = parJour[j].sort((x, y) => x[0] - y[0]);
+    let deb = iv[0][0], fin = iv[0][1], minutes = 0;
+    for (let i = 1; i < iv.length; i++) {
+      if (iv[i][0] < fin) fin = Math.max(fin, iv[i][1]);
+      else { minutes += fin - deb; deb = iv[i][0]; fin = iv[i][1]; }
+    }
+    minutes += fin - deb;
+    total += Math.round(minutes / 55);
+  });
+  return total;
+}
+// Autres cours du même jour qui se chevauchent avec c (au moins 20 min en commun)
+function _edtChevauchements(c, liste) {
+  const a = parseMin(c.heureDebut), b = parseMin(c.heureFin);
+  if (a === null || b === null) return [];
+  return liste.filter(x => {
+    if (x === c) return false;
+    const xa = parseMin(x.heureDebut), xb = parseMin(x.heureFin);
+    return xa !== null && xb !== null && Math.min(b, xb) - Math.max(a, xa) >= 20;
+  });
+}
+
 function _afficherMonEdt(data, dateMaj) {
   const zone = document.getElementById('edtZone');
   const sous = document.getElementById('edtSousTitre');
@@ -3417,10 +3450,10 @@ function _afficherMonEdt(data, dateMaj) {
     const nbClasses = Object.keys(classes).length;
     // ⚠️ 07/10/2026 — heures par cycle : 1er cycle (6e à 3e) et 2nd cycle (2nde à Tle)
     const hCycle = { 1: 0, 2: 0, 0: 0 };
-    data.cours.forEach(c => { hCycle[_edtCycle(c.classe)] += (c.seances || 0); });
+    [0, 1, 2].forEach(k => { hCycle[k] = _edtHeures(data.cours.filter(c => _edtCycle(c.classe) === k)); });   // 21/10/2026
     const tuileEdt = (valeur, libelle) => '<div class="card"><div class="card-body" style="text-align:center;padding:12px"><div style="font-size:22px;font-weight:800;color:var(--navy)">' + valeur + '</div><div style="font-size:11px;color:var(--text2)">' + libelle + '</div></div></div>';
     let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:' + ((hCycle[1] + hCycle[2]) > 0 ? '12' : '14') + 'px">' +
-      tuileEdt((data.totalSeances || 0) + ' h', 'de cours par semaine') +
+      tuileEdt(_edtHeures(data.cours) + ' h', 'de cours par semaine') +
       tuileEdt(nbClasses, 'classe' + (nbClasses > 1 ? 's' : '')) + '</div>';
     if ((hCycle[1] + hCycle[2]) > 0) {
       html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:' + (hCycle[0] > 0 ? '6' : '14') + 'px">' +
@@ -3435,14 +3468,23 @@ function _afficherMonEdt(data, dateMaj) {
       const estAuj = j === auj;
       html += '<div class="card" style="margin-bottom:12px' + (estAuj ? ';border:2px solid var(--blue)' : '') + '">' +
         '<div class="card-title"' + (estAuj ? ' style="background:var(--blue)"' : '') + '>' + _edtNomJour(j) + (estAuj ? ' · aujourd\'hui' : '') +
-        (liste.length ? '<span style="float:right;font-weight:600;text-transform:none;letter-spacing:0">' + liste.reduce((t, c) => t + (c.seances || 0), 0) + ' h</span>' : '') + '</div>' +
+        (liste.length ? '<span style="float:right;font-weight:600;text-transform:none;letter-spacing:0">' + _edtHeures(liste) + ' h</span>' : '') + '</div>' +
         '<div class="card-body" style="padding:6px 14px">';
       if (!liste.length) html += '<div style="padding:10px 0;font-size:12px;color:var(--text3)">Pas de cours</div>';
       liste.forEach((c, i) => {
+        // 21/10/2026 — même heure qu'un autre cours : classes regroupées (même école) ou à vérifier (autre école)
+        const autres = _edtChevauchements(c, liste);
+        let mention = '';
+        if (autres.length) {
+          const autreEcole = autres.filter(x => x.ecole && c.ecole && x.ecole !== c.ecole);
+          mention = autreEcole.length
+            ? '<div style="font-size:11px;font-weight:700;color:var(--red);margin-top:2px">⚠️ Même heure à ' + esc(autreEcole.map(x => (ECOLE_COURT[x.ecole] || x.ecole) + ' ' + x.classe).join(', ')) + ' — à vérifier avec la Direction</div>'
+            : '<div style="font-size:11px;font-weight:700;color:var(--blue);margin-top:2px">🔗 Classes regroupées avec ' + esc(autres.map(x => x.classe).join(', ')) + ' — comptées une seule fois</div>';
+        }
         html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 0' + (i ? ';border-top:1px solid var(--border)' : '') + '">' +
           '<div style="flex:0 0 96px;font-size:12px;font-weight:700;color:var(--blue)">' + esc(c.heureDebut) + ' → ' + esc(c.heureFin) + '</div>' +
           '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text)">' + esc(c.classe) + '</div>' +
-          '<div style="font-size:12px;color:var(--text2)">' + (c.ecole && user.multi ? '<b>' + esc(ECOLE_COURT[c.ecole] || c.ecole) + '</b> · ' : '') + esc(c.matiere) + '</div></div></div>';
+          '<div style="font-size:12px;color:var(--text2)">' + (c.ecole && user.multi ? '<b>' + esc(ECOLE_COURT[c.ecole] || c.ecole) + '</b> · ' : '') + esc(c.matiere) + '</div>' + mention + '</div></div>';
       });
       html += '</div></div>';
     });
