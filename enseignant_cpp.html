@@ -732,6 +732,11 @@ const ECOLE_CODES = {
   'tech':'CPP TECH','kouibly':'ETL PRINCES KOUIBLY','rita':'GS RITA ROSANE',
   'dabou':'CPP DABOU','anyama':'CPP ANYAMA'
 };
+// ⚠️ 21/10/2026 — ESPACE UNIQUE pour les enseignants de plusieurs écoles (lien ?e=princes3)
+const GROUPES_MULTI = {
+  'princes3': { ecoles: ['CPP LES PRINCES', 'CPP TECH', 'CPP PRO'], nom: 'CPP Les Princes, Technique et Professionnel' }
+};
+const ECOLE_COURT = { 'CPP LES PRINCES': '🏫 PRINCES', 'CPP TECH': '⚙️ TECH', 'CPP PRO': '🛠 PRO' };
 const ECOLE_NOMS = {
   'CPP LES PRINCES':     "CPP Les Princes d'Abidjan",
   'ACADEMIE':            'Académie des Princes',
@@ -870,11 +875,12 @@ function estOngletSysteme(titre) {
 window.onload = function() {
   const params = new URLSearchParams(window.location.search);
   const code = (params.get('e') || '').toLowerCase().trim();
-  ecoleURL = ECOLE_CODES[code] || null;
+  window._groupeMulti = GROUPES_MULTI[code] ? code : null;   // 21/10/2026 — espace unique plusieurs écoles
+  ecoleURL = ECOLE_CODES[code] || (window._groupeMulti ? GROUPES_MULTI[code].ecoles[0] : null);
 
   if (ecoleURL) {
     document.getElementById('ecoleBanner').style.display = 'flex';
-    document.getElementById('ecoleNomAffiche').textContent = ECOLE_NOMS[ecoleURL] || ecoleURL;
+    document.getElementById('ecoleNomAffiche').textContent = window._groupeMulti ? GROUPES_MULTI[window._groupeMulti].nom : (ECOLE_NOMS[ecoleURL] || ecoleURL);
     document.getElementById('loginForm').style.display = 'block';
     document.getElementById('ecoleErr').style.display = 'none';
   } else {
@@ -889,7 +895,8 @@ window.onload = function() {
     const saved = localStorage.getItem('pss_ens_v3');
     if (saved) {
       const su = JSON.parse(saved);
-      if (su && su.ecole === ecoleURL && su.code && su.code.length >= 3) {
+      const memeEspace = window._groupeMulti ? (su && su.multi === window._groupeMulti) : (su && !su.multi && su.ecole === ecoleURL);
+      if (memeEspace && su.code && su.code.length >= 3) {
         user = su;
         demarrerSession();
         return;
@@ -939,7 +946,18 @@ function seConnecter() {
   window[cbName] = function(data) {
     reponseRecue = true; cleanup();
     btn.disabled = false; btn.textContent = 'Se connecter →';
-    if (data && data.ok) {
+    if (data && data.ok && window._groupeMulti && Array.isArray(data.comptes) && data.comptes.length) {
+      // 21/10/2026 — espace unique : un compte par école, avec le NOM OFFICIEL renvoyé par le serveur
+      const c0 = data.comptes[0];
+      user = {
+        ecole: c0.ecole, nom: c0.nom, matiere: c0.matiere || matiere,
+        code, sheetsId: SHEETS_IDS_2026_2027[c0.ecole], niveau,
+        classeDefaut: classePrimaire, type: c0.type || 'VACATAIRE',
+        multi: window._groupeMulti, nomSaisi: nom, comptes: data.comptes
+      };
+      localStorage.setItem('pss_ens_v3', JSON.stringify(user));
+      demarrerSession();
+    } else if (data && data.ok) {
       user = {
         ecole: ecoleURL, nom, matiere: data.matiere || matiere,
         code, sheetsId: SHEETS_IDS_2026_2027[ecoleURL], niveau,
@@ -957,7 +975,7 @@ function seConnecter() {
     showToast('Erreur de connexion au serveur', 'error');
   };
   script.src = APPS_SCRIPT_URL + '?callback=' + cbName
-    + '&type=VERIFIER_ENSEIGNANT'
+    + (window._groupeMulti ? '&type=VERIFIER_ENSEIGNANT_MULTI' : '&type=VERIFIER_ENSEIGNANT')
     + '&ecole=' + encodeURIComponent(ecoleURL)
     + '&nom=' + encodeURIComponent(nom)
     + '&code=' + encodeURIComponent(code);
@@ -982,6 +1000,7 @@ function demarrerSession() {
   document.getElementById('headerPrenom').textContent = user.nom.split(' ')[0];
   document.getElementById('headerDate').textContent = jours[now.getDay()] + ' ' + now.getDate() + ' ' + moisC[now.getMonth()];
   document.getElementById('heroEcole').textContent = ECOLE_NOMS[user.ecole] || user.ecole;
+  _majSelecteurEcole();   // 21/10/2026 — espace unique plusieurs écoles
   if (typeof afficherCompositions === 'function') afficherCompositions();
   document.getElementById('bilanMoisLabel').textContent = getMoisLabel();
   document.getElementById('moyennesSubLabel').textContent = ECOLES_TECH.includes(user.ecole) ? 'Sem1·Sem2·EB1-4' : 'T1·T2·T3·EB1-4';
@@ -1088,6 +1107,64 @@ function _corrigerClasseDefaut_(toutesLesClasses, mesClasses) {
   return true;
 }
 
+// ══════════════════════════════════════════════
+// ⚠️ 21/10/2026 — ESPACE UNIQUE PLUSIEURS ÉCOLES
+// Le professeur se connecte une fois ; l'app « bascule » sur l'école du cours qu'il ouvre
+// (nom du compte, base, appel, cahier, notes partent alors vers cette école).
+// Pendant un cours commencé (appel fait, cahier pas encore publié), on ne change pas d'école.
+// ══════════════════════════════════════════════
+function _estMulti() {
+  return !!(user && user.multi && Array.isArray(user.comptes) && user.comptes.length > 1);
+}
+function _activerEcole(ecole, rechargerListes) {
+  if (!user || !user.multi || !ecole || ecole === user.ecole) return true;
+  const c = (user.comptes || []).find(x => x.ecole === ecole);
+  if (!c) { showToast('Vous n\'avez pas de compte dans cette école', 'error'); return false; }
+  if (coursActuel && coursActuel.horodatageAppel) {
+    showToast('📝 Publiez d\'abord le cahier du cours ' + (coursActuel.classe || '') + ' avant de passer à une autre école', 'warn');
+    return false;
+  }
+  user.ecole = c.ecole;
+  user.nom = c.nom;
+  user.matiere = c.matiere || user.matiere;
+  user.type = c.type || user.type;
+  user.sheetsId = SHEETS_IDS_2026_2027[c.ecole];
+  try { localStorage.setItem('pss_ens_v3', JSON.stringify(user)); } catch (e) {}
+  try { localStorage.removeItem('pss_edt_semaine'); } catch (e) {}
+  window._edtMemoire = null;
+  const h = document.getElementById('heroEcole');
+  if (h) h.textContent = ECOLE_NOMS[user.ecole] || user.ecole;
+  _majSelecteurEcole();
+  ['modalClasse', 'notesClasse', 'moyennesClasse'].forEach(id => {
+    const s = document.getElementById(id);
+    if (s) while (s.options.length > 1) s.remove(1);
+  });
+  if (rechargerListes !== false) chargerClasses();
+  return true;
+}
+function _majSelecteurEcole() {
+  const zone = document.querySelector('.hero-ecole');
+  const h = document.getElementById('heroEcole');
+  let sel = document.getElementById('selEcoleActive');
+  if (!zone || !user) return;
+  if (!_estMulti()) {
+    if (sel) sel.remove();
+    if (h) h.style.display = '';
+    return;
+  }
+  if (!sel) {
+    sel = document.createElement('select');
+    sel.id = 'selEcoleActive';
+    sel.setAttribute('aria-label', 'École active');
+    sel.style.cssText = 'margin-left:6px;padding:4px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.55);background:rgba(255,255,255,0.15);color:inherit;font-family:inherit;font-size:12px;font-weight:700;max-width:75%';
+    sel.onchange = function () { if (!_activerEcole(this.value)) this.value = user.ecole; };
+    zone.appendChild(sel);
+  }
+  sel.innerHTML = user.comptes.map(c => '<option value="' + esc(c.ecole) + '" style="color:#000">' + esc(ECOLE_NOMS[c.ecole] || c.ecole) + '</option>').join('');
+  sel.value = user.ecole;
+  if (h) h.style.display = 'none';
+}
+
 async function chargerClasses() {
   if (!user) return;
   const sels = ['modalClasse','notesClasse','moyennesClasse'];
@@ -1176,7 +1253,9 @@ async function chargerMesCoursDuJour() {
     return;
   }
   try {
-    const url = APPS_SCRIPT_URL + '?type=MES_COURS_JOUR&ecole=' + encodeURIComponent(user.ecole) + '&enseignant=' + encodeURIComponent(user.nom);
+    const url = user.multi   // 21/10/2026 — espace unique : les cours de toutes les écoles du professeur
+      ? APPS_SCRIPT_URL + '?type=MES_COURS_JOUR_MULTI&nom=' + encodeURIComponent(user.nomSaisi || user.nom) + '&code=' + encodeURIComponent(user.code)
+      : APPS_SCRIPT_URL + '?type=MES_COURS_JOUR&ecole=' + encodeURIComponent(user.ecole) + '&enseignant=' + encodeURIComponent(user.nom);
     const cbName = 'mcj_' + Date.now();
     const script = document.createElement('script');
     const promise = new Promise((resolve) => {
@@ -1200,6 +1279,11 @@ async function chargerMesCoursDuJour() {
     data.cours.sort((a, b) => parseMin(a.heureDebut) - parseMin(b.heureDebut));
     window._mesCoursJour = data.cours;
     window._mesCoursJourDate = formatDate(new Date());
+    if (user.multi && Array.isArray(data.comptes) && data.comptes.length) {   // 21/10/2026 — comptes tenus à jour
+      user.comptes = data.comptes;
+      try { localStorage.setItem('pss_ens_v3', JSON.stringify(user)); } catch (e) {}
+      _majSelecteurEcole();
+    }
     _dessinerMesCoursDuJour();
 } catch(e) {
      console.error('DEBUG chargerMesCoursDuJour:', e);
@@ -1270,7 +1354,7 @@ function _dessinerMesCoursDuJour() {
     let html = '<div class="card"><div class="card-title">📅 Mes cours aujourd\'hui</div><div class="card-body" style="padding:12px">';
     cours.forEach((c, i) => {
       const etat = _etatCoursDuJour(c);
-      const horaire = esc(c.matiere) + ' · ' + esc(c.heureDebut) + ' → ' + esc(c.heureFin);
+      const horaire = (c.ecole && _estMulti() ? '<b>' + esc(ECOLE_COURT[c.ecole] || c.ecole) + '</b> · ' : '') + esc(c.matiere) + ' · ' + esc(c.heureDebut) + ' → ' + esc(c.heureFin);
       if (etat === 'clos' || etat === 'termine') {
         html += '<div style="width:100%;text-align:left;padding:12px;margin-bottom:8px;background:#F0F0F0;border:1.5px solid #DDD;border-radius:10px;opacity:0.55">' +
           '<div style="font-weight:700;font-size:14px;color:#888">' + esc(c.classe) + ' <span style="font-size:11px;font-weight:400">' + (etat === 'clos' ? '(cahier publié)' : '(terminé)') + '</span></div>' +
@@ -1369,6 +1453,9 @@ async function demarrerCoursDepuisEDT(idx) {
   }
 
   // (15/10/2026 : le contrôle de position à l'ouverture est fait dans confirmerCours, pour TOUS les chemins)
+
+  // 21/10/2026 — espace unique : on passe sur l'école de ce cours (la liste des classes est rechargée juste après)
+  if (c.ecole && user && user.multi && !_activerEcole(c.ecole, false)) return;
 
   function normaliser(s) {
     return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
