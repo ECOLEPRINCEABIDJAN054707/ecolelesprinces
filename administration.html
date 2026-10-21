@@ -1801,6 +1801,15 @@ function _blocLien(titre, couleur, url, id){
     + '</div>';
 }
 
+// ⚠️ 21/10/2026 — Lien unique pour les enseignants qui font cours dans plusieurs écoles
+// (CPP LES PRINCES, CPP TECH, CPP PRO) : une seule connexion, tous leurs cours du jour.
+const ECOLES_LIEN_MULTI = ['CPP LES PRINCES', 'CPP TECH', 'CPP PRO'];
+function _blocLienMulti(suffixe){
+  if(!currentStaff || ECOLES_LIEN_MULTI.indexOf(String(currentStaff.ecole||'').toUpperCase().trim()) === -1) return '';
+  return _blocLien('👨‍🏫 Espace Enseignant — profs de plusieurs écoles (CPP Les Princes, Technique et Professionnel)', 'var(--emeraude, #00897B)', LIEN_ENSEIGNANT_BASE + 'princes3', 'lienEnsMulti' + suffixe)
+    + '<div style="margin:-6px 0 12px;font-size:0.78em;color:var(--gris);line-height:1.4">À transmettre aux enseignants qui ont cours dans au moins deux de ces trois écoles : ils se connectent une seule fois avec leur nom et leur code habituel, et voient tous leurs cours du jour.</div>';
+}
+
 function afficherLiensDir(){
   const body = document.getElementById('dirLiensBody');
   if(!body || !currentStaff) return;
@@ -1809,6 +1818,7 @@ function afficherLiensDir(){
   let h = '';
   h += _blocLien('👨‍👩‍👧 Espace Parents (réseau entier)', 'var(--bleu)', LIEN_PARENTS, 'lienParentsDir');
   h += _blocLien('👨‍🏫 Espace Enseignant — '+(currentStaff.label||currentStaff.ecole), 'var(--vert)', lienEnseignant, 'lienEnsDir');
+  h += _blocLienMulti('Dir');
   h += _blocLien('🔐 Espace Administration (Directeur/Comptable/Éducateur)', 'var(--violet)', LIEN_ADMIN, 'lienAdminDir');
   body.innerHTML = h;
 }
@@ -1820,6 +1830,7 @@ function afficherLiensDir(){
   let h = '';
   h += _blocLien('👨‍👩‍👧 Espace Parents (réseau entier)', 'var(--bleu)', LIEN_PARENTS, 'lienParentsCom');
   h += _blocLien('👨‍🏫 Espace Enseignant — '+(currentStaff.label||currentStaff.ecole), 'var(--vert)', lienEnseignant, 'lienEnsCom');
+  h += _blocLienMulti('Com');
   body.innerHTML = h;
 }
   function afficherLiensEdu(){
@@ -1830,6 +1841,7 @@ function afficherLiensDir(){
   let h = '';
   h += _blocLien('👨‍👩‍👧 Espace Parents (réseau entier)', 'var(--bleu)', LIEN_PARENTS, 'lienParentsEdu');
   h += _blocLien('👨‍🏫 Espace Enseignant — '+(currentStaff.label||currentStaff.ecole), 'var(--vert)', lienEnseignant, 'lienEnsEdu');
+  h += _blocLienMulti('Edu');
   body.innerHTML = h;
 }
   var _progCacheCom = []; // cache des lignes du programme, pour affichage groupé + PDF
