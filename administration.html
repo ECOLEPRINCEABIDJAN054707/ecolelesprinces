@@ -333,6 +333,9 @@ table tr:nth-child(even){background:#F8FAFD}
     <h3>&#128176; Masse salariale</h3><span class="arr">&#9660;</span>
   </div>
   <div class="sec-body">
+    <div style="padding:8px 8px 0;text-align:right">
+      <button type="button" onclick="telechargerBordereauPaie()" style="background:#1a3a6b;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer">&#128229; Bordereau de paie</button>
+    </div>
     <div id="dirMasseSalarialeBody" style="padding:8px">
       <div style="text-align:center;padding:30px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>
     </div>
@@ -3277,6 +3280,9 @@ async function sauvegarderPersonnelDir(idx) {
     <h3>&#128176; Masse salariale</h3><span class="arr">&#9660;</span>
   </div>
   <div class="sec-body">
+    <div style="padding:8px 8px 0;text-align:right">
+      <button type="button" onclick="telechargerBordereauPaie()" style="background:#1a3a6b;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer">&#128229; Bordereau de paie</button>
+    </div>
     <div id="comMasseSalarialeBody" style="padding:8px">
       <div style="text-align:center;padding:30px;color:var(--gris)"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>
     </div>
@@ -15287,6 +15293,182 @@ function chargerMasseSalarialeCom(ecole){
   document.body.appendChild(script);
 }
   
+// ============================================================
+// BORDEREAU DE PAIE DES SALAIRES — Comptable / Directeur
+// ============================================================
+var BORD_CAL_PAIE = [
+  ['Septembre 2026', '2026-09-01', '2026-10-04'],
+  ['Octobre 2026',   '2026-10-05', '2026-10-30'],
+  ['Novembre 2026',  '2026-11-02', '2026-11-27'],
+  ['Décembre 2026',  '2026-11-30', '2026-12-18'],
+  ['Janvier 2027',   '2027-01-04', '2027-01-29'],
+  ['Février 2027',   '2027-02-01', '2027-02-26'],
+  ['Mars 2027',      '2027-03-01', '2027-03-19'],
+  ['Avril 2027',     '2027-04-05', '2027-04-30'],
+  ['Mai 2027',       '2027-05-03', '2027-05-28'],
+  ['Juin 2027',      '2027-05-31', '2027-06-15']
+];
+
+function _bordPeriode() {
+  var auj = new Date(); auj.setHours(12, 0, 0, 0);
+  var choix = BORD_CAL_PAIE[0];
+  BORD_CAL_PAIE.forEach(function (p) { if (new Date(p[1] + 'T00:00:00') <= auj) choix = p; });
+  function fr(d) { var x = d.split('-'); return x[2] + '/' + x[1] + '/' + x[0]; }
+  return { libelle: choix[0], du: fr(choix[1]), au: fr(choix[2]) };
+}
+
+function _bordEsc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
+}
+
+function _bordF(n) { return Math.round(Number(n) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+
+function _bordEnLettres(n) {
+  n = Math.round(Number(n) || 0);
+  var U = ['zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix','onze','douze','treize','quatorze','quinze','seize'];
+  var D = ['','dix','vingt','trente','quarante','cinquante','soixante','soixante','quatre-vingt','quatre-vingt'];
+  function c100(x) {
+    if (x < 17) return U[x];
+    if (x < 20) return 'dix-' + U[x - 10];
+    var d = Math.floor(x / 10), u = x % 10;
+    if (d === 7 || d === 9) {
+      var r = x - (d === 7 ? 60 : 80);
+      return D[d] + (d === 7 && r === 11 ? ' et ' : '-') + c100(r);
+    }
+    if (u === 0) return d === 8 ? 'quatre-vingts' : D[d];
+    if (u === 1 && d < 8) return D[d] + ' et un';
+    return D[d] + '-' + U[u];
+  }
+  function c1000(x) {
+    var c = Math.floor(x / 100), r = x % 100, s = '';
+    if (c === 1) s = 'cent';
+    else if (c > 1) s = U[c] + ' cent' + (r === 0 ? 's' : '');
+    if (r) s += (s ? ' ' : '') + c100(r);
+    return s;
+  }
+  if (n === 0) return 'zéro';
+  var m = Math.floor(n / 1000000), k = Math.floor((n % 1000000) / 1000), r = n % 1000, out = [];
+  if (m) out.push(m === 1 ? 'un million' : c1000(m) + ' millions');
+  if (k) out.push(k === 1 ? 'mille' : c1000(k).replace(/cents$/, 'cent').replace(/vingts$/, 'vingt') + ' mille');
+  if (r) out.push(c1000(r));
+  return out.join(' ');
+}
+
+function telechargerBordereauPaie() {
+  if (!currentStaff || !currentStaff.ecole) { alert('Session expirée : reconnectez-vous.'); return; }
+  var ecole = currentStaff.ecole;
+  var sheetsId = SHEETS_IDS_2026_2027[ecole];
+  if (!sheetsId) { alert('Base 2026-2027 non configurée pour ' + ecole); return; }
+
+  // Fenêtre ouverte tout de suite (sinon le navigateur la bloque)
+  var w = window.open('', '_blank');
+  if (!w) { alert('Le navigateur a bloqué la fenêtre. Autorisez les fenêtres pop-up pour ce site.'); return; }
+  w.document.write('<p style="font-family:Arial;text-align:center;margin-top:60px">Préparation du bordereau de paie…</p>');
+
+  var cbName = 'bord_' + Date.now();
+  var script = document.createElement('script');
+  var fini = false;
+  window[cbName] = function (res) {
+    fini = true; delete window[cbName];
+    try { document.body.removeChild(script); } catch (e) {}
+    if (!res || !res.ok) {
+      w.document.body.innerHTML = '<p style="font-family:Arial;color:#c00;text-align:center;margin-top:60px">Erreur : ' + _bordEsc(res && res.erreur || 'réponse vide') + '</p>';
+      return;
+    }
+    _bordAfficher(w, res, ecole);
+  };
+  script.onerror = function () {
+    delete window[cbName];
+    w.document.body.innerHTML = '<p style="font-family:Arial;color:#c00;text-align:center;margin-top:60px">Erreur réseau</p>';
+  };
+  setTimeout(function () {
+    if (!fini && window[cbName]) {
+      delete window[cbName];
+      w.document.body.innerHTML = '<p style="font-family:Arial;color:#c00;text-align:center;margin-top:60px">Délai dépassé — réessayez.</p>';
+    }
+  }, 25000);
+  var params = new URLSearchParams({ callback: cbName, action: 'getBordereauSalaires', sheetsId: sheetsId });
+  script.src = APP_SCRIPT_URL_ADMIN + '?' + params.toString();
+  document.body.appendChild(script);
+}
+
+function _bordAfficher(w, res, ecole) {
+  var per = _bordPeriode();
+  var libellePeriode = per.libelle + ' (du ' + per.du + ' au ' + per.au + ')';
+  var perm = res.employes.filter(function (e) { return e.statut !== 'Vacataire'; });
+  var vac = res.employes.filter(function (e) { return e.statut === 'Vacataire'; });
+  var num = 0;
+
+  function lignes(liste) {
+    return liste.map(function (e) {
+      num++;
+      var rouge = e.anomalie ? ' class="ano"' : '';
+      return '<tr' + rouge + '><td class="c">' + num + '</td><td>' + _bordEsc(e.nom) + '</td><td>' + _bordEsc(e.fonction) +
+        '</td><td class="c">' + _bordEsc(e.contrat) + '</td><td class="r">' +
+        (e.anomalie ? _bordF(e.net) + ' F<br><small>À vérifier — non compté</small>' : _bordF(e.net) + ' F') +
+        '</td><td class="sig"></td></tr>';
+    }).join('');
+  }
+  function bloc(titre, liste, total) {
+    if (!liste.length) return '';
+    return '<tr class="sec"><td colspan="6">' + titre + ' (' + liste.length + ')</td></tr>' + lignes(liste) +
+      '<tr class="st"><td colspan="4" class="r">Sous-total ' + titre.toLowerCase() + '</td><td class="r">' + _bordF(total) + ' F</td><td></td></tr>';
+  }
+
+  var t = res.totaux;
+  var lettres = _bordEnLettres(t.total);
+  lettres = lettres.charAt(0).toUpperCase() + lettres.slice(1);
+  var nomComptable = (currentStaff && currentStaff.nom) ? _bordEsc(currentStaff.nom) : '';
+
+  var html = '<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Bordereau de paie — ' + _bordEsc(ecole) + ' — ' + per.libelle + '</title>' +
+    '<style>' +
+    '@page{size:A4 portrait;margin:12mm}' +
+    'body{font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#000;margin:0;padding:10px}' +
+    '.barre{text-align:center;margin-bottom:10px}' +
+    '.barre button{background:#1a3a6b;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-weight:bold;cursor:pointer;margin:0 4px}' +
+    '.ent{display:flex;justify-content:space-between;border-bottom:2px solid #000;padding-bottom:6px;margin-bottom:8px}' +
+    '.ent b{font-size:13px}' +
+    'h1{text-align:center;font-size:16px;margin:10px 0 2px;letter-spacing:1px}' +
+    '.per{text-align:center;font-size:12px;margin-bottom:10px}' +
+    'table{width:100%;border-collapse:collapse}' +
+    'th,td{border:1px solid #000;padding:4px 5px;vertical-align:middle}' +
+    'th{background:#e6e6e6;font-size:10.5px}' +
+    '.c{text-align:center}.r{text-align:right;white-space:nowrap}' +
+    '.sig{width:22%;height:26px}' +
+    'tr.sec td{background:#f2f2f2;font-weight:bold}' +
+    'tr.st td{font-weight:bold;background:#fafafa}' +
+    'tr.tot td{font-weight:bold;font-size:12px;background:#e6e6e6}' +
+    'tr.ano td{color:#c00}' +
+    '.lettres{margin:10px 0;font-size:11.5px}' +
+    '.signs{display:flex;justify-content:flex-end;margin-top:28px}' +
+    '.signs div{width:45%;text-align:center}' +
+    '.signs .zone{height:70px}' +
+    '.note{font-size:9.5px;color:#555;margin-top:14px}' +
+    '@media print{.barre{display:none}body{padding:0}}' +
+    '</style></head><body>' +
+    '<div class="barre"><button onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button><button onclick="window.close()">Fermer</button></div>' +
+    '<div class="ent"><div><b>' + _bordEsc(ecole) + '</b><br>Réseau CPP Les Princes d\'Abidjan</div>' +
+    '<div style="text-align:right">Année scolaire 2026-2027<br>Édité le ' + _bordEsc(res.dateEdition) + '</div></div>' +
+    '<h1>BORDEREAU DE PAIEMENT DES SALAIRES</h1>' +
+    '<div class="per">Période de paie : <b>' + _bordEsc(libellePeriode) + '</b></div>' +
+    '<table><thead><tr><th style="width:5%">N°</th><th>Nom et prénoms</th><th style="width:20%">Fonction</th><th style="width:8%">Contrat</th><th style="width:14%">Net à payer</th><th>Émargement</th></tr></thead><tbody>' +
+    bloc('Personnel permanent', perm, t.permanents) +
+    bloc('Vacataires', vac, t.vacataires) +
+    '<tr class="tot"><td colspan="4" class="r">TOTAL À PAYER</td><td class="r">' + _bordF(t.total) + ' F</td><td></td></tr>' +
+    '</tbody></table>' +
+    '<div class="lettres">Arrêté le présent bordereau à la somme de : <b>' + _bordEsc(lettres) + ' francs CFA</b> (' + _bordF(t.total) + ' F CFA), pour ' + (t.nbEmployes - t.nbAnomalies) + ' employé(s) payé(s).</div>' +
+    (t.nbAnomalies ? '<div style="color:#c00">⚠ ' + t.nbAnomalies + ' ligne(s) en rouge (net nul ou négatif) : à vérifier avant paiement, non comptées dans le total.</div>' : '') +
+    '<div class="signs"><div><b>Le Comptable</b><div class="zone"></div>' + (nomComptable || '……………………………………') + '</div></div>' +
+    '<div class="note">Document généré par Princes Smart School — source : onglet PERSONNEL_SALAIRES.</div>' +
+    '</body></html>';
+
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
 function chargerBulletinsSalaireDir(ecole) {
   _chargerBulletinsSalaire(ecole, 'dirBulletinsSalaireBody');
 }
