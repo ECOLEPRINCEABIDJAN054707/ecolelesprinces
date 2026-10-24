@@ -18923,6 +18923,24 @@ function afficherChoixEcoleStaff() {
         }).join('') + '</div>';
   });
 }
+// Relit au serveur la liste des écoles du compte : une session ouverte avant la mise à jour (ou avant l'ajout
+// des lignes dans STAFF) n'a pas cette liste — sans cela, la barre n'apparaîtrait qu'après une déconnexion.
+function rafraichirEcolesStaff() {
+  var s = (typeof currentStaff !== 'undefined') ? currentStaff : null;
+  if (!s || !s.matricule || !s.code || s.profil === 'FOND' || typeof appelJSONP !== 'function') return;
+  appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'VERIFIER_STAFF', matricule: s.matricule, code: s.code }, 20000).then(function (d) {
+    if (!d || !d.ok) return;
+    if (!d.ecoles) { console.warn('PSS : le serveur ne renvoie pas « ecoles » — redéployez POINTAGE ET SALAIRES (Nouvelle version).'); return; }
+    if (currentStaff !== s) return;
+    var avant = JSON.stringify(s.ecoles || []);
+    s.ecoles = d.ecoles.length ? d.ecoles : [s.ecole];
+    if (d.classesParEcole) s.classesParEcole = d.classesParEcole;
+    if (d.labels) s.labels = d.labels;
+    try { sessionStorage.setItem('staffConnecte', JSON.stringify(s)); } catch (e) {}
+    if (JSON.stringify(s.ecoles) === avant) return;
+    afficherChoixEcoleStaff();
+  });
+}
 function changerEcoleStaff(ecole) {
   var s = (typeof currentStaff !== 'undefined') ? currentStaff : null;
   if (!s || !s.ecoles || s.ecoles.indexOf(ecole) < 0 || s.ecole === ecole) return;
@@ -18940,6 +18958,7 @@ function changerEcoleStaff(ecole) {
     var r = _procederLoginAvantEbTech.apply(this, arguments);
     try { afficherEbTechProStaff(); } catch (e) {}
     try { afficherChoixEcoleStaff(); } catch (e) {}
+    try { rafraichirEcolesStaff(); } catch (e) {}
     return r;
   };
 })();
