@@ -19526,7 +19526,8 @@ function eboSurveillances_() {
   var d = EBO.data, jours = Object.keys(d.jours || {}).sort(), j = EBO.jour || jours[0];
   var h = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">' + jours.map(function (x) { return '<button class="ebo-tab' + (x === j ? ' on' : '') + '" onclick="EBO.jour=\'' + x + '\';eboSurveillances_()">' + eboEsc_(d.jours[x].split(' ').slice(0, 2).join(' ')) + '</button>'; }).join('') +
     '<button class="ebo-tab' + (j === 'HEURES' ? ' on' : '') + '" onclick="EBO.jour=\'HEURES\';eboSurveillances_()">⏱ Heures par enseignant</button>' +
-    '<button class="ebo-btn" onclick="eboImprimerPlanning_()">🖨 Planning</button></div>';
+    '<button class="ebo-btn" onclick="eboImprimerPlanning_()">🖨 Planning</button>' +
+    '<button class="ebo-btn" onclick="eboImprimerPV_(false)">🖨 PV du jour</button><button class="ebo-btn ebo-btn-l" onclick="eboImprimerPV_(true)">🖨 PV — tout l\'examen</button></div>';
   if (j === 'HEURES') {
     var t = {};
     d.surveillances.forEach(function (c) { var k = c.surveillant || '?'; t[k] = t[k] || { h: 0, n: 0, demi: {} }; t[k].h += (eboMin_(c.fin) - eboMin_(c.debut)) / 60; t[k].n++; t[k].demi[c.date + (eboMin_(c.debut) < 780 ? 'M' : 'S')] = 1; });
@@ -19563,6 +19564,58 @@ function eboImprimerPlanning_() {
       l.map(function (c) { return '<tr><td>' + c.debut + '-' + c.fin + '</td><td>' + eboEsc_(c.epreuve) + '</td><td>' + eboEsc_(c.groupe) + '</td><td>' + eboEsc_(c.salle) + '</td><td>' + eboEsc_(c.site) + '</td><td>' + eboEsc_(c.surveillant) + '</td><td>' + eboEsc_(c.ramassage) + '</td><td style="width:90px"></td></tr>'; }).join('') + '</table></div>';
   }).join('');
   eboFenetre_(html, 'body{font-family:Arial,sans-serif;font-size:11px;margin:16px}h1{font-size:15px;margin:0}h2{font-size:13px}table{border-collapse:collapse;width:100%}th,td{border:1px solid #444;padding:4px}th{background:#eee}.page{page-break-after:always}');
+}
+
+// ─── 3 ter. PROCÈS-VERBAL DE L'ÉPREUVE (24/10/2026) : un PV par salle et par épreuve, prérempli ───
+// Modèle : PV d'épreuve du BEPC (Direction des Examens et Concours), en-tête au nom de l'école.
+// tous = false → jour affiché dans l'onglet Surveillances ; tous = true → les trois jours.
+function eboImprimerPV_(tous) {
+  var d = EBO.data, st = eboStaff_() || {};
+  if (!d || !d.surveillances || !d.surveillances.length) { eboToast_('Aucune surveillance enregistrée', 'error'); return; }
+  var jours = Object.keys(d.jours || {}).sort(), j = (EBO.jour && EBO.jour !== 'HEURES') ? EBO.jour : jours[0];
+  var l = d.surveillances.filter(function (c) { return tous || c.date === j; })
+    .sort(function (a, b) { return (a.date + a.debut + a.salle).localeCompare(b.date + b.debut + b.salle, 'fr', { numeric: true }); });
+  if (!l.length) { eboToast_('Aucune épreuve ce jour-là', 'error'); return; }
+  var cmp = function (a, b) { return String(a.table).localeCompare(String(b.table), 'fr', { numeric: true }); };
+  var ligne = function (lib, val) { return '<div class="ln"><span class="lb">' + lib + '</span><span class="vl">' + (val ? eboEsc_(val) : '&nbsp;') + '</span></div>'; };
+  var html = l.map(function (c) {
+    var p = (d.programme || []).filter(function (e) { return e.date === c.date && e.epreuve === c.epreuve; })[0];
+    var cand = d.repartition.filter(function (x) { return x.salle === c.salle && (!p || p.h[x.niveau]); });
+    if (!cand.length) cand = d.repartition.filter(function (x) { return x.salle === c.salle; });
+    cand.sort(cmp);
+    var premier = cand.length ? cand[0].table : '', dernier = cand.length ? cand[cand.length - 1].table : '';
+    var surv = (c.surveillant && c.surveillant !== EBO_ADMIN_NOM) ? c.surveillant : '';
+    return '<div class="page">'
+      + '<div class="ent"><div>RÉSEAU CPP LES PRINCES D\'ABIDJAN<br><b>' + eboEsc_(st.ecole || '') + '</b></div><div style="text-align:right">RÉPUBLIQUE DE CÔTE D\'IVOIRE<br><small>Union – Discipline – Travail</small></div></div>'
+      + '<div class="cadre"><div class="s1">EXAMEN BLANC N°1 — SESSION OCTOBRE 2026</div><div class="s2">PROCÈS-VERBAL DE L\'ÉPREUVE</div></div>'
+      + ligne('ÉTABLISSEMENT :', st.ecole || '')
+      + '<div class="ln3">' + ligne('DATE :', d.jours[c.date] || c.date) + ligne('HEURE :', c.debut + ' – ' + c.fin) + ligne('SALLE :', c.salle + (c.site ? ' (' + c.site + ')' : '')) + '</div>'
+      + ligne('ÉPREUVE DE :', c.epreuve + ' — ' + c.groupe)
+      + ligne('NUMÉRO DE TABLE DU PREMIER CANDIDAT :', premier)
+      + ligne('NUMÉRO DE TABLE DU DERNIER CANDIDAT :', dernier)
+      + '<table class="nb"><tr><td>NOMBRE DE CANDIDATS INSCRITS :</td><td class="bx">' + cand.length + '</td><td>NOMBRE DE CANDIDATS ABSENTS * :</td><td class="bx"></td></tr>'
+      + '<tr><td>NOMBRE DE CANDIDATS PRÉSENTS :</td><td class="bx"></td><td>NOMBRE DE COPIES REMISES ** :</td><td class="bx"></td></tr></table>'
+      + '<div class="tt">A/ Observations du surveillant de la salle de composition :</div>'
+      + '<div class="ln"><span class="lb">❖ Numéros des candidats absents :</span><span class="vl">&nbsp;</span></div><div class="pt"></div><div class="pt"></div>'
+      + '<div class="ln"><span class="lb">❖ Observations sur le déroulement :</span><span class="vl">&nbsp;</span></div><div class="pt"></div><div class="pt"></div>'
+      + '<table class="sg"><tr><th>NOM ET PRÉNOMS DU SURVEILLANT</th><th>FONCTION</th><th>SIGNATURE</th></tr><tr><td>' + eboEsc_(surv) + '</td><td>' + (surv ? 'Enseignant' : '') + '</td><td></td></tr></table>'
+      + '<div class="tt">B/ Observations lors de la réception des copies' + (c.ramassage ? ' (ramassage : ' + eboEsc_(c.ramassage) + ')' : '') + ' :</div>'
+      + '<div class="pt"></div><div class="pt"></div>'
+      + '<table class="sg"><tr><th>NOM ET PRÉNOMS DE L\'AGENT QUI REÇOIT LES COPIES</th><th>HEURE DE RÉCEPTION</th><th>SIGNATURE</th></tr><tr><td></td><td></td><td></td></tr></table>'
+      + '<div class="nbp">* Remplir une feuille de copie pour chaque candidat absent (N° de table, matière) et y écrire « ABSENT » en travers.<br>'
+      + '** Les copies (y compris celles des absents) sont classées par ordre croissant des numéros de table.<br>'
+      + '<b>N.B. :</b> la copie porte le N° de table SEUL ; un nom ou un matricule écrit sur la copie = FRAUDE, à signaler dans les observations. '
+      + 'Ce PV fait foi de la régularité des copies de la salle et engage la responsabilité des signataires. Il est remis avec l\'enveloppe des copies au lieu de dépôt.</div>'
+      + '</div>';
+  }).join('');
+  eboFenetre_(html, '@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;font-size:11.5px;margin:0;color:#000}'
+    + '.page{page-break-after:always;padding:2px 4px}.ent{display:flex;justify-content:space-between;font-size:10px;line-height:1.4;margin-bottom:8px}'
+    + '.cadre{border:2px solid #000;box-shadow:4px 4px 0 #000;text-align:center;padding:8px;margin:6px auto 14px;width:70%}.s1{font-weight:bold;font-size:14px}.s2{font-weight:bold;font-size:20px;margin-top:4px}'
+    + '.ln{display:flex;gap:6px;margin:7px 0;align-items:flex-end}.lb{white-space:nowrap;font-weight:bold;font-size:10.5px}.vl{flex:1;border-bottom:1px dotted #000;min-height:14px;font-weight:bold}'
+    + '.ln3{display:flex;gap:14px}.ln3 .ln{flex:1}.pt{border-bottom:1px dotted #000;height:18px}'
+    + '.nb{width:100%;margin:10px 0;border-collapse:collapse}.nb td{padding:5px 4px;font-size:10.5px;font-weight:bold}.nb .bx{border:1.5px solid #000;width:60px;height:26px;text-align:center;font-size:15px}'
+    + '.tt{font-weight:bold;font-size:12.5px;margin:12px 0 4px}.sg{width:100%;border-collapse:collapse;margin-top:8px}.sg th{background:#ddd;border:1px solid #000;font-size:9.5px;padding:4px}.sg td{border:1px solid #000;height:30px;padding:4px;font-weight:bold}'
+    + '.nbp{font-size:9.5px;margin-top:12px;line-height:1.45}');
 }
 
 // ─── 3 bis. CORRECTIONS : lots de copies, correcteurs, dépôts (18/10/2026) ───
