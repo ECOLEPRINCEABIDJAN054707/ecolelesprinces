@@ -281,6 +281,7 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
   <div id="examBlancZoneDir" style="padding:0 14px"></div>
+  <div id="ebTechZoneDir" style="padding:0 14px"></div>
   <!-- 17/10/2026 — EXAMEN BLANC N°1 : organisation (EXAMEN_BLANC_ORGA.gs) -->
   <div class="section"><div class="sec-head sec-violet" onclick="eboOuvrir('Dir');toggleSec(this)"><h3>&#128221; Examen blanc n&deg;1 &mdash; salles, surveillances, notes</h3><span class="arr">&#9660;</span></div><div class="sec-body"><div id="eboBodyDir"></div></div></div>
   <!-- NOUVEAUX ÉLÈVES 2026-2027 — contrôle cursus (15/10/2026) -->
@@ -3157,6 +3158,7 @@ async function sauvegarderPersonnelDir(idx) {
     </div>
   </div>
   <div id="examBlancZoneCom" style="padding:0 14px"></div>
+  <div id="ebTechZoneCom" style="padding:0 14px"></div>
   <!-- 17/10/2026 — EXAMEN BLANC N°1 : organisation (EXAMEN_BLANC_ORGA.gs) -->
   <div class="section"><div class="sec-head sec-violet" onclick="eboOuvrir('Com');toggleSec(this)"><h3>&#128221; Examen blanc n&deg;1 &mdash; salles, surveillances, notes</h3><span class="arr">&#9660;</span></div><div class="sec-body"><div id="eboBodyCom"></div></div></div>
   <!-- EXAMEN BLANC — saisie et résultats (15/10/2026) -->
@@ -4111,6 +4113,7 @@ async function attribuerMatriculeCom() {
     </div>
   </div>
   <div id="examBlancZoneEdu" style="padding:0 14px"></div>
+  <div id="ebTechZoneEdu" style="padding:0 14px"></div>
   <!-- 17/10/2026 — EXAMEN BLANC N°1 : organisation (EXAMEN_BLANC_ORGA.gs) -->
   <div class="section"><div class="sec-head sec-violet" onclick="eboOuvrir('Edu');toggleSec(this)"><h3>&#128221; Examen blanc n&deg;1 &mdash; salles, surveillances, notes</h3><span class="arr">&#9660;</span></div><div class="sec-body"><div id="eboBodyEdu"></div></div></div>
   <!-- EXAMEN BLANC — saisie et résultats (15/10/2026) -->
@@ -18861,6 +18864,52 @@ function examensBlancsHtml(role) {
   [['examBlancZoneEns', 'ENS'], ['examBlancZoneCom', 'COM'], ['examBlancZoneEdu', 'EDU'], ['examBlancZoneDir', 'DIR']].forEach(function(z) {
     var el = document.getElementById(z[0]); if (el) el.innerHTML = examensBlancsHtml(z[1]);
   });
+})();
+</script>
+<script>
+// ═══ 24/10/2026 — EXAMEN BLANC TECHNIQUE ET PROFESSIONNEL : du lundi 23 au samedi 28 novembre 2026 ═══
+// Affiché aux enseignants du technique et du professionnel, et au Directeur, au Comptable et à l'Éducateur des écoles concernées.
+var EB_TECHPRO = { debut: '2026-11-23', fin: '2026-11-28', dates: 'du lundi 23 au samedi 28 novembre 2026' };
+var EB_TECHPRO_ECOLES = ['CPP TECH', 'CPP PRO', 'ETL PRINCES KOUIBLY'];               // écoles du technique et du professionnel
+var EB_TECHPRO_ECOLES_STAFF = EB_TECHPRO_ECOLES.concat(['CPP LES PRINCES']);         // + personnel de CPP Les Princes (même site que TECH et PRO)
+var EB_TECHPRO_CONSIGNES = {
+  ENS: 'Remettez vos sujets et barèmes au Directeur à la date qu’il vous indiquera. Consultez vos surveillances dans votre espace avant le début de l’examen.',
+  DIR: 'Validez les sujets et gardez-les sous clé. Affichez le planning des salles et des surveillants avant le lundi 23 novembre. Prévenez les parents des candidats.',
+  COM: 'Tenez à jour la situation des paiements des candidats avant l’examen et orientez les parents vers la Direction pour toute question.',
+  EDU: 'Préparez les salles et les listes d’appel. Faites l’appel des candidats chaque matin de l’examen et signalez toute absence à la Direction.'
+};
+function ebTechProHtml(role) {
+  var d = new Date(), auj = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  if (auj > EB_TECHPRO.fin) return '';
+  var p = EB_TECHPRO;
+  var jours = Math.round((Date.UTC(+p.debut.slice(0, 4), +p.debut.slice(5, 7) - 1, +p.debut.slice(8)) - Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+  var quand = jours > 1 ? 'dans ' + jours + ' jours' : (jours === 1 ? 'demain' : 'en cours');
+  var consigne = EB_TECHPRO_CONSIGNES[role] || '';
+  return '<div style="background:#fff;border-radius:12px;border-left:5px solid #0D47A1;box-shadow:0 2px 10px rgba(0,0,0,0.08);padding:12px 14px;margin:10px 0;text-align:left;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
+    + '<div style="font-weight:700;color:#0D47A1;font-size:14px;">EXAMEN BLANC — TECHNIQUE ET PROFESSIONNEL</div>'
+    + '<div style="background:#E3F2FD;color:#0D47A1;font-weight:700;font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap;">' + quand + '</div></div>'
+    + '<div style="font-size:14px;font-weight:600;color:#1F2937;margin-top:5px;">Du lundi 23 au samedi 28 novembre 2026</div>'
+    + '<div style="font-size:12px;color:#555;margin-top:3px;">Classes d’examen : la 1ère pour le technique et la 2ème année pour le professionnel · Présence obligatoire des élèves</div>'
+    + (consigne ? '<div style="font-size:12px;color:#0D47A1;font-weight:600;margin-top:5px;">' + consigne + '</div>' : '')
+    + '</div>';
+}
+// Personnel : Directeur, Comptable, Éducateur des écoles concernées — affiché à la connexion (et au rechargement de la page)
+function afficherEbTechProStaff() {
+  var s = (typeof currentStaff !== 'undefined') ? currentStaff : null;
+  var ok = !!(s && EB_TECHPRO_ECOLES_STAFF.indexOf(s.ecole) >= 0);
+  [['ebTechZoneDir', 'DIR'], ['ebTechZoneCom', 'COM'], ['ebTechZoneEdu', 'EDU']].forEach(function (z) {
+    var el = document.getElementById(z[0]); if (el) el.innerHTML = ok ? ebTechProHtml(z[1]) : '';
+  });
+}
+(function () {
+  if (typeof procederLogin !== 'function') return;
+  var _procederLoginAvantEbTech = procederLogin;
+  procederLogin = function (s) {
+    var r = _procederLoginAvantEbTech.apply(this, arguments);
+    try { afficherEbTechProStaff(); } catch (e) {}
+    return r;
+  };
 })();
 </script>
 <script>
