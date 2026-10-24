@@ -9096,7 +9096,7 @@ var lignesFiltrees = lignes.filter(function(l){
           l.notes.forEach(function(n) {
             html += '<td style="text-align:center;font-size:0.78em">' + (n === '' || n === null || n === undefined ? '—' : n) + '</td>';
           });
-          html += '<td style="text-align:center;font-size:0.8em;font-weight:700;color:var(--violet)">' + (l.moyenne || '—') + '</td>';
+          html += '<td style="text-align:center;font-size:0.8em;font-weight:700;color:var(--violet)">' + ((l.moyenne === '' || l.moyenne === null || l.moyenne === undefined) ? '—' : l.moyenne) + '</td>';
           html += '<td style="text-align:center;font-size:0.78em">' + absLabelCom(l.matricule) + '</td>';
           html += '<td style="font-size:0.74em;color:var(--gris)">' + l.enseignant + '</td></tr>';
         });
@@ -9950,7 +9950,7 @@ window._notesAbsMap_dir = absMap_dir;
           l.notes.forEach(function(n) {
             html += '<td style="text-align:center;font-size:0.78em">' + (n === '' || n === null || n === undefined ? '—' : n) + '</td>';
           });
-          html += '<td style="text-align:center;font-size:0.8em;font-weight:700;color:var(--violet)">' + (l.moyenne || '—') + '</td>';
+          html += '<td style="text-align:center;font-size:0.8em;font-weight:700;color:var(--violet)">' + ((l.moyenne === '' || l.moyenne === null || l.moyenne === undefined) ? '—' : l.moyenne) + '</td>';
           html += '<td style="text-align:center;font-size:0.78em">' + absLabelDir(l.matricule) + '</td>';
           html += '<td style="font-size:0.74em;color:var(--gris)">' + l.enseignant + '</td></tr>';
         });
@@ -10347,7 +10347,7 @@ async function chargerNotesSaisiesEdu() {
           l.notes.forEach(function(n) {
             html += '<td style="text-align:center;font-size:0.78em">' + (n === '' || n === null || n === undefined ? '—' : n) + '</td>';
           });
-          html += '<td style="text-align:center;font-size:0.8em;font-weight:700;color:var(--violet)">' + (l.moyenne || '—') + '</td>';
+          html += '<td style="text-align:center;font-size:0.8em;font-weight:700;color:var(--violet)">' + ((l.moyenne === '' || l.moyenne === null || l.moyenne === undefined) ? '—' : l.moyenne) + '</td>';
           html += '<td style="text-align:center;font-size:0.78em">' + absLabelEdu(l.matricule) + '</td>';
           html += '<td style="font-size:0.74em;color:var(--gris)">' + l.enseignant + '</td></tr>';
         });
