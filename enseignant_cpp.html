@@ -332,6 +332,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
     <button class="quick-btn" style="grid-column:1 / -1;flex-direction:row;align-items:center;gap:12px" onclick="goTo('edt')"><div class="quick-icon">📅</div><div><div class="quick-label">Mon emploi du temps</div><div class="quick-sub">Tous mes cours de la semaine</div></div></button>
   </div>
   <div id="examBlancZoneEns" style="padding:0 16px 6px"></div>
+  <div id="ebTechZoneEns" style="padding:0 16px 6px"></div>
   <div id="eboMesSurvZone" style="padding:0 16px 6px"></div>
   <div id="eboCopiesZone" style="padding:0 16px 6px"></div>
   <div id="compoZoneEns" style="padding:0 16px 6px"></div>
@@ -3829,7 +3830,45 @@ function compositionsHtml() {
     + '</div>';
 }
 // Espace Enseignant : la carte n'est montrée qu'aux maîtres de la maternelle et du primaire
+// ═══ 24/10/2026 — EXAMEN BLANC TECHNIQUE ET PROFESSIONNEL : du lundi 23 au samedi 28 novembre 2026 ═══
+// Affiché aux enseignants du technique et du professionnel, et au Directeur, au Comptable et à l'Éducateur des écoles concernées.
+var EB_TECHPRO = { debut: '2026-11-23', fin: '2026-11-28', dates: 'du lundi 23 au samedi 28 novembre 2026' };
+var EB_TECHPRO_ECOLES = ['CPP TECH', 'CPP PRO', 'ETL PRINCES KOUIBLY'];               // écoles du technique et du professionnel
+var EB_TECHPRO_ECOLES_STAFF = EB_TECHPRO_ECOLES.concat(['CPP LES PRINCES']);         // + personnel de CPP Les Princes (même site que TECH et PRO)
+var EB_TECHPRO_CONSIGNES = {
+  ENS: 'Remettez vos sujets et barèmes au Directeur à la date qu’il vous indiquera. Consultez vos surveillances dans votre espace avant le début de l’examen.',
+  DIR: 'Validez les sujets et gardez-les sous clé. Affichez le planning des salles et des surveillants avant le lundi 23 novembre. Prévenez les parents des candidats.',
+  COM: 'Tenez à jour la situation des paiements des candidats avant l’examen et orientez les parents vers la Direction pour toute question.',
+  EDU: 'Préparez les salles et les listes d’appel. Faites l’appel des candidats chaque matin de l’examen et signalez toute absence à la Direction.'
+};
+function ebTechProHtml(role) {
+  var d = new Date(), auj = d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  if (auj > EB_TECHPRO.fin) return '';
+  var p = EB_TECHPRO;
+  var jours = Math.round((Date.UTC(+p.debut.slice(0, 4), +p.debut.slice(5, 7) - 1, +p.debut.slice(8)) - Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+  var quand = jours > 1 ? 'dans ' + jours + ' jours' : (jours === 1 ? 'demain' : 'en cours');
+  var consigne = EB_TECHPRO_CONSIGNES[role] || '';
+  return '<div style="background:#fff;border-radius:12px;border-left:5px solid #0D47A1;box-shadow:0 2px 10px rgba(0,0,0,0.08);padding:12px 14px;margin:10px 0;text-align:left;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
+    + '<div style="font-weight:700;color:#0D47A1;font-size:14px;">EXAMEN BLANC — TECHNIQUE ET PROFESSIONNEL</div>'
+    + '<div style="background:#E3F2FD;color:#0D47A1;font-weight:700;font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap;">' + quand + '</div></div>'
+    + '<div style="font-size:14px;font-weight:600;color:#1F2937;margin-top:5px;">Du lundi 23 au samedi 28 novembre 2026</div>'
+    + '<div style="font-size:12px;color:#555;margin-top:3px;">Classes d’examen : la 1ère pour le technique et la 2ème année pour le professionnel · Présence obligatoire des élèves</div>'
+    + (consigne ? '<div style="font-size:12px;color:#0D47A1;font-weight:600;margin-top:5px;">' + consigne + '</div>' : '')
+    + '</div>';
+}
+// Enseignant : école de connexion ou l'un de ses comptes (espace unique princes3) dans le technique ou le professionnel
+function afficherEbTechPro() {
+  var el = document.getElementById('ebTechZoneEns'); if (!el) return;
+  var u = (typeof user !== 'undefined') ? user : null, ok = false;
+  if (u) {
+    var ecoles = [u.ecole].concat((u.comptes || []).map(function (c) { return c.ecole; }));
+    ok = ecoles.some(function (e) { return EB_TECHPRO_ECOLES.indexOf(e) >= 0; });
+  }
+  el.innerHTML = ok ? ebTechProHtml('ENS') : '';
+}
 function afficherCompositions() {
+  if (typeof afficherEbTechPro === 'function') afficherEbTechPro();   // 24/10/2026 — examen blanc technique et professionnel
   var el = document.getElementById('compoZoneEns'); if (!el) return;
   el.innerHTML = (typeof user !== 'undefined' && user && user.niveau === 'primaire') ? compositionsHtml() : '';
 }
