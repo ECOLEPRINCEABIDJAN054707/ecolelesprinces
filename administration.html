@@ -5951,7 +5951,7 @@ function login(){
     if(data&&data.ok){
       const PRIM=['ACADEMIE','AKEIKOI 1','AKEIKOI 2'];
       if(data.profil==='EDU'&&PRIM.includes(data.ecole)){affErr("Les ecoles primaires n'ont pas d'espace Educateur.");return;}
-      const s={matricule:data.matricule,code,nom:data.nom,ecole:data.ecole,profil:data.profil,type:data.type,label:data.label,classes:data.classes||[]};
+      const s={matricule:data.matricule,code,nom:data.nom,ecole:data.ecole,profil:data.profil,type:data.type,label:data.label,classes:data.classes||[],ecoles:(data.ecoles&&data.ecoles.length)?data.ecoles:[data.ecole]};   // 24/10/2026 — un compte, plusieurs écoles (Directeur, Comptable, Éducateur)
       tentativesPin=0;
       procederLogin(s);
       return;
@@ -6007,7 +6007,8 @@ function login(){
       const s = {
         matricule: data.matricule, code: code, nom: data.nom,
         ecole: data.ecole, profil: data.profil, type: data.type,
-        label: data.label, classes: data.classes || []
+        label: data.label, classes: data.classes || [],
+        ecoles: (data.ecoles && data.ecoles.length) ? data.ecoles : [data.ecole]   // 24/10/2026 — un compte, plusieurs écoles
       };
       tentativesPin = 0;
       procederLogin(s);
@@ -18902,12 +18903,42 @@ function afficherEbTechProStaff() {
     var el = document.getElementById(z[0]); if (el) el.innerHTML = ok ? ebTechProHtml(z[1]) : '';
   });
 }
+// ═══ 24/10/2026 — CHANGER D'ÉCOLE SANS SE RECONNECTER (ex. directrice de CPP LES PRINCES, CPP TECH et CPP PRO) ═══
+// Le compte doit avoir une ligne par école dans l'onglet STAFF (même matricule, même code). La page est rechargée sur l'école choisie.
+function afficherChoixEcoleStaff() {
+  var s = (typeof currentStaff !== 'undefined') ? currentStaff : null;
+  var ecoles = (s && s.ecoles) || [];
+  [['examBlancZoneDir', 'Dir'], ['examBlancZoneCom', 'Com'], ['examBlancZoneEdu', 'Edu']].forEach(function (z) {
+    var repere = document.getElementById(z[0]); if (!repere) return;
+    var id = 'choixEcole' + z[1], box = document.getElementById(id);
+    if (ecoles.length < 2) { if (box) box.remove(); return; }
+    if (!box) { box = document.createElement('div'); box.id = id; box.style.cssText = 'padding:10px 14px 0'; repere.parentNode.insertBefore(box, repere); }
+    var nom = function (e) { return (typeof ECOLE_LABELS !== 'undefined' && ECOLE_LABELS[e]) || e; };
+    box.innerHTML = '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#E3F2FD;border-radius:10px;padding:8px 12px">'
+      + '<span style="font-size:0.8em;font-weight:700;color:#0D47A1">🏫 École :</span>'
+      + ecoles.map(function (e) {
+          var actif = e === s.ecole;
+          return '<button onclick="changerEcoleStaff(\'' + e.replace(/'/g, "\\'") + '\')" style="padding:6px 12px;border-radius:20px;font-size:0.78em;font-weight:700;cursor:pointer;'
+            + (actif ? 'background:#0D47A1;color:#fff;border:1.5px solid #0D47A1' : 'background:#fff;color:#0D47A1;border:1.5px solid #90CAF9') + '">' + nom(e) + '</button>';
+        }).join('') + '</div>';
+  });
+}
+function changerEcoleStaff(ecole) {
+  var s = (typeof currentStaff !== 'undefined') ? currentStaff : null;
+  if (!s || !s.ecoles || s.ecoles.indexOf(ecole) < 0 || s.ecole === ecole) return;
+  var n = JSON.parse(JSON.stringify(s));
+  n.ecole = ecole;
+  n.label = (typeof ECOLE_LABELS !== 'undefined' && ECOLE_LABELS[ecole]) || ecole;
+  try { sessionStorage.setItem('staffConnecte', JSON.stringify(n)); } catch (e) {}
+  location.reload();   // la session est restaurée sur la nouvelle école (même chemin que le rechargement de la page)
+}
 (function () {
   if (typeof procederLogin !== 'function') return;
   var _procederLoginAvantEbTech = procederLogin;
   procederLogin = function (s) {
     var r = _procederLoginAvantEbTech.apply(this, arguments);
     try { afficherEbTechProStaff(); } catch (e) {}
+    try { afficherChoixEcoleStaff(); } catch (e) {}
     return r;
   };
 })();
