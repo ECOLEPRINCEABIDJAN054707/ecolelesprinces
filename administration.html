@@ -5951,7 +5951,7 @@ function login(){
     if(data&&data.ok){
       const PRIM=['ACADEMIE','AKEIKOI 1','AKEIKOI 2'];
       if(data.profil==='EDU'&&PRIM.includes(data.ecole)){affErr("Les ecoles primaires n'ont pas d'espace Educateur.");return;}
-      const s={matricule:data.matricule,code,nom:data.nom,ecole:data.ecole,profil:data.profil,type:data.type,label:data.label,classes:data.classes||[],ecoles:(data.ecoles&&data.ecoles.length)?data.ecoles:[data.ecole]};   // 24/10/2026 — un compte, plusieurs écoles (Directeur, Comptable, Éducateur)
+      const s={matricule:data.matricule,code,nom:data.nom,ecole:data.ecole,profil:data.profil,type:data.type,label:data.label,classes:data.classes||[],ecoles:(data.ecoles&&data.ecoles.length)?data.ecoles:[data.ecole],classesParEcole:data.classesParEcole||null,labels:data.labels||null};   // 24/10/2026 — un compte, plusieurs écoles (Directeur, Comptable, Éducateur)
       tentativesPin=0;
       procederLogin(s);
       return;
@@ -18928,7 +18928,8 @@ function changerEcoleStaff(ecole) {
   if (!s || !s.ecoles || s.ecoles.indexOf(ecole) < 0 || s.ecole === ecole) return;
   var n = JSON.parse(JSON.stringify(s));
   n.ecole = ecole;
-  n.label = (typeof ECOLE_LABELS !== 'undefined' && ECOLE_LABELS[ecole]) || ecole;
+  n.label = (s.labels && s.labels[ecole]) || (typeof ECOLE_LABELS !== 'undefined' && ECOLE_LABELS[ecole]) || ecole;
+  if (s.classesParEcole && s.classesParEcole[ecole]) n.classes = s.classesParEcole[ecole];   // Éducateur : les classes de l'école choisie
   try { sessionStorage.setItem('staffConnecte', JSON.stringify(n)); } catch (e) {}
   location.reload();   // la session est restaurée sur la nouvelle école (même chemin que le rechargement de la page)
 }
