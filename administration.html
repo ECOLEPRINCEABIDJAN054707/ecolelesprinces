@@ -19840,5 +19840,35 @@ async function eboLever_(mat, nom) {
 .ebo-aide{background:#F5F5F5;border-radius:8px;padding:8px 10px;font-size:11.5px;color:#444;margin-bottom:8px;line-height:1.5}
 </style>
 
+<script>
+// 27/10/2026 — Notes saisies par classe : semestres (TECH/PRO/KOUIBLY) + examens blancs (NOTES_EB1 à EB4)
+(function () {
+  var ECOLES_SEM = ['CPP PRO', 'CPP TECH', 'ETL PRINCES KOUIBLY'];
+  function majPeriodesNotesStaff() {
+    if (typeof currentStaff === 'undefined' || !currentStaff) return;
+    var sem = ECOLES_SEM.indexOf(currentStaff.ecole) >= 0;
+    var voulu = sem ? 'S' : 'T';
+    var periodes = sem
+      ? '<option value="NOTES_S1">Semestre 1</option><option value="NOTES_S2">Semestre 2</option>'
+      : '<option value="NOTES_T1">Trimestre 1</option><option value="NOTES_T2">Trimestre 2</option><option value="NOTES_T3">Trimestre 3</option>';
+    var eb = '<option value="NOTES_EB1">📝 Examen blanc n°1</option><option value="NOTES_EB2">📝 Examen blanc n°2</option>'
+           + '<option value="NOTES_EB3">📝 Examen blanc n°3</option><option value="NOTES_EB4">📝 Examen blanc n°4</option>';
+    ['dirNotesTrimestre', 'comNotesTrimestre', 'eduNotesTrimestre'].forEach(function (id) {
+      var sel = document.getElementById(id);
+      if (!sel || sel.dataset.mode === voulu) return;
+      var avant = sel.value;
+      sel.innerHTML = periodes + eb;
+      if (Array.prototype.some.call(sel.options, function (o) { return o.value === avant; })) sel.value = avant;
+      sel.dataset.mode = voulu;
+    });
+  }
+  ['chargerNotesSaisiesDir', 'chargerNotesSaisiesCom', 'chargerNotesSaisiesEdu'].forEach(function (nom) {
+    var f = window[nom];
+    if (typeof f !== 'function') return;
+    window[nom] = function () { majPeriodesNotesStaff(); return f.apply(this, arguments); };
+  });
+})();
+</script>
+
 </body>
 </html>
