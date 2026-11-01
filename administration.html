@@ -781,6 +781,12 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
     <div class="sec-body" id="annDIRBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement…</p></div>
   </div>
+  <div class="section" id="secDIRDronique" style="display:none">
+    <div class="sec-head sec-bleu" onclick="toggleSec(this)">
+      <h3>&#128641; Candidatures DRONIQUE</h3><span class="bdg bg-bleu" id="drqDIRCompteur">0</span>
+    </div>
+    <div class="sec-body" id="drqDIRBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement…</p></div>
+  </div>
   <div class="section">
     <div class="sec-head sec-violet" onclick="toggleSec(this)">
       <h3>&#128172; Messages parents <span id="dirMsgCount" style="font-size:0.78em;opacity:0.85"></span></h3><span class="arr">&#9660;</span>
@@ -6199,6 +6205,103 @@ var ecolesPurementPrimaires = ['AKEIKOI 1','AKEIKOI 2','ACADEMIE'];
   ['2NDE A','2NDE C','1ERE A','1ERE C','1ERE D','TLE A','TLE C','TLE D'].forEach(function(n){ sel.innerHTML += '<option value="'+n+'">'+n+'</option>'; });
   sel.innerHTML += '</optgroup>';
 }
+// ══════════════════════════════════════════════
+// FILIÈRE DRONIQUE — ESPACE DIRECTEUR — 01/11/2026
+// Madame BOTI (DIR CPP LES PRINCES) valide, refuse ou remet en attente ; les DIR de CPP TECH / CPP PRO consultent.
+// Le serveur vérifie le compte (matricule + code STAFF) à chaque demande.
+// ══════════════════════════════════════════════
+var _drqDir = { data: null, filtre: 'EN ATTENTE' };
+function drqDEsc(x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function drqDServeur(type, params) {
+  return new Promise(function (resolve) {
+    var cb = 'drq_' + Date.now() + '_' + Math.floor(Math.random() * 1e6), s = document.createElement('script'), fini = false;
+    var fin = function (d) { if (fini) return; fini = true; try { delete window[cb]; } catch (e) {} if (s.parentNode) s.parentNode.removeChild(s); resolve(d); };
+    window[cb] = fin; s.onerror = function () { fin(null); }; setTimeout(function () { fin(null); }, 30000);
+    var q = 'callback=' + cb + '&type=' + type + '&staffMat=' + encodeURIComponent(currentStaff.matricule) + '&staffCode=' + encodeURIComponent(currentStaff.code);
+    Object.keys(params || {}).forEach(function (k) { q += '&' + k + '=' + encodeURIComponent(params[k]); });
+    s.src = PSS_SERVEUR_LECTURE + '?' + q; document.body.appendChild(s);
+  });
+}
+async function chargerDroniqueDir() {
+  var body = document.getElementById('drqDIRBody'); if (!body || !currentStaff) return;
+  body.innerHTML = '<p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement…</p>';
+  var r = await drqDServeur('DRQ_LISTE', {});
+  if (!r || !r.ok) { body.innerHTML = '<p style="padding:14px;font-size:0.82em;color:#C62828">' + drqDEsc(r && r.erreur ? r.erreur : 'Le serveur ne répond pas.') + '</p>'; return; }
+  _drqDir.data = r; drqAfficherDir();
+}
+function drqAfficherDir() {
+  var r = _drqDir.data, body = document.getElementById('drqDIRBody'), h = '';
+  var cpt = document.getElementById('drqDIRCompteur'); if (cpt) cpt.textContent = r.bilan.total.enAttente;
+  var b = r.bilan, t = b.total;
+  h += '<div style="padding:12px 14px">';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">'
+    + '<span class="bdg bg-bleu">' + t.validees + ' / ' + b.plafond + ' validés</span>'
+    + '<span class="bdg" style="background:#FFF3E0;color:#E65100">' + t.enAttente + ' en attente</span>'
+    + (r.peutDecider ? '' : '<span class="bdg" style="background:#ECEFF1;color:#455A64">Consultation seule</span>') + '</div>';
+  b.alertes.forEach(function (a) { h += '<div style="background:#FFF8E1;border-left:4px solid #FFA000;border-radius:8px;padding:9px 11px;font-size:0.8em;margin-bottom:8px">' + drqDEsc(a) + '</div>'; });
+  h += '<div class="tbl-wrap"><table style="width:100%;border-collapse:collapse;font-size:0.78em"><tr style="background:var(--bleu,#1F4E79);color:#fff"><th style="padding:6px;text-align:left">Filière</th><th style="padding:6px">Places</th><th style="padding:6px">Validés</th><th style="padding:6px">En attente</th><th style="padding:6px">Restantes</th></tr>';
+  Object.keys(r.places).forEach(function (c) {
+    var p = r.places[c];
+    h += '<tr style="border-bottom:1px solid #eee"><td style="padding:6px"><strong>' + drqDEsc(c) + '</strong><br><span style="color:#777">' + drqDEsc(p.role) + '</span></td><td style="padding:6px;text-align:center">' + p.places + '</td><td style="padding:6px;text-align:center;color:#2E7D32;font-weight:700">' + p.validees + '</td><td style="padding:6px;text-align:center;color:#E65100;font-weight:700">' + p.enAttente + '</td><td style="padding:6px;text-align:center">' + p.restantes + '</td></tr>';
+  });
+  h += '</table></div>';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 8px">';
+  [['EN ATTENTE', 'En attente'], ['VALIDEE', 'Validées'], ['REFUSEE', 'Refusées'], ['', 'Toutes']].forEach(function (f) {
+    var actif = _drqDir.filtre === f[0];
+    h += '<button onclick="_drqDir.filtre=\'' + f[0] + '\';drqAfficherDir()" style="padding:6px 12px;border-radius:16px;border:1.5px solid #1565C0;background:' + (actif ? '#1565C0' : '#fff') + ';color:' + (actif ? '#fff' : '#1565C0') + ';font-size:0.76em;font-weight:700;cursor:pointer">' + f[1] + '</button>';
+  });
+  h += '<button onclick="chargerDroniqueDir()" style="padding:6px 12px;border-radius:16px;border:1.5px solid #607D8B;background:#fff;color:#455A64;font-size:0.76em;font-weight:700;cursor:pointer">↻ Actualiser</button>'
+    + '<button onclick="drqListeRetenus()" style="padding:6px 12px;border-radius:16px;border:1.5px solid #2E7D32;background:#fff;color:#2E7D32;font-size:0.76em;font-weight:700;cursor:pointer">📋 Liste des retenus</button></div>';
+  h += '<div id="drqListeRetenusZone"></div>';
+  var liste = r.candidatures.filter(function (c) { return !_drqDir.filtre || c.STATUT === _drqDir.filtre; });
+  if (!liste.length) h += '<p style="font-size:0.82em;color:var(--gris);text-align:center;padding:10px">Aucune candidature.</p>';
+  var coul = { 'EN ATTENTE': ['#FFF3E0', '#E65100'], 'VALIDEE': ['#E8F5E9', '#2E7D32'], 'REFUSEE': ['#FFEBEE', '#C62828'] };
+  liste.forEach(function (c) {
+    var k = coul[c.STATUT] || ['#ECEFF1', '#455A64'], id = drqDEsc(c.ID);
+    h += '<div style="border:1px solid #E0E0E0;border-left:4px solid ' + k[1] + ';border-radius:10px;padding:10px 12px;margin-bottom:10px;background:#fff">'
+      + '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div><div style="font-weight:800;font-size:0.9em">' + drqDEsc(c.NOM) + '</div>'
+      + '<div style="font-size:0.76em;color:#666">' + drqDEsc(c.CLASSE) + ' · ' + drqDEsc(c.ECOLE) + ' · ' + drqDEsc(c.MATRICULE) + ' · reçue le ' + drqDEsc(c.DATE) + '</div></div>'
+      + '<span style="background:' + k[0] + ';color:' + k[1] + ';border-radius:12px;padding:3px 9px;font-size:0.72em;font-weight:800;white-space:nowrap">' + drqDEsc(c.STATUT) + '</span></div>'
+      + '<div style="font-size:0.8em;color:#333;margin-top:6px;line-height:1.5"><strong>Attiré par :</strong> ' + drqDEsc(c.ATTRAITS) + ' · <strong>Expérience :</strong> ' + drqDEsc(c.EXPERIENCE) + ' · <strong>Tél. parent :</strong> ' + drqDEsc(c.TEL_PARENT) + '</div>'
+      + '<div style="font-size:0.82em;color:#333;background:#F5F9FF;border-radius:8px;padding:8px;margin-top:6px;white-space:pre-wrap">' + drqDEsc(c.MOTIVATION) + '</div>'
+      + (c.DECIDE_PAR ? '<div style="font-size:0.74em;color:#777;margin-top:5px">Décision : ' + drqDEsc(c.DECIDE_PAR) + ' le ' + drqDEsc(c.DATE_DECISION) + (c.OBSERVATION ? ' — ' + drqDEsc(c.OBSERVATION) : '') + '</div>' : '');
+    if (r.peutDecider) {
+      h += '<input id="drqObs_' + id + '" type="text" maxlength="300" placeholder="Observation interne (facultatif)" style="width:100%;box-sizing:border-box;margin-top:8px;padding:7px;border:1.5px solid var(--border,#ddd);border-radius:8px;font-size:0.8em">'
+        + '<div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">'
+        + (c.STATUT !== 'VALIDEE' ? '<button onclick="drqDecider(\'' + id + '\',\'VALIDEE\')" style="flex:1;padding:8px;border:none;border-radius:8px;background:#2E7D32;color:#fff;font-weight:800;font-size:0.8em;cursor:pointer">✅ Valider</button>' : '')
+        + (c.STATUT !== 'REFUSEE' ? '<button onclick="drqDecider(\'' + id + '\',\'REFUSEE\')" style="flex:1;padding:8px;border:none;border-radius:8px;background:#C62828;color:#fff;font-weight:800;font-size:0.8em;cursor:pointer">✖ Refuser</button>' : '')
+        + (c.STATUT !== 'EN ATTENTE' ? '<button onclick="drqDecider(\'' + id + '\',\'EN ATTENTE\')" style="flex:1;padding:8px;border:1.5px solid #E65100;border-radius:8px;background:#fff;color:#E65100;font-weight:800;font-size:0.8em;cursor:pointer">↺ En attente</button>' : '')
+        + '</div>';
+    }
+    h += '</div>';
+  });
+  h += '</div>';
+  body.innerHTML = h;
+}
+async function drqDecider(id, decision) {
+  if (decision === 'REFUSEE' && !confirm('Refuser cette candidature ?')) return;
+  var obs = document.getElementById('drqObs_' + id), params = { id: id, decision: decision, observation: obs ? obs.value : '' };
+  for (var essai = 0; essai < 3; essai++) {
+    var r = await drqDServeur('DRQ_DECIDER', params);
+    if (r && r.ok) { chargerDroniqueDir(); return; }
+    if (r && r.plein) {
+      if (!confirm(r.erreur)) return;
+      if (r.pleinTotal) params.forcerTotal = '1'; else params.forcer = '1';
+      continue;
+    }
+    alert(r && r.erreur ? r.erreur : 'Le serveur ne répond pas. Réessayez.'); return;
+  }
+}
+function drqListeRetenus() {
+  var r = _drqDir.data, z = document.getElementById('drqListeRetenusZone'); if (!r || !z) return;
+  var val = r.candidatures.filter(function (c) { return c.STATUT === 'VALIDEE'; }), L = ['🚁 PROMOTION DRONIQUE 2026-2027 — ' + val.length + ' élèves'];
+  Object.keys(r.places).forEach(function (f) {
+    var n = val.filter(function (c) { return String(c.CLASSE).toUpperCase() === f; }).map(function (c) { return c.NOM; }).sort();
+    if (n.length) L.push('', f + ' (' + n.length + ') : ' + n.join(', '));
+  });
+  z.innerHTML = '<textarea readonly style="width:100%;box-sizing:border-box;height:160px;font-size:0.8em;padding:8px;border:1.5px solid #2E7D32;border-radius:8px;margin-bottom:10px">' + drqDEsc(L.join('\n')) + '</textarea>';
+}
+
 function afficherDir(s){ 
   enregistrerConnexionStaff('Directeur', s.ecole);
   document.getElementById('dirAvatar').textContent=s.nom.split(' ').slice(0,2).map(w=>w[0]||'').join('');
@@ -6213,6 +6316,8 @@ function afficherDir(s){
   document.getElementById('dirStatsZone').innerHTML=stats;
   // Validation des permissions : réservée à l'espace CPP LES PRINCES
   var _secVal=document.getElementById('dirSecValidationPerm'); if(_secVal) _secVal.style.display=(String(s.ecole||'').toUpperCase().trim()==='CPP LES PRINCES')?'block':'none'; var _secDG=document.getElementById('dirSecDGValidation'); if(_secDG) _secDG.style.display=(String(s.ecole||'').toUpperCase().trim()==='CPP LES PRINCES')?'block':'none';
+  // Filière DRONIQUE : CPP LES PRINCES décide, CPP TECH et CPP PRO consultent
+  var _secDrq=document.getElementById('secDIRDronique'); if(_secDrq){ var _ecD=String(s.ecole||'').toUpperCase().trim(); var _okD=['CPP LES PRINCES','CPP TECH','CPP PRO'].indexOf(_ecD)>=0; _secDrq.style.display=_okD?'block':'none'; if(_okD) setTimeout(chargerDroniqueDir,1500); }
   document.getElementById('dirFiltresZone').style.display=!isPRIM?'block':'none';
   document.getElementById('dirSecAttente').style.display=!isPRIM?'block':'none';
   document.getElementById('dirSecSalaires').style.display=!isPRIM?'block':'none';
