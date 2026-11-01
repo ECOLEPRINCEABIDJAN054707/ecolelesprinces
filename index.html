@@ -289,6 +289,7 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
   </div>
 <div id="alerteRisqueParentZone"></div>
 <div id="circulaireExamenZone"></div>
+  <div id="droniqueZone"></div>
  <div class="section" id="sectionExamenBlanc" style="display:none">
   <div class="sec-header" style="background:#B71C1C" onclick="toggleSec(this)">&#128221; EXAMENS BLANCS &mdash; R&Eacute;SULTATS <span>v</span></div>
   <div class="sec-body open" id="examenBlancBody"></div>
@@ -1555,7 +1556,7 @@ var soldeAccesParsed = _pm(eleve.solde);
     document.getElementById("sectionBulletinsMensuels").style.display = "none";
     afficherSectionBloquee(eleve, soldeAccesParsed, verseParsed);
   }
-  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerStatutMenaParent(eleve);chargerAlerteRisqueParent(eleve);chargerProgrammeTrimestrielParent(eleve);chargerCirculaireExamen(eleve);chargerCarnetNotes(eleve);chargerExamenBlancParent(eleve);
+  chargerEDT(eleve); chargerFicheRenseignement(eleve); chargerInscription2026(eleve);chargerStatutMenaParent(eleve);chargerAlerteRisqueParent(eleve);chargerProgrammeTrimestrielParent(eleve);chargerCirculaireExamen(eleve);chargerCarnetNotes(eleve);chargerExamenBlancParent(eleve);chargerDronique(eleve);
   window._eleveActuel = eleve;
   var calP = document.getElementById('calPrimaire'); if (calP) calP.style.display = estPrimaire(window._classe2026 || eleve.classe) ? 'block' : 'none';
   if (typeof afficherCompositionsParent === 'function') afficherCompositionsParent(window._classe2026 || eleve.classe);
