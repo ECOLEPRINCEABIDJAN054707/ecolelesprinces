@@ -289,7 +289,7 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
   </div>
 <div id="alerteRisqueParentZone"></div>
 <div id="circulaireExamenZone"></div>
-  <div id="droniqueZone"></div>
+<div id="droniqueZone"></div>
  <div class="section" id="sectionExamenBlanc" style="display:none">
   <div class="sec-header" style="background:#B71C1C" onclick="toggleSec(this)">&#128221; EXAMENS BLANCS &mdash; R&Eacute;SULTATS <span>v</span></div>
   <div class="sec-body open" id="examenBlancBody"></div>
@@ -2960,6 +2960,140 @@ async function circEbEnvoyer(){
   if(res&&res.ok){ msg.textContent=''; circEbAfficherEtat(res.reponse,false); }
   else erreur(res&&res.erreur ? res.erreur : 'La r\u00e9ponse n\u2019a pas pu \u00eatre envoy\u00e9e. V\u00e9rifiez votre connexion et r\u00e9essayez.');
 }
+// ══════════════════════════════════════════════
+// FILIÈRE DRONIQUE — 01/11/2026
+// Carte de candidature (élèves éligibles), statut de la candidature, puis programme + emploi du temps
+// une fois la candidature validée par la Directrice. Le serveur identifie l'élève par le jeton de connexion.
+// ══════════════════════════════════════════════
+var DRQ_CLASSES_PARENT = ['2NDE F2', '1A BT ELN', '1A BT ELT BAT', '1A BT TOPO', '1A BT BATIMENT'];
+function drqEsc(x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function drqNormClasse(c) { return String(c || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim(); }
+function drqCadre(contenu) {
+  return '<div class="section" style="border-left:4px solid #0D47A1;overflow:hidden;">'
+    + '<div style="background:linear-gradient(135deg,#0D47A1,#1565C0 60%,#00ACC1);padding:16px 18px;color:#fff;">'
+    + '<div style="font-size:0.75em;letter-spacing:1px;opacity:0.85;font-weight:700;">NOUVEAU À CPP LES PRINCES</div>'
+    + '<div style="font-family:Poppins,Inter,Arial,sans-serif;font-size:1.35em;font-weight:800;margin-top:2px;">🚁 Filière DRONIQUE</div>'
+    + '<div style="font-size:0.85em;opacity:0.95;margin-top:2px;">À CPP, l\'électronique prend son envol</div></div>'
+    + '<div style="padding:14px 16px;background:#fff;">' + contenu + '</div></div>';
+}
+async function chargerDronique(eleve) {
+  var zone = document.getElementById('droniqueZone'); if (!zone || !eleve) return;
+  var classe = drqNormClasse(window._classe2026 || eleve.classe);
+  if (DRQ_CLASSES_PARENT.indexOf(classe) < 0) { zone.innerHTML = ''; return; }
+  if (!_pssJeton()) {
+    zone.innerHTML = drqCadre('<p style="font-size:0.88em;color:#333;margin:0;">Votre enfant peut candidater à la nouvelle filière DRONIQUE. <strong>Déconnectez-vous puis reconnectez-vous</strong> pour ouvrir la fiche de candidature.</p>');
+    return;
+  }
+  zone.innerHTML = drqCadre('<p style="text-align:center;color:#1565C0;font-size:0.85em;margin:6px 0;">Chargement…</p>');
+  var r = await _pssServeur('DRQ_INFO', { jeton: _pssJeton() }, 25000);
+  if (!r) { zone.innerHTML = drqCadre('<p style="font-size:0.85em;color:#C62828;margin:0;">Le serveur ne répond pas. Réessayez dans quelques minutes.</p>'); return; }
+  if (r.ok === false && r.raison === 'SESSION') { zone.innerHTML = drqCadre('<p style="font-size:0.88em;color:#333;margin:0;">Votre session a expiré. <strong>Reconnectez-vous</strong> pour ouvrir la fiche DRONIQUE.</p>'); return; }
+  if (!r.ok || !r.eligible) { zone.innerHTML = ''; return; }
+  zone.innerHTML = drqCadre(drqContenu(r));
+}
+function drqContenu(r) {
+  var f = r.fiche, el = r.eleve, fi = r.filiere, c = r.candidature, h = '';
+  // ---- Élève retenu : félicitations + programme + emploi du temps
+  if (c && c.statut === 'VALIDEE' && r.retenu) {
+    var e = r.retenu.edt[0];
+    h += '<div style="background:#E8F5E9;border:2px solid #2E7D32;border-radius:10px;padding:14px;text-align:center;margin-bottom:12px;">'
+      + '<div style="font-size:2em;">🎉</div><div style="font-weight:800;color:#2E7D32;font-size:1.05em;">Félicitations ' + drqEsc(el.nom) + ' !</div>'
+      + '<div style="font-size:0.86em;color:#333;margin-top:4px;">Ta candidature est <strong>validée</strong>. Tu fais partie de la promotion DRONIQUE ' + drqEsc(f.annee) + '.</div></div>';
+    h += '<div style="background:#E3F2FD;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:0.86em;color:#0D47A1;line-height:1.7;">'
+      + '📅 <strong>1re séance :</strong> ' + drqEsc(r.retenu.premiereSeance) + '<br>'
+      + '🎒 <strong>À apporter :</strong> ' + drqEsc(r.retenu.apporter) + '<br>'
+      + '👥 <strong>Ton rôle :</strong> ' + drqEsc(e.role) + '</div>';
+    h += '<div style="font-weight:700;color:#0D47A1;margin:6px 0;">🕑 Emploi du temps DRONIQUE</div>'
+      + '<table style="width:100%;border-collapse:collapse;font-size:0.84em;margin-bottom:12px;"><tr style="background:#0D47A1;color:#fff;"><th style="padding:7px;text-align:left;">Jour</th><th style="padding:7px;text-align:left;">Horaire</th><th style="padding:7px;text-align:left;">Lieu</th></tr>'
+      + '<tr style="background:#F5F9FF;"><td style="padding:8px;font-weight:700;">' + drqEsc(e.jour) + '</td><td style="padding:8px;">' + drqEsc(e.debut) + ' – ' + drqEsc(e.fin) + '</td><td style="padding:8px;">' + drqEsc(e.lieu) + '</td></tr></table>';
+    h += drqProgramme(r.retenu.programme);
+    h += drqSignature(f);
+    return h;
+  }
+  // ---- Candidature déjà envoyée
+  if (c) {
+    if (c.statut === 'REFUSEE') {
+      h += '<div style="background:#FFF8E1;border-left:4px solid #FFA000;border-radius:8px;padding:12px;font-size:0.86em;color:#5D4037;line-height:1.6;">'
+        + 'Merci pour ta candidature. Elle n\'a pas été retenue pour cette première promotion, les places étant très limitées. '
+        + 'Continue tes efforts : une nouvelle session sera ouverte l\'an prochain, avec le montage de drones et la cartographie aérienne.</div>';
+    } else {
+      h += '<div style="background:#E3F2FD;border-left:4px solid #1565C0;border-radius:8px;padding:12px;font-size:0.86em;color:#0D47A1;line-height:1.6;">'
+        + '✅ <strong>Candidature reçue</strong> le ' + drqEsc(c.date) + '.<br>Elle est en cours d\'étude par la Direction. La réponse s\'affichera ici.</div>';
+    }
+    return h + drqSignature(f);
+  }
+  // ---- Présentation + formulaire
+  h += '<p style="font-size:0.88em;color:#333;line-height:1.6;margin:0 0 10px;">' + drqEsc(f.accroche) + '</p>';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'
+    + '<span style="background:#0D47A1;color:#fff;border-radius:20px;padding:5px 12px;font-size:0.78em;font-weight:700;">' + drqEsc(f.placesTotal) + ' places en tout</span>'
+    + '<span style="background:#00ACC1;color:#fff;border-radius:20px;padding:5px 12px;font-size:0.78em;font-weight:700;">' + drqEsc(fi.places) + ' pour ' + drqEsc(fi.classe) + '</span>'
+    + '<span style="background:#2E7D32;color:#fff;border-radius:20px;padding:5px 12px;font-size:0.78em;font-weight:700;">' + drqEsc(f.frais.split('—')[0].trim()) + '</span></div>';
+  h += '<div style="font-weight:700;color:#0D47A1;margin:4px 0 6px;">Ce que tu gagnes</div><ul style="margin:0 0 8px;padding-left:4px;list-style:none;font-size:0.85em;color:#333;line-height:1.7;">';
+  f.atouts.forEach(function (a) { h += '<li>' + drqEsc(a) + '</li>'; });
+  h += '<li>🤝 ' + drqEsc(fi.equipe) + '</li></ul>';
+  h += drqProgramme(f.programme);
+  h += '<div style="background:#F5F9FF;border-radius:10px;padding:10px 12px;font-size:0.82em;color:#333;line-height:1.7;margin-bottom:10px;">'
+    + '🕑 <strong>' + drqEsc(f.creneau.jour) + ' ' + drqEsc(f.creneau.debut) + ' – ' + drqEsc(f.creneau.fin) + '</strong><br>'
+    + '📍 ' + drqEsc(f.lieu) + '<br>💰 ' + drqEsc(f.frais) + '<br>📅 1re séance : ' + drqEsc(f.premiereSeance)
+    + (f.dateLimite ? '<br>⏳ <strong>Date limite de candidature : ' + drqEsc(f.dateLimite) + ' à 23h59</strong>' : '') + '</div>';
+  h += '<div style="font-weight:700;color:#0D47A1;margin:4px 0 6px;">Conditions</div><ul style="margin:0 0 12px;padding-left:18px;font-size:0.82em;color:#333;line-height:1.6;">';
+  f.conditions.forEach(function (x) { h += '<li>' + drqEsc(x) + '</li>'; });
+  h += '</ul>';
+  if (!f.ouvert) return h + '<div style="background:#ECEFF1;border-radius:8px;padding:12px;text-align:center;font-size:0.86em;color:#455A64;font-weight:700;">Les candidatures sont closes.</div>' + drqSignature(f);
+  var lbl = 'display:flex;align-items:center;gap:8px;font-size:0.85em;color:#333;margin:5px 0;';
+  h += '<div style="border:2px solid #1565C0;border-radius:10px;padding:12px;">'
+    + '<div style="font-weight:800;color:#0D47A1;margin-bottom:8px;">📝 Fiche de candidature</div>'
+    + '<div style="font-size:0.82em;color:#555;margin-bottom:8px;">Élève : <strong>' + drqEsc(el.nom) + '</strong> · ' + drqEsc(el.matricule) + ' · ' + drqEsc(el.classe) + '</div>'
+    + '<div style="font-size:0.84em;font-weight:700;color:#333;margin-top:6px;">Ce qui t\'attire le plus</div>';
+  ['Construire', 'Piloter', 'Cartographier', 'Réparer et programmer'].forEach(function (a) { h += '<label style="' + lbl + '"><input type="checkbox" class="drqAttrait" value="' + drqEsc(a) + '"> ' + drqEsc(a) + '</label>'; });
+  h += '<div style="font-size:0.84em;font-weight:700;color:#333;margin-top:8px;">Pourquoi veux-tu rejoindre DRONIQUE ?</div>'
+    + '<textarea id="drqMotivation" maxlength="1000" rows="4" style="width:100%;box-sizing:border-box;border:1px solid #90CAF9;border-radius:8px;padding:8px;font-size:0.88em;margin-top:4px;" placeholder="En quelques mots…"></textarea>'
+    + '<div style="font-size:0.84em;font-weight:700;color:#333;margin-top:8px;">As-tu déjà manipulé un drone ou un appareil électronique ?</div>'
+    + '<label style="' + lbl + '"><input type="radio" name="drqExp" value="OUI"> Oui</label><label style="' + lbl + '"><input type="radio" name="drqExp" value="NON"> Non</label>'
+    + '<div style="font-size:0.84em;font-weight:700;color:#333;margin-top:8px;">Téléphone du parent</div>'
+    + '<input id="drqTel" type="tel" maxlength="20" style="width:100%;box-sizing:border-box;border:1px solid #90CAF9;border-radius:8px;padding:8px;font-size:0.88em;margin-top:4px;" placeholder="' + drqEsc(el.telMasque ? 'Laisser vide pour garder le ' + el.telMasque : 'Numéro du parent') + '">'
+    + '<div style="margin-top:10px;">'
+    + '<label style="' + lbl + '"><input type="checkbox" id="drqEng1"> Je m\'engage à être présent chaque samedi de 13h00 à 15h00.</label>'
+    + '<label style="' + lbl + '"><input type="checkbox" id="drqEng2"> Je m\'engage à respecter les règles de sécurité.</label>'
+    + '<label style="' + lbl + '"><input type="checkbox" id="drqEng3"> Parent : j\'autorise mon enfant à suivre la filière DRONIQUE.</label></div>'
+    + '<div id="drqMsg" style="display:none;margin-top:8px;padding:9px;border-radius:8px;font-size:0.84em;"></div>'
+    + '<button id="drqBtn" onclick="envoyerCandidatureDronique()" style="width:100%;margin-top:10px;padding:13px;background:linear-gradient(135deg,#0D47A1,#1565C0);color:#fff;border:none;border-radius:10px;font-size:0.95em;font-weight:800;cursor:pointer;">🚁 Envoyer ma candidature</button>'
+    + '<div style="font-size:0.76em;color:#777;text-align:center;margin-top:6px;">Sélection sur dossier. Les candidatures sont validées par la Direction.</div></div>';
+  return h + drqSignature(f);
+}
+function drqProgramme(prog) {
+  var h = '<div style="font-weight:700;color:#0D47A1;margin:4px 0 6px;">Le programme</div>';
+  prog.forEach(function (p) { h += '<div style="border-left:3px solid #00ACC1;padding:4px 10px;margin-bottom:6px;font-size:0.82em;color:#333;line-height:1.5;"><strong>' + drqEsc(p.periode) + '</strong> — ' + drqEsc(p.contenu) + '</div>'; });
+  return h;
+}
+function drqSignature(f) {
+  return '<div style="text-align:right;margin-top:12px;font-size:0.84em;color:#333;"><strong>' + drqEsc(f.signature.nom) + '</strong><br><em>' + drqEsc(f.signature.titre) + '</em></div>';
+}
+async function envoyerCandidatureDronique() {
+  var msg = document.getElementById('drqMsg'), btn = document.getElementById('drqBtn');
+  var dire = function (t, ok) { msg.style.display = 'block'; msg.style.background = ok ? '#E8F5E9' : '#FFEBEE'; msg.style.color = ok ? '#2E7D32' : '#C62828'; msg.textContent = t; };
+  var attraits = Array.prototype.slice.call(document.querySelectorAll('.drqAttrait:checked')).map(function (x) { return x.value; });
+  var exp = document.querySelector('input[name="drqExp"]:checked');
+  var motiv = (document.getElementById('drqMotivation').value || '').trim();
+  var tel = (document.getElementById('drqTel').value || '').replace(/[^\d+]/g, '');
+  var e1 = document.getElementById('drqEng1').checked, e2 = document.getElementById('drqEng2').checked, e3 = document.getElementById('drqEng3').checked;
+  if (!attraits.length) return dire('Coche au moins une case dans « Ce qui t\'attire le plus ».');
+  if (motiv.length < 10) return dire('Explique en quelques mots pourquoi tu veux rejoindre DRONIQUE.');
+  if (!exp) return dire('Réponds à la question sur le drone ou l\'appareil électronique.');
+  if (tel && tel.replace(/\D/g, '').length < 10) return dire('Le numéro du parent doit avoir 10 chiffres.');
+  if (!(e1 && e2 && e3)) return dire('Les trois engagements doivent être cochés.');
+  btn.disabled = true; btn.textContent = 'Envoi en cours…';
+  var r = await _pssServeur('DRQ_CANDIDATER', { jeton: _pssJeton(), attraits: attraits.join(', '), experience: exp.value, motivation: motiv, tel: tel, eng1: '1', eng2: '1', eng3: '1' }, 30000);
+  if (r && r.ok) {
+    dire('✅ ' + (r.message || 'Candidature enregistrée.'), true);
+    var ec = null; try { ec = JSON.parse(sessionStorage.getItem('eleveConnecte') || 'null'); } catch (x) {}
+    setTimeout(function () { if (ec) chargerDronique(ec); }, 1500);
+  } else {
+    btn.disabled = false; btn.textContent = '🚁 Envoyer ma candidature';
+    dire(r && r.erreur ? r.erreur : 'Le serveur ne répond pas. Réessayez dans quelques minutes.');
+  }
+}
+
 async function chargerCirculaireExamen(eleve){
   var zone=document.getElementById('circulaireExamenZone'); if(!zone) return;
   zone.innerHTML='';
