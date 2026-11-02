@@ -3964,13 +3964,58 @@ function eboMesCopiesHtml(lots, limite) {
       var fini = l.saisies >= l.nb && l.nb > 0;
       h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;">'
         + '<div><b>' + e(l.salle) + '</b> · ' + l.nb + ' copie(s)<br><span style="font-size:11.5px;color:#E65100">Dépôt : ' + e(l.depot) + '</span></div>'
+        + '<div style="display:flex;flex-direction:column;gap:5px;align-items:stretch">'
         + ('<button onclick="eboOuvrirSaisie(\'' + e(l.id) + '\')" style="border:none;border-radius:8px;padding:7px 10px;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap;background:' + (fini ? '#E8F5E9;color:#2E7D32' : '#2E7D32;color:#fff') + '">' + (fini ? '✓ ' : '') + l.saisies + '/' + l.nb + ' · Saisir</button>')
+        + ((fini || _eboAuj() >= EBR_OUVERTURE) ? '<button onclick="eboOuvrirRendre(\'' + e(l.id) + '\')" style="border:1px solid #1565C0;border-radius:8px;padding:6px 10px;font-weight:700;font-size:12px;font-family:inherit;cursor:pointer;white-space:nowrap;background:#fff;color:#1565C0">📋 Rendre les copies</button>' : '')
+        + '</div>'
         + '</div>';
     });
     h += '</div>';
   });
   h += '<div style="font-size:11px;color:#777;margin-top:6px;border-top:1px solid #EEE;padding-top:5px;">Retirez vos enveloppes au dépôt en signant le registre. Corrigez d\'après le barème commun. Copie avec un nom ou un matricule : tapez ce nom ou ce matricule, la fraude est signalée d\'office.</div></div>';
   return h;
+}
+
+// ─── 2b. Rendre les copies (02/11/2026) : N° de table → nom et classe, trié par classe puis par nom ───
+// Serveur : EXAMEN_BLANC_RESTITUTION.gs (EBO_RENDRE). Ouvert quand toutes les notes de la salle sont saisies,
+// ou à partir de EBR_OUVERTURE (le lendemain de la date limite) : la correction reste anonyme jusque-là.
+var EBR_OUVERTURE = '2026-11-04';
+function eboOuvrirRendre(id) {
+  var l = EBO_LOTS.filter(function (x) { return x.id === id; })[0]; if (!l) return;
+  var sc = document.getElementById('screen-ebo-rendre');
+  if (!sc) { sc = document.createElement('div'); sc.className = 'screen'; sc.id = 'screen-ebo-rendre'; document.body.appendChild(sc); }
+  sc.innerHTML = eboRendreEntete_(l) + '<div style="padding:16px;font-size:13px">⏳ Chargement de la liste…</div>';
+  goTo('ebo-rendre');
+  _eboJsonp({ type: 'EBO_RENDRE', ecole: l.ecole, id: l.id, enseignant: user.nom, code: user.code || '', ecoleCnx: user.ecole || '' }, function (r) {
+    sc.innerHTML = eboRendreEntete_(l) + eboRendreHtml(r);
+  }, 120000);
+}
+function eboRendreEntete_(l) {
+  var e = _eboE;
+  return '<div class="header"><div class="header-icon">📋</div><div class="header-title"><h1>Rendre les copies</h1><p>' + e(l.epreuve) + ' · ' + e(l.niveau) + ' · ' + e(l.salle) + '</p></div></div>';
+}
+function eboRendreHtml(r) {
+  var e = _eboE, retour = '<button class="btn" style="margin-top:12px;background:#ECEFF1;color:#37474F" onclick="goTo(\'accueil\');eboMesCopies()">← Retour à l\'accueil</button>';
+  if (!r || !r.ok) return '<div style="padding:14px"><div style="background:#FFEBEE;color:#C62828;border-radius:10px;padding:11px;font-size:13px;font-weight:600">❌ ' + e(r && r.error || 'Erreur') + '</div>' + retour + '</div>';
+  var grp = {}, ordre = [];
+  (r.eleves || []).forEach(function (x) { if (!grp[x.classe]) { grp[x.classe] = []; ordre.push(x.classe); } grp[x.classe].push(x); });
+  var h = '<div style="padding:14px 14px 90px">'
+    + '<div style="background:#E3F2FD;border-radius:10px;padding:9px 11px;font-size:12px;color:#0D47A1;line-height:1.5;margin-bottom:10px;">'
+    + 'Rangez vos copies par classe avec cette liste (N° de table → élève), puis rendez-les en classe. '
+    + (r.manquantes ? '<b>' + r.manquantes + ' note(s) non saisie(s)</b> dans cette salle.' : 'Toutes les notes de la salle sont saisies.') + '</div>';
+  ordre.forEach(function (c) {
+    var l = grp[c];
+    h += '<div style="font-weight:700;color:#1565C0;font-size:14px;margin:12px 0 4px">' + e(c) + ' <span style="font-weight:400;color:#777;font-size:12px">— ' + l.length + ' copie(s)</span></div>'
+      + '<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#E3F2FD;color:#0D47A1"><th style="text-align:left;padding:5px">N° table</th><th style="text-align:left;padding:5px">Élève</th><th style="padding:5px">Note</th></tr>';
+    l.forEach(function (x) {
+      var n = x.saisie ? (isNaN(parseFloat(x.note)) ? e(x.note) : e(String(x.note).replace('.', ',')) + '/20') : '<span style="color:#C62828">non saisie</span>';
+      h += '<tr style="border-top:1px solid #EEE"><td style="padding:5px;font-weight:700">' + e(x.table) + '</td><td style="padding:5px">' + e(x.nom)
+        + (x.fraude ? ' <span style="background:#C62828;color:#fff;border-radius:6px;padding:1px 6px;font-size:10.5px;font-weight:700">FRAUDE</span>' : '') + '</td>'
+        + '<td style="padding:5px;text-align:center;white-space:nowrap">' + n + '</td></tr>';
+    });
+    h += '</table>';
+  });
+  return h + retour + '</div>';
 }
 
 // ─── 3. Écran de saisie du correcteur ───
