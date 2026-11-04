@@ -4101,6 +4101,359 @@ function eboEnvoyerSaisie(verifier) {
     majPeriodesNotes._ebo = true;
   }
 })();
+
+// ══════════════════════════════════════════════
+// ⚠️ NOUVEAU 04/11/2026 — APPEL GROUPÉ (cours communs à plusieurs classes)
+// Même professeur, même école, mêmes heures de début et de fin → UNE carte, UN écran, UN appel, UN cahier.
+// Le serveur reçoit toujours un appel et un cahier PAR CLASSE (absences et cahier de chaque classe conservés) ;
+// la règle de plafond déjà en place (plafondApresCloture_) ne paie le créneau qu'une seule fois.
+// ══════════════════════════════════════════════
+(function () {
+  if (window._appelGroupeInstalle) return;
+  window._appelGroupeInstalle = true;
+
+  const _orig = {
+    dessiner: _dessinerMesCoursDuJour,
+    afficherEleves: afficherEleves,
+    validerInterne: _validerAppelInterne,
+    majAppel: mettreAJourAppel,
+    publier: publierCahier,
+    reprendre: _reprendreCoursAppele,
+    restaurer: restaurerCoursActuel
+  };
+  const N = s => String(s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim();
+  const estGroupe = () => !!(coursActuel && Array.isArray(coursActuel.groupe) && coursActuel.groupe.length > 1);
+  const libelle = g => g.map(x => x.classe).join(' + ');
+  const matieres = g => g.map(x => x.matiere).filter((m, k, a) => a.findIndex(y => N(y) === N(m)) === k).join(' / ');
+
+  // Cours du jour regroupés : même école, même début, même fin
+  function _groupesDuJour(cours) {
+    const pos = {}, groupes = [];
+    cours.forEach((c, i) => {
+      if (user && user.niveau === 'primaire') { groupes.push([i]); return; }
+      const k = (c.ecole || '') + '|' + parseMin(c.heureDebut) + '|' + parseMin(c.heureFin);
+      if (pos[k] === undefined) { pos[k] = groupes.length; groupes.push([i]); } else groupes[pos[k]].push(i);
+    });
+    return groupes;
+  }
+  function _etatGroupe(idx) {
+    const cours = window._mesCoursJour || [];
+    const etats = idx.map(i => _etatCoursDuJour(cours[i]));
+    if (etats.every(e => e === 'clos')) return 'clos';
+    if (etats.some(e => e === 'appele')) return 'appele';
+    if (etats.every(e => e === 'clos' || e === 'termine')) return 'termine';
+    return 'ouvert';
+  }
+
+  // ── 1. « Mes cours aujourd'hui » : une seule carte par cours commun ──
+  _dessinerMesCoursDuJour = function () {
+    try {
+      const container = document.getElementById('mesCoursJourZone');
+      const cours = window._mesCoursJour;
+      if (!container || !user || !Array.isArray(cours) || !cours.length) return;
+      if (window._mesCoursJourDate !== formatDate(new Date())) return _orig.dessiner();
+      const groupes = _groupesDuJour(cours);
+      if (!groupes.some(g => g.length > 1)) return _orig.dessiner();
+      let html = '<div class="card"><div class="card-title">📅 Mes cours aujourd\'hui</div><div class="card-body" style="padding:12px">';
+      groupes.forEach(idx => {
+        const c = cours[idx[0]], commun = idx.length > 1;
+        const etat = commun ? _etatGroupe(idx) : _etatCoursDuJour(c);
+        const classes = idx.map(i => esc(cours[i].classe)).join(' + ');
+        const mats = matieres(idx.map(i => ({ matiere: cours[i].matiere })));
+        const horaire = (c.ecole && _estMulti() ? '<b>' + esc(ECOLE_COURT[c.ecole] || c.ecole) + '</b> · ' : '') + esc(mats) + ' · ' + esc(c.heureDebut) + ' → ' + esc(c.heureFin);
+        const badge = commun ? '<div style="display:inline-block;font-size:10px;font-weight:700;background:var(--navy);color:#fff;border-radius:10px;padding:2px 8px;margin-top:4px">👥 COURS COMMUN · ' + idx.length + ' classes · un seul appel</div>' : '';
+        if (etat === 'clos' || etat === 'termine') {
+          html += '<div style="width:100%;text-align:left;padding:12px;margin-bottom:8px;background:#F0F0F0;border:1.5px solid #DDD;border-radius:10px;opacity:0.55">' +
+            '<div style="font-weight:700;font-size:14px;color:#888">' + classes + ' <span style="font-size:11px;font-weight:400">' + (etat === 'clos' ? '(cahier publié)' : '(terminé)') + '</span></div>' +
+            '<div style="font-size:12px;color:#999;margin-top:2px">' + horaire + '</div></div>';
+        } else {
+          const action = commun ? 'demarrerGroupeEDT([' + idx.join(',') + '])' : 'demarrerCoursDepuisEDT(' + idx[0] + ')';
+          html += '<button onclick="' + action + '" style="width:100%;text-align:left;padding:12px;margin-bottom:8px;background:var(--blue-lt);border:1.5px solid #90CAF9;border-radius:10px;font-family:inherit;cursor:pointer">' +
+            '<div style="font-weight:700;font-size:14px;color:var(--navy)">' + classes + (etat === 'appele' ? ' <span style="font-size:11px;font-weight:400">(appel fait — cahier à compléter)</span>' : '') + '</div>' +
+            '<div style="font-size:12px;color:var(--text2);margin-top:2px">' + horaire + '</div>' + badge + '</button>';
+        }
+      });
+      html += '<button class="btn btn-ghost" style="margin-top:4px" onclick="signalerProblemeEDT()">🚩 Je ne trouve pas mon cours</button></div></div>';
+      container.innerHTML = html;
+    } catch (e) { console.warn('appel groupé / dessiner :', e); try { _orig.dessiner(); } catch (x) {} }
+  };
+
+  function _afficherEntete() {
+    const g = coursActuel.groupe, lib = libelle(g), mats = matieres(g);
+    document.getElementById('appelClasse').textContent = lib;
+    document.getElementById('appelMatiere').textContent = mats;
+    document.getElementById('appelDebut').textContent = coursActuel.heureDebutEDT;
+    document.getElementById('appelFin').textContent = coursActuel.heureFinEDT;
+    document.getElementById('cahierClasse').textContent = lib;
+    document.getElementById('cahierMatiere').textContent = mats;
+    const ns = document.getElementById('notesSousTitre'); if (ns) ns.textContent = mats + ' · ' + coursActuel.classe;
+  }
+  async function _chargerElevesGroupe(groupe) {
+    let tous = [];
+    for (const g of groupe) { await chargerEleves(g.classe); tous = tous.concat(eleves); }
+    eleves = tous; elevesFiltres = [...eleves]; afficherEleves(); majStats();
+  }
+
+  // ── 2. Ouverture du cours commun ──
+  window.demarrerGroupeEDT = async function (idx) {
+    const cours = window._mesCoursJour || [];
+    const membres = idx.map(i => cours[i]).filter(Boolean);
+    if (membres.length < 2) { if (membres.length) demarrerCoursDepuisEDT(idx[0]); return; }
+    if (window._mesCoursJourDate !== formatDate(new Date())) {
+      showToast('📅 Cette liste date d\'hier — chargement des cours d\'aujourd\'hui...', 'warn'); _dessinerMesCoursDuJour(); return;
+    }
+    const c = membres[0], etat = _etatGroupe(idx);
+    if (etat === 'clos') { showToast('📝 Le cahier de ce cours est déjà publié — il ne peut plus être rouvert', 'warn'); _dessinerMesCoursDuJour(); return; }
+    if (etat === 'termine') { showToast('⏰ Ce cours est terminé depuis ' + c.heureFin + ' — l\'appel n\'est plus possible. Voyez la Direction.', 'warn'); _dessinerMesCoursDuJour(); return; }
+    const deja = membres.map(m => _coursDejaAppele(m.classe, m.heureDebut)).find(Boolean);
+    if (deja) { _reprendreCoursAppele(deja); return; }
+    const TOLERANCE_AVANT = 10, now = new Date(), minNow = now.getHours() * 60 + now.getMinutes(), minDebut = parseMin(c.heureDebut);
+    if (minDebut !== null && minNow < (minDebut - TOLERANCE_AVANT)) {
+      showToast('⏰ Ce cours commence à ' + c.heureDebut + ' — revenez dans ' + ((minDebut - TOLERANCE_AVANT) - minNow) + ' min', 'warn'); return;
+    }
+    if (c.ecole && user && user.multi && !_activerEcole(c.ecole, false)) return;
+    const sel = document.getElementById('modalClasse');
+    const trouver = nom => {
+      const a = N(nom), b = a.replace(/\s+/g, '');
+      for (const o of sel.options) if (o.value && N(o.value) === a) return o.value;
+      for (const o of sel.options) if (o.value && N(o.value).replace(/\s+/g, '') === b) return o.value;
+      return null;
+    };
+    let reels = membres.map(m => trouver(m.classe));
+    if (reels.some(r => !r)) { showLoader('Chargement des classes...'); await chargerClasses(); hideLoader(); reels = membres.map(m => trouver(m.classe)); }
+    const k0 = reels.findIndex(r => !r);
+    if (k0 >= 0) { alert('Classe "' + membres[k0].classe + '" introuvable dans la liste. Contactez la Direction pour vérifier le nom exact de cette classe.'); return; }
+    const pad2 = h => String(h || '').trim().replace(/^(\d):/, '0$1:');
+    const hD = pad2(c.heureDebut), hF = pad2(c.heureFin);
+    if (!(await _controlerPositionOuverture(reels[0], hD))) return;
+    const groupe = membres.map((m, k) => ({ classe: reels[k], matiere: m.matiere }));
+    coursActuel = { classe: groupe[0].classe, matiere: groupe[0].matiere, heureDebutEDT: hD, heureFinEDT: hF, horodatageAppel: null, dateAppel: null, groupe };
+    _afficherEntete();
+    document.getElementById('carteValidation').style.display = 'none';
+    document.getElementById('btnValiderAppel').style.display = 'flex';
+    document.getElementById('btnMajAppel').style.display = 'none';
+    document.getElementById('btnCahierAppel').style.display = 'none';
+    goToScreen('appel');
+    await _chargerElevesGroupe(groupe);
+  };
+
+  // ── 3. Liste des élèves : un titre par classe ──
+  afficherEleves = function () {
+    if (!estGroupe()) return _orig.afficherEleves();
+    const container = document.getElementById('eleveList'), tout = elevesFiltres;
+    let html = '';
+    try {
+      coursActuel.groupe.forEach(g => {
+        const sous = tout.filter(e => e.classe === g.classe), classe = eleves.filter(e => e.classe === g.classe);
+        const nA = classe.filter(e => e.statut === 'absent').length, nR = classe.filter(e => e.statut === 'retard').length;
+        html += '<div style="margin:14px 0 8px;padding:8px 12px;background:var(--navy);color:#fff;border-radius:var(--radius-sm);font-size:13px;font-weight:700;display:flex;justify-content:space-between">' +
+          '<span>🏫 ' + esc(g.classe) + '</span><span style="font-weight:500;font-size:12px">' + classe.length + ' élèves' + (nA ? ' · ❌ ' + nA : '') + (nR ? ' · ⏰ ' + nR : '') + '</span></div>';
+        if (!sous.length) { html += '<p style="text-align:center;color:var(--text2);padding:10px;font-size:12px">Aucun élève</p>'; return; }
+        elevesFiltres = sous; _orig.afficherEleves(); html += container.innerHTML;
+      });
+    } finally { elevesFiltres = tout; }
+    container.innerHTML = html;
+  };
+
+  // ── 4. Valider l'appel : un envoi par classe ──
+  _validerAppelInterne = async function () {
+    if (!estGroupe()) return _orig.validerInterne.apply(this, arguments);
+    const maintenant = new Date(), horodatage = formatHeure(maintenant), auj = formatDate(maintenant);
+    showLoader('Vérification de la position...');
+    const pos = await _positionPourAppel();
+    const verif = await _verifierPositionAppel(pos);
+    hideLoader();
+    if (verif && verif.autorise === false) {
+      const d = Number(verif.distance) || 0, txt = d >= 1000 ? (d / 1000).toFixed(1).replace('.', ',') + ' km' : d + ' m';
+      showToast(d ? ('🚫 Vous êtes à ' + txt + " de l'établissement — appel impossible. Rendez-vous à l'école pour faire l'appel.") : "🚫 Appel impossible : position hors de l'établissement.", 'error');
+      return;
+    }
+    if (!coursActuel.horodatageAppel || coursActuel.dateAppel !== auj) coursActuel.horodatageAppel = horodatage;
+    coursActuel.dateAppel = auj;
+    coursActuel.statuts = _statutsAppel();
+    sauverCoursActuel();
+    const g = coursActuel.groupe;
+    const nbP = eleves.filter(e => e.statut === 'present').length, nbR = eleves.filter(e => e.statut === 'retard').length, nbA = eleves.filter(e => e.statut === 'absent').length;
+    document.getElementById('heureAppelAffiche').textContent = coursActuel.horodatageAppel;
+    document.getElementById('resumeAppel').textContent = g.length + ' classes · ' + eleves.length + ' élèves · ' + nbP + ' présents · ' + nbR + ' retards · ' + nbA + ' absents';
+    afficherEstimAppel(calculerSalaireRobuste(horodatage, null, coursActuel.heureDebutEDT, coursActuel.heureFinEDT, user.ecole, coursActuel.classe), horodatage);
+    afficherEstimCahier();
+    document.getElementById('carteValidation').style.display = 'block';
+    document.getElementById('btnValiderAppel').style.display = 'none';
+    document.getElementById('btnCahierAppel').style.display = 'flex';
+    showLoader("Enregistrement de l'appel (" + g.length + ' classes)...');
+    const signature = document.getElementById('sigCanvas').toDataURL('image/png');
+    const erreurs = []; let horsLigne = 0;
+    for (const x of g) {
+      const sous = eleves.filter(e => e.classe === x.classe), p = sous.filter(e => e.statut === 'present').length;
+      const absences = sous.filter(e => e.statut !== 'present').map(e => ({
+        date: auj, heure: horodatage, matricule: e.matricule, nom: e.nom, classe: x.classe, statut: e.statut,
+        heureArrivee: e.heure || '', motif: e.motif || '', obs: e.obs || '', enseignant: user.nom, matiere: x.matiere
+      }));
+      const data = { date: auj, heure: horodatage, classe: x.classe, matiere: x.matiere, enseignant: user.nom, ecole: user.ecole,
+        heureDebutEDT: coursActuel.heureDebutEDT, heureFinEDT: coursActuel.heureFinEDT,
+        totalEleves: sous.length, nbPresents: p, taux: Math.round(p / Math.max(sous.length, 1) * 100), absences };
+      try {
+        const res = await envoyerDonnees('APPEL', Object.assign({ signature }, data));
+        if (res && res.ok === false) erreurs.push(x.classe + ' : ' + (res.error || 'refusé'));
+      } catch (e) { sauvegarderHorsLigne('APPEL', data); horsLigne++; }
+    }
+    hideLoader();
+    if (erreurs.length) showToast('❌ Erreur serveur — ' + erreurs.join(' | '), 'error');
+    else if (horsLigne) showToast('✅ Appel sauvegardé localement (' + horsLigne + ' classe(s))', 'success');
+    else showToast('✅ Appel validé — ' + g.length + ' classes · ' + nbP + '/' + eleves.length + ' présents', 'success');
+  };
+
+  // ── 5. Mettre à jour l'appel : une correction par classe ──
+  mettreAJourAppel = async function () {
+    if (!estGroupe()) return _orig.majAppel.apply(this, arguments);
+    if (!coursActuel.horodatageAppel) return;
+    showLoader('Mise à jour de l\'appel...');
+    const maintenant = new Date(), connus = Array.isArray(coursActuel.statuts);
+    if (connus) { coursActuel.statuts = _statutsAppel(); sauverCoursActuel(); }
+    const erreurs = [];
+    for (const x of coursActuel.groupe) {
+      const sous = eleves.filter(e => e.classe === x.classe);
+      const absences = sous.filter(e => e.statut !== 'present').map(e => ({
+        date: coursActuel.dateAppel, matricule: e.matricule, nom: e.nom, classe: x.classe, statut: e.statut,
+        heureArrivee: e.heure || '', motif: e.motif || '', obs: e.obs || '', enseignant: user.nom, matiere: x.matiere
+      }));
+      const data = { date: coursActuel.dateAppel, classe: x.classe, enseignant: user.nom, ecole: user.ecole, absences,
+        presents: connus ? sous.filter(e => e.statut === 'present').map(e => e.matricule) : [],
+        heureCorrection: formatHeure(maintenant), corrigePar: user.nom };
+      try {
+        const res = await envoyerDonnees('CORRECTION_APPEL', data);
+        if (res && res.ok === false) erreurs.push(x.classe + ' : ' + (res.error || 'refusé'));
+      } catch (e) { sauvegarderHorsLigne('CORRECTION_APPEL', data); }
+    }
+    hideLoader();
+    if (erreurs.length) { showToast('❌ ' + erreurs.join(' | '), 'error'); return; }
+    document.getElementById('btnMajAppel').style.display = 'none';
+    const nbP = eleves.filter(e => e.statut === 'present').length, nbR = eleves.filter(e => e.statut === 'retard').length, nbA = eleves.filter(e => e.statut === 'absent').length;
+    document.getElementById('resumeAppel').textContent = coursActuel.groupe.length + ' classes · ' + eleves.length + ' élèves · ' + nbP + ' présents · ' + nbR + ' retards · ' + nbA + ' absents (corrigé à ' + formatHeure(maintenant) + ')';
+    showToast('✅ Appel mis à jour', 'success');
+  };
+
+  // ── 6. Publier le cahier : le même cahier dans chaque classe, payé une seule fois ──
+  publierCahier = async function () {
+    if (!estGroupe()) return _orig.publier.apply(this, arguments);
+    const lecon = document.getElementById('cahierLecon').value.trim(), contenu = document.getElementById('cahierContenu').value.trim();
+    if (!lecon || !contenu) {
+      document.getElementById('obligMsg').style.display = 'block';
+      setTimeout(() => document.getElementById('obligMsg').style.display = 'none', 3000);
+      return;
+    }
+    const maintenant = new Date(), horodatagePubli = formatHeure(maintenant);
+    if (coursActuel.horodatageAppel) {
+      const minNow = parseMin(horodatagePubli), minFin = parseMin(coursActuel.heureFinEDT);
+      const estim = calculerSalaireRobuste(coursActuel.horodatageAppel, horodatagePubli, coursActuel.heureDebutEDT, coursActuel.heureFinEDT, user.ecole, coursActuel.classe);
+      const reste = (minNow !== null && minFin !== null) ? (minFin - minNow) : null, nonPaye = (estim.heuresValidees || 0) === 0;
+      if ((reste !== null && reste > 10) || nonPaye) {
+        let txt = '⚠️ ATTENTION — VOTRE COURS N\'EST PAS TERMINÉ\n\n';
+        if (minFin !== null) txt += 'Fin prévue : ' + coursActuel.heureFinEDT + (reste > 0 ? ' (dans ' + reste + ' min)' : '') + '\n';
+        txt += 'Durée comptée si vous publiez maintenant : ' + (estim.dureeMin ? minStr(estim.dureeMin) : '0 min') + '\nMontant : ' + (estim.salaire || 0).toLocaleString('fr-FR') + ' F CFA';
+        if (nonPaye) txt += ' → aucun créneau complet : cours NON PAYÉ automatiquement, transmis au Directeur';
+        txt += '\n\nLe cahier de textes se publie à la FIN du cours.\n\nOK = publier quand même\nAnnuler = revenir et publier plus tard';
+        if (!confirm(txt)) return;
+      }
+    }
+    if (window._cahierEnvoi) return;
+    window._cahierEnvoi = true;
+    try {
+      // Position : 2 essais (précis puis approximatif), publication même sans GPS (statut tracé dans l'observation)
+      let lat = null, lon = null, acc = null, gpsStatut = 'GPS_NON_DISPO';
+      if (navigator.geolocation) {
+        showLoader('Localisation en cours...');
+        const essai = o => new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, o));
+        let refuse = false;
+        try { const p = await essai({ enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }); lat = p.coords.latitude; lon = p.coords.longitude; acc = Math.round(p.coords.accuracy); gpsStatut = acc > 150 ? 'GPS_IMPRECIS' : 'GPS_OK'; }
+        catch (e1) { refuse = !!(e1 && e1.code === 1); }
+        if (lat === null && !refuse) {
+          try { const p2 = await essai({ enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 }); lat = p2.coords.latitude; lon = p2.coords.longitude; acc = Math.round(p2.coords.accuracy); gpsStatut = 'GPS_IMPRECIS'; } catch (e2) {}
+        }
+        if (lat === null) gpsStatut = refuse ? 'GPS_REFUSE' : 'GPS_INDISPONIBLE';
+      }
+      const g = coursActuel.groupe;
+      showLoader('Publication du cahier (' + g.length + ' classes)...');
+      const calcul = calculerSalaireRobuste(coursActuel.horodatageAppel, horodatagePubli, coursActuel.heureDebutEDT, coursActuel.heureFinEDT, user.ecole, coursActuel.classe);
+      const commun = {
+        date: formatDate(maintenant), heure: horodatagePubli, enseignant: user.nom, ecole: user.ecole, lecon, contenu, avancement,
+        devoir: document.getElementById('cahierDevoir').value.trim(), dateRemise: document.getElementById('cahierDateRemise').value || '',
+        docs: document.getElementById('cahierDocs').value.trim(),
+        obs: (document.getElementById('cahierObs').value.trim() + (gpsStatut !== 'GPS_OK' && gpsStatut !== 'GPS_IMPRECIS' ? ' [GPS : ' + gpsStatut + ']' : '')).trim(),
+        horodatageAppel: coursActuel.horodatageAppel || '', horodatagePubli, heureDebutEDT: coursActuel.heureDebutEDT || '', heureFinEDT: coursActuel.heureFinEDT || '',
+        debutRetenu: calcul.debutRetenu, finRetenu: calcul.finRetenue, dureeMin: calcul.dureeMin || 0, heuresValidees: calcul.heuresValidees || 0,
+        heuresAttente: calcul.heuresAttente || 0, salaire: calcul.salaire || 0, tarif: calcul.tarif || 0, statutSalaire: calcul.statut || '',
+        detailSalaire: calcul.detail || '', gps_lat: lat, gps_lon: lon, gps_prec: acc, gps_statut: gpsStatut
+      };
+      const echecs = []; let premier = null, horsLigne = 0;
+      for (const x of g) {
+        const data = Object.assign({}, commun, { classe: x.classe, matiere: x.matiere });
+        if (!premier) premier = data;
+        try {
+          const res = await envoyerDonnees('CAHIER', data);
+          if (res && res.ok === false) { echecs.push({ x, err: res.error || res.message || 'refusé' }); continue; }
+        } catch (e) { sauvegarderHorsLigne('CAHIER', data); horsLigne++; }
+        _noterCoursClos(Object.assign({}, coursActuel, { classe: x.classe }));
+      }
+      hideLoader();
+      if (echecs.length) {   // on garde le cours ouvert pour les seules classes refusées
+        coursActuel.groupe = echecs.map(e => e.x);
+        if (coursActuel.groupe.length === 1) { coursActuel.classe = coursActuel.groupe[0].classe; coursActuel.matiere = coursActuel.groupe[0].matiere; delete coursActuel.groupe; }
+        sauverCoursActuel();
+        showToast('❌ Cahier non publié pour ' + echecs.map(e => e.x.classe + ' (' + e.err + ')').join(', ') + ' — réessayez', 'error');
+        return;
+      }
+      _noterDernierCahier(premier);
+      let msg = '📝 Cours commun publié (' + g.length + ' classes) — ' + calcul.heuresValidees + 'h — ' + (calcul.salaire || 0).toLocaleString('fr-FR') + ' F CFA, payé une fois';
+      if (horsLigne) msg = '📝 Cahier sauvegardé localement (' + horsLigne + ' classe(s))';
+      if (calcul.heuresAttente > 0) msg += ' | ' + calcul.heuresAttente + ' créneau(x) incomplet(s) → DIRECTEUR';
+      if (calcul.primaire) msg = '📝 Cours publié — présence enregistrée (salaire fixe)';
+      showToast(msg, calcul.heuresAttente > 0 ? 'warn' : 'success');
+      resetCahier();
+      coursActuel = null;
+      sauverCoursActuel();
+      document.getElementById('btnMajAppel').style.display = 'none';
+      chargerBilan();
+      setTimeout(() => goToScreen('accueil'), 1800);
+    } finally { window._cahierEnvoi = false; hideLoader(); }
+  };
+
+  // ── 7. Revenir sur un cours commun déjà appelé ──
+  _reprendreCoursAppele = function (s) {
+    if (!s || !Array.isArray(s.groupe) || s.groupe.length < 2) return _orig.reprendre.apply(this, arguments);
+    coursActuel = { classe: s.classe, matiere: s.matiere, heureDebutEDT: s.heureDebutEDT, heureFinEDT: s.heureFinEDT,
+                    horodatageAppel: s.horodatageAppel, dateAppel: s.dateAppel || formatDate(new Date()), statuts: s.statuts, groupe: s.groupe };
+    sauverCoursActuel();
+    _afficherEntete();
+    document.getElementById('heureAppelAffiche').textContent = coursActuel.horodatageAppel;
+    document.getElementById('resumeAppel').textContent = 'Appel déjà enregistré pour ce cours commun. Corrigez un retard ou une absence si besoin, puis complétez le cahier.';
+    document.getElementById('carteValidation').style.display = 'block';
+    document.getElementById('btnValiderAppel').style.display = 'none';
+    document.getElementById('btnMajAppel').style.display = 'none';
+    document.getElementById('btnCahierAppel').style.display = 'flex';
+    try {
+      afficherEstimAppel(calculerSalaireRobuste(coursActuel.horodatageAppel, null, coursActuel.heureDebutEDT, coursActuel.heureFinEDT, user.ecole, coursActuel.classe), coursActuel.horodatageAppel);
+      afficherEstimCahier();
+    } catch (e) {}
+    goToScreen('appel');
+    const ref = coursActuel;
+    _chargerElevesGroupe(s.groupe).then(() => {
+      if (coursActuel !== ref || !Array.isArray(ref.statuts)) return;
+      const parMat = {}; ref.statuts.forEach(x => { parMat[x.m] = x; });
+      eleves.forEach(e => { const x = parMat[e.matricule]; if (x) { e.statut = x.s; e.heure = x.h || ''; e.motif = x.mo || ''; e.obs = x.o || ''; } });
+      elevesFiltres = [...eleves]; afficherEleves(); majStats();
+    });
+    showToast('✅ Appel déjà fait à ' + coursActuel.horodatageAppel + ' — pas de second appel', 'success');
+  };
+
+  // ── 8. Application rouverte : titre du cahier = toutes les classes ──
+  restaurerCoursActuel = function () {
+    const r = _orig.restaurer.apply(this, arguments);
+    try { if (estGroupe()) { document.getElementById('cahierClasse').textContent = libelle(coursActuel.groupe); document.getElementById('cahierMatiere').textContent = matieres(coursActuel.groupe); } } catch (e) {}
+    return r;
+  };
+})();
 </script>
 
 </body>
