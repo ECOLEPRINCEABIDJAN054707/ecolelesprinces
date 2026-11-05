@@ -3198,7 +3198,7 @@ function validerNoteBulletin(input) {
   if (!cfg) return;
   let nbComplets = 0;
   bulletinElevesData.forEach((_,idx) => {
-    if (cfg.matieres.every(m => { const inp=document.querySelector(`input[data-idx="${idx}"][data-mat="${m}"]`); return inp&&inp.value.trim()!==''&&!isNaN(parseFloat(inp.value)); })) nbComplets++;
+    if (cfg.matieres.some(m => { const inp=document.querySelector(`input[data-idx="${idx}"][data-mat="${m}"]`); return inp&&inp.value.trim()!==''&&!isNaN(parseFloat(inp.value)); })) nbComplets++;   // 05/11/2026 : une note suffit
   });
   const bz = document.getElementById('btnSoumettreZone');
   if (bz) bz.style.display = nbComplets > 0 ? 'block' : 'none';
@@ -3210,12 +3210,13 @@ async function soumettreNotesBulletin() {
   const classeEnvoi = document.getElementById('bulletinClasseSelect').value;
   const elevesNotesBul = bulletinElevesData.map((el,idx) => {
     const n = {matricule:el.matricule,nom:el.nom};
-    cfg.matieres.forEach(m => { const inp=document.querySelector(`input[data-idx="${idx}"][data-mat="${m}"]`); n[m]=inp?(safeFloat(inp.value)):0; });
-    const cInp = document.querySelector(`input[data-idx="${idx}"][data-mat="CONDUITE"]`);
-    n.CONDUITE = cInp ? safeFloat(cInp.value) : 0;
+    // 05/11/2026 : une case vide reste vide ('') — elle n'est plus envoyée comme un 0 ; un vrai 0 est gardé
+    const lire = inp => (inp && inp.value.trim() !== '' && !isNaN(parseFloat(inp.value))) ? parseFloat(inp.value) : '';
+    cfg.matieres.forEach(m => { n[m] = lire(document.querySelector(`input[data-idx="${idx}"][data-mat="${m}"]`)); });
+    n.CONDUITE = lire(document.querySelector(`input[data-idx="${idx}"][data-mat="CONDUITE"]`));
     return n;
   });
-  const avecNotes = elevesNotesBul.filter(el=>cfg.matieres.every(m=>el[m]>0));
+  const avecNotes = elevesNotesBul.filter(el=>cfg.matieres.some(m=>el[m]!==''));   // 05/11/2026 : élève envoyé dès qu'il a une note (0 compris)
   if (!avecNotes.length) { showToast('Saisissez au moins une note','error'); return; }
   const btn = document.getElementById('btnSoumettreBulletin');
   btn.disabled = true;
@@ -3237,7 +3238,7 @@ async function soumettreNotesBulletin() {
         + '&annee=2026-2027'
         + '&eleves=' + encodeURIComponent(JSON.stringify(lot));
       document.body.appendChild(script);
-      setTimeout(() => { if(window[cbName]){delete window[cbName];resolve({ok:false});} }, 15000);
+      setTimeout(() => { if(window[cbName]){delete window[cbName];resolve({ok:false,error:'Le serveur met trop de temps à répondre. Réessayez.'});} }, 45000);
     });
     if (!result || !result.ok) break;
   }
@@ -3250,7 +3251,7 @@ async function soumettreNotesBulletin() {
     document.querySelectorAll('.mois-btn').forEach(b=>b.classList.remove('actif'));
     bulletinMoisActuel = '';
   } else {
-    showToast('❌ Erreur envoi — réessayez','error');
+    showToast('❌ ' + ((result && result.error) || 'Erreur envoi — réessayez'),'error');
   }
 }
 
