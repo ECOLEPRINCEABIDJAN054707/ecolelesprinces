@@ -315,11 +315,11 @@ table tr:nth-child(even){background:#F8FAFD}
     <div class="sec-body open"><div class="tbl-wrap" id="tableAttente"></div></div>
   </div>
   <div class="section" id="dirSecBulletins" style="display:none">
-    <div class="sec-head sec-emeraude" onclick="toggleSec(this)">
+    <div class="sec-head sec-emeraude" onclick="toggleSec(this);if(this.classList.contains('open'))chargerBulletinsPrimaire()">
       <h3>&#128203; Bulletins primaire &mdash; en attente</h3>
       <span class="bdg bg-bleu" id="bulletinCompteur">0</span>
     </div>
-    <div class="sec-body" id="dirBulBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Cliquez sur Bulletins pour charger</p></div>
+    <div class="sec-body" id="dirBulBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Chargement des bulletins en attente…</p></div>
   </div>
   <div class="section" id="dirSecSalaires" style="display:none">
     <div class="sec-head sec-or" onclick="toggleSec(this)">
@@ -6332,6 +6332,7 @@ function afficherDir(s){
     ['matStatDispo','matStatAttrib','matStatTotal','dirMatCount'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=id==='dirMatCount'?'':'-';});
   }
   if(!isSEC && (s.type==='PRIM'||s.type==='BOTH')) setTimeout(chargerMatriculesPrimaire, 1200);
+  if(!isSEC) setTimeout(chargerBulletinsPrimaire, 1600);
   const alertes=[];
   let ha=alertes.length?'':'<p style="padding:14px;text-align:center;color:var(--gris)">Aucune alerte</p>';
   alertes.forEach(a=>{ha+='<div class="alerte-item"><div class="alerte-ico">'+a.ico+'</div><div><div class="alerte-nom">'+a.nom+'</div><div class="alerte-detail">'+a.detail+'</div></div></div>';});
@@ -6610,7 +6611,7 @@ function chargerBulletinsPrimaire(){
   const cbName='bul_dir_'+Date.now();const script=document.createElement('script');
   window[cbName]=data=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(!data||!data.ok){body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur</p>';return;}const bulletins=data.bulletins||data.enAttente||[];const bc=document.getElementById('bulletinCompteur');if(bc)bc.textContent=bulletins.length;const bs=document.getElementById('statBulletins');if(bs)bs.textContent=bulletins.length;if(!bulletins.length){body.innerHTML='<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun bulletin en attente</p>';return;}let html='';bulletins.forEach((b,idx)=>{html+='<div class="bul-card"><div class="bul-info"><div class="bul-classe">'+b.classe+' — '+_libMoisPrim(b.mois)+'</div><div class="bul-meta">'+(b.nb||0)+' eleve(s)</div></div><span class="bul-nb">'+(b.nb||0)+'</span><button class="btn-val-bul" onclick="ouvrirModalBulletin('+idx+')">Valider</button></div>';});body.innerHTML=html;window._bulletinsEnAttente=bulletins;};
   script.onerror=()=>{delete window[cbName];body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Erreur reseau</p>';};
-  setTimeout(()=>{if(window[cbName]){delete window[cbName];body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Delai depasse</p>';}},10000);
+  setTimeout(()=>{if(window[cbName]){delete window[cbName];body.innerHTML='<p style="padding:14px;color:var(--rouge);font-size:0.82em">Delai depasse</p>';}},30000);
   script.src=APPS_SCRIPT_POINTAGE+'?callback='+cbName+'&type=GET_ATTENTE_PRIMAIRE&ecole='+encodeURIComponent(currentStaff.ecole||'');document.body.appendChild(script);
 }
 function ouvrirModalBulletin(idx){
@@ -6623,7 +6624,7 @@ function confirmerValidationBulletin(){
   const cbName='bul_val_'+Date.now();const script=document.createElement('script');
   window[cbName]=data=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(data&&data.ok){showToast('Bulletin valide !','success');document.getElementById('modalBulletin').style.display='none';bulletinEnCours=null;setTimeout(chargerBulletinsPrimaire,1500);}else showToast('Erreur','error');};
   script.onerror=()=>{delete window[cbName];showToast('Erreur reseau','error');};
-  script.src=APPS_SCRIPT_POINTAGE+'?callback='+cbName+'&type=VALIDER_BULLETIN_PRIMAIRE&ecole='+encodeURIComponent(currentStaff.ecole||'')+'&classe='+encodeURIComponent(b.classe||'')+'&mois='+encodeURIComponent(b.mois||'')+'&annee=2026-2027';
+  script.src=APPS_SCRIPT_POINTAGE+'?callback='+cbName+'&type=VALIDER_BULLETIN_PRIMAIRE&ecole='+encodeURIComponent(currentStaff.ecole||'')+'&classe='+encodeURIComponent(b.classe||'')+'&mois='+encodeURIComponent(b.mois||'')+'&annee='+encodeURIComponent(b.annee||'2026-2027');
   document.body.appendChild(script);showToast('Validation en cours...','');
 }
 async function syncEnseignants(){
