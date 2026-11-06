@@ -19391,7 +19391,7 @@ async function _ebDonneesEcole(ecole, n) {
 function _ebStats(lignes) {
   var s = { cand: lignes.length, compl: 0, admis: 0, somme: 0, max: null, mentions: {} };
   lignes.forEach(function (r) {
-    if (r[8] === 'ADMIS' || r[8] === 'NON ADMIS') { s.compl++; var m = parseFloat(r[5]); if (!isNaN(m)) { s.somme += m; if (s.max === null || m > s.max) s.max = m; } }
+    if (r[8] === 'ADMIS' || r[8] === 'NON ADMIS' || r[8] === 'REFUSÉ') { s.compl++;   /* 05/11/2026 : « REFUSÉ » comme au CEPE ; « NON ADMIS » gardé pour les anciennes lignes */ var m = parseFloat(r[5]); if (!isNaN(m)) { s.somme += m; if (s.max === null || m > s.max) s.max = m; } }
     if (r[8] === 'ADMIS') s.admis++;
     if (r[9]) s.mentions[r[9]] = (s.mentions[r[9]] || 0) + 1;
   });
@@ -19452,7 +19452,7 @@ async function chargerExamenBlanc(pfx, force) {
         h += '<div style="font-weight:700;color:var(--bleu);margin:10px 0 4px">Résultats</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.95em">'
           + '<tr style="background:#F1F5F9"><th style="text-align:left;padding:4px">Rang</th><th style="text-align:left;padding:4px">Élève</th><th style="padding:4px">Moyenne</th><th style="text-align:left;padding:4px">Résultat</th></tr>'
           + c.res.map(function (r) {
-            var coul = r[8] === 'ADMIS' ? '#2E7D32' : (r[8] === 'NON ADMIS' ? '#C62828' : '#E65100');
+            var coul = r[8] === 'ADMIS' ? '#2E7D32' : ((r[8] === 'NON ADMIS' || r[8] === 'REFUSÉ') ? '#C62828' : '#E65100');
             return '<tr style="border-bottom:1px solid #eee"><td style="padding:4px">' + _ebEsc(r[6] || '—') + '</td><td style="padding:4px">' + _ebEsc(r[1]) + '<br><span style="color:var(--gris);font-size:0.85em">' + _ebEsc(r[0]) + '</span></td>'
               + '<td style="padding:4px;text-align:center">' + (r[5] !== '' ? _ebFmt(r[5]) + (r[8] === 'INCOMPLET' ? '<br><span style="color:var(--gris);font-size:0.85em">partielle</span>' : '') : '—') + '</td>'
               + '<td style="padding:4px;color:' + coul + ';font-weight:700">' + _ebEsc(r[8]) + (r[9] ? ' — ' + _ebEsc(r[9]) : '')
