@@ -4121,8 +4121,24 @@ function eboMesCopies() {
     z.innerHTML = eboMesCopiesHtml(EBO_LOTS, r.dateLimite);
   });
 }
+// ⚠️ 06/11/2026 — copies rendues aux élèves : le lot disparaît de l'accueil (mémorisé sur ce téléphone, réaffichable)
+function _eboRendus() { try { return JSON.parse(localStorage.getItem('pss_ebo_rendus') || '[]'); } catch (e) { return []; } }
+function eboMarquerRendu(id) {
+  if (!confirm('Confirmez-vous avoir rendu ces copies aux élèves ?\nElles disparaîtront de votre accueil.')) return;
+  var r = _eboRendus(); if (r.indexOf(id) < 0) r.push(id);
+  try { localStorage.setItem('pss_ebo_rendus', JSON.stringify(r)); } catch (e) {}
+  showToast('✅ Copies rendues — retirées de l\'accueil', 'success');
+  goTo('accueil'); var z = document.getElementById('eboCopiesZone'); if (z) z.innerHTML = eboMesCopiesHtml(EBO_LOTS, window._eboLimite);
+}
+function eboReafficherRendus() {
+  try { localStorage.removeItem('pss_ebo_rendus'); } catch (e) {}
+  var z = document.getElementById('eboCopiesZone'); if (z) z.innerHTML = eboMesCopiesHtml(EBO_LOTS, window._eboLimite);
+}
 function eboMesCopiesHtml(lots, limite) {
-  if (!lots.length) return '';
+  window._eboLimite = limite;
+  var rendus = _eboRendus(), nbCaches = lots.filter(function (l) { return rendus.indexOf(l.id) >= 0; }).length;
+  lots = lots.filter(function (l) { return rendus.indexOf(l.id) < 0; });
+  if (!lots.length) return nbCaches ? '<div style="text-align:center;margin:6px 0"><a href="#" onclick="eboReafficherRendus();return false" style="font-size:11px;color:#777">Réafficher mes ' + nbCaches + ' lot(s) de copies rendues</a></div>' : '';
   var e = _eboE, grp = {}, ordre = [];
   lots.forEach(function (l) { var k = l.ecole + '|' + l.epreuve + '|' + l.niveau; if (!grp[k]) { grp[k] = []; ordre.push(k); } grp[k].push(l); });
   var total = lots.reduce(function (t, l) { return t + l.nb; }, 0), faites = lots.reduce(function (t, l) { return t + (l.saisies || 0); }, 0);
@@ -4146,6 +4162,7 @@ function eboMesCopiesHtml(lots, limite) {
     });
     h += '</div>';
   });
+  if (nbCaches) h += '<div style="margin-top:6px"><a href="#" onclick="eboReafficherRendus();return false" style="font-size:11px;color:#777">Réafficher mes ' + nbCaches + ' lot(s) de copies rendues</a></div>';
   h += '<div style="font-size:11px;color:#777;margin-top:6px;border-top:1px solid #EEE;padding-top:5px;">Retirez vos enveloppes au dépôt en signant le registre. Corrigez d\'après le barème commun. Copie avec un nom ou un matricule : tapez ce nom ou ce matricule, la fraude est signalée d\'office.</div></div>';
   return h;
 }
@@ -4156,6 +4173,7 @@ function eboMesCopiesHtml(lots, limite) {
 var EBR_OUVERTURE = '2026-11-04';
 function eboOuvrirRendre(id) {
   var l = EBO_LOTS.filter(function (x) { return x.id === id; })[0]; if (!l) return;
+  window._eboLotRendre = id;   // 06/11/2026
   var sc = document.getElementById('screen-ebo-rendre');
   if (!sc) { sc = document.createElement('div'); sc.className = 'screen'; sc.id = 'screen-ebo-rendre'; document.body.appendChild(sc); }
   sc.innerHTML = eboRendreEntete_(l) + '<div style="padding:16px;font-size:13px">⏳ Chargement de la liste…</div>';
@@ -4170,6 +4188,7 @@ function eboRendreEntete_(l) {
 }
 function eboRendreHtml(r) {
   var e = _eboE, retour = '<button class="btn" style="margin-top:12px;background:#ECEFF1;color:#37474F" onclick="goTo(\'accueil\');eboMesCopies()">← Retour à l\'accueil</button>';
+  if (r && r.ok && window._eboLotRendre) retour = '<button class="btn" style="margin-top:12px;background:#2E7D32;color:#fff" onclick="eboMarquerRendu(\'' + e(window._eboLotRendre) + '\')">✅ J\'ai rendu ces copies aux élèves</button>' + retour;   // 06/11/2026
   if (!r || !r.ok) return '<div style="padding:14px"><div style="background:#FFEBEE;color:#C62828;border-radius:10px;padding:11px;font-size:13px;font-weight:600">❌ ' + e(r && r.error || 'Erreur') + '</div>' + retour + '</div>';
   var grp = {}, ordre = [];
   (r.eleves || []).forEach(function (x) { if (!grp[x.classe]) { grp[x.classe] = []; ordre.push(x.classe); } grp[x.classe].push(x); });
