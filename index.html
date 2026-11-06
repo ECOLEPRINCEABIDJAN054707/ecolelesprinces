@@ -1970,16 +1970,17 @@ async function chargerAbsences(eleve){
     var _min=function(x){var m=String(x==null?"":x).match(/(\d{1,2})\s*[hH:]\s*(\d{2})/);return m?(+m[1])*60+(+m[2]):null;};
     var _duree=function(row){var d=_min(row[11]),f=_min(row[12]);return (d!==null&&f!==null&&f>d)?f-d:null;};
     var _hTxt=function(mn){var h=Math.floor(mn/60),m=mn%60;return h+"h"+(m<10?"0":"")+m;};
-    let totalH=0,justH=0,nonJustH=0,totalMin=0,sansDuree=0,minMois=0;
+    let totalH=0,justH=0,nonJustH=0,nbAbs=0,nbRet=0,totalMin=0,sansDuree=0,minMois=0;
     var _auj=new Date();
-    absEleve.forEach(row=>{totalH++;if(String(row[8]||"").toUpperCase()==="OUI")justH++;else nonJustH++;
+    absEleve.forEach(row=>{totalH++;if(String(row[5]||"").trim().toUpperCase()==="RETARD")nbRet++;else nbAbs++;   /* 06/11/2026 */ if(String(row[8]||"").toUpperCase()==="OUI")justH++;else nonJustH++;
       if(String(row[5]||"").trim().toUpperCase()==="RETARD")return;
       var du=_duree(row);if(du===null){sansDuree++;return;}
       totalMin+=du;
       var dm=String(row[0]||"").match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
       if(dm&&(+dm[2])===_auj.getMonth()+1&&(+dm[3])===_auj.getFullYear())minMois+=du;});
     if(!carteH)carteH=carteHeuresAbsence({ok:true,totalMinutes:minMois,totalTxt:_hTxt(minMois)});
-    var htmlStats="<div style='display:flex;gap:8px;margin-bottom:14px;'><div style='flex:1;background:#FFEBEE;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#C62828;margin-bottom:2px;'>TOTAL</p><p style='font-size:1.6em;font-weight:bold;color:#C62828;'>"+totalH+"</p></div><div style='flex:1;background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#2E7D32;margin-bottom:2px;'>JUSTIFIEES</p><p style='font-size:1.6em;font-weight:bold;color:#2E7D32;'>"+justH+"</p></div><div style='flex:1;background:#FFF3E0;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#E65100;margin-bottom:2px;'>NON JUST.</p><p style='font-size:1.6em;font-weight:bold;color:#E65100;'>"+nonJustH+"</p></div></div>";
+    // 06/11/2026 — les cases comptent des ABSENCES et des RETARDS (nombre), et non des heures : un retard n'est pas une heure d'absence
+    var htmlStats="<div style='display:flex;gap:8px;margin-bottom:14px;'><div style='flex:1;background:#FFEBEE;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#C62828;margin-bottom:2px;'>ABSENCES (nombre)</p><p style='font-size:1.6em;font-weight:bold;color:#C62828;'>"+nbAbs+"</p></div><div style='flex:1;background:#FFF3E0;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#E65100;margin-bottom:2px;'>RETARDS (nombre)</p><p style='font-size:1.6em;font-weight:bold;color:#E65100;'>"+nbRet+"</p></div><div style='flex:1;background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#2E7D32;margin-bottom:2px;'>JUSTIFIÉS</p><p style='font-size:1.6em;font-weight:bold;color:#2E7D32;'>"+justH+"</p></div><div style='flex:1;background:#FFF8E1;border-radius:8px;padding:10px;text-align:center;'><p style='font-size:0.75em;color:#B8860B;margin-bottom:2px;'>NON JUSTIFIÉS</p><p style='font-size:1.6em;font-weight:bold;color:#B8860B;'>"+nonJustH+"</p></div></div>";
     htmlStats+="<div style='background:#F3E5F5;border-radius:8px;padding:10px;text-align:center;margin-bottom:14px;'><p style='font-size:0.75em;color:#6A1B9A;margin-bottom:2px;'>HEURES D'ABSENCE DEPUIS LA RENTREE</p><p style='font-size:1.6em;font-weight:bold;color:#6A1B9A;'>"+_hTxt(totalMin)+"</p>"+(sansDuree?"<p style='font-size:0.7em;color:#888;'>"+sansDuree+" absence(s) sans horaire de cours enregistré</p>":"")+"</div>";
     var htmlDetail="<div style='margin-top:4px;'>";
     absEleve.slice().reverse().forEach(function(row){
@@ -1998,7 +1999,9 @@ async function chargerAbsences(eleve){
       htmlDetail+="<span style='font-size:0.78em;color:#555;'>"+date+" à "+heure+"</span></div>";
       if(matiere)htmlDetail+="<div style='font-size:0.8em;color:#333;'>Matière : <strong>"+matiere+"</strong></div>";
       var _du=_duree(row);
-      if(_du!==null)htmlDetail+="<div style='font-size:0.8em;color:#333;'>Cours de <strong>"+String(row[11]).trim()+"</strong> à <strong>"+String(row[12]).trim()+"</strong> — durée : <strong>"+_hTxt(_du)+"</strong></div>";
+      if(_du!==null&&estRetard){var _arr=_min(heure),_deb=_min(row[11]),_rt=(_arr!==null&&_deb!==null)?Math.max(0,_arr-_deb):null;   /* 06/11/2026 : présent, arrivé en retard */
+        htmlDetail+="<div style='font-size:0.8em;color:#333;'>Cours de <strong>"+String(row[11]).trim()+"</strong> à <strong>"+String(row[12]).trim()+"</strong> — arrivé(e) à <strong>"+heure+"</strong>"+(_rt!==null?" ("+_rt+" min de retard)":"")+"</div><div style='font-size:0.74em;color:#888;'>Un retard ne compte pas dans les heures d'absence.</div>";}
+      else if(_du!==null)htmlDetail+="<div style='font-size:0.8em;color:#333;'>Cours de <strong>"+String(row[11]).trim()+"</strong> à <strong>"+String(row[12]).trim()+"</strong> — durée : <strong>"+_hTxt(_du)+"</strong></div>";
       if(enseignant)htmlDetail+="<div style='font-size:0.76em;color:#666;'>Enseignant : "+enseignant+"</div>";
       if(motif)htmlDetail+="<div style='font-size:0.76em;color:#666;'>Motif : "+motif+"</div>";
       htmlDetail+="</div>";
