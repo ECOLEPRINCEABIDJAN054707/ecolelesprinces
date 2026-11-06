@@ -20041,30 +20041,45 @@ function impBulOuvrir(z) {
     window['_impBulListe' + z] = d.liste;
     var opts = d.liste.map(function (x, i) { return '<option value="' + i + '">' + _ibEsc(x.classe) + ' — ' + _ibEsc(IMPBUL_MOIS[x.mois] || x.mois) + ' (' + x.nb + ' élèves)</option>'; }).join('');
     body.innerHTML = '<div style="padding:12px">'
-      + '<select id="impBulSel' + z + '" style="width:100%;padding:10px;border:1.5px solid #CFD8DC;border-radius:8px;font-size:0.9em;margin-bottom:10px">' + opts + '</select>'
-      + '<button onclick="impBulImprimer(\'' + z + '\')" style="width:100%;padding:12px;background:var(--vert,#2E7D32);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.9em;cursor:pointer">🖨️ Imprimer les bulletins de la classe</button>'
-      + '<p style="font-size:0.75em;color:var(--gris);margin-top:8px;line-height:1.5">Un bulletin par page A4, dans l\'ordre alphabétique. Dans la fenêtre d\'impression, choisissez votre imprimante, ou « Enregistrer au format PDF » pour garder un fichier.</p></div>';
+      + '<label style="font-size:0.78em;font-weight:700;color:var(--gris)">1. Classe et mois</label>'
+      + '<select id="impBulSel' + z + '" onchange="impBulChargerEleves(\'' + z + '\')" style="width:100%;padding:10px;border:1.5px solid #CFD8DC;border-radius:8px;font-size:0.9em;margin:4px 0 10px">' + opts + '</select>'
+      + '<label style="font-size:0.78em;font-weight:700;color:var(--gris)">2. Élève</label>'
+      + '<select id="impBulEleve' + z + '" style="width:100%;padding:10px;border:1.5px solid #CFD8DC;border-radius:8px;font-size:0.9em;margin:4px 0 10px"><option value="">⏳ Chargement des élèves…</option></select>'
+      + '<button onclick="impBulImprimer(\'' + z + '\')" id="impBulBtn' + z + '" style="width:100%;padding:12px;background:var(--vert,#2E7D32);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.9em;cursor:pointer">🖨️ Imprimer</button>'
+      + '<p style="font-size:0.75em;color:var(--gris);margin-top:8px;line-height:1.5">Choisissez « Toute la classe » (un bulletin par page A4, ordre alphabétique) ou un seul élève, par exemple quand un parent vient chercher le bulletin de son enfant. Dans la fenêtre d\'impression, choisissez l\'imprimante, ou « Enregistrer au format PDF ».</p></div>';
+    impBulChargerEleves(z);
+  });
+}
+
+// 06/11/2026 — liste des élèves de la classe et du mois choisis (les bulletins sont gardés pour l'impression)
+function impBulChargerEleves(z) {
+  var sel = document.getElementById('impBulSel' + z), selE = document.getElementById('impBulEleve' + z), liste = window['_impBulListe' + z] || [];
+  var x = sel ? liste[parseInt(sel.value, 10)] : null; if (!x || !selE) return;
+  var c = _pssCompte(); if (!c) { selE.innerHTML = '<option value="">Session expirée : reconnectez-vous</option>'; return; }
+  var cle = x.classe + '|' + x.mois; window['_impBulCle' + z] = cle; window['_impBulData' + z] = null;
+  selE.innerHTML = '<option value="">⏳ Chargement des élèves…</option>';
+  appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_BULLETINS_CLASSE', matricule: c.matricule, code: c.code, ecole: currentStaff.ecole || '', annee: '2026-2027', classe: x.classe, mois: x.mois }, 45000).then(function (d) {
+    if (window['_impBulCle' + z] !== cle) return;            // une autre classe a été choisie entre-temps
+    if (!d || !d.ok || !d.bulletins || !d.bulletins.length) { selE.innerHTML = '<option value="">' + _ibEsc((d && d.error) || 'Aucun bulletin — réessayez') + '</option>'; return; }
+    window['_impBulData' + z] = d.bulletins;
+    selE.innerHTML = '<option value="*">👥 Toute la classe (' + d.bulletins.length + ' bulletins)</option>'
+      + d.bulletins.map(function (b, i) { return '<option value="' + i + '">' + _ibEsc((b.nom + ' ' + (b.prenoms || '')).trim()) + (b.matricule ? ' — ' + _ibEsc(b.matricule) : '') + '</option>'; }).join('');
   });
 }
 
 function impBulImprimer(z) {
-  var sel = document.getElementById('impBulSel' + z), liste = window['_impBulListe' + z] || [];
-  var x = sel ? liste[parseInt(sel.value, 10)] : null; if (!x) return;
-  var c = _pssCompte(); if (!c) { showToast('Session expirée : reconnectez-vous', 'error'); return; }
-  var w = window.open('', '_blank');                 // ouverte tout de suite, sinon le navigateur la bloque
+  var data = window['_impBulData' + z], selE = document.getElementById('impBulEleve' + z);
+  if (!data || !data.length) { showToast('Attendez la fin du chargement des élèves', 'error'); return; }
+  var v = selE ? selE.value : '*', choix = (v === '*' || v === '') ? data : [data[parseInt(v, 10)]].filter(Boolean);
+  if (!choix.length) return;
+  var w = window.open('', '_blank');
   if (!w) { showToast('Autorisez les fenêtres (pop-up) pour imprimer', 'error'); return; }
-  w.document.write('<p style="font-family:Arial;padding:30px;text-align:center">⏳ Préparation des bulletins de ' + _ibEsc(x.classe) + '…</p>');
-  appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_BULLETINS_CLASSE', matricule: c.matricule, code: c.code, ecole: currentStaff.ecole || '', annee: '2026-2027', classe: x.classe, mois: x.mois }, 45000).then(function (d) {
-    if (!d || !d.ok || !d.bulletins || !d.bulletins.length) {
-      w.document.body.innerHTML = '<p style="font-family:Arial;padding:30px;text-align:center;color:#C62828">' + _ibEsc((d && d.error) || 'Aucun bulletin trouvé — réessayez') + '</p>'; return;
-    }
-    w.document.open(); w.document.write(impBulDocument(d.bulletins, currentStaff.ecole || '')); w.document.close();
-  });
+  w.document.open(); w.document.write(impBulDocument(choix, currentStaff.ecole || '')); w.document.close();
 }
 
 function impBulDocument(bulletins, ecole) {
   var E = String(ecole).toUpperCase().trim(), dir = IMPBUL_DIRECTION[E] || { t: 'Le Directeur', n: '', tel: '' };
-  var b0 = bulletins[0], titre = 'Bulletins ' + b0.classe + ' — ' + (IMPBUL_MOIS[b0.mois] || b0.mois);
+  var b0 = bulletins[0], titre = (bulletins.length === 1 ? 'Bulletin ' + (b0.nom + ' ' + (b0.prenoms || '')).trim() + ' — ' + b0.classe : 'Bulletins ' + b0.classe) + ' — ' + (IMPBUL_MOIS[b0.mois] || b0.mois);
   var css = '@page{size:A4 portrait;margin:10mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
     + '.page{page-break-after:always;break-after:page;padding:1mm}.page:last-child{page-break-after:auto;break-after:auto}'
     + '.ent{display:flex;align-items:center;justify-content:space-between;gap:8px;border:2px solid #1F4E79;border-radius:6px;padding:8px 10px}'
