@@ -20009,16 +20009,23 @@ var IMPBUL_DIRECTION = {
   'CPP DABOU':      { t: 'Le Directeur',  n: 'KOUAKOU BAH',               tel: '' },
   'GUINGLO VILLE':  { t: 'Le Directeur',  n: "N'DOUA MICHEL",             tel: '' }
 };
+// 06/11/2026 — nom officiel de chaque école sur le bulletin (à corriger ici si besoin)
+var IMPBUL_NOMS = {   // noms officiels du primaire, donnés par le Fondateur le 06/11/2026
+  'KOUTOUAN': 'GROUPE SCOLAIRE LES PRINCES KOUTOUAN', 'AKEIKOI 1': 'EPV LES PRINCES AKEIKOI 1 (CŒUR BLANC)', 'AKEIKOI 2': 'EPV LES PRINCES AKEIKOI 2',
+  'ACADEMIE': 'EPV LES PRINCES ACADÉMIE', 'GS RITA ROSANE': 'GROUPE SCOLAIRE RITA ROSANE', 'GNONTINROU': 'EPV LES PRINCES GNONTINROU',
+  'GUINGLO VILLE': 'EPV LES PRINCES GUINGLO VILLE', 'CPP DABOU': 'EPV LES PRINCES DE DABOU', 'CPP ANYAMA': 'EPV LES PRINCES D\'ANYAMA ADJAMÉ'
+};
 var IMPBUL_MOIS = { OCT: 'Octobre', NOV: 'Novembre', DEC: 'Décembre', JAN: 'Janvier', FEV: 'Février', MAR: 'Mars', AVR: 'Avril', MAI: 'Mai',
                     EB1: 'Examen blanc n°1', EB2: 'Examen blanc n°2', EB3: 'Examen blanc n°3', EB4: 'Examen blanc n°4' };
 var IMPBUL_MOIS_COURT = { OCT: 'Oct.', NOV: 'Nov.', DEC: 'Déc.', JAN: 'Janv.', FEV: 'Févr.', MAR: 'Mars', AVR: 'Avr.', MAI: 'Mai', EB1: 'EB1', EB2: 'EB2', EB3: 'EB3', EB4: 'EB4' };
 function _ibEsc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function _ibNb(x, d) { var n = parseFloat(x); return isNaN(n) ? '—' : (d ? n.toFixed(d) : String(Math.round(n * 100) / 100)).replace('.', ','); }
 // Appréciation selon la part de la note dans son barème (0 à 1)
+function _ibRang(r) { return r == 1 ? '1<sup>er</sup>' : r + '<sup>e</sup>'; }   // 1er, 2e, 3e…
 function _ibAppr(p) { return p >= 0.9 ? 'Excellent' : p >= 0.8 ? 'Très bien' : p >= 0.7 ? 'Bien' : p >= 0.6 ? 'Assez bien' : p >= 0.5 ? 'Passable' : p >= 0.3 ? 'Insuffisant' : 'Faible'; }
 function _ibCoul(p) { return p >= 0.7 ? '#1B5E20' : p >= 0.5 ? '#8D6E00' : '#B71C1C'; }
 function _ibApprGenerale(p) {
-  return p >= 0.8 ? 'Excellent travail. Félicitations !' : p >= 0.7 ? 'Très bon travail. Continue ainsi.' : p >= 0.6 ? 'Bon travail. Peut encore mieux faire.'
+  return p >= 0.8 ? 'Excellent travail. Félicitations\u00a0!' : p >= 0.7 ? 'Très bon travail. Continue ainsi.' : p >= 0.6 ? 'Bon travail. Peut encore mieux faire.'
        : p >= 0.5 ? 'Travail moyen. Doit fournir plus d\'efforts.' : 'Résultats insuffisants. Un sérieux effort est attendu.';
 }
 
@@ -20060,7 +20067,7 @@ function impBulDocument(bulletins, ecole) {
   var css = '@page{size:A4 portrait;margin:10mm}*{box-sizing:border-box}body{font-family:Arial,Helvetica,sans-serif;color:#111;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
     + '.page{page-break-after:always;break-after:page;padding:1mm}.page:last-child{page-break-after:auto;break-after:auto}'
     + '.ent{display:flex;align-items:center;justify-content:space-between;gap:8px;border:2px solid #1F4E79;border-radius:6px;padding:8px 10px}'
-    + '.logo{width:64px;height:auto;max-height:96px}.centre{text-align:center;flex:1}.reseau{font-size:10px;font-weight:bold;color:#555;letter-spacing:1px}'
+    + '.logo{width:64px;height:auto;max-height:96px}.centre{text-align:center;flex:1}.reseau{font-size:10.5px;font-weight:bold;color:#333;letter-spacing:0.3px}'
     + '.ecole{font-size:18px;font-weight:bold;color:#1F4E79;text-transform:uppercase;margin-top:2px}.sous{font-size:10px;color:#444;margin-top:2px}'
     + '.bandeau{display:inline-block;margin-top:6px;background:#1F4E79;color:#fff;padding:5px 16px;border-radius:14px;font-size:12.5px;font-weight:bold}'
     + '.rci{text-align:center;font-size:8px;color:#222;width:135px;line-height:1.3}.rci b{font-size:8.5px}.rci img{width:66px;height:auto;display:block;margin:2px auto}'
@@ -20091,7 +20098,7 @@ function impBulDocument(bulletins, ecole) {
       return '<tr><td class="mat">' + _ibEsc(m.nom) + '</td>'
         + '<td><b style="font-size:13.5px">' + (vide ? '—' : _ibNb(m.note)) + '</b> / ' + (m.bareme || '') + '</td>'
         + '<td>' + coef + '</td>'
-        + '<td>' + (vide || !m.rang ? '—' : m.rang + '<sup>e</sup>') + '</td>'
+        + '<td>' + (vide || !m.rang ? '—' : _ibRang(m.rang)) + '</td>'
         + '<td>' + _ibNb(m.moy_cls, 1) + '</td>'
         + '<td>' + _ibNb(m.max) + ' / ' + _ibNb(m.min) + '</td>'
         + '<td class="ap" style="color:' + (vide ? '#777' : _ibCoul(p)) + '">' + (vide ? 'Non évalué' : _ibAppr(p)) + '</td></tr>';
@@ -20103,9 +20110,9 @@ function impBulDocument(bulletins, ecole) {
     var mention = eb ? (b.moyenne >= 10 ? 'ADMIS' : 'REFUSÉ') : _ibAppr(pct).toUpperCase();
     var resultat = '<div class="res" style="border-color:' + coul + '"><div class="titre" style="background:' + coul + '">RÉSULTAT</div>'
       + '<div class="bloc"><div class="l">' + (eb ? 'Moyenne (CEPE)' : 'Moyenne du mois') + '</div><div class="v" style="color:' + coul + '">' + _ibNb(b.moyenne, 2) + ' <small>/ ' + sur + '</small></div></div>'
-      + '<div class="bloc"><div class="l">Rang</div><div class="v">' + (b.rang ? b.rang + '<sup style="font-size:14px">e</sup>' : '—') + ' <small>/ ' + _ibEsc(b.effectif || '—') + '</small></div></div>'
+      + '<div class="bloc"><div class="l">Rang</div><div class="v">' + (b.rang ? _ibRang(b.rang).replace('<sup>', '<sup style="font-size:14px">') : '—') + ' <small>/ ' + _ibEsc(b.effectif || '—') + '</small></div></div>'
       + '<div class="bloc"><div class="l">' + (eb ? 'Décision' : 'Mention') + '</div><div class="v" style="color:' + coul + ';font-size:' + (mention.length > 9 ? 19 : 24) + 'px;padding-top:4px">' + mention + '</div></div>'
-      + '<div class="bloc"><div class="l">Moyenne annuelle</div><div class="v" style="font-size:22px;padding-top:4px">' + _ibNb(b.moy_annuelle, 2) + ' <small>/ ' + sur + '</small></div>' + (b.rang_annuel ? '<div style="font-size:10px;color:#555">Rang annuel : ' + b.rang_annuel + '<sup>e</sup></div>' : '') + '</div></div>'
+      + '<div class="bloc"><div class="l">Moyenne annuelle</div><div class="v" style="font-size:22px;padding-top:4px">' + _ibNb(b.moy_annuelle, 2) + ' <small>/ ' + sur + '</small></div>' + (b.rang_annuel ? '<div style="font-size:10px;color:#555">Rang annuel : ' + _ibRang(b.rang_annuel) + '</div>' : '') + '</div></div>'
       + '<div class="apprg" style="border-color:' + coul + '"><b>Appréciation générale :</b> ' + (eb ? (b.moyenne >= 10 ? 'Admis à l\'examen blanc. ' : 'Refusé à l\'examen blanc. ') : '') + _ibApprGenerale(eb ? b.moyenne / 20 : pct) + '</div>';
     // Évolution des moyennes (mois déjà publiés jusqu'au mois de ce bulletin)
     var hist = (b.historique || []).filter(function (h) { return !!h.moyenne || h.moyenne === 0; }), evo = '';
@@ -20120,12 +20127,12 @@ function impBulDocument(bulletins, ecole) {
     }
     return '<div class="page' + (n > 6 ? ' dense' : '') + '">'   // CP : 12 matières → mise en page serrée pour tenir sur une page
       + '<div class="ent"><img class="logo" src="' + IMPBUL_LOGO + '">'
-      + '<div class="centre"><div class="reseau">RÉSEAU CPP LES PRINCES D\'ABIDJAN</div><div class="ecole">' + _ibEsc(ecole) + '</div>'
+      + '<div class="centre"><div class="reseau">MINISTÈRE DE L\'ÉDUCATION NATIONALE ET DE L\'ENSEIGNEMENT TECHNIQUE</div><div class="ecole">' + _ibEsc(IMPBUL_NOMS[E] || ecole) + '</div>'
       + '<div class="sous">Année scolaire ' + _ibEsc(b.annee || '2026-2027') + (dir.tel ? ' · Tél. ' + _ibEsc(dir.tel) : '') + '</div>'
       + '<div class="bandeau">' + (eb ? _ibEsc(moisL).toUpperCase() + ' — PRÉPARATION AU CEPE' : 'BULLETIN MENSUEL — ' + _ibEsc(moisL).toUpperCase()) + '</div></div>'
-      + '<div class="rci"><b>RÉPUBLIQUE DE CÔTE D\'IVOIRE</b><img src="' + IMPBUL_ARMOIRIES + '">Union - Discipline - Travail<br>Ministère de l\'Éducation Nationale<br>et de l\'Alphabétisation</div></div>'
+      + '<div class="rci"><b>RÉPUBLIQUE DE CÔTE D\'IVOIRE</b><img src="' + IMPBUL_ARMOIRIES + '">Union - Discipline - Travail</div></div>'
       + '<div class="eleve"><div>Nom et prénoms : <b>' + _ibEsc((b.nom + ' ' + (b.prenoms || '')).trim()) + '</b><br>Matricule : ' + _ibEsc(b.matricule || '—') + '</div>'
-      + '<div style="text-align:right">Classe : <b>' + _ibEsc(b.classe) + '</b><br>Effectif : ' + _ibEsc(b.effectif || '—') + ' élèves</div></div>'
+      + '<div style="text-align:right">Classe : <b>' + _ibEsc(b.classe) + '</b><br>Effectif : ' + _ibEsc(b.effectif || '—') + (b.effectif == 1 ? ' élève' : ' élèves') + '</div></div>'
       + '<table><thead><tr><th style="text-align:left">MATIÈRE</th><th>NOTE</th><th>COEF.</th><th>RANG</th><th>MOY. CLASSE</th><th>MEILLEURE / PLUS FAIBLE</th><th>APPRÉCIATION</th></tr></thead><tbody>' + lignes + '</tbody></table>'
       + resultat + evo
       + '<div class="obs"><b>Observations du maître :</b><div class="lg"></div><div class="lg"></div></div>'
