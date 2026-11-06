@@ -1278,7 +1278,7 @@ async function chargerMesCoursDuJour() {
     // ⚠️ 07/10/2026 — la liste est mémorisée puis dessinée par _dessinerMesCoursDuJour(),
     // qui est rejouée à chaque retour à l'accueil : un cours terminé ne reste plus cliquable
     data.cours.sort((a, b) => parseMin(a.heureDebut) - parseMin(b.heureDebut));
-    window._mesCoursJour = data.cours;
+    window._mesCoursJour = _regrouperClassesCommunes(data.cours);   // 06/11/2026 — classes communes : un seul cours
     window._mesCoursJourDate = formatDate(new Date());
     if (user.multi && Array.isArray(data.comptes) && data.comptes.length) {   // 21/10/2026 — comptes tenus à jour
       user.comptes = data.comptes;
@@ -1298,6 +1298,28 @@ async function chargerMesCoursDuJour() {
 // Un cours fini restait donc cliquable si l'application était restée ouverte, et un nouvel appel partait
 // avec le créneau du cours déjà terminé (le cours suivant était alors pris pour un doublon et non payé).
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+// ⚠️ NOUVEAU 06/11/2026 — CLASSES COMMUNES (ex. 1A BT BÂTIMENT + 1A BT TOPO en dessin, même heure, même professeur)
+// Un seul cours à l'écran, un seul appel (les élèves des deux classes), un seul cahier de textes.
+// À l'envoi, une ligne par classe part au serveur (absences et cahier dans la bonne classe) ;
+// la séance n'est payée qu'une fois (contrôle « classes regroupées » du serveur).
+// ══════════════════════════════════════════════
+function _nCl(x) { return String(x || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ''); }
+function _regrouperClassesCommunes(liste) {
+  const res = [], parCle = {};
+  (liste || []).forEach(c => {
+    const k = _nCl(c.ecole) + '|' + _nCl(c.matiere) + '|' + parseMin(c.heureDebut) + '|' + parseMin(c.heureFin);
+    const g = parCle[k];
+    if (!g) { const copie = Object.assign({}, c); parCle[k] = copie; res.push(copie); return; }
+    const deja = (g.classesCommunes || [g.classe]).some(x => _nCl(x) === _nCl(c.classe));
+    if (!deja) g.classesCommunes = (g.classesCommunes || [g.classe]).concat([c.classe]);
+  });
+  return res;
+}
+function _libClasses(c) { return (c && Array.isArray(c.classesCommunes) && c.classesCommunes.length > 1) ? c.classesCommunes.join(' + ') : (c ? c.classe : ''); }
+function _classesDuCours() {
+  return (coursActuel && Array.isArray(coursActuel.classesCommunes) && coursActuel.classesCommunes.length > 1) ? coursActuel.classesCommunes : [coursActuel ? coursActuel.classe : ''];
+}
 function _cleCours(classe, hD) {
   const n = String(classe || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '');
   const m = parseMin(hD);
@@ -1358,12 +1380,12 @@ function _dessinerMesCoursDuJour() {
       const horaire = (c.ecole && _estMulti() ? '<b>' + esc(ECOLE_COURT[c.ecole] || c.ecole) + '</b> · ' : '') + esc(c.matiere) + ' · ' + esc(c.heureDebut) + ' → ' + esc(c.heureFin);
       if (etat === 'clos' || etat === 'termine') {
         html += '<div style="width:100%;text-align:left;padding:12px;margin-bottom:8px;background:#F0F0F0;border:1.5px solid #DDD;border-radius:10px;opacity:0.55">' +
-          '<div style="font-weight:700;font-size:14px;color:#888">' + esc(c.classe) + ' <span style="font-size:11px;font-weight:400">' + (etat === 'clos' ? '(cahier publié)' : '(terminé)') + '</span></div>' +
+          '<div style="font-weight:700;font-size:14px;color:#888">' + esc(_libClasses(c)) + ' <span style="font-size:11px;font-weight:400">' + (etat === 'clos' ? '(cahier publié)' : '(terminé)') + '</span></div>' +
           '<div style="font-size:12px;color:#999;margin-top:2px">' + horaire + '</div>' +
           '</div>';
       } else {
         html += '<button onclick="demarrerCoursDepuisEDT(' + i + ')" style="width:100%;text-align:left;padding:12px;margin-bottom:8px;background:var(--blue-lt);border:1.5px solid #90CAF9;border-radius:10px;font-family:inherit;cursor:pointer">' +
-          '<div style="font-weight:700;font-size:14px;color:var(--navy)">' + esc(c.classe) + (etat === 'appele' ? ' <span style="font-size:11px;font-weight:400">(appel fait — cahier à compléter)</span>' : '') + '</div>' +
+          '<div style="font-weight:700;font-size:14px;color:var(--navy)">' + esc(_libClasses(c)) + (c.classesCommunes ? ' <span style="font-size:10px;font-weight:700;background:#E8F5E9;color:#2E7D32;padding:2px 7px;border-radius:10px">👥 classe commune</span>' : '') + (etat === 'appele' ? ' <span style="font-size:11px;font-weight:400">(appel fait — cahier à compléter)</span>' : '') + '</div>' +
           '<div style="font-size:12px;color:var(--text2);margin-top:2px">' + horaire + '</div>' +
           '</button>';
       }
@@ -1512,6 +1534,7 @@ async function demarrerCoursDepuisEDT(idx) {
   document.getElementById('modalHeureDebut').value = pad2(c.heureDebut);
   document.getElementById('modalHeureFin').value = pad2(c.heureFin);
   calculerEstim();
+  window._classesCommunesAOuvrir = (Array.isArray(c.classesCommunes) && c.classesCommunes.length > 1) ? c.classesCommunes.slice() : null;   // 06/11/2026
   confirmerCours();
 }
 async function demarrerCoursPrimaireDirect() {
@@ -1889,15 +1912,16 @@ function _coursDejaAppele(classe, hD) {
 // Rouvre l'écran d'appel d'un cours déjà appelé : pas de second appel, seulement « Mettre à jour » ou « Compléter le cahier »
 function _reprendreCoursAppele(s) {
   coursActuel = { classe: s.classe, matiere: s.matiere, heureDebutEDT: s.heureDebutEDT, heureFinEDT: s.heureFinEDT,
-                  horodatageAppel: s.horodatageAppel, dateAppel: s.dateAppel || formatDate(new Date()), statuts: s.statuts };
+                  horodatageAppel: s.horodatageAppel, dateAppel: s.dateAppel || formatDate(new Date()), statuts: s.statuts,
+                  classesCommunes: s.classesCommunes };
   sauverCoursActuel();
-  document.getElementById('appelClasse').textContent = coursActuel.classe;
+  document.getElementById('appelClasse').textContent = _libClasses(coursActuel);
   document.getElementById('appelMatiere').textContent = coursActuel.matiere;
   document.getElementById('appelDebut').textContent = coursActuel.heureDebutEDT;
   document.getElementById('appelFin').textContent = coursActuel.heureFinEDT;
-  document.getElementById('cahierClasse').textContent = coursActuel.classe;
+  document.getElementById('cahierClasse').textContent = _libClasses(coursActuel);
   document.getElementById('cahierMatiere').textContent = coursActuel.matiere;
-  document.getElementById('notesSousTitre').textContent = (coursActuel.matiere || user.matiere) + ' · ' + coursActuel.classe;
+  document.getElementById('notesSousTitre').textContent = (coursActuel.matiere || user.matiere) + ' · ' + _libClasses(coursActuel);
   document.getElementById('heureAppelAffiche').textContent = coursActuel.horodatageAppel;
   document.getElementById('resumeAppel').textContent = 'Appel déjà enregistré pour ce cours. Corrigez un retard ou une absence si besoin, puis complétez le cahier.';
   document.getElementById('carteValidation').style.display = 'block';
@@ -1920,6 +1944,7 @@ function _reprendreCoursAppele(s) {
   showToast('✅ Appel déjà fait à ' + coursActuel.horodatageAppel + ' — pas de second appel', 'success');
 }
 async function confirmerCours() {
+  const _cc = window._classesCommunesAOuvrir; window._classesCommunesAOuvrir = null;   // 06/11/2026 — classe commune ?
   const classe = document.getElementById('modalClasse').value;
   const matiere = document.getElementById('modalMatiere').value.trim();
   const hD = document.getElementById('modalHeureDebut').value;
@@ -1934,13 +1959,14 @@ async function confirmerCours() {
   // (emploi du temps, primaire, choix manuel « Démarrer le cours »).
   if (!(await _controlerPositionOuverture(classe, hD))) return;
   coursActuel = { classe, matiere, heureDebutEDT:hD, heureFinEDT:hF, horodatageAppel:null, dateAppel:null };
-  document.getElementById('appelClasse').textContent = classe;
+  if (Array.isArray(_cc) && _cc.length > 1 && _nCl(_cc[0]) === _nCl(classe)) coursActuel.classesCommunes = _cc;
+  document.getElementById('appelClasse').textContent = _libClasses(coursActuel);
   document.getElementById('appelMatiere').textContent = matiere;
   document.getElementById('appelDebut').textContent = hD;
   document.getElementById('appelFin').textContent = hF;
-  document.getElementById('cahierClasse').textContent = classe;
+  document.getElementById('cahierClasse').textContent = _libClasses(coursActuel);
   document.getElementById('cahierMatiere').textContent = matiere;
-  document.getElementById('notesSousTitre').textContent = (matiere||user.matiere) + ' · ' + classe;
+  document.getElementById('notesSousTitre').textContent = (matiere||user.matiere) + ' · ' + _libClasses(coursActuel);
   // Réinitialiser l'appel
   document.getElementById('carteValidation').style.display = 'none';
   document.getElementById('btnValiderAppel').style.display = 'flex';
@@ -1957,15 +1983,18 @@ async function chargerEleves(classe) {
   eleves = [];
   try {
     showLoader('Chargement des élèves...');
-    const range = encodeURIComponent(`${classe}!B3:C300`);
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}`;
-    const data = await lireBase('ELEVES', { classe: classe }, url, 'eleves_' + classe, 20);
-    if (!data.values || !data.values.length) {
-      eleves = [];
-    } else {
-      eleves = data.values
-        .filter(r => r[0] && r[0].toString().trim())
-        .map(r => ({ classe, matricule: (r[0]||'').toString().trim(), nom: (r[1]||'').toString().trim(), statut:'present', motif:'', heure:'', obs:'' }));
+    // 06/11/2026 — classe commune : les élèves de toutes les classes du cours, chacun avec sa classe
+    const _toutes = (coursActuel && Array.isArray(coursActuel.classesCommunes) && coursActuel.classesCommunes.length > 1 && _nCl(coursActuel.classesCommunes[0]) === _nCl(classe))
+      ? coursActuel.classesCommunes : [classe];
+    for (const k of _toutes) {
+      const range = encodeURIComponent(`${k}!B3:C300`);
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}`;
+      const data = await lireBase('ELEVES', { classe: k }, url, 'eleves_' + k, 20);
+      if (data.values && data.values.length) {
+        eleves = eleves.concat(data.values
+          .filter(r => r[0] && r[0].toString().trim())
+          .map(r => ({ classe: k, matricule: (r[0]||'').toString().trim(), nom: (r[1]||'').toString().trim(), statut:'present', motif:'', heure:'', obs:'' })));
+      }
     }
   } catch(e) {
     console.warn('chargerEleves:', e);
@@ -2012,7 +2041,7 @@ function afficherEleves() {
         <div class="eleve-avatar">${esc(el.nom.charAt(0))}</div>
         <div class="eleve-info">
           <div class="eleve-nom">${esc(el.nom)}</div>
-          <div class="eleve-mat">${esc(el.matricule)}</div>
+          <div class="eleve-mat">${esc(el.matricule)}${(coursActuel && coursActuel.classesCommunes) ? ' · <b>' + esc(el.classe) + '</b>' : ''}</div>
         </div>
         <div class="status-btns">
           <button class="status-btn btn-p ${el.statut==='present'?'on':''}" onclick="setStatut(event,${i},'present')" title="Présent">✅</button>
@@ -2142,59 +2171,71 @@ async function _validerAppelInterne() {
   document.getElementById('btnCahierAppel').style.display = 'flex';
 
   showLoader("Enregistrement de l'appel...");
-  const absences = eleves.filter(e=>e.statut!=='present').map(e=>({
-    date:formatDate(maintenant), heure:horodatage, matricule:e.matricule,
-    nom:e.nom, classe:coursActuel.classe, statut:e.statut,
-    heureArrivee:e.heure||'', motif:e.motif||'', obs:e.obs||'', enseignant:user.nom, matiere:coursActuel.matiere
-  }));
   const taux = Math.round(nbP / Math.max(eleves.length,1) * 100);
-  try {
-    const res = await envoyerDonnees('APPEL', {
-      date:formatDate(maintenant), heure:horodatage, classe:coursActuel.classe,
+  // 06/11/2026 — classe commune : un envoi par classe (ses élèves, ses absences) ; un seul appel pour l'enseignant
+  const _classesAppel = _classesDuCours(), _signature = document.getElementById('sigCanvas').toDataURL('image/png');
+  let _horsLigne = 0;
+  for (const k of _classesAppel) {
+    const elK = _classesAppel.length > 1 ? eleves.filter(e => _nCl(e.classe) === _nCl(k)) : eleves;
+    const pK = elK.filter(e=>e.statut==='present').length;
+    const charge = {
+      date:formatDate(maintenant), heure:horodatage, classe:k,
       matiere:coursActuel.matiere, enseignant:user.nom, ecole:user.ecole,
       heureDebutEDT:coursActuel.heureDebutEDT, heureFinEDT:coursActuel.heureFinEDT,
-      totalEleves:eleves.length, nbPresents:nbP, taux, absences,
-      signature:document.getElementById('sigCanvas').toDataURL('image/png')
-    });
-    hideLoader();
-    if (res && res.ok === false) {
-      showToast(`❌ Erreur serveur : ${res.error||'echec inconnu'}`,'error');
-      console.error('APPEL refuse par le serveur:', res);
-      return;
+      totalEleves:elK.length, nbPresents:pK, taux:Math.round(pK / Math.max(elK.length,1) * 100),
+      absences: elK.filter(e=>e.statut!=='present').map(e=>({
+        date:formatDate(maintenant), heure:horodatage, matricule:e.matricule,
+        nom:e.nom, classe:k, statut:e.statut,
+        heureArrivee:e.heure||'', motif:e.motif||'', obs:e.obs||'', enseignant:user.nom, matiere:coursActuel.matiere
+      }))
+    };
+    try {
+      const res = await envoyerDonnees('APPEL', Object.assign({ signature: _signature }, charge));
+      if (res && res.ok === false) {
+        hideLoader();
+        showToast(`❌ Erreur serveur (${k}) : ${res.error||'echec inconnu'}`,'error');
+        console.error('APPEL refuse par le serveur:', res);
+        return;
+      }
+    } catch(e) {
+      sauvegarderHorsLigne('APPEL', charge);
+      _horsLigne++;
     }
-    if (taux < 90) showToast(`⚠️ Taux présence ${taux}% — Direction notifiée`,'warn');
-    else showToast(`✅ Appel validé — ${nbP}/${eleves.length} (${taux}%)`,'success');
-  } catch(e) {
-    hideLoader();
-    sauvegarderHorsLigne('APPEL', {
-      date:formatDate(maintenant), heure:horodatage, classe:coursActuel.classe,
-      matiere:coursActuel.matiere, enseignant:user.nom, ecole:user.ecole,
-      heureDebutEDT:coursActuel.heureDebutEDT, heureFinEDT:coursActuel.heureFinEDT,
-      totalEleves:eleves.length, nbPresents:nbP, taux, absences
-    });
-    showToast('✅ Appel sauvegardé localement','success');
   }
+  hideLoader();
+  if (_horsLigne) showToast('✅ Appel sauvegardé localement','success');
+  else if (taux < 90) showToast(`⚠️ Taux présence ${taux}% — Direction notifiée`,'warn');
+  else showToast(`✅ Appel validé — ${nbP}/${eleves.length} (${taux}%)` + (_classesAppel.length > 1 ? ' · ' + _classesAppel.length + ' classes' : ''),'success');
 }
 async function mettreAJourAppel() {
   if (!coursActuel || !coursActuel.horodatageAppel) return;
   showLoader('Mise à jour de l\'appel...');
   const maintenant = new Date();
-  const absences = eleves.filter(e=>e.statut!=='present').map(e=>({
-    date:coursActuel.dateAppel, matricule:e.matricule, nom:e.nom,
-    classe:coursActuel.classe, statut:e.statut, heureArrivee:e.heure||'',
-    motif:e.motif||'', obs:e.obs||'', enseignant:user.nom, matiere:coursActuel.matiere
-  }));
   // ⚠️ 07/10/2026 — la liste des présents n'est envoyée que si le téléphone connaît les absents du premier appel
   // (sinon la mise à jour effacerait des absences déjà enregistrées)
   const _statutsConnus = Array.isArray(coursActuel.statuts);
-  const presents = _statutsConnus ? eleves.filter(e=>e.statut==='present').map(e=>e.matricule) : [];
   if (_statutsConnus) { coursActuel.statuts = _statutsAppel(); sauverCoursActuel(); }
-  try {
-    const res = await envoyerDonnees('CORRECTION_APPEL', {
-      date:coursActuel.dateAppel, classe:coursActuel.classe, enseignant:user.nom,
-      ecole:user.ecole, absences, presents,
+  // 06/11/2026 — une correction par classe (classe commune) ; la matière est envoyée (le serveur en a besoin pour retrouver l'absence)
+  const _classesMaj = _classesDuCours(), _chargesMaj = _classesMaj.map(k => {
+    const elK = _classesMaj.length > 1 ? eleves.filter(e => _nCl(e.classe) === _nCl(k)) : eleves;
+    return {
+      date:coursActuel.dateAppel, classe:k, matiere:coursActuel.matiere, enseignant:user.nom, ecole:user.ecole,
+      absences: elK.filter(e=>e.statut!=='present').map(e=>({
+        date:coursActuel.dateAppel, matricule:e.matricule, nom:e.nom,
+        classe:k, statut:e.statut, heureArrivee:e.heure||'',
+        motif:e.motif||'', obs:e.obs||'', enseignant:user.nom, matiere:coursActuel.matiere
+      })),
+      presents: _statutsConnus ? elK.filter(e=>e.statut==='present').map(e=>e.matricule) : [],
       heureCorrection:formatHeure(maintenant), corrigePar:user.nom
-    });
+    };
+  });
+  try {
+    let res = null;
+    for (const ch of _chargesMaj) {
+      try { res = await envoyerDonnees('CORRECTION_APPEL', ch); }
+      catch (eMaj) { sauvegarderHorsLigne('CORRECTION_APPEL', ch); continue; }
+      if (res && res.ok === false) break;
+    }
     hideLoader();
     if (res && res.ok === false) {
       showToast(`❌ Erreur : ${res.error||'echec inconnu'}`,'error');
@@ -2208,7 +2249,7 @@ async function mettreAJourAppel() {
     showToast('✅ Appel mis à jour','success');
   } catch(e) {
     hideLoader();
-    sauvegarderHorsLigne('CORRECTION_APPEL', {date:coursActuel.dateAppel, classe:coursActuel.classe, enseignant:user.nom, ecole:user.ecole, absences, presents});
+    _chargesMaj.forEach(ch => sauvegarderHorsLigne('CORRECTION_APPEL', ch));
     showToast('✅ Correction sauvegardée localement','success');
     document.getElementById('btnMajAppel').style.display = 'none';
   }
@@ -2377,6 +2418,18 @@ function _envoyerCorrectionCahier(lecon, contenu) {
 // ══════════════════════════════════════════════
 // PUBLIER CAHIER
 // ══════════════════════════════════════════════
+// 06/11/2026 — cahier d'un cours commun : la même leçon est enregistrée dans chaque classe (et chaque cours y est clôturé)
+async function _envoyerCahierClasses(data) {
+  const cl = _classesDuCours();
+  if (cl.length < 2) return envoyerDonnees('CAHIER', data);
+  let res = null;
+  for (const k of cl) {
+    const d = Object.assign({}, data, { classe: k });
+    try { const r = await envoyerDonnees('CAHIER', d); if (!res || (r && r.ok === false)) res = r; }
+    catch (e) { sauvegarderHorsLigne('CAHIER', d); }
+  }
+  return res || { ok: true };
+}
 async function publierCahier() {
   const lecon = document.getElementById('cahierLecon').value.trim();
   const contenu = document.getElementById('cahierContenu').value.trim();
@@ -2440,7 +2493,7 @@ async function publierCahier() {
       detailSalaire:calcul.detail||'',
       gps_lat:lat, gps_lon:lon, gps_prec:acc, gps_statut:gpsStatut
     };
-    envoyerDonnees('CAHIER', data).then((res) => {
+    _envoyerCahierClasses(data).then((res) => {   // 06/11/2026 — classe commune : un cahier par classe
       window._cahierEnvoi = false;
       if (!(res && res.ok === false)) { _noterCoursClos(coursActuel); _noterDernierCahier(data); } // ⚠️ 07/10/2026 — cahier publié : ce cours ne peut plus être rouvert ; le cahier reste corrigeable 30 min
       hideLoader();
