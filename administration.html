@@ -341,6 +341,12 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
     <div class="sec-body" id="pnJournalBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Ouverture…</p></div>
   </div>
+  <div class="section" id="dirSecSuiviEval" style="display:none">
+    <div class="sec-head sec-or" onclick="toggleSec(this);if(this.classList.contains('open'))seOuvrir()">
+      <h3>&#128202; Suivi des &eacute;valuations des professeurs (3 devoirs + 3 interrogations)</h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="seBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Ouverture…</p></div>
+  </div>
   <div class="section" id="dirSecSalaires" style="display:none">
     <div class="sec-head sec-or" onclick="toggleSec(this)">
       <h3>&#128176; Salaires &amp; Pointage enseignants</h3><span class="arr">&#9660;</span>
@@ -6362,6 +6368,7 @@ function afficherDir(s){
   var _ibD=document.getElementById('dirSecImpBul');if(_ibD)_ibD.style.display=!isSEC?'block':'none';   // 06/11/2026
   var _pnD=document.getElementById('dirSecPeriodesNotes');if(_pnD)_pnD.style.display=String(s.ecole||'').toUpperCase().trim()==='CPP LES PRINCES'?'block':'none';   // 06/11/2026
   var _pnJ=document.getElementById('dirSecNotesModif');if(_pnJ)_pnJ.style.display=!isPRIM?'block':'none';   // 06/11/2026
+  var _seD=document.getElementById('dirSecSuiviEval');if(_seD)_seD.style.display=!isPRIM?'block':'none';   // 06/11/2026
   document.getElementById('dirBtnBulZone').style.display=!isSEC?'block':'none';
   const zoneMat=document.getElementById('dirSecMatricules');
   if(zoneMat){
@@ -20295,6 +20302,55 @@ function pnCorriger() {
     else if (r && r.ok) showToast('Aucun changement : même note déjà enregistrée', 'warn');
     else showToast('❌ ' + ((r && (r.message || r.error)) || 'Erreur réseau, réessayez'), 'error');
   });
+}
+</script>
+
+<script>
+// ═══ 06/11/2026 — SUIVI DES ÉVALUATIONS DES PROFESSEURS (Directeur) : minimum 3 devoirs + 3 interrogations par classe et matière ═══
+function seOuvrir() {
+  var body = document.getElementById('seBody'); if (!body) return;
+  var c = _pssCompte(); if (!c) { body.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">Session expirée : reconnectez-vous.</p>'; return; }
+  body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div><p style="font-size:0.78em;color:var(--gris)">Calcul pour tous les professeurs…</p></div>';
+  appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'SUIVI_EVALUATIONS_ECOLE', matricule: c.matricule, code: c.code, ecole: currentStaff.ecole || '' }, 45000).then(function (d) {
+    if (!d || !d.ok || !d.profs) { body.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">' + _pnEsc((d && d.error) || 'Le serveur ne connaît pas encore ce suivi : ajoutez SUIVI_EVALUATIONS_ECOLE puis redéployez (Nouvelle version).') + '</p>'; return; }
+    window._seData = d; seDessiner(false);
+  });
+}
+function seDessiner(seulementRetards) {
+  var d = window._seData, body = document.getElementById('seBody'); if (!d || !body) return;
+  var enRetard = d.profs.filter(function (p) { return p.reste > 0; }).length, pct = d.nbPaires ? Math.round(100 * d.nbCompletes / d.nbPaires) : 0;
+  var html = '<div style="padding:12px">'
+    + '<div style="background:#F5F7FA;border-radius:10px;padding:10px 12px;font-size:0.8em;line-height:1.6;margin-bottom:10px">'
+    + '<b>' + _pnEsc(d.libelle) + '</b> — fin le <b>' + _pnEsc(d.fin) + '</b> — <b>' + d.joursRestants + ' jour(s) de classe</b> restant(s).<br>'
+    + 'Minimum : ' + d.minDevoirs + ' devoirs + ' + d.minInterros + ' interrogations par classe et matière.<br>'
+    + '<b>' + d.nbCompletes + ' / ' + d.nbPaires + '</b> classes-matières complètes (' + pct + ' %) · <b style="color:#C62828">' + enRetard + '</b> professeur(s) en retard sur ' + d.profs.length + '.</div>'
+    + '<label style="font-size:0.8em;display:flex;align-items:center;gap:6px;margin-bottom:10px;cursor:pointer"><input type="checkbox" ' + (seulementRetards ? 'checked' : '') + ' onchange="seDessiner(this.checked)"> Afficher seulement les professeurs en retard</label>';
+  d.profs.forEach(function (p, ip) {
+    if (seulementRetards && !p.reste) return;
+    var coul = !p.reste ? ['#E8F5E9', '#2E7D32', '✅ Complet'] : (d.joursRestants <= 10 ? ['#FFEBEE', '#C62828', 'Reste ' + p.reste] : ['#FFF3E0', '#E65100', 'Reste ' + p.reste]);
+    html += '<div style="border:1px solid #E0E4EF;border-radius:10px;margin-bottom:8px;overflow:hidden">'
+      + '<div onclick="var n=this.nextElementSibling;n.style.display=n.style.display===\'none\'?\'block\':\'none\'" style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;background:#FAFBFD">'
+      + '<b style="font-size:0.86em">' + _pnEsc(p.prof) + '</b><span style="font-size:0.72em;font-weight:700;background:' + coul[0] + ';color:' + coul[1] + ';padding:3px 10px;border-radius:12px;white-space:nowrap">' + coul[2] + (p.reste ? ' évaluation' + (p.reste > 1 ? 's' : '') : '') + '</span></div>'
+      + '<div style="display:' + (p.reste && d.joursRestants <= 10 ? 'block' : 'none') + ';padding:8px 12px">'
+      + p.lignes.map(function (l) {
+          var r = l.resteDevoirs + l.resteInterros;
+          return '<div style="display:flex;justify-content:space-between;gap:8px;font-size:0.78em;padding:5px 0;border-bottom:1px solid #F0F0F0"><span>' + _pnEsc(l.classe) + ' · ' + _pnEsc(l.matiere) + '</span>'
+            + '<span>D ' + l.devoirs + '/' + d.minDevoirs + ' · I ' + l.interros + '/' + d.minInterros + ' ' + (r ? '<b style="color:#E65100">→ reste ' + (l.resteDevoirs ? l.resteDevoirs + ' D' : '') + (l.resteDevoirs && l.resteInterros ? ' + ' : '') + (l.resteInterros ? l.resteInterros + ' I' : '') + '</b>' : '✅') + '</span></div>';
+        }).join('')
+      + (p.reste ? '<button onclick="seCopierRelance(' + ip + ')" style="margin-top:8px;padding:8px 12px;background:#25D366;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.78em;cursor:pointer">📋 Copier la relance WhatsApp</button>' : '')
+      + '</div></div>';
+  });
+  body.innerHTML = html + '</div>';
+}
+function seCopierRelance(ip) {
+  var d = window._seData, p = d && d.profs[ip]; if (!p) return;
+  var lignes = p.lignes.filter(function (l) { return l.resteDevoirs + l.resteInterros; }).map(function (l) {
+    return '- ' + l.classe + ' (' + l.matiere + ') : ' + [l.resteDevoirs ? l.resteDevoirs + ' devoir' + (l.resteDevoirs > 1 ? 's' : '') : '', l.resteInterros ? l.resteInterros + ' interrogation' + (l.resteInterros > 1 ? 's' : '') : ''].filter(Boolean).join(' et ');
+  });
+  var txt = 'Bonjour M./Mme ' + p.prof + ',\n\nLe ' + d.libelle + ' se termine le ' + d.fin + ' (' + d.joursRestants + ' jours de classe restants). Le minimum est de ' + d.minDevoirs + ' devoirs et ' + d.minInterros + ' interrogations par classe et par matière, saisis dans PSS.\n\nIl vous reste à faire :\n' + lignes.join('\n') + '\n\nMerci de les programmer dès maintenant et de saisir les notes dans PSS.\n\nLa Direction';
+  var fini = function () { showToast('✅ Relance copiée : collez-la dans WhatsApp', 'success'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(fini, function () { window.prompt('Copiez ce message :', txt); });
+  else window.prompt('Copiez ce message :', txt);
 }
 </script>
 
