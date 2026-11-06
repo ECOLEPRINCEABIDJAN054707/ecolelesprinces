@@ -1066,6 +1066,7 @@ async function lireBase(quoi, extra, urlDirecte, cle, dureeMin) {
   const garde = _lectureCache(cle, dureeMin);
   if (garde) return garde;
   let data = await _lireServeur(quoi, extra);
+  if (data && data.ok && Array.isArray(data.values)) data._serveur = true;   // 06/11/2026 : déjà filtré par le serveur
   // Une réponse du serveur ne compte que si elle porte bien des données (un serveur pas encore à jour répond « ok » sans rien)
   if (!data || !data.ok || !(Array.isArray(data.values) || Array.isArray(data.sheets))) {
     const res = await fetch(urlDirecte);
@@ -2831,18 +2832,19 @@ async function majSelecteurDevoirs(classe, matiere, trimestre) {
     }
   }
   try {
-    const range = encodeURIComponent(`${trimestre}!A2:J2000`);
+    const range = encodeURIComponent(`${trimestre}!A2:J40000`);   // 06/11/2026 : avant 2 000 lignes seulement
     const url = `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${range}?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`;
     let data;
     try { data = await lireBase('NOTES', { trimestre: trimestre, classe: classe, matiere: matiere }, url); } catch (eLect) { return; }
     if (!data || !data.values) return;
 
     const devoirsFaits = new Set();
-    window._notesLuesSel = { cle: trimestre + '|' + classe + '|' + matiere, lignes: data.values.filter(r => (r[2]||'').toString().trim() === classe && (r[3]||'').toString().trim() === matiere) };   // 06/11/2026
+    // 06/11/2026 — comparaison souple ; si le serveur a répondu, sa sélection (matière rangée sous le nom de l'emploi du temps) fait foi
+    const _nz = x => String(x == null ? '' : x).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+    const _garde = r => _nz(r[2]) === _nz(classe) && (data._serveur || _nz(r[3]) === _nz(matiere));
+    window._notesLuesSel = { cle: trimestre + '|' + classe + '|' + matiere, lignes: data.values.filter(_garde) };
     data.values.forEach(row => {
-      const cls = (row[2]||'').toString().trim();
-      const mat = (row[3]||'').toString().trim();
-      if (cls !== classe || mat !== matiere) return;
+      if (!_garde(row)) return;
       for (let d=1; d<=6; d++) {
         const val = row[3+d];
         if (val !== '' && val !== null && val !== undefined) devoirsFaits.add(d);
@@ -3107,7 +3109,7 @@ async function chargerMoyennes() {
     showLoader('Chargement...');
     const [resEl, resN] = await Promise.all([
       lireBase('ELEVES', { classe: classe }, `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${encodeURIComponent(`${classe}!B3:C300`)}?key=${API_KEY}`, 'eleves_' + classe, 20),
-      lireBase('MOYENNES', { trimestre: trimestreActif, classe: classe }, `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${encodeURIComponent(`${trimestreActif}_MOYENNES!A2:F2000`)}?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`)
+      lireBase('MOYENNES', { trimestre: trimestreActif, classe: classe }, `https://sheets.googleapis.com/v4/spreadsheets/${user.sheetsId}/values/${encodeURIComponent(`${trimestreActif}_MOYENNES!A2:F40000`)}?key=${API_KEY}&valueRenderOption=UNFORMATTED_VALUE`)
     ]);
     let elevesListe = [];
     if (resEl.values) elevesListe = resEl.values.filter(r=>r[0]&&r[0].toString().trim()).map(r=>({matricule:(r[0]||'').toString().trim(),nom:(r[1]||'').toString().trim(),moyenne:''}));
