@@ -584,7 +584,7 @@ function chargerBulletinsMensuels(eleve) {
     try { document.body.removeChild(script); } catch(e) {}
     body.innerHTML = "<p style='text-align:center;padding:20px;color:#C62828;font-size:0.85em;'>Erreur chargement bulletins. Reessayez.</p>";
   };
-  var ECOLE_PRIM_MAP = {'AKEIKOI_1':'AKEIKOI 1','AKEIKOI_2':'AKEIKOI 2','ACADEMIE':'ACADEMIE','RITA':'GS RITA ROSANE','GNONTINROU':'GNONTINROU','KOUTOUAN':'KOUTOUAN'};
+  var ECOLE_PRIM_MAP = {'AKEIKOI_1':'AKEIKOI 1','AKEIKOI_2':'AKEIKOI 2','ACADEMIE':'ACADEMIE','RITA':'GS RITA ROSANE','GNONTINROU':'GNONTINROU','KOUTOUAN':'KOUTOUAN','GUINGLO_V':'GUINGLO VILLE','DABOU':'CPP DABOU','ANYAMA':'CPP ANYAMA'};   // 06/11/2026 : + Guinglo Ville, Dabou, Anyama
   var ecolePrim = ECOLE_PRIM_MAP[eleve.ecoleCode] || eleve.ecoleCode || '';
   var params = 'callback='+cbName+'&type=LIRE_BULLETINS_PARENT&matricule='+encodeURIComponent(eleve.matricule)+'&annee='+ANNEE_SCOLAIRE_ACTIVE+'&ecole='+encodeURIComponent(ecolePrim);
   script.src = APPS_SCRIPT_PRIM + '?' + params;
@@ -625,6 +625,22 @@ function voirBulletin(idx) {
   var eleve = window._eleveActuel || {};
   var nomEcole = (eleve.ecole && eleve.ecole.nom) ? eleve.ecole.nom : 'Ecole Les Princes';
   var moisLabel = (MOIS_LABELS_EP[b.mois]||b.mois).toUpperCase();
+  // 06/11/2026 : direction de l'école définie AVANT l'en-tête (avant, son téléphone ne s'affichait jamais)
+  var DIRECTEURS = {
+    'AKEIKOI_1':  {titre:'La Directrice', nom:'KOKOBO OULO LATH NINA',    tel:'07 47 47 79 26'},
+    'AKEIKOI_2':  {titre:'La Directrice', nom:'KADJA PRISCA',              tel:'07 07 77 75 45'},
+    'ACADEMIE':   {titre:'La Directrice', nom:"N'GBRA LINDA MARYSE",       tel:'07 07 31 29 10'},
+    'RITA':       {titre:'Le Directeur',  nom:'OCHO TCHIMOU Pacome Dasis', tel:'07 04 22 59 15'},
+    'GNONTINROU': {titre:'Le Directeur',  nom:'',                          tel:'07 78 06 90 66'},
+    'KOUTOUAN':   {titre:'Le Directeur',  nom:'GBOMENE LUE VALERY',        tel:'07 47 33 01 28'},
+    'CPP':        {titre:'Le Directeur',  nom:'',                          tel:'07 08 11 12 69'},
+    'ANYAMA':     {titre:'La Directrice', nom:'Madame ZOROKOUA',           tel:''},
+    'DABOU':      {titre:'Le Directeur',  nom:'KOUAKOU BAH',               tel:''},
+    'GUINGLO_V':  {titre:'Le Directeur',  nom:"N'DOUA MICHEL",             tel:''},
+  };
+  var ecoleDir = (window._eleveActuel && window._eleveActuel.ecoleCode) ? window._eleveActuel.ecoleCode : 'CPP';
+  var dirInfo = DIRECTEURS[ecoleDir] || {titre:'Le Directeur', nom:''};
+  var dirBul = dirInfo;;
 
   var html = '<div id="bulletinImprimable" style="background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-family:Arial,sans-serif;">';
 
@@ -648,7 +664,7 @@ function voirBulletin(idx) {
   html += '</div>';
   // Contact directrice (sans nom, juste téléphone)
   html += '<div style="text-align:center;font-size:0.68em;opacity:0.85;border-top:1px solid rgba(255,255,255,0.3);padding-top:8px;">';
-  html += (dirBul?'Tel : '+dirBul.tel:'');
+  html += (dirBul && dirBul.tel ? 'Tel : '+dirBul.tel : '');
   html += '</div>';
   html += '</div>';
 
@@ -674,12 +690,13 @@ function voirBulletin(idx) {
 
   b.matieres.forEach(function(m, i) {
     var bg = i%2===0 ? '#ffffff' : '#F8FAFD';
-    var notePct = m.max > 0 ? m.note/m.max : m.note/sur;
+    var sansNote = (m.note === '' || m.note === null || m.note === undefined);   // 06/11/2026 : matière non notée
+    var notePct = sansNote ? 1 : (m.bareme > 0 ? m.note/m.bareme : (m.max > 0 ? m.note/m.max : m.note/sur));   // 06/11/2026 : couleur selon le barème de la matière
     var cn = notePct >= 0.7 ? '#2E7D32' : notePct >= 0.5 ? '#B8860B' : '#C62828';
     html += '<tr style="background:'+bg+';border-bottom:1px solid #E0E4EF;">';
     html += '<td style="padding:7px 10px;font-size:12px;font-weight:600;white-space:nowrap;">'+m.nom+'</td>';
-    html += '<td style="padding:7px 5px;text-align:center;font-weight:bold;color:'+cn+';font-size:13px;">'+m.note+'</td>';
-    html += '<td style="padding:7px 5px;text-align:center;font-size:11px;color:#1F4E79;">'+m.rang+'<span style="font-size:10px;">e</span></td>';
+    html += '<td style="padding:7px 5px;text-align:center;font-weight:bold;color:'+cn+';font-size:13px;">'+(sansNote?'—':m.note)+(m.bareme?'<span style="font-size:10px;color:#888;font-weight:normal;">/'+m.bareme+'</span>':'')+'</td>';
+    html += '<td style="padding:7px 5px;text-align:center;font-size:11px;color:#1F4E79;">'+(sansNote||!m.rang?'—':m.rang+'<span style="font-size:10px;">e</span>')+'</td>';
     html += '<td style="padding:7px 5px;text-align:center;font-size:11px;">'+m.moy_cls.toFixed(1)+'</td>';
     html += '<td style="padding:7px 5px;text-align:center;font-size:11px;color:#2E7D32;font-weight:600;">'+m.max+'</td>';
     html += '<td style="padding:7px 5px;text-align:center;font-size:11px;color:#C62828;font-weight:600;">'+m.min+'</td>';
@@ -739,18 +756,7 @@ function voirBulletin(idx) {
   html += '</div>';
   // Signature directrice à droite
   html += '<div style="text-align:right;">';
-  var DIRECTEURS = {
-    'AKEIKOI_1':  {titre:'La Directrice', nom:'KOKOBO OULO LATH NINA',    tel:'07 47 47 79 26'},
-    'AKEIKOI_2':  {titre:'La Directrice', nom:'KADJA PRISCA',              tel:'07 07 77 75 45'},
-    'ACADEMIE':   {titre:'La Directrice', nom:"N'GBRA LINDA MARYSE",       tel:'07 07 31 29 10'},
-    'RITA':       {titre:'Le Directeur',  nom:'OCHO TCHIMOU Pacome Dasis', tel:'07 04 22 59 15'},
-    'GNONTINROU': {titre:'Le Directeur',  nom:'',                          tel:'07 78 06 90 66'},
-    'KOUTOUAN':   {titre:'Le Directeur',  nom:'GBOMENE LUE VALERY',        tel:'07 47 33 01 28'},
-    'CPP':        {titre:'Le Directeur',  nom:'',                          tel:'07 08 11 12 69'},
-  };
-  var ecoleDir = (window._eleveActuel && window._eleveActuel.ecoleCode) ? window._eleveActuel.ecoleCode : 'CPP';
-  var dirInfo = DIRECTEURS[ecoleDir] || {titre:'Le Directeur', nom:''};
-  var dirBul = dirInfo;;
+
   html += '<div style="font-size:0.72em;color:#555;margin-bottom:2px;">'+dirInfo.titre+'</div>';
   html += '<div style="width:110px;height:35px;border-bottom:1.5px solid #333;margin-bottom:2px;"></div>';
   html += '<div style="font-size:0.7em;font-weight:bold;color:#1F4E79;">'+dirInfo.nom+'</div>';
