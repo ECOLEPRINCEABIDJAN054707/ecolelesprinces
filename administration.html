@@ -328,6 +328,19 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
     <div class="sec-body" id="impBulBodyDir"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Ouverture…</p></div>
   </div>
+  <!-- 06/11/2026 — règle des notes du secondaire -->
+  <div class="section" id="dirSecPeriodesNotes" style="display:none">
+    <div class="sec-head sec-violet" onclick="toggleSec(this);if(this.classList.contains('open'))pnOuvrir('Dir')">
+      <h3>&#128197; Fen&ecirc;tres de calcul des moyennes (r&eacute;seau)</h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="pnBodyDir"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Ouverture…</p></div>
+  </div>
+  <div class="section" id="dirSecNotesModif" style="display:none">
+    <div class="sec-head sec-violet" onclick="toggleSec(this);if(this.classList.contains('open'))pnJournalOuvrir()">
+      <h3>&#128221; Notes modifi&eacute;es &amp; correction (Directeur)</h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="pnJournalBody"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Ouverture…</p></div>
+  </div>
   <div class="section" id="dirSecSalaires" style="display:none">
     <div class="sec-head sec-or" onclick="toggleSec(this)">
       <h3>&#128176; Salaires &amp; Pointage enseignants</h3><span class="arr">&#9660;</span>
@@ -2926,6 +2939,13 @@ async function sauvegarderPersonnelDir(idx) {
     <div class="stat-box vert"><div class="stat-val">6 600+</div><div class="stat-lbl">El&egrave;ves</div></div>
     <div class="stat-box or"><div class="stat-val">200+</div><div class="stat-lbl">Enseignants</div></div>
     <div class="stat-box rouge"><div class="stat-val">&#8212;</div><div class="stat-lbl">Impay&eacute;s r&eacute;seau</div></div>
+  </div>
+  <!-- 06/11/2026 — règle des notes du secondaire -->
+  <div class="section" id="fondSecPeriodesNotes">
+    <div class="sec-head sec-violet" onclick="toggleSec(this);if(this.classList.contains('open'))pnOuvrir('Fond')">
+      <h3>&#128197; Fen&ecirc;tres de calcul des moyennes (r&eacute;seau)</h3><span class="arr">&#9660;</span>
+    </div>
+    <div class="sec-body" id="pnBodyFond"><p style="padding:14px;font-size:0.82em;color:var(--gris)">Ouverture…</p></div>
   </div>
  <div class="section">
     <div class="sec-head sec-violet open" onclick="toggleSec(this)">
@@ -6340,6 +6360,8 @@ function afficherDir(s){
   if(!isPRIM)remplirMois();
   document.getElementById('dirSecBulletins').style.display=!isSEC?'block':'none';
   var _ibD=document.getElementById('dirSecImpBul');if(_ibD)_ibD.style.display=!isSEC?'block':'none';   // 06/11/2026
+  var _pnD=document.getElementById('dirSecPeriodesNotes');if(_pnD)_pnD.style.display=String(s.ecole||'').toUpperCase().trim()==='CPP LES PRINCES'?'block':'none';   // 06/11/2026
+  var _pnJ=document.getElementById('dirSecNotesModif');if(_pnJ)_pnJ.style.display=!isPRIM?'block':'none';   // 06/11/2026
   document.getElementById('dirBtnBulZone').style.display=!isSEC?'block':'none';
   const zoneMat=document.getElementById('dirSecMatricules');
   if(zoneMat){
@@ -20161,6 +20183,118 @@ function impBulDocument(bulletins, ecole) {
     + '<div class="barre"><button onclick="window.print()">🖨️ Imprimer / Enregistrer en PDF</button><button onclick="window.close()">Fermer</button>'
     + '<div style="font-size:12px;margin-top:6px;color:#333">' + _ibEsc(titre) + ' — ' + bulletins.length + ' bulletin(s), un par page A4</div></div>'
     + pages + '</body></html>';
+}
+</script>
+
+<script>
+// ═══ 06/11/2026 — RÈGLE DES NOTES DU SECONDAIRE (voir NOTES_PERIODES.gs) ═══
+// • Fenêtres de calcul des moyennes : dates fixées par le Fondateur ou la Direction de CPP LES PRINCES, mêmes pour tout le réseau
+// • Directeur : journal des notes modifiées de son école, et correction d'une note à tout moment (tracée, avec motif)
+var PN_PERIODES = ['NOTES_T1', 'NOTES_T2', 'NOTES_T3', 'NOTES_S1', 'NOTES_S2'];
+var PN_LIB = { NOTES_T1: '1er trimestre', NOTES_T2: '2e trimestre', NOTES_T3: '3e trimestre', NOTES_S1: '1er semestre', NOTES_S2: '2e semestre' };
+var PN_ETATS = { SAISIE: ['🔒 Saisie — notes saisies en lecture seule', '#ECEFF1', '#455A64'], CALCUL: ['✏️ Fenêtre ouverte — tout est modifiable', '#E8F5E9', '#2E7D32'], VERROUILLE: ['🔐 Verrouillé', '#FFEBEE', '#C62828'] };
+function _pnEsc(x) { return String(x == null ? '' : x).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function _pnIso(fr) { var m = String(fr || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? m[3] + '-' + m[2] + '-' + m[1] : ''; }
+function _pnFr(iso) { var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})$/); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; }
+var _PN_ATTENTE = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
+
+// ── Fenêtres de calcul des moyennes ──
+function pnOuvrir(z) {
+  var body = document.getElementById('pnBody' + z); if (!body) return;
+  body.innerHTML = _PN_ATTENTE;
+  appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'GET_PERIODES_NOTES' }, 20000).then(function (d) {
+    if (!d || !d.ok || !d.periodes) { body.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">' + _pnEsc((d && d.error) || 'Le serveur ne connaît pas encore les fenêtres de calcul : ajoutez GET_PERIODES_NOTES puis redéployez (Nouvelle version).') + '</p>'; return; }
+    pnDessiner(z, d.periodes);
+  });
+}
+function pnDessiner(z, P) {
+  var body = document.getElementById('pnBody' + z); if (!body) return;
+  var inp = 'width:100%;padding:8px;border:1.5px solid #CFD8DC;border-radius:8px;font-size:0.9em;margin-top:3px';
+  var html = '<div style="padding:12px"><p style="font-size:0.78em;color:var(--gris);line-height:1.55;margin-bottom:10px">'
+    + '<b>Pendant le trimestre</b> : les notes déjà saisies sont en lecture seule, seules les cases vides (absents) se remplissent. '
+    + '<b>Pendant la fenêtre</b> : les professeurs peuvent tout corriger, avec un motif. <b>Après la fenêtre</b> : tout est verrouillé, seul le Directeur corrige. '
+    + 'Les dates valent pour <b>tout le réseau</b>, et chaque correction est tracée.</p>';
+  PN_PERIODES.forEach(function (k) {
+    var p = P[k] || { libelle: PN_LIB[k], etat: 'SAISIE' }, e = PN_ETATS[p.etat] || PN_ETATS.SAISIE;
+    html += '<div style="border:1px solid #E0E4EF;border-radius:10px;padding:10px;margin-bottom:8px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px"><b style="font-size:0.9em">' + _pnEsc(p.libelle || PN_LIB[k]) + '</b>'
+      + '<span style="font-size:0.72em;font-weight:700;background:' + e[1] + ';color:' + e[2] + ';padding:3px 10px;border-radius:12px">' + e[0] + '</span></div>'
+      + '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">'
+      + '<label style="font-size:0.72em;color:var(--gris);flex:1;min-width:130px">Début de la fenêtre<input type="date" id="pnD' + z + k + '" value="' + _pnIso(p.debut) + '" style="' + inp + '"></label>'
+      + '<label style="font-size:0.72em;color:var(--gris);flex:1;min-width:130px">Fin (dernier jour inclus)<input type="date" id="pnF' + z + k + '" value="' + _pnIso(p.fin) + '" style="' + inp + '"></label>'
+      + '<button onclick="pnEnregistrer(\'' + z + '\',\'' + k + '\',false)" style="padding:9px 14px;background:var(--bleu,#1F4E79);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.82em;cursor:pointer">Enregistrer</button>'
+      + (p.debut ? '<button onclick="pnEnregistrer(\'' + z + '\',\'' + k + '\',true)" style="padding:9px 12px;background:#FFEBEE;color:#C62828;border:none;border-radius:8px;font-weight:700;font-size:0.82em;cursor:pointer">Effacer</button>' : '')
+      + '</div></div>';
+  });
+  body.innerHTML = html + '</div>';
+}
+function pnEnregistrer(z, k, effacer) {
+  var c = _pssCompte(); if (!c) { showToast('Session expirée : reconnectez-vous', 'error'); return; }
+  var d = effacer ? '' : _pnFr((document.getElementById('pnD' + z + k) || {}).value);
+  var f = effacer ? '' : _pnFr((document.getElementById('pnF' + z + k) || {}).value);
+  if (!effacer && (!d || !f)) { showToast('Choisissez la date de début et la date de fin', 'error'); return; }
+  if (effacer && !confirm('Effacer les dates du ' + PN_LIB[k] + ' ?\nLes notes saisies repassent en lecture seule (mode saisie).')) return;
+  if (!effacer && !confirm(PN_LIB[k] + ' — fenêtre de calcul du ' + d + ' au ' + f + '.\nPendant ces jours, les professeurs pourront modifier leurs notes ; ensuite, tout sera verrouillé pour tout le réseau. Confirmer ?')) return;
+  showToast('Enregistrement…', '');
+  appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'SET_PERIODE_NOTES', matricule: c.matricule, code: c.code, periode: k, debut: d, fin: f }, 25000).then(function (r) {
+    if (r && r.ok && r.periodes) { showToast('✅ ' + PN_LIB[k] + ' enregistré', 'success'); pnDessiner(z, r.periodes); }
+    else showToast('❌ ' + ((r && r.error) || 'Erreur réseau, réessayez'), 'error');
+  });
+}
+
+// ── Directeur : correction d'une note et journal des notes modifiées ──
+function pnJournalOuvrir() {
+  var body = document.getElementById('pnJournalBody'); if (!body) return;
+  var inp = 'width:100%;padding:8px;border:1.5px solid #CFD8DC;border-radius:8px;font-size:0.88em;margin-top:3px';
+  var lab = 'font-size:0.72em;color:var(--gris);flex:1;min-width:120px';
+  body.innerHTML = '<div style="padding:12px">'
+    + '<div style="background:#F5F7FA;border-radius:10px;padding:10px;margin-bottom:12px"><b style="font-size:0.86em">✏️ Corriger une note (Directeur)</b>'
+    + '<p style="font-size:0.72em;color:var(--gris);margin:4px 0 8px">Possible à tout moment, même verrouillé. Écrivez la classe et la matière exactement comme dans les notes (ex. « 2NDE F2 », « DESSIN »). La correction est tracée avec votre nom et le motif.</p>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+    + '<label style="' + lab + '">Période<select id="pnCPer" style="' + inp + '">' + PN_PERIODES.map(function (k) { return '<option value="' + k + '">' + PN_LIB[k] + '</option>'; }).join('') + '</select></label>'
+    + '<label style="' + lab + '">Classe<input id="pnCCl" style="' + inp + '" placeholder="2NDE F2"></label>'
+    + '<label style="' + lab + '">Matière<input id="pnCMat" style="' + inp + '" placeholder="DESSIN"></label></div>'
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">'
+    + '<label style="' + lab + '">Devoir n°<select id="pnCDev" style="' + inp + '">' + [1, 2, 3, 4, 5, 6].map(function (n) { return '<option>' + n + '</option>'; }).join('') + '</select></label>'
+    + '<label style="' + lab + '">Matricule de l\'élève<input id="pnCMatr" style="' + inp + '" placeholder="25012345A"></label>'
+    + '<label style="' + lab + '">Nouvelle note /20<input id="pnCNote" type="number" min="0" max="20" step="0.25" style="' + inp + '"></label></div>'
+    + '<label style="font-size:0.72em;color:var(--gris);display:block;margin-top:6px">Motif<select id="pnCMotif" style="' + inp + '"><option>Erreur de saisie</option><option>Erreur de correction</option><option>Copie rattrapée</option><option>Réclamation de l\'élève acceptée</option><option>Décision de la Direction</option></select></label>'
+    + '<button onclick="pnCorriger()" style="width:100%;margin-top:10px;padding:11px;background:var(--bleu,#1F4E79);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:0.88em;cursor:pointer">Enregistrer la correction</button></div>'
+    + '<b style="font-size:0.86em">📝 Notes modifiées (les plus récentes d\'abord)</b><div id="pnJournalListe">' + _PN_ATTENTE + '</div></div>';
+  pnJournalCharger();
+}
+function pnJournalCharger() {
+  var zone = document.getElementById('pnJournalListe'); if (!zone) return;
+  var c = _pssCompte(); if (!c) { zone.innerHTML = '<p style="font-size:0.8em;color:var(--rouge)">Session expirée : reconnectez-vous.</p>'; return; }
+  appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LISTER_MODIFS_NOTES', matricule: c.matricule, code: c.code, ecole: currentStaff.ecole || '' }, 25000).then(function (d) {
+    if (!d || !d.ok || !d.modifs) { zone.innerHTML = '<p style="font-size:0.8em;color:var(--rouge);padding:8px 0">' + _pnEsc((d && d.error) || 'Le serveur ne connaît pas encore le journal des notes : ajoutez LISTER_MODIFS_NOTES puis redéployez.') + '</p>'; return; }
+    if (!d.modifs.length) { zone.innerHTML = '<p style="font-size:0.8em;color:var(--gris);padding:8px 0">Aucune note modifiée pour l\'instant.</p>'; return; }
+    zone.innerHTML = '<div class="tbl-wrap" style="overflow-x:auto;margin-top:6px"><table style="width:100%;border-collapse:collapse;font-size:0.76em"><thead><tr style="background:#4A148C;color:#fff">'
+      + ['Date', 'Élève', 'Classe · matière', 'Devoir', 'Ancienne → nouvelle', 'Motif', 'Par'].map(function (h) { return '<th style="padding:6px;text-align:left">' + h + '</th>'; }).join('') + '</tr></thead><tbody>'
+      + d.modifs.map(function (m, i) {
+        return '<tr style="background:' + (i % 2 ? '#F8F9FB' : '#fff') + ';border-bottom:1px solid #EEE"><td style="padding:6px;white-space:nowrap">' + _pnEsc(m.date) + '</td><td style="padding:6px">' + _pnEsc(m.nom || m.matricule) + '</td>'
+          + '<td style="padding:6px">' + _pnEsc(m.classe) + ' · ' + _pnEsc(m.matiere) + '</td><td style="padding:6px">' + _pnEsc((PN_LIB[m.periode] || m.periode) + ' — ' + m.devoir) + '</td>'
+          + '<td style="padding:6px;font-weight:700">' + _pnEsc(m.ancienne) + ' → ' + _pnEsc(m.nouvelle === '' ? 'absent' : m.nouvelle) + '</td><td style="padding:6px">' + _pnEsc(m.motif) + '</td>'
+          + '<td style="padding:6px">' + _pnEsc(m.par) + (/DIRECTION/.test(m.type) ? ' 🛡️' : '') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+  });
+}
+function pnCorriger() {
+  var c = _pssCompte(); if (!c) { showToast('Session expirée : reconnectez-vous', 'error'); return; }
+  var v = function (id) { return String((document.getElementById(id) || {}).value || '').trim(); };
+  var per = v('pnCPer'), cl = v('pnCCl').toUpperCase(), mat = v('pnCMat').toUpperCase(), dev = parseInt(v('pnCDev'), 10), matr = v('pnCMatr').toUpperCase(), note = v('pnCNote'), motif = v('pnCMotif');
+  if (!cl || !mat || !matr || note === '') { showToast('Remplissez la classe, la matière, le matricule et la note', 'error'); return; }
+  var n = parseFloat(note.replace(',', '.'));
+  if (isNaN(n) || n < 0 || n > 20) { showToast('La note doit être entre 0 et 20', 'error'); return; }
+  if (!confirm('Corriger la note de ' + matr + ' (' + cl + ', ' + mat + ', ' + PN_LIB[per] + ', devoir ' + dev + ') à ' + n + '/20 ?\nMotif : ' + motif)) return;
+  var payload = { type: 'NOTES', ecole: currentStaff.ecole || '', trimestre: per, classe: cl, matiere: mat, numeroDevoir: dev, enseignant: '',
+                  parDirecteur: true, staffMatricule: c.matricule, staffCode: c.code, notes: [{ matricule: matr, nom: '', note: n, motif: motif }] };
+  showToast('Correction en cours…', '');
+  appelJSONP(APPS_SCRIPT_POINTAGE, { data: encodeURIComponent(JSON.stringify(payload)) }, 30000).then(function (r) {
+    if (r && r.ok && r.nbNotes) { showToast('✅ Note corrigée et tracée', 'success'); pnJournalCharger(); }
+    else if (r && r.ok) showToast('Aucun changement : même note déjà enregistrée', 'warn');
+    else showToast('❌ ' + ((r && (r.message || r.error)) || 'Erreur réseau, réessayez'), 'error');
+  });
 }
 </script>
 
