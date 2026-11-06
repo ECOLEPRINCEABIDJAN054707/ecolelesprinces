@@ -536,8 +536,8 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
       <div class="form-group"><label class="label">Devoir N°</label>
         <select class="select" id="notesNumero" onchange="onChangeDevoirNotes()">
           <option value="1">Devoir N°1</option><option value="2">Devoir N°2</option>
-          <option value="3">Devoir N°3</option><option value="4">Devoir N°4</option>
-          <option value="5">Devoir N°5</option><option value="6">Devoir N°6</option>
+          <option value="3">Devoir N°3</option><option value="4">Interrogation N°1</option>
+          <option value="5">Interrogation N°2</option><option value="6">Interrogation N°3</option>
         </select>
      <div id="notesRattrapageCompteur" style="display:none;font-size:11px;font-weight:700;color:var(--amber);margin-top:4px"></div>
       </div>
@@ -1241,6 +1241,7 @@ async function chargerMesCoursDuJour() {
   if (heroDiv && heroDiv.nextSibling) {
     heroDiv.parentNode.insertBefore(container, heroDiv.nextSibling);
   }
+  setTimeout(chargerSuiviEvaluations, 400);   // 06/11/2026 — compteur devoirs / interrogations
 
   // ⚠️ NOUVEAU — Le primaire n'a pas d'EDT au format "matière-Prof",
   // la recherche EDT_PAR_PROF échoue toujours pour ces comptes.
@@ -2709,6 +2710,114 @@ const trimestreVal = document.getElementById('notesTrimestre').value;
     if (elevesNotes.length) document.getElementById('btnPublierNotes').style.display = 'block';
   } catch(e) { hideLoader(); showToast('Erreur chargement élèves','error'); }
 }
+// ══════════════════════════════════════════════
+// ⚠️ NOUVEAU 06/11/2026 — DEVOIRS / INTERROGATIONS, RÈGLE DES NOTES ET COMPTEUR
+// Cases 1-3 = devoirs, cases 4-6 = interrogations. Minimum par période : 3 devoirs + 3 interrogations par classe et matière.
+// SAISIE : notes déjà saisies en lecture seule (seules les cases vides se remplissent) · CALCUL : tout est corrigible, avec un motif
+// VERROUILLE : plus rien (seul le Directeur corrige). Le serveur applique la même règle.
+// ══════════════════════════════════════════════
+function _libEval(n) { n = parseInt(n, 10); return n <= 3 ? 'Devoir N°' + n : 'Interrogation N°' + (n - 3); }
+function _jsonpApp(params, ms) {
+  return new Promise(res => {
+    const cb = 'jp_' + Date.now() + '_' + Math.floor(Math.random() * 1e6), s = document.createElement('script');
+    window[cb] = d => { delete window[cb]; try { document.body.removeChild(s); } catch (e) {} res(d); };
+    s.onerror = () => { delete window[cb]; res(null); };
+    s.src = APPS_SCRIPT_URL + '?' + new URLSearchParams(Object.assign({ callback: cb }, params)).toString();
+    document.body.appendChild(s);
+    setTimeout(() => { if (window[cb]) { delete window[cb]; res(null); } }, ms || 15000);
+  });
+}
+async function _etatPeriodeApp(trimestre) {
+  const t = String(trimestre || '').toUpperCase();
+  if (!/^NOTES_(T[1-3]|S[12])$/.test(t)) return { etat: 'LIBRE' };          // examens blancs : pas de règle
+  const c = window._periodesNotes;
+  if (!c || Date.now() - c.ts > 300000) {
+    const d = await _jsonpApp({ type: 'GET_PERIODES_NOTES' }, 12000);
+    if (d && d.ok && d.periodes) window._periodesNotes = { ts: Date.now(), p: d.periodes };
+  }
+  return (window._periodesNotes && window._periodesNotes.p[t]) || { etat: 'SAISIE' };
+}
+function _bandeauPeriode(per) {
+  const liste = document.getElementById('notesListe'); if (!liste || !per || per.etat === 'LIBRE') return;
+  const b = document.createElement('div'); b.id = 'notesPeriodeBandeau';
+  const st = { SAISIE: ['#ECEFF1', '#455A64', '🔒 Notes déjà saisies en lecture seule. ' + (per.debut ? 'Correction possible du ' + per.debut + ' au ' + per.fin + ' (période de calcul des moyennes).' : 'Correction possible pendant la période de calcul des moyennes.')],
+               CALCUL: ['#E8F5E9', '#2E7D32', '✏️ Période de calcul des moyennes jusqu\'au ' + (per.fin || '…') + ' : vous pouvez corriger vos notes. Choisissez le motif avant de publier.'],
+               VERROUILLE: ['#FFEBEE', '#C62828', '🔐 ' + (per.libelle || 'Période') + ' verrouillé(e) : plus aucune note ne peut être modifiée. Seul le Directeur peut corriger une note.'] }[per.etat];
+  if (!st) return;
+  b.style.cssText = 'background:' + st[0] + ';color:' + st[1] + ';border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px;font-size:12px;font-weight:600';
+  b.textContent = st[2];
+  liste.parentNode.insertBefore(b, liste);
+}
+// Notes déjà saisies pour la case choisie, depuis la dernière lecture (matricule → valeur)
+function _notesExistantes(numero) {
+  const m = {}, L = (window._notesLuesSel && window._notesLuesSel.lignes) || [];
+  L.forEach(r => { const v = r[3 + parseInt(numero, 10)]; m[(r[0] || '').toString().trim().toUpperCase()] = { nom: (r[1] || '').toString().trim(), v: (v === null || v === undefined) ? '' : v }; });
+  return m;
+}
+function _afficherNotesLectureSeule() {
+  const liste = document.getElementById('notesListe'); if (!liste) return;
+  const numero = document.getElementById('notesNumero').value, ex = _notesExistantes(numero);
+  const notes = Object.keys(ex).filter(k => ex[k].v !== '').map(k => ({ mat: k, nom: ex[k].nom, v: ex[k].v })).sort((a, b) => a.nom < b.nom ? -1 : 1);
+  if (!notes.length) return;
+  const z = document.createElement('div'); z.id = 'notesLectureSeule';
+  z.innerHTML = '<div style="font-size:12px;font-weight:700;color:var(--text2);margin:14px 0 6px">🔒 Notes déjà saisies — ' + esc(_libEval(numero)) + ' (lecture seule)</div>'
+    + notes.map(n => '<div style="display:flex;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;background:#F7F8FA;opacity:0.85">'
+      + '<span style="font-size:12px">' + esc(n.nom || n.mat) + '</span><b style="font-size:13px">🔒 ' + esc(String(n.v).replace('.', ',')) + ' /20</b></div>').join('');
+  liste.parentNode.insertBefore(z, liste.nextSibling);
+}
+function activerModeCorrection() {
+  const numero = document.getElementById('notesNumero').value, ex = _notesExistantes(numero);
+  elevesNotes = elevesNotesComplet.map(e => {
+    const x = ex[String(e.matricule || '').trim().toUpperCase()], v = x ? x.v : '';
+    return Object.assign({}, e, { note: v === '' ? '' : String(v), statutAbsence: (x && v === '') ? 'JUSTIFIEE' : '', commentaire: e.commentaire || '' });
+  });
+  const liste = document.getElementById('notesListe');
+  const z = document.createElement('div'); z.id = 'notesMotifZone';
+  z.innerHTML = '<label class="label">Motif des corrections</label><select class="select" id="notesMotif"><option>Erreur de saisie</option><option>Erreur de correction</option><option>Copie rattrapée</option><option>Réclamation de l\'élève acceptée</option></select>';
+  z.style.marginBottom = '10px';
+  liste.parentNode.insertBefore(z, liste);
+  afficherElevesNotes();
+  const b = document.getElementById('btnPublierNotes'); if (b) b.style.display = elevesNotes.length ? 'block' : 'none';
+}
+function afficherNotesVerrouillees() {
+  elevesNotes = [];
+  document.getElementById('notesListe').innerHTML = '';
+  const b = document.getElementById('btnPublierNotes'); if (b) b.style.display = 'none';
+  _afficherNotesLectureSeule();
+}
+
+// Compteur sur l'accueil : devoirs et interrogations faits / restants, par classe et matière
+async function chargerSuiviEvaluations() {
+  try {
+    if (!user || user.niveau === 'primaire') return;
+    const ancre = document.getElementById('mesCoursJourZone'); if (!ancre) return;
+    let zone = document.getElementById('suiviEvalZone');
+    if (!zone) { zone = document.createElement('div'); zone.id = 'suiviEvalZone'; zone.style.cssText = 'padding:0 16px 16px'; ancre.parentNode.insertBefore(zone, ancre.nextSibling); }
+    zone.innerHTML = '<div class="card"><div class="card-body" style="text-align:center;padding:14px;font-size:12px;color:var(--text2)">⏳ Calcul de vos évaluations…</div></div>';
+    const comptes = (user.multi && Array.isArray(user.comptes) && user.comptes.length) ? user.comptes : [{ ecole: user.ecole, nom: user.nom }];
+    const reps = await Promise.all(comptes.map(c => _jsonpApp({ type: 'MON_SUIVI_EVALUATIONS', ecole: c.ecole, nom: c.nom, code: user.code }, 30000)));
+    const bons = reps.filter(r => r && r.ok && Array.isArray(r.lignes) && r.lignes.length);
+    if (!bons.length) { zone.innerHTML = ''; return; }
+    let html = '';
+    bons.forEach(r => {
+      const reste = r.lignes.reduce((s, x) => s + x.resteDevoirs + x.resteInterros, 0);
+      html += '<div class="card" style="margin-bottom:10px"><div class="card-title">📊 Mes évaluations — ' + esc(r.libelle) + (bons.length > 1 ? ' · ' + esc(ECOLE_COURT[r.ecole] || r.ecole) : '') + '</div><div class="card-body" style="padding:12px">'
+        + '<div style="font-size:12px;margin-bottom:8px;color:var(--text2)">Minimum : <b>' + r.minDevoirs + ' devoirs</b> et <b>' + r.minInterros + ' interrogations</b> par classe et par matière. Fin le <b>' + esc(r.fin) + '</b> — <b>' + r.joursRestants + ' jour(s) de classe</b> restant(s).</div>'
+        + (reste ? '' : '<div style="background:#E8F5E9;color:#2E7D32;border-radius:8px;padding:8px 10px;font-size:12px;font-weight:700;margin-bottom:6px">✅ Minimum atteint dans toutes vos classes. Bravo !</div>');
+      r.lignes.forEach(x => {
+        const rt = x.resteDevoirs + x.resteInterros, urgent = rt > 0 && r.joursRestants <= 10;
+        const coul = rt === 0 ? ['#E8F5E9', '#2E7D32'] : urgent ? ['#FFEBEE', '#C62828'] : ['#FFF3E0', '#E65100'];
+        const txt = rt === 0 ? '✅ Complet' : 'Reste ' + (x.resteDevoirs ? x.resteDevoirs + ' devoir' + (x.resteDevoirs > 1 ? 's' : '') : '') + (x.resteDevoirs && x.resteInterros ? ' + ' : '') + (x.resteInterros ? x.resteInterros + ' interro' + (x.resteInterros > 1 ? 's' : '') : '');
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:5px">'
+          + '<div><div style="font-weight:700;font-size:13px;color:var(--navy)">' + esc(x.classe) + ' · ' + esc(x.matiere) + '</div>'
+          + '<div style="font-size:11px;color:var(--text2)">Devoirs ' + x.devoirs + '/' + r.minDevoirs + ' · Interrogations ' + x.interros + '/' + r.minInterros + '</div></div>'
+          + '<span style="font-size:11px;font-weight:700;background:' + coul[0] + ';color:' + coul[1] + ';padding:4px 9px;border-radius:12px;white-space:nowrap">' + txt + '</span></div>';
+      });
+      html += '</div></div>';
+    });
+    zone.innerHTML = html;
+  } catch (e) { console.warn('chargerSuiviEvaluations:', e); }
+}
 async function majSelecteurDevoirs(classe, matiere, trimestre) {
   // ⚠️ 15/10/2026 — Examen blanc : une seule épreuve (enregistrée en D1) ; sinon Devoir N°1 à N°6
   const estEB = /^NOTES_EB/.test(String(trimestre || ''));
@@ -2717,7 +2826,7 @@ async function majSelecteurDevoirs(classe, matiere, trimestre) {
     const voulu = estEB ? 1 : 6;
     if (selN.options.length !== voulu || selN.dataset.mode !== (estEB ? 'EB' : 'DEVOIRS')) {
       selN.innerHTML = '';
-      for (let d = 1; d <= voulu; d++) { const o = document.createElement('option'); o.value = String(d); o.textContent = `Devoir N°${d}`; selN.appendChild(o); }
+      for (let d = 1; d <= voulu; d++) { const o = document.createElement('option'); o.value = String(d); o.textContent = estEB ? 'Épreuve de l\'examen blanc' : _libEval(d); selN.appendChild(o); }
       selN.dataset.mode = estEB ? 'EB' : 'DEVOIRS';
     }
   }
@@ -2729,6 +2838,7 @@ async function majSelecteurDevoirs(classe, matiere, trimestre) {
     if (!data || !data.values) return;
 
     const devoirsFaits = new Set();
+    window._notesLuesSel = { cle: trimestre + '|' + classe + '|' + matiere, lignes: data.values.filter(r => (r[2]||'').toString().trim() === classe && (r[3]||'').toString().trim() === matiere) };   // 06/11/2026
     data.values.forEach(row => {
       const cls = (row[2]||'').toString().trim();
       const mat = (row[3]||'').toString().trim();
@@ -2742,7 +2852,7 @@ async function majSelecteurDevoirs(classe, matiere, trimestre) {
     const sel = document.getElementById('notesNumero');
     Array.from(sel.options).forEach(opt => {
       const n = parseInt(opt.value, 10);
-      const libelle = estEB ? 'Épreuve de l\'examen blanc' : `Devoir N°${n}`;
+      const libelle = estEB ? 'Épreuve de l\'examen blanc' : _libEval(n);
       if (devoirsFaits.has(n)) {
         opt.disabled = false;
         opt.dataset.dejaSaisi = '1';
@@ -2762,9 +2872,16 @@ async function onChangeDevoirNotes() {
   const opt = sel.options[sel.selectedIndex];
   const bandeau = document.getElementById('notesRattrapageBandeau');
   if (bandeau) bandeau.remove();
+  ['notesLectureSeule', 'notesMotifZone', 'notesPeriodeBandeau'].forEach(id => { const z = document.getElementById(id); if (z) z.remove(); });   // 06/11/2026
+  const _btnPub = document.getElementById('btnPublierNotes'); if (_btnPub) _btnPub.disabled = false;
 
   if (opt && opt.dataset.dejaSaisi === '1') {
-    await activerModeRattrapage();
+    // 06/11/2026 — règle des notes : SAISIE = notes en lecture seule (cases vides seulement), CALCUL = tout corrigible, VERROUILLE = rien
+    const _per = await _etatPeriodeApp(document.getElementById('notesTrimestre').value);
+    _bandeauPeriode(_per);
+    if (_per.etat === 'CALCUL') activerModeCorrection();
+    else if (_per.etat === 'VERROUILLE') afficherNotesVerrouillees();
+    else { await activerModeRattrapage(); if (_per.etat === 'SAISIE') _afficherNotesLectureSeule(); }
   } else {
     elevesNotes = elevesNotesComplet.slice();
     if (elevesNotes.length) afficherElevesNotes();
@@ -2812,7 +2929,7 @@ async function activerModeRattrapage() {
 
     if (!absents.length) {
       if (compteur) compteur.style.display = 'none';
-      document.getElementById('notesListe').innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px">✅ Devoir N°' + numero + ' déjà saisi — aucun élève en attente de rattrapage.</p>';
+      document.getElementById('notesListe').innerHTML = '<p style="text-align:center;color:var(--text2);padding:20px">✅ ' + _libEval(numero) + ' déjà saisi(e) — aucun élève en attente de rattrapage.</p>';
       document.getElementById('btnPublierNotes').style.display = 'none';
       return;
     }
@@ -2824,7 +2941,7 @@ async function activerModeRattrapage() {
     const bandeau = document.createElement('div');
     bandeau.id = 'notesRattrapageBandeau';
     bandeau.style.cssText = 'background:var(--amber-lt);border:1.5px solid #FFD54F;border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--amber)';
-    bandeau.textContent = `🔄 Mode rattrapage — Devoir N°${numero} déjà saisi. Seuls les élèves marqués absents apparaissent ci-dessous ; les autres notes ne seront pas modifiées.`;
+    bandeau.textContent = `🔄 ${_libEval(numero)} déjà saisi(e). Seuls les élèves absents (case vide) apparaissent ci-dessous ; les notes déjà saisies sont listées plus bas, en lecture seule.`;
     document.getElementById('notesListe').parentNode.insertBefore(bandeau, document.getElementById('notesListe'));
 
     elevesNotes = absents.map(e => ({
@@ -2935,7 +3052,7 @@ async function publierNotes() {
 const data = {
     date:formatDate(new Date()), dateRemise, classe,
     matiere:matiereActiveNotes || user.matiere, enseignant:user.nom, ecole:user.ecole,
-    numeroDevoir:numero, trimestre,
+    numeroDevoir:numero, trimestre, motif:(document.getElementById('notesMotif') || {}).value || '',   // 06/11/2026 — motif des corrections
   notes:elevesNotes.map(e=>({matricule:e.matricule,nom:e.nom,note:e.note,statutAbsence:e.statutAbsence||'',commentaire:e.commentaire||''}))
   };
   try {
@@ -2946,8 +3063,11 @@ const data = {
       showToast('Élèves manquants signalés par le serveur','error');
       return;
     }
+    if (res && res.ok === false && res.error === 'PERIODE_VERROUILLEE') { showToast('🔐 ' + (res.message || 'Période verrouillée : seul le Directeur peut corriger une note.'), 'error'); return; }   // 06/11/2026
+    if (res && res.ok === false) { showToast('❌ ' + (res.message || res.error || 'Erreur'), 'error'); return; }
     let msg = '✅ Notes publiées';
     if (res && res.alertesEnvoyees > 0) msg += ` — ${res.alertesEnvoyees} parent(s) notifié(s) (absence non justifiée)`;
+    if (res && Array.isArray(res.refuses) && res.refuses.length) { showToast('🔒 ' + res.refuses.length + ' note(s) déjà saisie(s) non modifiée(s) (lecture seule) : ' + res.refuses.slice(0, 5).join(', ') + (res.refuses.length > 5 ? '…' : '') + '. Correction possible pendant la période de calcul des moyennes.', 'warn'); setTimeout(()=>goTo('accueil'),4000); return; }
     showToast(msg,'success');
     setTimeout(()=>goTo('accueil'),1500);
   } catch(e) {
