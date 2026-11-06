@@ -19500,7 +19500,7 @@ async function chargerExamenBlanc(pfx, force) {
             var coul = r[8] === 'ADMIS' ? '#2E7D32' : ((r[8] === 'NON ADMIS' || r[8] === 'REFUSÉ') ? '#C62828' : '#E65100');
             return '<tr style="border-bottom:1px solid #eee"><td style="padding:4px">' + _ebEsc(r[6] || '—') + '</td><td style="padding:4px">' + _ebEsc(r[1]) + '<br><span style="color:var(--gris);font-size:0.85em">' + _ebEsc(r[0]) + '</span></td>'
               + '<td style="padding:4px;text-align:center">' + (r[5] !== '' ? _ebFmt(r[5]) + (r[8] === 'INCOMPLET' ? '<br><span style="color:var(--gris);font-size:0.85em">partielle</span>' : '') : '—') + '</td>'
-              + '<td style="padding:4px;color:' + coul + ';font-weight:700">' + _ebEsc(r[8]) + (r[9] ? ' — ' + _ebEsc(r[9]) : '')
+              + '<td style="padding:4px;color:' + coul + ';font-weight:700">' + _ebEsc(r[8] === 'NON ADMIS' ? 'REFUSÉ' : r[8]) + (r[9] ? ' — ' + _ebEsc(r[9]) : '')   /* 06/11/2026 : REFUSÉ pour tous les examens blancs */
               + (r[12] ? '<br><span style="font-weight:400;color:var(--gris);font-size:0.85em">Manque : ' + _ebEsc(r[12]) + '</span>' : '') + '</td></tr>';
           }).join('') + '</table></div>';
       }
