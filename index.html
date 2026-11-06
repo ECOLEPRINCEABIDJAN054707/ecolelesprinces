@@ -582,7 +582,7 @@ function chargerBulletinsMensuels(eleve) {
   script.onerror = function() {
     delete window[cbName];
     try { document.body.removeChild(script); } catch(e) {}
-    body.innerHTML = "<p style='text-align:center;padding:20px;color:#C62828;font-size:0.85em;'>Erreur chargement bulletins. Reessayez.</p>";
+    body.innerHTML = "<p style='text-align:center;padding:20px;color:#C62828;font-size:0.85em;'>Erreur de chargement des bulletins. Réessayez.</p>";
   };
   var ECOLE_PRIM_MAP = {'AKEIKOI_1':'AKEIKOI 1','AKEIKOI_2':'AKEIKOI 2','ACADEMIE':'ACADEMIE','RITA':'GS RITA ROSANE','GNONTINROU':'GNONTINROU','KOUTOUAN':'KOUTOUAN','GUINGLO_V':'GUINGLO VILLE','DABOU':'CPP DABOU','ANYAMA':'CPP ANYAMA'};   // 06/11/2026 : + Guinglo Ville, Dabou, Anyama
   var ecolePrim = ECOLE_PRIM_MAP[eleve.ecoleCode] || eleve.ecoleCode || '';
@@ -592,7 +592,7 @@ function chargerBulletinsMensuels(eleve) {
   setTimeout(function() {
     if (window[cbName]) {
       delete window[cbName];
-      body.innerHTML = "<p style='text-align:center;padding:20px;color:#888;font-size:0.85em;'>Delai depasse. Reessayez plus tard.</p>";
+      body.innerHTML = "<p style='text-align:center;padding:20px;color:#888;font-size:0.85em;'>Délai dépassé. Réessayez plus tard.</p>";
     }
   }, 15000);
 }
@@ -651,13 +651,16 @@ function voirBulletin(idx) {
   html += '<img src="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/logo_cpp.png" style="width:60px;height:60px;object-fit:contain;flex-shrink:0;" onerror="this.style.display=\'none\'">';
   // Centre : texte
   html += '<div style="text-align:center;flex:1;">';
-  html += '<div style="font-size:0.95em;font-weight:bold;margin-bottom:4px;">'+nomEcole+'</div>';
-  html += '<div style="font-size:0.65em;opacity:0.85;margin-bottom:4px;">ANNEE SCOLAIRE '+ANNEE_SCOLAIRE_ACTIVE+'</div>';
+  // 06/11/2026 : ministère au-dessus du nom officiel de l'école
+  var NOMS_OFFICIELS = {'KOUTOUAN':'GROUPE SCOLAIRE LES PRINCES KOUTOUAN','AKEIKOI_1':'EPV LES PRINCES AKEIKOI 1 (CŒUR BLANC)','AKEIKOI_2':'EPV LES PRINCES AKEIKOI 2','ACADEMIE':'EPV LES PRINCES ACADÉMIE','RITA':'GROUPE SCOLAIRE RITA ROSANE','GNONTINROU':'EPV LES PRINCES GNONTINROU','GUINGLO_V':'EPV LES PRINCES GUINGLO VILLE','DABOU':'EPV LES PRINCES DE DABOU','ANYAMA':'EPV LES PRINCES D\'ANYAMA ADJAMÉ'};
+  html += '<div style="font-size:0.58em;font-weight:bold;opacity:0.9;margin-bottom:3px;">MINISTÈRE DE L\'ÉDUCATION NATIONALE ET DE L\'ENSEIGNEMENT TECHNIQUE</div>';
+  html += '<div style="font-size:0.95em;font-weight:bold;margin-bottom:4px;">'+(NOMS_OFFICIELS[eleve.ecoleCode]||nomEcole)+'</div>';
+  html += '<div style="font-size:0.65em;opacity:0.85;margin-bottom:4px;">ANNÉE SCOLAIRE '+ANNEE_SCOLAIRE_ACTIVE+'</div>';
   html += '<div style="background:rgba(255,255,255,0.2);border-radius:20px;display:inline-block;padding:4px 16px;font-size:0.82em;font-weight:bold;">'+(b.examenBlanc ? moisLabel+' — PRÉPARATION AU CEPE' : 'BULLETIN MENSUEL — '+moisLabel)+'</div>';
   html += '</div>';
   // Armoirie à droite avec textes
   html += '<div style="text-align:center;flex-shrink:0;">';
-  html += '<div style="font-size:0.58em;opacity:0.85;margin-bottom:2px;">REPUBLIQUE DE COTE D\'IVOIRE</div>';
+  html += '<div style="font-size:0.58em;opacity:0.85;margin-bottom:2px;">RÉPUBLIQUE DE CÔTE D\'IVOIRE</div>';
   html += '<img src="https://ecoleprinceabidjan054707.github.io/ecolelesprinces/drapeau_ci.png" style="width:45px;height:45px;object-fit:contain;display:block;margin:2px auto;" onerror="this.style.display=\'none\'">';
   html += '<div style="font-size:0.55em;opacity:0.75;">Union - Discipline - Travail</div>';
   html += '</div>';
@@ -671,16 +674,16 @@ function voirBulletin(idx) {
   // Infos élève
   html += '<div style="background:#F8FAFD;padding:10px 14px;border-bottom:1px solid #E0E4EF;">';
   html += '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;">';
-  html += '<div><div style="font-size:0.7em;color:#888;">ELEVE</div><div style="font-weight:bold;font-size:0.9em;color:#1F4E79;">'+(b.nom||eleve.nom||'')+'</div></div>';
+  html += '<div><div style="font-size:0.7em;color:#888;">ÉLÈVE</div><div style="font-weight:bold;font-size:0.9em;color:#1F4E79;">'+(b.nom||eleve.nom||'')+'</div></div>';
   html += '<div style="text-align:center;"><div style="font-size:0.7em;color:#888;">CLASSE</div><div style="font-weight:bold;font-size:0.9em;color:#1F4E79;">'+b.classe+'</div></div>';
-  html += '<div style="text-align:right;"><div style="font-size:0.7em;color:#888;">EFFECTIF</div><div style="font-weight:bold;font-size:0.9em;color:#1F4E79;">'+b.effectif+' eleves</div></div>';
+  html += '<div style="text-align:right;"><div style="font-size:0.7em;color:#888;">EFFECTIF</div><div style="font-weight:bold;font-size:0.9em;color:#1F4E79;">'+b.effectif+(b.effectif==1?' élève':' élèves')+'</div></div>';
   html += '</div></div>';
 
   // Tableau matières
   html += '<div style="overflow-x:auto;">';
   html += '<table style="width:100%;border-collapse:collapse;min-width:320px;">';
   html += '<thead><tr style="background:#1F4E79;color:white;">';
-  html += '<th style="padding:8px 10px;text-align:left;font-size:11px;white-space:nowrap;">MATIERE</th>';
+  html += '<th style="padding:8px 10px;text-align:left;font-size:11px;white-space:nowrap;">MATIÈRE</th>';
   html += '<th style="padding:8px 5px;text-align:center;font-size:11px;">NOTE</th>';
   html += '<th style="padding:8px 5px;text-align:center;font-size:11px;">RANG</th>';
   html += '<th style="padding:8px 5px;text-align:center;font-size:11px;">MOY.CLS</th>';
@@ -696,7 +699,7 @@ function voirBulletin(idx) {
     html += '<tr style="background:'+bg+';border-bottom:1px solid #E0E4EF;">';
     html += '<td style="padding:7px 10px;font-size:12px;font-weight:600;white-space:nowrap;">'+m.nom+'</td>';
     html += '<td style="padding:7px 5px;text-align:center;font-weight:bold;color:'+cn+';font-size:13px;">'+(sansNote?'—':m.note)+(m.bareme?'<span style="font-size:10px;color:#888;font-weight:normal;">/'+m.bareme+'</span>':'')+'</td>';
-    html += '<td style="padding:7px 5px;text-align:center;font-size:11px;color:#1F4E79;">'+(sansNote||!m.rang?'—':m.rang+'<span style="font-size:10px;">e</span>')+'</td>';
+    html += '<td style="padding:7px 5px;text-align:center;font-size:11px;color:#1F4E79;">'+(sansNote||!m.rang?'—':m.rang+'<span style="font-size:10px;">'+(m.rang==1?'er':'e')+'</span>')+'</td>';
     html += '<td style="padding:7px 5px;text-align:center;font-size:11px;">'+m.moy_cls.toFixed(1)+'</td>';
     html += '<td style="padding:7px 5px;text-align:center;font-size:11px;color:#2E7D32;font-weight:600;">'+m.max+'</td>';
     html += '<td style="padding:7px 5px;text-align:center;font-size:11px;color:#C62828;font-weight:600;">'+m.min+'</td>';
@@ -720,7 +723,7 @@ function voirBulletin(idx) {
   // Stats générales
   var moyPct = sur > 0 ? (b.moyenne/sur) : 0;
   var couleurMoy = moyPct >= 0.7 ? '#2E7D32' : moyPct >= 0.5 ? '#B8860B' : '#C62828';
-  var mention = moyPct >= 0.80 ? 'Tres Bien' : moyPct >= 0.70 ? 'Bien' : moyPct >= 0.60 ? 'Assez Bien' : moyPct >= 0.50 ? 'Passable' : 'Insuffisant';
+  var mention = moyPct >= 0.80 ? 'Très bien' : moyPct >= 0.70 ? 'Bien' : moyPct >= 0.60 ? 'Assez bien' : moyPct >= 0.50 ? 'Passable' : 'Insuffisant';
   if (b.examenBlanc) mention = '<b style="font-size:1.15em">' + (b.moyenne >= 10 ? 'ADMIS' : 'REFUSÉ') + '</b>';   // examen blanc du CM2 : admis à 10/20 (85/170)
 
   html += '<div style="padding:12px 14px;background:#F0F4F8;">';
@@ -734,14 +737,14 @@ function voirBulletin(idx) {
 
   html += '<div style="background:white;border-radius:8px;padding:10px;text-align:center;border-top:3px solid #1F4E79;">';
   html += '<div style="font-size:9px;color:#888;margin-bottom:3px;text-transform:uppercase;">Rang</div>';
-  html += '<div style="font-size:1.3em;font-weight:bold;color:#1F4E79;">'+b.rang+'<span style="font-size:0.55em;">e/'+b.effectif+'</span></div>';
-  html += '<div style="font-size:9px;color:#888;margin-top:2px;">'+b.effectif+' eleves</div>';
+  html += '<div style="font-size:1.3em;font-weight:bold;color:#1F4E79;">'+b.rang+'<span style="font-size:0.55em;">'+(b.rang==1?'er':'e')+' / '+b.effectif+'</span></div>';
+  html += '<div style="font-size:9px;color:#888;margin-top:2px;">'+b.effectif+(b.effectif==1?' élève':' élèves')+'</div>';
   html += '</div>';
 
   html += '<div style="background:white;border-radius:8px;padding:10px;text-align:center;border-top:3px solid #B8860B;">';
-  html += '<div style="font-size:9px;color:#888;margin-bottom:3px;text-transform:uppercase;">Moy. annuelle</div>';
+  html += '<div style="font-size:9px;color:#888;margin-bottom:3px;text-transform:uppercase;">Moyenne annuelle</div>';
   html += '<div style="font-size:1.3em;font-weight:bold;color:#B8860B;">'+b.moy_annuelle.toFixed(2)+'<span style="font-size:0.55em;">/'+sur+'</span></div>';
-  if (b.rang_annuel > 0) html += '<div style="font-size:9px;color:#888;margin-top:2px;">Rang ann. : '+b.rang_annuel+'e</div>';
+  if (b.rang_annuel > 0) html += '<div style="font-size:9px;color:#888;margin-top:2px;">Rang annuel : '+b.rang_annuel+(b.rang_annuel==1?'er':'e')+'</div>';
   html += '</div>';
 
   html += '</div></div>';
@@ -765,7 +768,7 @@ function voirBulletin(idx) {
 
   // Bouton imprimer
   html += '<div style="padding:12px 14px;">';
-  html += '<button onclick="imprimerBulletin()" style="width:100%;padding:13px;background:linear-gradient(135deg,#1F4E79,#1565C0);color:white;border:none;border-radius:10px;font-size:0.95em;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">🖨️ Imprimer / Telecharger en PDF</button>';
+  html += '<button onclick="imprimerBulletin()" style="width:100%;padding:13px;background:linear-gradient(135deg,#1F4E79,#1565C0);color:white;border:none;border-radius:10px;font-size:0.95em;font-weight:bold;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;">🖨️ Imprimer / Télécharger en PDF</button>';
   html += '</div>';
   html += '</div>';
 
