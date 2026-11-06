@@ -20036,6 +20036,7 @@ function impBulOuvrir(z) {
   body.innerHTML = '<div style="text-align:center;padding:20px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_BULLETINS_CLASSE', matricule: c.matricule, code: c.code, ecole: currentStaff.ecole || '', annee: '2026-2027' }, 30000).then(function (d) {
     if (!d || !d.ok) { body.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">' + _ibEsc((d && d.error) || 'Erreur réseau, réessayez') + '</p>'; return; }
+    if (!d.liste) { body.innerHTML = '<p style="padding:14px;color:var(--rouge);font-size:0.82em">Le serveur ne connaît pas encore l\'impression des bulletins : ajoutez LIRE_BULLETINS_CLASSE dans ENSEIGNANT ET POINTAGE.gs puis redéployez (Nouvelle version).</p>'; return; }   // 06/11/2026
     if (!d.liste.length) { body.innerHTML = '<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun bulletin publié pour l\'instant. Les bulletins apparaissent ici dès que la Direction les a validés.</p>'; return; }
     window['_impBulListe' + z] = d.liste;
     var opts = d.liste.map(function (x, i) { return '<option value="' + i + '">' + _ibEsc(x.classe) + ' — ' + _ibEsc(IMPBUL_MOIS[x.mois] || x.mois) + ' (' + x.nb + ' élèves)</option>'; }).join('');
