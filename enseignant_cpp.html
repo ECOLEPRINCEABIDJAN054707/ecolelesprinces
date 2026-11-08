@@ -336,6 +336,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
   <div id="eboMesSurvZone" style="padding:0 16px 6px"></div>
   <div id="eboCopiesZone" style="padding:0 16px 6px"></div>
   <div id="compoZoneEns" style="padding:0 16px 6px"></div>
+  <div id="devexZoneEns" style="padding:0 16px 6px"></div>   <!-- 08/11/2026 — Programme des devoirs des classes d'examen -->
   <div class="section-label" style="display:none">▶ Démarrer un cours</div>
  <div style="padding:0 16px 16px;display:none">
     <div class="card"><div class="card-body">
@@ -1003,6 +1004,7 @@ function demarrerSession() {
   document.getElementById('heroEcole').textContent = ECOLE_NOMS[user.ecole] || user.ecole;
   _majSelecteurEcole();   // 21/10/2026 — espace unique plusieurs écoles
   if (typeof afficherCompositions === 'function') afficherCompositions();
+  if (typeof chargerDevoirsExamenEns === 'function') setTimeout(chargerDevoirsExamenEns, 900);   // 08/11/2026
   document.getElementById('bilanMoisLabel').textContent = getMoisLabel();
   document.getElementById('moyennesSubLabel').textContent = ECOLES_TECH.includes(user.ecole) ? 'Sem1·Sem2·EB1-4' : 'T1·T2·T3·EB1-4';
 
@@ -4651,5 +4653,66 @@ function eboEnvoyerSaisie(verifier) {
 })();
 </script>
 
+
+<script>
+// ============================================================
+// 📅 PROGRAMME DES DEVOIRS DES CLASSES D'EXAMEN (08/11/2026)
+// Affichage seul : le professeur voit le programme de son école ; ses épreuves (sa matière, ses niveaux) sont mises en avant.
+// Le sujet est remis en main propre à la Directrice ou à l'Éducateur, qui l'imprime (pas de dépôt en ligne).
+// ============================================================
+function _dxEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function _dxJsonp(params) {
+  return new Promise(function (resolve) {
+    var cb = 'dx_' + Date.now() + '_' + Math.floor(Math.random() * 1e4), s = document.createElement('script');
+    var fin = function (r) { delete window[cb]; try { document.body.removeChild(s); } catch (e) {} resolve(r); };
+    window[cb] = fin;
+    s.onerror = function () { fin({ ok: false, error: 'réseau' }); };
+    s.src = APPS_SCRIPT_URL + '?' + new URLSearchParams(Object.assign({ callback: cb }, params)).toString();
+    document.body.appendChild(s);
+    setTimeout(function () { if (window[cb]) fin({ ok: false, error: 'délai dépassé' }); }, 20000);
+  });
+}
+function _dxComptes() {
+  if (user && Array.isArray(user.comptes) && user.comptes.length) return user.comptes.map(function (c) { return { ecole: c.ecole, nom: c.nom }; });
+  return user ? [{ ecole: user.ecole, nom: user.nom }] : [];
+}
+async function chargerDevoirsExamenEns() {
+  var z = document.getElementById('devexZoneEns'); if (!z || !user) return;
+  var blocs = [];
+  for (var c of _dxComptes()) {
+    var rp = await _dxJsonp({ type: 'DEVEX_PROGRAMME', ecole: c.ecole });
+    if (!rp || !rp.ok || !(rp.epreuves || []).length) continue;
+    var rm = await _dxJsonp({ type: 'DEVEX_MES_EPREUVES', ecole: c.ecole, nom: c.nom, code: user.code });
+    var miens = {}; ((rm && rm.ok && rm.epreuves) || []).forEach(function (e) { miens[e.id] = true; });
+    blocs.push({ ecole: c.ecole, epreuves: rp.epreuves, miens: miens });
+  }
+  if (!blocs.length) { z.innerHTML = ''; return; }
+  var auj = new Date(); auj.setHours(0, 0, 0, 0);
+  var dateDe = function (s) { var m = String(s).match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };
+  var h = '<div style="background:#fff;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden;margin-bottom:10px">'
+    + '<div onclick="var b=this.nextElementSibling;b.style.display=b.style.display===\'none\'?\'block\':\'none\'" style="background:#1F4E79;color:#fff;padding:12px 14px;cursor:pointer"><b>📅 Programme des devoirs — classes d\'examen</b></div>'
+    + '<div style="padding:10px 12px">';
+  blocs.forEach(function (b) {
+    if (blocs.length > 1) h += '<div style="font-weight:700;color:#1F4E79;margin:4px 0 6px">' + _dxEsc(b.ecole) + '</div>';
+    var nbMiens = Object.keys(b.miens).length;
+    if (nbMiens) h += '<div style="background:#FFF8E1;border-radius:8px;padding:7px 9px;font-size:12px;margin-bottom:8px">⭐ = vos épreuves (' + nbMiens + '). Remettez votre sujet à la Directrice ou à l\'Éducateur pour l\'impression.</div>';
+    var parDate = {};
+    b.epreuves.forEach(function (e) { (parDate[e.date] = parDate[e.date] || []).push(e); });
+    Object.keys(parDate).sort(function (x, y) { return dateDe(x) - dateDe(y); }).forEach(function (d) {
+      var passe = dateDe(d) < auj, l = parDate[d];
+      h += '<div style="margin-bottom:8px;' + (passe ? 'opacity:.55' : '') + '"><div style="font-size:12px;font-weight:700;color:#555;border-bottom:1px solid #eee;padding-bottom:2px;margin-bottom:4px">' + _dxEsc(l[0].jour) + ' ' + _dxEsc(d) + (passe ? ' — passé' : '') + '</div>';
+      l.sort(function (x, y) { return x.debut < y.debut ? -1 : 1; }).forEach(function (e) {
+        var mien = b.miens[e.id];
+        h += '<div style="display:flex;gap:8px;font-size:13px;padding:4px 6px;border-radius:6px;' + (mien ? 'background:#E3F2FD;font-weight:700' : '') + '">'
+          + '<span style="min-width:86px;color:#1F4E79">' + _dxEsc(e.debut) + '-' + _dxEsc(e.fin) + '</span>'
+          + '<span style="flex:1">' + (mien ? '⭐ ' : '') + _dxEsc(e.matiereLib) + ' <span style="color:#777;font-weight:normal">— ' + _dxEsc(e.niveauLib) + '</span></span></div>';
+      });
+      h += '</div>';
+    });
+  });
+  h += '</div></div>';
+  z.innerHTML = h;
+}
+</script>
 </body>
 </html>
