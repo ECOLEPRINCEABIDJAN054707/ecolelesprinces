@@ -6384,7 +6384,8 @@ function afficherDir(s){
   const dsa=document.getElementById('dStatAlert');if(dsa)dsa.textContent=alertes.length;
   chargerSuiviPedagogique();setTimeout(initSaisiePedago,500);setTimeout(function(){chargerCoursJourDir(s);},600);
 setTimeout(function(){chargerMasseSalarialeDir(s.ecole);},600);
-  setTimeout(function(){initCorrectionsAFaire('DIR');},900);   // 08/11/2026 — Corrections à faire
+  setTimeout(function(){initCorrectionsAFaire('DIR');},900);
+  setTimeout(function(){initProgrammeDevex('DIR');},1100);   // 08/11/2026 — Programme des devoirs des classes d'examen   // 08/11/2026 — Corrections à faire
   setTimeout(function(){chargerRecepParentsDir(s.ecole);},700);
   let hag='';AGENDA_DEMO.forEach(a=>{hag+='<div class="agenda-item"><div class="agenda-date" style="background:'+a.col+'"><div class="jour">'+a.jour+'</div><div class="mois">'+a.mois+'</div></div><div><div class="agenda-titre">'+a.titre+'</div><div class="agenda-detail">'+a.detail+'</div></div></div>';});
   document.getElementById('dirAgendaBody').innerHTML=hag;
@@ -9118,7 +9119,8 @@ peuplerClassesReellesCom(s.ecole);
  chargerCoursJourCom(s);
 setTimeout(function(){chargerAffectationTousCom();},700);
   setTimeout(function(){chargerMasseSalarialeCom(s.ecole);},600);
-  setTimeout(function(){initCorrectionsAFaire('COM');},900);   // 08/11/2026 — Corrections à faire
+  setTimeout(function(){initCorrectionsAFaire('COM');},900);
+  setTimeout(function(){initProgrammeDevex('COM');},1100);   // 08/11/2026 — Programme des devoirs des classes d'examen   // 08/11/2026 — Corrections à faire
   remplirMoisCom();
   chargerResultatsEtMessages(s.ecole,'COM');
   setTimeout(function(){initAnnonces('COM');},800);
@@ -9487,7 +9489,8 @@ function afficherEdu(s){
   document.getElementById('eduCharteBody').innerHTML=h2;
   chargerResultatsEtMessages(s.ecole,'EDU');
   setTimeout(function(){initAnnonces('EDU');},800);
-  setTimeout(function(){initCorrectionsAFaire('EDU');},900);   // 08/11/2026 — Corrections à faire
+  setTimeout(function(){initCorrectionsAFaire('EDU');},900);
+  setTimeout(function(){initProgrammeDevex('EDU');},1100);   // 08/11/2026 — Programme des devoirs des classes d'examen   // 08/11/2026 — Corrections à faire
   chargerAbsencesElevesSigne(s.ecole, s.classes||[]);
   chargerPresencesEnseignants(s.ecole);
   setTimeout(function(){chargerAppelsEdu(s.ecole);},600);
@@ -20569,5 +20572,66 @@ async function repondreCorrectionUI(esp, i) {
 }
 </script>
 
+
+<script>
+// ============================================================
+// 📅 PROGRAMME DES DEVOIRS DES CLASSES D'EXAMEN — Directeur / Éducateur / Comptable (08/11/2026)
+// Lecture du programme (onglet PROGRAMME_DEVOIRS_EXAMEN) sur le serveur des enseignants ; tableau par date et par niveau ; impression.
+// ============================================================
+var DEVEX_COLS = [['3EME', '3ème'], ['TLE A', 'Tle A'], ['TLE CD', 'Tle C / D']];
+function _dvxEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function _dvxTableau(epreuves, pourImpression) {
+  var niveaux = DEVEX_COLS.filter(function (c) { return epreuves.some(function (e) { return e.niveau === c[0]; }); });
+  var dateDe = function (s) { var m = String(s).match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : 0; };
+  var parDate = {};
+  epreuves.forEach(function (e) { (parDate[e.date] = parDate[e.date] || []).push(e); });
+  var auj = new Date(); auj.setHours(0, 0, 0, 0);
+  var bord = 'border:1px solid ' + (pourImpression ? '#000' : 'var(--border)') + ';padding:6px;vertical-align:top';
+  var h = '<table style="width:100%;border-collapse:collapse;font-size:' + (pourImpression ? '12px' : '0.8em') + '"><thead><tr><th style="' + bord + ';background:#1F4E79;color:#fff">Date</th>'
+    + niveaux.map(function (n) { return '<th style="' + bord + ';background:#1F4E79;color:#fff">' + n[1] + '</th>'; }).join('') + '</tr></thead><tbody>';
+  Object.keys(parDate).sort(function (a, b) { return dateDe(a) - dateDe(b); }).forEach(function (d) {
+    var l = parDate[d], passe = !pourImpression && dateDe(d) < auj;
+    h += '<tr style="' + (passe ? 'opacity:.5' : '') + '"><td style="' + bord + ';font-weight:700;white-space:nowrap">' + _dvxEsc(l[0].jour) + '<br>' + _dvxEsc(d) + '</td>'
+      + niveaux.map(function (n) {
+          return '<td style="' + bord + '">' + l.filter(function (e) { return e.niveau === n[0]; }).sort(function (a, b) { return a.debut < b.debut ? -1 : 1; })
+            .map(function (e) { return '<div><b>' + _dvxEsc(e.debut.replace(':', 'H')) + '-' + _dvxEsc(e.fin.replace(':', 'H')) + '</b> : ' + _dvxEsc(e.matiereLib) + '</div>'; }).join('') + '</td>';
+        }).join('') + '</tr>';
+  });
+  return h + '</tbody></table>';
+}
+async function initProgrammeDevex(esp) {
+  var zoneId = 'devexZone' + esp, ancienne = document.getElementById(zoneId);
+  if (!currentStaff || !SHEETS_IDS_2026_2027[currentStaff.ecole]) { if (ancienne) ancienne.remove(); return; }
+  var r = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'DEVEX_PROGRAMME', ecole: currentStaff.ecole }, 20000);
+  var ep = (r && r.ok && r.epreuves) || [];
+  if (!ep.length) { if (ancienne) ancienne.remove(); return; }
+  window['_devexProg' + esp] = ep;
+  var espace = document.getElementById({ DIR: 'espaceDir', COM: 'espaceCom', EDU: 'espaceEdu' }[esp]); if (!espace) return;
+  var sec = ancienne || document.createElement('div');
+  sec.className = 'section'; sec.id = zoneId;
+  var classes = {}; ep.forEach(function (e) { e.classes.forEach(function (c) { classes[c] = 1; }); });
+  sec.innerHTML = '<div class="sec-head" style="background:#1F4E79;color:#fff" onclick="toggleSec(this)"><h3>&#128197; Programme des devoirs — classes d\'examen</h3><span class="arr">&#9660;</span></div>'
+    + '<div class="sec-body"><div style="padding:8px 12px">'
+    + '<div style="font-size:0.78em;color:var(--gris);margin-bottom:8px">' + ep.length + ' épreuve(s) · classes : ' + _dvxEsc(Object.keys(classes).sort().join(', ')) + '<br>'
+    + (esp === 'COM' ? '' : 'Les professeurs remettent leurs sujets à la Directrice ou à l\'Éducateur pour l\'impression.') + '</div>'
+    + '<div style="text-align:right;margin-bottom:8px"><button type="button" onclick="imprimerProgrammeDevex(\'' + esp + '\')" style="padding:7px 12px;border:none;border-radius:6px;background:#1a3a6b;color:#fff;font-weight:700;cursor:pointer;font-size:0.8em">&#128424;&#65039; Imprimer / PDF</button></div>'
+    + '<div style="overflow-x:auto">' + _dvxTableau(ep, false) + '</div></div></div>';
+  if (!ancienne) {
+    var apres = document.getElementById('corrZone' + esp) || espace.querySelector('.hdr');
+    if (apres && apres.nextSibling) espace.insertBefore(sec, apres.nextSibling); else espace.appendChild(sec);
+  }
+}
+function imprimerProgrammeDevex(esp) {
+  var ep = window['_devexProg' + esp] || []; if (!ep.length) return;
+  var w = window.open('', '_blank'); if (!w) { showToast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Programme des devoirs — ' + _dvxEsc(currentStaff.ecole) + '</title>'
+    + '<style>body{font-family:Arial,sans-serif;margin:0;padding:12px;color:#000}h1{font-size:16px;text-align:center;margin:4px 0}.s{text-align:center;font-size:12px;margin-bottom:12px}'
+    + '.np{background:#f5f5f5;padding:10px;border-bottom:3px solid #000;margin-bottom:10px;text-align:center}@media print{.np{display:none}@page{size:A4 landscape;margin:10mm}}</style></head><body>'
+    + '<div class="np"><button onclick="window.print()" style="background:#000;color:#fff;border:none;padding:9px 18px;font-weight:bold;border-radius:4px;cursor:pointer">Imprimer / PDF</button></div>'
+    + '<h1>' + _dvxEsc(currentStaff.label || currentStaff.ecole) + ' — PROGRAMME DE DEVOIRS DES ÉLÈVES EN CLASSE D\'EXAMEN</h1>'
+    + '<div class="s">Année scolaire 2026-2027</div>' + _dvxTableau(ep, true) + '</body></html>');
+  w.document.close();
+}
+</script>
 </body>
 </html>
