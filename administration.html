@@ -20379,13 +20379,13 @@ function initCorrectionsAFaire(esp) {
     sec.innerHTML = '<div class="sec-head" style="background:#B71C1C;color:#fff" onclick="toggleSec(this)">'
       + '<h3>&#128203; Corrections à faire <span id="corrBadge' + esp + '" style="background:#fff;color:#B71C1C;border-radius:10px;padding:1px 8px;font-size:0.8em;margin-left:6px">…</span></h3><span class="arr">&#9660;</span></div>'
       + '<div class="sec-body"><div style="padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
-      + ['A FAIRE', 'REPONDU', 'TOUS'].map(function (f) { return '<button type="button" data-f="' + f + '" onclick="corrFiltrer(\'' + esp + '\',\'' + f + '\')" class="corrF' + esp + '" style="padding:6px 10px;border:1px solid var(--border);border-radius:16px;background:#fff;cursor:pointer;font-size:0.78em">' + (f === 'A FAIRE' ? 'À faire' : f === 'REPONDU' ? 'Répondus' : 'Tous') + '</button>'; }).join('')
+      + (esp === 'DIR' ? ['MES', 'A FAIRE', 'REPONDU', 'TOUS'] : ['A FAIRE', 'REPONDU', 'TOUS']).map(function (f) { return '<button type="button" data-f="' + f + '" onclick="corrFiltrer(\'' + esp + '\',\'' + f + '\')" class="corrF' + esp + '" style="padding:6px 10px;border:1px solid var(--border);border-radius:16px;background:#fff;cursor:pointer;font-size:0.78em">' + (f === 'MES' ? 'Mes questions' : f === 'A FAIRE' ? 'À faire (tous)' : f === 'REPONDU' ? 'Répondus' : 'Tous') + '</button>'; }).join('')
       + '<button type="button" onclick="chargerCorrections(\'' + esp + '\')" style="margin-left:auto;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-size:0.78em">&#128260; Actualiser</button></div>'
       + '<div id="corrListe' + esp + '" style="padding:0 12px 12px"></div></div>';
     var hdr = espace.querySelector('.hdr');
     if (hdr && hdr.nextSibling) espace.insertBefore(sec, hdr.nextSibling); else espace.insertBefore(sec, espace.firstChild);
   }
-  _corrFiltre[esp] = _corrFiltre[esp] || 'A FAIRE';
+  _corrFiltre[esp] = _corrFiltre[esp] || (esp === 'DIR' ? 'MES' : 'A FAIRE');
   chargerCorrections(esp);
 }
 
@@ -20395,7 +20395,8 @@ async function chargerCorrections(esp) {
   var r = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action: 'getCorrectionsAFaire', sheetsId: SHEETS_IDS_2026_2027[currentStaff.ecole], role: CORR_ROLES[esp] }, 20000);
   if (!r || !r.ok) { liste.innerHTML = '<p style="color:var(--rouge);font-size:0.82em;padding:10px">Erreur : ' + _corrEsc((r && (r.erreur || r.error)) || 'réseau') + '</p>'; return; }
   _corrItems[esp] = r.items || [];
-  var b = document.getElementById('corrBadge' + esp); if (b) b.textContent = r.nbAFaire;
+  var b = document.getElementById('corrBadge' + esp);
+  if (b) b.textContent = esp === 'DIR' ? _corrItems[esp].filter(function (it) { return it.pour === 'DIRECTEUR' && it.etat === 'A FAIRE'; }).length : r.nbAFaire;
   var zone = document.getElementById('corrZone' + esp);
   if (zone) zone.style.display = _corrItems[esp].length ? '' : 'none';
   _corrAfficher(esp);
@@ -20406,8 +20407,8 @@ function corrFiltrer(esp, f) { _corrFiltre[esp] = f; _corrAfficher(esp); }
 function _corrAfficher(esp) {
   var liste = document.getElementById('corrListe' + esp), f = _corrFiltre[esp] || 'A FAIRE';
   document.querySelectorAll('.corrF' + esp).forEach(function (bt) { var on = bt.getAttribute('data-f') === f; bt.style.background = on ? 'var(--bleu)' : '#fff'; bt.style.color = on ? '#fff' : ''; });
-  var items = (_corrItems[esp] || []).filter(function (it) { return f === 'TOUS' || it.etat === f; });
-  if (!items.length) { liste.innerHTML = '<p style="text-align:center;color:var(--gris);font-size:0.82em;padding:14px">' + (f === 'A FAIRE' ? '&#9989; Rien à faire pour le moment.' : 'Aucun élément.') + '</p>'; return; }
+  var items = (_corrItems[esp] || []).filter(function (it) { return f === 'TOUS' || (f === 'MES' ? it.pour === 'DIRECTEUR' : it.etat === f); });
+  if (!items.length) { liste.innerHTML = '<p style="text-align:center;color:var(--gris);font-size:0.82em;padding:14px">' + ((f === 'A FAIRE' || f === 'MES') ? '&#9989; Rien à faire pour le moment.' : 'Aucun élément.') + '</p>'; return; }
   var couleurs = { 'A FAIRE': '#FFF3E0', 'REPONDU': '#E8F5E9', 'TRAITE': '#ECEFF1' };
   liste.innerHTML = items.map(function (it) {
     var i = (_corrItems[esp] || []).indexOf(it), modifiable = it.etat !== 'TRAITE';
