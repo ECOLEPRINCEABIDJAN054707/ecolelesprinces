@@ -20380,7 +20380,8 @@ function initCorrectionsAFaire(esp) {
       + '<h3>&#128203; Corrections à faire <span id="corrBadge' + esp + '" style="background:#fff;color:#B71C1C;border-radius:10px;padding:1px 8px;font-size:0.8em;margin-left:6px">…</span></h3><span class="arr">&#9660;</span></div>'
       + '<div class="sec-body"><div style="padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
       + (esp === 'DIR' ? ['MES', 'A FAIRE', 'REPONDU', 'TOUS'] : ['A FAIRE', 'REPONDU', 'TOUS']).map(function (f) { return '<button type="button" data-f="' + f + '" onclick="corrFiltrer(\'' + esp + '\',\'' + f + '\')" class="corrF' + esp + '" style="padding:6px 10px;border:1px solid var(--border);border-radius:16px;background:#fff;cursor:pointer;font-size:0.78em">' + (f === 'MES' ? 'Mes questions' : f === 'A FAIRE' ? 'À faire (tous)' : f === 'REPONDU' ? 'Répondus' : 'Tous') + '</button>'; }).join('')
-      + '<button type="button" onclick="chargerCorrections(\'' + esp + '\')" style="margin-left:auto;padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-size:0.78em">&#128260; Actualiser</button></div>'
+      + '<button type="button" onclick="imprimerCorrections(\'' + esp + '\')" style="margin-left:auto;padding:6px 10px;border:none;border-radius:6px;background:#1a3a6b;color:#fff;cursor:pointer;font-size:0.78em;font-weight:700">&#128424;&#65039; Imprimer / PDF</button>'
+      + '<button type="button" onclick="chargerCorrections(\'' + esp + '\')" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-size:0.78em">&#128260; Actualiser</button></div>'
       + '<div id="corrListe' + esp + '" style="padding:0 12px 12px"></div></div>';
     var hdr = espace.querySelector('.hdr');
     if (hdr && hdr.nextSibling) espace.insertBefore(sec, hdr.nextSibling); else espace.insertBefore(sec, espace.firstChild);
@@ -20410,7 +20411,9 @@ function _corrAfficher(esp) {
   var items = (_corrItems[esp] || []).filter(function (it) { return f === 'TOUS' || (f === 'MES' ? it.pour === 'DIRECTEUR' : it.etat === f); });
   if (!items.length) { liste.innerHTML = '<p style="text-align:center;color:var(--gris);font-size:0.82em;padding:14px">' + ((f === 'A FAIRE' || f === 'MES') ? '&#9989; Rien à faire pour le moment.' : 'Aucun élément.') + '</p>'; return; }
   var couleurs = { 'A FAIRE': '#FFF3E0', 'REPONDU': '#E8F5E9', 'TRAITE': '#ECEFF1' };
-  liste.innerHTML = items.map(function (it) {
+  var nbClasses = {}; items.forEach(function (it) { nbClasses[it.classe || '?'] = 1; });
+  var entete = '<div style="background:#1F4E79;color:#fff;border-radius:8px;padding:8px 10px;margin-bottom:8px;font-size:0.85em;font-weight:700">&#128203; ' + items.length + ' cas ' + (f === 'REPONDU' ? 'répondu' + (items.length > 1 ? 's' : '') : f === 'TOUS' ? 'au total' : 'à traiter') + ' · ' + Object.keys(nbClasses).length + ' classe(s)</div>';
+  liste.innerHTML = entete + items.map(function (it) {
     var i = (_corrItems[esp] || []).indexOf(it), modifiable = it.etat !== 'TRAITE';
     return '<div style="background:' + (couleurs[it.etat] || '#fff') + ';border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;font-size:0.84em">'
       + '<div style="display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap"><b>' + _corrEsc(it.nom) + '</b><span style="font-size:0.8em;color:var(--gris)">' + _corrEsc(it.id) + ' · ' + _corrEsc(it.type) + (esp === 'DIR' ? ' · pour ' + _corrEsc(it.pour) : '') + '</span></div>'
@@ -20424,6 +20427,49 @@ function _corrAfficher(esp) {
         + '<button type="button" onclick="repondreCorrectionUI(\'' + esp + '\',' + i + ')" style="margin-left:auto;padding:8px 14px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">' + (it.reponse ? 'Modifier la réponse' : 'Envoyer') + '</button></div>' : '')
       + '</div>';
   }).join('');
+}
+
+// 🖨️ Fiche à imprimer (ou « Enregistrer en PDF ») : la liste affichée, regroupée par classe, avec une case réponse à remplir en classe
+function imprimerCorrections(esp) {
+  var f = _corrFiltre[esp] || 'A FAIRE';
+  var items = (_corrItems[esp] || []).filter(function (it) { return it.etat !== 'TRAITE' && (f === 'TOUS' || (f === 'MES' ? it.pour === 'DIRECTEUR' : it.etat === f)); });
+  if (!items.length) { showToast('Rien à imprimer', 'error'); return; }
+  var parClasse = {};
+  items.forEach(function (it) { var c = (!it.classe || /^\?/.test(it.classe)) ? 'CLASSE NON PRÉCISÉE' : it.classe; (parClasse[c] = parClasse[c] || []).push(it); });
+  var classes = Object.keys(parClasse).sort(function (a, b) { return a.localeCompare(b, 'fr'); });
+  var roleLabels = { DIR: 'Directeur', COM: 'Comptable', EDU: 'Éducateur' };
+  var titreFiltre = { MES: 'Questions du Directeur', 'A FAIRE': 'Points à faire', REPONDU: 'Points répondus', TOUS: 'Tous les points' }[f];
+  var date = new Date().toLocaleDateString('fr-FR');
+  var n = 0, corps = '';
+  classes.forEach(function (c) {
+    corps += '<h3>' + _corrEsc(c) + ' <span>(' + parClasse[c].length + ' cas à traiter)</span></h3>'
+      + '<table><thead><tr><th style="width:4%">N°</th><th style="width:11%">Matricule</th><th style="width:20%">Nom et prénoms</th><th style="width:6%">Statut</th><th style="width:29%">Question</th><th style="width:30%">Réponse / constat en classe</th></tr></thead><tbody>'
+      + parClasse[c].map(function (it) {
+          n++;
+          return '<tr><td style="text-align:center">' + n + '</td><td>' + _corrEsc(it.matricule || '—') + '</td><td><b>' + _corrEsc(it.nom) + '</b><div class="id">' + _corrEsc(it.id) + ' · ' + _corrEsc(it.type) + (esp === 'DIR' && f !== 'MES' ? ' · ' + _corrEsc(it.pour) : '') + '</div></td>'
+            + '<td style="text-align:center">' + _corrEsc(it.statutAff || '?') + (it.statutAff === '?' || !it.statutAff ? '<div class="id">AFF □ NAFF □</div>' : '') + '</td>'
+            + '<td>' + _corrEsc(it.question) + '</td><td>' + (it.reponse ? '<div class="id">Déjà répondu : ' + _corrEsc(it.reponse) + '</div>' : '') + '</td></tr>';
+        }).join('')
+      + '</tbody></table>';
+  });
+  var w = window.open('', '_blank');
+  if (!w) { showToast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Corrections à faire — ' + _corrEsc(currentStaff.ecole) + ' — ' + date + '</title>'
+    + '<style>body{font-family:Arial,sans-serif;font-size:11px;margin:0;padding:10px;color:#000}h1{font-size:16px;margin:0 0 2px;text-align:center}.sous{text-align:center;font-size:11px;margin-bottom:10px}'
+    + 'h3{font-size:13px;background:#000;color:#fff;padding:5px 8px;margin:14px 0 0}h3 span{font-weight:normal;font-size:11px}table{width:100%;border-collapse:collapse;page-break-inside:auto}tr{page-break-inside:avoid}'
+    + 'th{background:#ddd;border:1px solid #000;padding:4px;font-size:10px}td{border:1px solid #000;padding:5px 4px;vertical-align:top;height:34px}.id{font-size:9px;color:#444;margin-top:2px}'
+    + '.sign{display:flex;justify-content:space-between;margin-top:22px;font-size:11px}.np{background:#f5f5f5;padding:10px;border-bottom:3px solid #000;margin-bottom:10px;text-align:center}'
+    + '@media print{.np{display:none!important}body{padding:0}@page{size:A4 landscape;margin:8mm}}</style></head><body>'
+    + '<div class="np"><b>Corrections à faire</b> — utilisez « Enregistrer en PDF » comme imprimante pour obtenir un PDF<br><br>'
+    + '<button onclick="window.print()" style="background:#000;color:#fff;border:none;padding:9px 18px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px;margin-right:8px">Imprimer / PDF</button>'
+    + '<button onclick="window.close()" style="background:#555;color:#fff;border:none;padding:9px 14px;font-size:14px;font-weight:bold;cursor:pointer;border-radius:4px">Fermer</button></div>'
+    + '<h1>' + _corrEsc(currentStaff.label || currentStaff.ecole) + ' — CORRECTIONS À FAIRE</h1>'
+    + '<div class="sous">' + titreFiltre + ' · <b>' + n + ' cas à traiter</b> · ' + classes.length + ' classe(s) · édité le ' + date + ' par ' + _corrEsc(currentStaff.nom || '') + ' (' + roleLabels[esp] + ')<br>'
+    + 'Passer dans chaque classe, vérifier l\'élève et noter la réponse. Les réponses sont ensuite saisies dans PSS (carte « Corrections à faire »).</div>'
+    + corps
+    + '<div class="sign"><div>Vérifié par : ...................................................</div><div>Date : ......../......../............</div><div>Signature :</div></div>'
+    + '</body></html>');
+  w.document.close();
 }
 
 async function repondreCorrectionUI(esp, i) {
