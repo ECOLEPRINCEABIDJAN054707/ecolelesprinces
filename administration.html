@@ -20398,6 +20398,11 @@ async function chargerCorrections(esp) {
   var r = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action: 'getCorrectionsAFaire', sheetsId: SHEETS_IDS_2026_2027[currentStaff.ecole], role: CORR_ROLES[esp] }, 20000);
   if (!r || !r.ok) { liste.innerHTML = '<p style="color:var(--rouge);font-size:0.82em;padding:10px">Erreur : ' + _corrEsc((r && (r.erreur || r.error)) || 'réseau') + '</p>'; return; }
   _corrItems[esp] = r.items || [];
+  if (esp === 'DIR' && !(window._corrClasses && window._corrClasses[currentStaff.ecole])) {
+    window._corrClasses = window._corrClasses || {};
+    var rc = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action: 'getClassesEcole', sheetsId: SHEETS_IDS_2026_2027[currentStaff.ecole] }, 20000);
+    if (rc && rc.ok) window._corrClasses[currentStaff.ecole] = rc.classes || [];
+  }
   var b = document.getElementById('corrBadge' + esp);
   if (b) b.textContent = esp === 'DIR' ? _corrItems[esp].filter(function (it) { return it.pour === 'DIRECTEUR' && it.etat === 'A FAIRE'; }).length : r.nbAFaire;
   var zone = document.getElementById('corrZone' + esp);
@@ -20423,6 +20428,13 @@ function _corrAfficher(esp) {
       + '<div style="margin-bottom:8px">' + _corrEsc(it.question) + '</div>'
       + (it.reponse ? '<div style="background:#fff;border-left:3px solid var(--vert);padding:6px 8px;margin-bottom:6px"><b>Réponse :</b> ' + _corrEsc(it.reponse) + '<div style="font-size:0.8em;color:var(--gris)">' + _corrEsc(it.reponduPar) + ' — ' + _corrEsc(it.dateReponse) + '</div></div>' : '')
       + (it.etat === 'TRAITE' ? '<div style="font-size:0.8em;color:var(--vert);font-weight:700">&#10004; Traité par la Direction générale</div>' : '')
+      + (modifiable && esp === 'DIR' && it.matricule && (it.type === 'CLASSE' || it.type === 'FILIERE')
+        ? '<div style="background:#E3F2FD;border-radius:8px;padding:8px;margin-bottom:8px"><div style="font-weight:700;color:var(--bleu);font-size:0.9em;margin-bottom:6px">&#128256; Placer l\'élève dans sa classe</div>'
+          + '<div style="display:flex;gap:6px;flex-wrap:wrap"><select id="corrCl' + esp + '_' + i + '" style="flex:2;min-width:150px;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.9em"><option value="">— Nouvelle classe —</option>'
+          + ((window._corrClasses && window._corrClasses[currentStaff.ecole]) || []).map(function (c) { return '<option value="' + _corrEsc(c) + '">' + _corrEsc(c) + '</option>'; }).join('')
+          + '</select><button type="button" onclick="corrChangerClasseUI(\'' + esp + '\',' + i + ')" style="flex:1;padding:8px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">Déplacer l\'élève</button></div>'
+          + '<div style="font-size:0.75em;color:var(--gris);margin-top:4px">L\'élève est déplacé tout de suite, sa scolarité est recalculée selon le statut choisi ci-dessous, et le cas est clôturé.</div></div>'
+        : '')
       + (modifiable ? '<textarea id="corrRep' + esp + '_' + i + '" rows="2" maxlength="600" placeholder="Votre réponse…" style="width:100%;box-sizing:border-box;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em"></textarea>'
         + '<div style="display:flex;gap:6px;margin-top:6px;align-items:center">'
         + '<select id="corrSt' + esp + '_' + i + '" title="Changer le statut met à jour la scolarité" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.9em"><option value="">Statut ?</option><option value="AFF"' + (it.statutAff === 'AFF' ? ' selected' : '') + '>AFF</option><option value="NAFF"' + (it.statutAff === 'NAFF' ? ' selected' : '') + '>NAFF</option></select>'
@@ -20527,6 +20539,21 @@ async function corrEnregistrerAjout(esp) {
     window['_corrDerMat' + esp] = '';
     chargerCorrections(esp);
   } else showToast('Erreur : ' + ((r && (r.erreur || r.error)) || 'réseau'), 'error');
+}
+
+// 🔀 Changement de classe appliqué directement (Directeur) — 08/11/2026
+async function corrChangerClasseUI(esp, i) {
+  var it = (_corrItems[esp] || [])[i]; if (!it) return;
+  var cl = (document.getElementById('corrCl' + esp + '_' + i) || {}).value || '';
+  var st = (document.getElementById('corrSt' + esp + '_' + i) || {}).value || '';
+  var com = ((document.getElementById('corrRep' + esp + '_' + i) || {}).value || '').trim();
+  if (!cl) { showToast('Choisissez la nouvelle classe', 'error'); return; }
+  if (!confirm('Déplacer ' + it.nom + ' de « ' + it.classe + ' » vers « ' + cl + ' » ?' + (st ? '\nStatut : ' + st + ' (la scolarité sera recalculée)' : '\nStatut non choisi : la scolarité ne sera pas recalculée'))) return;
+  showToast('Déplacement en cours…', '');
+  var par = (currentStaff.nom || currentStaff.matricule || 'inconnu') + ' (Directeur)';
+  var r = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action: 'changerClasseCorrection', sheetsId: SHEETS_IDS_2026_2027[currentStaff.ecole], id: it.id, nouvelleClasse: cl, statutAff: st, reponduPar: par, commentaire: com }, 30000);
+  if (r && r.ok) { showToast('✅ ' + r.resume, 'success'); if (typeof invaliderCacheSynthese === 'function') invaliderCacheSynthese(currentStaff.ecole); chargerCorrections(esp); }
+  else showToast('Erreur : ' + ((r && (r.erreur || r.error)) || 'réseau'), 'error');
 }
 
 async function repondreCorrectionUI(esp, i) {
