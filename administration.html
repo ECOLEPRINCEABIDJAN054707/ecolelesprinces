@@ -20380,8 +20380,10 @@ function initCorrectionsAFaire(esp) {
       + '<h3>&#128203; Corrections à faire <span id="corrBadge' + esp + '" style="background:#fff;color:#B71C1C;border-radius:10px;padding:1px 8px;font-size:0.8em;margin-left:6px">…</span></h3><span class="arr">&#9660;</span></div>'
       + '<div class="sec-body"><div style="padding:8px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">'
       + (esp === 'DIR' ? ['MES', 'A FAIRE', 'REPONDU', 'TOUS'] : ['A FAIRE', 'REPONDU', 'TOUS']).map(function (f) { return '<button type="button" data-f="' + f + '" onclick="corrFiltrer(\'' + esp + '\',\'' + f + '\')" class="corrF' + esp + '" style="padding:6px 10px;border:1px solid var(--border);border-radius:16px;background:#fff;cursor:pointer;font-size:0.78em">' + (f === 'MES' ? 'Mes questions' : f === 'A FAIRE' ? 'À faire (tous)' : f === 'REPONDU' ? 'Répondus' : 'Tous') + '</button>'; }).join('')
-      + '<button type="button" onclick="imprimerCorrections(\'' + esp + '\')" style="margin-left:auto;padding:6px 10px;border:none;border-radius:6px;background:#1a3a6b;color:#fff;cursor:pointer;font-size:0.78em;font-weight:700">&#128424;&#65039; Imprimer / PDF</button>'
+      + '<button type="button" onclick="corrOuvrirAjout(\'' + esp + '\')" style="margin-left:auto;padding:6px 10px;border:none;border-radius:6px;background:var(--vert);color:#fff;cursor:pointer;font-size:0.78em;font-weight:700">&#10133; Ajouter un cas</button>'
+      + '<button type="button" onclick="imprimerCorrections(\'' + esp + '\')" style="padding:6px 10px;border:none;border-radius:6px;background:#1a3a6b;color:#fff;cursor:pointer;font-size:0.78em;font-weight:700">&#128424;&#65039; Imprimer / PDF</button>'
       + '<button type="button" onclick="chargerCorrections(\'' + esp + '\')" style="padding:6px 10px;border:1px solid var(--border);border-radius:6px;background:#fff;cursor:pointer;font-size:0.78em">&#128260; Actualiser</button></div>'
+      + '<div id="corrAjout' + esp + '" style="display:none;padding:0 12px 10px"></div>'
       + '<div id="corrListe' + esp + '" style="padding:0 12px 12px"></div></div>';
     var hdr = espace.querySelector('.hdr');
     if (hdr && hdr.nextSibling) espace.insertBefore(sec, hdr.nextSibling); else espace.insertBefore(sec, espace.firstChild);
@@ -20399,7 +20401,7 @@ async function chargerCorrections(esp) {
   var b = document.getElementById('corrBadge' + esp);
   if (b) b.textContent = esp === 'DIR' ? _corrItems[esp].filter(function (it) { return it.pour === 'DIRECTEUR' && it.etat === 'A FAIRE'; }).length : r.nbAFaire;
   var zone = document.getElementById('corrZone' + esp);
-  if (zone) zone.style.display = _corrItems[esp].length ? '' : 'none';
+  if (zone) zone.style.display = '';
   _corrAfficher(esp);
 }
 
@@ -20423,7 +20425,7 @@ function _corrAfficher(esp) {
       + (it.etat === 'TRAITE' ? '<div style="font-size:0.8em;color:var(--vert);font-weight:700">&#10004; Traité par la Direction générale</div>' : '')
       + (modifiable ? '<textarea id="corrRep' + esp + '_' + i + '" rows="2" maxlength="600" placeholder="Votre réponse…" style="width:100%;box-sizing:border-box;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.95em"></textarea>'
         + '<div style="display:flex;gap:6px;margin-top:6px;align-items:center">'
-        + (it.statutAff === '?' || !it.statutAff ? '<select id="corrSt' + esp + '_' + i + '" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.9em"><option value="">Statut ?</option><option value="AFF">AFF</option><option value="NAFF">NAFF</option></select>' : '')
+        + '<select id="corrSt' + esp + '_' + i + '" title="Changer le statut met à jour la scolarité" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.9em"><option value="">Statut ?</option><option value="AFF"' + (it.statutAff === 'AFF' ? ' selected' : '') + '>AFF</option><option value="NAFF"' + (it.statutAff === 'NAFF' ? ' selected' : '') + '>NAFF</option></select>'
         + '<button type="button" onclick="repondreCorrectionUI(\'' + esp + '\',' + i + ')" style="margin-left:auto;padding:8px 14px;background:var(--vert);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">' + (it.reponse ? 'Modifier la réponse' : 'Envoyer') + '</button></div>' : '')
       + '</div>';
   }).join('');
@@ -20472,6 +20474,61 @@ function imprimerCorrections(esp) {
   w.document.close();
 }
 
+// ➕ Ajouter un cas (élève supplémentaire) — 08/11/2026
+var CORR_TYPES = [['CLASSE','Classe à vérifier / changer'],['FILIERE','Filière à préciser'],['MONTANT','Montant dû / versé à vérifier'],['PRESENCE','Présence / départ de l\'élève'],['A INSCRIRE','Élève à inscrire dans PSS'],['TRANSFERT','Transfert entre écoles'],['AUTRE','Autre']];
+function corrOuvrirAjout(esp) {
+  var z = document.getElementById('corrAjout' + esp); if (!z) return;
+  if (z.style.display !== 'none') { z.style.display = 'none'; return; }
+  var st = 'width:100%;box-sizing:border-box;padding:8px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;margin-bottom:6px';
+  var pourDefaut = CORR_ROLES[esp];
+  z.innerHTML = '<div style="background:#F1F8E9;border:1.5px solid var(--vert);border-radius:10px;padding:10px">'
+    + '<div style="font-weight:700;color:var(--vert);margin-bottom:6px">&#10133; Nouveau cas à traiter</div>'
+    + '<div style="display:flex;gap:6px"><input id="corrAjMat' + esp + '" placeholder="Matricule (si connu)" style="' + st + ';flex:1" onblur="corrChercherEleve(\'' + esp + '\')">'
+    + '<button type="button" onclick="corrChercherEleve(\'' + esp + '\')" style="margin-bottom:6px;padding:0 10px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer">&#128269;</button></div>'
+    + '<input id="corrAjNom' + esp + '" placeholder="Nom et prénoms *" style="' + st + '">'
+    + '<div style="display:flex;gap:6px"><input id="corrAjCl' + esp + '" placeholder="Classe" style="' + st + ';flex:2">'
+    + '<select id="corrAjSt' + esp + '" style="' + st + ';flex:1"><option value="?">Statut ?</option><option value="AFF">AFF</option><option value="NAFF">NAFF</option></select></div>'
+    + '<select id="corrAjType' + esp + '" style="' + st + '">' + CORR_TYPES.map(function (t) { return '<option value="' + t[0] + '">' + t[1] + '</option>'; }).join('') + '</select>'
+    + '<textarea id="corrAjQ' + esp + '" rows="2" maxlength="600" placeholder="Décrivez le problème ou la question *" style="' + st + '"></textarea>'
+    + '<label style="font-size:0.78em;color:var(--gris)">À traiter par</label>'
+    + '<select id="corrAjPour' + esp + '" style="' + st + '">' + ['DIRECTEUR', 'COMPTABLE', 'EDUCATEUR'].map(function (r) { return '<option value="' + r + '"' + (r === pourDefaut ? ' selected' : '') + '>' + r.charAt(0) + r.slice(1).toLowerCase() + '</option>'; }).join('') + '</select>'
+    + '<div id="corrAjInfo' + esp + '" style="font-size:0.78em;color:var(--gris);margin-bottom:6px"></div>'
+    + '<div style="display:flex;gap:6px"><button type="button" onclick="document.getElementById(\'corrAjout' + esp + '\').style.display=\'none\'" style="flex:1;padding:9px;border:1px solid var(--border);border-radius:8px;background:#fff;cursor:pointer">Annuler</button>'
+    + '<button type="button" onclick="corrEnregistrerAjout(\'' + esp + '\')" style="flex:2;padding:9px;border:none;border-radius:8px;background:var(--vert);color:#fff;font-weight:700;cursor:pointer">Enregistrer le cas</button></div></div>';
+  z.style.display = 'block';
+}
+async function corrChercherEleve(esp) {
+  var mat = ((document.getElementById('corrAjMat' + esp) || {}).value || '').trim().toUpperCase();
+  var info = document.getElementById('corrAjInfo' + esp);
+  if (!mat || mat === window['_corrDerMat' + esp]) return;
+  window['_corrDerMat' + esp] = mat;
+  if (info) info.textContent = 'Recherche de l\'élève…';
+  var r = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action: 'chercherEleveCorrection', sheetsId: SHEETS_IDS_2026_2027[currentStaff.ecole], matricule: mat }, 15000);
+  if (r && r.ok && r.trouve) {
+    document.getElementById('corrAjNom' + esp).value = r.nom || '';
+    document.getElementById('corrAjCl' + esp).value = r.classe || '';
+    if (r.statutAff === 'AFF' || r.statutAff === 'NAFF') document.getElementById('corrAjSt' + esp).value = r.statutAff;
+    if (info) info.innerHTML = '&#9989; Élève trouvé (' + _corrEsc(r.source) + ')' + (r.du !== '' && r.du != null ? ' — Dû ' + _corrEsc(r.du) + ' F / Versé ' + _corrEsc(r.verse) + ' F' : '');
+  } else if (info) info.textContent = 'Matricule introuvable dans la base : complétez le nom et la classe à la main.';
+}
+async function corrEnregistrerAjout(esp) {
+  var v = function (id) { return ((document.getElementById(id + esp) || {}).value || '').trim(); };
+  var nom = v('corrAjNom'), q = v('corrAjQ');
+  if (!nom) { showToast('Indiquez le nom de l\'élève', 'error'); return; }
+  if (!q) { showToast('Décrivez le problème', 'error'); return; }
+  var roleLabels = { DIR: 'Directeur', COM: 'Comptable', EDU: 'Educateur' };
+  var par = (currentStaff.nom || currentStaff.matricule || 'inconnu') + ' (' + roleLabels[esp] + ')';
+  var r = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action: 'ajouterCorrection', sheetsId: SHEETS_IDS_2026_2027[currentStaff.ecole],
+    matricule: v('corrAjMat').toUpperCase(), nom: nom.toUpperCase(), classe: v('corrAjCl').toUpperCase(), statutAff: v('corrAjSt'),
+    type: v('corrAjType'), question: q, pour: v('corrAjPour'), ajoutePar: par }, 20000);
+  if (r && r.ok) {
+    showToast('Cas ' + r.id + ' ajouté' + (r.scolarite ? ' — ' + r.scolarite : ''), 'success');
+    document.getElementById('corrAjout' + esp).style.display = 'none';
+    window['_corrDerMat' + esp] = '';
+    chargerCorrections(esp);
+  } else showToast('Erreur : ' + ((r && (r.erreur || r.error)) || 'réseau'), 'error');
+}
+
 async function repondreCorrectionUI(esp, i) {
   var it = (_corrItems[esp] || [])[i]; if (!it) return;
   var txt = (document.getElementById('corrRep' + esp + '_' + i) || {}).value || '';
@@ -20480,7 +20537,7 @@ async function repondreCorrectionUI(esp, i) {
   var roleLabels = { DIR: 'Directeur', COM: 'Comptable', EDU: 'Educateur' };
   var par = (currentStaff.nom || currentStaff.matricule || 'inconnu') + ' (' + roleLabels[esp] + ')';
   var r = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action: 'repondreCorrection', sheetsId: SHEETS_IDS_2026_2027[currentStaff.ecole], id: it.id, reponse: txt.trim(), reponduPar: par, statutAff: st }, 20000);
-  if (r && r.ok) { showToast('Réponse enregistrée', 'success'); chargerCorrections(esp); }
+  if (r && r.ok) { showToast('Réponse enregistrée' + (r.scolarite ? ' — ' + r.scolarite : ''), 'success'); chargerCorrections(esp); }
   else showToast('Erreur : ' + ((r && (r.erreur || r.error)) || 'réseau'), 'error');
 }
 </script>
