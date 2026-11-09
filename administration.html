@@ -20427,7 +20427,9 @@ function _corrAfficher(esp) {
     var i = (_corrItems[esp] || []).indexOf(it), modifiable = it.etat !== 'TRAITE';
     return '<div style="background:' + (couleurs[it.etat] || '#fff') + ';border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;font-size:0.84em">'
       + '<div style="display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap"><b>' + _corrEsc(it.nom) + '</b><span style="font-size:0.8em;color:var(--gris)">' + _corrEsc(it.id) + ' · ' + _corrEsc(it.type) + (esp === 'DIR' ? ' · pour ' + _corrEsc(it.pour) : '') + '</span></div>'
-      + '<div style="color:var(--gris);font-size:0.85em;margin:2px 0 6px">' + (it.matricule ? _corrEsc(it.matricule) + ' · ' : '') + _corrEsc(it.classe) + ' · Statut : <b>' + _corrEsc(it.statutAff || '?') + '</b></div>'
+      + '<div style="color:var(--gris);font-size:0.85em;margin:2px 0 6px">' + (it.matricule ? _corrEsc(it.matricule) + ' · ' : '') + 'Statut : <b>' + _corrEsc(it.statutAff || '?') + '</b></div>'
+      + '<div style="background:#E3F2FD;border-left:3px solid #1565C0;border-radius:6px;padding:5px 8px;margin-bottom:4px;font-size:0.85em">&#128203; <b>Liste manuscrite :</b> ' + _corrEsc(it.classe || 'classe non précisée') + '</div>'
+      + (it.ou ? '<div style="background:' + ({ ok: '#E8F5E9', attention: '#FFF8E1', introuvable: '#FDECEA' }[it.ouNiveau] || '#F5F5F5') + ';border-left:3px solid ' + ({ ok: '#2E7D32', attention: '#F9A825', introuvable: '#C62828' }[it.ouNiveau] || '#999') + ';border-radius:6px;padding:5px 8px;margin-bottom:6px;font-size:0.85em">&#128269; <b>Dans PSS :</b> ' + _corrEsc(it.ou) + '</div>' : '')
       + '<div style="margin-bottom:8px">' + _corrEsc(it.question) + '</div>'
       + (it.reponse ? '<div style="background:#fff;border-left:3px solid var(--vert);padding:6px 8px;margin-bottom:6px"><b>Réponse :</b> ' + _corrEsc(it.reponse) + '<div style="font-size:0.8em;color:var(--gris)">' + _corrEsc(it.reponduPar) + ' — ' + _corrEsc(it.dateReponse) + '</div></div>' : '')
       + (it.etat === 'TRAITE' ? '<div style="font-size:0.8em;color:var(--vert);font-weight:700">&#10004; Traité par la Direction générale</div>' : '')
@@ -20452,19 +20454,20 @@ function imprimerCorrections(esp) {
   var items = (_corrItems[esp] || []).filter(function (it) { return it.etat !== 'TRAITE' && (f === 'TOUS' || (f === 'MES' ? it.pour === 'DIRECTEUR' : it.etat === f)); });
   if (!items.length) { showToast('Rien à imprimer', 'error'); return; }
   var parClasse = {};
-  items.forEach(function (it) { var c = (!it.classe || /^\?/.test(it.classe)) ? 'CLASSE NON PRÉCISÉE' : it.classe; (parClasse[c] = parClasse[c] || []).push(it); });
+  items.forEach(function (it) { var c = (it.classe && !/^\?/.test(it.classe)) ? it.classe : (it.classeTrouvee || 'CLASSE NON PRÉCISÉE'); (parClasse[c] = parClasse[c] || []).push(it); });
   var classes = Object.keys(parClasse).sort(function (a, b) { return a.localeCompare(b, 'fr'); });
   var roleLabels = { DIR: 'Directeur', COM: 'Comptable', EDU: 'Éducateur' };
   var titreFiltre = { MES: 'Questions du Directeur', 'A FAIRE': 'Points à faire', REPONDU: 'Points répondus', TOUS: 'Tous les points' }[f];
   var date = new Date().toLocaleDateString('fr-FR');
   var n = 0, corps = '';
   classes.forEach(function (c) {
-    corps += '<h3>' + _corrEsc(c) + ' <span>(' + parClasse[c].length + ' cas à traiter)</span></h3>'
-      + '<table><thead><tr><th style="width:4%">N°</th><th style="width:11%">Matricule</th><th style="width:20%">Nom et prénoms</th><th style="width:6%">Statut</th><th style="width:29%">Question</th><th style="width:30%">Réponse / constat en classe</th></tr></thead><tbody>'
+    corps += '<h3>' + _corrEsc(c) + ' <span>(' + parClasse[c].length + ' cas à traiter — classe relevée sur la liste manuscrite)</span></h3>'
+      + '<table><thead><tr><th style="width:3%">N°</th><th style="width:9%">Matricule</th><th style="width:16%">Nom et prénoms</th><th style="width:5%">Statut</th><th style="width:19%">Dans PSS (à comparer à la liste)</th><th style="width:23%">Question</th><th style="width:25%">Réponse / constat en classe</th></tr></thead><tbody>'
       + parClasse[c].map(function (it) {
           n++;
           return '<tr><td style="text-align:center">' + n + '</td><td>' + _corrEsc(it.matricule || '—') + '</td><td><b>' + _corrEsc(it.nom) + '</b><div class="id">' + _corrEsc(it.id) + ' · ' + _corrEsc(it.type) + (esp === 'DIR' && f !== 'MES' ? ' · ' + _corrEsc(it.pour) : '') + '</div></td>'
             + '<td style="text-align:center">' + _corrEsc(it.statutAff || '?') + (it.statutAff === '?' || !it.statutAff ? '<div class="id">AFF □ NAFF □</div>' : '') + '</td>'
+            + '<td style="font-size:9.5px">' + (it.ouNiveau === 'introuvable' ? '<b>' : '') + _corrEsc(it.ou || '—') + (it.ouNiveau === 'introuvable' ? '</b>' : '') + '</td>'
             + '<td>' + _corrEsc(it.question) + '</td><td>' + (it.reponse ? '<div class="id">Déjà répondu : ' + _corrEsc(it.reponse) + '</div>' : '') + '</td></tr>';
         }).join('')
       + '</tbody></table>';
