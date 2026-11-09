@@ -6665,11 +6665,19 @@ function ouvrirModalBulletin(idx){
   document.getElementById('modalBulletinInfo').innerHTML='<div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:0.82em;line-height:2;margin-bottom:10px"><b>Classe:</b> '+b.classe+' | <b>Mois:</b> '+_libMoisPrim(b.mois)+'<br><b>Eleves:</b> '+(b.nb||0)+'</div>';
   document.getElementById('modalBulletin').style.display='flex';
 }
+// 🔒 09/11/2026 — anti double validation : un seul envoi à la fois, bouton grisé jusqu'à la réponse
+var _bulValEnCours=false;
+function _bulValBouton(actif){const bt=document.querySelector('#modalBulletin button[onclick^="confirmerValidationBulletin"]');if(!bt)return;bt.disabled=!actif;bt.style.opacity=actif?'':'0.55';bt.style.cursor=actif?'':'not-allowed';bt.textContent=actif?'Valider et publier':'Validation en cours…';}
 function confirmerValidationBulletin(){
-  if(!bulletinEnCours)return;const b=bulletinEnCours;
+  if(!bulletinEnCours)return;
+  if(_bulValEnCours){showToast('Validation déjà en cours, patientez…','');return;}
+  _bulValEnCours=true;_bulValBouton(false);
+  const b=bulletinEnCours;
+  const fin=()=>{_bulValEnCours=false;_bulValBouton(true);};
   const cbName='bul_val_'+Date.now();const script=document.createElement('script');
-  window[cbName]=data=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(data&&data.ok){showToast('Bulletin valide !','success');document.getElementById('modalBulletin').style.display='none';bulletinEnCours=null;setTimeout(chargerBulletinsPrimaire,1500);}else showToast('Erreur','error');};
-  script.onerror=()=>{delete window[cbName];showToast('Erreur reseau','error');};
+  window[cbName]=data=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}fin();if(data&&data.ok){showToast(data.dejaValide?(data.message||'Déjà validé'):'Bulletin valide !','success');document.getElementById('modalBulletin').style.display='none';bulletinEnCours=null;setTimeout(chargerBulletinsPrimaire,1500);}else showToast('Erreur'+(data&&(data.message||data.error)?' : '+(data.message||data.error):''),'error');};
+  script.onerror=()=>{delete window[cbName];fin();showToast('Erreur reseau — vérifiez la liste avant de revalider','error');setTimeout(chargerBulletinsPrimaire,1500);};
+  setTimeout(()=>{if(window[cbName]){delete window[cbName];fin();showToast('Réponse lente — la liste est rechargée : si la classe n\'y est plus, elle est validée','error');setTimeout(chargerBulletinsPrimaire,500);}},90000);
   script.src=APPS_SCRIPT_POINTAGE+'?callback='+cbName+'&type=VALIDER_BULLETIN_PRIMAIRE&ecole='+encodeURIComponent(currentStaff.ecole||'')+'&classe='+encodeURIComponent(b.classe||'')+'&mois='+encodeURIComponent(b.mois||'')+'&annee='+encodeURIComponent(b.annee||'2026-2027');
   document.body.appendChild(script);showToast('Validation en cours...','');
 }
