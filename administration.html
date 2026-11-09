@@ -20398,7 +20398,10 @@ function initCorrectionsAFaire(esp) {
 async function chargerCorrections(esp) {
   var liste = document.getElementById('corrListe' + esp); if (!liste) return;
   liste.innerHTML = '<p style="text-align:center;color:var(--gris);font-size:0.82em;padding:14px">Chargement…</p>';
-  var r = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action: 'getCorrectionsAFaire', sheetsId: SHEETS_IDS_2026_2027[currentStaff.ecole], role: CORR_ROLES[esp] }, 20000);
+  var sid = SHEETS_IDS_2026_2027[currentStaff.ecole];
+  // 1) liste rapide (sans la recherche « Dans PSS »), 2) recherche « Dans PSS » ensuite, sans bloquer
+  var r = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action: 'getCorrectionsAFaire', sheetsId: sid, role: CORR_ROLES[esp] + '|SANSOU' }, 30000);
+  if (r && r.ok) setTimeout(function () { _corrChargerOu(esp, sid); }, 50);
   if (!r || !r.ok) { liste.innerHTML = '<p style="color:var(--rouge);font-size:0.82em;padding:10px">Erreur : ' + _corrEsc((r && (r.erreur || r.error)) || 'réseau') + '</p>'; return; }
   _corrItems[esp] = r.items || [];
   if (esp === 'DIR' && !(window._corrClasses && window._corrClasses[currentStaff.ecole])) {
@@ -20410,6 +20413,18 @@ async function chargerCorrections(esp) {
   if (b) b.textContent = esp === 'DIR' ? _corrItems[esp].filter(function (it) { return it.pour === 'DIRECTEUR' && it.etat === 'A FAIRE'; }).length : r.nbAFaire;
   var zone = document.getElementById('corrZone' + esp);
   if (zone) zone.style.display = '';
+  _corrAfficher(esp);
+}
+
+async function _corrChargerOu(esp, sid) {
+  var r = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action: 'getCorrectionsAFaire', sheetsId: sid, role: CORR_ROLES[esp] }, 120000);
+  if (sid !== SHEETS_IDS_2026_2027[currentStaff.ecole]) return;   // l'utilisateur a changé d'école entre-temps
+  var parId = {}; ((r && r.ok && r.items) || []).forEach(function (it) { parId[it.id] = it; });
+  (_corrItems[esp] || []).forEach(function (it) {
+    var o = parId[it.id];
+    if (o) { it.ou = o.ou; it.ouNiveau = o.ouNiveau; it.classeTrouvee = o.classeTrouvee; }
+    else if (!(r && r.ok)) { it.ou = 'Recherche dans PSS indisponible (' + ((r && (r.erreur || r.error)) || 'délai dépassé') + ') — cliquez sur Actualiser'; it.ouNiveau = 'attention'; }
+  });
   _corrAfficher(esp);
 }
 
@@ -20429,6 +20444,7 @@ function _corrAfficher(esp) {
       + '<div style="display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap"><b>' + _corrEsc(it.nom) + '</b><span style="font-size:0.8em;color:var(--gris)">' + _corrEsc(it.id) + ' · ' + _corrEsc(it.type) + (esp === 'DIR' ? ' · pour ' + _corrEsc(it.pour) : '') + '</span></div>'
       + '<div style="color:var(--gris);font-size:0.85em;margin:2px 0 6px">' + (it.matricule ? _corrEsc(it.matricule) + ' · ' : '') + 'Statut : <b>' + _corrEsc(it.statutAff || '?') + '</b></div>'
       + '<div style="background:#E3F2FD;border-left:3px solid #1565C0;border-radius:6px;padding:5px 8px;margin-bottom:4px;font-size:0.85em">&#128203; <b>Liste manuscrite :</b> ' + _corrEsc(it.classe || 'classe non précisée') + '</div>'
+      + (!it.ou ? '<div style="font-size:0.78em;color:var(--gris);margin-bottom:4px">&#128269; Recherche dans PSS en cours…</div>' : '')
       + (it.ou ? '<div style="background:' + ({ ok: '#E8F5E9', attention: '#FFF8E1', introuvable: '#FDECEA' }[it.ouNiveau] || '#F5F5F5') + ';border-left:3px solid ' + ({ ok: '#2E7D32', attention: '#F9A825', introuvable: '#C62828' }[it.ouNiveau] || '#999') + ';border-radius:6px;padding:5px 8px;margin-bottom:6px;font-size:0.85em">&#128269; <b>Dans PSS :</b> ' + _corrEsc(it.ou) + '</div>' : '')
       + '<div style="margin-bottom:8px">' + _corrEsc(it.question) + '</div>'
       + (it.reponse ? '<div style="background:#fff;border-left:3px solid var(--vert);padding:6px 8px;margin-bottom:6px"><b>Réponse :</b> ' + _corrEsc(it.reponse) + '<div style="font-size:0.8em;color:var(--gris)">' + _corrEsc(it.reponduPar) + ' — ' + _corrEsc(it.dateReponse) + '</div></div>' : '')
