@@ -6385,7 +6385,7 @@ function afficherDir(s){
   chargerSuiviPedagogique();setTimeout(initSaisiePedago,500);setTimeout(function(){chargerCoursJourDir(s);},600);
 setTimeout(function(){chargerMasseSalarialeDir(s.ecole);},600);
   setTimeout(function(){initCorrectionsAFaire('DIR');},900);
-  setTimeout(function(){initProgrammeDevex('DIR');},1100);   // 08/11/2026 — Programme des devoirs des classes d'examen   // 08/11/2026 — Corrections à faire
+  setTimeout(function(){initProgrammeDevex('DIR');},1100); setTimeout(function(){initExamenBlancBT('DIR');},1300);   // 09/11/2026 — Examen blanc TECH/PRO   // 08/11/2026 — Programme des devoirs des classes d'examen   // 08/11/2026 — Corrections à faire
   setTimeout(function(){chargerRecepParentsDir(s.ecole);},700);
   let hag='';AGENDA_DEMO.forEach(a=>{hag+='<div class="agenda-item"><div class="agenda-date" style="background:'+a.col+'"><div class="jour">'+a.jour+'</div><div class="mois">'+a.mois+'</div></div><div><div class="agenda-titre">'+a.titre+'</div><div class="agenda-detail">'+a.detail+'</div></div></div>';});
   document.getElementById('dirAgendaBody').innerHTML=hag;
@@ -9128,7 +9128,7 @@ peuplerClassesReellesCom(s.ecole);
 setTimeout(function(){chargerAffectationTousCom();},700);
   setTimeout(function(){chargerMasseSalarialeCom(s.ecole);},600);
   setTimeout(function(){initCorrectionsAFaire('COM');},900);
-  setTimeout(function(){initProgrammeDevex('COM');},1100);   // 08/11/2026 — Programme des devoirs des classes d'examen   // 08/11/2026 — Corrections à faire
+  setTimeout(function(){initProgrammeDevex('COM');},1100); setTimeout(function(){initExamenBlancBT('COM');},1300);   // 09/11/2026 — Examen blanc TECH/PRO   // 08/11/2026 — Programme des devoirs des classes d'examen   // 08/11/2026 — Corrections à faire
   remplirMoisCom();
   chargerResultatsEtMessages(s.ecole,'COM');
   setTimeout(function(){initAnnonces('COM');},800);
@@ -9498,7 +9498,7 @@ function afficherEdu(s){
   chargerResultatsEtMessages(s.ecole,'EDU');
   setTimeout(function(){initAnnonces('EDU');},800);
   setTimeout(function(){initCorrectionsAFaire('EDU');},900);
-  setTimeout(function(){initProgrammeDevex('EDU');},1100);   // 08/11/2026 — Programme des devoirs des classes d'examen   // 08/11/2026 — Corrections à faire
+  setTimeout(function(){initProgrammeDevex('EDU');},1100); setTimeout(function(){initExamenBlancBT('EDU');},1300);   // 09/11/2026 — Examen blanc TECH/PRO   // 08/11/2026 — Programme des devoirs des classes d'examen   // 08/11/2026 — Corrections à faire
   chargerAbsencesElevesSigne(s.ecole, s.classes||[]);
   chargerPresencesEnseignants(s.ecole);
   setTimeout(function(){chargerAppelsEdu(s.ecole);},600);
@@ -20657,6 +20657,117 @@ function imprimerProgrammeDevex(esp) {
     + '<div class="np"><button onclick="window.print()" style="background:#000;color:#fff;border:none;padding:9px 18px;font-weight:bold;border-radius:4px;cursor:pointer">Imprimer / PDF</button></div>'
     + '<h1>' + _dvxEsc(currentStaff.label || currentStaff.ecole) + ' — PROGRAMME DE DEVOIRS DES ÉLÈVES EN CLASSE D\'EXAMEN</h1>'
     + '<div class="s">Année scolaire 2026-2027</div>' + _dvxTableau(ep, true) + '</body></html>');
+  w.document.close();
+}
+</script>
+
+<script>
+// ============================================================
+// 📝 EXAMEN BLANC CPP TECH / CPP PRO (23-28/11/2026) — Directeur / Éducateur / Comptable — 09/11/2026
+// Programme, listes de porte par salle, feuilles d'émargement par salle et par épreuve, salle réelle modifiable.
+// Données : onglets EXAMEN_BLANC_BT et EXAMEN_BLANC_BT_CANDIDATS (serveur des enseignants, type EBT_DONNEES).
+// ============================================================
+var _ebt = {};
+function _ebtEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function _ebtDate(d) { var m = String(d).match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? m[3] + m[2] + m[1] : String(d); }
+function _ebtSalles(esp) {
+  var d = _ebt[esp], s = {};
+  d.candidats.forEach(function (c) {
+    var o = s[c.salle] = s[c.salle] || { salle: c.salle, reelle: c.salleReelle, eleves: [], classes: {} };
+    o.eleves.push(c); o.classes[c.classe] = (o.classes[c.classe] || 0) + 1; if (c.salleReelle) o.reelle = c.salleReelle;
+  });
+  return Object.keys(s).sort().map(function (k) { return s[k]; });
+}
+async function initExamenBlancBT(esp) {
+  var zoneId = 'ebtZone' + esp, ancienne = document.getElementById(zoneId);
+  if (!currentStaff || !/^CPP (PRO|TECH)$/.test(currentStaff.ecole || '')) { if (ancienne) ancienne.remove(); return; }
+  var r = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'EBT_DONNEES', ecole: currentStaff.ecole }, 30000);
+  if (!r || !r.ok || !r.actif) { if (ancienne) ancienne.remove(); return; }
+  _ebt[esp] = r;
+  var espace = document.getElementById({ DIR: 'espaceDir', COM: 'espaceCom', EDU: 'espaceEdu' }[esp]); if (!espace) return;
+  var sec = ancienne || document.createElement('div');
+  sec.className = 'section'; sec.id = zoneId;
+  var salles = _ebtSalles(esp);
+  var bt = function (txt, js, coul) { return '<button type="button" onclick="' + js + '" style="padding:8px 11px;border:none;border-radius:7px;background:' + coul + ';color:#fff;font-weight:700;cursor:pointer;font-size:0.78em">' + txt + '</button>'; };
+  sec.innerHTML = '<div class="sec-head" style="background:#6A1B9A;color:#fff" onclick="toggleSec(this)"><h3>&#128221; Examen blanc — 23 au 28 novembre</h3><span class="arr">&#9660;</span></div>'
+    + '<div class="sec-body"><div style="padding:8px 12px">'
+    + '<div style="font-size:0.78em;color:var(--gris);margin-bottom:8px">' + r.candidats.length + ' candidats · ' + salles.length + ' salles · ' + r.epreuves.length + ' épreuves. Remplissez la <b>salle réelle</b> puis imprimez les documents.</div>'
+    + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">'
+    + bt('&#128197; Programme', "ebtImprimer('" + esp + "','PROG')", '#1a3a6b')
+    + bt('&#128682; Listes de porte', "ebtImprimer('" + esp + "','PORTE')", '#2E7D32')
+    + bt('&#9997;&#65039; Émargement', "ebtImprimer('" + esp + "','EMARG')", '#6A1B9A')
+    + '<select id="ebtSalleF' + esp + '" style="padding:7px;border:1.5px solid var(--border);border-radius:7px;font-size:0.8em"><option value="">Toutes les salles</option>'
+    + salles.map(function (s) { return '<option value="' + _ebtEsc(s.salle) + '">' + _ebtEsc(s.salle) + '</option>'; }).join('') + '</select></div>'
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.78em"><thead><tr style="background:#F3E5F5">'
+    + '<th style="padding:6px;text-align:left">Salle</th><th style="padding:6px;text-align:left">Classes</th><th style="padding:6px">Élèves</th><th style="padding:6px">N° de table</th><th style="padding:6px;text-align:left">Salle réelle</th></tr></thead><tbody>'
+    + salles.map(function (s, i) {
+        var t = s.eleves.map(function (e) { return e.table; }).sort();
+        return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:6px;font-weight:700">' + _ebtEsc(s.salle) + '</td>'
+          + '<td style="padding:6px">' + Object.keys(s.classes).map(function (c) { return _ebtEsc(c) + ' (' + s.classes[c] + ')'; }).join('<br>') + '</td>'
+          + '<td style="padding:6px;text-align:center">' + s.eleves.length + '</td><td style="padding:6px;text-align:center;white-space:nowrap">' + t[0] + ' → ' + t[t.length - 1] + '</td>'
+          + '<td style="padding:6px;white-space:nowrap"><input id="ebtR' + esp + '_' + i + '" value="' + _ebtEsc(s.reelle || '') + '" placeholder="ex : Salle 12" maxlength="40" style="width:110px;padding:5px;border:1.5px solid var(--border);border-radius:6px">'
+          + ' <button type="button" onclick="ebtEnregistrerSalle(\'' + esp + '\',' + i + ')" style="padding:5px 8px;border:none;border-radius:6px;background:var(--vert);color:#fff;font-weight:700;cursor:pointer">OK</button></td></tr>';
+      }).join('') + '</tbody></table></div></div></div>';
+  if (!ancienne) {
+    var apres = document.getElementById('devexZone' + esp) || document.getElementById('corrZone' + esp) || espace.querySelector('.hdr');
+    if (apres && apres.nextSibling) espace.insertBefore(sec, apres.nextSibling); else espace.appendChild(sec);
+  }
+}
+async function ebtEnregistrerSalle(esp, i) {
+  var s = _ebtSalles(esp)[i], inp = document.getElementById('ebtR' + esp + '_' + i); if (!s || !inp) return;
+  var r = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'EBT_SALLE_REELLE', ecole: currentStaff.ecole, salle: s.salle, valeur: inp.value.trim(), par: currentStaff.nom || '' }, 30000);
+  if (r && r.ok) { _ebt[esp].candidats.forEach(function (c) { if (c.salle === s.salle) c.salleReelle = inp.value.trim(); }); showToast('Salle ' + s.salle + ' : « ' + (inp.value.trim() || '—') + ' » enregistrée', 'success'); }
+  else showToast('Erreur : ' + ((r && r.error) || 'réseau'), 'error');
+}
+function ebtImprimer(esp, quoi) {
+  var d = _ebt[esp]; if (!d) return;
+  var filtre = (document.getElementById('ebtSalleF' + esp) || {}).value || '';
+  var salles = _ebtSalles(esp).filter(function (s) { return !filtre || s.salle === filtre; });
+  var nomSalle = function (s) { return 'Salle ' + s.salle + (s.reelle ? ' — ' + s.reelle : ''); };
+  var ecole = currentStaff.label || currentStaff.ecole;
+  var titre = { PROG: 'PROGRAMME', PORTE: 'LISTE DES CANDIDATS', EMARG: 'FEUILLE D\'ÉMARGEMENT' }[quoi];
+  var corps = '', bord = 'border:1px solid #000;padding:5px';
+  var entete = function (sous) { return '<div class="ent"><b>' + _ebtEsc(ecole) + '</b><br>EXAMEN BLANC — 23 au 28 novembre 2026<h1>' + titre + '</h1>' + (sous ? '<div class="sous">' + sous + '</div>' : '') + '</div>'; };
+  if (quoi === 'PROG') {
+    var classes = {}; d.epreuves.forEach(function (e) { (classes[e.classe] = classes[e.classe] || []).push(e); });
+    var cl = Object.keys(classes).sort();
+    if (filtre) { var dans = {}; salles.forEach(function (s) { Object.keys(s.classes).forEach(function (c) { dans[c] = 1; }); }); cl = cl.filter(function (c) { return dans[c]; }); }
+    cl.forEach(function (c, k) {
+      var l = classes[c].sort(function (a, b) { return (_ebtDate(a.date) + a.debut).localeCompare(_ebtDate(b.date) + b.debut); });
+      var salleC = _ebtSalles(esp).filter(function (s) { return s.classes[c]; }).map(nomSalle).join(' · ');
+      corps += '<div class="page' + (k ? ' saut' : '') + '">' + entete(_ebtEsc(c) + ' — ' + (l[0] ? l[0].effectif : '') + ' candidats — ' + _ebtEsc(salleC))
+        + '<table><tr><th style="' + bord + '">Jour</th><th style="' + bord + '">Heure</th><th style="' + bord + '">Épreuve</th><th style="' + bord + '">Coef</th><th style="' + bord + '">Professeur(s)</th></tr>'
+        + l.map(function (e) { return '<tr><td style="' + bord + '">' + e.jour + ' ' + e.date + '</td><td style="' + bord + ';white-space:nowrap">' + e.debut.replace(':', 'h') + ' - ' + e.fin.replace(':', 'h') + '</td><td style="' + bord + '"><b>' + _ebtEsc(e.epreuve) + '</b>' + (e.fond ? ' ★' : '') + '</td><td style="' + bord + ';text-align:center">' + e.coef + '</td><td style="' + bord + '">' + _ebtEsc(e.profs) + '</td></tr>'; }).join('')
+        + '</table><div class="note">★ matière fondamentale. Se présenter 15 minutes avant chaque épreuve, avec sa carte et son matériel. La copie porte uniquement le N° de table.</div></div>';
+    });
+  } else if (quoi === 'PORTE') {
+    salles.forEach(function (s, k) {
+      corps += '<div class="page' + (k ? ' saut' : '') + '">' + entete('<span style="font-size:22px"><b>' + _ebtEsc(nomSalle(s)) + '</b></span><br>' + s.eleves.length + ' candidats · ' + Object.keys(s.classes).map(function (c) { return _ebtEsc(c); }).join(' + '))
+        + '<table class="gros"><tr><th style="' + bord + '">N° de table</th><th style="' + bord + '">Nom et prénoms</th><th style="' + bord + '">Classe</th></tr>'
+        + s.eleves.map(function (e) { return '<tr><td style="' + bord + ';text-align:center;font-weight:700">' + e.table + '</td><td style="' + bord + '">' + _ebtEsc(e.nom) + '</td><td style="' + bord + '">' + _ebtEsc(e.classe) + '</td></tr>'; }).join('') + '</table></div>';
+    });
+  } else {
+    var k = 0;
+    salles.forEach(function (s) {
+      var seances = {};
+      d.epreuves.forEach(function (e) { if (!s.classes[e.classe]) return; var cle = _ebtDate(e.date) + e.debut + '¤' + e.epreuve; (seances[cle] = seances[cle] || { e: e, classes: {} }).classes[e.classe] = 1; });
+      Object.keys(seances).sort().forEach(function (cle) {
+        var se = seances[cle], e = se.e, el = s.eleves.filter(function (c) { return se.classes[c.classe]; });
+        corps += '<div class="page' + (k++ ? ' saut' : '') + '">' + entete('<b>' + _ebtEsc(nomSalle(s)) + '</b> · ' + e.jour + ' ' + e.date + ' · ' + e.debut.replace(':', 'h') + ' - ' + e.fin.replace(':', 'h') + '<br><span style="font-size:15px"><b>' + _ebtEsc(e.epreuve) + '</b></span> · ' + Object.keys(se.classes).map(_ebtEsc).join(' + ') + ' · ' + el.length + ' candidats')
+          + '<table><tr><th style="' + bord + ';width:12%">N° table</th><th style="' + bord + ';width:38%">Nom et prénoms</th><th style="' + bord + ';width:14%">Classe</th><th style="' + bord + ';width:18%">Signature (entrée)</th><th style="' + bord + ';width:18%">Signature (remise de copie)</th></tr>'
+          + el.map(function (c) { return '<tr style="height:30px"><td style="' + bord + ';text-align:center;font-weight:700">' + c.table + '</td><td style="' + bord + '">' + _ebtEsc(c.nom) + '</td><td style="' + bord + ';font-size:10px">' + _ebtEsc(c.classe) + '</td><td style="' + bord + '"></td><td style="' + bord + '"></td></tr>'; }).join('')
+          + '</table><div class="pied"><div>Présents : ........ &nbsp; Absents : ........ &nbsp; Copies remises : ........</div><div>Surveillant : ......................................... Signature :</div></div></div>';
+      });
+    });
+  }
+  if (!corps) { showToast('Rien à imprimer', 'error'); return; }
+  var w = window.open('', '_blank'); if (!w) { showToast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Examen blanc — ' + titre + ' — ' + _ebtEsc(currentStaff.ecole) + '</title><style>'
+    + 'body{font-family:Arial,sans-serif;margin:0;padding:12px;color:#000;font-size:12px}.ent{text-align:center;margin-bottom:10px}.ent h1{font-size:17px;margin:6px 0 2px}.sous{font-size:12px}'
+    + 'table{width:100%;border-collapse:collapse}th{background:#ddd}.gros td{font-size:14px;padding:7px}.note{font-size:10px;margin-top:8px}.pied{display:flex;justify-content:space-between;margin-top:14px;font-size:11px}'
+    + '.np{background:#f5f5f5;padding:10px;border-bottom:3px solid #000;margin-bottom:10px;text-align:center}@media print{.np{display:none}.saut{page-break-before:always}@page{size:A4 portrait;margin:10mm}}</style></head><body>'
+    + '<div class="np"><button onclick="window.print()" style="background:#000;color:#fff;border:none;padding:9px 18px;font-weight:bold;border-radius:4px;cursor:pointer">Imprimer / PDF</button></div>'
+    + corps + '</body></html>');
   w.document.close();
 }
 </script>
