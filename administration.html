@@ -5955,7 +5955,11 @@ function mettreAJourLiensOutilsPedago(prefixe) {
 }
   let currentStaff=null,donneesPointage=[],coursEnAttente=[],coursCourant=null,bulletinEnCours=null,tentativesPin=0,donneesSheetPeda=[],donneesResultats=[],donneesMessages=[],donneesElevesSheets=[],appelDir={};
 let notesTypeCourant='',notesClasseChoisie='',notesMatieresChoisies=[],notesElevesCache={};
-function getTarif(ecole,classe){const t=TARIFS[ecole]||TARIF_DEFAUT;return/^(2NDE|1[EÈ]RE|TLE|TERMINALE)/i.test(classe||'')?t.lycee:t.college;}
+// 10/11/2026 — taux horaire individuel (TARIFS_PERSONNELS du serveur) prioritaire sur le tarif de l'école
+window._tarifsPerso=window._tarifsPerso||{};
+async function _chargerTarifsPerso(ecole){if(!ecole||window._tarifsPerso[ecole])return;try{const r=await appelJSONP(APPS_SCRIPT_POINTAGE,{type:'TARIFS_PERSO',ecole:ecole},15000);if(r&&r.ok)window._tarifsPerso[ecole]=r.tarifs||[];}catch(e){}}
+function _tarifPerso(ecole,prof,date){const l=window._tarifsPerso[ecole];if(!l||!prof)return 0;const n=v=>String(v||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z]/g,'');const p=n(prof);let d=String(date||'');const m=d.match(/(\d{2})\/(\d{2})\/(\d{4})/);d=m?m[3]+'-'+m[2]+'-'+m[1]:d.slice(0,10);let best=0,bestD='';l.forEach(t=>{if(n(t.nom)===p&&(!d||!t.depuis||t.depuis<=d)&&t.depuis>=bestD){best=Number(t.taux)||0;bestD=t.depuis||'';}});return best;}
+function getTarif(ecole,classe,prof,date){const tp=_tarifPerso(ecole,prof,date);if(tp>0)return tp;const t=TARIFS[ecole]||TARIF_DEFAUT;return/^(2NDE|1[EÈ]RE|TLE|TERMINALE|[123]A\s*BT)/i.test(classe||'')?t.lycee:t.college;}
 function calculerSalaireV2(dm, tarif, dureeEDT){   var SEUIL_ATTENTE = 50;   var dureeRetenue = (dureeEDT && dureeEDT > 0) ? Math.min(dm, dureeEDT) : dm;   var heuresCompletes = Math.floor(dureeRetenue / 60);   var resteMin = dureeRetenue % 60;   var heuresValidees = heuresCompletes;   if (resteMin >= SEUIL_ATTENTE) heuresValidees += 1;   var salaire = heuresValidees * tarif;   return {heuresValidees: heuresValidees, resteMin: resteMin, salaire: salaire, salPartiel: 0}; }
 function toDate(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>40000){const d=new Date(Math.round((n-25569)*86400*1000));return d.getUTCDate().toString().padStart(2,'0')+'/'+(d.getUTCMonth()+1).toString().padStart(2,'0')+'/'+d.getUTCFullYear();}return String(val);}
 function toHeure(val){if(!val)return'';const n=parseFloat(val);if(!isNaN(n)&&n>0&&n<1){const m=Math.round(n*24*60);return Math.floor(m/60).toString().padStart(2,'0')+':'+(m%60).toString().padStart(2,'0');}return String(val).trim();}
@@ -6439,6 +6443,7 @@ async function chargerPointage(){
   if(tb)tb.innerHTML='<div style="text-align:center;padding:24px"><div class="spinner-sm" style="margin:0 auto 10px"></div></div>';
   try{
     const sheetsId=getSheetsIdPourEcole(currentStaff.ecole);if(!sheetsId)return;
+    await _chargerTarifsPerso(currentStaff.ecole);
     const url='https://sheets.googleapis.com/v4/spreadsheets/'+sheetsId+'/values/POINTAGE_MENSUEL!A2:P5000?key='+API_KEY+'&valueRenderOption=UNFORMATTED_VALUE';
     const res=await pssFetch(url);const data=await res.json();
     if(!data.values||!data.values.length){afficherTableauVide();return;}
@@ -6553,7 +6558,7 @@ function afficherAttente(lignes,mois){
   const se=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   se('statAttente',coursEnAttente.length);se('attenteCompteur',coursEnAttente.length+' cours');
   const totalF=coursEnAttente.reduce((s,row)=>{
-    const tarif=getTarif(currentStaff.ecole,String(row[2]||''));
+    const tarif=getTarif(currentStaff.ecole,String(row[2]||''),String(row[4]||''),toDate(row[0]));
     const hAppel=toHeure(row[1]);const hPubli=toHeure(row[7]);
     const dm=hAppel&&hPubli?Math.max(0,parseH(hPubli)-parseH(hAppel)):0;
     const edtD=row[12]?String(row[12]).trim():'';const edtF=row[13]?String(row[13]).trim():'';
@@ -6564,7 +6569,7 @@ function afficherAttente(lignes,mois){
   if(!coursEnAttente.length){const ta=document.getElementById('tableAttente');if(ta)ta.innerHTML='<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Aucun cours en attente</p>';return;}
   let h='<div class="tbl-wrap"><table><thead><tr><th>Date</th><th>Enseignant</th><th>Classe</th><th>Matiere</th><th>Creneau</th><th>Duree faite</th><th>Salaire si valide</th><th>Action</th></tr></thead><tbody>';
   coursEnAttente.forEach((row,idx)=>{
-    const tarif=getTarif(currentStaff.ecole,String(row[2]||''));
+    const tarif=getTarif(currentStaff.ecole,String(row[2]||''),String(row[4]||''),toDate(row[0]));
     const hAppel=toHeure(row[1]);const hPubli=toHeure(row[7]);
     const dm=hAppel&&hPubli?Math.max(0,parseH(hPubli)-parseH(hAppel)):0;
     const edtD=row[12]?String(row[12]).trim():'';const edtF=row[13]?String(row[13]).trim():'';
@@ -6582,7 +6587,7 @@ function _datalistProfsDir(){
 }
 function ouvrirModalAttente(idx){
   coursCourant=coursEnAttente[idx];const row=coursCourant;
-  const tarif=getTarif(currentStaff.ecole,String(row[2]||''));
+  const tarif=getTarif(currentStaff.ecole,String(row[2]||''),String(row[4]||''),toDate(row[0]));
   const hAppel=toHeure(row[1]);const hPubli=toHeure(row[7]);
   const dm=hAppel&&hPubli?Math.max(0,parseH(hPubli)-parseH(hAppel)):0;
   const edtD=row[12]?String(row[12]).trim():'';const edtF=row[13]?String(row[13]).trim():'';
@@ -6634,7 +6639,7 @@ function ouvrirModalAttente(idx){
     if(!ensNom)ensNom='NON IDENTIFIÉ';
     profVide='1';
   }
-  const tarif=getTarif(currentStaff.ecole,String(row[2]||''));
+  const tarif=getTarif(currentStaff.ecole,String(row[2]||''),ensNom,toDate(row[0]));
   const salaire=heures*tarif;
   const decision=heures>0?'VALID\u00C9':'REJET\u00C9';
   const raison=document.getElementById('modalRaison').value||'';
