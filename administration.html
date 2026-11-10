@@ -20689,6 +20689,8 @@ async function initExamenBlancBT(esp) {
   if (!currentStaff || !/^CPP (PRO|TECH)$/.test(currentStaff.ecole || '')) { if (ancienne) ancienne.remove(); return; }
   var r = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'EBT_DONNEES', ecole: currentStaff.ecole }, 30000);
   if (!r || !r.ok || !r.actif) { if (ancienne) ancienne.remove(); return; }
+  var rs = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'EBT_SURVEILLANCES', ecole: currentStaff.ecole }, 30000);   // 10/11/2026
+  r.surv = (rs && rs.ok && rs.surveillances) || []; r.profs = (rs && rs.ok && rs.profs) || [];
   _ebt[esp] = r;
   var espace = document.getElementById({ DIR: 'espaceDir', COM: 'espaceCom', EDU: 'espaceEdu' }[esp]); if (!espace) return;
   var sec = ancienne || document.createElement('div');
@@ -20702,6 +20704,8 @@ async function initExamenBlancBT(esp) {
     + bt('&#128197; Programme', "ebtImprimer('" + esp + "','PROG')", '#1a3a6b')
     + bt('&#128682; Listes de porte', "ebtImprimer('" + esp + "','PORTE')", '#2E7D32')
     + bt('&#9997;&#65039; Émargement', "ebtImprimer('" + esp + "','EMARG')", '#6A1B9A')
+    + (r.surv.length ? bt('&#128065; Surveillants', "ebtImprimer('" + esp + "','SURV')", '#0D47A1') : '')
+    + (r.surv.length && esp !== 'EDU' ? bt('&#128176; État des surveillances', "ebtImprimer('" + esp + "','PAIE')", '#E65100') : '')
     + '<select id="ebtSalleF' + esp + '" style="padding:7px;border:1.5px solid var(--border);border-radius:7px;font-size:0.8em"><option value="">Toutes les salles</option>'
     + salles.map(function (s) { return '<option value="' + _ebtEsc(s.salle) + '">' + _ebtEsc(s.salle) + '</option>'; }).join('') + '</select></div>'
     + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.78em"><thead><tr style="background:#F3E5F5">'
@@ -20713,11 +20717,53 @@ async function initExamenBlancBT(esp) {
           + '<td style="padding:6px;text-align:center">' + s.eleves.length + '</td><td style="padding:6px;text-align:center;white-space:nowrap">' + t[0] + ' → ' + t[t.length - 1] + '</td>'
           + '<td style="padding:6px;white-space:nowrap"><input id="ebtR' + esp + '_' + i + '" value="' + _ebtEsc(s.reelle || '') + '" placeholder="ex : Salle 12" maxlength="40" style="width:110px;padding:5px;border:1.5px solid var(--border);border-radius:6px">'
           + ' <button type="button" onclick="ebtEnregistrerSalle(\'' + esp + '\',' + i + ')" style="padding:5px 8px;border:none;border-radius:6px;background:var(--vert);color:#fff;font-weight:700;cursor:pointer">OK</button></td></tr>';
-      }).join('') + '</tbody></table></div></div></div>';
+      }).join('') + '</tbody></table></div>' + _ebtTableSurv(esp) + '</div></div>';
   if (!ancienne) {
     var apres = document.getElementById('devexZone' + esp) || document.getElementById('corrZone' + esp) || espace.querySelector('.hdr');
     if (apres && apres.nextSibling) espace.insertBefore(sec, apres.nextSibling); else espace.appendChild(sec);
   }
+}
+// ─── Surveillances (10/11/2026) : liste ; le Directeur peut remplacer un surveillant. Paiement MANUEL (montants indicatifs). ───
+function _ebtMin(h) { var m = String(h).match(/(\d{1,2})\s*[:hH]\s*(\d{0,2})/); return m ? (+m[1]) * 60 + (+m[2] || 0) : -1; }
+function _ebtSurvDe(esp, salle, date, debut, fin) {
+  var d = _ebt[esp], a = _ebtMin(debut), b = _ebtMin(fin), vus = {};
+  return ((d && d.surv) || []).filter(function (x) { return x.salle === salle && x.date === date && _ebtMin(x.debut) < b && a < _ebtMin(x.fin); })
+    .map(function (x) { return x.surveillant + (_ebtMin(x.debut) > a || _ebtMin(x.fin) < b ? ' (' + x.debut.replace(':', 'h') + '-' + x.fin.replace(':', 'h') + ')' : ''); })
+    .filter(function (n) { if (vus[n]) return false; vus[n] = 1; return true; });
+}
+function _ebtTableSurv(esp) {
+  var d = _ebt[esp]; if (!d || !d.surv.length) return '';
+  var dir = esp === 'DIR', argent = esp !== 'EDU', total = 0, heures = 0;
+  var l = d.surv.slice().sort(function (a, b) { return (_ebtDate(a.date) + a.debut + a.salle).localeCompare(_ebtDate(b.date) + b.debut + b.salle); });
+  var opts = d.profs.map(function (p) { return '<option value="' + _ebtEsc(p.nom) + '">' + _ebtEsc(p.nom) + ' (' + _ebtEsc(p.ecole.replace('CPP ', '')) + ')</option>'; }).join('');
+  var lignes = l.map(function (x) {
+    total += Number(x.montant) || 0; heures += Number(x.heures) || 0;
+    var modif = /^modifié/.test(x.motif || '');
+    return '<tr style="border-bottom:1px solid var(--border)' + (modif ? ';background:#FFF8E1' : '') + '"><td style="padding:5px;white-space:nowrap">' + _ebtEsc(x.jour.slice(0, 3)) + ' ' + _ebtEsc(x.date.slice(0, 5)) + '<br>' + _ebtEsc(x.debut) + '-' + _ebtEsc(x.fin) + '</td>'
+      + '<td style="padding:5px;font-weight:700">' + _ebtEsc(x.salle) + '</td><td style="padding:5px;font-size:0.92em">' + _ebtEsc(x.epreuves) + '</td>'
+      + '<td style="padding:5px"><b>' + _ebtEsc(x.surveillant) + '</b>' + (x.ecoleSurv && x.ecoleSurv !== currentStaff.ecole ? ' <span style="color:var(--gris)">(' + _ebtEsc(x.ecoleSurv) + ')</span>' : '')
+      + '<div style="font-size:0.85em;color:var(--gris)">' + _ebtEsc(x.motif) + '</div>'
+      + (dir ? '<div style="margin-top:4px;white-space:nowrap"><select id="ebtS' + _ebtEsc(x.id) + '" style="max-width:170px;padding:4px;border:1.5px solid var(--border);border-radius:6px;font-size:0.95em"><option value="">— remplacer par —</option>' + opts + '</select>'
+        + ' <button type="button" onclick="ebtChangerSurv(\'' + esp + '\',\'' + _ebtEsc(x.id) + '\')" style="padding:4px 8px;border:none;border-radius:6px;background:#0D47A1;color:#fff;font-weight:700;cursor:pointer">Changer</button></div>' : '') + '</td>'
+      + '<td style="padding:5px;text-align:center">' + _ebtEsc(x.heures) + ' h</td>'
+      + (argent ? '<td style="padding:5px;text-align:right;white-space:nowrap">' + Number(x.montant || 0).toLocaleString('fr-FR') + ' F</td>' : '') + '</tr>';
+  }).join('');
+  return '<details style="margin-top:12px"><summary style="cursor:pointer;font-weight:700;color:#0D47A1;padding:6px 0">&#128065; Surveillants — ' + l.length + ' créneaux · ' + heures + ' h' + (argent ? ' · ' + total.toLocaleString('fr-FR') + ' F (indicatif, paiement manuel)' : '') + '</summary>'
+    + (dir ? '<div style="font-size:0.75em;color:var(--gris);margin:4px 0 6px">Pour remplacer un surveillant : choisissez le professeur puis « Changer ». Refusé s\'il surveille déjà ailleurs à cette heure. Le taux du nouveau surveillant est repris automatiquement.</div>' : '')
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.76em"><thead><tr style="background:#E3F2FD">'
+    + '<th style="padding:5px;text-align:left">Quand</th><th style="padding:5px;text-align:left">Salle</th><th style="padding:5px;text-align:left">Épreuve(s)</th><th style="padding:5px;text-align:left">Surveillant</th><th style="padding:5px">Heures</th>' + (argent ? '<th style="padding:5px;text-align:right">Montant</th>' : '') + '</tr></thead><tbody>'
+    + lignes + '</tbody></table></div></details>';
+}
+async function ebtChangerSurv(esp, id) {
+  var sel = document.getElementById('ebtS' + id), nouveau = sel ? sel.value : '';
+  if (!nouveau) { showToast('Choisissez le nouveau surveillant', 'error'); return; }
+  var x = (_ebt[esp].surv || []).filter(function (s) { return s.id === id; })[0]; if (!x) return;
+  if (!confirm('Remplacer ' + x.surveillant + ' par ' + nouveau + '\n' + x.jour + ' ' + x.date + ' ' + x.debut + '-' + x.fin + ' — salle ' + x.salle + ' ?')) return;
+  var r = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'EBT_SURV_CHANGER', ecole: currentStaff.ecole, id: id, nouveau: nouveau, par: currentStaff.nom || '' }, 45000);
+  if (!r || !r.ok) { showToast('Refusé : ' + ((r && r.error) || 'réseau'), 'error'); return; }
+  if (!r.inchange) { x.surveillant = r.surveillant; x.ecoleSurv = r.ecoleSurv; x.taux = String(r.taux); x.montant = String(r.montant); x.motif = r.motif; }
+  showToast(id + ' : ' + nouveau + ' enregistré', 'success');
+  initExamenBlancBT(esp);
 }
 async function ebtEnregistrerSalle(esp, i) {
   var s = _ebtSalles(esp)[i], inp = document.getElementById('ebtR' + esp + '_' + i); if (!s || !inp) return;
@@ -20731,7 +20777,7 @@ function ebtImprimer(esp, quoi) {
   var salles = _ebtSalles(esp).filter(function (s) { return !filtre || s.salle === filtre; });
   var nomSalle = function (s) { return 'Salle ' + s.salle + (s.reelle ? ' — ' + s.reelle : ''); };
   var ecole = currentStaff.label || currentStaff.ecole;
-  var titre = { PROG: 'PROGRAMME', PORTE: 'LISTE DES CANDIDATS', EMARG: 'FEUILLE D\'ÉMARGEMENT' }[quoi];
+  var titre = { PROG: 'PROGRAMME', PORTE: 'LISTE DES CANDIDATS', EMARG: 'FEUILLE D\'ÉMARGEMENT', SURV: 'PLANNING DES SURVEILLANTS', PAIE: 'ÉTAT DES SURVEILLANCES' }[quoi];
   var corps = '', bord = 'border:1px solid #000;padding:5px';
   var entete = function (sous) { return '<div class="ent"><b>' + _ebtEsc(ecole) + '</b><br>EXAMEN BLANC — 23 au 28 novembre 2026<h1>' + titre + '</h1>' + (sous ? '<div class="sous">' + sous + '</div>' : '') + '</div>'; };
   if (quoi === 'PROG') {
@@ -20746,6 +20792,21 @@ function ebtImprimer(esp, quoi) {
         + l.map(function (e) { return '<tr><td style="' + bord + '">' + e.jour + ' ' + e.date + '</td><td style="' + bord + ';white-space:nowrap">' + e.debut.replace(':', 'h') + ' - ' + e.fin.replace(':', 'h') + '</td><td style="' + bord + '"><b>' + _ebtEsc(e.epreuve) + '</b>' + (e.fond ? ' ★' : '') + '</td><td style="' + bord + ';text-align:center">' + e.coef + '</td><td style="' + bord + '">' + _ebtEsc(e.profs) + '</td></tr>'; }).join('')
         + '</table><div class="note">★ matière fondamentale. Se présenter 15 minutes avant chaque épreuve, avec sa carte et son matériel. La copie porte uniquement le N° de table.</div></div>';
     });
+  } else if (quoi === 'SURV') {
+    var ls = (d.surv || []).filter(function (x) { return !filtre || x.salle === filtre; })
+      .sort(function (a, b) { return (_ebtDate(a.date) + a.debut + a.salle).localeCompare(_ebtDate(b.date) + b.debut + b.salle); });
+    var reelleDe = {}; _ebtSalles(esp).forEach(function (s) { reelleDe[s.salle] = s.reelle; });
+    corps = '<div class="page">' + entete(filtre ? 'Salle ' + _ebtEsc(filtre) : '') + '<table><tr><th style="' + bord + '">Jour</th><th style="' + bord + '">Heure</th><th style="' + bord + '">Salle</th><th style="' + bord + '">Épreuve(s)</th><th style="' + bord + '">Surveillant</th><th style="' + bord + '">Signature</th></tr>'
+      + ls.map(function (x) { return '<tr style="height:28px"><td style="' + bord + '">' + _ebtEsc(x.jour) + ' ' + _ebtEsc(x.date) + '</td><td style="' + bord + ';white-space:nowrap">' + x.debut.replace(':', 'h') + ' - ' + x.fin.replace(':', 'h') + '</td><td style="' + bord + ';white-space:nowrap"><b>' + _ebtEsc(x.salle) + '</b>' + (reelleDe[x.salle] ? '<br>' + _ebtEsc(reelleDe[x.salle]) : '') + '</td><td style="' + bord + ';font-size:10px">' + _ebtEsc(x.epreuves) + '</td><td style="' + bord + '"><b>' + _ebtEsc(x.surveillant) + '</b></td><td style="' + bord + ';width:16%"></td></tr>'; }).join('')
+      + '</table><div class="note">Être dans la salle 15 minutes avant le début. Faire signer l\'émargement, compter les copies, les remettre sous enveloppe fermée à la Direction.</div></div>';
+  } else if (quoi === 'PAIE') {
+    var parProf = {};
+    (d.surv || []).forEach(function (x) { var p = parProf[x.surveillant] = parProf[x.surveillant] || { nom: x.surveillant, ecole: x.ecoleSurv, h: 0, m: 0, taux: x.taux, l: [] }; p.h += Number(x.heures) || 0; p.m += Number(x.montant) || 0; p.l.push(x.jour.slice(0, 3) + ' ' + x.date.slice(0, 5) + ' ' + x.debut.replace(':', 'h') + '-' + x.fin.replace(':', 'h') + ' ' + x.salle); });
+    var lp = Object.keys(parProf).sort().map(function (k) { return parProf[k]; }), tot = lp.reduce(function (t, p) { return t + p.m; }, 0), th = lp.reduce(function (t, p) { return t + p.h; }, 0);
+    corps = '<div class="page">' + entete('Montants indicatifs — paiement fait manuellement par la Comptabilité') + '<table><tr><th style="' + bord + '">N°</th><th style="' + bord + '">Surveillant</th><th style="' + bord + '">Créneaux</th><th style="' + bord + '">Heures</th><th style="' + bord + '">Taux</th><th style="' + bord + '">Montant</th><th style="' + bord + '">Émargement</th></tr>'
+      + lp.map(function (p, i) { return '<tr style="height:30px"><td style="' + bord + ';text-align:center">' + (i + 1) + '</td><td style="' + bord + '"><b>' + _ebtEsc(p.nom) + '</b>' + (p.ecole && p.ecole !== currentStaff.ecole ? '<br><span style="font-size:10px">' + _ebtEsc(p.ecole) + '</span>' : '') + '</td><td style="' + bord + ';font-size:9.5px">' + p.l.map(_ebtEsc).join('<br>') + '</td><td style="' + bord + ';text-align:center">' + p.h + '</td><td style="' + bord + ';text-align:right">' + Number(p.taux || 0).toLocaleString('fr-FR') + '</td><td style="' + bord + ';text-align:right"><b>' + p.m.toLocaleString('fr-FR') + ' F</b></td><td style="' + bord + ';width:15%"></td></tr>'; }).join('')
+      + '<tr><td colspan="3" style="' + bord + ';text-align:right"><b>TOTAL</b></td><td style="' + bord + ';text-align:center"><b>' + th + '</b></td><td style="' + bord + '"></td><td style="' + bord + ';text-align:right"><b>' + tot.toLocaleString('fr-FR') + ' F</b></td><td style="' + bord + '"></td></tr></table>'
+      + '<div class="pied"><div>Le Comptable</div><div>Le Directeur</div></div></div>';
   } else if (quoi === 'PORTE') {
     salles.forEach(function (s, k) {
       corps += '<div class="page' + (k ? ' saut' : '') + '">' + entete('<span style="font-size:22px"><b>' + _ebtEsc(nomSalle(s)) + '</b></span><br>' + s.eleves.length + ' candidats · ' + Object.keys(s.classes).map(function (c) { return _ebtEsc(c); }).join(' + '))
@@ -20762,7 +20823,7 @@ function ebtImprimer(esp, quoi) {
         corps += '<div class="page' + (k++ ? ' saut' : '') + '">' + entete('<b>' + _ebtEsc(nomSalle(s)) + '</b> · ' + e.jour + ' ' + e.date + ' · ' + e.debut.replace(':', 'h') + ' - ' + e.fin.replace(':', 'h') + '<br><span style="font-size:15px"><b>' + _ebtEsc(e.epreuve) + '</b></span> · ' + Object.keys(se.classes).map(_ebtEsc).join(' + ') + ' · ' + el.length + ' candidats')
           + '<table><tr><th style="' + bord + ';width:12%">N° table</th><th style="' + bord + ';width:38%">Nom et prénoms</th><th style="' + bord + ';width:14%">Classe</th><th style="' + bord + ';width:18%">Signature (entrée)</th><th style="' + bord + ';width:18%">Signature (remise de copie)</th></tr>'
           + el.map(function (c) { return '<tr style="height:30px"><td style="' + bord + ';text-align:center;font-weight:700">' + c.table + '</td><td style="' + bord + '">' + _ebtEsc(c.nom) + '</td><td style="' + bord + ';font-size:10px">' + _ebtEsc(c.classe) + '</td><td style="' + bord + '"></td><td style="' + bord + '"></td></tr>'; }).join('')
-          + '</table><div class="pied"><div>Présents : ........ &nbsp; Absents : ........ &nbsp; Copies remises : ........</div><div>Surveillant : ......................................... Signature :</div></div></div>';
+          + '</table><div class="pied"><div>Présents : ........ &nbsp; Absents : ........ &nbsp; Copies remises : ........</div><div>Surveillant : ' + (function () { var n = _ebtSurvDe(esp, s.salle, e.date, e.debut, e.fin); return n.length ? '<b>' + n.map(_ebtEsc).join(' · ') + '</b>' : '.........................................'; })() + ' &nbsp; Signature :</div></div></div>';
       });
     });
   }
