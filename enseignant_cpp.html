@@ -334,6 +334,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
   <div id="examBlancZoneEns" style="padding:0 16px 6px"></div>
   <div id="ebTechZoneEns" style="padding:0 16px 6px"></div>
   <div id="eboMesSurvZone" style="padding:0 16px 6px"></div>
+  <div id="ebtSurvZoneEns" style="padding:0 16px 6px"></div>   <!-- 10/11/2026 — Mes surveillances examen blanc TECH / PRO -->
   <div id="eboCopiesZone" style="padding:0 16px 6px"></div>
   <div id="compoZoneEns" style="padding:0 16px 6px"></div>
   <div id="devexZoneEns" style="padding:0 16px 6px"></div>   <!-- 08/11/2026 — Programme des devoirs des classes d'examen -->
@@ -1005,6 +1006,7 @@ function demarrerSession() {
   _majSelecteurEcole();   // 21/10/2026 — espace unique plusieurs écoles
   if (typeof afficherCompositions === 'function') afficherCompositions();
   if (typeof chargerDevoirsExamenEns === 'function') setTimeout(chargerDevoirsExamenEns, 900);   // 08/11/2026
+  if (typeof chargerMesSurvBT === 'function') setTimeout(chargerMesSurvBT, 1200);   // 10/11/2026 — surveillances examen blanc TECH / PRO
   document.getElementById('bilanMoisLabel').textContent = getMoisLabel();
   document.getElementById('moyennesSubLabel').textContent = ECOLES_TECH.includes(user.ecole) ? 'Sem1·Sem2·EB1-4' : 'T1·T2·T3·EB1-4';
 
@@ -4712,6 +4714,51 @@ async function chargerDevoirsExamenEns() {
   });
   h += '</div></div>';
   z.innerHTML = h;
+}
+
+// ============================================================
+// EXAMEN BLANC CPP TECH / CPP PRO — MES SURVEILLANCES (10/11/2026)
+// Lecture seule : onglet EXAMEN_BLANC_BT_SURVEILLANCES des deux écoles (serveur : EBT_MES_SURV).
+// Les montants ne sont pas affichés : le paiement des surveillances se fait manuellement.
+// ============================================================
+async function chargerMesSurvBT() {
+  var z = document.getElementById('ebtSurvZoneEns'); if (!z || !user) return;
+  var comptes = _dxComptes();
+  if (!comptes.some(function (c) { return c.ecole === 'CPP PRO' || c.ecole === 'CPP TECH'; })) { z.innerHTML = ''; return; }
+  var noms = comptes.map(function (c) { return c.nom; }).filter(function (v, i, a) { return v && a.indexOf(v) === i; });
+  var r = await _dxJsonp({ type: 'EBT_MES_SURV', noms: noms.join('|') });
+  if (!r || !r.ok) { z.innerHTML = ''; return; }
+  var cadre = function (contenu) {
+    return '<div style="background:#fff;border-radius:12px;border-left:5px solid #0D47A1;box-shadow:0 2px 10px rgba(0,0,0,0.08);padding:12px 14px;margin:10px 0;text-align:left;">' + contenu + '</div>';
+  };
+  if (r.ambigu && r.ambigu.length) {
+    z.innerHTML = cadre('<b style="color:#0D47A1">EXAMEN BLANC TECH / PRO — Mes surveillances</b><br><span style="font-size:12px;color:#5D4037">Votre nom de connexion correspond à plusieurs surveillants ('
+      + r.ambigu.map(_dxEsc).join(', ') + '). Demandez votre planning au Directeur.</span>');
+    return;
+  }
+  var l = r.surveillances || [];
+  if (!l.length) { z.innerHTML = ''; return; }
+  var dateDe = function (s) { var m = String(s).match(/(\d{2})\/(\d{2})\/(\d{4})/); return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null; };
+  var auj = new Date(); auj.setHours(0, 0, 0, 0);
+  var heures = l.reduce(function (t, c) { return t + (Number(c.heures) || 0); }, 0);
+  var parJour = {}; l.forEach(function (c) { (parJour[c.date] = parJour[c.date] || []).push(c); });
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">'
+    + '<div style="font-weight:700;color:#0D47A1;font-size:14px;">&#128221; MES SURVEILLANCES — EXAMEN BLANC TECH / PRO</div>'
+    + '<div style="background:#E3F2FD;color:#0D47A1;font-weight:700;font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap;">' + l.length + ' surv. · ' + heures + ' h</div></div>';
+  Object.keys(parJour).sort(function (a, b) { return dateDe(a) - dateDe(b); }).forEach(function (d) {
+    var passe = dateDe(d) < auj;
+    h += '<div style="' + (passe ? 'opacity:.5;' : '') + '"><div style="font-size:12px;font-weight:700;color:#1F2937;margin:9px 0 3px;">' + _dxEsc(parJour[d][0].jour) + ' ' + _dxEsc(d) + (passe ? ' — passé' : '') + '</div>';
+    parJour[d].forEach(function (c) {
+      var salle = c.salleReelle ? c.salle + ' (' + c.salleReelle + ')' : c.salle;
+      h += '<div style="display:flex;gap:10px;padding:6px 0;border-top:1px solid #F0F0F0;font-size:12.5px;">'
+        + '<div style="min-width:78px;font-weight:700;color:#0D47A1">' + _dxEsc(c.debut + '-' + c.fin) + '</div>'
+        + '<div><b>' + _dxEsc(salle) + '</b> · ' + _dxEsc(c.ecole) + '<br><span style="color:#333">' + _dxEsc(c.epreuves) + '</span>'
+        + '<br><span style="color:#777;font-size:11.5px">' + _dxEsc(c.classes) + ' · ' + _dxEsc(c.nb) + ' candidats</span></div></div>';
+    });
+    h += '</div>';
+  });
+  h += '<div style="font-size:11px;color:#777;margin-top:6px;border-top:1px solid #EEE;padding-top:5px;">Soyez dans la salle 15 minutes avant le début. Faites signer la feuille d\'émargement. Les copies portent le N° de table seul : un nom ou un matricule écrit est une fraude à signaler. Changement de surveillant : voir le Directeur.</div>';
+  z.innerHTML = cadre(h);
 }
 </script>
 </body>
