@@ -20691,6 +20691,7 @@ async function initExamenBlancBT(esp) {
   if (!r || !r.ok || !r.actif) { if (ancienne) ancienne.remove(); return; }
   var rs = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'EBT_SURVEILLANCES', ecole: currentStaff.ecole }, 30000);   // 10/11/2026
   r.surv = (rs && rs.ok && rs.surveillances) || []; r.profs = (rs && rs.ok && rs.profs) || [];
+  if (esp !== 'COM') { var rn = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'EBT_N_SUIVI', ecole: currentStaff.ecole }, 30000); r.suivi = (rn && rn.ok) ? rn : null; }   // 10/11/2026 — notes
   _ebt[esp] = r;
   var espace = document.getElementById({ DIR: 'espaceDir', COM: 'espaceCom', EDU: 'espaceEdu' }[esp]); if (!espace) return;
   var sec = ancienne || document.createElement('div');
@@ -20717,7 +20718,7 @@ async function initExamenBlancBT(esp) {
           + '<td style="padding:6px;text-align:center">' + s.eleves.length + '</td><td style="padding:6px;text-align:center;white-space:nowrap">' + t[0] + ' → ' + t[t.length - 1] + '</td>'
           + '<td style="padding:6px;white-space:nowrap"><input id="ebtR' + esp + '_' + i + '" value="' + _ebtEsc(s.reelle || '') + '" placeholder="ex : Salle 12" maxlength="40" style="width:110px;padding:5px;border:1.5px solid var(--border);border-radius:6px">'
           + ' <button type="button" onclick="ebtEnregistrerSalle(\'' + esp + '\',' + i + ')" style="padding:5px 8px;border:none;border-radius:6px;background:var(--vert);color:#fff;font-weight:700;cursor:pointer">OK</button></td></tr>';
-      }).join('') + '</tbody></table></div>' + _ebtTableSurv(esp) + '</div></div>';
+      }).join('') + '</tbody></table></div>' + _ebtTableSurv(esp) + _ebtBlocNotes(esp) + '</div></div>';
   if (!ancienne) {
     var apres = document.getElementById('devexZone' + esp) || document.getElementById('corrZone' + esp) || espace.querySelector('.hdr');
     if (apres && apres.nextSibling) espace.insertBefore(sec, apres.nextSibling); else espace.appendChild(sec);
@@ -20764,6 +20765,84 @@ async function ebtChangerSurv(esp, id) {
   if (!r.inchange) { x.surveillant = r.surveillant; x.ecoleSurv = r.ecoleSurv; x.taux = String(r.taux); x.montant = String(r.montant); x.motif = r.motif; }
   showToast(id + ' : ' + nouveau + ' enregistré', 'success');
   initExamenBlancBT(esp);
+}
+// ─── Notes et résultats (10/11/2026) : avancement de la saisie, fraudes (Directeur : lever / maintenir), résultats, publication ───
+function _ebtBlocNotes(esp) {
+  var d = _ebt[esp], su = d && d.suivi; if (!su) return '';
+  var dir = esp === 'DIR', e = _ebtEsc, tot = 0, sai = 0;
+  var l = su.epreuves.slice().sort(function (a, b) { return (_ebtDate(a.date) + a.debut + a.classe).localeCompare(_ebtDate(b.date) + b.debut + b.classe); });
+  l.forEach(function (x) { tot += x.effectif; sai += Math.min(x.saisies, x.effectif); });
+  var pct = tot ? Math.round(sai / tot * 100) : 0;
+  var h = '<details style="margin-top:12px"' + (su.fraudes.some(function (f) { return f.statut === 'FRAUDE'; }) ? ' open' : '') + '><summary style="cursor:pointer;font-weight:700;color:#2E7D32;padding:6px 0">&#9997;&#65039; Notes et résultats — saisie ' + pct + ' % (' + sai + '/' + tot + ' copies)'
+    + (su.fraudes.length ? ' · <span style="color:#B71C1C">' + su.fraudes.length + ' fraude(s)</span>' : '') + (su.publie ? ' · <span style="color:#1565C0">publié</span>' : '') + '</summary>';
+  if (su.publie) h += '<div style="background:#E3F2FD;border-radius:7px;padding:7px 9px;font-size:0.78em;margin:4px 0">Résultats publiés aux parents le ' + e(su.publie) + '. La saisie des correcteurs est fermée.</div>';
+  // fraudes
+  if (su.fraudes.length) {
+    h += '<div style="font-weight:700;color:#B71C1C;font-size:0.82em;margin:8px 0 4px">Copies en fraude (nom ou matricule écrit au lieu du N° de table)</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.76em"><tr style="background:#FFEBEE">'
+      + '<th style="padding:5px;text-align:left">Élève</th><th style="padding:5px;text-align:left">Épreuve</th><th style="padding:5px">Note correcteur</th><th style="padding:5px;text-align:left">État</th></tr>'
+      + su.fraudes.map(function (f) {
+          var leve = f.statut === 'FRAUDE LEVÉE';
+          return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px"><b>' + e(f.nom) + '</b><br>' + e(f.table) + ' · ' + e(f.matricule) + ' · ' + e(f.classe) + '</td>'
+            + '<td style="padding:5px">' + e(f.epreuve) + '<br><span style="color:var(--gris)">' + e(f.correcteur) + ' — ' + e(f.obs) + '</span></td><td style="padding:5px;text-align:center">' + e(f.noteC) + '</td>'
+            + '<td style="padding:5px;white-space:nowrap"><b style="color:' + (leve ? '#2E7D32' : '#B71C1C') + '">' + (leve ? 'Levée : note comptée' : 'Fraude : 0') + '</b>'
+            + (dir && !su.publie ? '<br><button type="button" onclick="ebtFraude(\'' + esp + '\',\'' + e(f.id) + '\',\'' + e(f.table) + '\',\'' + (leve ? 'MAINTENIR' : 'LEVER') + '\')" style="margin-top:3px;padding:4px 8px;border:none;border-radius:6px;background:' + (leve ? '#B71C1C' : '#2E7D32') + ';color:#fff;font-weight:700;cursor:pointer">' + (leve ? 'Remettre en fraude (0)' : 'Lever la fraude') + '</button>' : '') + '</td></tr>';
+        }).join('') + '</table></div>';
+  }
+  // avancement par épreuve
+  h += '<div style="font-weight:700;color:#2E7D32;font-size:0.82em;margin:10px 0 4px">Avancement de la saisie par épreuve</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.76em"><tr style="background:#E8F5E9">'
+    + '<th style="padding:5px;text-align:left">Épreuve</th><th style="padding:5px;text-align:left">Classe</th><th style="padding:5px;text-align:left">Correcteur(s)</th><th style="padding:5px">Saisies</th></tr>'
+    + l.map(function (x) {
+        var c = x.saisies >= x.effectif;
+        return '<tr style="border-bottom:1px solid var(--border)"><td style="padding:5px">' + e(x.epreuve) + '<br><span style="color:var(--gris)">' + e(x.jour.slice(0, 3)) + ' ' + e(x.date.slice(0, 5)) + '</span></td><td style="padding:5px">' + e(x.classe) + '</td><td style="padding:5px">' + e(x.profs || '—') + '</td>'
+          + '<td style="padding:5px;text-align:center;font-weight:700;color:' + (c ? '#2E7D32' : x.saisies ? '#E65100' : '#B71C1C') + '">' + x.saisies + '/' + x.effectif + (x.absents ? '<br><span style="font-weight:normal;color:var(--gris)">' + x.absents + ' abs.</span>' : '') + '</td></tr>';
+      }).join('') + '</table></div>';
+  if (dir) h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px">'
+    + '<button type="button" onclick="ebtResultats(\'' + esp + '\')" style="padding:8px 11px;border:none;border-radius:7px;background:#1a3a6b;color:#fff;font-weight:700;cursor:pointer;font-size:0.8em">&#128202; Calculer et imprimer les résultats</button>'
+    + (su.publie ? '<button type="button" onclick="ebtPublier(\'' + esp + '\',\'NON\')" style="padding:8px 11px;border:none;border-radius:7px;background:#757575;color:#fff;font-weight:700;cursor:pointer;font-size:0.8em">Retirer la publication</button>'
+                 : '<button type="button" onclick="ebtPublier(\'' + esp + '\',\'OUI\')" style="padding:8px 11px;border:none;border-radius:7px;background:#1565C0;color:#fff;font-weight:700;cursor:pointer;font-size:0.8em">&#128227; Publier aux parents</button>')
+    + '</div><div style="font-size:0.72em;color:var(--gris);margin-top:5px">Publication refusée tant qu\'une note manque. Après publication, les correcteurs ne peuvent plus modifier ; « Retirer la publication » rouvre la saisie.</div>';
+  return h + '</details>';
+}
+async function ebtFraude(esp, id, table, action) {
+  if (!confirm(action === 'LEVER' ? 'Lever la fraude : la note du correcteur comptera. Continuer ?' : 'Remettre la copie en fraude : elle comptera 0. Continuer ?')) return;
+  var r = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'EBT_N_FRAUDE', ecole: currentStaff.ecole, id: id, table: table, action: action, par: currentStaff.nom || '' }, 30000);
+  if (!r || !r.ok) { showToast('Erreur : ' + ((r && r.error) || 'réseau'), 'error'); return; }
+  showToast(table + ' : ' + r.statut, 'success'); initExamenBlancBT(esp);
+}
+async function ebtPublier(esp, etat) {
+  if (!confirm(etat === 'OUI' ? 'Publier les résultats de l\'examen blanc aux parents ? La saisie des correcteurs sera fermée.' : 'Retirer les résultats de l\'espace Parents et rouvrir la saisie ?')) return;
+  var r = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'EBT_N_PUBLIER', ecole: currentStaff.ecole, etat: etat, par: currentStaff.nom || '' }, 90000);
+  if (!r || !r.ok) { showToast('Refusé : ' + ((r && r.error) || 'réseau'), 'error'); return; }
+  showToast(etat === 'OUI' ? 'Résultats publiés aux parents' : 'Publication retirée', 'success'); initExamenBlancBT(esp);
+}
+async function ebtResultats(esp) {
+  var w = window.open('', '_blank'); if (!w) { showToast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
+  w.document.write('<p style="font-family:Arial;padding:20px">Calcul des résultats…</p>');
+  var r = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'EBT_N_CALCULER', ecole: currentStaff.ecole }, 90000);
+  if (!r || !r.ok) { w.document.body.innerHTML = '<p style="font-family:Arial;padding:20px;color:#B71C1C">Erreur : ' + _ebtEsc((r && r.error) || 'réseau') + '</p>'; return; }
+  var e = _ebtEsc, bord = 'border:1px solid #000;padding:4px', ecole = currentStaff.label || currentStaff.ecole, parC = {};
+  r.resultats.forEach(function (x) { (parC[x.classe] = parC[x.classe] || []).push(x); });
+  var coul = { 'ADMIS': '#1B5E20', 'REPÊCHABLE': '#E65100', 'NON ADMIS': '#B71C1C', 'EN ATTENTE': '#555' };
+  var corps = Object.keys(parC).sort().map(function (c, k) {
+    var l = parC[c].sort(function (a, b) { return (b.mg || -1) - (a.mg || -1) || a.nom.localeCompare(b.nom); }), b = {};
+    l.forEach(function (x) { b[x.decision] = (b[x.decision] || 0) + 1; });
+    return '<div class="' + (k ? 'saut' : '') + '"><div class="ent"><b>' + e(ecole) + '</b><br>EXAMEN BLANC — 23 au 28 novembre 2026<h1>RÉSULTATS — ' + e(c) + '</h1><div>'
+      + Object.keys(b).map(function (d) { return d + ' : ' + b[d]; }).join(' · ') + ' — ' + l.length + ' candidats</div></div>'
+      + '<table><tr><th style="' + bord + '">Rang</th><th style="' + bord + '">N° table</th><th style="' + bord + '">Nom et prénoms</th>' + (r.bt ? '<th style="' + bord + '">UEG</th><th style="' + bord + '">UEP</th>' : '') + '<th style="' + bord + '">Moy. gén.</th><th style="' + bord + '">Décision</th></tr>'
+      + l.map(function (x) {
+          return '<tr><td style="' + bord + ';text-align:center">' + (x.rang || '') + '</td><td style="' + bord + ';text-align:center">' + e(x.table) + '</td><td style="' + bord + '">' + e(x.nom) + '</td>'
+            + (r.bt ? '<td style="' + bord + ';text-align:center">' + (x.ueg == null ? '—' : x.ueg) + '</td><td style="' + bord + ';text-align:center">' + (x.uep == null ? '—' : x.uep) + '</td>' : '')
+            + '<td style="' + bord + ';text-align:center;font-weight:700">' + (x.mg == null ? '—' : x.mg) + '</td><td style="' + bord + ';color:' + (coul[x.decision] || '#000') + ';font-weight:700">' + e(x.decision) + (x.decision === 'EN ATTENTE' || x.decision === 'REPÊCHABLE' ? '<br><span style="font-weight:normal;font-size:10px;color:#333">' + e(x.detail) + '</span>' : '') + '</td></tr>';
+        }).join('') + '</table>'
+      + (r.bt ? '<div class="note">ADMIS : UEG ≥ 10 et UEP ≥ 12. Repêchable : UEG de 9 à 10 si Techniques d\'expression et Maths ≥ 8 ; UEP de 11 à 12 si ≥ 10 dans 2 matières fondamentales.</div>' : '<div class="note">ADMIS : moyenne générale ≥ 10.</div>')
+      + '<div class="pied"><div>Le Directeur des études</div><div>Le Directeur</div></div></div>';
+  }).join('');
+  w.document.open();
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Résultats examen blanc — ' + e(currentStaff.ecole) + '</title><style>body{font-family:Arial,sans-serif;margin:0;padding:12px;font-size:11.5px}.ent{text-align:center;margin-bottom:8px}.ent h1{font-size:16px;margin:5px 0}'
+    + 'table{width:100%;border-collapse:collapse}th{background:#ddd}.note{font-size:10px;margin-top:6px}.pied{display:flex;justify-content:space-between;margin-top:18px}.np{background:#f5f5f5;padding:10px;text-align:center;border-bottom:3px solid #000;margin-bottom:10px}'
+    + '@media print{.np{display:none}.saut{page-break-before:always}@page{size:A4 portrait;margin:10mm}}</style></head><body><div class="np"><button onclick="window.print()" style="background:#000;color:#fff;border:none;padding:9px 18px;font-weight:bold;border-radius:4px">Imprimer / PDF</button> '
+    + (r.publie ? '' : '<span style="color:#B71C1C;font-weight:bold">&nbsp; Non publié aux parents</span>') + '</div>' + corps + '</body></html>');
+  w.document.close();
 }
 async function ebtEnregistrerSalle(esp, i) {
   var s = _ebtSalles(esp)[i], inp = document.getElementById('ebtR' + esp + '_' + i); if (!s || !inp) return;
