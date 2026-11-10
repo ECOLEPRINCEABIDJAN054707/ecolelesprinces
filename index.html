@@ -281,7 +281,7 @@ h1, h2, h3, h4, .login-titre, .eleve-nom, .cpp-titre, .sec-header, .header h1 { 
    <div id="badgeMenaPhoto" style="flex:1;text-align:center;padding:10px 4px;border-radius:8px;font-size:0.85em;font-weight:bold">Photo</div>
   </div>
   <div id="messageMenaAction" style="font-size:0.8em;padding:10px;border-radius:8px;text-align:center"></div>
-</div> <div id="compoZoneParent" style="margin:10px 0"></div><div id="devexZoneParent" style="margin:10px 0"></div><div id="ebTechZoneParent" style="margin:10px 0"></div><div id="carteNotifs" style="margin:10px 0"></div><div id="sectionAnnonces" style="display:none;">
+</div> <div id="compoZoneParent" style="margin:10px 0"></div><div id="devexZoneParent" style="margin:10px 0"></div><div id="ebtResZoneParent" style="margin:10px 0"></div><div id="ebTechZoneParent" style="margin:10px 0"></div><div id="carteNotifs" style="margin:10px 0"></div><div id="sectionAnnonces" style="display:none;">
     <div class="section" style="border-left:4px solid #C62828;">
       <div class="sec-header" style="background:#C62828;" onclick="toggleSec(this)">&#128226; ANNONCES DE L'ECOLE <span>v</span></div>
       <div class="sec-body" id="annoncesBody"></div>
@@ -1562,6 +1562,7 @@ var soldeAccesParsed = _pm(eleve.solde);
     afficherSectionResultats(eleve);
     // ✅ BULLETINS MENSUELS PRIMAIRE
     chargerBulletinsMensuels(eleve);
+    if (typeof chargerResultatExamenBlancBT === 'function') chargerResultatExamenBlancBT(eleve);   // 10/11/2026 — examen blanc TECH / PRO (après publication)
     document.getElementById("sectionBloque").style.display = "none";
   } else {
     document.getElementById("sectionResultats").style.display = "none";
@@ -4278,6 +4279,49 @@ function _devexParentAfficher(zone, ep, classe) {
     h += '<div style="margin-bottom:8px;' + (passe ? 'opacity:.45' : '') + '"><div style="font-weight:700;color:#1F4E79;font-size:.85em">' + esc(parDate[d][0].jour) + ' ' + esc(d) + (passe ? ' (passé)' : '') + '</div>'
       + parDate[d].map(function (e) { return '<div style="font-size:.85em;padding:2px 0 2px 10px">' + esc(e.debut.replace(':', 'H')) + '-' + esc(e.fin.replace(':', 'H')) + ' : <b>' + esc(e.matiereLib) + '</b></div>'; }).join('') + '</div>';
   });
+  zone.innerHTML = h + '</div></div>';
+}
+</script>
+
+<script>
+// ============================================================
+// 🎓 RÉSULTAT DE L'EXAMEN BLANC CPP TECH / CPP PRO — Espace Parents (10/11/2026)
+// Visible seulement après publication par le Directeur, et seulement si l'accès aux notes est ouvert (solde).
+// Serveur : EBT_N_PARENT (sheetsId, matricule).
+// ============================================================
+function chargerResultatExamenBlancBT(eleve) {
+  var zone = document.getElementById('ebtResZoneParent'); if (!zone || !eleve) return;
+  zone.innerHTML = '';
+  var sheetsId = window._sheetsId2026 || eleve.sheetsId || '', classe = String(window._classe2026 || eleve.classe || '').toUpperCase();
+  if (!sheetsId || !eleve.matricule || !/^(2A BT|1ERE (F2|G1|G2))/.test(classe)) return;
+  var cb = 'jp_ebtres_' + Date.now(), sc = document.createElement('script'), fini = false;
+  var fin = function () { fini = true; delete window[cb]; try { sc.remove(); } catch (e) {} };
+  window[cb] = function (r) { fin(); if (r && r.ok && r.publie && r.candidat) _ebtResAfficher(zone, r); };
+  sc.onerror = fin;
+  sc.src = PSS_SERVEUR_URL + '?callback=' + cb + '&type=EBT_N_PARENT&sheetsId=' + encodeURIComponent(sheetsId) + '&matricule=' + encodeURIComponent(eleve.matricule);
+  document.body.appendChild(sc);
+  setTimeout(function () { if (!fini) fin(); }, 30000);
+}
+function _ebtResAfficher(zone, r) {
+  var x = r.resultat, esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var coul = { 'ADMIS': ['#1B5E20', '#E8F5E9'], 'REPÊCHABLE': ['#E65100', '#FFF3E0'], 'NON ADMIS': ['#B71C1C', '#FFEBEE'] }[x.decision] || ['#333', '#F5F5F5'];
+  var fmt = function (v) { return v == null ? '—' : String(v).replace('.', ','); };
+  var ligne = function (n) { return '<tr><td style="padding:5px 6px;border-bottom:1px solid #eee">' + esc(n.epreuve) + '</td><td style="padding:5px 6px;border-bottom:1px solid #eee;text-align:center">' + esc(n.coef) + '</td><td style="padding:5px 6px;border-bottom:1px solid #eee;text-align:center;font-weight:700;color:' + (n.note === 'ABS' ? '#B71C1C' : Number(n.note) >= 10 ? '#1B5E20' : '#B71C1C') + '">' + esc(n.note === 'ABS' ? 'ABS' : fmt(n.note)) + '</td></tr>'; };
+  var bloc = function (titre, l, moy) { return l.length ? '<div style="font-weight:700;color:#1F4E79;font-size:.85em;margin:10px 0 3px">' + titre + (moy != null ? ' — moyenne ' + fmt(moy) + '/20' : '') + '</div><table style="width:100%;border-collapse:collapse;font-size:.84em"><tr style="background:#F5F5F5"><th style="padding:5px 6px;text-align:left">Épreuve</th><th style="padding:5px 6px">Coef</th><th style="padding:5px 6px">Note</th></tr>' + l.map(ligne).join('') + '</table>' : ''; };
+  var h = '<div style="background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden">'
+    + '<div style="background:#4A148C;color:#fff;padding:10px 14px;font-weight:700">&#127891; Résultat de l\'examen blanc — 23 au 28 novembre</div><div style="padding:12px 14px">'
+    + '<div style="background:' + coul[1] + ';border-left:5px solid ' + coul[0] + ';border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px">'
+    + '<div><div style="font-size:1.25em;font-weight:800;color:' + coul[0] + '">' + esc(x.decision) + '</div><div style="font-size:.85em;color:#333">' + esc(x.classe) + (x.rang ? ' · rang ' + x.rang + '/' + x.sur : '') + '</div></div>'
+    + '<div style="text-align:right"><div style="font-size:.75em;color:#555">Moyenne générale</div><div style="font-size:1.4em;font-weight:800;color:#1F4E79">' + fmt(x.mg) + '</div></div></div>';
+  if (r.bt) {
+    h += bloc('Enseignement général (UEG)', x.notes.filter(function (n) { return n.unite === 'UEG'; }), x.ueg)
+       + bloc('Enseignement professionnel (UEP)', x.notes.filter(function (n) { return n.unite !== 'UEG'; }), x.uep)
+       + '<div style="font-size:.75em;color:#666;margin-top:8px">Pour être admis : moyenne UEG ≥ 10 et moyenne UEP ≥ 12. Repêchable : UEG entre 9 et 10, ou UEP entre 11 et 12, selon les notes des matières principales.'
+       + (x.decision === 'REPÊCHABLE' && x.detail ? '<br><b>' + esc(x.detail) + '</b>' : '') + '</div>';
+  } else {
+    h += bloc('Notes par épreuve', x.notes, null) + '<div style="font-size:.75em;color:#666;margin-top:8px">Pour être admis : moyenne générale ≥ 10.</div>';
+  }
+  h += '<div style="font-size:.75em;color:#666;margin-top:6px">Examen blanc : résultat indicatif pour préparer l\'examen officiel. Pour toute question, contactez la Direction.</div>';
   zone.innerHTML = h + '</div></div>';
 }
 </script>
