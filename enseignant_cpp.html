@@ -335,6 +335,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
   <div id="ebTechZoneEns" style="padding:0 16px 6px"></div>
   <div id="eboMesSurvZone" style="padding:0 16px 6px"></div>
   <div id="ebtSurvZoneEns" style="padding:0 16px 6px"></div>   <!-- 10/11/2026 — Mes surveillances examen blanc TECH / PRO -->
+  <div id="ebtCopiesZoneEns" style="padding:0 16px 6px"></div>   <!-- 10/11/2026 — Mes copies à corriger examen blanc TECH / PRO -->
   <div id="eboCopiesZone" style="padding:0 16px 6px"></div>
   <div id="compoZoneEns" style="padding:0 16px 6px"></div>
   <div id="devexZoneEns" style="padding:0 16px 6px"></div>   <!-- 08/11/2026 — Programme des devoirs des classes d'examen -->
@@ -1007,6 +1008,7 @@ function demarrerSession() {
   if (typeof afficherCompositions === 'function') afficherCompositions();
   if (typeof chargerDevoirsExamenEns === 'function') setTimeout(chargerDevoirsExamenEns, 900);   // 08/11/2026
   if (typeof chargerMesSurvBT === 'function') setTimeout(chargerMesSurvBT, 1200);   // 10/11/2026 — surveillances examen blanc TECH / PRO
+  if (typeof chargerMesCopiesBT === 'function') setTimeout(chargerMesCopiesBT, 1500);   // 10/11/2026 — copies à corriger examen blanc TECH / PRO
   document.getElementById('bilanMoisLabel').textContent = getMoisLabel();
   document.getElementById('moyennesSubLabel').textContent = ECOLES_TECH.includes(user.ecole) ? 'Sem1·Sem2·EB1-4' : 'T1·T2·T3·EB1-4';
 
@@ -4759,6 +4761,101 @@ async function chargerMesSurvBT() {
   });
   h += '<div style="font-size:11px;color:#777;margin-top:6px;border-top:1px solid #EEE;padding-top:5px;">Soyez dans la salle 15 minutes avant le début. Faites signer la feuille d\'émargement. Les copies portent le N° de table seul : un nom ou un matricule écrit est une fraude à signaler. Changement de surveillant : voir le Directeur.</div>';
   z.innerHTML = cadre(h);
+}
+
+// ============================================================
+// EXAMEN BLANC CPP TECH / CPP PRO — MES COPIES À CORRIGER (10/11/2026)
+// Le correcteur (professeur de l'épreuve) tape la note à côté de chaque N° de table (ABS = absent).
+// Copie qui porte un nom ou un matricule au lieu du N° de table : la saisir dans « Copie avec nom / matricule »
+// → elle passe en FRAUDE (0) ; seul le Directeur peut lever la fraude. Serveur : EBT_N_MES_COPIES, EBT_N_SAISIR.
+// ============================================================
+var EBT_LOTS = [], EBT_OUVERT = '';
+function _ebtComptesTxt() { return _dxComptes().map(function (c) { return c.ecole + '~' + c.nom; }).join('|'); }
+async function chargerMesCopiesBT() {
+  var z = document.getElementById('ebtCopiesZoneEns'); if (!z || !user) return;
+  if (!_dxComptes().some(function (c) { return c.ecole === 'CPP PRO' || c.ecole === 'CPP TECH'; })) { z.innerHTML = ''; return; }
+  var r = await _dxJsonp({ type: 'EBT_N_MES_COPIES', comptes: _ebtComptesTxt() });
+  if (!r || !r.ok || !(r.lots || []).length) { z.innerHTML = ''; return; }
+  EBT_LOTS = r.lots; _ebtAfficherCopies();
+}
+function _ebtAfficherCopies() {
+  var z = document.getElementById('ebtCopiesZoneEns'); if (!z) return;
+  var e = _dxEsc, fini = EBT_LOTS.filter(function (l) { return l.nbSaisies >= l.tables.length; }).length;
+  var h = '<div style="background:#fff;border-radius:12px;border-left:5px solid #2E7D32;box-shadow:0 2px 10px rgba(0,0,0,0.08);padding:12px 14px;margin:10px 0;text-align:left;">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><div style="font-weight:700;color:#2E7D32;font-size:14px;">&#9997;&#65039; MES COPIES À CORRIGER — EXAMEN BLANC TECH / PRO</div>'
+    + '<div style="background:#E8F5E9;color:#2E7D32;font-weight:700;font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap;">' + fini + '/' + EBT_LOTS.length + ' terminés</div></div>';
+  EBT_LOTS.forEach(function (l, i) {
+    var cle = l.ecole + '¤' + l.id, ouvert = EBT_OUVERT === cle, complet = l.nbSaisies >= l.tables.length;
+    h += '<div style="border-top:1px solid #F0F0F0;padding:7px 0">'
+      + '<div onclick="EBT_OUVERT=(EBT_OUVERT===\'' + e(cle) + '\'?\'\':\'' + e(cle) + '\');_ebtAfficherCopies()" style="cursor:pointer;display:flex;justify-content:space-between;gap:8px;font-size:12.5px">'
+      + '<div><b>' + e(l.epreuve) + '</b> · ' + e(l.classe) + '<br><span style="color:#777;font-size:11.5px">' + e(l.jour) + ' ' + e(l.date) + ' · coef ' + e(l.coef) + ' · ' + e(l.ecole) + '</span></div>'
+      + '<div style="white-space:nowrap;font-weight:700;color:' + (complet ? '#2E7D32' : '#E65100') + '">' + l.nbSaisies + '/' + l.tables.length + (ouvert ? ' ▲' : ' ▼') + '</div></div>';
+    if (ouvert) h += _ebtFormLot(l, i);
+    h += '</div>';
+  });
+  h += '<div style="font-size:11px;color:#777;margin-top:6px;border-top:1px solid #EEE;padding-top:5px;">Note sur 20 (12,5 accepté) ou ABS. Une copie avec nom ou matricule = fraude : saisissez-la en bas avec le matricule écrit sur la copie. Vous pouvez enregistrer en plusieurs fois.</div></div>';
+  z.innerHTML = h;
+}
+function _ebtFormLot(l, i) {
+  var e = _dxEsc;
+  if (l.verrou) return '<div style="font-size:12px;color:#B71C1C;padding:6px 0">Résultats publiés : la saisie est fermée. Voir le Directeur.</div>';
+  var h = '<div style="padding:6px 0"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:6px">';
+  l.tables.forEach(function (t) {
+    var s = l.saisies[t.table] || {}, fr = /FRAUDE/.test(s.statut || '');
+    h += '<label style="display:flex;align-items:center;gap:5px;font-size:12px;background:' + (fr ? '#FFEBEE' : s.note ? '#F1F8E9' : '#FAFAFA') + ';border-radius:6px;padding:4px 6px">'
+      + '<b style="min-width:38px">' + e(t.table) + '</b><input data-t="' + e(t.table) + '" class="ebtN' + i + '" value="' + e(s.note || '') + '" inputmode="decimal" maxlength="5" placeholder="—" style="width:52px;padding:4px;border:1.5px solid #ddd;border-radius:5px;font-size:13px;text-align:center">'
+      + (fr ? '<span title="Fraude" style="color:#B71C1C;font-weight:700">F</span>' : '') + '</label>';
+  });
+  h += '</div><div style="margin-top:8px;font-size:12px;font-weight:700;color:#B71C1C">Copie avec nom / matricule (fraude)</div>'
+    + '<div id="ebtFr' + i + '"></div>'
+    + '<button type="button" onclick="_ebtAjoutFraude(' + i + ')" style="margin-top:4px;padding:5px 9px;border:1.5px solid #B71C1C;background:#fff;color:#B71C1C;border-radius:6px;font-size:12px;cursor:pointer">+ Ajouter une copie</button>'
+    + '<div style="margin-top:9px"><button type="button" id="ebtBtn' + i + '" onclick="ebtEnregistrerLot(' + i + ')" style="width:100%;padding:10px;border:none;border-radius:8px;background:#2E7D32;color:#fff;font-weight:700;font-size:14px;cursor:pointer">Enregistrer les notes</button></div>'
+    + '<div id="ebtMsg' + i + '" style="font-size:12px;margin-top:6px"></div></div>';
+  return h;
+}
+function _ebtAjoutFraude(i) {
+  var d = document.getElementById('ebtFr' + i); if (!d) return;
+  var r = document.createElement('div'); r.style.cssText = 'display:flex;gap:6px;margin-top:4px';
+  r.innerHTML = '<input class="ebtFm' + i + '" placeholder="Matricule ou nom écrit" style="flex:1;padding:5px;border:1.5px solid #ddd;border-radius:5px;font-size:12px">'
+    + '<input class="ebtFn' + i + '" placeholder="Note" inputmode="decimal" maxlength="5" style="width:60px;padding:5px;border:1.5px solid #ddd;border-radius:5px;font-size:12px;text-align:center">';
+  d.appendChild(r);
+}
+async function ebtEnregistrerLot(i) {
+  var l = EBT_LOTS[i], msg = document.getElementById('ebtMsg' + i), btn = document.getElementById('ebtBtn' + i); if (!l) return;
+  var ok = function (v) { v = String(v).trim().toUpperCase().replace(',', '.'); return v === 'ABS' || (/^\d{1,2}(\.\d{1,2})?$/.test(v) && +v <= 20); };
+  var items = [], fautes = [];
+  document.querySelectorAll('.ebtN' + i).forEach(function (inp) {
+    var v = inp.value.trim(); if (!v) return;
+    var avant = (l.saisies[inp.dataset.t] || {}).note || '';
+    if (!ok(v)) { fautes.push(inp.dataset.t); inp.style.borderColor = '#B71C1C'; return; }
+    inp.style.borderColor = '#ddd';
+    if (v.toUpperCase().replace(',', '.') !== String(avant).toUpperCase()) items.push(inp.dataset.t + ':' + v.toUpperCase().replace(',', '.'));
+  });
+  var fm = document.querySelectorAll('.ebtFm' + i), fn = document.querySelectorAll('.ebtFn' + i);
+  fm.forEach(function (inp, k) {
+    var m = inp.value.trim().replace(/[:;|~]/g, ' '), v = (fn[k] || {}).value || ''; if (!m && !v) return;
+    if (!m || !ok(v) || String(v).toUpperCase() === 'ABS') { fautes.push('fraude ' + (m || '?')); return; }
+    items.push(m + ':' + v.trim().replace(',', '.'));
+  });
+  if (fautes.length) { msg.innerHTML = '<span style="color:#B71C1C">Notes invalides (0 à 20 ou ABS) : ' + fautes.map(_dxEsc).join(', ') + '</span>'; return; }
+  if (!items.length) { msg.innerHTML = '<span style="color:#777">Aucune nouvelle note à enregistrer.</span>'; return; }
+  btn.disabled = true; btn.textContent = 'Enregistrement…';
+  var tous = [], err = [], fr = 0;
+  for (var k = 0; k < items.length; k += 40) {   // paquets de 40 notes (longueur de l'adresse)
+    var r = await _dxJsonp({ type: 'EBT_N_SAISIR', ecole: l.ecole, id: l.id, comptes: _ebtComptesTxt(), code: user.code || '', notes: items.slice(k, k + 40).join(';') });
+    if (!r || !r.ok) { err.push((r && r.error) || 'réseau'); break; }
+    tous.push(r.enregistrees); fr += r.fraudes || 0; err = err.concat(r.erreurs || []);
+  }
+  btn.disabled = false; btn.textContent = 'Enregistrer les notes';
+  var n = tous.reduce(function (a, b) { return a + b; }, 0);
+  if (n) {   // relire l'état à jour depuis le serveur
+    var rr = await _dxJsonp({ type: 'EBT_N_MES_COPIES', comptes: _ebtComptesTxt() });
+    if (rr && rr.ok) EBT_LOTS = rr.lots;
+    _ebtAfficherCopies();
+    var j = EBT_LOTS.findIndex(function (x) { return x.ecole === l.ecole && x.id === l.id; }); msg = document.getElementById('ebtMsg' + j);
+  }
+  if (msg) msg.innerHTML = (n ? '<span style="color:#2E7D32;font-weight:700">✅ ' + n + ' note(s) enregistrée(s)' + (fr ? ' · ' + fr + ' copie(s) en fraude' : '') + '</span>' : '')
+    + (err.length ? '<br><span style="color:#B71C1C">' + err.map(_dxEsc).join('<br>') + '</span>' : '');
 }
 </script>
 </body>
