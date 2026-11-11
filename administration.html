@@ -14226,6 +14226,18 @@ async function supprimerLigneEdtDir(ligne) {
   saveBtn.disabled = false;
 }
 
+// ═══ 11/11/2026 — EDT en PDF : texte coupé sur plusieurs lignes dans sa case (plus de débordement sur la case voisine) ═══
+function _edtPdfLignes(doc, v, w) { var t = String(v || '').replace(/\s+/g, ' ').trim(); return t ? doc.splitTextToSize(t, w - 3) : []; }
+function _edtPdfHauteur(doc, valeurs, colWidths) {
+  var n = 1; valeurs.forEach(function (v, i) { n = Math.max(n, _edtPdfLignes(doc, v, colWidths[i]).length); });
+  return Math.max(9, n * 3.4 + 3);
+}
+function _edtPdfCase(doc, x, y, w, h, v) {
+  doc.rect(x, y, w, h);
+  var l = _edtPdfLignes(doc, v, w); if (!l.length) return;
+  var y0 = y + (h - l.length * 3.4) / 2 + 2.6;   // centré verticalement
+  l.forEach(function (t, k) { doc.text(t, x + 1.5, y0 + k * 3.4); });
+}
 function exporterEdtClassePDF() {
   if (!_edtClasseCourante || !window.jspdf) { showToast('Charge d\'abord un EDT', 'error'); return; }
   const doc = new jspdf.jsPDF({ orientation: 'landscape' });
@@ -14285,12 +14297,12 @@ function exporterEdtClassePDF() {
     } else {
       x = startX;
       const valeurs = [l.creneau, l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi, l.samedi];
+      const _h = _edtPdfHauteur(doc, valeurs, colWidths);   // 11/11/2026 — hauteur selon le texte le plus long
       valeurs.forEach(function(v, i) {
-        doc.rect(x, y, colWidths[i], 9);
-        doc.text(String(v || ''), x + 2, y + 6);
+        _edtPdfCase(doc, x, y, colWidths[i], _h, v);
         x += colWidths[i];
       });
-      y += 9;
+      y += _h;
     }
     if (y > pageHeight - 35) { doc.addPage(); y = 15; }
   });
@@ -14509,9 +14521,9 @@ function exporterEdtProfPDF() {
   _edtProfCourant.lignes.forEach(function(l) {
     x = startX;
     const valeurs = [l.creneau, l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi, l.samedi];
+      const _h = _edtPdfHauteur(doc, valeurs, colWidths);   // 11/11/2026 — hauteur selon le texte le plus long
     valeurs.forEach(function(v, i) {
-      doc.rect(x, y, colWidths[i], 9);
-      doc.text(String(v || ''), x + 2, y + 6);
+      _edtPdfCase(doc, x, y, colWidths[i], _h, v);
       x += colWidths[i];
     });
     JOURS_EDT.forEach(function(j) {
@@ -14521,7 +14533,7 @@ function exporterEdtProfPDF() {
       if (prefixesPremierCycle.some(p => classe.indexOf(p) === 0)) totalPremierCycle++;
       else if (prefixesSecondCycle.some(p => classe.indexOf(p) === 0)) totalSecondCycle++;
     });
-    y += 9;
+    y += _h;
     if (y > pageHeight - 30) { doc.addPage(); y = 15; }
   });
 
@@ -14684,12 +14696,12 @@ function exporterEdtClassePDFCom() {
     } else {
       x = startX;
       const valeurs = [l.creneau, l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi, l.samedi];
+      const _h = _edtPdfHauteur(doc, valeurs, colWidths);   // 11/11/2026 — hauteur selon le texte le plus long
       valeurs.forEach(function(v, i) {
-        doc.rect(x, y, colWidths[i], 9);
-        doc.text(String(v || ''), x + 2, y + 6);
+        _edtPdfCase(doc, x, y, colWidths[i], _h, v);
         x += colWidths[i];
       });
-      y += 9;
+      y += _h;
     }
     if (y > pageHeight - 35) { doc.addPage(); y = 15; }
   });
@@ -14856,9 +14868,9 @@ function exporterEdtProfPDFCom() {
   _edtProfCourantCom.lignes.forEach(function(l) {
     x = startX;
     const valeurs = [l.creneau, l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi, l.samedi];
+      const _h = _edtPdfHauteur(doc, valeurs, colWidths);   // 11/11/2026 — hauteur selon le texte le plus long
     valeurs.forEach(function(v, i) {
-      doc.rect(x, y, colWidths[i], 9);
-      doc.text(String(v || ''), x + 2, y + 6);
+      _edtPdfCase(doc, x, y, colWidths[i], _h, v);
       x += colWidths[i];
     });
     JOURS_EDT.forEach(function(j) {
@@ -14868,7 +14880,7 @@ function exporterEdtProfPDFCom() {
       if (prefixesPremierCycle.some(p => classe.indexOf(p) === 0)) totalPremierCycle++;
       else if (prefixesSecondCycle.some(p => classe.indexOf(p) === 0)) totalSecondCycle++;
     });
-    y += 9;
+    y += _h;
     if (y > pageHeight - 30) { doc.addPage(); y = 15; }
   });
 
@@ -15030,12 +15042,12 @@ function exporterEdtClassePDFEdu() {
     } else {
       x = startX;
       const valeurs = [l.creneau, l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi, l.samedi];
+      const _h = _edtPdfHauteur(doc, valeurs, colWidths);   // 11/11/2026 — hauteur selon le texte le plus long
       valeurs.forEach(function(v, i) {
-        doc.rect(x, y, colWidths[i], 9);
-        doc.text(String(v || ''), x + 2, y + 6);
+        _edtPdfCase(doc, x, y, colWidths[i], _h, v);
         x += colWidths[i];
       });
-      y += 9;
+      y += _h;
     }
     if (y > pageHeight - 35) { doc.addPage(); y = 15; }
   });
@@ -15202,9 +15214,9 @@ function exporterEdtProfPDFEdu() {
   _edtProfCourantEdu.lignes.forEach(function(l) {
     x = startX;
     const valeurs = [l.creneau, l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi, l.samedi];
+      const _h = _edtPdfHauteur(doc, valeurs, colWidths);   // 11/11/2026 — hauteur selon le texte le plus long
     valeurs.forEach(function(v, i) {
-      doc.rect(x, y, colWidths[i], 9);
-      doc.text(String(v || ''), x + 2, y + 6);
+      _edtPdfCase(doc, x, y, colWidths[i], _h, v);
       x += colWidths[i];
     });
     JOURS_EDT.forEach(function(j) {
@@ -15214,7 +15226,7 @@ function exporterEdtProfPDFEdu() {
       if (prefixesPremierCycle.some(p => classe.indexOf(p) === 0)) totalPremierCycle++;
       else if (prefixesSecondCycle.some(p => classe.indexOf(p) === 0)) totalSecondCycle++;
     });
-    y += 9;
+    y += _h;
     if (y > pageHeight - 30) { doc.addPage(); y = 15; }
   });
 
