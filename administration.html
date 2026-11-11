@@ -21210,11 +21210,11 @@ async function _edtLotPool(items, n, fn, prog) {   // n appels en parallèle
 }
 
 // ── Page PDF (en-tête + grille), commune aux classes et aux professeurs ──
-function _edtLotPage(doc, titre, ligne2, ligne3, lignes) {
+function _edtLotPage(doc, titre, ligne2, ligne3, lignes, sousTitre) {
   var pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight(), y = 16;
   if (_logoCppBase64) { try { doc.addImage(_logoCppBase64, 'PNG', 14, 8, 20, 20); } catch (e) {} }
   doc.setFontSize(14); doc.setFont(undefined, 'bold'); doc.text(titre, pw / 2, y, { align: 'center' }); y += 8;
-  doc.setFontSize(11); doc.setFont(undefined, 'normal'); doc.text(String(currentStaff.ecole || '') + ' — Année scolaire 2026-2027', pw / 2, y, { align: 'center' }); y += 7;
+  doc.setFontSize(11); doc.setFont(undefined, 'normal'); doc.text(sousTitre || (String(currentStaff.ecole || '') + ' — Année scolaire 2026-2027'), pw / 2, y, { align: 'center' }); y += 7;
   if (ligne2) { doc.setFontSize(10); doc.text(ligne2, 14, y); y += 6; }
   if (ligne3) { doc.setFontSize(10); doc.text(ligne3, 14, y); y += 6; }
   y += 2;
@@ -21353,19 +21353,29 @@ async function edtReseauCharger(pfx) {
     p.noms[t.nom] = 1; p.ecoles[t.court] = 1;
     r.lignes.forEach(function (l) {
       var c = _erCreneau(l.creneau); if (!c) return;
-      JOURS_EDT.forEach(function (j) { var v = String(l[j] || '').trim(); if (v) p.cours.push({ jour: j, a: c.a, b: c.b, ecole: t.court, texte: v }); });
+      JOURS_EDT.forEach(function (j) {
+        var v = String(l[j] || '').trim(); if (!v) return;
+        // une case peut regrouper plusieurs classes : « 2A BT SMS - ECO GLE / 2A BT TH - ECO GLE »
+        var items = v.split(/\s+\/\s+/).map(function (it) { var q = it.split(' - '); return { classe: q[0].trim(), mat: _erN(q.slice(1).join(' - ')) }; });
+        p.cours.push({ jour: j, a: c.a, b: c.b, ecole: t.court, texte: v, items: items, mats: items.map(function (x) { return x.mat; }).filter(function (m, k, tt) { return m && tt.indexOf(m) === k; }) });
+      });
     });
   });
   personnes.forEach(function (p) {   // conflits : même jour, horaires qui se chevauchent dans deux écoles différentes
     p.conflits = 0;
-    p.cours.forEach(function (x) { x.conflit = p.cours.some(function (y) { return y !== x && y.jour === x.jour && y.ecole !== x.ecole && x.a < y.b && y.a < x.b; }); if (x.conflit) p.conflits++; });
+    // 11/11/2026 — conflit = deux cours qui se chevauchent le même jour, SAUF classes regroupées (même école, même créneau, même matière)
+    p.cours.forEach(function (x) {
+      x.conflit = x.mats.length > 1   // dans une même case : plusieurs matières différentes au même moment
+        || p.cours.some(function (y) { return y !== x && y.jour === x.jour && x.a < y.b && y.a < x.b && (y.ecole !== x.ecole || y.a !== x.a || y.b !== x.b || y.mats.join() !== x.mats.join()); });
+      if (x.conflit) p.conflits++;
+    });
     p.nbEcoles = Object.keys(p.ecoles).length;
   });
   personnes.sort(function (a, b) { return (b.nbEcoles - a.nbEcoles) || a.cle.localeCompare(b.cle); });
   EDT_RES = personnes;
   var multi = personnes.filter(function (p) { return p.nbEcoles > 1; });
   var btn = function (p, i) { return '<button onclick="edtReseauVoir(\'' + pfx + '\',' + i + ')" style="padding:5px 9px;margin:2px;border-radius:6px;border:1px solid ' + (p.conflits ? '#C62828' : 'var(--bleu)') + ';background:#fff;color:' + (p.conflits ? '#C62828' : 'var(--bleu)') + ';font-size:0.76em;cursor:pointer">' + _edtLotEsc(p.cle) + ' <span style="opacity:0.7">(' + Object.keys(p.ecoles).join('+') + ')</span>' + (p.conflits ? ' ⚠️' : '') + '</button>'; };
-  z.innerHTML = '<div style="font-size:0.8em;margin:6px 0"><b>' + multi.length + '</b> professeur(s) interviennent dans plusieurs écoles, sur ' + personnes.length + ' au total. ⚠️ = cours qui se chevauchent entre deux écoles.</div>'
+  z.innerHTML = '<div style="font-size:0.8em;margin:6px 0"><b>' + multi.length + '</b> professeur(s) interviennent dans plusieurs écoles, sur ' + personnes.length + ' au total. ⚠️ = cours qui se chevauchent (deux écoles, ou deux classes de matières différentes au même moment ; les classes regroupées ne comptent pas).</div>'
     + '<button onclick="edtReseauPdf(\'' + pfx + '\', true)" style="padding:6px 11px;margin:2px;border-radius:6px;border:none;background:#4A148C;color:#fff;font-size:0.78em;cursor:pointer">🖨️ PDF — professeurs de plusieurs écoles (' + multi.length + ')</button>'
     + '<button onclick="edtReseauPdf(\'' + pfx + '\', false)" style="padding:6px 11px;margin:2px;border-radius:6px;border:1px solid #4A148C;background:#fff;color:#4A148C;font-size:0.78em;cursor:pointer">🖨️ PDF — tous les professeurs des 3 écoles (' + personnes.length + ')</button>'
     + '<div style="margin-top:6px">' + personnes.map(function (p, i) { return p.nbEcoles > 1 ? btn(p, i) : ''; }).join('') + '</div>'
@@ -21380,7 +21390,7 @@ function _erLignes(p) {
     var l = { creneau: _erHM(c.a) + ' - ' + _erHM(c.b) };
     JOURS_EDT.forEach(function (j) {
       l[j] = p.cours.filter(function (x) { return x.jour === j && x.a === c.a && x.b === c.b; })
-        .map(function (x) { return (x.conflit ? '⚠ ' : '') + x.ecole + ' : ' + x.texte; }).join(' / ');
+        .map(function (x) { return (x.conflit ? '[CONFLIT] ' : '') + x.ecole + ' : ' + x.texte; }).join(' / ');
     });
     return l;
   });
@@ -21389,12 +21399,12 @@ function edtReseauVoir(pfx, i) {
   var p = EDT_RES[i], d = document.getElementById(pfx + 'EdtResDetail'); if (!p || !d) return;
   var td = 'style="border:1px solid var(--border);padding:4px;font-size:0.76em;vertical-align:top"';
   var h = '<div style="margin-top:10px;border-top:2px solid #4A148C;padding-top:6px"><b>' + _edtLotEsc(p.cle) + '</b> — ' + Object.keys(p.ecoles).join(', ') + ' — ' + p.cours.length + ' créneau(x)'
-    + (p.conflits ? ' — <b style="color:#C62828">⚠️ ' + p.conflits + ' cours en conflit d\'horaire</b>' : '')
+    + (p.conflits ? ' — <b style="color:#C62828">⚠️ ' + p.conflits + ' cours en conflit d\'horaire (même heure : deux écoles, ou deux classes de matières différentes)</b>' : '')
     + ' <button onclick="edtReseauPdf(\'' + pfx + '\', null, ' + i + ')" style="padding:4px 9px;border-radius:6px;border:none;background:var(--vert);color:#fff;font-size:0.8em;cursor:pointer;margin-left:6px">🖨️ PDF</button>'
     + '<div style="font-size:0.72em;color:var(--gris)">Noms dans les écoles : ' + _edtLotEsc(Object.keys(p.noms).join(' · ')) + '</div>'
     + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;margin-top:4px"><tr><th ' + td + '>Horaire</th>' + JOURS_LABELS.map(function (j) { return '<th ' + td + '>' + j + '</th>'; }).join('') + '</tr>';
   _erLignes(p).forEach(function (l) {
-    h += '<tr><td ' + td + '><b>' + l.creneau + '</b></td>' + JOURS_EDT.map(function (j) { var v = l[j]; return '<td ' + td + (v.indexOf('⚠') >= 0 ? ' bgcolor="#FFEBEE"' : '') + '>' + _edtLotEsc(v) + '</td>'; }).join('') + '</tr>';
+    h += '<tr><td ' + td + '><b>' + l.creneau + '</b></td>' + JOURS_EDT.map(function (j) { var v = l[j]; return '<td ' + td + (v.indexOf('[CONFLIT]') >= 0 ? ' bgcolor="#FFEBEE"' : '') + '>' + _edtLotEsc(v) + '</td>'; }).join('') + '</tr>';
   });
   d.innerHTML = h + '</table></div></div>';
 }
@@ -21405,7 +21415,7 @@ function edtReseauPdf(pfx, multiSeulement, seul) {
   liste.forEach(function (p, k) {
     if (k) doc.addPage();
     _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + p.cle, 'Écoles : ' + Object.keys(p.ecoles).join(', ') + '   —   ' + p.cours.length + ' créneau(x) par semaine',
-      p.conflits ? '⚠ ' + p.conflits + ' cours en conflit d\'horaire entre deux écoles (marqués ⚠)' : 'Aucun conflit d\'horaire entre les écoles', _erLignes(p));
+      p.conflits ? 'ATTENTION : ' + p.conflits + ' cours en conflit d\'horaire (marqués [CONFLIT]) — même heure, deux écoles ou deux classes/matières différentes' : 'Aucun conflit d\'horaire', _erLignes(p), 'Réseau CPP Les Princes — Princes + TECH + PRO — Année scolaire 2026-2027');
   });
   doc.save('EDT_RESEAU_' + (seul != null ? liste[0].cle.replace(/\s+/g, '_') : (multiSeulement ? 'PROFS_MULTI_ECOLES' : 'TOUS_PROFS_3_ECOLES')) + '.pdf');
 }
