@@ -404,7 +404,7 @@ table tr:nth-child(even){background:#F8FAFD}
       <select id="dirEdtProfSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtProfDir()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
       <button onclick="exporterEdtProfPDF()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
-      <button onclick="edtLotProfs('dir')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT des professeurs (par mati&egrave;re)</button>
+      <button onclick="edtLotProfs('dir')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT des professeurs (par fili&egrave;re / mati&egrave;re)</button>
       <div id="dirEdtLotProfZone" style="padding:6px 0"></div>
 <button id="dirEdtProfSaveBtn" onclick="sauvegarderEdtProfDir()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="dirEdtProfBody" style="padding:12px 0"></div>
@@ -3412,7 +3412,7 @@ async function sauvegarderPersonnelDir(idx) {
       <select id="comEdtProfSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtProfCom()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
       <button onclick="exporterEdtProfPDFCom()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
-      <button onclick="edtLotProfs('com')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT des professeurs (par mati&egrave;re)</button>
+      <button onclick="edtLotProfs('com')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT des professeurs (par fili&egrave;re / mati&egrave;re)</button>
       <div id="comEdtLotProfZone" style="padding:6px 0"></div>
 <button id="comEdtProfSaveBtn" onclick="sauvegarderEdtProfCom()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="comEdtProfBody" style="padding:12px 0"></div>
@@ -4921,7 +4921,7 @@ async function attribuerMatriculeCom() {
       <select id="eduEdtProfSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtProfEdu()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
       <button onclick="exporterEdtProfPDFEdu()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
-      <button onclick="edtLotProfs('edu')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT des professeurs (par mati&egrave;re)</button>
+      <button onclick="edtLotProfs('edu')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT des professeurs (par fili&egrave;re / mati&egrave;re)</button>
       <div id="eduEdtLotProfZone" style="padding:6px 0"></div>
 <button id="eduEdtProfSaveBtn" onclick="sauvegarderEdtProfEdu()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="eduEdtProfBody" style="padding:12px 0"></div>
@@ -21269,19 +21269,25 @@ async function edtLotProfs(pfx) {
   if (!noms.length) { z.innerHTML = '<p style="color:var(--rouge);font-size:0.8em">Aucun enseignant trouvé.</p>'; return; }
   var lus = await _edtLotPool(noms, 4, function (n) { return appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_EDT_PROF', ecole: currentStaff.ecole, prof: n }, 30000); },
     function (f, t) { z.innerHTML = '<p style="font-size:0.8em;color:var(--gris)">⏳ Lecture des EDT des enseignants : ' + f + ' / ' + t + '…</p>'; });
+  // 11/11/2026 : CPP TECH / CPP PRO → regroupement par FILIÈRE (un professeur figure dans chaque filière où il enseigne) ;
+  //              autres écoles (enseignement général) → regroupement par MATIÈRE principale, une page par enseignant
+  var parFiliere = /^(CPP TECH|CPP PRO)$/i.test(String(currentStaff.ecole).trim());
+  var filiereDe = function (cl) { var c = String(cl || '').toUpperCase().replace(/\s+/g, ' ').trim(); return c.replace(/^(\d\s*A|1ERE|2NDE|TLE|\d+EME)\s*/, '').trim() || c; };
   var mat = {}, sans = [];
   noms.forEach(function (n, i) {
     var res = lus[i]; if (!res || !res.ok || _edtLotVide(res.lignes)) { sans.push(n); return; }
-    var cpt = {};   // matière la plus fréquente dans ses cases « CLASSE - MATIERE »
-    res.lignes.forEach(function (l) { JOURS_EDT.forEach(function (j) { var p = String(l[j] || '').split(' - '); var m = (p[1] || '').trim().toUpperCase(); if (m) cpt[m] = (cpt[m] || 0) + 1; }); });
-    var best = Object.keys(cpt).sort(function (a, b) { return cpt[b] - cpt[a]; })[0] || 'AUTRE';
-    (mat[best] = mat[best] || []).push({ nom: n, lignes: res.lignes, matieres: Object.keys(cpt) });
+    var cpt = {}, fil = {};   // matières (« CLASSE - MATIERE ») et filières enseignées
+    res.lignes.forEach(function (l) { JOURS_EDT.forEach(function (j) { var p = String(l[j] || '').split(' - '); var m = (p[1] || '').trim().toUpperCase(); if (m) cpt[m] = (cpt[m] || 0) + 1; var f = p[0] && p[0].trim() ? filiereDe(p[0]) : ''; if (f) fil[f] = 1; }); });
+    var fiche = { nom: n, lignes: res.lignes, matieres: Object.keys(cpt), filieres: Object.keys(fil) };
+    if (parFiliere) (fiche.filieres.length ? fiche.filieres : ['AUTRE']).forEach(function (f) { (mat[f] = mat[f] || []).push(fiche); });
+    else { var best = Object.keys(cpt).sort(function (a, b) { return cpt[b] - cpt[a]; })[0] || 'AUTRE'; (mat[best] = mat[best] || []).push(fiche); }
   });
   var ordre = Object.keys(mat).sort();
-  EDT_LOT.profs = { mat: mat, ordre: ordre };
-  var total = ordre.reduce(function (a, m) { return a + mat[m].length; }, 0);
-  z.innerHTML = '<div style="font-size:0.8em;margin:6px 0">Choisissez la matière à imprimer (un seul PDF, une page par professeur) :</div>'
-    + '<button onclick="edtLotProfsPdf(\'' + pfx + '\',\'\')" style="padding:5px 10px;margin:2px;border-radius:6px;border:none;background:var(--bleu);color:#fff;font-size:0.78em;cursor:pointer">Toutes les matières (' + total + ' professeurs)</button>'
+  var lib = parFiliere ? 'filière' : 'matière';
+  EDT_LOT.profs = { mat: mat, ordre: ordre, lib: lib };
+  var total = noms.length - sans.length;
+  z.innerHTML = '<div style="font-size:0.8em;margin:6px 0">Choisissez la ' + lib + ' à imprimer (un seul PDF, une page par professeur' + (parFiliere ? ' ; un professeur apparaît dans chaque filière où il enseigne' : '') + ') :</div>'
+    + '<button onclick="edtLotProfsPdf(\'' + pfx + '\',\'\')" style="padding:5px 10px;margin:2px;border-radius:6px;border:none;background:var(--bleu);color:#fff;font-size:0.78em;cursor:pointer">' + (parFiliere ? 'Toutes les filières' : 'Toutes les matières') + ' (' + total + ' professeurs)</button>'
     + ordre.map(function (m) { return '<button onclick="edtLotProfsPdf(\'' + pfx + '\',\'' + _edtLotEsc(m).replace(/'/g, "\\'") + '\')" style="padding:5px 10px;margin:2px;border-radius:6px;border:1px solid var(--bleu);background:#fff;color:var(--bleu);font-size:0.78em;cursor:pointer">' + _edtLotEsc(m) + ' (' + mat[m].length + ')</button>'; }).join('')
     + (sans.length ? '<div style="font-size:0.72em;color:var(--gris);margin-top:4px">Sans EDT : ' + _edtLotEsc(sans.join(', ')) + '</div>' : '');
 }
@@ -21292,11 +21298,12 @@ function edtLotProfsPdf(pfx, matiere) {
     P.mat[m].slice().sort(function (a, b) { return a.nom.localeCompare(b.nom, 'fr'); }).forEach(function (p) {
       if (pages++) doc.addPage();
       var nb = 0; p.lignes.forEach(function (l) { JOURS_EDT.forEach(function (j) { if (String(l[j] || '').trim()) nb++; }); });
-      _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + p.nom, 'Matière : ' + m + (p.matieres.length > 1 ? '   (enseigne aussi : ' + p.matieres.filter(function (x) { return x !== m; }).join(', ') + ')' : ''), 'Volume hebdomadaire : ' + nb + ' créneau(x)', p.lignes);
+      var l2 = P.lib === 'filière' ? 'Filière : ' + m + '   —   Matière(s) : ' + p.matieres.join(', ') : 'Matière : ' + m + (p.matieres.length > 1 ? '   (enseigne aussi : ' + p.matieres.filter(function (x) { return x !== m; }).join(', ') + ')' : '');
+      _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + p.nom, l2, 'Volume hebdomadaire : ' + nb + ' créneau(x)' + (P.lib === 'filière' && p.filieres.length > 1 ? '   —   Filières : ' + p.filieres.join(', ') : ''), p.lignes);
     });
   });
   doc.save('EDT_PROFESSEURS_' + (matiere || 'TOUTES_MATIERES').replace(/\s+/g, '_') + '_' + String(currentStaff.ecole).replace(/\s+/g, '_') + '.pdf');
-  z.innerHTML += '<p style="font-size:0.8em;color:#2E7D32">✅ PDF créé : ' + pages + ' professeur(s)' + (matiere ? ' en ' + _edtLotEsc(matiere) : '') + '.</p>';
+  z.innerHTML += '<p style="font-size:0.8em;color:#2E7D32">✅ PDF créé : ' + pages + ' page(s)' + (matiere ? ' — ' + P.lib + ' ' + _edtLotEsc(matiere) : '') + '.</p>';
 }
 </script>
 
