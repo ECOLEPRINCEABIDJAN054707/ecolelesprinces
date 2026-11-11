@@ -406,6 +406,8 @@ table tr:nth-child(even){background:#F8FAFD}
       <button onclick="exporterEdtProfPDF()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
       <button onclick="edtLotProfs('dir')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT des professeurs (par fili&egrave;re / mati&egrave;re)</button>
       <div id="dirEdtLotProfZone" style="padding:6px 0"></div>
+      <button id="dirEdtResBtn" onclick="edtReseauCharger('dir')" style="display:none;padding:6px 12px;border-radius:6px;background:#00695C;border:none;color:#fff;margin-left:6px">&#128279; EDT r&eacute;seau d'un professeur (Princes + TECH + PRO)</button>
+      <div id="dirEdtResZone" style="padding:6px 0"></div>
 <button id="dirEdtProfSaveBtn" onclick="sauvegarderEdtProfDir()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="dirEdtProfBody" style="padding:12px 0"></div>
     </div>
@@ -3414,6 +3416,8 @@ async function sauvegarderPersonnelDir(idx) {
       <button onclick="exporterEdtProfPDFCom()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
       <button onclick="edtLotProfs('com')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT des professeurs (par fili&egrave;re / mati&egrave;re)</button>
       <div id="comEdtLotProfZone" style="padding:6px 0"></div>
+      <button id="comEdtResBtn" onclick="edtReseauCharger('com')" style="display:none;padding:6px 12px;border-radius:6px;background:#00695C;border:none;color:#fff;margin-left:6px">&#128279; EDT r&eacute;seau d'un professeur (Princes + TECH + PRO)</button>
+      <div id="comEdtResZone" style="padding:6px 0"></div>
 <button id="comEdtProfSaveBtn" onclick="sauvegarderEdtProfCom()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="comEdtProfBody" style="padding:12px 0"></div>
     </div>
@@ -4923,6 +4927,8 @@ async function attribuerMatriculeCom() {
       <button onclick="exporterEdtProfPDFEdu()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
       <button onclick="edtLotProfs('edu')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT des professeurs (par fili&egrave;re / mati&egrave;re)</button>
       <div id="eduEdtLotProfZone" style="padding:6px 0"></div>
+      <button id="eduEdtResBtn" onclick="edtReseauCharger('edu')" style="display:none;padding:6px 12px;border-radius:6px;background:#00695C;border:none;color:#fff;margin-left:6px">&#128279; EDT r&eacute;seau d'un professeur (Princes + TECH + PRO)</button>
+      <div id="eduEdtResZone" style="padding:6px 0"></div>
 <button id="eduEdtProfSaveBtn" onclick="sauvegarderEdtProfEdu()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="eduEdtProfBody" style="padding:12px 0"></div>
     </div>
@@ -21305,6 +21311,111 @@ function edtLotProfsPdf(pfx, matiere) {
   doc.save('EDT_PROFESSEURS_' + (matiere || 'TOUTES_MATIERES').replace(/\s+/g, '_') + '_' + String(currentStaff.ecole).replace(/\s+/g, '_') + '.pdf');
   z.innerHTML += '<p style="font-size:0.8em;color:#2E7D32">✅ PDF créé : ' + pages + ' page(s)' + (matiere ? ' — ' + P.lib + ' ' + _edtLotEsc(matiere) : '') + '.</p>';
 }
+</script>
+
+<script>
+// ═══ 11/11/2026 — EDT RÉSEAU D'UN PROFESSEUR : CPP LES PRINCES + CPP TECH + CPP PRO ═══
+// Regroupe en UN SEUL emploi du temps les cours d'un même professeur dans les 3 écoles.
+// Même personne = même nom (mots identiques, ou nom court contenu dans le nom long, au moins 2 mots) ou alias connu.
+// Les cours qui se chevauchent entre deux écoles sont signalés ⚠️ (conflit d'horaire).
+var EDT_RES_ECOLES = [['CPP LES PRINCES', 'PRINCES'], ['CPP TECH', 'TECH'], ['CPP PRO', 'PRO']];
+var EDT_RES_ALIAS = {   // nom écrit dans une école → nom de référence (décisions du Fondateur, 20/10 et 06/11/2026)
+  'CHANOU': 'CHONOU ATTO PRISCA', 'CHONOU': 'CHONOU ATTO PRISCA', 'EKOUE': 'EKOUE RODOLPHE', 'COTCHI': 'COTCHI AGNI PAULE',
+  'N DORI': 'N DORI TCHIMON', 'KOUELLO': 'KOUELLO IVON MARDOCHEE'
+};
+var EDT_RES = null;
+function _erN(s) { return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z0-9]+/g, ' ').replace(/\b(M|MR|MME|MLLE|MADAME|MONSIEUR)\b/g, ' ').replace(/\s+/g, ' ').trim(); }
+function _erMin(t) { var m = String(t || '').match(/(\d{1,2})\s*[hH:.]\s*(\d{2})?/); return m ? (+m[1]) * 60 + (+(m[2] || 0)) : null; }
+function _erCreneau(cr) { var p = String(cr || '').split(/\s*[-–]\s*|\s+[àa]\s+/), a = _erMin(p[0]), b = p.length > 1 ? _erMin(p[1]) : null; return (a == null || b == null) ? null : { a: a, b: b }; }
+function _erHM(m) { return ('0' + Math.floor(m / 60)).slice(-2) + 'h' + ('0' + (m % 60)).slice(-2); }
+function _erMeme(a, b) {
+  if (a === b) return true;
+  var A = a.split(' '), B = b.split(' '), c = A.length <= B.length ? A : B, l = A.length <= B.length ? B : A;
+  return c.length >= 2 && c.every(function (w) { return l.indexOf(w) >= 0; });
+}
+
+async function edtReseauCharger(pfx) {
+  var z = document.getElementById(pfx + 'EdtResZone'); if (!z || !currentStaff) return;
+  z.innerHTML = '<p style="font-size:0.8em;color:var(--gris)">⏳ Liste des enseignants des 3 écoles…</p>';
+  var listes = await Promise.all(EDT_RES_ECOLES.map(function (e) { return appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LISTER_ENSEIGNANTS_ACTIFS', ecole: e[0] }, 30000); }));
+  var taches = [];
+  EDT_RES_ECOLES.forEach(function (e, i) { ((listes[i] && listes[i].noms) || []).forEach(function (n) { taches.push({ ecole: e[0], court: e[1], nom: n }); }); });
+  var lus = await _edtLotPool(taches, 6, function (t) { return appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_EDT_PROF', ecole: t.ecole, prof: t.nom }, 30000); },
+    function (f, t) { z.innerHTML = '<p style="font-size:0.8em;color:var(--gris)">⏳ Lecture des EDT des 3 écoles : ' + f + ' / ' + t + '…</p>'; });
+  // regroupement des personnes
+  var personnes = [];
+  taches.forEach(function (t, i) {
+    var r = lus[i]; if (!r || !r.ok || _edtLotVide(r.lignes)) return;
+    var n = _erN(t.nom); n = EDT_RES_ALIAS[n] || n;
+    var p = null; for (var k = 0; k < personnes.length && !p; k++) if (_erMeme(personnes[k].cle, n)) p = personnes[k];
+    if (!p) { p = { cle: n, noms: {}, ecoles: {}, cours: [] }; personnes.push(p); }
+    if (n.length > p.cle.length) p.cle = n;
+    p.noms[t.nom] = 1; p.ecoles[t.court] = 1;
+    r.lignes.forEach(function (l) {
+      var c = _erCreneau(l.creneau); if (!c) return;
+      JOURS_EDT.forEach(function (j) { var v = String(l[j] || '').trim(); if (v) p.cours.push({ jour: j, a: c.a, b: c.b, ecole: t.court, texte: v }); });
+    });
+  });
+  personnes.forEach(function (p) {   // conflits : même jour, horaires qui se chevauchent dans deux écoles différentes
+    p.conflits = 0;
+    p.cours.forEach(function (x) { x.conflit = p.cours.some(function (y) { return y !== x && y.jour === x.jour && y.ecole !== x.ecole && x.a < y.b && y.a < x.b; }); if (x.conflit) p.conflits++; });
+    p.nbEcoles = Object.keys(p.ecoles).length;
+  });
+  personnes.sort(function (a, b) { return (b.nbEcoles - a.nbEcoles) || a.cle.localeCompare(b.cle); });
+  EDT_RES = personnes;
+  var multi = personnes.filter(function (p) { return p.nbEcoles > 1; });
+  var btn = function (p, i) { return '<button onclick="edtReseauVoir(\'' + pfx + '\',' + i + ')" style="padding:5px 9px;margin:2px;border-radius:6px;border:1px solid ' + (p.conflits ? '#C62828' : 'var(--bleu)') + ';background:#fff;color:' + (p.conflits ? '#C62828' : 'var(--bleu)') + ';font-size:0.76em;cursor:pointer">' + _edtLotEsc(p.cle) + ' <span style="opacity:0.7">(' + Object.keys(p.ecoles).join('+') + ')</span>' + (p.conflits ? ' ⚠️' : '') + '</button>'; };
+  z.innerHTML = '<div style="font-size:0.8em;margin:6px 0"><b>' + multi.length + '</b> professeur(s) interviennent dans plusieurs écoles, sur ' + personnes.length + ' au total. ⚠️ = cours qui se chevauchent entre deux écoles.</div>'
+    + '<button onclick="edtReseauPdf(\'' + pfx + '\', true)" style="padding:6px 11px;margin:2px;border-radius:6px;border:none;background:#4A148C;color:#fff;font-size:0.78em;cursor:pointer">🖨️ PDF — professeurs de plusieurs écoles (' + multi.length + ')</button>'
+    + '<button onclick="edtReseauPdf(\'' + pfx + '\', false)" style="padding:6px 11px;margin:2px;border-radius:6px;border:1px solid #4A148C;background:#fff;color:#4A148C;font-size:0.78em;cursor:pointer">🖨️ PDF — tous les professeurs des 3 écoles (' + personnes.length + ')</button>'
+    + '<div style="margin-top:6px">' + personnes.map(function (p, i) { return p.nbEcoles > 1 ? btn(p, i) : ''; }).join('') + '</div>'
+    + '<details style="margin-top:4px;font-size:0.78em"><summary>Professeurs d\'une seule école</summary>' + personnes.map(function (p, i) { return p.nbEcoles === 1 ? btn(p, i) : ''; }).join('') + '</details>'
+    + '<div id="' + pfx + 'EdtResDetail"></div>';
+}
+
+// lignes de grille (créneaux réunis des 3 écoles, triés par heure)
+function _erLignes(p) {
+  var cles = {}; p.cours.forEach(function (x) { cles[x.a + '-' + x.b] = { a: x.a, b: x.b }; });
+  return Object.keys(cles).map(function (k) { return cles[k]; }).sort(function (u, v) { return u.a - v.a || u.b - v.b; }).map(function (c) {
+    var l = { creneau: _erHM(c.a) + ' - ' + _erHM(c.b) };
+    JOURS_EDT.forEach(function (j) {
+      l[j] = p.cours.filter(function (x) { return x.jour === j && x.a === c.a && x.b === c.b; })
+        .map(function (x) { return (x.conflit ? '⚠ ' : '') + x.ecole + ' : ' + x.texte; }).join(' / ');
+    });
+    return l;
+  });
+}
+function edtReseauVoir(pfx, i) {
+  var p = EDT_RES[i], d = document.getElementById(pfx + 'EdtResDetail'); if (!p || !d) return;
+  var td = 'style="border:1px solid var(--border);padding:4px;font-size:0.76em;vertical-align:top"';
+  var h = '<div style="margin-top:10px;border-top:2px solid #4A148C;padding-top:6px"><b>' + _edtLotEsc(p.cle) + '</b> — ' + Object.keys(p.ecoles).join(', ') + ' — ' + p.cours.length + ' créneau(x)'
+    + (p.conflits ? ' — <b style="color:#C62828">⚠️ ' + p.conflits + ' cours en conflit d\'horaire</b>' : '')
+    + ' <button onclick="edtReseauPdf(\'' + pfx + '\', null, ' + i + ')" style="padding:4px 9px;border-radius:6px;border:none;background:var(--vert);color:#fff;font-size:0.8em;cursor:pointer;margin-left:6px">🖨️ PDF</button>'
+    + '<div style="font-size:0.72em;color:var(--gris)">Noms dans les écoles : ' + _edtLotEsc(Object.keys(p.noms).join(' · ')) + '</div>'
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;margin-top:4px"><tr><th ' + td + '>Horaire</th>' + JOURS_LABELS.map(function (j) { return '<th ' + td + '>' + j + '</th>'; }).join('') + '</tr>';
+  _erLignes(p).forEach(function (l) {
+    h += '<tr><td ' + td + '><b>' + l.creneau + '</b></td>' + JOURS_EDT.map(function (j) { var v = l[j]; return '<td ' + td + (v.indexOf('⚠') >= 0 ? ' bgcolor="#FFEBEE"' : '') + '>' + _edtLotEsc(v) + '</td>'; }).join('') + '</tr>';
+  });
+  d.innerHTML = h + '</table></div></div>';
+}
+function edtReseauPdf(pfx, multiSeulement, seul) {
+  if (!EDT_RES || !window.jspdf) return;
+  var liste = seul != null ? [EDT_RES[seul]] : EDT_RES.filter(function (p) { return !multiSeulement || p.nbEcoles > 1; });
+  var doc = new jspdf.jsPDF({ orientation: 'landscape' });
+  liste.forEach(function (p, k) {
+    if (k) doc.addPage();
+    _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + p.cle, 'Écoles : ' + Object.keys(p.ecoles).join(', ') + '   —   ' + p.cours.length + ' créneau(x) par semaine',
+      p.conflits ? '⚠ ' + p.conflits + ' cours en conflit d\'horaire entre deux écoles (marqués ⚠)' : 'Aucun conflit d\'horaire entre les écoles', _erLignes(p));
+  });
+  doc.save('EDT_RESEAU_' + (seul != null ? liste[0].cle.replace(/\s+/g, '_') : (multiSeulement ? 'PROFS_MULTI_ECOLES' : 'TOUS_PROFS_3_ECOLES')) + '.pdf');
+}
+// le bouton n'apparaît que pour CPP LES PRINCES, CPP TECH et CPP PRO
+function edtReseauAfficherBouton() {
+  if (typeof currentStaff === 'undefined' || !currentStaff) return;
+  var ok = /^(CPP LES PRINCES|CPP TECH|CPP PRO)$/i.test(String(currentStaff.ecole).trim());
+  ['dir', 'com', 'edu'].forEach(function (p) { var b = document.getElementById(p + 'EdtResBtn'); if (b) b.style.display = ok ? 'inline-block' : 'none'; });
+}
+setInterval(edtReseauAfficherBouton, 3000);
 </script>
 
 </body>
