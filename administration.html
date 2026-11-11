@@ -387,6 +387,8 @@ table tr:nth-child(even){background:#F8FAFD}
       <select id="dirEdtClasseSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtClasseDir()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
       <button onclick="exporterEdtClassePDF()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+      <button onclick="edtLotClasses('dir')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT de classe (par niveau)</button>
+      <div id="dirEdtLotZone" style="padding:6px 0"></div>
      <button id="dirEdtSaveBtn" onclick="sauvegarderEdtClasseDir()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <button id="dirEdtAddBtn" onclick="ajouterLigneEdtDir()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px;display:none">&#10133; Ajouter une ligne</button>
       <div id="dirEdtClasseBody" style="padding:12px 0"></div>
@@ -402,6 +404,8 @@ table tr:nth-child(even){background:#F8FAFD}
       <select id="dirEdtProfSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtProfDir()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
       <button onclick="exporterEdtProfPDF()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+      <button onclick="edtLotProfs('dir')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT des professeurs (par mati&egrave;re)</button>
+      <div id="dirEdtLotProfZone" style="padding:6px 0"></div>
 <button id="dirEdtProfSaveBtn" onclick="sauvegarderEdtProfDir()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="dirEdtProfBody" style="padding:12px 0"></div>
     </div>
@@ -3392,6 +3396,8 @@ async function sauvegarderPersonnelDir(idx) {
       <select id="comEdtClasseSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtClasseCom()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
       <button onclick="exporterEdtClassePDFCom()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+      <button onclick="edtLotClasses('com')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT de classe (par niveau)</button>
+      <div id="comEdtLotZone" style="padding:6px 0"></div>
 <button id="comEdtClasseSaveBtn" onclick="sauvegarderEdtClasseCom()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="comEdtClasseBody" style="padding:12px 0"></div>
     </div>
@@ -3406,6 +3412,8 @@ async function sauvegarderPersonnelDir(idx) {
       <select id="comEdtProfSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtProfCom()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
       <button onclick="exporterEdtProfPDFCom()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+      <button onclick="edtLotProfs('com')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT des professeurs (par mati&egrave;re)</button>
+      <div id="comEdtLotProfZone" style="padding:6px 0"></div>
 <button id="comEdtProfSaveBtn" onclick="sauvegarderEdtProfCom()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="comEdtProfBody" style="padding:12px 0"></div>
     </div>
@@ -4897,6 +4905,8 @@ async function attribuerMatriculeCom() {
       <select id="eduEdtClasseSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtClasseEdu()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
      <button onclick="exporterEdtClassePDFEdu()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+      <button onclick="edtLotClasses('edu')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT de classe (par niveau)</button>
+      <div id="eduEdtLotZone" style="padding:6px 0"></div>
 <button id="eduEdtClasseSaveBtn" onclick="sauvegarderEdtClasseEdu()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="eduEdtClasseBody" style="padding:12px 0"></div>
     </div>
@@ -4911,6 +4921,8 @@ async function attribuerMatriculeCom() {
       <select id="eduEdtProfSelect" style="padding:6px;border-radius:6px;border:1px solid var(--border);margin-right:6px"></select>
       <button onclick="chargerEdtProfEdu()" style="padding:6px 12px;border-radius:6px;background:var(--or);border:none;color:#fff">Charger</button>
       <button onclick="exporterEdtProfPDFEdu()" style="padding:6px 12px;border-radius:6px;background:var(--vert);border:none;color:#fff;margin-left:6px">&#128190; Export PDF</button>
+      <button onclick="edtLotProfs('edu')" style="padding:6px 12px;border-radius:6px;background:#4A148C;border:none;color:#fff;margin-left:6px">&#128424; Tous les EDT des professeurs (par mati&egrave;re)</button>
+      <div id="eduEdtLotProfZone" style="padding:6px 0"></div>
 <button id="eduEdtProfSaveBtn" onclick="sauvegarderEdtProfEdu()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="eduEdtProfBody" style="padding:12px 0"></div>
     </div>
@@ -21172,6 +21184,119 @@ function islReseauDetail(pfx, i) {
     + Object.keys(e.classes).sort().map(function (c) { var x = e.classes[c], reste = x.n - x.ok;
       return '<tr><td ' + td.replace('center', 'left') + '>' + _islEsc(c) + '</td><td ' + td + '>' + x.n + '</td><td ' + td + '>' + x.ok + '</td><td ' + td + '><b style="color:' + (reste ? '#C62828' : '#2E7D32') + '">' + reste + '</b></td><td ' + td + '>' + x.aff + '</td><td ' + td + '>' + x.naff + '</td><td ' + td + '>' + (x.n - x.aff - x.naff) + '</td></tr>'; }).join('')
     + '</table></div>';
+}
+</script>
+
+<script>
+// ═══ 11/11/2026 — IMPRESSION GROUPÉE DES EDT ═══
+// • « Tous les EDT de classe » : un seul PDF, une page par classe, classé par niveau (choix d'un niveau ou de tous)
+// • « Tous les EDT des professeurs » : un seul PDF, une page par professeur, classé par matière (choix d'une matière ou de toutes)
+// Utilise les lectures existantes du serveur : LISTER_CLASSES_EDT / LIRE_EDT et LISTER_ENSEIGNANTS_ACTIFS / LIRE_EDT_PROF.
+var EDT_LOT = { classes: null, profs: null };
+function _edtLotEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function _edtLotNiveau(cl) { var c = String(cl || '').toUpperCase().trim(), m = c.match(/^(\d+\s*A|6EME|5EME|4EME|3EME|2NDE|1ERE|TLE|CP\d|CE\d|CM\d|[A-Z]+)/); return m ? m[1].replace(/\s+/g, '') : c; }
+function _edtLotOrdre(n) { var o = ['PS', 'MS', 'GS', 'CP1', 'CP2', 'CE1', 'CE2', 'CM1', 'CM2', '6EME', '5EME', '4EME', '3EME', '2NDE', '1ERE', 'TLE', '1A', '2A', '3A']; var i = o.indexOf(n); return i < 0 ? 99 : i; }
+function _edtLotVide(lignes) { return !(lignes || []).some(function (l) { return JOURS_EDT.some(function (j) { return String(l[j] || '').trim(); }); }); }
+async function _edtLotPool(items, n, fn, prog) {   // n appels en parallèle
+  var res = new Array(items.length), i = 0, fait = 0;
+  async function w() { while (i < items.length) { var k = i++; try { res[k] = await fn(items[k]); } catch (e) { res[k] = null; } fait++; if (prog) prog(fait, items.length); } }
+  var ws = []; for (var t = 0; t < Math.min(n, items.length); t++) ws.push(w()); await Promise.all(ws); return res;
+}
+
+// ── Page PDF (en-tête + grille), commune aux classes et aux professeurs ──
+function _edtLotPage(doc, titre, ligne2, ligne3, lignes) {
+  var pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight(), y = 16;
+  if (_logoCppBase64) { try { doc.addImage(_logoCppBase64, 'PNG', 14, 8, 20, 20); } catch (e) {} }
+  doc.setFontSize(14); doc.setFont(undefined, 'bold'); doc.text(titre, pw / 2, y, { align: 'center' }); y += 8;
+  doc.setFontSize(11); doc.setFont(undefined, 'normal'); doc.text(String(currentStaff.ecole || '') + ' — Année scolaire 2026-2027', pw / 2, y, { align: 'center' }); y += 7;
+  if (ligne2) { doc.setFontSize(10); doc.text(ligne2, 14, y); y += 6; }
+  if (ligne3) { doc.setFontSize(10); doc.text(ligne3, 14, y); y += 6; }
+  y += 2;
+  var colWidths = [30, 42, 42, 42, 42, 42, 42], startX = 10, x = startX;
+  doc.setFontSize(9); doc.setFont(undefined, 'bold');
+  ['Horaire'].concat(JOURS_LABELS).forEach(function (h, i) { doc.rect(x, y, colWidths[i], 8); doc.text(h, x + 2, y + 5.5); x += colWidths[i]; });
+  y += 8; doc.setFont(undefined, 'normal'); doc.setFontSize(8);
+  (lignes || []).forEach(function (l) {
+    if (/RÉCR|RECR|DÉJEUNER|DEJEUNER|PAUSE/i.test(l.creneau || '')) {
+      var tot = colWidths.reduce(function (a, b) { return a + b; }, 0);
+      doc.setFillColor(230, 230, 230); doc.rect(startX, y, tot, 6, 'FD'); doc.setFont(undefined, 'bold');
+      doc.text(String(l.creneau), startX + tot / 2, y + 4.2, { align: 'center' }); doc.setFont(undefined, 'normal'); y += 6;
+    } else {
+      var v = [l.creneau, l.lundi, l.mardi, l.mercredi, l.jeudi, l.vendredi, l.samedi], h = _edtPdfHauteur(doc, v, colWidths); x = startX;
+      if (y + h > ph - 12) { doc.addPage(); y = 15; }
+      v.forEach(function (t, i) { _edtPdfCase(doc, x, y, colWidths[i], h, t); x += colWidths[i]; });
+      y += h;
+    }
+  });
+}
+
+// ── 1) Tous les EDT de classe, par niveau ──
+async function edtLotClasses(pfx) {
+  var z = document.getElementById(pfx + 'EdtLotZone'); if (!z || !currentStaff) return;
+  z.innerHTML = '<p style="font-size:0.8em;color:var(--gris)">⏳ Liste des classes…</p>';
+  var r = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LISTER_CLASSES_EDT', ecole: currentStaff.ecole }, 30000);
+  var cls = ((r && r.classes) || []).filter(function (c) { return !/^(PAR_PROF|ENSEIGNANTS)$/i.test(c); });
+  if (!cls.length) { z.innerHTML = '<p style="color:var(--rouge);font-size:0.8em">Aucune classe trouvée.</p>'; return; }
+  var niv = {}; cls.forEach(function (c) { var n = _edtLotNiveau(c); (niv[n] = niv[n] || []).push(c); });
+  var ordre = Object.keys(niv).sort(function (a, b) { return _edtLotOrdre(a) - _edtLotOrdre(b) || a.localeCompare(b); });
+  EDT_LOT.classes = { niv: niv, ordre: ordre };
+  z.innerHTML = '<div style="font-size:0.8em;margin:6px 0">Choisissez le niveau à imprimer (un seul PDF, une page par classe) :</div>'
+    + '<button onclick="edtLotClassesPdf(\'' + pfx + '\',\'\')" style="padding:5px 10px;margin:2px;border-radius:6px;border:none;background:var(--bleu);color:#fff;font-size:0.78em;cursor:pointer">Tous les niveaux (' + cls.length + ' classes)</button>'
+    + ordre.map(function (n) { return '<button onclick="edtLotClassesPdf(\'' + pfx + '\',\'' + _edtLotEsc(n) + '\')" style="padding:5px 10px;margin:2px;border-radius:6px;border:1px solid var(--bleu);background:#fff;color:var(--bleu);font-size:0.78em;cursor:pointer">' + _edtLotEsc(n) + ' (' + niv[n].length + ')</button>'; }).join('');
+}
+async function edtLotClassesPdf(pfx, niveau) {
+  var z = document.getElementById(pfx + 'EdtLotZone'), L = EDT_LOT.classes; if (!L || !window.jspdf) return;
+  var liste = []; (niveau ? [niveau] : L.ordre).forEach(function (n) { L.niv[n].slice().sort().forEach(function (c) { liste.push(c); }); });
+  var lus = await _edtLotPool(liste, 4, function (c) { return appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_EDT', ecole: currentStaff.ecole, classe: c }, 30000); },
+    function (f, t) { z.innerHTML = '<p style="font-size:0.8em;color:var(--gris)">⏳ Lecture des EDT : ' + f + ' / ' + t + '…</p>'; });
+  var doc = new jspdf.jsPDF({ orientation: 'landscape' }), pages = 0, vides = [];
+  liste.forEach(function (c, i) {
+    var r = lus[i]; if (!r || !r.ok || _edtLotVide(r.lignes)) { vides.push(c); return; }
+    if (pages++) doc.addPage();
+    _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + c, 'Niveau : ' + _edtLotNiveau(c), 'Professeur Principal : ' + (r.profPrincipal || '______________________'), r.lignes);
+  });
+  if (!pages) { z.innerHTML = '<p style="color:var(--rouge);font-size:0.8em">Aucun EDT rempli.</p>'; return; }
+  doc.save('EDT_CLASSES_' + (niveau || 'TOUS') + '_' + String(currentStaff.ecole).replace(/\s+/g, '_') + '.pdf');
+  z.innerHTML = '<p style="font-size:0.8em;color:#2E7D32">✅ PDF créé : ' + pages + ' classe(s).' + (vides.length ? ' <span style="color:#E65100">EDT vide ou introuvable : ' + _edtLotEsc(vides.join(', ')) + '</span>' : '') + '</p>';
+}
+
+// ── 2) Tous les EDT des professeurs, par matière ──
+async function edtLotProfs(pfx) {
+  var z = document.getElementById(pfx + 'EdtLotProfZone'); if (!z || !currentStaff) return;
+  z.innerHTML = '<p style="font-size:0.8em;color:var(--gris)">⏳ Liste des enseignants…</p>';
+  var r = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LISTER_ENSEIGNANTS_ACTIFS', ecole: currentStaff.ecole }, 30000);
+  var noms = (r && r.noms) || [];
+  if (!noms.length) { z.innerHTML = '<p style="color:var(--rouge);font-size:0.8em">Aucun enseignant trouvé.</p>'; return; }
+  var lus = await _edtLotPool(noms, 4, function (n) { return appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_EDT_PROF', ecole: currentStaff.ecole, prof: n }, 30000); },
+    function (f, t) { z.innerHTML = '<p style="font-size:0.8em;color:var(--gris)">⏳ Lecture des EDT des enseignants : ' + f + ' / ' + t + '…</p>'; });
+  var mat = {}, sans = [];
+  noms.forEach(function (n, i) {
+    var res = lus[i]; if (!res || !res.ok || _edtLotVide(res.lignes)) { sans.push(n); return; }
+    var cpt = {};   // matière la plus fréquente dans ses cases « CLASSE - MATIERE »
+    res.lignes.forEach(function (l) { JOURS_EDT.forEach(function (j) { var p = String(l[j] || '').split(' - '); var m = (p[1] || '').trim().toUpperCase(); if (m) cpt[m] = (cpt[m] || 0) + 1; }); });
+    var best = Object.keys(cpt).sort(function (a, b) { return cpt[b] - cpt[a]; })[0] || 'AUTRE';
+    (mat[best] = mat[best] || []).push({ nom: n, lignes: res.lignes, matieres: Object.keys(cpt) });
+  });
+  var ordre = Object.keys(mat).sort();
+  EDT_LOT.profs = { mat: mat, ordre: ordre };
+  var total = ordre.reduce(function (a, m) { return a + mat[m].length; }, 0);
+  z.innerHTML = '<div style="font-size:0.8em;margin:6px 0">Choisissez la matière à imprimer (un seul PDF, une page par professeur) :</div>'
+    + '<button onclick="edtLotProfsPdf(\'' + pfx + '\',\'\')" style="padding:5px 10px;margin:2px;border-radius:6px;border:none;background:var(--bleu);color:#fff;font-size:0.78em;cursor:pointer">Toutes les matières (' + total + ' professeurs)</button>'
+    + ordre.map(function (m) { return '<button onclick="edtLotProfsPdf(\'' + pfx + '\',\'' + _edtLotEsc(m).replace(/'/g, "\\'") + '\')" style="padding:5px 10px;margin:2px;border-radius:6px;border:1px solid var(--bleu);background:#fff;color:var(--bleu);font-size:0.78em;cursor:pointer">' + _edtLotEsc(m) + ' (' + mat[m].length + ')</button>'; }).join('')
+    + (sans.length ? '<div style="font-size:0.72em;color:var(--gris);margin-top:4px">Sans EDT : ' + _edtLotEsc(sans.join(', ')) + '</div>' : '');
+}
+function edtLotProfsPdf(pfx, matiere) {
+  var z = document.getElementById(pfx + 'EdtLotProfZone'), P = EDT_LOT.profs; if (!P || !window.jspdf) return;
+  var doc = new jspdf.jsPDF({ orientation: 'landscape' }), pages = 0;
+  (matiere ? [matiere] : P.ordre).forEach(function (m) {
+    P.mat[m].slice().sort(function (a, b) { return a.nom.localeCompare(b.nom, 'fr'); }).forEach(function (p) {
+      if (pages++) doc.addPage();
+      var nb = 0; p.lignes.forEach(function (l) { JOURS_EDT.forEach(function (j) { if (String(l[j] || '').trim()) nb++; }); });
+      _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + p.nom, 'Matière : ' + m + (p.matieres.length > 1 ? '   (enseigne aussi : ' + p.matieres.filter(function (x) { return x !== m; }).join(', ') + ')' : ''), 'Volume hebdomadaire : ' + nb + ' créneau(x)', p.lignes);
+    });
+  });
+  doc.save('EDT_PROFESSEURS_' + (matiere || 'TOUTES_MATIERES').replace(/\s+/g, '_') + '_' + String(currentStaff.ecole).replace(/\s+/g, '_') + '.pdf');
+  z.innerHTML += '<p style="font-size:0.8em;color:#2E7D32">✅ PDF créé : ' + pages + ' professeur(s)' + (matiere ? ' en ' + _edtLotEsc(matiere) : '') + '.</p>';
 }
 </script>
 
