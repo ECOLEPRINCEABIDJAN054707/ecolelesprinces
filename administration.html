@@ -628,6 +628,24 @@ table tr:nth-child(even){background:#F8FAFD}
   </div>
 </div>
   <!-- EXAMEN BLANC — saisie et résultats (15/10/2026) -->
+  <!-- 11/11/2026 — INSCRIPTION EN LIGNE + STATUT AFF/NAFF (INSCRIPTION_STATUT.gs) — secondaire uniquement -->
+  <div class="section" id="dirSecInscLigne">
+    <div class="sec-head sec-vert" onclick="toggleSec(this); islCharger('dir')">
+      <h3>🖥️ Inscription en ligne &amp; statut AFF / NAFF <span id="dirISLCount" style="font-size:0.78em;opacity:0.9"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body">
+      <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select id="dirISLClasse" onchange="islAfficher('dir')" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"><option value="">— Toutes les classes —</option></select>
+        <input id="dirISLCherche" oninput="islAfficher('dir')" placeholder="🔍 Nom ou matricule" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;width:170px">
+        <label style="font-size:0.8em;display:flex;align-items:center;gap:4px"><input type="checkbox" id="dirISLReste" onchange="islAfficher('dir')"> Non vérifiés seulement</label>
+        <button onclick="islCharger('dir', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
+        <button onclick="islImprimer('dir')" style="padding:7px 12px;background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ Liste de contrôle</button>
+      </div>
+      <div id="dirISLReseau" style="padding:0 14px"></div>   <!-- 11/11/2026 — décompte des 14 écoles, visible à CPP LES PRINCES -->
+      <div id="dirISLDecompte" style="padding:0 14px"></div>
+      <div id="dirISLZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Ouvrez la section pour charger les élèves.</p></div>
+    </div>
+  </div>
   <div class="section" id="dirSecEB">
   <div class="sec-head sec-rouge" onclick="toggleSec(this); chargerExamenBlanc('dir')">
     <h3>📝 Examen blanc — saisie des notes et résultats</h3><span class="arr">▼</span>
@@ -3208,6 +3226,24 @@ async function sauvegarderPersonnelDir(idx) {
   <!-- 17/10/2026 — EXAMEN BLANC N°1 : organisation (EXAMEN_BLANC_ORGA.gs) -->
   <div class="section"><div class="sec-head sec-violet" onclick="eboOuvrir('Com');toggleSec(this)"><h3>&#128221; Examen blanc n&deg;1 &mdash; salles, surveillances, notes</h3><span class="arr">&#9660;</span></div><div class="sec-body"><div id="eboBodyCom"></div></div></div>
   <!-- EXAMEN BLANC — saisie et résultats (15/10/2026) -->
+  <!-- 11/11/2026 — INSCRIPTION EN LIGNE + STATUT AFF/NAFF (INSCRIPTION_STATUT.gs) — secondaire uniquement -->
+  <div class="section" id="comSecInscLigne">
+    <div class="sec-head sec-vert" onclick="toggleSec(this); islCharger('com')">
+      <h3>🖥️ Inscription en ligne &amp; statut AFF / NAFF <span id="comISLCount" style="font-size:0.78em;opacity:0.9"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body">
+      <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select id="comISLClasse" onchange="islAfficher('com')" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"><option value="">— Toutes les classes —</option></select>
+        <input id="comISLCherche" oninput="islAfficher('com')" placeholder="🔍 Nom ou matricule" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;width:170px">
+        <label style="font-size:0.8em;display:flex;align-items:center;gap:4px"><input type="checkbox" id="comISLReste" onchange="islAfficher('com')"> Non vérifiés seulement</label>
+        <button onclick="islCharger('com', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
+        <button onclick="islImprimer('com')" style="padding:7px 12px;background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ Liste de contrôle</button>
+      </div>
+      <div id="comISLReseau" style="padding:0 14px"></div>   <!-- 11/11/2026 — décompte des 14 écoles, visible à CPP LES PRINCES -->
+      <div id="comISLDecompte" style="padding:0 14px"></div>
+      <div id="comISLZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Ouvrez la section pour charger les élèves.</p></div>
+    </div>
+  </div>
   <div class="section" id="comSecEB">
   <div class="sec-head sec-rouge" onclick="toggleSec(this); chargerExamenBlanc('com')">
     <h3>📝 Examen blanc — saisie des notes et résultats</h3><span class="arr">▼</span>
@@ -4163,6 +4199,23 @@ async function attribuerMatriculeCom() {
   <!-- 17/10/2026 — EXAMEN BLANC N°1 : organisation (EXAMEN_BLANC_ORGA.gs) -->
   <div class="section"><div class="sec-head sec-violet" onclick="eboOuvrir('Edu');toggleSec(this)"><h3>&#128221; Examen blanc n&deg;1 &mdash; salles, surveillances, notes</h3><span class="arr">&#9660;</span></div><div class="sec-body"><div id="eboBodyEdu"></div></div></div>
   <!-- EXAMEN BLANC — saisie et résultats (15/10/2026) -->
+  <!-- 11/11/2026 — INSCRIPTION EN LIGNE + STATUT AFF/NAFF (INSCRIPTION_STATUT.gs) — secondaire uniquement -->
+  <div class="section" id="eduSecInscLigne">
+    <div class="sec-head sec-vert" onclick="toggleSec(this); islCharger('edu')">
+      <h3>🖥️ Inscription en ligne &amp; statut AFF / NAFF <span id="eduISLCount" style="font-size:0.78em;opacity:0.9"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body">
+      <div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <select id="eduISLClasse" onchange="islAfficher('edu')" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em"><option value="">— Toutes les classes —</option></select>
+        <input id="eduISLCherche" oninput="islAfficher('edu')" placeholder="🔍 Nom ou matricule" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em;width:170px">
+        <label style="font-size:0.8em;display:flex;align-items:center;gap:4px"><input type="checkbox" id="eduISLReste" onchange="islAfficher('edu')"> Non vérifiés seulement</label>
+        <button onclick="islCharger('edu', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
+        <button onclick="islImprimer('edu')" style="padding:7px 12px;background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ Liste de contrôle</button>
+      </div>
+      <div id="eduISLDecompte" style="padding:0 14px"></div>
+      <div id="eduISLZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Ouvrez la section pour charger les élèves.</p></div>
+    </div>
+  </div>
   <div class="section" id="eduSecEB">
   <div class="sec-head sec-rouge" onclick="toggleSec(this); chargerExamenBlanc('edu')">
     <h3>📝 Examen blanc — saisie des notes et résultats</h3><span class="arr">▼</span>
@@ -19149,7 +19202,7 @@ var _SV_REP_LISTE4 = ['TROUVE EN CLASSE', 'JAMAIS VENU', 'PARTI', 'AUTRE'];
 var _SV_NIVEAUX = ['6EME', '5EME', '4EME', '3EME', '2NDE', '1ERE', 'TLE'];
 
 function _svE(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-function _svNorm(s) { return String(s || '').toUpperCase().trim().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[-_]/g, ' ').replace(/\s+/g, ' '); }
+function _svNorm(s) { return String(s || '').toUpperCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[-_]/g, ' ').replace(/\s+/g, ' '); }
 function _svJsonp(p) {
   return new Promise(function (resolve) {
     var cb = 'sv_' + Date.now() + '_' + Math.floor(Math.random() * 1000), sc = document.createElement('script');
@@ -19434,7 +19487,7 @@ function _nouvImprimer(pfx) {
 // Directeur et Comptable : toute l'école. Éducateur : ses classes. Fondateur : les 14 écoles.
 var _ebAdmCache = {};
 function _ebEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
-function _ebNorm(s) { return String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+function _ebNorm(s) { return String(s == null ? '' : s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
 function _ebFmt(v) { var n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? '—' : n.toFixed(2).replace('.', ','); }
 
 async function _ebLireOnglet(sheetsId, onglet) {
@@ -20917,5 +20970,198 @@ function ebtImprimer(esp, quoi) {
   w.document.close();
 }
 </script>
+<script>
+// ═══ 11/11/2026 — INSCRIPTION EN LIGNE + STATUT AFF/NAFF (serveur : INSCRIPTION_STATUT.gs, types INSC_LISTE / INSC_MAJ) ═══
+// Secondaire uniquement (les classes du primaire et de la maternelle sont écartées).
+// Le tableau de décompte se met à jour à chaque case cochée : « Reste à vérifier » diminue.
+var ISL = {};   // ISL[pfx] = { eleves:[], tarifs:{} }
+function _islEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function _islNorm(s) { return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim(); }
+function _islPrimaire(cl) { var c = _islNorm(cl); return /^(CP|CE|CM)\s*\d/.test(c) || /^(TPS|PS|MS|GS|PSA|MSA|GSA)(\s|$)/.test(c) || /^MATER/.test(c); }
+function _islF(n) { return Number(n || 0).toLocaleString('fr-FR'); }
+function _islPar() {
+  var roles = { DIR: 'Directeur', FOND: 'Fondateur', COM: 'Comptable', EDU: 'Éducateur' };
+  return (currentStaff.nom || currentStaff.matricule || 'inconnu') + ' (' + (roles[currentStaff.profil] || currentStaff.profil || '') + ')';
+}
+
+async function islCharger(pfx, force) {
+  if (!currentStaff) return;
+  if (ISL[pfx] && !force) { islAfficher(pfx); return; }
+  var zone = document.getElementById(pfx + 'ISLZone');
+  zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">⏳ Chargement des élèves…</p>';
+  try {
+    var r = await _appelPerm({ type: 'INSC_LISTE', ecole: currentStaff.ecole });
+    if (!r || !r.success) throw new Error((r && r.message) || 'réponse vide — le serveur a-t-il été redéployé ?');
+    var el = (r.eleves || []).filter(function (e) { return !_islPrimaire(e.classe); });
+    if (pfx === 'edu' && (currentStaff.classes || []).length) {          // l'éducateur voit ses classes (toutes si aucune ne correspond)
+      var mes = currentStaff.classes.map(_islNorm), f = el.filter(function (e) { return mes.indexOf(_islNorm(e.classe)) >= 0; });
+      if (f.length) el = f;
+    }
+    ISL[pfx] = { eleves: el, tarifs: r.tarifs || {} };
+    if ((pfx === 'dir' || pfx === 'com') && _islNorm(currentStaff.ecole) === 'CPP LES PRINCES') islReseau(pfx, force);   // contrôle des 14 écoles : Directeur et Comptable de CPP LES PRINCES seulement
+    var sel = document.getElementById(pfx + 'ISLClasse'), cur = sel.value;
+    var cls = Object.keys(el.reduce(function (a, e) { a[e.classe] = 1; return a; }, {})).sort();
+    sel.innerHTML = '<option value="">— Toutes les classes —</option>' + cls.map(function (c) { return '<option' + (c === cur ? ' selected' : '') + '>' + _islEsc(c) + '</option>'; }).join('');
+    islAfficher(pfx);
+  } catch (e) {
+    zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--rouge);font-size:0.82em">Erreur : ' + _islEsc(e.message) + '</p>';
+  }
+}
+
+// Tableau de décompte par classe (recalculé à chaque modification)
+function islDecompte(pfx) {
+  var d = ISL[pfx]; if (!d) return;
+  var parCl = {}, tot = { n: 0, ok: 0, aff: 0, naff: 0 };
+  d.eleves.forEach(function (e) {
+    var k = parCl[e.classe] = parCl[e.classe] || { n: 0, ok: 0, aff: 0, naff: 0 };
+    [k, tot].forEach(function (x) { x.n++; if (e.insc) x.ok++; if (e.statut === 'AFF') x.aff++; if (e.statut === 'NAFF') x.naff++; });
+  });
+  var th = 'style="padding:6px 8px;background:var(--bleu);color:#fff;font-size:0.74em;text-align:center"', td = 'style="padding:5px 8px;border-bottom:1px solid var(--border);font-size:0.78em;text-align:center"';
+  var ligne = function (nom, x, gras, clic) {
+    var reste = x.n - x.ok, pc = x.n ? Math.round(x.ok * 100 / x.n) : 0, sans = x.n - x.aff - x.naff;
+    return '<tr' + (gras ? ' style="background:#E8F5E9;font-weight:700"' : ' style="cursor:pointer" onclick="document.getElementById(\'' + pfx + 'ISLClasse\').value=\'' + _islEsc(nom).replace(/'/g, "\\'") + '\';islAfficher(\'' + pfx + '\')"') + '>'
+      + '<td ' + td.replace('center', 'left') + '>' + (clic ? '<u>' + _islEsc(nom) + '</u>' : _islEsc(nom)) + '</td><td ' + td + '>' + x.n + '</td>'
+      + '<td ' + td + '><b style="color:#2E7D32">' + x.ok + '</b></td>'
+      + '<td ' + td + '><b style="color:' + (reste ? '#C62828' : '#2E7D32') + ';font-size:1.1em">' + reste + '</b></td>'
+      + '<td ' + td + '><div style="background:#eee;border-radius:6px;height:8px;min-width:60px"><div style="background:#2E7D32;height:8px;border-radius:6px;width:' + pc + '%"></div></div><span style="font-size:0.85em">' + pc + ' %</span></td>'
+      + '<td ' + td + '>' + x.aff + '</td><td ' + td + '>' + x.naff + '</td><td ' + td + '>' + (sans ? '<b style="color:#E65100">' + sans + '</b>' : '0') + '</td></tr>';
+  };
+  var h = '<div style="font-weight:700;font-size:0.85em;margin:4px 0 6px">📊 Décompte — inscription en ligne</div><div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+    + '<tr><th ' + th + '>Classe</th><th ' + th + '>Effectif</th><th ' + th + '>✅ Vérifiés</th><th ' + th + '>⏳ Reste à vérifier</th><th ' + th + '>Avancement</th><th ' + th + '>AFF</th><th ' + th + '>NAFF</th><th ' + th + '>Sans statut</th></tr>';
+  Object.keys(parCl).sort().forEach(function (c) { h += ligne(c, parCl[c], false, true); });
+  h += ligne('TOTAL ' + (currentStaff.ecole || ''), tot, true, false) + '</table></div><p style="font-size:0.7em;color:var(--gris);margin:3px 0 10px">Touchez une classe pour afficher ses élèves.</p>';
+  document.getElementById(pfx + 'ISLDecompte').innerHTML = h;
+  var cpt = document.getElementById(pfx + 'ISLCount');
+  if (cpt) cpt.textContent = '(' + tot.ok + '/' + tot.n + ' vérifiés — reste ' + (tot.n - tot.ok) + ')';
+}
+
+function islAfficher(pfx) {
+  var d = ISL[pfx]; if (!d) return;
+  islDecompte(pfx);
+  var cl = document.getElementById(pfx + 'ISLClasse').value, q = _islNorm(document.getElementById(pfx + 'ISLCherche').value), reste = document.getElementById(pfx + 'ISLReste').checked;
+  var zone = document.getElementById(pfx + 'ISLZone');
+  if (!cl && !q) { zone.innerHTML = '<p style="padding:10px;text-align:center;color:var(--gris);font-size:0.8em">Choisissez une classe (ou tapez un nom) pour cocher les élèves.</p>'; return; }
+  var liste = d.eleves.filter(function (e) {
+    return (!cl || e.classe === cl) && (!reste || !e.insc) && (!q || _islNorm(e.nom).indexOf(q) >= 0 || _islNorm(e.matricule).indexOf(q) >= 0);
+  }).sort(function (a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
+  if (!liste.length) { zone.innerHTML = '<p style="padding:10px;text-align:center;color:#2E7D32;font-size:0.82em">' + (reste ? '✅ Tous les élèves sont vérifiés.' : 'Aucun élève.') + '</p>'; return; }
+  var th = 'style="padding:6px;background:#F1F5F9;font-size:0.74em;text-align:left"', td = 'style="padding:5px 6px;border-bottom:1px solid var(--border);font-size:0.78em;vertical-align:middle"';
+  var h = '<table style="width:100%;border-collapse:collapse;margin-top:4px"><tr><th ' + th + '>N°</th><th ' + th + '>Élève</th><th ' + th + '>Inscription en ligne</th><th ' + th + '>Statut</th><th ' + th + '>Scolarité</th><th ' + th + '>Contact</th></tr>';
+  liste.forEach(function (e, k) {
+    var id = pfx + 'ISL_' + _islEsc(e.matricule);
+    h += '<tr id="' + id + '_tr" style="background:' + (e.insc ? '#F1F8E9' : '#fff') + '"><td ' + td + '>' + (k + 1) + '</td>'
+      + '<td ' + td + '><b>' + _islEsc(e.nom) + '</b><br><span style="color:var(--gris);font-size:0.9em">' + _islEsc(e.matricule) + (cl ? '' : ' · ' + _islEsc(e.classe)) + '</span></td>'
+      + '<td ' + td + '><label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" style="width:20px;height:20px" ' + (e.insc ? 'checked' : '') + ' onchange="islCocher(\'' + pfx + '\',\'' + _islEsc(e.matricule) + '\',this)"> <span id="' + id + '_lib">' + (e.insc ? '✅ FAIT' : 'Non faite') + '</span></label></td>'
+      + '<td ' + td + '><select style="padding:5px;border:1.5px solid ' + (e.statut ? 'var(--border)' : '#E65100') + ';border-radius:6px;font-size:0.9em" onchange="islStatut(\'' + pfx + '\',\'' + _islEsc(e.matricule) + '\',this)">'
+      + ['', 'AFF', 'NAFF'].map(function (s) { return '<option value="' + s + '"' + (e.statut === s ? ' selected' : '') + (s === '' ? ' disabled' : '') + '>' + (s || '—') + '</option>'; }).join('') + '</select></td>'
+      + '<td ' + td + ' id="' + id + '_sco">' + _islSco(e) + '</td>'
+      + '<td ' + td + '>' + _islEsc(e.tel || '—') + '</td></tr>';
+  });
+  zone.innerHTML = h + '</table>';
+}
+function _islSco(e) { return 'Dû ' + _islF(e.du) + '<br>Versé ' + _islF(e.verse) + '<br><b style="color:' + (e.solde > 0 ? '#C62828' : '#2E7D32') + '">Reste ' + _islF(e.solde) + '</b>'; }
+function _islTrouve(pfx, mat) { var d = ISL[pfx]; for (var i = 0; i < d.eleves.length; i++) if (d.eleves[i].matricule === mat) return d.eleves[i]; return null; }
+
+async function islCocher(pfx, mat, cb) {
+  var e = _islTrouve(pfx, mat); if (!e) return;
+  var val = cb.checked; cb.disabled = true;
+  var lib = document.getElementById(pfx + 'ISL_' + mat + '_lib'); if (lib) lib.textContent = '⏳';
+  try {
+    var r = await _appelPerm({ type: 'INSC_MAJ', ecole: currentStaff.ecole, matricule: mat, insc: val ? '1' : '0', par: _islPar() });
+    if (!r || !r.success) throw new Error((r && r.message) || 'échec');
+    e.insc = r.insc;
+    if (lib) lib.textContent = e.insc ? '✅ FAIT' : 'Non faite';
+    var tr = document.getElementById(pfx + 'ISL_' + mat + '_tr'); if (tr) tr.style.background = e.insc ? '#F1F8E9' : '#fff';
+    islDecompte(pfx);
+    showToast(e.nom + (e.insc ? ' : inscription en ligne vérifiée' : ' : inscription décochée'), 'success');
+    if (document.getElementById(pfx + 'ISLReste').checked && e.insc) setTimeout(function () { islAfficher(pfx); }, 600);
+  } catch (err) { cb.checked = !val; if (lib) lib.textContent = e.insc ? '✅ FAIT' : 'Non faite'; showToast('Erreur : ' + err.message, 'error'); }
+  cb.disabled = false;
+}
+
+async function islStatut(pfx, mat, sel) {
+  var e = _islTrouve(pfx, mat); if (!e) return;
+  var st = sel.value; if (!st || st === e.statut) return;
+  var t = (ISL[pfx].tarifs[e.classe] || {})[st], du = t ? t.montant : 0;
+  if (!du) {
+    var s = prompt('Aucun élève ' + st + ' en ' + e.classe + ' pour servir de modèle.\nMontant dû (scolarité) pour un élève ' + st + ' de ' + e.classe + ' :', e.du || '');
+    du = Number(String(s || '').replace(/\D/g, ''));
+    if (!du) { sel.value = e.statut; return; }
+  }
+  if (!confirm(e.nom + '\nStatut : ' + (e.statut || '—') + ' → ' + st + '\nMontant dû : ' + _islF(e.du) + ' → ' + _islF(du) + ' F\nVersé : ' + _islF(e.verse) + ' F — Reste : ' + _islF(du - e.verse) + ' F\n\nConfirmer ?')) { sel.value = e.statut; return; }
+  sel.disabled = true;
+  try {
+    var r = await _appelPerm({ type: 'INSC_MAJ', ecole: currentStaff.ecole, matricule: mat, statut: st, du: du, par: _islPar() });
+    if (!r || !r.success) throw new Error((r && r.message) || 'échec');
+    e.statut = r.statut; e.du = r.du; e.solde = r.solde;
+    ISL[pfx].tarifs[e.classe] = ISL[pfx].tarifs[e.classe] || {};
+    if (!ISL[pfx].tarifs[e.classe][st]) ISL[pfx].tarifs[e.classe][st] = { montant: du, nb: 1 };   // modèle pour les suivants
+    var sco = document.getElementById(pfx + 'ISL_' + mat + '_sco'); if (sco) sco.innerHTML = _islSco(e);
+    sel.style.borderColor = 'var(--border)';
+    if (typeof invaliderCacheSynthese === 'function') invaliderCacheSynthese(currentStaff.ecole);
+    islDecompte(pfx);
+    showToast(e.nom + ' : ' + st + ' — dû ' + _islF(e.du) + ' F', 'success');
+  } catch (err) { sel.value = e.statut; showToast('Erreur : ' + err.message, 'error'); }
+  sel.disabled = false;
+}
+
+function islImprimer(pfx) {
+  var d = ISL[pfx]; if (!d) { alert('Ouvrez d\'abord la section.'); return; }
+  var cl = document.getElementById(pfx + 'ISLClasse').value;
+  var cls = cl ? [cl] : Object.keys(d.eleves.reduce(function (a, e) { a[e.classe] = 1; return a; }, {})).sort();
+  var corps = cls.map(function (c, i) {
+    var l = d.eleves.filter(function (e) { return e.classe === c; }).sort(function (a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
+    var ok = l.filter(function (e) { return e.insc; }).length;
+    return '<div style="' + (i ? 'page-break-before:always;' : '') + '"><h2>' + _islEsc(currentStaff.ecole) + ' — ' + _islEsc(c) + ' — ' + l.length + ' élèves</h2><p>Inscription en ligne vérifiée : <b>' + ok + '</b> / ' + l.length + ' — reste à vérifier : <b>' + (l.length - ok) + '</b></p>'
+      + '<table><tr><th>N°</th><th>Matricule</th><th>Nom et prénoms</th><th>Statut</th><th>IL</th><th>Contact</th></tr>'
+      + l.map(function (e, k) { return '<tr><td>' + (k + 1) + '</td><td>' + _islEsc(e.matricule) + '</td><td>' + _islEsc(e.nom) + '</td><td>' + _islEsc(e.statut || '') + '</td><td style="text-align:center">' + (e.insc ? '✔' : '') + '</td><td>' + _islEsc(e.tel || '') + '</td></tr>'; }).join('')
+      + '</table></div>';
+  }).join('');
+  var w = window.open('', '_blank');
+  w.document.write('<html><head><title>Contrôle inscription en ligne</title><style>body{font-family:Arial,sans-serif;font-size:12px;padding:16px}h2{font-size:15px;margin:0 0 4px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:4px 6px;text-align:left}th{background:#1F4E79;color:#fff}</style></head><body>' + corps + '</body></html>');
+  w.document.close(); setTimeout(function () { w.print(); }, 400);
+}
+// ── 11/11/2026 — Décompte des 14 écoles (visible dans les espaces de CPP LES PRINCES) ──
+var ISL_RES = {};
+async function islReseau(pfx, force) {
+  var z = document.getElementById(pfx + 'ISLReseau'); if (!z) return;
+  z.innerHTML = '<p style="padding:10px;text-align:center;color:var(--gris);font-size:0.8em">⏳ Décompte des 14 écoles (environ 20 secondes)…</p>';
+  try {
+    var r = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'INSC_RESEAU', force: force ? '1' : '0' }, 70000);   // 14 bases : délai allongé
+    if (!r || !r.success) throw new Error((r && r.message) || 'réponse vide');
+    ISL_RES[pfx] = r;
+    var th = 'style="padding:6px 8px;background:#4A148C;color:#fff;font-size:0.74em;text-align:center"', td = 'style="padding:5px 8px;border-bottom:1px solid var(--border);font-size:0.78em;text-align:center"';
+    var tot = { n: 0, ok: 0, aff: 0, naff: 0 };
+    var lignes = r.ecoles.slice().sort(function (a, b) { return (b.n ? b.ok / b.n : 0) - (a.n ? a.ok / a.n : 0); }).map(function (e, i) {
+      if (e.erreur) return '<tr><td ' + td.replace('center', 'left') + '>' + _islEsc(e.ecole) + '</td><td ' + td + ' colspan="8" style="color:var(--rouge)">Erreur : ' + _islEsc(e.erreur) + '</td></tr>';
+      ['n', 'ok', 'aff', 'naff'].forEach(function (k) { tot[k] += e[k]; });
+      var reste = e.n - e.ok, pc = e.n ? Math.round(e.ok * 100 / e.n) : 0, sans = e.n - e.aff - e.naff;
+      var actif = e.modif7j > 0 ? '<span style="color:#2E7D32">✅ ' + e.modif7j + ' cette semaine</span>' : '<span style="color:#C62828;font-weight:700">⚠️ aucune</span>';
+      return '<tr style="cursor:pointer" onclick="islReseauDetail(\'' + pfx + '\',' + r.ecoles.indexOf(e) + ')"><td ' + td.replace('center', 'left') + '><u>' + _islEsc(e.ecole) + '</u></td><td ' + td + '>' + e.n + '</td><td ' + td + '><b style="color:#2E7D32">' + e.ok + '</b></td>'
+        + '<td ' + td + '><b style="color:' + (reste ? '#C62828' : '#2E7D32') + '">' + reste + '</b></td>'
+        + '<td ' + td + '><div style="background:#eee;border-radius:6px;height:8px;min-width:60px"><div style="background:' + (pc >= 80 ? '#2E7D32' : pc >= 30 ? '#F9A825' : '#C62828') + ';height:8px;border-radius:6px;width:' + pc + '%"></div></div><span style="font-size:0.85em">' + pc + ' %</span></td>'
+        + '<td ' + td + '>' + e.aff + ' / ' + e.naff + (sans ? ' · <b style="color:#E65100">' + sans + ' sans</b>' : '') + '</td>'
+        + '<td ' + td + '>' + actif + '</td><td ' + td + ' style="font-size:0.72em">' + _islEsc(e.derniere || '—') + (e.par ? '<br>' + _islEsc(e.par) : '') + '</td></tr>';
+    }).join('');
+    var pcT = tot.n ? Math.round(tot.ok * 100 / tot.n) : 0;
+    z.innerHTML = '<div style="border:2px solid #4A148C;border-radius:10px;padding:8px 10px;margin:4px 0 12px">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px"><b style="font-size:0.88em;color:#4A148C">🌍 Contrôle réseau — inscription en ligne des 14 écoles (secondaire)</b>'
+      + '<button onclick="islReseau(\'' + pfx + '\', true)" style="padding:5px 10px;background:#4A148C;color:#fff;border:none;border-radius:8px;font-size:0.75em;cursor:pointer">🔄 Actualiser</button></div>'
+      + '<div style="overflow-x:auto;margin-top:6px"><table style="width:100%;border-collapse:collapse"><tr><th ' + th + '>École</th><th ' + th + '>Effectif</th><th ' + th + '>✅ Vérifiés</th><th ' + th + '>⏳ Reste</th><th ' + th + '>Avancement</th><th ' + th + '>AFF / NAFF</th><th ' + th + '>Vérifications (7 j)</th><th ' + th + '>Dernière vérification</th></tr>'
+      + lignes + '<tr style="background:#F3E5F5;font-weight:700"><td ' + td.replace('center', 'left') + '>RÉSEAU</td><td ' + td + '>' + tot.n + '</td><td ' + td + '>' + tot.ok + '</td><td ' + td + '>' + (tot.n - tot.ok) + '</td><td ' + td + '>' + pcT + ' %</td><td ' + td + '>' + tot.aff + ' / ' + tot.naff + '</td><td ' + td + ' colspan="2">Mis à jour : ' + _islEsc(r.maj) + '</td></tr></table></div>'
+      + '<p style="font-size:0.7em;color:var(--gris);margin:4px 0 0">« Vérifications (7 j) » = cases cochées ou statuts modifiés dans la section depuis 7 jours : ⚠️ aucune = l\'école ne fait pas le contrôle. Touchez une école pour le détail par classe.</p>'
+      + '<div id="' + pfx + 'ISLResDetail"></div></div>';
+  } catch (e) { z.innerHTML = '<p style="padding:10px;color:var(--rouge);font-size:0.8em">Décompte réseau : ' + _islEsc(e.message) + '</p>'; }
+}
+function islReseauDetail(pfx, i) {
+  var e = (ISL_RES[pfx] || { ecoles: [] }).ecoles[i], z = document.getElementById(pfx + 'ISLResDetail'); if (!e || !z) return;
+  var td = 'style="padding:4px 8px;border-bottom:1px solid var(--border);font-size:0.76em;text-align:center"';
+  z.innerHTML = '<div style="margin-top:8px;border-top:2px solid #4A148C;padding-top:6px"><b style="font-size:0.82em">' + _islEsc(e.ecole) + ' — détail par classe</b><table style="width:100%;border-collapse:collapse;margin-top:4px"><tr style="background:#F3E5F5"><th ' + td + '>Classe</th><th ' + td + '>Effectif</th><th ' + td + '>Vérifiés</th><th ' + td + '>Reste</th><th ' + td + '>AFF</th><th ' + td + '>NAFF</th><th ' + td + '>Sans statut</th></tr>'
+    + Object.keys(e.classes).sort().map(function (c) { var x = e.classes[c], reste = x.n - x.ok;
+      return '<tr><td ' + td.replace('center', 'left') + '>' + _islEsc(c) + '</td><td ' + td + '>' + x.n + '</td><td ' + td + '>' + x.ok + '</td><td ' + td + '><b style="color:' + (reste ? '#C62828' : '#2E7D32') + '">' + reste + '</b></td><td ' + td + '>' + x.aff + '</td><td ' + td + '>' + x.naff + '</td><td ' + td + '>' + (x.n - x.aff - x.naff) + '</td></tr>'; }).join('')
+    + '</table></div>';
+}
+</script>
+
 </body>
 </html>
