@@ -20977,7 +20977,7 @@ function ebtImprimer(esp, quoi) {
 var ISL = {};   // ISL[pfx] = { eleves:[], tarifs:{} }
 function _islEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function _islNorm(s) { return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim(); }
-function _islPrimaire(cl) { var c = _islNorm(cl); return /^(CP|CE|CM)\s*\d/.test(c) || /^(TPS|PS|MS|GS|PSA|MSA|GSA)(\s|$)/.test(c) || /^MATER/.test(c); }
+function _islPrimaire(cl) { var c = _islNorm(cl); return /^(CP|CE|CM)\s*\d/.test(c) || /^(TPS|PS|MS|GS)[A-D]?([\s\-_]|\d|$)/.test(c) || /^MATER/.test(c); }
 function _islF(n) { return Number(n || 0).toLocaleString('fr-FR'); }
 function _islPar() {
   var roles = { DIR: 'Directeur', FOND: 'Fondateur', COM: 'Comptable', EDU: 'Éducateur' };
