@@ -6626,6 +6626,11 @@ function afficherAttente(lignes,mois){
   const voirDirection=st==='VOIR DIRECTION';   // 07/10/2026 : cours renvoyé à la Direction par le serveur (aucune heure acquise d'office) — le Directeur doit le voir et le traiter
   return (st==='EN ATTENTE'||voirDirection||sansCahier||aIdentifier)&&mr===mois&&!estPrimaire&&(String(row[4]||'').trim()!==''||aIdentifier);
 });
+  // 12/11/2026 — classes regroupées : un créneau (même prof, même jour, même créneau EDT) n'est présenté et payé qu'une fois
+  const _cle=row=>{const p=String(row[4]||'').trim().toUpperCase(),d=String(row[12]||'').trim(),f=String(row[13]||'').trim();return p&&d&&f?p+'|'+toDate(row[0])+'|'+d+'-'+f:'';};
+  const _payes=new Set(lignes.filter(r=>/^(VALID|PARTIEL)/.test(String(r[9]||'').trim().toUpperCase())).map(_cle).filter(Boolean));
+  const _grp={};
+  coursEnAttente=coursEnAttente.filter(row=>{const k=_cle(row);row._freres=[];if(!k)return true;if(_payes.has(k))return false;if(_grp[k]){_grp[k]._freres.push(row);return false;}_grp[k]=row;return true;});
   const sec=document.getElementById('dirSecAttente');if(sec)sec.style.display='block';
   const se=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
   se('statAttente',coursEnAttente.length);se('attenteCompteur',coursEnAttente.length+' cours');
@@ -6649,7 +6654,7 @@ function afficherAttente(lignes,mois){
     const calc=calculerSalaireV2(dm,tarif,dureeEDT);
     const creneauTxt=edtD&&edtF?(edtD+' - '+edtF):'—';
     const _hz=String(row[15]||'').trim();
-    h+='<tr'+(_hz?' style="background:#FFF5F5"':'')+'><td>'+toDate(row[0])+'</td><td><strong>'+(row[4]||'<span style="color:var(--orange)">❓ Prof à identifier</span>')+'</strong>'+(_hz?'<br><span style="display:inline-block;margin-top:3px;padding:2px 7px;background:#C62828;color:#fff;border-radius:10px;font-size:0.72em;font-weight:700">'+_hz+'</span>':'')+'</td><td>'+(row[2]||'')+'</td><td>'+(row[3]||'')+'</td><td style="font-size:0.75em;color:var(--bleu)">'+creneauTxt+'</td><td style="color:var(--orange);font-weight:700">'+(String(row[9]||'').trim()==='EN COURS'?'📕 Sans cahier':(String(row[9]||'').trim()==='INCOMPLET'?'❓ À identifier':minStr(dm)+(String(row[9]||'').trim().toUpperCase()==='VOIR DIRECTION'?'<br><span style="font-size:0.8em;color:var(--rouge)">⚠️ Voir direction</span>':'')))+'</td><td style="font-weight:700;color:var(--vert)">'+calc.salaire.toLocaleString('fr-FR')+' F</td><td><button onclick="ouvrirModalAttente('+idx+')" style="padding:5px 10px;background:var(--bleu);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.75em;font-weight:600">Traiter</button></td></tr>';
+    h+='<tr'+(_hz?' style="background:#FFF5F5"':'')+'><td>'+toDate(row[0])+'</td><td><strong>'+(row[4]||'<span style="color:var(--orange)">❓ Prof à identifier</span>')+'</strong>'+(_hz?'<br><span style="display:inline-block;margin-top:3px;padding:2px 7px;background:#C62828;color:#fff;border-radius:10px;font-size:0.72em;font-weight:700">'+_hz+'</span>':'')+'</td><td>'+(row[2]||'')+(row._freres&&row._freres.length?' + '+row._freres.map(r=>r[2]).join(' + ')+'<br><span style="display:inline-block;margin-top:3px;padding:2px 7px;background:#1F4E79;color:#fff;border-radius:10px;font-size:0.72em;font-weight:700">🔗 Classes regroupées — payé une fois</span>':'')+'</td><td>'+(row[3]||'')+'</td><td style="font-size:0.75em;color:var(--bleu)">'+creneauTxt+'</td><td style="color:var(--orange);font-weight:700">'+(String(row[9]||'').trim()==='EN COURS'?'📕 Sans cahier':(String(row[9]||'').trim()==='INCOMPLET'?'❓ À identifier':minStr(dm)+(String(row[9]||'').trim().toUpperCase()==='VOIR DIRECTION'?'<br><span style="font-size:0.8em;color:var(--rouge)">⚠️ Voir direction</span>':'')))+'</td><td style="font-weight:700;color:var(--vert)">'+calc.salaire.toLocaleString('fr-FR')+' F</td><td><button onclick="ouvrirModalAttente('+idx+')" style="padding:5px 10px;background:var(--bleu);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.75em;font-weight:600">Traiter</button></td></tr>';
   });
   h+='</tbody></table></div>';const ta=document.getElementById('tableAttente');if(ta)ta.innerHTML=h;
 }
@@ -6665,7 +6670,7 @@ function ouvrirModalAttente(idx){
   const edtD=row[12]?String(row[12]).trim():'';const edtF=row[13]?String(row[13]).trim():'';
   const dureeEDT=edtD&&edtF?Math.max(0,parseH(edtF)-parseH(edtD)):0;
   const heuresCreneauEntier=dureeEDT>0?Math.floor(dureeEDT/60)+((dureeEDT%60)>=50?1:0):0;
-  document.getElementById('modalAttenteInfo').innerHTML='<div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:0.82em;line-height:1.9;margin-bottom:8px"><b>Enseignant:</b> '+(row[4]||'<input id="modalProfIdent" list="listeProfsIdent" placeholder="✍️ Nom du prof (choisir ou écrire)" style="width:100%;margin-top:4px;padding:8px;border:2px solid var(--orange);border-radius:6px;font-size:0.95em">'+_datalistProfsDir())+'<br><b>Classe:</b> '+(row[2]||'—')+' · <b>Matiere:</b> '+(row[3]||'—')+'<br><b>Date:</b> '+toDate(row[0])+'</div>'
+  document.getElementById('modalAttenteInfo').innerHTML='<div style="background:#F5F7FA;border-radius:8px;padding:12px;font-size:0.82em;line-height:1.9;margin-bottom:8px"><b>Enseignant:</b> '+(row[4]||'<input id="modalProfIdent" list="listeProfsIdent" placeholder="✍️ Nom du prof (choisir ou écrire)" style="width:100%;margin-top:4px;padding:8px;border:2px solid var(--orange);border-radius:6px;font-size:0.95em">'+_datalistProfsDir())+'<br><b>Classe:</b> '+(row[2]||'—')+(row._freres&&row._freres.length?' + '+row._freres.map(r=>r[2]).join(' + ')+' <span style="color:#1F4E79;font-weight:700">(classes regroupées : un seul paiement)</span>':'')+' · <b>Matiere:</b> '+(row[3]||'—')+'<br><b>Date:</b> '+toDate(row[0])+'</div>'
     +'<div class="calcul-bloc">'
     +(dureeEDT>0?'<div class="calcul-row"><span>Creneau prevu</span><span style="color:var(--bleu);font-weight:700">'+edtD+' - '+edtF+' ('+minStr(dureeEDT)+')</span></div>':'<div class="calcul-row"><span>Creneau prevu</span><span style="color:var(--rouge)">Non disponible</span></div>')
     +(String(row[15]||'').trim()?'<div class="calcul-row" style="background:#FFEBEE;border-radius:6px;padding:4px 6px"><span style="font-weight:700;color:#C62828">Position à l\'appel</span><span style="color:#C62828;font-weight:700">'+String(row[15]).trim()+' — à vérifier avant validation</span></div>':'')
@@ -6718,10 +6723,19 @@ function ouvrirModalAttente(idx){
   const cbName='dir_'+Date.now();
   const params=new URLSearchParams({callback:cbName,type:'TRAITER_ATTENTE',ecole:currentStaff.ecole||'',enseignant:ensNom,profVide:profVide,heureAppel:toHeure(row[1]),classe:String(row[2]||''),date:toDate(row[0]),decision,raison,salaire,heures});
   const script=document.createElement('script');
-  window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(res&&res.ok){showToast('Decision: '+salaire.toLocaleString('fr-FR')+' F ('+heures+'h)','success');fermerModalAttente();setTimeout(()=>chargerPointage(),2000);}else showToast('Erreur','error');};
+  window[cbName]=res=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}if(res&&res.ok){showToast('Decision: '+salaire.toLocaleString('fr-FR')+' F ('+heures+'h)','success');fermerModalAttente();setTimeout(()=>chargerPointage(),heures===0&&row._freres&&row._freres.length?2000+1500*row._freres.length:2000);}else showToast('Erreur','error');};
   script.onerror=()=>{delete window[cbName];try{document.body.removeChild(script);}catch(e){}showToast('Erreur connexion','error');};
   script.src=APPS_SCRIPT_POINTAGE+'?'+params.toString();document.body.appendChild(script);
   setTimeout(()=>{if(window[cbName]){delete window[cbName];showToast('Delai depasse','error');}},25000);
+  // 12/11/2026 — classes regroupées : un rejet s'applique à toutes les classes du créneau ; une validation ne paie que la 1re classe (les autres passent en DOUBLON côté serveur)
+  if(heures===0&&row._freres&&row._freres.length)row._freres.forEach((fr,i)=>setTimeout(()=>_rejeterClasseRegroupee(fr,String(row[2]||''),raison),1500*(i+1)));
+}
+function _rejeterClasseRegroupee(fr,classePrincipale,raison){
+  const cb='dirfr_'+Date.now()+'_'+Math.floor(Math.random()*1e6);const s=document.createElement('script');
+  window[cb]=()=>{delete window[cb];try{document.body.removeChild(s);}catch(e){}};
+  s.onerror=()=>{delete window[cb];try{document.body.removeChild(s);}catch(e){}showToast('Rejet non envoyé pour '+String(fr[2]||''),'error');};
+  const p=new URLSearchParams({callback:cb,type:'TRAITER_ATTENTE',ecole:currentStaff.ecole||'',enseignant:String(fr[4]||'').trim(),profVide:'',heureAppel:toHeure(fr[1]),classe:String(fr[2]||''),date:toDate(fr[0]),decision:'REJET\u00C9',raison:(raison?raison+' — ':'')+'Classe regroupée avec '+classePrincipale,salaire:0,heures:0});
+  s.src=APPS_SCRIPT_POINTAGE+'?'+p.toString();document.body.appendChild(s);
 }
 function fermerModalAttente(){document.getElementById('modalAttente').style.display='none';coursCourant=null;}
 
