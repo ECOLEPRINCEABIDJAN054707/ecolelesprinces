@@ -3686,20 +3686,32 @@ function _afficherMonEdt(data, dateMaj) {
         (liste.length ? '<span style="float:right;font-weight:600;text-transform:none;letter-spacing:0">' + _edtHeures(liste) + ' h</span>' : '') + '</div>' +
         '<div class="card-body" style="padding:6px 14px">';
       if (!liste.length) html += '<div style="padding:10px 0;font-size:12px;color:var(--text3)">Pas de cours</div>';
-      liste.forEach((c, i) => {
-        // 21/10/2026 — même heure qu'un autre cours : classes regroupées (même école) ou à vérifier (autre école)
-        const autres = _edtChevauchements(c, liste);
+      // 13/11/2026 — classes regroupées (même école, même matière, mêmes heures) : UNE seule ligne « CLASSE A + CLASSE B »
+      const groupes = [];
+      liste.forEach(c => {
+        const mat = String(c.matiere || '').toUpperCase().trim();
+        const g = groupes.find(x => (x.ecole || '') === (c.ecole || '') && x.heureDebut === c.heureDebut && x.heureFin === c.heureFin && x._mat === mat);
+        if (g) { if (g.classes.indexOf(c.classe) === -1) g.classes.push(c.classe); g._src.push(c); }
+        else groupes.push(Object.assign({}, c, { _mat: mat, classes: [c.classe], _src: [c] }));
+      });
+      groupes.forEach((g, i) => {
+        // autres cours qui chevauchent ce créneau (hors classes déjà regroupées sur cette ligne)
+        const ga = parseMin(g.heureDebut), gb = parseMin(g.heureFin);
+        const autres = (ga === null || gb === null) ? [] : liste.filter(x => {
+          if (g._src.indexOf(x) !== -1) return false;
+          const xa = parseMin(x.heureDebut), xb = parseMin(x.heureFin);
+          return xa !== null && xb !== null && Math.min(gb, xb) - Math.max(ga, xa) >= 20;
+        });
+        const autreEcole = autres.filter(x => x.ecole && g.ecole && x.ecole !== g.ecole);
+        const memeEcole = autres.filter(x => autreEcole.indexOf(x) === -1);
         let mention = '';
-        if (autres.length) {
-          const autreEcole = autres.filter(x => x.ecole && c.ecole && x.ecole !== c.ecole);
-          mention = autreEcole.length
-            ? '<div style="font-size:11px;font-weight:700;color:var(--red);margin-top:2px">⚠️ Même heure à ' + esc(autreEcole.map(x => (ECOLE_COURT[x.ecole] || x.ecole) + ' ' + x.classe).join(', ')) + ' — à vérifier avec la Direction</div>'
-            : '<div style="font-size:11px;font-weight:700;color:var(--blue);margin-top:2px">🔗 Classes regroupées avec ' + esc(autres.map(x => x.classe).join(', ')) + ' — comptées une seule fois</div>';
-        }
+        if (g.classes.length > 1) mention += '<div style="font-size:11px;font-weight:700;color:var(--blue);margin-top:2px">🔗 Classes regroupées — une seule séance, comptée une fois</div>';
+        if (memeEcole.length) mention += '<div style="font-size:11px;font-weight:700;color:var(--blue);margin-top:2px">🔗 Même heure que ' + esc(memeEcole.map(x => x.classe).join(', ')) + ' — comptée une seule fois</div>';
+        if (autreEcole.length) mention += '<div style="font-size:11px;font-weight:700;color:var(--red);margin-top:2px">⚠️ Même heure à ' + esc(autreEcole.map(x => (ECOLE_COURT[x.ecole] || x.ecole) + ' ' + x.classe).join(', ')) + ' — à vérifier avec la Direction</div>';
         html += '<div style="display:flex;align-items:center;gap:12px;padding:10px 0' + (i ? ';border-top:1px solid var(--border)' : '') + '">' +
-          '<div style="flex:0 0 96px;font-size:12px;font-weight:700;color:var(--blue)">' + esc(c.heureDebut) + ' → ' + esc(c.heureFin) + '</div>' +
-          '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text)">' + esc(c.classe) + '</div>' +
-          '<div style="font-size:12px;color:var(--text2)">' + (c.ecole && user.multi ? '<b>' + esc(ECOLE_COURT[c.ecole] || c.ecole) + '</b> · ' : '') + esc(c.matiere) + '</div>' + mention + '</div></div>';
+          '<div style="flex:0 0 96px;font-size:12px;font-weight:700;color:var(--blue)">' + esc(g.heureDebut) + ' → ' + esc(g.heureFin) + '</div>' +
+          '<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--text)">' + esc(g.classes.join(' + ')) + '</div>' +
+          '<div style="font-size:12px;color:var(--text2)">' + (g.ecole && user.multi ? '<b>' + esc(ECOLE_COURT[g.ecole] || g.ecole) + '</b> · ' : '') + esc(g.matiere) + '</div>' + mention + '</div></div>';
       });
       html += '</div></div>';
     });
