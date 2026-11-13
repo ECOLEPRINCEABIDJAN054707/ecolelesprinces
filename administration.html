@@ -6415,7 +6415,49 @@ function drqListeRetenus() {
     var n = val.filter(function (c) { return String(c.CLASSE).toUpperCase() === f; }).map(function (c) { return c.NOM; }).sort();
     if (n.length) L.push('', f + ' (' + n.length + ') : ' + n.join(', '));
   });
-  z.innerHTML = '<textarea readonly style="width:100%;box-sizing:border-box;height:160px;font-size:0.8em;padding:8px;border:1.5px solid #2E7D32;border-radius:8px;margin-bottom:10px">' + drqDEsc(L.join('\n')) + '</textarea>';
+  z.innerHTML = '<button onclick="drqImprimerRetenus()" style="width:100%;padding:10px;margin-bottom:8px;border:none;border-radius:8px;background:#2E7D32;color:#fff;font-weight:800;font-size:0.84em;cursor:pointer">🖨 Imprimer / PDF la liste des retenus</button>'
+    + '<textarea readonly style="width:100%;box-sizing:border-box;height:160px;font-size:0.8em;padding:8px;border:1.5px solid #2E7D32;border-radius:8px;margin-bottom:10px">' + drqDEsc(L.join('\n')) + '</textarea>';
+}
+// 13/11/2026 — Impression de la liste des élèves retenus DRONIQUE (une page A4, groupée par filière, signée par la Directrice)
+function drqImprimerRetenus() {
+  var r = _drqDir.data; if (!r) return;
+  var val = r.candidatures.filter(function (c) { return c.STATUT === 'VALIDEE'; });
+  if (!val.length) { alert('Aucun élève validé pour le moment.'); return; }
+  var d = new Date(), date = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+  var logo = new URL('logo_cpp.png', location.href).href;
+  var td = 'border:1px solid #333;padding:5px 6px;font-size:12px;';
+  var filieres = Object.keys(r.places);
+  // élèves dont la classe n'est pas dans la liste des filières : groupe « AUTRES »
+  var autres = val.filter(function (c) { return filieres.indexOf(String(c.CLASSE).toUpperCase()) < 0; });
+  var groupes = filieres.map(function (f) { return [f, val.filter(function (c) { return String(c.CLASSE).toUpperCase() === f; })]; });
+  if (autres.length) groupes.push(['AUTRES', autres]);
+  var corps = '', n = 0;
+  groupes.forEach(function (g) {
+    if (!g[1].length) return;
+    g[1].sort(function (a, b) { return String(a.NOM).localeCompare(String(b.NOM), 'fr'); });
+    corps += '<tr><td colspan="6" style="' + td + 'background:#E3F2FD;font-weight:bold;color:#0D47A1">' + drqDEsc(g[0]) + ' — ' + g[1].length + ' élève' + (g[1].length > 1 ? 's' : '') + '</td></tr>';
+    g[1].forEach(function (c) {
+      n++;
+      corps += '<tr><td style="' + td + 'text-align:center">' + n + '</td><td style="' + td + 'font-weight:bold;color:#1F4E79">' + drqDEsc(c.MATRICULE) + '</td><td style="' + td + 'font-weight:bold">' + drqDEsc(c.NOM) + '</td><td style="' + td + '">' + drqDEsc(c.CLASSE) + ' · ' + drqDEsc(c.ECOLE) + '</td><td style="' + td + '">' + drqDEsc(c.TEL_PARENT) + '</td><td style="' + td + 'width:90px"></td></tr>';
+    });
+  });
+  var html = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>DRONIQUE_RETENUS_' + date.replace(/\//g, '') + '</title>'
+    + '<style>@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;color:#000;margin:0}table{border-collapse:collapse;width:100%}th{border:1px solid #333;background:#1F4E79;color:#fff;padding:6px;font-size:12px}'
+    + '.np{margin:10px 0;text-align:center}@media print{.np{display:none}tr{page-break-inside:avoid}}</style></head><body>'
+    + '<div class="np"><button onclick="window.print()" style="padding:10px 22px;font-size:15px;font-weight:bold;background:#2E7D32;color:#fff;border:none;border-radius:8px;cursor:pointer">🖨 Imprimer / Enregistrer en PDF</button></div>'
+    + '<table style="margin-bottom:8px"><tr><td style="width:70px;border:none"><img src="' + logo + '" style="width:64px;height:64px;object-fit:contain" onerror="this.style.display=\'none\'"></td>'
+    + '<td style="border:none;text-align:center"><div style="font-size:11px">Ministère de l\'Éducation Nationale et de l\'Alphabétisation</div>'
+    + '<div style="font-size:16px;font-weight:bold">RÉSEAU CPP LES PRINCES D\'ABIDJAN</div>'
+    + '<div style="font-size:15px;font-weight:bold;color:#0D47A1;margin-top:4px">🚁 FILIÈRE DRONIQUE — LISTE DES ÉLÈVES RETENUS</div>'
+    + '<div style="font-size:12px;margin-top:2px">Année scolaire 2026-2027 · Cours le samedi de 13h à 15h · Salle Labo F2 (CPP TECH)</div></td>'
+    + '<td style="width:70px;border:none"></td></tr></table><hr style="border:none;border-top:2px solid #000;margin:4px 0 10px">'
+    + '<table><tr><th style="width:30px">N°</th><th>MATRICULE</th><th>NOM ET PRÉNOMS</th><th>CLASSE · ÉCOLE</th><th>TÉL. PARENT</th><th>ÉMARGEMENT</th></tr>' + corps + '</table>'
+    + '<p style="font-size:12px;margin-top:10px"><b>Total : ' + n + ' élève' + (n > 1 ? 's' : '') + ' retenu' + (n > 1 ? 's' : '') + '</b> sur ' + drqDEsc(r.bilan && r.bilan.plafond ? r.bilan.plafond : '') + ' places.</p>'
+    + '<table style="margin-top:24px"><tr><td style="border:none;width:55%"></td><td style="border:none;text-align:center;font-size:13px">Fait à Abidjan, le ' + date + '<br><br><b>La Directrice</b><br><br><br><br><b>Madame BOTI</b></td></tr></table>'
+    + '</body></html>';
+  var blob = new Blob([html], { type: 'text/html' }), url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
 }
 
 function afficherDir(s){ 
