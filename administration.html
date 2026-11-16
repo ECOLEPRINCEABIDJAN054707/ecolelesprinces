@@ -658,6 +658,8 @@ table tr:nth-child(even){background:#F8FAFD}
       <h3>🏛️ Visite Direction Régionale — 8 décembre <span id="dirVDRCount" style="font-size:0.78em;opacity:0.9"></span></h3><span class="arr">▼</span>
     </div>
     <div class="sec-body">
+      <div style="padding:12px 14px 0"><button onclick="vdrDosCharger('dir')" style="padding:9px 14px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:0.85em;cursor:pointer;font-weight:600">📄 Dossier de visite : compléter et imprimer</button></div>
+      <div id="dirVDRDos" style="padding:0 14px"></div>
       <div id="dirVDRZone" style="padding:12px 14px"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.85em">Ouvrez la section pour charger.</p></div>
     </div>
   </div>
@@ -4243,6 +4245,8 @@ async function attribuerMatriculeCom() {
       <h3>🏛️ Visite Direction Régionale — élèves à compléter <span id="eduVDRCount" style="font-size:0.78em;opacity:0.9"></span></h3><span class="arr">▼</span>
     </div>
     <div class="sec-body">
+      <div style="padding:12px 14px 0"><button onclick="vdrDosCharger('edu')" style="padding:9px 14px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:0.85em;cursor:pointer;font-weight:600">📄 Dossier de visite : compléter et imprimer</button></div>
+      <div id="eduVDRDos" style="padding:0 14px"></div>
       <div id="eduVDRZone" style="padding:12px 14px"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.85em">Ouvrez la section pour charger.</p></div>
     </div>
   </div>
@@ -21515,7 +21519,7 @@ function vdrEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => 
 function vdrConcerne() { return typeof currentStaff !== 'undefined' && currentStaff && VDR_ECOLES.indexOf(String(currentStaff.ecole || '').toUpperCase().trim()) !== -1; }
 function vdrVisibilite() {
   ['dir', 'edu'].forEach(p => { const el = document.getElementById(p + 'SecVisiteDR'); if (el) el.style.display = vdrConcerne() ? '' : 'none'; });
-  if (!vdrConcerne()) { VDR.dir = null; VDR.edu = null; }
+  if (!vdrConcerne()) { VDR.dir = null; VDR.edu = null; VDR.dirDos = null; VDR.eduDos = null; }
 }
 setInterval(vdrVisibilite, 1500);
 function vdrParams(extra) { return Object.assign({ ecole: currentStaff.ecole, id: currentStaff.matricule, code: currentStaff.code }, extra || {}); }
@@ -21643,6 +21647,191 @@ async function vdrTache(p, i, cb) {
   const d = await appelJSONP(VDR_URL, vdrParams({ action: 'tache', r: t.r, tid: t.id, fait: cb.checked ? 'OUI' : '' }), 20000);
   if (d && d.ok) { t.fait = cb.checked; t.trace = cb.checked ? (currentStaff.matricule + ' — maintenant') : ''; vdrAfficher(p); showToast('✓ Tâche mise à jour', 'success'); }
   else { cb.checked = !cb.checked; showToast('Erreur — réessayez', 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DOSSIER DE VISITE — compléter + imprimer (Directeur / Éducateur) — 16/11/2026
+// ═══════════════════════════════════════════════════════════════
+function vdrDosVal(p, k) {
+  const D = VDR[p + 'Dos']; if (!D) return '';
+  if (Object.prototype.hasOwnProperty.call(D._modif, k)) return D._modif[k];
+  if (Object.prototype.hasOwnProperty.call(D.champs, k)) return D.champs[k];
+  return D.defauts[k] || '';
+}
+function vdrDosSet(p, el) { const D = VDR[p + 'Dos']; if (!D) return; D._modif[el.getAttribute('data-k')] = el.value; el.style.background = '#FFF9C4'; }
+
+async function vdrDosCharger(p, force) {
+  const zone = document.getElementById(p + 'VDRDos'); if (!zone || !vdrConcerne()) return;
+  if (VDR[p + 'Dos'] && !force) { vdrDosAfficher(p); return; }
+  zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris)">Préparation du dossier… (jusqu\'à 1 minute)</p>';
+  const d = await appelJSONP(VDR_URL, vdrParams({ action: 'dossier' }), 120000);
+  if (!d || !d.ok) { zone.innerHTML = '<p style="padding:14px;color:var(--rouge)">' + vdrEsc((d && d.message) || 'Erreur réseau — réessayez.') + '</p>'; return; }
+  d.dossier._modif = {};
+  VDR[p + 'Dos'] = d.dossier;
+  vdrDosAfficher(p);
+}
+
+function vdrDosStatsProfs(profs) {
+  const c = { PERMANENT: [0, 0], 'PRIVÉ': [0, 0], FONCTIONNAIRE: [0, 0] };
+  profs.forEach(x => {
+    const t = /PERMANENT/i.test(x.type) ? 'PERMANENT' : (/FONCTIONNAIRE/i.test(x.type) ? 'FONCTIONNAIRE' : 'PRIVÉ');
+    c[t][x.aut ? 0 : 1]++;
+  });
+  return c;
+}
+
+function vdrDosAfficher(p) {
+  const D = VDR[p + 'Dos'], zone = document.getElementById(p + 'VDRDos'); if (!D || !zone) return;
+  const inp = (k, w, ph) => '<input data-k="' + k + '" value="' + vdrEsc(vdrDosVal(p, k)) + '" oninput="vdrDosSet(\'' + p + '\',this)" placeholder="' + (ph || '') + '" style="width:' + (w || '100%') + ';padding:4px;border:1px solid var(--border);border-radius:5px;font-size:0.95em">';
+  const sel = (k, vals) => '<select data-k="' + k + '" onchange="vdrDosSet(\'' + p + '\',this)" style="padding:3px">' + vdrOpts(vals, vdrDosVal(p, k)) + '</select>';
+  const tab = 'width:100%;border-collapse:collapse;font-size:0.8em;margin-bottom:8px';
+  const th = s => '<tr style="background:#1F3864;color:#fff">' + s.map(x => '<th style="padding:5px;text-align:left">' + x + '</th>').join('') + '</tr>';
+  const td = 'style="padding:4px;border-bottom:1px solid var(--border)"';
+  const btn = 'padding:7px 12px;border:none;border-radius:8px;font-size:0.8em;cursor:pointer;color:#fff;';
+  let h = '<div style="border:2px solid var(--rouge);border-radius:10px;padding:10px 12px;margin:10px 0;background:#fff">';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><b style="flex:1;min-width:200px">📄 Dossier de visite — ' + vdrEsc(D.ecole) + ' <small style="font-weight:normal;color:var(--gris)">(données du ' + vdrEsc(D.genere) + ')</small></b>'
+    + '<button onclick="vdrDosEnregistrer(\'' + p + '\')" style="' + btn + 'background:var(--vert)">💾 Enregistrer</button>'
+    + '<button onclick="vdrDosImprimer(\'' + p + '\')" style="' + btn + 'background:#1F3864">🖨️ Imprimer le dossier</button>'
+    + '<button onclick="vdrDosCharger(\'' + p + '\',true)" style="' + btn + 'background:var(--bleu)">🔄 Actualiser</button></div>';
+  h += '<div style="font-size:0.78em;color:var(--gris);margin-bottom:8px">Complétez les cases blanches puis cliquez sur 💾 Enregistrer. Les effectifs, la liste des professeurs et les emplois du temps viennent de PSS (sections ci-dessous) — cliquez sur 🔄 après les avoir mis à jour.</div>';
+
+  // 1. Identification
+  h += '<h4 style="margin:10px 0 4px">1. Identification de l\'établissement</h4><table style="' + tab + '">';
+  [['Dénomination et sigle', 'id.nom'], ['Code établissement', 'id.code'], ['Localité (ville ; quartier ; sous-quartier)', 'id.localite'],
+   ['Direction régionale', 'id.dr'], ['Ordre / type d\'enseignement', 'id.ordre'], ['Fondateur', 'id.fondateur'], ['Contacts', 'id.contacts'], ['E-mail', 'id.email']]
+    .forEach(r => { h += '<tr><td ' + td + ' width="35%"><b>' + r[0] + '</b></td><td ' + td + '>' + inp(r[1]) + '</td></tr>'; });
+  h += '</table>';
+
+  // Autorisations
+  h += '<h4 style="margin:10px 0 4px">Autorisations délivrées par le Ministère</h4><div style="overflow-x:auto"><table style="' + tab + '">' + th(['Autorisation', 'N° de décision', 'Date', 'Objet']);
+  for (let i = 0; i < D.nbAut + 2; i++) h += '<tr><td ' + td + '>' + inp('aut.' + i + '.lib', '160px') + '</td><td ' + td + '>' + inp('aut.' + i + '.num', '190px') + '</td><td ' + td + '>' + inp('aut.' + i + '.date', '85px') + '</td><td ' + td + '>' + inp('aut.' + i + '.objet', '260px') + '</td></tr>';
+  h += '</table></div>';
+
+  // 2. Administratif
+  h += '<h4 style="margin:10px 0 4px">2. Personnel administratif et d\'encadrement</h4><div style="overflow-x:auto"><table style="' + tab + '">' + th(['Fonction', 'Nom et prénoms', 'Genre', 'N° autorisation', 'Contact']);
+  D.roles.forEach((r, i) => { h += '<tr><td ' + td + '><b>' + vdrEsc(r) + '</b></td><td ' + td + '>' + inp('adm.' + i + '.nom', '190px') + '</td><td ' + td + '>' + sel('adm.' + i + '.genre', ['', 'F', 'H']) + '</td><td ' + td + '>' + inp('adm.' + i + '.aut', '120px') + '</td><td ' + td + '>' + inp('adm.' + i + '.tel', '110px') + '</td></tr>'; });
+  h += '</table></div>';
+
+  // 3. Enseignants
+  const sp = vdrDosStatsProfs(D.profs);
+  h += '<h4 style="margin:10px 0 4px">3. Personnel enseignant — ' + D.profs.length + ' enseignant(s)</h4>';
+  h += '<table style="' + tab + '">' + th(['Enseignants', 'Autorisés', 'Non autorisés', 'Total'])
+    + [['Permanents', 'PERMANENT'], ['Vacataires privés', 'PRIVÉ'], ['Vacataires fonctionnaires', 'FONCTIONNAIRE']].map(r => '<tr><td ' + td + '>' + r[0] + '</td><td ' + td + '>' + sp[r[1]][0] + '</td><td ' + td + '>' + sp[r[1]][1] + '</td><td ' + td + '>' + (sp[r[1]][0] + sp[r[1]][1]) + '</td></tr>').join('') + '</table>';
+  h += '<div style="font-size:0.75em;color:var(--gris);margin-bottom:6px">La liste nominative (genre, statut, n° d\'autorisation) se complète dans le tableau « Professeurs » de cette section (Directeur). Elle est imprimée avec le dossier.</div>';
+  h += '<h4 style="margin:10px 0 4px">Responsables des Conseils d\'Enseignement (CE)</h4><div style="overflow-x:auto"><table style="' + tab + '">' + th(['Discipline / CE', 'Responsable', 'Genre', 'Contact']);
+  for (let i = 0; i < D.nbCE; i++) h += '<tr><td ' + td + '>' + inp('ce.' + i + '.disc', '150px') + '</td><td ' + td + '>' + inp('ce.' + i + '.resp', '190px') + '</td><td ' + td + '>' + sel('ce.' + i + '.genre', ['', 'F', 'H']) + '</td><td ' + td + '>' + inp('ce.' + i + '.tel', '110px') + '</td></tr>';
+  h += '</table></div>';
+
+  // 4-5. Classes et effectifs (lecture seule)
+  const tot = [0, 0, 0, 0, 0, 0]; D.effectifs.forEach(e => e.slice(1).forEach((v, j) => tot[j] += v));
+  h += '<h4 style="margin:10px 0 4px">4-5. Classes (' + D.classes.length + ') et effectifs (' + tot[5] + ' élèves)</h4><div style="overflow-x:auto"><table style="' + tab + '">' + th(['Classe', 'AFF F', 'AFF G', 'NAFF F', 'NAFF G', 'Non renseigné', 'Total'])
+    + D.effectifs.map(e => '<tr>' + e.map(v => '<td ' + td + '>' + vdrEsc(v) + '</td>').join('') + '</tr>').join('')
+    + '<tr style="font-weight:bold;background:#eee"><td ' + td + '>TOTAL</td>' + tot.map(v => '<td ' + td + '>' + v + '</td>').join('') + '</tr></table></div>';
+  if (tot[4]) h += '<div style="font-size:0.75em;color:var(--rouge)">⚠️ ' + tot[4] + ' élève(s) sans sexe ou statut AFF/NAFF — à compléter dans la liste « Élèves » de cette section.</div>';
+
+  // 6. Rapports
+  h += '<h4 style="margin:10px 0 4px">6. Suivi des rapports et des diplômés</h4><div style="overflow-x:auto"><table style="' + tab + '">' + th(['Élément', 'Oui / Non', 'Raison si non']);
+  D.rapports.forEach(r => { h += '<tr><td ' + td + '>' + vdrEsc(r[1]) + '</td><td ' + td + '>' + sel('rap.' + r[0], ['', 'OUI', 'NON']) + '</td><td ' + td + '>' + inp('rap.' + r[0] + '.raison', '220px') + '</td></tr>'; });
+  h += '</table></div>';
+
+  const sansEdt = D.edtClasses.filter(o => o.lignes.length < 2).map(o => o.classe);
+  h += '<div style="font-size:0.8em;margin-top:6px">📎 Annexes imprimées automatiquement : emplois du temps de <b>' + D.edtClasses.length + ' classe(s)</b> et de <b>' + D.profs.length + ' professeur(s)</b>.'
+    + (sansEdt.length ? ' <span style="color:var(--rouge)">⚠️ Sans emploi du temps : ' + vdrEsc(sansEdt.join(', ')) + '</span>' : '') + '</div>';
+  h += '</div>';
+  zone.innerHTML = h;
+}
+
+async function vdrDosEnregistrer(p) {
+  const D = VDR[p + 'Dos']; if (!D) return;
+  const cles = Object.keys(D._modif);
+  if (!cles.length) { showToast('Aucune modification à enregistrer', ''); return; }
+  showToast('Enregistrement…', '');
+  let ok = 0, err = 0;
+  for (let i = 0; i < cles.length; i += 10) {
+    const lot = cles.slice(i, i + 10).map(k => ({ k, v: D._modif[k] }));
+    const d = await appelJSONP(VDR_URL, vdrParams({ action: 'champ', data: JSON.stringify(lot) }), 30000);
+    if (d && d.ok) { lot.forEach(x => { D.champs[x.k] = x.v; delete D._modif[x.k]; }); ok += lot.length; } else err++;
+  }
+  vdrDosAfficher(p);
+  showToast(err ? '⚠️ ' + ok + ' champ(s) enregistré(s), réessayez pour le reste' : '✓ ' + ok + ' champ(s) enregistré(s)', err ? 'error' : 'success');
+}
+
+function vdrDosImprimer(p) {
+  const D = VDR[p + 'Dos']; if (!D) return;
+  if (Object.keys(D._modif).length && !confirm('Des modifications ne sont pas encore enregistrées. Imprimer quand même (elles apparaîtront sur l\'impression) ?')) return;
+  const v = k => vdrEsc(vdrDosVal(p, k));
+  const T = (rows, opts) => {
+    opts = opts || {};
+    return '<table' + (opts.petit ? ' class="petit"' : '') + '>' + rows.map((r, i) => '<tr' + (opts.total && i === rows.length - 1 ? ' class="tot"' : '') + '>'
+      + r.map(c => (i === 0 ? '<th>' : '<td>') + c + (i === 0 ? '</th>' : '</td>')).join('') + '</tr>').join('') + '</table>';
+  };
+  let h = '<div class="garde"><p class="c b">RÉPUBLIQUE DE CÔTE D\'IVOIRE</p><p class="c">Union – Discipline – Travail</p><br>'
+    + '<p class="c">Ministère de l\'Éducation Nationale, de l\'Alphabétisation et de l\'Enseignement Technique</p>'
+    + '<p class="c">Direction Régionale Abidjan II de l\'Enseignement Technique, de la Formation Professionnelle et de l\'Apprentissage</p><br><br><br>'
+    + '<p class="c titre">' + v('id.nom') + '</p><p class="c st">DOSSIER DE LA VISITE D\'ÉTABLISSEMENT</p>'
+    + '<p class="c">Année de formation 2026-2027 — Visite du mardi 8 décembre 2026</p>'
+    + '<p class="c petitp">Référence : courrier N° 669/MDET/DR-ABJ II/dv/ya du 13 novembre 2026</p></div>';
+
+  h += '<h1 class="pb">1. Identification de l\'établissement et autorisations</h1>';
+  h += T([['Rubrique', 'Renseignement'], ['Dénomination et sigle', v('id.nom')], ['Code établissement', v('id.code')], ['Localité', v('id.localite')],
+    ['Direction régionale', v('id.dr')], ['Ordre / type d\'enseignement', v('id.ordre')], ['Fondateur', v('id.fondateur')], ['Contacts', v('id.contacts')], ['E-mail', v('id.email')]]);
+  const aut = [['Autorisation', 'N° de décision', 'Date', 'Objet']];
+  for (let i = 0; i < D.nbAut + 2; i++) if (vdrDosVal(p, 'aut.' + i + '.lib') || vdrDosVal(p, 'aut.' + i + '.num')) aut.push([v('aut.' + i + '.lib'), v('aut.' + i + '.num'), v('aut.' + i + '.date'), v('aut.' + i + '.objet')]);
+  h += '<h2>Autorisations délivrées par le Ministère</h2>' + T(aut);
+
+  h += '<h1>2. Personnel administratif et d\'encadrement</h1>'
+    + T([['Fonction', 'Nom et prénoms', 'Genre', 'N° autorisation', 'Contact']].concat(D.roles.map((r, i) => [vdrEsc(r), v('adm.' + i + '.nom'), v('adm.' + i + '.genre'), v('adm.' + i + '.aut'), v('adm.' + i + '.tel')])));
+
+  const sp = vdrDosStatsProfs(D.profs), s = k => sp[k][0] + sp[k][1];
+  h += '<h1 class="pb">3. Personnel enseignant</h1>'
+    + T([['Enseignants', 'Autorisés', 'Non autorisés', 'Sous-total'], ['Permanents', sp.PERMANENT[0], sp.PERMANENT[1], s('PERMANENT')],
+      ['Vacataires privés', sp['PRIVÉ'][0], sp['PRIVÉ'][1], s('PRIVÉ')], ['Vacataires fonctionnaires', sp.FONCTIONNAIRE[0], sp.FONCTIONNAIRE[1], s('FONCTIONNAIRE')],
+      ['TOTAL', sp.PERMANENT[0] + sp['PRIVÉ'][0] + sp.FONCTIONNAIRE[0], sp.PERMANENT[1] + sp['PRIVÉ'][1] + sp.FONCTIONNAIRE[1], D.profs.length]], { total: true });
+  h += '<h2>Liste du personnel enseignant</h2>' + T([['N°', 'Nom et prénoms', 'Genre', 'Discipline', 'Statut', 'N° autorisation', 'Classes']]
+    .concat(D.profs.map((x, i) => [i + 1, vdrEsc(x.nom), vdrEsc(x.genre), vdrEsc(x.matiere), vdrEsc(x.type), vdrEsc(x.aut), vdrEsc(x.classes)])), { petit: true });
+  const ce = [['Discipline / CE', 'Responsable', 'Genre', 'Contact']];
+  for (let i = 0; i < D.nbCE; i++) ce.push([v('ce.' + i + '.disc'), v('ce.' + i + '.resp'), v('ce.' + i + '.genre'), v('ce.' + i + '.tel')]);
+  h += '<h2>Responsables des Conseils d\'Enseignement</h2>' + T(ce);
+
+  const totN = D.niveaux.map((n, j) => D.filieres.reduce((a, f) => a + f[j + 1], 0));
+  h += '<h1 class="pb">4. Filières, séries et nombre de classes</h1>'
+    + T([['Série / filière'].concat(D.niveaux).concat(['Total'])].concat(D.filieres.map(f => f.concat([f.slice(1).reduce((a, b) => a + b, 0)])))
+      .concat([['TOTAL'].concat(totN).concat([D.classes.length])]), { total: true })
+    + '<p class="b">Nombre total de classes de l\'établissement : ' + D.classes.length + '</p>';
+  const tot = [0, 0, 0, 0, 0, 0]; D.effectifs.forEach(e => e.slice(1).forEach((x, j) => tot[j] += x));
+  h += '<h1>5. Effectifs des élèves par classe</h1>'
+    + T([['Classe', 'AFF F', 'AFF G', 'NAFF F', 'NAFF G', 'Non renseigné', 'Total']].concat(D.effectifs.map(e => e.map(vdrEsc))).concat([['TOTAL'].concat(tot)]), { total: true })
+    + '<p class="b">Filles : ' + (tot[0] + tot[2]) + ' — Garçons : ' + (tot[1] + tot[3]) + ' — Affectés : ' + (tot[0] + tot[1]) + ' — Non affectés : ' + (tot[2] + tot[3]) + ' — EFFECTIF TOTAL : ' + tot[5] + '</p>';
+
+  h += '<h1 class="pb">6. Suivi des rapports et des diplômés</h1>'
+    + T([['Élément', 'Oui / Non', 'Raison si non']].concat(D.rapports.map(r => [vdrEsc(r[1]), v('rap.' + r[0]), v('rap.' + r[0] + '.raison')])));
+
+  h += '<h1 class="pb">Annexe A — Emplois du temps des classes</h1>';
+  D.edtClasses.forEach((o, i) => {
+    h += '<h2' + (i ? ' class="pb"' : '') + '>' + vdrEsc(o.classe) + '</h2>'
+      + (o.lignes.length < 2 ? '<p class="rouge">Emploi du temps absent dans PSS.</p>' : T(o.lignes.map(l => l.map(vdrEsc)), { petit: true }));
+  });
+  h += '<h1 class="pb">Annexe B — Emplois du temps des professeurs</h1>';
+  D.profs.forEach(x => {
+    h += '<div class="nobr"><h3>' + vdrEsc(x.nom) + (x.matiere ? ' — ' + vdrEsc(x.matiere) : '') + '</h3>'
+      + (x.edt.length ? T([['Jour', 'Horaire', 'Classe', 'Matière']].concat(x.edt.map(l => l.map(vdrEsc))), { petit: true }) : '<p class="rouge">Aucun créneau dans l\'emploi du temps.</p>') + '</div>';
+  });
+  h += '<h1 class="pb">Annexe C — Pièces du classeur de visite</h1>' + T([['☐', 'Pièce']].concat([
+    'Arrêtés / décisions de l\'établissement (création, ouverture, filières)', 'Autorisations d\'enseigner et de diriger', 'Emplois du temps des classes (Annexe A)',
+    'Emplois du temps des professeurs (Annexe B)', 'Nombre de classes par filière (section 4)', 'Liste du personnel administratif avec le genre (section 2)',
+    'Liste du personnel enseignant et des responsables de CE avec le genre (section 3)', 'PV de la réunion de rentrée', 'PV des Conseils d\'Enseignement',
+    'Guide de visite de la DR rempli', 'Cahiers de textes de toutes les classes (sur place)', 'Cahiers d\'appel (sur place)', 'Cahiers de notes (sur place)'].map(t => ['☐', t])));
+  h += '<p class="petitp">Document imprimé depuis Princes Smart School le ' + new Date().toLocaleString('fr-FR') + '.</p>';
+
+  const css = '@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;font-size:11px;color:#000}h1{font-size:15px;color:#1F3864;border-bottom:2px solid #1F3864;margin:14px 0 6px}'
+    + 'h2{font-size:13px;margin:10px 0 4px}h3{font-size:11.5px;margin:8px 0 3px}table{width:100%;border-collapse:collapse;margin-bottom:8px}th,td{border:1px solid #888;padding:3px 5px;text-align:left;vertical-align:top}'
+    + 'th{background:#1F3864;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}table.petit{font-size:9.5px}tr.tot td{font-weight:bold;background:#E7E6E6;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    + '.pb{page-break-before:always}.nobr{page-break-inside:avoid}.c{text-align:center}.b{font-weight:bold}.titre{font-size:20px;font-weight:bold;color:#1F3864;margin-top:40px}'
+    + '.st{font-size:16px;font-weight:bold}.petitp{font-size:8.5px;color:#666}.rouge{color:#B71C1C}.garde{padding-top:60px}';
+  const w = window.open('', '_blank');
+  if (!w) { showToast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
+  w.document.write('<html><head><meta charset="UTF-8"><title>Dossier visite DR — ' + vdrEsc(D.ecole) + '</title><style>' + css + '</style></head><body>' + h + '</body></html>');
+  w.document.close(); w.focus(); setTimeout(() => w.print(), 700);
 }
 </script>
 
