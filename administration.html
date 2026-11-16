@@ -652,6 +652,15 @@ table tr:nth-child(even){background:#F8FAFD}
       <div id="dirISLZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Ouvrez la section pour charger les élèves.</p></div>
     </div>
   </div>
+  <!-- ═══ 15/11/2026 — VISITE DIRECTION RÉGIONALE (CPP TECH / CPP PRO) — Directeur ═══ -->
+  <div class="section" id="dirSecVisiteDR" style="display:none">
+    <div class="sec-head sec-rouge" onclick="toggleSec(this); vdrCharger('dir')">
+      <h3>🏛️ Visite Direction Régionale — 8 décembre <span id="dirVDRCount" style="font-size:0.78em;opacity:0.9"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body">
+      <div id="dirVDRZone" style="padding:12px 14px"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.85em">Ouvrez la section pour charger.</p></div>
+    </div>
+  </div>
   <div class="section" id="dirSecEB">
   <div class="sec-head sec-rouge" onclick="toggleSec(this); chargerExamenBlanc('dir')">
     <h3>📝 Examen blanc — saisie des notes et résultats</h3><span class="arr">▼</span>
@@ -4226,6 +4235,15 @@ async function attribuerMatriculeCom() {
       </div>
       <div id="eduISLDecompte" style="padding:0 14px"></div>
       <div id="eduISLZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Ouvrez la section pour charger les élèves.</p></div>
+    </div>
+  </div>
+  <!-- ═══ 15/11/2026 — VISITE DIRECTION RÉGIONALE (CPP TECH / CPP PRO) — Éducateur ═══ -->
+  <div class="section" id="eduSecVisiteDR" style="display:none">
+    <div class="sec-head sec-rouge" onclick="toggleSec(this); vdrCharger('edu')">
+      <h3>🏛️ Visite Direction Régionale — élèves à compléter <span id="eduVDRCount" style="font-size:0.78em;opacity:0.9"></span></h3><span class="arr">▼</span>
+    </div>
+    <div class="sec-body">
+      <div id="eduVDRZone" style="padding:12px 14px"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.85em">Ouvrez la section pour charger.</p></div>
     </div>
   </div>
   <div class="section" id="eduSecEB">
@@ -21482,6 +21500,150 @@ function edtReseauAfficherBouton() {
   ['dir', 'com', 'edu'].forEach(function (p) { var b = document.getElementById(p + 'EdtResBtn'); if (b) b.style.display = ok ? 'inline-block' : 'none'; });
 }
 setInterval(edtReseauAfficherBouton, 3000);
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// VISITE DIRECTION RÉGIONALE (CPP TECH / CPP PRO) — 15/11/2026
+// Serveur séparé VISITE_DR — n'écrit que dans VISITE_ELEVES / VISITE_PROFS / VISITE_TACHES
+// ═══════════════════════════════════════════════════════════════
+const VDR_URL = 'https://script.google.com/macros/s/AKfycbw0usYOXMKXplb7x-_hmcRbWDiMP5vm-CqByiq8QTGFswtu5hDEazZ3IiKa6Mpm2dY/exec';
+const VDR_ECOLES = ['CPP TECH', 'CPP PRO'];
+const VDR = { dir: null, edu: null };
+
+function vdrEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function vdrConcerne() { return typeof currentStaff !== 'undefined' && currentStaff && VDR_ECOLES.indexOf(String(currentStaff.ecole || '').toUpperCase().trim()) !== -1; }
+function vdrVisibilite() {
+  ['dir', 'edu'].forEach(p => { const el = document.getElementById(p + 'SecVisiteDR'); if (el) el.style.display = vdrConcerne() ? '' : 'none'; });
+  if (!vdrConcerne()) { VDR.dir = null; VDR.edu = null; }
+}
+setInterval(vdrVisibilite, 1500);
+function vdrParams(extra) { return Object.assign({ ecole: currentStaff.ecole, id: currentStaff.matricule, code: currentStaff.code }, extra || {}); }
+function vdrOpts(vals, cur) { return vals.map(v => '<option value="' + vdrEsc(v) + '"' + (v === cur ? ' selected' : '') + '>' + (v || '—') + '</option>').join(''); }
+function vdrBarre(titre, n, tot) {
+  const pc = tot ? Math.round(100 * n / tot) : 100;
+  const coul = pc === 100 ? 'var(--vert)' : (pc >= 50 ? '#F9A825' : 'var(--rouge)');
+  return '<div style="margin:6px 0"><div style="font-size:0.82em;display:flex;justify-content:space-between"><b>' + titre + '</b><span>' + n + ' / ' + tot + ' (' + pc + ' %)</span></div>'
+    + '<div style="height:8px;background:#eee;border-radius:5px;overflow:hidden"><div style="height:8px;width:' + pc + '%;background:' + coul + '"></div></div></div>';
+}
+
+async function vdrCharger(p, force) {
+  const zone = document.getElementById(p + 'VDRZone'); if (!zone || !vdrConcerne()) return;
+  if (VDR[p] && !force) { vdrAfficher(p); return; }
+  zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris)">Chargement…</p>';
+  const d = await appelJSONP(VDR_URL, vdrParams({ action: 'lire' }), 30000);
+  if (!d || !d.ok) { zone.innerHTML = '<p style="padding:14px;color:var(--rouge)">' + vdrEsc((d && d.message) || 'Erreur réseau — réessayez.') + '</p>'; return; }
+  d.eleves.forEach(e => { e._s = e.sexe; e._t = e.statut; e._dirty = false; });
+  d.profs.forEach(x => { x._o = { genre: x.genre, type: x.type, aut: x.aut, nomOff: x.nomOff, garder: x.garder }; x._dirty = false; });
+  d.filtreClasse = ''; d.aFaire = true;
+  VDR[p] = d;
+  vdrAfficher(p);
+}
+
+function vdrAfficher(p) {
+  const d = VDR[p], zone = document.getElementById(p + 'VDRZone'); if (!d || !zone) return;
+  const faitE = d.eleves.filter(e => e.sexe && e.statut).length;
+  const cpt = document.getElementById(p + 'VDRCount'); if (cpt) cpt.textContent = '(' + faitE + '/' + d.eleves.length + ' élèves)';
+  const btn = 'padding:7px 12px;border:none;border-radius:8px;font-size:0.8em;cursor:pointer;color:#fff;';
+  let h = '<div style="font-size:0.82em;color:var(--gris);margin-bottom:6px">Visite de la Direction Régionale Abidjan II — <b>mardi 8 décembre 2026</b>. Date limite de saisie : <b>vendredi 20 novembre</b>.</div>';
+  h += vdrBarre('Élèves : sexe + statut AFF/NAFF', faitE, d.eleves.length);
+  if (d.role === 'DIR') {
+    h += vdrBarre('Professeurs : genre + type + à garder', d.profs.filter(x => x.genre && x.type && x.garder).length, d.profs.length);
+    h += vdrBarre('Tâches de préparation', d.taches.filter(t => t.fait).length, d.taches.length);
+
+    h += '<h4 style="margin:16px 0 6px">✅ Tâches du Directeur</h4>';
+    d.taches.forEach((t, i) => {
+      h += '<label style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;font-size:0.85em;border-bottom:1px solid var(--border)">'
+        + '<input type="checkbox" ' + (t.fait ? 'checked' : '') + ' onchange="vdrTache(\'' + p + '\',' + i + ',this)" style="margin-top:3px">'
+        + '<span>' + vdrEsc(t.txt) + (t.trace ? '<br><small style="color:var(--gris)">' + vdrEsc(t.trace) + '</small>' : '') + '</span></label>';
+    });
+
+    h += '<h4 style="margin:18px 0 6px">👨‍🏫 Professeurs <small style="font-weight:normal;color:var(--gris)">— orange : sans emploi du temps · À GARDER = NON pour les anciennes fiches et doublons</small></h4>';
+    h += '<div style="margin-bottom:8px"><button onclick="vdrEnregistrerProfs(\'' + p + '\')" style="' + btn + 'background:var(--vert)">💾 Enregistrer les professeurs</button></div>';
+    h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.8em"><tr style="background:#1F3864;color:#fff">'
+      + '<th style="padding:6px;text-align:left">Nom (PSS)</th><th>Matière</th><th>EDT</th><th>Genre</th><th>Type</th><th>N° autorisation</th><th>Nom complet officiel</th><th>À garder</th></tr>';
+    d.profs.forEach((x, i) => {
+      const bg = x._dirty ? '#FFF9C4' : (!x.creneaux ? '#FFE0B2' : ((x.genre && x.type && x.garder) ? '#E8F5E9' : '#fff'));
+      h += '<tr id="' + p + 'VDRp' + i + '" style="background:' + bg + ';border-bottom:1px solid var(--border)">'
+        + '<td style="padding:5px"><b>' + vdrEsc(x.nom) + '</b></td><td>' + vdrEsc(x.matiere) + '</td>'
+        + '<td title="' + vdrEsc(x.classes) + '">' + (x.creneaux || '<span style="color:var(--rouge)">aucun</span>') + '</td>'
+        + '<td><select onchange="vdrSetP(\'' + p + '\',' + i + ',\'genre\',this.value)">' + vdrOpts(['', 'F', 'H'], x._o.genre) + '</select></td>'
+        + '<td><select onchange="vdrSetP(\'' + p + '\',' + i + ',\'type\',this.value)">' + vdrOpts(['', 'PRIVÉ', 'FONCTIONNAIRE', 'PERMANENT'], x._o.type) + '</select></td>'
+        + '<td><input value="' + vdrEsc(x._o.aut) + '" oninput="vdrSetP(\'' + p + '\',' + i + ',\'aut\',this.value)" style="width:110px;padding:3px"></td>'
+        + '<td><input value="' + vdrEsc(x._o.nomOff) + '" oninput="vdrSetP(\'' + p + '\',' + i + ',\'nomOff\',this.value)" style="width:170px;padding:3px" placeholder="NOM Prénoms"></td>'
+        + '<td><select onchange="vdrSetP(\'' + p + '\',' + i + ',\'garder\',this.value)">' + vdrOpts(['', 'OUI', 'NON'], x._o.garder) + '</select></td></tr>';
+    });
+    h += '</table></div>';
+  }
+
+  const classes = [...new Set(d.eleves.map(e => e.classe))].sort();
+  h += '<h4 style="margin:18px 0 6px">👩‍🎓 Élèves à compléter</h4>';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px">'
+    + '<select onchange="VDR.' + p + '.filtreClasse=this.value;vdrAfficher(\'' + p + '\')" style="padding:7px;border:1.5px solid var(--border);border-radius:8px;font-size:0.85em">'
+    + '<option value="">— Toutes les classes —</option>' + classes.map(c => '<option' + (c === d.filtreClasse ? ' selected' : '') + '>' + vdrEsc(c) + '</option>').join('') + '</select>'
+    + '<label style="font-size:0.8em;display:flex;gap:4px;align-items:center"><input type="checkbox" ' + (d.aFaire ? 'checked' : '') + ' onchange="VDR.' + p + '.aFaire=this.checked;vdrAfficher(\'' + p + '\')"> Seulement ceux à compléter</label>'
+    + '<button onclick="vdrEnregistrerEleves(\'' + p + '\')" style="' + btn + 'background:var(--vert)">💾 Enregistrer les élèves</button>'
+    + '<button onclick="vdrCharger(\'' + p + '\',true)" style="' + btn + 'background:var(--bleu)">🔄 Actualiser</button></div>';
+  const liste = d.eleves.map((e, i) => ({ e, i })).filter(o => (!d.filtreClasse || o.e.classe === d.filtreClasse) && (!d.aFaire || !(o.e.sexe && o.e.statut) || o.e._dirty));
+  if (!liste.length) h += '<p style="padding:10px;text-align:center;color:var(--vert);font-size:0.85em">✅ Rien à compléter ici.</p>';
+  else {
+    h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.82em"><tr style="background:#1F3864;color:#fff">'
+      + '<th style="padding:6px;text-align:left">Classe</th><th>Matricule</th><th style="text-align:left">Nom et prénoms</th><th>Sexe</th><th>Statut</th></tr>';
+    liste.forEach(({ e, i }) => {
+      const bg = e._dirty ? '#FFF9C4' : ((e.sexe && e.statut) ? '#E8F5E9' : '#fff');
+      h += '<tr id="' + p + 'VDRe' + i + '" style="background:' + bg + ';border-bottom:1px solid var(--border)">'
+        + '<td style="padding:5px">' + vdrEsc(e.classe) + '</td><td>' + vdrEsc(e.mat) + '</td><td>' + vdrEsc(e.nom) + '</td>'
+        + '<td><select onchange="vdrSetE(\'' + p + '\',' + i + ',\'_s\',this.value)">' + vdrOpts(['', 'F', 'G'], e._s) + '</select></td>'
+        + '<td><select onchange="vdrSetE(\'' + p + '\',' + i + ',\'_t\',this.value)">' + vdrOpts(['', 'AFF', 'NAFF'], e._t) + '</select></td></tr>';
+    });
+    h += '</table></div>';
+  }
+  h += '<div style="font-size:0.75em;color:var(--gris);margin-top:8px">Jaune = modifié, pas encore enregistré · Vert = complet. Pensez à cliquer sur 💾 Enregistrer.</div>';
+  zone.innerHTML = h;
+}
+
+function vdrSetE(p, i, k, v) { const e = VDR[p].eleves[i]; e[k] = v; e._dirty = true; const tr = document.getElementById(p + 'VDRe' + i); if (tr) tr.style.background = '#FFF9C4'; }
+function vdrSetP(p, i, k, v) { const x = VDR[p].profs[i]; x._o[k] = v; x._dirty = true; const tr = document.getElementById(p + 'VDRp' + i); if (tr) tr.style.background = '#FFF9C4'; }
+
+async function vdrEnvoyerParLots(p, action, items, taille, versData) {
+  let ok = 0, rejets = [], erreurs = 0;
+  for (let k = 0; k < items.length; k += taille) {
+    const lot = items.slice(k, k + taille);
+    const d = await appelJSONP(VDR_URL, vdrParams({ action, data: JSON.stringify(lot.map(versData)) }), 30000);
+    if (d && d.ok) { ok += d.enregistres; rejets = rejets.concat(d.rejetes || []); lot.forEach(x => x._lotOk = true); }
+    else { erreurs++; lot.forEach(x => x._lotOk = false); }
+  }
+  return { ok, rejets, erreurs };
+}
+
+async function vdrEnregistrerEleves(p) {
+  const d = VDR[p]; if (!d) return;
+  const items = d.eleves.filter(e => e._dirty);
+  if (!items.length) { showToast('Aucune modification à enregistrer', ''); return; }
+  showToast('Enregistrement de ' + items.length + ' élève(s)…', '');
+  const r = await vdrEnvoyerParLots(p, 'eleves', items, 15, e => ({ r: e.r, mat: e.mat, sexe: e._s, statut: e._t }));
+  items.forEach(e => { if (e._lotOk && r.rejets.indexOf(e.mat) === -1) { e.sexe = e._s; e.statut = e._t; e._dirty = false; } });
+  vdrAfficher(p);
+  showToast(r.erreurs ? '⚠️ ' + r.ok + ' enregistré(s), problème réseau sur une partie — recliquez sur Enregistrer' : '✓ ' + r.ok + ' élève(s) enregistré(s)' + (r.rejets.length ? ' — ' + r.rejets.length + ' refusé(s)' : ''), r.erreurs ? 'error' : 'success');
+}
+
+async function vdrEnregistrerProfs(p) {
+  const d = VDR[p]; if (!d) return;
+  const items = d.profs.filter(x => x._dirty);
+  if (!items.length) { showToast('Aucune modification à enregistrer', ''); return; }
+  showToast('Enregistrement de ' + items.length + ' professeur(s)…', '');
+  const r = await vdrEnvoyerParLots(p, 'profs', items, 8, x => ({ r: x.r, nom: x.nom, genre: x._o.genre, type: x._o.type, aut: x._o.aut, nomOff: x._o.nomOff, garder: x._o.garder }));
+  items.forEach(x => { if (x._lotOk && r.rejets.indexOf(x.nom) === -1) { Object.assign(x, x._o); x._dirty = false; } });
+  vdrAfficher(p);
+  showToast(r.erreurs ? '⚠️ ' + r.ok + ' enregistré(s), problème réseau sur une partie — recliquez sur Enregistrer' : '✓ ' + r.ok + ' professeur(s) enregistré(s)' + (r.rejets.length ? ' — ' + r.rejets.length + ' refusé(s)' : ''), r.erreurs ? 'error' : 'success');
+}
+
+async function vdrTache(p, i, cb) {
+  const t = VDR[p].taches[i];
+  const d = await appelJSONP(VDR_URL, vdrParams({ action: 'tache', r: t.r, tid: t.id, fait: cb.checked ? 'OUI' : '' }), 20000);
+  if (d && d.ok) { t.fait = cb.checked; t.trace = cb.checked ? (currentStaff.matricule + ' — maintenant') : ''; vdrAfficher(p); showToast('✓ Tâche mise à jour', 'success'); }
+  else { cb.checked = !cb.checked; showToast('Erreur — réessayez', 'error'); }
+}
 </script>
 
 </body>
