@@ -658,6 +658,10 @@ table tr:nth-child(even){background:#F8FAFD}
       <h3>🏛️ Visite Direction Régionale — 8 décembre <span id="dirVDRCount" style="font-size:0.78em;opacity:0.9"></span></h3><span class="arr">▼</span>
     </div>
     <div class="sec-body">
+      <div style="padding:12px 14px 0"><button onclick="vdrEdtCharger('dir','')" style="padding:9px 14px;background:#00695C;color:#fff;border:none;border-radius:8px;font-size:0.85em;cursor:pointer;font-weight:600">🗓️ Emplois du temps : manques et corrections</button></div>
+      <div id="dirVDREdt" style="padding:0 14px"></div>
+      <div style="padding:12px 14px 0"><button onclick="vdrDocsOuvrir('dir')" style="padding:9px 14px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.85em;cursor:pointer;font-weight:600">🗂️ Documents à compléter et imprimer (PV, fiches, listes)</button></div>
+      <div id="dirVDRDocs" style="padding:0 14px"></div>
       <div style="padding:12px 14px 0"><button onclick="vdrDosCharger('dir')" style="padding:9px 14px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:0.85em;cursor:pointer;font-weight:600">📄 Dossier de visite : compléter et imprimer</button></div>
       <div id="dirVDRDos" style="padding:0 14px"></div>
       <div id="dirVDRZone" style="padding:12px 14px"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.85em">Ouvrez la section pour charger.</p></div>
@@ -4245,6 +4249,8 @@ async function attribuerMatriculeCom() {
       <h3>🏛️ Visite Direction Régionale — élèves à compléter <span id="eduVDRCount" style="font-size:0.78em;opacity:0.9"></span></h3><span class="arr">▼</span>
     </div>
     <div class="sec-body">
+      <div style="padding:12px 14px 0"><button onclick="vdrEdtCharger('edu','')" style="padding:9px 14px;background:#00695C;color:#fff;border:none;border-radius:8px;font-size:0.85em;cursor:pointer;font-weight:600">🗓️ Emplois du temps : ce qui manque</button></div>
+      <div id="eduVDREdt" style="padding:0 14px"></div>
       <div style="padding:12px 14px 0"><button onclick="vdrDosCharger('edu')" style="padding:9px 14px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:0.85em;cursor:pointer;font-weight:600">📄 Dossier de visite : compléter et imprimer</button></div>
       <div id="eduVDRDos" style="padding:0 14px"></div>
       <div id="eduVDRZone" style="padding:12px 14px"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.85em">Ouvrez la section pour charger.</p></div>
@@ -21519,7 +21525,7 @@ function vdrEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => 
 function vdrConcerne() { return typeof currentStaff !== 'undefined' && currentStaff && VDR_ECOLES.indexOf(String(currentStaff.ecole || '').toUpperCase().trim()) !== -1; }
 function vdrVisibilite() {
   ['dir', 'edu'].forEach(p => { const el = document.getElementById(p + 'SecVisiteDR'); if (el) el.style.display = vdrConcerne() ? '' : 'none'; });
-  if (!vdrConcerne()) { VDR.dir = null; VDR.edu = null; VDR.dirDos = null; VDR.eduDos = null; }
+  if (!vdrConcerne()) { VDR.dir = null; VDR.edu = null; VDR.dirDos = null; VDR.eduDos = null; VDR.dirEdt = null; VDR.eduEdt = null; VDR.dirDocSel = null; ['dir', 'edu'].forEach(q => { const z = document.getElementById(q + 'VDREdt'); if (z) z.innerHTML = ''; const zd = document.getElementById(q + 'VDRDocs'); if (zd) zd.innerHTML = ''; }); }
 }
 setInterval(vdrVisibilite, 1500);
 function vdrParams(extra) { return Object.assign({ ecole: currentStaff.ecole, id: currentStaff.matricule, code: currentStaff.code }, extra || {}); }
@@ -21831,6 +21837,407 @@ function vdrDosImprimer(p) {
   const w = window.open('', '_blank');
   if (!w) { showToast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
   w.document.write('<html><head><meta charset="UTF-8"><title>Dossier visite DR — ' + vdrEsc(D.ecole) + '</title><style>' + css + '</style></head><body>' + h + '</body></html>');
+  w.document.close(); w.focus(); setTimeout(() => w.print(), 700);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EMPLOIS DU TEMPS — bilan des manques (Directeur + Éducateur) et modification (Directeur) — 16/11/2026
+// ═══════════════════════════════════════════════════════════════
+function vdrN(s) { return String(s == null ? '' : s).toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Z0-9]/g, ''); }
+function vdrMin(t) { const m = String(t).match(/(\d{1,2})\s*h\s*(\d{0,2})/i); return m ? (+m[1]) * 60 + (+(m[2] || 0)) : null; }
+function vdrPlage(lib) {
+  const m = String(lib).replace(/[–—]/g, '-').match(/(\d{1,2}\s*h\s*\d{0,2})\s*-\s*(\d{1,2}\s*h\s*\d{0,2})/i);
+  if (!m) return null; const a = vdrMin(m[1]), b = vdrMin(m[2]); return { a, b };
+}
+function vdrEstPause(lib) { return /RECREATION|DEJEUNER|PAUSE/.test(vdrN(lib)); }
+
+// Analyse d'une grille : heures, jours vides, matières absentes, cases anormales
+function vdrEdtAnalyse(G, profs) {
+  const res = { heures: 0, joursVides: [], manques: [], anomalies: [], cellKo: {} };
+  if (!G || !G.lignes.length) { res.manques.push('Emploi du temps absent'); return res; }
+  const profsN = (profs || []).map(vdrN), tout = [];
+  let finPrec = null;
+  const jourCours = G.jours.map(() => 0);
+  G.lignes.forEach((l, li) => {
+    const lib = l.cells[0] || '', pl = vdrPlage(lib);
+    if (vdrEstPause(lib)) {
+      if (!pl || pl.a >= pl.b) { res.anomalies.push('Libellé incorrect : « ' + lib + ' »'); res.cellKo[li + '_0'] = 1; }
+      else if (finPrec !== null && pl.a !== finPrec) { res.anomalies.push('« ' + lib + ' » ne commence pas à la fin du cours précédent (' + Math.floor(finPrec / 60) + 'h' + String(finPrec % 60).padStart(2, '0') + ')'); res.cellKo[li + '_0'] = 1; }
+      if (pl) finPrec = pl.b;
+      return;
+    }
+    if (!pl || pl.a >= pl.b) { if (l.cells.slice(1).some(x => x.trim())) { res.anomalies.push('Horaire illisible : « ' + lib + ' »'); res.cellKo[li + '_0'] = 1; } return; }
+    finPrec = pl.b;
+    l.cells.forEach((x, ci) => {
+      if (ci === 0 || !x.trim()) return;
+      res.heures += (pl.b - pl.a) / 60; jourCours[ci]++;
+      x.split('/').forEach(part => {
+        const bouts = part.split(/\s*[-_]\s*/); tout.push(vdrN(bouts[0]));
+        const prof = vdrN(bouts.slice(1).join(''));
+        if (bouts.length < 2 || !prof) { res.anomalies.push(G.jours[ci] + ' ' + lib + ' : « ' + part.trim() + ' » sans professeur'); res.cellKo[li + '_' + ci] = 1; }
+        else if (profsN.length && !profsN.some(n => n === prof || n.indexOf(prof) !== -1 || prof.indexOf(n) !== -1)) { res.anomalies.push(G.jours[ci] + ' ' + lib + ' : professeur inconnu « ' + bouts.slice(1).join(' ').trim() + ' »'); res.cellKo[li + '_' + ci] = 1; }
+      });
+    });
+  });
+  G.jours.forEach((j, ci) => { if (ci > 0 && !/SAMEDI/.test(vdrN(j)) && !jourCours[ci]) res.joursVides.push(j); });
+  const a = s => tout.some(t => t.indexOf(s) === 0);
+  if (!a('EPS')) res.manques.push('EPS');
+  if (!a('INFO') && !a('TIC')) res.manques.push('Informatique');
+  res.heures = Math.round(res.heures * 10) / 10;
+  return res;
+}
+
+async function vdrEdtCharger(p, classe) {
+  const zone = document.getElementById(p + 'VDREdt'); if (!zone || !vdrConcerne()) return;
+  const prec = VDR[p + 'Edt'];
+  const cl = classe !== undefined ? classe : ((prec && prec.classe) || '');
+  zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris)">Chargement des emplois du temps…</p>';
+  const d = await appelJSONP(VDR_URL, vdrParams({ action: 'edtLire', classe: cl, tous: '1' }), 60000);
+  if (!d || !d.ok) { zone.innerHTML = '<p style="padding:14px;color:var(--rouge)">' + vdrEsc((d && d.message) || 'Erreur réseau — réessayez.') + '</p>'; return; }
+  d.peutModifier = currentStaff.profil === 'DIR' || currentStaff.profil === 'FOND';
+  VDR[p + 'Edt'] = d;
+  vdrEdtAfficher(p);
+}
+
+function vdrEdtAfficher(p) {
+  const E = VDR[p + 'Edt'], zone = document.getElementById(p + 'VDREdt'); if (!E || !zone) return;
+  const btn = 'padding:7px 12px;border:none;border-radius:8px;font-size:0.8em;cursor:pointer;color:#fff;';
+  const td = 'style="padding:4px 6px;border:1px solid var(--border)"';
+  let h = '<div style="border:2px solid #00695C;border-radius:10px;padding:10px 12px;margin:10px 0;background:#fff">';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><b style="flex:1;min-width:180px">🗓️ Emplois du temps — ce qui manque</b>'
+    + '<button onclick="vdrEdtCharger(\'' + p + '\')" style="' + btn + 'background:var(--bleu)">🔄 Actualiser</button>'
+    + '<button onclick="document.getElementById(\'' + p + 'VDREdt\').innerHTML=\'\'" style="' + btn + 'background:#777">✕ Fermer</button></div>';
+
+  // Bilan de toutes les classes
+  h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.78em;margin-bottom:8px"><tr style="background:#00695C;color:#fff">'
+    + '<th style="padding:5px;text-align:left">Classe</th><th>Heures / sem.</th><th>Jours sans cours</th><th>Matières absentes</th><th>Cases à corriger</th><th></th></tr>';
+  let totKo = 0;
+  (E.toutes || []).forEach(o => {
+    const A = vdrEdtAnalyse(o.grille, E.profs); totKo += A.anomalies.length + A.manques.length + A.joursVides.length;
+    const ok = !A.anomalies.length && !A.manques.length && !A.joursVides.length;
+    h += '<tr style="background:' + (o.classe === E.classe ? '#E0F2F1' : (ok ? '#F1F8E9' : '#fff')) + '">'
+      + '<td ' + td + '><b>' + vdrEsc(o.classe) + '</b></td><td ' + td + '>' + A.heures + ' h</td>'
+      + '<td ' + td + (A.joursVides.length ? ' class="ko"' : '') + '>' + (A.joursVides.length ? '<span style="color:var(--rouge)">' + vdrEsc(A.joursVides.join(', ')) + '</span>' : '✓') + '</td>'
+      + '<td ' + td + '>' + (A.manques.length ? '<span style="color:var(--rouge)">' + vdrEsc(A.manques.join(', ')) + '</span>' : '✓') + '</td>'
+      + '<td ' + td + '>' + (A.anomalies.length ? '<span style="color:var(--rouge)">' + A.anomalies.length + '</span>' : '✓') + '</td>'
+      + '<td ' + td + '><button onclick="vdrEdtCharger(\'' + p + '\',\'' + vdrEsc(o.classe).replace(/'/g, '\\\'') + '\')" style="padding:4px 8px;border:none;border-radius:6px;background:#00695C;color:#fff;cursor:pointer;font-size:0.95em">Voir</button></td></tr>';
+  });
+  h += '</table></div>';
+  h += '<div style="font-size:0.78em;color:' + (totKo ? 'var(--rouge)' : 'var(--vert)') + ';margin-bottom:8px">' + (totKo ? '⚠️ ' + totKo + ' point(s) à corriger au total. Touchez « Voir » pour ouvrir une classe.' : '✅ Aucun manque détecté.') + '</div>';
+
+  if (!E.grille) { h += '</div>'; zone.innerHTML = h; return; }
+
+  // Grille de la classe choisie
+  const G = E.grille, A = vdrEdtAnalyse(G, E.profs);
+  h += '<h4 style="margin:10px 0 4px">' + vdrEsc(E.classe) + ' — ' + A.heures + ' h par semaine</h4>';
+  if (A.manques.length || A.joursVides.length || A.anomalies.length) {
+    h += '<div style="background:#FFEBEE;border-left:3px solid var(--rouge);padding:6px 10px;font-size:0.8em;margin-bottom:6px">'
+      + (A.manques.length ? '<div>⚠️ <b>Matières absentes :</b> ' + vdrEsc(A.manques.join(', ')) + '</div>' : '')
+      + (A.joursVides.length ? '<div>⚠️ <b>Jours sans aucun cours :</b> ' + vdrEsc(A.joursVides.join(', ')) + '</div>' : '')
+      + A.anomalies.map(x => '<div>⚠️ ' + vdrEsc(x) + '</div>').join('') + '</div>';
+  }
+  h += '<div style="font-size:0.75em;color:var(--gris);margin-bottom:4px">' + (E.peutModifier ? 'Touchez une case pour la modifier. Cases rouges = à corriger. Les professeurs voient le changement dans leur espace dans les 10 minutes.' : 'Cases rouges = à corriger. Signalez-les au Directeur (seul le Directeur peut modifier).') + '</div>';
+  h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.75em"><tr style="background:#1F3864;color:#fff">'
+    + G.jours.map(j => '<th style="padding:5px;min-width:' + (j ? '95px' : '70px') + '">' + vdrEsc(j || 'HORAIRE') + '</th>').join('') + '</tr>';
+  G.lignes.forEach((l, li) => {
+    const pause = vdrEstPause(l.cells[0]);
+    h += '<tr style="background:' + (pause ? '#F2F2F2' : '#fff') + '">';
+    l.cells.forEach((x, ci) => {
+      const ouvert = E.edit && E.edit.li === li && E.edit.ci === ci, ko = A.cellKo[li + '_' + ci];
+      h += '<td ' + (E.peutModifier ? 'onclick="vdrEdtEditer(\'' + p + '\',' + li + ',' + ci + ')" ' : '')
+        + 'style="padding:4px;border:1px solid var(--border);vertical-align:top;' + (E.peutModifier ? 'cursor:pointer;' : '')
+        + (ci === 0 ? 'font-weight:600;' : '') + (ko ? 'background:#FFCDD2;' : '') + (ouvert ? 'outline:3px solid #F9A825;' : '') + '">'
+        + (vdrEsc(x) || (E.peutModifier && !pause ? '<span style="color:#ccc">+</span>' : '')) + '</td>';
+    });
+    h += '</tr>';
+  });
+  h += '</table></div>';
+
+  // Éditeur (Directeur)
+  if (E.edit && E.peutModifier) {
+    const l = G.lignes[E.edit.li], ci = E.edit.ci, jour = ci === 0 ? 'HORAIRE' : G.jours[ci], actuel = l.cells[ci] || '';
+    h += '<div style="margin-top:10px;padding:10px;border:2px solid #F9A825;border-radius:8px;background:#FFFDE7">';
+    h += '<b>' + vdrEsc(E.classe) + ' — ' + vdrEsc(jour) + ' — ' + vdrEsc(l.cells[0]) + '</b><br><small>Actuellement : « ' + (vdrEsc(actuel) || 'vide') + ' »</small><br>';
+    if (ci === 0) {
+      h += '<label style="font-size:0.85em">Libellé de la ligne (horaire, récréation, déjeuner) :<br><input id="' + p + 'EdtLib" value="' + vdrEsc(actuel) + '" style="width:100%;max-width:320px;padding:6px;margin-top:4px"></label>';
+    } else {
+      const m0 = (actuel.split(/\s*[-_]\s*/)[0] || '').trim().toUpperCase();
+      const p0 = (actuel.split(/\s*[-_]\s*/).slice(1).join(' ') || '').trim().toUpperCase();
+      h += '<datalist id="' + p + 'EdtMats">' + E.matieres.concat(['EPS', 'INFORMATIQUE']).filter((m, i, t) => t.indexOf(m) === i).map(m => '<option value="' + vdrEsc(m) + '">').join('') + '</datalist>';
+      h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">'
+        + '<label style="font-size:0.85em">Matière<br><input id="' + p + 'EdtMat" list="' + p + 'EdtMats" value="' + vdrEsc(m0) + '" placeholder="ex : MATHS" style="width:140px;padding:6px"></label>'
+        + '<label style="font-size:0.85em">Professeur<br><select id="' + p + 'EdtProf" style="padding:6px;max-width:240px"><option value="">— choisir —</option>'
+        + E.profs.map(n => '<option' + (n === p0 ? ' selected' : '') + '>' + vdrEsc(n) + '</option>').join('')
+        + (p0 && E.profs.indexOf(p0) === -1 ? '<option selected>' + vdrEsc(p0) + '</option>' : '') + '</select></label></div>';
+      h += '<div style="font-size:0.75em;color:var(--gris);margin-top:4px">La case sera écrite « MATIÈRE - PROFESSEUR ». Un prof absent de la liste doit d\'abord être ajouté dans la liste du personnel.</div>';
+    }
+    h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">'
+      + '<button onclick="vdrEdtEnregistrer(\'' + p + '\',false)" style="' + btn + 'background:var(--vert)">💾 Enregistrer</button>'
+      + (ci === 0 ? '' : '<button onclick="vdrEdtEnregistrer(\'' + p + '\',true)" style="' + btn + 'background:var(--rouge)">🗑️ Vider la case</button>')
+      + '<button onclick="VDR[\'' + p + 'Edt\'].edit=null;vdrEdtAfficher(\'' + p + '\')" style="' + btn + 'background:#777">Annuler</button></div></div>';
+  }
+  h += '</div>';
+  zone.innerHTML = h;
+}
+
+function vdrEdtEditer(p, li, ci) { const E = VDR[p + 'Edt']; if (!E || !E.peutModifier) return; E.edit = { li, ci }; vdrEdtAfficher(p); }
+
+async function vdrEdtEnregistrer(p, vider, forcer) {
+  const E = VDR[p + 'Edt']; if (!E || !E.edit) return;
+  const l = E.grille.lignes[E.edit.li], ci = E.edit.ci;
+  let valeur = '', prof = '';
+  if (!vider) {
+    if (ci === 0) valeur = (document.getElementById(p + 'EdtLib').value || '').trim();
+    else {
+      const m = (document.getElementById(p + 'EdtMat').value || '').trim().toUpperCase();
+      prof = (document.getElementById(p + 'EdtProf').value || '').trim().toUpperCase();
+      if (!m || !prof) { showToast('Indiquez la matière ET le professeur', 'error'); return; }
+      valeur = m + ' - ' + prof;
+    }
+  } else if (!forcer && !confirm('Vider cette case ?')) return;
+  const params = { action: 'edtEcrire', classe: E.classe, r: l.r, c: ci + 1, attendu: l.cells[ci] || '', valeur, prof,
+    horaire: l.cells[0], jour: ci === 0 ? 'HORAIRE' : E.grille.jours[ci] };
+  if (forcer) params.forcer = '1';
+  showToast('Enregistrement…', '');
+  const d = await appelJSONP(VDR_URL, vdrParams(params), 30000);
+  if (d && d.conflit) {
+    if (confirm('⚠️ ' + d.message + '\n\nS\'il s\'agit de classes regroupées (même cours, même salle), cliquez OK pour enregistrer quand même. Sinon, Annuler.')) return vdrEdtEnregistrer(p, vider, true);
+    return;
+  }
+  if (!d || !d.ok) { showToast((d && d.message) || 'Erreur réseau — réessayez', 'error'); return; }
+  l.cells[ci] = d.valeur; E.edit = null;
+  const o = (E.toutes || []).find(t => t.classe === E.classe); if (o && o.grille) o.grille.lignes[E.grille.lignes.indexOf(l)].cells[ci] = d.valeur;
+  vdrEdtAfficher(p);
+  showToast('✓ Emploi du temps modifié', 'success');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DOCUMENTS DE LA VISITE — un document à compléter / imprimer par tâche (Directeur) — 16/11/2026
+// Les saisies sont enregistrées avec celles du dossier (onglet VISITE_DOSSIER, clés doc.*)
+// ═══════════════════════════════════════════════════════════════
+const VDR_ODJ_RENTREE = '1. Présentation de l\'équipe administrative et pédagogique\n2. Effectifs et répartition des classes\n3. Emplois du temps et répartition des services\n4. Règlement intérieur et discipline\n5. Calendrier scolaire, devoirs et évaluations\n6. Tenue des cahiers (textes, appel, notes)\n7. Divers';
+const VDR_ODJ_CE = '1. Désignation / confirmation du responsable du CE\n2. Progressions et répartition des programmes par niveau\n3. Programme des devoirs et harmonisation des évaluations\n4. Tenue des cahiers de textes et de notes\n5. Besoins en matériel et documentation\n6. Divers';
+const VDR_DOCS = [
+  { id: 't01', tache: 'T01', titre: 'Bordereau des autorisations de l\'établissement',
+    table: (D, p) => { const L = []; for (let i = 0; i < D.nbAut + 2; i++) { const lib = vdrDosVal(p, 'aut.' + i + '.lib'); if (lib) L.push([lib, vdrDosVal(p, 'aut.' + i + '.num'), vdrDosVal(p, 'aut.' + i + '.date'), '']); }
+      L.push(['Autorisation de diriger (Directeur des Études)', '', '', '']); L.push(['Autorisation de diriger (Chef d\'établissement)', '', '', '']);
+      return { cols: ['Pièce', 'N° de décision', 'Date', 'Copie jointe (OUI/NON)'], lignes: L, edit: [1, 2, 3], vides: 2 }; },
+    signatures: ['Le Directeur des Études'] },
+  { id: 't02', tache: 'T02', titre: 'Liste des enseignants sans autorisation d\'enseigner',
+    champs: [['dest', 'Destinataire', 'text', 'Monsieur le Fondateur']],
+    table: D => ({ cols: ['N°', 'Nom et prénoms', 'Discipline', 'Statut', 'Démarche en cours', 'Date de dépôt'],
+      lignes: D.profs.filter(x => !x.aut).map((x, i) => [i + 1, x.nom, x.matiere, x.type, '', '']), edit: [4, 5], vides: 3 }),
+    signatures: ['Le Directeur des Études'] },
+  { id: 't03', tache: 'T03', titre: 'État des emplois du temps des classes',
+    table: D => ({ cols: ['Classe', 'Heures / semaine', 'Jours sans cours', 'Matières absentes', 'Cases à corriger', 'Observation / correction faite'],
+      lignes: D.edtClasses.map(o => { const G = o.lignes.length > 1 ? { jours: o.lignes[0], lignes: o.lignes.slice(1).map(c => ({ cells: c })) } : null; const A = vdrEdtAnalyse(G, D.profs.map(x => x.nomPss));
+        return [o.classe, A.heures + ' h', A.joursVides.join(', ') || '✓', A.manques.join(', ') || '✓', A.anomalies.length || '✓', '']; }), edit: [5], vides: 0 }),
+    note: 'Données issues de PSS au moment du chargement. Corriger les emplois du temps avec le bouton « 🗓️ Emplois du temps », puis 🔄 Actualiser.',
+    signatures: ['Le Directeur des Études'] },
+  { id: 't04', tache: 'T04', titre: 'Emplois du temps des professeurs', special: 'edtprofs' },
+  { id: 't05', tache: 'T05', titre: 'Note de service — Désignation des responsables des Conseils d\'Enseignement',
+    champs: [['ref', 'Référence', 'text', 'N° ____ /DE/2026-2027'], ['date', 'Date', 'text', ''],
+      ['texte', 'Texte', 'area', 'Il est porté à la connaissance du personnel enseignant que les professeurs dont les noms suivent sont désignés responsables des Conseils d\'Enseignement pour l\'année scolaire 2026-2027. Ils sont chargés de coordonner les progressions, les devoirs et la tenue des documents pédagogiques de leur discipline.'],
+      ['signataire', 'Signataire', 'text', 'Madame BOTI, Directrice']],
+    table: (D, p) => { const L = []; for (let i = 0; i < D.nbCE; i++) L.push([vdrDosVal(p, 'ce.' + i + '.disc'), vdrDosVal(p, 'ce.' + i + '.resp'), vdrDosVal(p, 'ce.' + i + '.genre'), vdrDosVal(p, 'ce.' + i + '.tel')]);
+      return { cols: ['Discipline / CE', 'Responsable', 'Genre', 'Contact'], lignes: L, edit: [], vides: 0 }; },
+    note: 'Les responsables se saisissent dans « 📄 Dossier de visite » (tableau des Conseils d\'Enseignement).', signatures: ['__signataire'] },
+  { id: 't06', tache: 'T06', titre: 'Procès-verbal de réunion du Conseil d\'Enseignement', multi: 8,
+    champs: [['disc', 'Conseil d\'Enseignement (discipline)', 'text', ''], ['date', 'Date', 'text', ''], ['heure', 'Heure de début / de fin', 'text', ''],
+      ['lieu', 'Lieu', 'text', ''], ['pres', 'Président de séance', 'text', ''], ['secr', 'Secrétaire de séance', 'text', ''],
+      ['presents', 'Membres présents', 'area', ''], ['absents', 'Membres absents', 'area', ''], ['odj', 'Ordre du jour', 'area', VDR_ODJ_CE],
+      ['deroule', 'Déroulement des travaux', 'area', ''], ['decisions', 'Décisions et recommandations', 'area', '']],
+    signatures: ['Le Secrétaire de séance', 'Le Président de séance', 'Visa du Directeur des Études'] },
+  { id: 't07', tache: 'T07', titre: 'Procès-verbal de la réunion de rentrée 2026-2027',
+    champs: [['date', 'Date', 'text', ''], ['heure', 'Heure de début / de fin', 'text', ''], ['lieu', 'Lieu', 'text', ''],
+      ['pres', 'Président de séance', 'text', ''], ['secr', 'Secrétaire de séance', 'text', ''], ['odj', 'Ordre du jour', 'area', VDR_ODJ_RENTREE],
+      ['deroule', 'Déroulement des travaux', 'area', ''], ['decisions', 'Décisions et recommandations', 'area', ''], ['divers', 'Divers', 'area', '']],
+    table: D => ({ cols: ['N°', 'Nom et prénoms', 'Discipline', 'Présent (P/A)', 'Signature'], lignes: D.profs.map((x, i) => [i + 1, x.nom, x.matiere, '', '']), edit: [3], vides: 4, titre: 'Liste de présence' }),
+    signatures: ['Le Secrétaire de séance', 'Le Président de séance'] },
+  { id: 't08', tache: 'T08', titre: 'Fiche de contrôle des cahiers de textes',
+    champs: [['date', 'Date du contrôle', 'text', ''], ['ctrl', 'Contrôlé par', 'text', '']],
+    table: D => ({ cols: ['Classe', 'Cahier présent', 'À jour au', 'Disciplines en retard', 'Visa', 'Observations'], lignes: D.classes.map(c => [c, '', '', '', '', '']), edit: [1, 2, 3, 4, 5], vides: 0 }),
+    signatures: ['Le Directeur des Études'] },
+  { id: 't09', tache: 'T09', titre: 'Fiche de contrôle des cahiers de notes',
+    champs: [['date', 'Date du contrôle', 'text', ''], ['periode', 'Période contrôlée', 'text', '1er trimestre']],
+    table: D => ({ cols: ['Professeur', 'Discipline', 'Classes', 'Nb devoirs', 'Nb interrogations', 'Conforme (3+3)', 'Observations'],
+      lignes: D.profs.map(x => [x.nom, x.matiere, x.classes, '', '', '', '']), edit: [3, 4, 5, 6], vides: 0 }),
+    signatures: ['Le Directeur des Études'] },
+  { id: 't10', tache: 'T10', titre: 'Fiche de contrôle des cahiers d\'appel',
+    champs: [['date', 'Date du contrôle', 'text', ''], ['ctrl', 'Contrôlé par', 'text', '']],
+    table: D => ({ cols: ['Classe', 'Effectif', 'Cahier présent', 'À jour au', 'Absences du mois', 'Visa Éducateur', 'Observations'],
+      lignes: D.effectifs.map(e => [e[0], e[6], '', '', '', '', '']), edit: [2, 3, 4, 5, 6], vides: 0 }),
+    signatures: ['L\'Éducateur', 'Le Directeur des Études'] },
+  { id: 't11', tache: 'T11', titre: 'Liste nominative du personnel enseignant',
+    table: D => ({ cols: ['N°', 'Nom et prénoms', 'Genre', 'Discipline', 'Statut', 'N° autorisation', 'Classes'], lignes: D.profs.map((x, i) => [i + 1, x.nom, x.genre, x.matiere, x.type, x.aut, x.classes]), edit: [], vides: 0 }),
+    note: 'Se complète dans le tableau « Professeurs » de la section (genre, type, n° d\'autorisation, nom officiel). Puis 🔄 Actualiser.',
+    signatures: ['Le Directeur des Études'] },
+  { id: 't12', tache: 'T12', titre: 'Guide de visite (dossier complet)', special: 'dossier' },
+  { id: 't13', tache: 'T13', titre: 'Contrôle du classeur de visite',
+    table: () => ({ cols: ['Pièce', 'Exemplaire 1', 'Exemplaire 2', 'Observations'], lignes: [
+      'Décisions de création, d\'ouverture et des filières', 'Autorisations d\'enseigner et de diriger', 'Emplois du temps des classes', 'Emplois du temps des professeurs',
+      'Nombre de classes par filière', 'Liste du personnel administratif (avec le genre)', 'Liste du personnel enseignant et des responsables de CE (avec le genre)',
+      'PV de la réunion de rentrée', 'PV des Conseils d\'Enseignement', 'Guide de visite rempli', 'Fiches de contrôle des cahiers (textes, notes, appel)'].map(t => [t, '', '', '']), edit: [1, 2, 3], vides: 2 }),
+    signatures: ['Le Directeur des Études'] },
+  { id: 't14', tache: 'T14', titre: 'Visite à blanc des locaux — état des infrastructures',
+    champs: [['date', 'Date de la visite à blanc', 'text', ''], ['par', 'Effectuée par', 'text', '']],
+    table: () => ({ cols: ['Élément', 'Nombre', 'État (Bon / Moyen / Mauvais)', 'Action à faire', 'Responsable', 'Délai'], lignes: [
+      'Salles de classe', 'Bloc administratif', 'Ateliers', 'Salle informatique', 'Salle multimédia', 'Cantine', 'Infirmerie',
+      'Toilettes du personnel — femmes', 'Toilettes du personnel — hommes', 'Toilettes des apprenants — filles', 'Toilettes des apprenants — garçons',
+      'Clôture (existence)', 'Clôture (état)', 'Propreté de la cour'].map(t => [t, '', '', '', '', '']), edit: [1, 2, 3, 4, 5], vides: 2 }),
+    signatures: ['Le Directeur des Études'] },
+  { id: 't15', tache: 'T15', titre: 'Séance de préparation des responsables de CE à la visite',
+    champs: [['date', 'Date', 'text', ''], ['heure', 'Heure', 'text', ''], ['lieu', 'Lieu', 'text', ''],
+      ['points', 'Points à préparer par chaque responsable', 'area', '1. Progressions à jour et conformes au programme\n2. Cahiers de textes visés dans la discipline\n3. PV du Conseil d\'Enseignement disponible\n4. Programme des devoirs et état des notes\n5. Difficultés rencontrées et besoins\n6. Questions possibles de la délégation et réponses']],
+    table: (D, p) => { const L = []; for (let i = 0; i < D.nbCE; i++) if (vdrDosVal(p, 'ce.' + i + '.resp')) L.push([vdrDosVal(p, 'ce.' + i + '.disc'), vdrDosVal(p, 'ce.' + i + '.resp'), '', '']);
+      return { cols: ['Discipline / CE', 'Responsable', 'Présent (P/A)', 'Signature'], lignes: L, edit: [2], vides: 3, titre: 'Feuille d\'émargement' }; },
+    signatures: ['Le Directeur des Études'] }
+];
+
+function vdrDocCle(doc, ce) { return 'doc.' + doc.id + (doc.multi ? '.' + ce : ''); }
+function vdrDocVal(p, k, def) {
+  const D = VDR[p + 'Dos']; if (!D) return def || '';
+  if (Object.prototype.hasOwnProperty.call(D._modif, k)) return D._modif[k];
+  if (Object.prototype.hasOwnProperty.call(D.champs, k)) return D.champs[k];
+  return def == null ? '' : String(def);
+}
+
+async function vdrDocsOuvrir(p) {
+  const zone = document.getElementById(p + 'VDRDocs'); if (!zone || !vdrConcerne()) return;
+  if (!VDR[p + 'Dos']) {
+    zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris)">Chargement des données (jusqu\'à 1 minute)…</p>';
+    const d = await appelJSONP(VDR_URL, vdrParams({ action: 'dossier' }), 120000);
+    if (!d || !d.ok) { zone.innerHTML = '<p style="padding:14px;color:var(--rouge)">' + vdrEsc((d && d.message) || 'Erreur réseau — réessayez.') + '</p>'; return; }
+    d.dossier._modif = {}; VDR[p + 'Dos'] = d.dossier;
+  }
+  VDR[p + 'DocSel'] = null; vdrDocsAfficher(p);
+}
+
+function vdrDocsAfficher(p) {
+  const D = VDR[p + 'Dos'], zone = document.getElementById(p + 'VDRDocs'); if (!D || !zone) return;
+  const btn = 'padding:7px 12px;border:none;border-radius:8px;font-size:0.8em;cursor:pointer;color:#fff;';
+  const taches = (VDR[p] && VDR[p].taches) || [];
+  const sel = VDR[p + 'DocSel'];
+  let h = '<div style="border:2px solid #6A1B9A;border-radius:10px;padding:10px 12px;margin:10px 0;background:#fff">';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><b style="flex:1;min-width:180px">🗂️ Documents de la visite</b>'
+    + (sel ? '<button onclick="VDR[\'' + p + 'DocSel\']=null;vdrDocsAfficher(\'' + p + '\')" style="' + btn + 'background:#6A1B9A">← Liste</button>' : '')
+    + '<button onclick="VDR[\'' + p + 'Dos\']=null;vdrDocsOuvrir(\'' + p + '\')" style="' + btn + 'background:var(--bleu)">🔄 Actualiser</button>'
+    + '<button onclick="document.getElementById(\'' + p + 'VDRDocs\').innerHTML=\'\'" style="' + btn + 'background:#777">✕ Fermer</button></div>';
+  if (!sel) {
+    h += '<div style="font-size:0.78em;color:var(--gris);margin-bottom:6px">Un document par tâche : ouvrez-le, complétez les cases, enregistrez, puis imprimez. Les données de PSS (professeurs, classes, effectifs) sont déjà remplies.</div>';
+    VDR_DOCS.forEach(doc => {
+      const t = taches.find(x => x.id === doc.tache);
+      h += '<div style="display:flex;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:0.85em">'
+        + '<span style="width:22px">' + (t && t.fait ? '✅' : '⬜') + '</span><span style="flex:1">' + vdrEsc(doc.titre) + (t ? '<br><small style="color:var(--gris)">' + vdrEsc(t.txt) + '</small>' : '') + '</span>'
+        + '<button onclick="VDR[\'' + p + 'DocSel\']={id:\'' + doc.id + '\',ce:0};vdrDocsAfficher(\'' + p + '\')" style="' + btn + 'background:#6A1B9A">Ouvrir</button></div>';
+    });
+    h += '</div>'; zone.innerHTML = h; return;
+  }
+  const doc = VDR_DOCS.find(x => x.id === sel.id), base = vdrDocCle(doc, sel.ce);
+  h += '<h4 style="margin:6px 0">' + vdrEsc(doc.titre) + '</h4>';
+  if (doc.special === 'dossier') {
+    h += '<p style="font-size:0.85em">Le guide de visite correspond au dossier complet. Complétez-le dans « 📄 Dossier de visite », puis imprimez-le.</p>'
+      + '<button onclick="vdrDosImprimer(\'' + p + '\')" style="' + btn + 'background:#1F3864">🖨️ Imprimer le dossier complet</button></div>';
+    zone.innerHTML = h; return;
+  }
+  if (doc.special === 'edtprofs') {
+    h += '<p style="font-size:0.85em">' + D.profs.length + ' professeur(s). Corrigez d\'abord les emplois du temps des classes si besoin (🗓️), puis 🔄 Actualiser.</p>'
+      + '<button onclick="vdrDocImprimer(\'' + p + '\')" style="' + btn + 'background:#1F3864">🖨️ Imprimer les emplois du temps des professeurs</button></div>';
+    zone.innerHTML = h; return;
+  }
+  if (doc.multi) {
+    h += '<div style="margin-bottom:6px;font-size:0.85em">PV n° <select onchange="VDR[\'' + p + 'DocSel\'].ce=+this.value;vdrDocsAfficher(\'' + p + '\')">'
+      + Array.from({ length: doc.multi }, (_, i) => '<option value="' + i + '"' + (i === sel.ce ? ' selected' : '') + '>' + (i + 1) + ' — ' + vdrEsc(vdrDocVal(p, 'doc.' + doc.id + '.' + i + '.disc', vdrDosVal(p, 'ce.' + i + '.disc')) || 'CE ' + (i + 1)) + '</option>').join('') + '</select></div>';
+  }
+  const inpS = 'width:100%;padding:5px;border:1px solid var(--border);border-radius:5px;font-size:0.95em;box-sizing:border-box';
+  (doc.champs || []).forEach(c => {
+    let def = c[3]; if (doc.multi && c[0] === 'disc') def = vdrDosVal(p, 'ce.' + sel.ce + '.disc'); if (doc.multi && c[0] === 'pres') def = vdrDosVal(p, 'ce.' + sel.ce + '.resp');
+    const k = base + '.' + c[0], v = vdrEsc(vdrDocVal(p, k, def));
+    h += '<label style="display:block;font-size:0.8em;margin:6px 0 2px"><b>' + vdrEsc(c[1]) + '</b></label>'
+      + (c[2] === 'area' ? '<textarea data-k="' + k + '" oninput="vdrDosSet(\'' + p + '\',this)" rows="4" style="' + inpS + '">' + v + '</textarea>'
+                         : '<input data-k="' + k + '" value="' + v + '" oninput="vdrDosSet(\'' + p + '\',this)" style="' + inpS + '">');
+  });
+  if (doc.note) h += '<div style="font-size:0.75em;color:var(--gris);margin:6px 0">' + vdrEsc(doc.note) + '</div>';
+  if (doc.table) {
+    const T = doc.table(D, p);
+    h += (T.titre ? '<b style="font-size:0.85em;display:block;margin-top:8px">' + vdrEsc(T.titre) + '</b>' : '')
+      + '<div style="overflow-x:auto;margin-top:6px"><table style="width:100%;border-collapse:collapse;font-size:0.78em"><tr style="background:#6A1B9A;color:#fff">'
+      + T.cols.map(c => '<th style="padding:5px;text-align:left">' + vdrEsc(c) + '</th>').join('') + '</tr>';
+    T.lignes.concat(Array.from({ length: T.vides }, () => T.cols.map(() => ''))).forEach((l, r) => {
+      const ligneVide = r >= T.lignes.length;
+      h += '<tr>' + l.map((x, c) => {
+        const editable = ligneVide || T.edit.indexOf(c) !== -1;
+        if (!editable) return '<td style="padding:4px;border:1px solid var(--border)">' + vdrEsc(x) + '</td>';
+        const k = base + '.' + r + '.' + c;
+        return '<td style="padding:2px;border:1px solid var(--border)"><input data-k="' + k + '" value="' + vdrEsc(vdrDocVal(p, k, x)) + '" oninput="vdrDosSet(\'' + p + '\',this)" style="width:100%;min-width:70px;padding:3px;border:none;background:#FFFDE7;box-sizing:border-box"></td>';
+      }).join('') + '</tr>';
+    });
+    h += '</table></div>';
+  }
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
+    + '<button onclick="vdrDocEnregistrer(\'' + p + '\')" style="' + btn + 'background:var(--vert)">💾 Enregistrer</button>'
+    + '<button onclick="vdrDocImprimer(\'' + p + '\')" style="' + btn + 'background:#1F3864">🖨️ Imprimer</button></div></div>';
+  zone.innerHTML = h;
+}
+
+async function vdrDocEnregistrer(p, silencieux) {
+  const D = VDR[p + 'Dos']; if (!D) return true;
+  const cles = Object.keys(D._modif);
+  if (!cles.length) { if (!silencieux) showToast('Aucune modification à enregistrer', ''); return true; }
+  showToast('Enregistrement…', '');
+  // lots limités en taille (adresse web)
+  const lots = []; let lot = [], taille = 0;
+  cles.forEach(k => { const x = { k, v: D._modif[k] }, t = encodeURIComponent(JSON.stringify(x)).length;
+    if (lot.length && (taille + t > 3500 || lot.length >= 10)) { lots.push(lot); lot = []; taille = 0; } lot.push(x); taille += t; });
+  if (lot.length) lots.push(lot);
+  let ok = 0, err = 0;
+  for (const l of lots) {
+    const d = await appelJSONP(VDR_URL, vdrParams({ action: 'champ', data: JSON.stringify(l) }), 30000);
+    if (d && d.ok) { l.forEach(x => { D.champs[x.k] = x.v; delete D._modif[x.k]; }); ok += l.length; } else err++;
+  }
+  if (document.getElementById(p + 'VDRDocs') && document.getElementById(p + 'VDRDocs').innerHTML) vdrDocsAfficher(p);
+  showToast(err ? '⚠️ ' + ok + ' enregistré(s), réessayez pour le reste' : '✓ ' + ok + ' champ(s) enregistré(s)', err ? 'error' : 'success');
+  return !err;
+}
+
+function vdrDocImprimer(p) {
+  const D = VDR[p + 'Dos'], sel = VDR[p + 'DocSel']; if (!D || !sel) return;
+  const doc = VDR_DOCS.find(x => x.id === sel.id), base = vdrDocCle(doc, sel.ce);
+  const e = s => vdrEsc(s).replace(/\n/g, '<br>');
+  let h = '<table class="ent"><tr><td>Ministère de l\'Éducation Nationale, de l\'Alphabétisation et de l\'Enseignement Technique<br>DR Abidjan II — ETFPA<br><b>' + e(vdrDosVal(p, 'id.nom')) + '</b><br>Code : ' + e(vdrDosVal(p, 'id.code')) + '</td>'
+    + '<td class="dr">RÉPUBLIQUE DE CÔTE D\'IVOIRE<br><small>Union – Discipline – Travail</small><br><br>Année scolaire 2026-2027</td></tr></table>';
+  h += '<h1>' + e(doc.titre) + (doc.multi ? ' — ' + e(vdrDocVal(p, base + '.disc', vdrDosVal(p, 'ce.' + sel.ce + '.disc'))) : '') + '</h1>';
+  if (doc.special === 'edtprofs') {
+    D.profs.forEach(x => {
+      h += '<div class="nobr"><h3>' + e(x.nom) + (x.matiere ? ' — ' + e(x.matiere) : '') + '</h3>'
+        + (x.edt.length ? '<table><tr><th>Jour</th><th>Horaire</th><th>Classe</th><th>Matière</th></tr>' + x.edt.map(l => '<tr>' + l.map(c => '<td>' + e(c) + '</td>').join('') + '</tr>').join('') + '</table>'
+                        : '<p class="rouge">Aucun créneau dans l\'emploi du temps.</p>') + '</div>';
+    });
+  } else {
+    (doc.champs || []).forEach(c => {
+      let def = c[3]; if (doc.multi && c[0] === 'disc') return; if (doc.multi && c[0] === 'pres') def = vdrDosVal(p, 'ce.' + sel.ce + '.resp');
+      const v = vdrDocVal(p, base + '.' + c[0], def);
+      if (c[0] === 'signataire') return;
+      h += c[2] === 'area' ? '<p class="lab">' + e(c[1]) + '</p><div class="bloc">' + (e(v) || '<br><br><br>') + '</div>' : '<p><b>' + e(c[1]) + ' :</b> ' + (e(v) || '……………………………………') + '</p>';
+    });
+    if (doc.table) {
+      const T = doc.table(D, p);
+      h += (T.titre ? '<h2>' + e(T.titre) + '</h2>' : '') + '<table><tr>' + T.cols.map(c => '<th>' + e(c) + '</th>').join('') + '</tr>'
+        + T.lignes.concat(Array.from({ length: T.vides }, () => T.cols.map(() => ''))).map((l, r) => '<tr>' + l.map((x, c) => {
+          const editable = r >= T.lignes.length || T.edit.indexOf(c) !== -1;
+          return '<td>' + e(editable ? vdrDocVal(p, base + '.' + r + '.' + c, x) : x) + '&nbsp;</td>'; }).join('') + '</tr>').join('') + '</table>';
+    }
+    const sig = (doc.signatures || []).map(s => s === '__signataire' ? vdrDocVal(p, base + '.signataire', (doc.champs.find(c => c[0] === 'signataire') || [])[3]) : s);
+    if (sig.length) h += '<table class="sig"><tr>' + sig.map(s => '<td>' + e(s) + '<br><br><br><br>…………………………</td>').join('') + '</tr></table>';
+    h += '<p class="pied">Fait à Abidjan, le ……………………………</p>';
+  }
+  const css = '@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;font-size:11px}table{width:100%;border-collapse:collapse;margin:6px 0}th,td{border:1px solid #888;padding:4px 5px;text-align:left;vertical-align:top}'
+    + 'th{background:#1F3864;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}table.ent td,table.sig td{border:none}table.ent td.dr{text-align:right}table.sig td{text-align:center;padding-top:16px}'
+    + 'h1{font-size:15px;text-align:center;text-transform:uppercase;margin:16px 0 10px;text-decoration:underline}h2{font-size:12px}h3{font-size:11.5px;margin:8px 0 3px}.lab{font-weight:bold;margin:8px 0 2px}'
+    + '.bloc{border:1px solid #bbb;padding:6px;min-height:40px}.nobr{page-break-inside:avoid}.rouge{color:#B71C1C}.pied{text-align:right;margin-top:14px}';
+  const w = window.open('', '_blank');
+  if (!w) { showToast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
+  w.document.write('<html><head><meta charset="UTF-8"><title>' + vdrEsc(doc.titre) + '</title><style>' + css + '</style></head><body>' + h + '</body></html>');
   w.document.close(); w.focus(); setTimeout(() => w.print(), 700);
 }
 </script>
