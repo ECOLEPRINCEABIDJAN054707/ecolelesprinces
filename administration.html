@@ -21543,8 +21543,8 @@ async function vdrCharger(p, force) {
   zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris)">Chargement…</p>';
   const d = await appelJSONP(VDR_URL, vdrParams({ action: 'lire' }), 30000);
   if (!d || !d.ok) { zone.innerHTML = '<p style="padding:14px;color:var(--rouge)">' + vdrEsc((d && d.message) || 'Erreur réseau — réessayez.') + '</p>'; return; }
-  d.eleves.forEach(e => { e._s = e.sexe; e._t = e.statut; e._dirty = false; });
-  d.profs.forEach(x => { x._o = { genre: x.genre, type: x.type, aut: x.aut, nomOff: x.nomOff, garder: x.garder }; x._dirty = false; });
+  d.eleves.forEach(e => { if (e.sexe === 'G') e.sexe = 'M'; e._s = e.sexe; e._t = e.statut; e._dirty = false; });
+  d.profs.forEach(x => { if (x.genre === 'H') x.genre = 'M'; x._o = { genre: x.genre, type: x.type, aut: x.aut, nomOff: x.nomOff, garder: x.garder }; x._dirty = false; });
   d.filtreClasse = ''; d.aFaire = true;
   VDR[p] = d;
   vdrAfficher(p);
@@ -21577,7 +21577,7 @@ function vdrAfficher(p) {
       h += '<tr id="' + p + 'VDRp' + i + '" style="background:' + bg + ';border-bottom:1px solid var(--border)">'
         + '<td style="padding:5px"><b>' + vdrEsc(x.nom) + '</b></td><td>' + vdrEsc(x.matiere) + '</td>'
         + '<td title="' + vdrEsc(x.classes) + '">' + (x.creneaux || '<span style="color:var(--rouge)">aucun</span>') + '</td>'
-        + '<td><select onchange="vdrSetP(\'' + p + '\',' + i + ',\'genre\',this.value)">' + vdrOpts(['', 'F', 'H'], x._o.genre) + '</select></td>'
+        + '<td><select onchange="vdrSetP(\'' + p + '\',' + i + ',\'genre\',this.value)">' + vdrOpts(['', 'F', 'M'], x._o.genre) + '</select></td>'
         + '<td><select onchange="vdrSetP(\'' + p + '\',' + i + ',\'type\',this.value)">' + vdrOpts(['', 'PRIVÉ', 'FONCTIONNAIRE', 'PERMANENT'], x._o.type) + '</select></td>'
         + '<td><input value="' + vdrEsc(x._o.aut) + '" oninput="vdrSetP(\'' + p + '\',' + i + ',\'aut\',this.value)" style="width:110px;padding:3px"></td>'
         + '<td><input value="' + vdrEsc(x._o.nomOff) + '" oninput="vdrSetP(\'' + p + '\',' + i + ',\'nomOff\',this.value)" style="width:170px;padding:3px" placeholder="NOM Prénoms"></td>'
@@ -21603,7 +21603,7 @@ function vdrAfficher(p) {
       const bg = e._dirty ? '#FFF9C4' : ((e.sexe && e.statut) ? '#E8F5E9' : '#fff');
       h += '<tr id="' + p + 'VDRe' + i + '" style="background:' + bg + ';border-bottom:1px solid var(--border)">'
         + '<td style="padding:5px">' + vdrEsc(e.classe) + '</td><td>' + vdrEsc(e.mat) + '</td><td>' + vdrEsc(e.nom) + '</td>'
-        + '<td><select onchange="vdrSetE(\'' + p + '\',' + i + ',\'_s\',this.value)">' + vdrOpts(['', 'F', 'G'], e._s) + '</select></td>'
+        + '<td><select onchange="vdrSetE(\'' + p + '\',' + i + ',\'_s\',this.value)">' + vdrOpts(['', 'F', 'M'], e._s) + '</select></td>'
         + '<td><select onchange="vdrSetE(\'' + p + '\',' + i + ',\'_t\',this.value)">' + vdrOpts(['', 'AFF', 'NAFF'], e._t) + '</select></td></tr>';
     });
     h += '</table></div>';
@@ -21715,7 +21715,7 @@ function vdrDosAfficher(p) {
 
   // 2. Administratif
   h += '<h4 style="margin:10px 0 4px">2. Personnel administratif et d\'encadrement</h4><div style="overflow-x:auto"><table style="' + tab + '">' + th(['Fonction', 'Nom et prénoms', 'Genre', 'N° autorisation', 'Contact']);
-  D.roles.forEach((r, i) => { h += '<tr><td ' + td + '><b>' + vdrEsc(r) + '</b></td><td ' + td + '>' + inp('adm.' + i + '.nom', '190px') + '</td><td ' + td + '>' + sel('adm.' + i + '.genre', ['', 'F', 'H']) + '</td><td ' + td + '>' + inp('adm.' + i + '.aut', '120px') + '</td><td ' + td + '>' + inp('adm.' + i + '.tel', '110px') + '</td></tr>'; });
+  D.roles.forEach((r, i) => { h += '<tr><td ' + td + '><b>' + vdrEsc(r) + '</b></td><td ' + td + '>' + inp('adm.' + i + '.nom', '190px') + '</td><td ' + td + '>' + sel('adm.' + i + '.genre', ['', 'F', 'M']) + '</td><td ' + td + '>' + inp('adm.' + i + '.aut', '120px') + '</td><td ' + td + '>' + inp('adm.' + i + '.tel', '110px') + '</td></tr>'; });
   h += '</table></div>';
 
   // 3. Enseignants
@@ -21725,12 +21725,12 @@ function vdrDosAfficher(p) {
     + [['Permanents', 'PERMANENT'], ['Vacataires privés', 'PRIVÉ'], ['Vacataires fonctionnaires', 'FONCTIONNAIRE']].map(r => '<tr><td ' + td + '>' + r[0] + '</td><td ' + td + '>' + sp[r[1]][0] + '</td><td ' + td + '>' + sp[r[1]][1] + '</td><td ' + td + '>' + (sp[r[1]][0] + sp[r[1]][1]) + '</td></tr>').join('') + '</table>';
   h += '<div style="font-size:0.75em;color:var(--gris);margin-bottom:6px">La liste nominative (genre, statut, n° d\'autorisation) se complète dans le tableau « Professeurs » de cette section (Directeur). Elle est imprimée avec le dossier.</div>';
   h += '<h4 style="margin:10px 0 4px">Responsables des Conseils d\'Enseignement (CE)</h4><div style="overflow-x:auto"><table style="' + tab + '">' + th(['Discipline / CE', 'Responsable', 'Genre', 'Contact']);
-  for (let i = 0; i < D.nbCE; i++) h += '<tr><td ' + td + '>' + inp('ce.' + i + '.disc', '150px') + '</td><td ' + td + '>' + inp('ce.' + i + '.resp', '190px') + '</td><td ' + td + '>' + sel('ce.' + i + '.genre', ['', 'F', 'H']) + '</td><td ' + td + '>' + inp('ce.' + i + '.tel', '110px') + '</td></tr>';
+  for (let i = 0; i < D.nbCE; i++) h += '<tr><td ' + td + '>' + inp('ce.' + i + '.disc', '150px') + '</td><td ' + td + '>' + inp('ce.' + i + '.resp', '190px') + '</td><td ' + td + '>' + sel('ce.' + i + '.genre', ['', 'F', 'M']) + '</td><td ' + td + '>' + inp('ce.' + i + '.tel', '110px') + '</td></tr>';
   h += '</table></div>';
 
   // 4-5. Classes et effectifs (lecture seule)
   const tot = [0, 0, 0, 0, 0, 0]; D.effectifs.forEach(e => e.slice(1).forEach((v, j) => tot[j] += v));
-  h += '<h4 style="margin:10px 0 4px">4-5. Classes (' + D.classes.length + ') et effectifs (' + tot[5] + ' élèves)</h4><div style="overflow-x:auto"><table style="' + tab + '">' + th(['Classe', 'AFF F', 'AFF G', 'NAFF F', 'NAFF G', 'Non renseigné', 'Total'])
+  h += '<h4 style="margin:10px 0 4px">4-5. Classes (' + D.classes.length + ') et effectifs (' + tot[5] + ' élèves)</h4><div style="overflow-x:auto"><table style="' + tab + '">' + th(['Classe', 'AFF F', 'AFF M', 'NAFF F', 'NAFF M', 'Non renseigné', 'Total'])
     + D.effectifs.map(e => '<tr>' + e.map(v => '<td ' + td + '>' + vdrEsc(v) + '</td>').join('') + '</tr>').join('')
     + '<tr style="font-weight:bold;background:#eee"><td ' + td + '>TOTAL</td>' + tot.map(v => '<td ' + td + '>' + v + '</td>').join('') + '</tr></table></div>';
   if (tot[4]) h += '<div style="font-size:0.75em;color:var(--rouge)">⚠️ ' + tot[4] + ' élève(s) sans sexe ou statut AFF/NAFF — à compléter dans la liste « Élèves » de cette section.</div>';
@@ -21806,7 +21806,7 @@ function vdrDosImprimer(p) {
     + '<p class="b">Nombre total de classes de l\'établissement : ' + D.classes.length + '</p>';
   const tot = [0, 0, 0, 0, 0, 0]; D.effectifs.forEach(e => e.slice(1).forEach((x, j) => tot[j] += x));
   h += '<h1>5. Effectifs des élèves par classe</h1>'
-    + T([['Classe', 'AFF F', 'AFF G', 'NAFF F', 'NAFF G', 'Non renseigné', 'Total']].concat(D.effectifs.map(e => e.map(vdrEsc))).concat([['TOTAL'].concat(tot)]), { total: true })
+    + T([['Classe', 'AFF F', 'AFF M', 'NAFF F', 'NAFF M', 'Non renseigné', 'Total']].concat(D.effectifs.map(e => e.map(vdrEsc))).concat([['TOTAL'].concat(tot)]), { total: true })
     + '<p class="b">Filles : ' + (tot[0] + tot[2]) + ' — Garçons : ' + (tot[1] + tot[3]) + ' — Affectés : ' + (tot[0] + tot[1]) + ' — Non affectés : ' + (tot[2] + tot[3]) + ' — EFFECTIF TOTAL : ' + tot[5] + '</p>';
 
   h += '<h1 class="pb">6. Suivi des rapports et des diplômés</h1>'
