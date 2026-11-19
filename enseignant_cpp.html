@@ -962,10 +962,12 @@ function seConnecter() {
       localStorage.setItem('pss_ens_v3', JSON.stringify(user));
       demarrerSession();
     } else if (data && data.ok) {
+      // 20/11/2026 — on garde le NOM OFFICIEL du compte renvoyé par le serveur (pas le nom tapé)
       user = {
-        ecole: ecoleURL, nom, matiere: data.matiere || matiere,
+        ecole: ecoleURL, nom: data.nom || nom, matiere: data.matiere || matiere,
         code, sheetsId: SHEETS_IDS_2026_2027[ecoleURL], niveau,
-        classeDefaut: classePrimaire, type: data.type || 'VACATAIRE'
+        classeDefaut: classePrimaire, type: data.type || 'VACATAIRE',
+        nomSaisi: nom
       };
       localStorage.setItem('pss_ens_v3', JSON.stringify(user));
       demarrerSession();
