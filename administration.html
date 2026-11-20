@@ -21577,8 +21577,10 @@ function vdrAfficher(p) {
   const btn = 'padding:7px 12px;border:none;border-radius:8px;font-size:0.8em;cursor:pointer;color:#fff;';
   let h = '<div style="font-size:0.82em;color:var(--gris);margin-bottom:6px">Visite de la Direction Régionale Abidjan II — <b>mardi 8 décembre 2026</b>. Date limite de saisie : <b>vendredi 20 novembre</b>.</div>';
   h += vdrBarre('Élèves : sexe + statut AFF/NAFF', faitE, d.eleves.length);
-  if (d.role === 'DIR') {
+  if (d.role === 'DIR' || /^EDU/.test(String(d.role || '')) || (currentStaff && currentStaff.profil === 'EDU')) {   // 20/11/2026 — partie Professeurs aussi pour l'Éducateur de CPP TECH / CPP PRO
+    if (!(d.profs || []).length) h += '<p style="padding:8px;font-size:0.82em;color:var(--rouge)">La liste des professeurs n\'est pas envoyée à ce compte par le serveur de la visite.</p>';
     h += vdrBarre('Professeurs : genre + type + à garder', d.profs.filter(x => x.genre && x.type && x.garder).length, d.profs.length);
+    if (d.role === 'DIR') {   // les tâches restent au Directeur
     h += vdrBarre('Tâches de préparation', d.taches.filter(t => t.fait).length, d.taches.length);
 
     h += '<h4 style="margin:16px 0 6px">✅ Tâches du Directeur</h4>';
@@ -21588,6 +21590,7 @@ function vdrAfficher(p) {
         + '<span>' + vdrEsc(t.txt) + (t.trace ? '<br><small style="color:var(--gris)">' + vdrEsc(t.trace) + '</small>' : '') + '</span></label>';
     });
 
+    }
     h += '<h4 style="margin:18px 0 6px">👨‍🏫 Professeurs <small style="font-weight:normal;color:var(--gris)">— orange : sans emploi du temps · À GARDER = NON pour les anciennes fiches et doublons</small></h4>';
     h += '<div style="margin-bottom:8px"><button onclick="vdrEnregistrerProfs(\'' + p + '\')" style="' + btn + 'background:var(--vert)">💾 Enregistrer les professeurs</button></div>';
     h += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.8em"><tr style="background:#1F3864;color:#fff">'
