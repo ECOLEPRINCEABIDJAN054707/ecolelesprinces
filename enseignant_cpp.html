@@ -416,7 +416,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
     <div class="header-title"><h1>📈 Moyennes</h1><p id="moyennesSousTitre">—</p></div>
   </div>
   <div style="padding:16px">
-    <div class="form-group"><label class="label">Classe</label><select class="select" id="moyennesClasse" onchange="chargerMoyennes()"><option value="">— Sélectionner —</option></select></div>
+    <div class="form-group"><label class="label">Classe</label><select class="select" id="moyennesClasse" onchange="_choixClasseMulti(this, chargerMoyennes)"><option value="">— Sélectionner —</option></select></div>
     <div class="form-group" id="moyennesGroupMatiere" style="display:none"><label class="label">Matière</label><select class="select" id="moyennesMatiereSelect" onchange="changerMatiereMoyennes()"></select></div>
     <div class="tabs" id="moyennesTabs"></div>
     <div id="resumeClasse" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px">
@@ -533,7 +533,7 @@ canvas#sigCanvas{display:block;width:100%;height:120px;touch-action:none;cursor:
 <div class="screen" id="screen-notes">
   <div class="header"><div class="header-icon">🎯</div><div class="header-title"><h1>Saisie des notes</h1><p id="notesSousTitre">Sélectionnez une classe</p></div></div>
   <div style="padding:16px" class="has-nav">
-    <div class="form-group"><label class="label">Classe</label><select class="select" id="notesClasse" onchange="chargerElevesNotes()"><option value="">— Sélectionner —</option></select></div>
+    <div class="form-group"><label class="label">Classe</label><select class="select" id="notesClasse" onchange="_choixClasseMulti(this, chargerElevesNotes)"><option value="">— Sélectionner —</option></select></div>
     <div class="form-group" id="notesGroupMatiere" style="display:none"><label class="label">Matière</label><select class="select" id="notesMatiereSelect" onchange="changerMatiereNotes()"></select></div>
     <div class="grid2">
       <div class="form-group"><label class="label">Devoir N°</label>
@@ -1231,8 +1231,70 @@ classes.sort((a, b) => a.localeCompare(b, 'fr'));
       classes.forEach(c => { const opt = document.createElement('option'); opt.value = c; opt.textContent = c; sel.appendChild(opt); });
       if (current) sel.value = current; // conserver la sélection
     });
+    if (_estMulti()) await _ajouterClassesAutresEcoles();   // 20/11/2026 — espace unique : classes des autres écoles
   } catch(e) { console.warn('chargerClasses:', e); }
-} 
+}
+
+// ══════════════════════════════════════════════
+// 20/11/2026 — ESPACE UNIQUE (PRINCES / TECH / PRO) : NOTES et MOYENNES
+// La liste des classes montre les classes du professeur dans TOUTES ses écoles (ex. « 2A BT SMS · 🛠 PRO »).
+// Choisir une classe d'une autre école bascule l'app sur cette école, puis charge les élèves.
+// ══════════════════════════════════════════════
+const SELS_MULTI = ['notesClasse', 'moyennesClasse'];
+const _MULTI_SEP = '@@';
+window._classesAutresEcoles = {};
+function _normClasseMulti(s) { return String(s || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z0-9]/g, ''); }
+async function _mesClassesEcole(c) {
+  if (window._classesAutresEcoles[c.ecole]) return window._classesAutresEcoles[c.ecole];
+  const cb = 'mcsm_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+  const script = document.createElement('script');
+  const p = new Promise(resolve => {
+    window[cb] = d => { resolve(d); delete window[cb]; if (script.parentNode) script.parentNode.removeChild(script); };
+    script.onerror = () => { resolve(null); delete window[cb]; };
+  });
+  script.src = APPS_SCRIPT_URL + '?type=MES_CLASSES_SEMAINE&ecole=' + encodeURIComponent(c.ecole) + '&enseignant=' + encodeURIComponent(c.nom) + '&callback=' + cb;
+  document.body.appendChild(script);
+  const d = await Promise.race([p, new Promise(r => setTimeout(() => r(null), 15000))]);
+  const liste = (d && d.ok && Array.isArray(d.classes)) ? d.classes.slice() : [];
+  if (liste.length) window._classesAutresEcoles[c.ecole] = liste;
+  return liste;
+}
+async function _ajouterClassesAutresEcoles() {
+  if (!_estMulti()) return;
+  const autres = user.comptes.filter(c => c.ecole !== user.ecole);
+  const listes = await Promise.all(autres.map(c => _mesClassesEcole(c).then(l => ({ c: c, l: l }))));
+  const court = ECOLE_COURT[user.ecole] || user.ecole;
+  SELS_MULTI.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const garde = sel.value;
+    Array.from(sel.options).forEach(o => { if (o.value.indexOf(_MULTI_SEP) === 0) o.remove(); });
+    Array.from(sel.options).forEach((o, i) => { if (i > 0 && o.value) o.textContent = o.value + ' · ' + court; });
+    listes.forEach(x => {
+      x.l.slice().sort((a, b) => a.localeCompare(b, 'fr')).forEach(cl => {
+        const o = document.createElement('option');
+        o.value = _MULTI_SEP + x.c.ecole + _MULTI_SEP + cl;
+        o.textContent = cl + ' · ' + (ECOLE_COURT[x.c.ecole] || x.c.ecole);
+        sel.appendChild(o);
+      });
+    });
+    if (garde && Array.from(sel.options).some(o => o.value === garde)) sel.value = garde;
+  });
+}
+async function _choixClasseMulti(sel, suite) {
+  const v = sel.value || '';
+  if (v.indexOf(_MULTI_SEP) !== 0) { suite(); return; }
+  const parts = v.split(_MULTI_SEP);   // ['', école, classe]
+  const ecole = parts[1], classe = parts.slice(2).join(_MULTI_SEP);
+  if (!_activerEcole(ecole, false)) { sel.value = ''; return; }
+  showToast('École : ' + (ECOLE_NOMS[ecole] || ecole), 'success');
+  await chargerClasses();   // vraies classes de l'école choisie, puis celles des autres écoles
+  const cible = Array.from(sel.options).find(o => o.value && o.value.indexOf(_MULTI_SEP) !== 0 && _normClasseMulti(o.value) === _normClasseMulti(classe));
+  if (!cible) { showToast('Classe ' + classe + ' introuvable dans ' + (ECOLE_NOMS[ecole] || ecole), 'error'); sel.value = ''; return; }
+  sel.value = cible.value;
+  suite();
+}
+
   // ⚠️ NOUVEAU — Mes cours du jour, avec créneaux cliquables uniquement à mon nom
 async function chargerMesCoursDuJour() {
   const zone = document.getElementById('modalClasse').closest('.card') || document.getElementById('modalClasse').parentElement.parentElement;
