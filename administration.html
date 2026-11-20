@@ -12711,12 +12711,32 @@ async function confirmerClasseSuivanteDir(idx,tableId){
 }
 function filtrerResultatsDir(){renderTableResultats(donneesResultats,'dirResTable','dirResFiltreClasse','dirResFiltreDecision','dirResFiltreNom');}
 function filtrerResultatsCom(){renderTableResultats(donneesResultats,'comResTable','comResFiltreClasse','comResFiltreDecision','comResFiltreNom');}
+// 20/11/2026 — Messages parents : les plus RÉCENTS en haut, les NON LUS d'abord, texte protégé
+// (un message contenant « < » ou « > » ne casse plus l'affichage des messages suivants)
+function _escMsg(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function _cleDateMsg(v){
+  var s=fmtDateMsg(v), m=/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:[ ,]+(\d{1,2}):(\d{2}))?/.exec(String(s||''));
+  if(!m) return '';
+  var p=function(x){return String(x||'0').padStart(2,'0');};
+  return m[3]+p(m[2])+p(m[1])+p(m[4])+p(m[5]);
+}
 function renderMessages(data,bodyId,canReply){
   const body=document.getElementById(bodyId);if(!body)return;
   if(!data.length){body.innerHTML='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun message</p>';return;}
-  const msgs=data.filter(m=>m.message);const connexions=data.filter(m=>m.statut==='CONNEXION'&&!m.message);
-  let h='';if(connexions.length)h+='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">'+connexions.length+' connexion(s) parent recente(s)</div>';
-  if(msgs.length){msgs.forEach((m,i)=>{const nonLu=!m.reponse;const repId='rep-msg-'+i;h+='<div style="padding:12px 16px;border-bottom:1px solid var(--border);background:'+(nonLu?'#FFF8E1':'#fff')+'"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><div style="font-size:0.82em;font-weight:700">'+m.nom+' <span style="font-size:0.8em;color:var(--gris)">· '+m.classe+'</span></div><div style="font-size:0.7em;color:var(--gris)">'+fmtDateMsg(m.date)+(nonLu?' <span style="color:var(--orange);font-weight:700">Non lu</span>':'')+'</div></div><div style="font-size:0.8em;margin-bottom:6px">'+m.message+'</div>';if(m.reponse){h+='<div style="background:#E8F5E9;border-radius:6px;padding:6px 10px;font-size:0.76em;color:var(--vert)">Reponse: '+m.reponse+'</div>';}else if(canReply){h+='<div style="display:flex;gap:6px;margin-top:6px"><input id="'+repId+'" type="text" placeholder="Votre reponse..." style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;outline:none"><button onclick="envoyerReponse(this)" data-mat="'+m.matricule+'" data-id="'+(m.idMessage||'')+'" data-rep="'+repId+'" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">Repondre</button></div>';}h+='</div>';});}
+  const msgs=data.filter(m=>m.message).map((m,i)=>({m:m,i:i,cle:_cleDateMsg(m.date),nonLu:!m.reponse}));
+  msgs.sort((a,b)=>(b.nonLu-a.nonLu)||(b.cle<a.cle?-1:b.cle>a.cle?1:0)||(b.i-a.i));
+  const connexions=data.filter(m=>m.statut==='CONNEXION'&&!m.message);
+  const nbNonLus=msgs.filter(x=>x.nonLu).length;
+  let h='';
+  if(connexions.length)h+='<div style="padding:10px 14px;background:#E3F2FD;font-size:0.76em;color:var(--bleu);border-bottom:1px solid var(--border)">'+connexions.length+' connexion(s) parent recente(s)</div>';
+  if(msgs.length){
+    h+='<div style="padding:8px 14px;background:#FFF8E1;font-size:0.78em;font-weight:700;color:var(--orange);border-bottom:1px solid var(--border)">'+nbNonLus+' message(s) non lu(s) — les plus récents en haut</div>';
+    msgs.forEach((x,k)=>{const m=x.m,nonLu=x.nonLu,repId='rep-msg-'+k;
+      h+='<div style="padding:12px 16px;border-bottom:1px solid var(--border);background:'+(nonLu?'#FFF8E1':'#fff')+'"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><div style="font-size:0.82em;font-weight:700">'+_escMsg(m.nom)+' <span style="font-size:0.8em;color:var(--gris)">· '+_escMsg(m.classe)+'</span></div><div style="font-size:0.7em;color:var(--gris)">'+_escMsg(fmtDateMsg(m.date))+(nonLu?' <span style="color:var(--orange);font-weight:700">Non lu</span>':'')+'</div></div><div style="font-size:0.8em;margin-bottom:6px;white-space:pre-wrap;word-break:break-word">'+_escMsg(m.message)+'</div>';
+      if(m.reponse){h+='<div style="background:#E8F5E9;border-radius:6px;padding:6px 10px;font-size:0.76em;color:var(--vert);white-space:pre-wrap;word-break:break-word">Reponse: '+_escMsg(m.reponse)+'</div>';}
+      else if(canReply){h+='<div style="display:flex;gap:6px;margin-top:6px"><input id="'+repId+'" type="text" placeholder="Votre reponse..." style="flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.78em;outline:none"><button onclick="envoyerReponse(this)" data-mat="'+_escMsg(m.matricule)+'" data-id="'+_escMsg(m.idMessage||'')+'" data-rep="'+repId+'" style="padding:6px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.76em;font-weight:600;cursor:pointer">Repondre</button></div>';}
+      h+='</div>';});
+  }
   else if(!connexions.length)h='<p style="padding:14px;font-size:0.82em;color:var(--gris)">Aucun message parent</p>';
   body.innerHTML=h;
 }
