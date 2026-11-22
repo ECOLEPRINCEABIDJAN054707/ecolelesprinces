@@ -15652,7 +15652,7 @@ async function salResCharger(){
   if (!code) { if (inp) inp.focus(); return; }
   window._salResCode = code;
   body.innerHTML = '<div style="text-align:center;padding:30px"><div class="spinner-sm" style="margin:0 auto 10px"></div><div style="color:var(--gris);font-size:0.82em">Lecture des bases des &eacute;coles&hellip;</div></div>';
-  const res = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action: 'getSalairesReseau', code: code }, 60000);
+  const res = await appelJSONP(APP_SCRIPT_URL_ADMIN, { action: 'getSalairesReseau', code: code }, 90000);
   if (!res || !res.ok) {
     window._salResCode = '';
     body.innerHTML = '<p style="text-align:center;padding:16px;color:var(--rouge);font-size:0.85em">' + ((res && res.erreur) || (res && res.error) || 'Erreur de chargement') + '</p>'
@@ -15671,30 +15671,39 @@ function salResReset(){
 function _salResF(n){ return Math.round(n || 0).toLocaleString('fr-FR') + ' F'; }
 function _salResEsc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function salResOnglet(i){ _salResOnglet = i; salResRendre(); }
+function _salResTable(titre, liste, total, avecCnps){
+  let h = '<div style="font-weight:700;margin:10px 0 4px;color:#1a3a6b">' + titre + ' (' + liste.length + ')</div>';
+  if (!liste.length) return h + '<p style="font-size:0.8em;color:var(--gris);margin:0 0 6px">Aucun</p>';
+  h += '<div class="tbl-wrap"><table><thead><tr><th>N&deg;</th><th>Nom et pr&eacute;noms</th><th>Poste</th>' + (avecCnps ? '<th>N&deg; CNPS</th>' : '') + '<th>Net &agrave; payer</th></tr></thead><tbody>';
+  liste.forEach((p, k) => {
+    h += '<tr><td style="text-align:center">' + (k + 1) + '</td><td>' + _salResEsc(p.nom) + '</td><td>' + _salResEsc(p.poste) + '</td>' + (avecCnps ? '<td>' + _salResEsc(p.cnps) + '</td>' : '') + '<td style="text-align:right;font-weight:700">' + _salResF(p.net) + '</td></tr>';
+  });
+  h += '</tbody><tfoot><tr class="total-row"><td colspan="' + (avecCnps ? 4 : 3) + '" style="text-align:right">TOTAL</td><td style="text-align:right">' + _salResF(total) + '</td></tr></tfoot></table></div>';
+  return h;
+}
 function salResRendre(){
   const d = _salResData, body = document.getElementById('salResBody'); if (!d || !body) return;
-  // Récapitulatif réseau
-  let h = '<div class="tbl-wrap"><table><thead><tr><th>&Eacute;cole</th><th>Effectif</th><th>Net mensuel</th></tr></thead><tbody>';
+  let h = '<div class="tbl-wrap"><table><thead><tr><th>&Eacute;cole</th><th>Personnel fixe</th><th>Vacataires</th><th>Total</th></tr></thead><tbody>';
   d.ecoles.forEach((e, i) => {
-    h += '<tr style="cursor:pointer" onclick="salResOnglet(' + i + ')"><td>' + _salResEsc(e.ecole) + (e.erreur ? ' &#10060;' : '') + '</td><td style="text-align:center">' + e.nb + '</td><td style="text-align:right;font-weight:700">' + _salResF(e.total) + '</td></tr>';
+    h += '<tr style="cursor:pointer" onclick="salResOnglet(' + i + ')"><td>' + _salResEsc(e.ecole) + (e.erreur ? ' &#10060;' : '') + '</td>'
+      + '<td style="text-align:right">' + _salResF(e.totalPerm) + ' <span style="color:var(--gris);font-size:0.8em">(' + e.nbPerm + ')</span></td>'
+      + '<td style="text-align:right">' + (e.nbVac ? _salResF(e.totalVac) + ' <span style="color:var(--gris);font-size:0.8em">(' + e.nbVac + ')</span>' : '&mdash;') + '</td>'
+      + '<td style="text-align:right;font-weight:700">' + _salResF(e.total) + '</td></tr>';
   });
-  h += '</tbody><tfoot><tr class="total-row"><td style="text-align:right">TOTAL R&Eacute;SEAU</td><td style="text-align:center">' + d.ecoles.reduce((a, e) => a + e.nb, 0) + '</td><td style="text-align:right">' + _salResF(d.totalReseau) + '</td></tr></tfoot></table></div>';
-  // Onglets
+  h += '</tbody><tfoot><tr class="total-row"><td style="text-align:right">TOTAL R&Eacute;SEAU</td><td style="text-align:right">' + _salResF(d.totalPerm) + '</td><td style="text-align:right">' + _salResF(d.totalVac) + '</td><td style="text-align:right">' + _salResF(d.totalReseau) + '</td></tr></tfoot></table></div>';
+  h += '<p style="font-size:0.75em;color:var(--gris);margin:4px 0 0">Vacataires : montant des cours valid&eacute;s du mois de paie en cours (mis &agrave; jour au fil des validations).</p>';
   h += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 8px">';
   d.ecoles.forEach((e, i) => {
     const actif = i === _salResOnglet;
     h += '<button type="button" onclick="salResOnglet(' + i + ')" style="border:1px solid #1a3a6b;border-radius:16px;padding:5px 12px;font-size:0.8em;cursor:pointer;background:' + (actif ? '#1a3a6b;color:#fff' : '#fff;color:#1a3a6b') + '">' + _salResEsc(e.ecole) + '</button>';
   });
   h += '</div>';
-  // Détail de l'école choisie
   const e = d.ecoles[_salResOnglet];
   if (e) {
     if (e.erreur) h += '<p style="color:var(--rouge);font-size:0.82em">Erreur : ' + _salResEsc(e.erreur) + '</p>';
-    h += '<div class="tbl-wrap"><table><thead><tr><th>N&deg;</th><th>Nom et pr&eacute;noms</th><th>Poste</th><th>N&deg; CNPS</th><th>Net &agrave; payer</th></tr></thead><tbody>';
-    e.personnes.forEach((p, k) => {
-      h += '<tr><td style="text-align:center">' + (k + 1) + '</td><td>' + _salResEsc(p.nom) + '</td><td>' + _salResEsc(p.poste) + '</td><td>' + _salResEsc(p.cnps) + '</td><td style="text-align:right;font-weight:700">' + _salResF(p.net) + '</td></tr>';
-    });
-    h += '</tbody><tfoot><tr class="total-row"><td colspan="4" style="text-align:right">TOTAL ' + _salResEsc(e.ecole) + '</td><td style="text-align:right">' + _salResF(e.total) + '</td></tr></tfoot></table></div>';
+    h += _salResTable('Personnel fixe', e.personnes, e.totalPerm, true);
+    if (e.vacataires && e.vacataires.length) h += _salResTable('Vacataires (au pointage)', e.vacataires, e.totalVac, false);
+    h += '<div style="text-align:right;font-weight:700;margin-top:6px">TOTAL ' + _salResEsc(e.ecole) + ' : ' + _salResF(e.total) + '</div>';
   }
   h += '<div style="display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap">'
     + '<span style="font-size:0.75em;color:var(--gris)">Mis &agrave; jour le ' + _salResEsc(d.maj) + '</span>'
@@ -15706,17 +15715,23 @@ function salResRendre(){
 function salResImprimer(tout){
   const d = _salResData; if (!d) return;
   const liste = tout ? d.ecoles : [d.ecoles[_salResOnglet]];
-  let h = '<html><head><meta charset="UTF-8"><title>Salaires r&eacute;seau Princes</title><style>body{font-family:Arial,sans-serif;font-size:12px;margin:24px}h1{font-size:16px;margin:0 0 4px}h2{font-size:14px;margin:18px 0 6px;color:#1a3a6b}table{width:100%;border-collapse:collapse;margin-bottom:8px}th,td{border:1px solid #999;padding:4px 6px}th{background:#1a3a6b;color:#fff}td.n{text-align:right}tfoot td{font-weight:bold;background:#eef}.pb{page-break-after:always}</style></head><body>';
-  h += '<h1>R&Eacute;SEAU CPP LES PRINCES &mdash; SALAIRES DU PERSONNEL FIXE</h1><div>&Eacute;tabli le ' + _salResEsc(d.maj) + '</div>';
+  const tab = (titre, l, tot, cnps) => {
+    if (!l || !l.length) return '';
+    let t = '<h3>' + titre + '</h3><table><thead><tr><th>N&deg;</th><th>Nom et pr&eacute;noms</th><th>Poste</th>' + (cnps ? '<th>N&deg; CNPS</th>' : '') + '<th>Net &agrave; payer</th></tr></thead><tbody>';
+    l.forEach((p, k) => { t += '<tr><td class="n">' + (k + 1) + '</td><td>' + _salResEsc(p.nom) + '</td><td>' + _salResEsc(p.poste) + '</td>' + (cnps ? '<td>' + _salResEsc(p.cnps) + '</td>' : '') + '<td class="n">' + _salResF(p.net) + '</td></tr>'; });
+    return t + '</tbody><tfoot><tr><td colspan="' + (cnps ? 4 : 3) + '" style="text-align:right">TOTAL</td><td class="n">' + _salResF(tot) + '</td></tr></tfoot></table>';
+  };
+  let h = '<html><head><meta charset="UTF-8"><title>Salaires r&eacute;seau Princes</title><style>body{font-family:Arial,sans-serif;font-size:12px;margin:24px}h1{font-size:16px;margin:0 0 4px}h2{font-size:14px;margin:18px 0 4px;color:#1a3a6b}h3{font-size:12px;margin:8px 0 4px}table{width:100%;border-collapse:collapse;margin-bottom:8px}th,td{border:1px solid #999;padding:4px 6px}th{background:#1a3a6b;color:#fff}td.n{text-align:right}tfoot td{font-weight:bold;background:#eef}</style></head><body>';
+  h += '<h1>R&Eacute;SEAU CPP LES PRINCES &mdash; SALAIRES DU PERSONNEL</h1><div>&Eacute;tabli le ' + _salResEsc(d.maj) + ' &mdash; vacataires : cours valid&eacute;s du mois de paie en cours</div>';
   if (tout) {
-    h += '<h2>R&eacute;capitulatif</h2><table><thead><tr><th>&Eacute;cole</th><th>Effectif</th><th>Net mensuel</th></tr></thead><tbody>';
-    d.ecoles.forEach(e => { h += '<tr><td>' + _salResEsc(e.ecole) + '</td><td class="n">' + e.nb + '</td><td class="n">' + _salResF(e.total) + '</td></tr>'; });
-    h += '</tbody><tfoot><tr><td>TOTAL R&Eacute;SEAU</td><td class="n">' + d.ecoles.reduce((a, e) => a + e.nb, 0) + '</td><td class="n">' + _salResF(d.totalReseau) + '</td></tr></tfoot></table>';
+    h += '<h2>R&eacute;capitulatif</h2><table><thead><tr><th>&Eacute;cole</th><th>Personnel fixe</th><th>Vacataires</th><th>Total</th></tr></thead><tbody>';
+    d.ecoles.forEach(e => { h += '<tr><td>' + _salResEsc(e.ecole) + '</td><td class="n">' + _salResF(e.totalPerm) + '</td><td class="n">' + _salResF(e.totalVac) + '</td><td class="n">' + _salResF(e.total) + '</td></tr>'; });
+    h += '</tbody><tfoot><tr><td>TOTAL R&Eacute;SEAU</td><td class="n">' + _salResF(d.totalPerm) + '</td><td class="n">' + _salResF(d.totalVac) + '</td><td class="n">' + _salResF(d.totalReseau) + '</td></tr></tfoot></table>';
   }
   liste.forEach(e => {
-    h += '<h2>' + _salResEsc(e.ecole) + '</h2><table><thead><tr><th>N&deg;</th><th>Nom et pr&eacute;noms</th><th>Poste</th><th>N&deg; CNPS</th><th>Net &agrave; payer</th></tr></thead><tbody>';
-    e.personnes.forEach((p, k) => { h += '<tr><td class="n">' + (k + 1) + '</td><td>' + _salResEsc(p.nom) + '</td><td>' + _salResEsc(p.poste) + '</td><td>' + _salResEsc(p.cnps) + '</td><td class="n">' + _salResF(p.net) + '</td></tr>'; });
-    h += '</tbody><tfoot><tr><td colspan="4" style="text-align:right">TOTAL</td><td class="n">' + _salResF(e.total) + '</td></tr></tfoot></table>';
+    h += '<h2>' + _salResEsc(e.ecole) + ' &mdash; ' + _salResF(e.total) + '</h2>';
+    h += tab('Personnel fixe', e.personnes, e.totalPerm, true);
+    h += tab('Vacataires (au pointage)', e.vacataires, e.totalVac, false);
   });
   h += '<div style="margin-top:30px;text-align:right">La Directrice<br><br><br>Madame BOTI</div></body></html>';
   const w = window.open('', '_blank'); if (!w) { alert('Autorisez les fenêtres pop-up pour imprimer.'); return; }
