@@ -6550,7 +6550,7 @@ function afficherDir(s){
   const dsa=document.getElementById('dStatAlert');if(dsa)dsa.textContent=alertes.length;
   chargerSuiviPedagogique();setTimeout(initSaisiePedago,500);setTimeout(function(){chargerCoursJourDir(s);},600);
 setTimeout(function(){chargerMasseSalarialeDir(s.ecole);},600);
-  (function(){var z=document.getElementById('dirSecSalairesReseau');if(z)z.style.display=(s.ecole==='CPP LES PRINCES')?'':'none';})();
+  (function(){var z=document.getElementById('dirSecSalairesReseau'),ref=document.getElementById('dirSecBulletinsSalaire');if(!z)return;if(ref&&z.nextElementSibling!==ref)ref.parentNode.insertBefore(z,ref);window._salResLecture=false;salResReset();z.style.display=(s.ecole==='CPP LES PRINCES')?'':'none';})();
   setTimeout(function(){initCorrectionsAFaire('DIR');},900);
   setTimeout(function(){initProgrammeDevex('DIR');},1100); setTimeout(function(){initExamenBlancBT('DIR');},1300);   // 09/11/2026 — Examen blanc TECH/PRO   // 08/11/2026 — Programme des devoirs des classes d'examen   // 08/11/2026 — Corrections à faire
   setTimeout(function(){chargerRecepParentsDir(s.ecole);},700);
@@ -9309,6 +9309,7 @@ peuplerClassesReellesCom(s.ecole);
  chargerCoursJourCom(s);
 setTimeout(function(){chargerAffectationTousCom();},700);
   setTimeout(function(){chargerMasseSalarialeCom(s.ecole);},600);
+  (function(){var z=document.getElementById('dirSecSalairesReseau'),ref=document.getElementById('comSecBulletinsSalaire');if(!z)return;if(String(s.ecole||'').toUpperCase().trim()!=='CPP LES PRINCES'){z.style.display='none';return;}if(ref)ref.parentNode.insertBefore(z,ref);window._salResLecture=true;salResReset();z.style.display='';})();   // 22/11/2026 — Salaires réseau en lecture seule (Comptable)
   setTimeout(function(){initCorrectionsAFaire('COM');},900);
   setTimeout(function(){initProgrammeDevex('COM');},1100); setTimeout(function(){initExamenBlancBT('COM');},1300);   // 09/11/2026 — Examen blanc TECH/PRO   // 08/11/2026 — Programme des devoirs des classes d'examen   // 08/11/2026 — Corrections à faire
   remplirMoisCom();
@@ -15746,7 +15747,10 @@ function salResAjouter(){
 }
 function salResRendre(){
   const d = _salResData, body = document.getElementById('salResBody'); if (!d || !body) return;
-  let h = d.modifiable
+  if (window._salResLecture || d.lectureSeule) d.modifiable = false;
+  let h = (window._salResLecture || d.lectureSeule)
+    ? '<div style="background:#e8f0fe;border-radius:8px;padding:6px 10px;margin-bottom:10px;font-size:0.8em;color:#1a3a6b">&#128065;&#65039; <b>Lecture seule</b> &mdash; consultation et impression uniquement.</div>'
+    : d.modifiable
     ? '<div style="background:#fff8e1;border:1px solid #b8860b;border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:0.82em">&#9999;&#65039; <b>Modifications ouvertes jusqu\'au ' + _salResEsc(d.finModif) + '</b> &mdash; montants en NET &agrave; payer. Pass&eacute; cette date, la liste sera bloqu&eacute;e.</div>'
     : '<div style="background:#f2f2f2;border-radius:8px;padding:6px 10px;margin-bottom:10px;font-size:0.78em;color:var(--gris)">&#128274; Modifications ferm&eacute;es' + (d.finModif ? ' depuis le ' + _salResEsc(d.finModif) : '') + '.</div>';
   h += '<div class="tbl-wrap"><table><thead><tr><th>&Eacute;cole</th><th>Personnel fixe</th><th>Vacataires</th><th>Total</th></tr></thead><tbody>';
