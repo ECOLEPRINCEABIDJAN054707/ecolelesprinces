@@ -15486,7 +15486,7 @@ function ouvrirFenetreBulletin(d) {
       '<table>' +
         '<tr><td>Salaire de base</td><td class="montant">' + _formaterMontant(d.salaireBase) + ' F</td></tr>' +
         '<tr><td>Prime d\'ancienneté</td><td class="montant">' + _formaterMontant(d.primeAnciennete) + ' F</td></tr>' +
-        '<tr><td>Indemnité de transport</td><td class="montant">' + _formaterMontant(d.indemniteTransport) + ' F</td></tr>' +
+        '<tr><td>Prime de transport (non imposable)</td><td class="montant">' + _formaterMontant(d.indemniteTransport) + ' F</td></tr>' +
         '<tr class="total-row"><td>Salaire brut</td><td class="montant">' + _formaterMontant(d.salaireBrut) + ' F</td></tr>' +
       '</table>' +
     '</div>' +
@@ -15494,7 +15494,7 @@ function ouvrirFenetreBulletin(d) {
     '<div class="bloc">' +
       '<div class="bloc-titre">Retenues</div>' +
       '<table>' +
-        '<tr><td>CNPS (6,3%)</td><td class="montant">' + _formaterMontant(d.cnps) + ' F</td></tr>' +
+        '<tr><td>CNPS (6,3 % hors transport)</td><td class="montant">' + _formaterMontant(d.cnps) + ' F</td></tr>' +
         '<tr><td>CMU</td><td class="montant">' + _formaterMontant(d.cmu) + ' F</td></tr>' +
         '<tr><td>ITS (après RICF)</td><td class="montant">' + _formaterMontant(Math.max(0, d.itsBrut - d.ricf)) + ' F</td></tr>' +
         '<tr class="total-row"><td>Total retenues</td><td class="montant">' + _formaterMontant(d.salaireBrut - d.netAPayer) + ' F</td></tr>' +
