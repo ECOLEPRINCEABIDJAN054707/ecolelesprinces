@@ -15659,7 +15659,8 @@ async function salResCharger(){
       + '<div style="text-align:center"><button type="button" onclick="salResReset()" style="background:#1a3a6b;color:#fff;border:none;border-radius:8px;padding:8px 14px;cursor:pointer">R&eacute;essayer</button></div>';
     return;
   }
-  _salResData = res; _salResOnglet = 0; salResRendre();
+  const garder = window._salResGarderOnglet; window._salResGarderOnglet = false;
+  _salResData = res; if (!garder) _salResOnglet = 0; salResRendre();
 }
 function salResReset(){
   _salResData = null; window._salResCode = '';
@@ -15671,19 +15672,78 @@ function salResReset(){
 function _salResF(n){ return Math.round(n || 0).toLocaleString('fr-FR') + ' F'; }
 function _salResEsc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function salResOnglet(i){ _salResOnglet = i; salResRendre(); }
-function _salResTable(titre, liste, total, avecCnps){
+function _salResBtn(ico, titre, fn, coul){ return '<button type="button" title="' + titre + '" onclick="' + fn + '" style="border:1px solid ' + (coul || '#1a3a6b') + ';background:#fff;color:' + (coul || '#1a3a6b') + ';border-radius:6px;padding:3px 7px;margin:1px;cursor:pointer;font-size:0.85em">' + ico + '</button>'; }
+function _salResTable(titre, liste, total, avecCnps, vac){
+  const modif = !!(_salResData && _salResData.modifiable);
   let h = '<div style="font-weight:700;margin:10px 0 4px;color:#1a3a6b">' + titre + ' (' + liste.length + ')</div>';
   if (!liste.length) return h + '<p style="font-size:0.8em;color:var(--gris);margin:0 0 6px">Aucun</p>';
-  h += '<div class="tbl-wrap"><table><thead><tr><th>N&deg;</th><th>Nom et pr&eacute;noms</th><th>Poste</th>' + (avecCnps ? '<th>N&deg; CNPS</th>' : '') + '<th>Net &agrave; payer</th></tr></thead><tbody>';
+  const nbCol = 3 + (avecCnps ? 1 : 0) + (vac ? 1 : 0);
+  h += '<div class="tbl-wrap"><table><thead><tr><th>N&deg;</th><th>Nom et pr&eacute;noms</th><th>Poste</th>' + (avecCnps ? '<th>N&deg; CNPS</th>' : '') + (vac ? '<th>Part fixe</th>' : '') + '<th>Net &agrave; payer</th>' + (modif ? '<th>Actions</th>' : '') + '</tr></thead><tbody>';
+  let totFixe = 0;
   liste.forEach((p, k) => {
-    h += '<tr><td style="text-align:center">' + (k + 1) + '</td><td>' + _salResEsc(p.nom) + '</td><td>' + _salResEsc(p.poste) + '</td>' + (avecCnps ? '<td>' + _salResEsc(p.cnps) + '</td>' : '') + '<td style="text-align:right;font-weight:700">' + _salResF(p.net) + '</td></tr>';
+    totFixe += Number(p.partFixe) || 0;
+    const t = vac ? 'V' : 'P';
+    h += '<tr><td style="text-align:center">' + (k + 1) + '</td><td>' + _salResEsc(p.nom) + '</td><td>' + _salResEsc(p.poste) + '</td>' + (avecCnps ? '<td>' + _salResEsc(p.cnps) + '</td>' : '')
+      + (vac ? '<td style="text-align:right">' + (p.partFixe ? _salResF(p.partFixe) : '&mdash;') + '</td>' : '')
+      + '<td style="text-align:right;font-weight:700">' + _salResF(p.net) + '</td>';
+    if (modif) {
+      h += '<td style="text-align:center;white-space:nowrap">'
+        + (vac ? _salResBtn('&#9999;&#65039; Part fixe', 'Fixer la part fixe', "salResModifier('" + t + "'," + k + ")")
+               : _salResBtn('&#9999;&#65039;', 'Modifier le net', "salResModifier('" + t + "'," + k + ")"))
+        + ((vac && !p.partFixe) ? '' : _salResBtn('&#128465;&#65039;', vac ? 'Retirer la part fixe' : 'Retirer ce salari&eacute;', "salResRetirer('" + t + "'," + k + ")", '#c0392b'))
+        + '</td>';
+    }
+    h += '</tr>';
   });
-  h += '</tbody><tfoot><tr class="total-row"><td colspan="' + (avecCnps ? 4 : 3) + '" style="text-align:right">TOTAL</td><td style="text-align:right">' + _salResF(total) + '</td></tr></tfoot></table></div>';
+  h += '</tbody><tfoot><tr class="total-row"><td colspan="' + (nbCol - (vac ? 1 : 0)) + '" style="text-align:right">TOTAL</td>' + (vac ? '<td style="text-align:right">' + _salResF(totFixe) + '</td>' : '') + '<td style="text-align:right">' + _salResF(total) + '</td>' + (modif ? '<td></td>' : '') + '</tr></tfoot></table></div>';
+  if (vac && (modif || totFixe)) h += '<p style="font-size:0.75em;color:var(--gris);margin:2px 0 6px">Net vacataire = part fixe + cours valid&eacute;s du mois. Total des parts fixes : <b>' + _salResF(totFixe) + '</b>' + (_salResData.ecoles[_salResOnglet].ecole === 'ADMINISTRATION PRINCE' ? ' / 1 000 000 F pr&eacute;vus' : '') + '</p>';
   return h;
+}
+function _salResPar(){ try { const s = JSON.parse(sessionStorage.getItem('staffConnecte') || '{}'); return String(s.nom || s.identifiant || s.profil || 'Directrice CPP LES PRINCES'); } catch (e) { return 'Directrice CPP LES PRINCES'; } }
+function _salResNombre(txt){ const n = Number(String(txt == null ? '' : txt).replace(/[\s .F]/g, '').replace(',', '.')); return isFinite(n) ? Math.round(n) : NaN; }
+async function _salResEnvoyer(params){
+  const body = document.getElementById('salResBody');
+  const zone = document.getElementById('salResMsg'); if (zone) zone.innerHTML = '<span style="color:var(--gris)">Enregistrement&hellip;</span>';
+  params.code = window._salResCode; params.ecole = _salResData.ecoles[_salResOnglet].ecole; params.par = _salResPar();
+  const res = await appelJSONP(APP_SCRIPT_URL_ADMIN, params, 60000);
+  if (!res || !res.ok) { alert('❌ ' + ((res && (res.erreur || res.error)) || 'Erreur réseau, réessayez')); if (zone) zone.innerHTML = ''; return; }
+  alert('✅ ' + (res.message || 'Enregistré'));
+  window._salResGarderOnglet = true; salResCharger();
+}
+function _salResPers(t, k){ const e = _salResData.ecoles[_salResOnglet]; return (t === 'V' ? e.vacataires : e.personnes)[k]; }
+function salResModifier(t, k){
+  const p = _salResPers(t, k); if (!p) return;
+  if (t === 'V') {
+    const v = prompt('Part fixe mensuelle de ' + p.nom + ' (en F, 0 pour aucune) :', p.partFixe || 0); if (v === null) return;
+    const n = _salResNombre(v); if (isNaN(n) || n < 0) { alert('Montant invalide'); return; }
+    _salResEnvoyer({ action: 'partFixeVacataire', ligne: p.ligne, nom: p.nom, net: n });
+  } else {
+    const v = prompt('Nouveau NET à payer de ' + p.nom + ' (en F) :', p.net); if (v === null) return;
+    const n = _salResNombre(v); if (isNaN(n) || n <= 0) { alert('Montant invalide'); return; }
+    const poste = prompt('Poste (laisser tel quel si inchangé) :', p.poste || ''); if (poste === null) return;
+    _salResEnvoyer({ action: 'majSalaire', ligne: p.ligne, nom: p.nom, net: n, poste: poste });
+  }
+}
+function salResRetirer(t, k){
+  const p = _salResPers(t, k); if (!p) return;
+  const q = t === 'V' ? 'Retirer la part fixe de ' + p.nom + ' ? (ses cours pointés restent payés)' : 'Retirer ' + p.nom + ' de la liste du personnel ?\nLa ligne sera archivée dans PERSONNEL_SORTIS.';
+  if (!confirm(q)) return;
+  _salResEnvoyer({ action: 'retirerSalarie', ligne: p.ligne, nom: p.nom });
+}
+function salResAjouter(){
+  const nom = prompt('NOM et PRÉNOMS du nouveau salarié :'); if (!nom || !nom.trim()) return;
+  const poste = prompt('Poste :', ''); if (poste === null) return;
+  const v = prompt('NET à payer mensuel (en F) :'); if (v === null) return;
+  const n = _salResNombre(v); if (isNaN(n) || n <= 0) { alert('Montant invalide'); return; }
+  if (!confirm('Ajouter ' + nom.trim().toUpperCase() + ' (' + poste + ') — ' + n.toLocaleString('fr-FR') + ' F net à ' + _salResData.ecoles[_salResOnglet].ecole + ' ?')) return;
+  _salResEnvoyer({ action: 'ajouterSalarie', nom: nom.trim(), poste: poste, net: n });
 }
 function salResRendre(){
   const d = _salResData, body = document.getElementById('salResBody'); if (!d || !body) return;
-  let h = '<div class="tbl-wrap"><table><thead><tr><th>&Eacute;cole</th><th>Personnel fixe</th><th>Vacataires</th><th>Total</th></tr></thead><tbody>';
+  let h = d.modifiable
+    ? '<div style="background:#fff8e1;border:1px solid #b8860b;border-radius:8px;padding:8px 10px;margin-bottom:10px;font-size:0.82em">&#9999;&#65039; <b>Modifications ouvertes jusqu\'au ' + _salResEsc(d.finModif) + '</b> &mdash; montants en NET &agrave; payer. Pass&eacute; cette date, la liste sera bloqu&eacute;e.</div>'
+    : '<div style="background:#f2f2f2;border-radius:8px;padding:6px 10px;margin-bottom:10px;font-size:0.78em;color:var(--gris)">&#128274; Modifications ferm&eacute;es' + (d.finModif ? ' depuis le ' + _salResEsc(d.finModif) : '') + '.</div>';
+  h += '<div class="tbl-wrap"><table><thead><tr><th>&Eacute;cole</th><th>Personnel fixe</th><th>Vacataires</th><th>Total</th></tr></thead><tbody>';
   d.ecoles.forEach((e, i) => {
     h += '<tr style="cursor:pointer" onclick="salResOnglet(' + i + ')"><td>' + _salResEsc(e.ecole) + (e.erreur ? ' &#10060;' : '') + '</td>'
       + '<td style="text-align:right">' + _salResF(e.totalPerm) + ' <span style="color:var(--gris);font-size:0.8em">(' + e.nbPerm + ')</span></td>'
@@ -15701,8 +15761,10 @@ function salResRendre(){
   const e = d.ecoles[_salResOnglet];
   if (e) {
     if (e.erreur) h += '<p style="color:var(--rouge);font-size:0.82em">Erreur : ' + _salResEsc(e.erreur) + '</p>';
-    h += _salResTable('Personnel fixe', e.personnes, e.totalPerm, true);
-    if (e.vacataires && e.vacataires.length) h += _salResTable('Vacataires (au pointage)', e.vacataires, e.totalVac, false);
+    h += _salResTable('Personnel fixe', e.personnes, e.totalPerm, true, false);
+    if (d.modifiable && !e.erreur) h += '<div style="margin:2px 0 8px"><button type="button" onclick="salResAjouter()" style="background:#1e7e34;color:#fff;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:0.85em">&#10133; Ajouter un salari&eacute; &agrave; ' + _salResEsc(e.ecole) + '</button></div>';
+    if (e.vacataires && e.vacataires.length) h += _salResTable('Vacataires (au pointage)', e.vacataires, e.totalVac, false, true);
+    h += '<div id="salResMsg" style="font-size:0.8em;margin:4px 0"></div>';
     h += '<div style="text-align:right;font-weight:700;margin-top:6px">TOTAL ' + _salResEsc(e.ecole) + ' : ' + _salResF(e.total) + '</div>';
   }
   h += '<div style="display:flex;gap:8px;justify-content:space-between;align-items:center;margin-top:10px;flex-wrap:wrap">'
