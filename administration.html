@@ -684,6 +684,8 @@ table tr:nth-child(even){background:#F8FAFD}
       <div id="dirVDRDocs" style="padding:0 14px"></div>
       <div style="padding:12px 14px 0"><button onclick="vdrDosCharger('dir')" style="padding:9px 14px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:0.85em;cursor:pointer;font-weight:600">📄 Dossier de visite : compléter et imprimer</button></div>
       <div id="dirVDRDos" style="padding:0 14px"></div>
+      <div style="padding:12px 14px 0"><button onclick="vdrCECharger('dir')" style="padding:9px 14px;background:#BF360C;color:#fff;border:none;border-radius:8px;font-size:0.85em;cursor:pointer;font-weight:600">👥 Conseils d'Enseignement : responsables, réunions et PV</button></div>
+      <div id="dirVDRCE" style="padding:0 14px"></div>
       <div id="dirVDRZone" style="padding:12px 14px"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.85em">Ouvrez la section pour charger.</p></div>
     </div>
   </div>
@@ -21726,7 +21728,7 @@ function vdrEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => 
 function vdrConcerne() { return typeof currentStaff !== 'undefined' && currentStaff && VDR_ECOLES.indexOf(String(currentStaff.ecole || '').toUpperCase().trim()) !== -1; }
 function vdrVisibilite() {
   ['dir', 'edu'].forEach(p => { const el = document.getElementById(p + 'SecVisiteDR'); if (el) el.style.display = vdrConcerne() ? '' : 'none'; });
-  if (!vdrConcerne()) { VDR.dir = null; VDR.edu = null; VDR.dirDos = null; VDR.eduDos = null; VDR.dirEdt = null; VDR.eduEdt = null; VDR.dirDocSel = null; ['dir', 'edu'].forEach(q => { const z = document.getElementById(q + 'VDREdt'); if (z) z.innerHTML = ''; const zd = document.getElementById(q + 'VDRDocs'); if (zd) zd.innerHTML = ''; }); }
+  if (!vdrConcerne()) { VDR.dir = null; VDR.edu = null; VDR.dirDos = null; VDR.eduDos = null; VDR.dirEdt = null; VDR.eduEdt = null; VDR.dirDocSel = null; VDR.dirCE = null; VDR.eduCE = null; ['dir', 'edu'].forEach(q => { const zc = document.getElementById(q + 'VDRCE'); if (zc) zc.innerHTML = ''; }); ['dir', 'edu'].forEach(q => { const z = document.getElementById(q + 'VDREdt'); if (z) z.innerHTML = ''; const zd = document.getElementById(q + 'VDRDocs'); if (zd) zd.innerHTML = ''; }); }
 }
 setInterval(vdrVisibilite, 1500);
 function vdrParams(extra) { return Object.assign({ ecole: currentStaff.ecole, id: currentStaff.matricule, code: currentStaff.code }, extra || {}); }
@@ -22041,6 +22043,86 @@ function vdrDosImprimer(p) {
   const w = window.open('', '_blank');
   if (!w) { showToast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
   w.document.write('<html><head><meta charset="UTF-8"><title>Dossier visite DR — ' + vdrEsc(D.ecole) + '</title><style>' + css + '</style></head><body>' + h + '</body></html>');
+  w.document.close(); w.focus(); setTimeout(() => w.print(), 700);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONSEILS D'ENSEIGNEMENT (onglet VISITE_CE, communs CPP TECH / CPP PRO) — Directeur — 24/11/2026
+// Lecture : action 'ce' · Modification : action 'ceMaj' (Directeur seulement)
+// ═══════════════════════════════════════════════════════════════
+function vdrCEDateIso(d) { const m = String(d || '').match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? m[3] + '-' + m[2] + '-' + m[1] : ''; }
+async function vdrCECharger(p, force) {
+  const zone = document.getElementById(p + 'VDRCE'); if (!zone || !vdrConcerne()) return;
+  if (VDR[p + 'CE'] && !force) { zone.innerHTML = ''; VDR[p + 'CE'] = null; return; }   // 2e clic = refermer
+  zone.innerHTML = '<p style="padding:14px;text-align:center;color:var(--gris)">Chargement des Conseils d\'Enseignement…</p>';
+  const d = await appelJSONP(VDR_URL, vdrParams({ action: 'ce' }), 30000);
+  if (!d || !d.ok) { zone.innerHTML = '<p style="padding:14px;color:var(--rouge)">' + vdrEsc((d && d.message) || 'Erreur réseau — réessayez.') + '</p>'; return; }
+  VDR[p + 'CE'] = d;
+  vdrCEAfficher(p);
+}
+function vdrCEAfficher(p) {
+  const d = VDR[p + 'CE'], zone = document.getElementById(p + 'VDRCE'); if (!d || !zone) return;
+  const ce = d.ce || [], n = ce.length;
+  const avecResp = ce.filter(c => String(c.resp || '').trim()).length, pv = ce.filter(c => c.pv === 'OUI').length, cah = ce.filter(c => c.cahiers === 'OUI').length;
+  const inp = 'padding:5px;border:1.5px solid var(--border);border-radius:6px;font-size:0.8em;width:100%;box-sizing:border-box';
+  let h = '<div style="margin:10px 0;padding:10px;border:1.5px solid #BF360C;border-radius:10px;background:#FFF8F5">'
+    + '<div style="font-size:0.82em;color:var(--gris);margin-bottom:6px">Les Conseils sont <b>communs à CPP TECH et CPP PRO</b> : une modification enregistrée ici vaut pour les deux écoles. '
+    + 'Chaque responsable réunit sa discipline, rédige le PV et contrôle les cahiers <b>avant le jeudi 3 décembre</b>.</div>'
+    + vdrBarre('Responsables désignés', avecResp, n) + vdrBarre('PV de réunion remis', pv, n) + vdrBarre('Cahiers de textes et de notes contrôlés', cah, n)
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">'
+    + '<button onclick="vdrCECharger(\'' + p + '\', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>'
+    + '<button onclick="vdrCEImprimer(\'' + p + '\')" style="padding:7px 12px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ Imprimer la liste des Conseils</button></div>'
+    + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.8em;min-width:900px">'
+    + '<tr style="background:#BF360C;color:#fff"><th style="padding:6px">N°</th><th style="padding:6px;text-align:left">Conseil</th><th style="padding:6px;text-align:left">Responsable</th><th style="padding:6px;text-align:left">Membres</th>'
+    + '<th style="padding:6px">1ʳᵉ réunion</th><th style="padding:6px">PV remis</th><th style="padding:6px">Cahiers contrôlés</th><th style="padding:6px;text-align:left">Observations</th><th style="padding:6px"></th></tr>';
+  ce.forEach((c, i) => {
+    const fond = (c.pv === 'OUI' && c.cahiers === 'OUI') ? '#E8F5E9' : (i % 2 ? '#fff' : '#FAFAFA');
+    h += '<tr id="' + p + 'VDRce' + i + '" style="background:' + fond + ';border-bottom:1px solid #eee;vertical-align:top">'
+      + '<td style="padding:5px;text-align:center;font-weight:700">' + c.n + '</td>'
+      + '<td style="padding:5px;font-weight:600;min-width:150px">' + vdrEsc(c.conseil) + '</td>'
+      + '<td style="padding:5px;min-width:160px"><input id="' + p + 'CEr' + i + '" value="' + vdrEsc(c.resp) + '" oninput="vdrCEModif(\'' + p + '\',' + i + ')" style="' + inp + ';font-weight:700"></td>'
+      + '<td style="padding:5px;min-width:220px"><textarea id="' + p + 'CEm' + i + '" rows="2" oninput="vdrCEModif(\'' + p + '\',' + i + ')" style="' + inp + ';resize:vertical">' + vdrEsc(c.membres) + '</textarea></td>'
+      + '<td style="padding:5px"><input type="date" id="' + p + 'CEd' + i + '" value="' + vdrCEDateIso(c.date) + '" onchange="vdrCEModif(\'' + p + '\',' + i + ')" style="' + inp + '"></td>'
+      + '<td style="padding:5px"><select id="' + p + 'CEp' + i + '" onchange="vdrCEModif(\'' + p + '\',' + i + ')" style="' + inp + '">' + vdrOpts(['NON', 'OUI'], c.pv) + '</select></td>'
+      + '<td style="padding:5px"><select id="' + p + 'CEc' + i + '" onchange="vdrCEModif(\'' + p + '\',' + i + ')" style="' + inp + '">' + vdrOpts(['NON', 'OUI'], c.cahiers) + '</select></td>'
+      + '<td style="padding:5px;min-width:140px"><input id="' + p + 'CEo' + i + '" value="' + vdrEsc(c.obs) + '" oninput="vdrCEModif(\'' + p + '\',' + i + ')" style="' + inp + '"></td>'
+      + '<td style="padding:5px;white-space:nowrap"><button id="' + p + 'CEb' + i + '" onclick="vdrCEEnregistrer(\'' + p + '\',' + i + ')" style="padding:6px 10px;background:var(--vert);color:#fff;border:none;border-radius:6px;font-size:0.85em;cursor:pointer;opacity:0.45">💾</button>'
+      + '<div style="font-size:0.72em;color:var(--gris);margin-top:3px">' + vdrEsc(c.par || '') + '</div></td></tr>';
+  });
+  h += '</table></div></div>';
+  zone.innerHTML = h;
+}
+function vdrCEModif(p, i) {
+  const tr = document.getElementById(p + 'VDRce' + i); if (tr) tr.style.background = '#FFF9C4';
+  const b = document.getElementById(p + 'CEb' + i); if (b) b.style.opacity = '1';
+}
+async function vdrCEEnregistrer(p, i) {
+  const d = VDR[p + 'CE']; if (!d) return;
+  const c = d.ce[i], val = k => (document.getElementById(p + 'CE' + k + i) || {}).value || '';
+  const resp = val('r').trim();
+  if (!resp) { showToast('Le responsable ne peut pas être vide', 'error'); return; }
+  const b = document.getElementById(p + 'CEb' + i); if (b) { b.disabled = true; b.textContent = '⏳'; }
+  const r = await appelJSONP(VDR_URL, vdrParams({ action: 'ceMaj', n: c.n, resp: resp, membres: val('m').trim(), date: val('d'), pv: val('p'), cahiers: val('c'), obs: val('o').trim() }), 30000);
+  if (!r || !r.ok) { showToast((r && r.message) || 'Erreur réseau — réessayez', 'error'); if (b) { b.disabled = false; b.textContent = '💾'; } return; }
+  showToast(r.message || 'Enregistré', 'success');
+  VDR[p + 'CE'] = r;
+  vdrCEAfficher(p);
+}
+function vdrCEImprimer(p) {
+  const d = VDR[p + 'CE']; if (!d) return;
+  const e = vdrEsc;
+  let h = '<p class="c b">RÉSEAU CPP LES PRINCES D\'ABIDJAN — CPP TECH et CPP PRO</p><p class="c">Année scolaire 2026-2027</p>'
+    + '<h1>Liste des Conseils d\'Enseignement et de leurs responsables</h1>'
+    + '<table><tr><th>N°</th><th>Conseil d\'Enseignement</th><th>Responsable</th><th>Membres</th><th>1ʳᵉ réunion</th><th>PV</th><th>Cahiers</th></tr>'
+    + (d.ce || []).map(c => '<tr><td>' + c.n + '</td><td><b>' + e(c.conseil) + '</b></td><td><b>' + e(c.resp) + '</b></td><td>' + e(c.membres) + '</td><td>' + e(c.date || '') + '</td><td>' + e(c.pv) + '</td><td>' + e(c.cahiers) + '</td></tr>').join('')
+    + '</table><br><p style="text-align:right">Fait à Abidjan, le ' + new Date().toLocaleDateString('fr-FR') + '</p><p style="text-align:right"><b>Madame BOTI</b><br>Directrice de CPP Les Princes</p>'
+    + '<p class="petitp">Document imprimé depuis Princes Smart School le ' + new Date().toLocaleString('fr-FR') + '.</p>';
+  const css = '@page{size:A4 landscape;margin:12mm}body{font-family:Arial,sans-serif;font-size:11px;color:#000}h1{font-size:15px;color:#1F3864;border-bottom:2px solid #1F3864;margin:12px 0 8px}'
+    + 'table{width:100%;border-collapse:collapse}th,td{border:1px solid #888;padding:4px 6px;text-align:left;vertical-align:top}'
+    + 'th{background:#1F3864;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.c{text-align:center}.b{font-weight:bold}.petitp{font-size:8.5px;color:#666}';
+  const w = window.open('', '_blank');
+  if (!w) { showToast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
+  w.document.write('<html><head><meta charset="UTF-8"><title>Conseils d\'Enseignement — CPP TECH / CPP PRO</title><style>' + css + '</style></head><body>' + h + '</body></html>');
   w.document.close(); w.focus(); setTimeout(() => w.print(), 700);
 }
 
