@@ -22071,7 +22071,8 @@ function vdrCEAfficher(p) {
     + vdrBarre('Responsables désignés', avecResp, n) + vdrBarre('PV de réunion remis', pv, n) + vdrBarre('Cahiers de textes et de notes contrôlés', cah, n)
     + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">'
     + '<button onclick="vdrCECharger(\'' + p + '\', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>'
-    + '<button onclick="vdrCEImprimer(\'' + p + '\')" style="padding:7px 12px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ Imprimer la liste des Conseils</button></div>'
+    + '<button onclick="vdrCEImprimer(\'' + p + '\')" style="padding:7px 12px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ Imprimer la liste des Conseils</button>'
+    + '<button onclick="vdrCEVersDossier(\'' + p + '\')" style="padding:7px 12px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">📄 Reporter dans le Dossier de visite</button></div>'
     + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.8em;min-width:900px">'
     + '<tr style="background:#BF360C;color:#fff"><th style="padding:6px">N°</th><th style="padding:6px;text-align:left">Conseil</th><th style="padding:6px;text-align:left">Responsable</th><th style="padding:6px;text-align:left">Membres</th>'
     + '<th style="padding:6px">1ʳᵉ réunion</th><th style="padding:6px">PV remis</th><th style="padding:6px">Cahiers contrôlés</th><th style="padding:6px;text-align:left">Observations</th><th style="padding:6px"></th></tr>';
@@ -22107,6 +22108,27 @@ async function vdrCEEnregistrer(p, i) {
   showToast(r.message || 'Enregistré', 'success');
   VDR[p + 'CE'] = r;
   vdrCEAfficher(p);
+}
+// 24/11/2026 — reporte les Conseils (VISITE_CE) dans le tableau « Responsables des CE » du Dossier de visite (clés ce.i.*)
+async function vdrCEVersDossier(p) {
+  const d = VDR[p + 'CE']; if (!d || !d.ce || !d.ce.length) { showToast('Chargez d\'abord les Conseils', 'error'); return; }
+  if (!VDR[p + 'Dos']) { showToast('Chargement du Dossier de visite… (jusqu\'à 1 minute)', ''); await vdrDosCharger(p); }
+  const D = VDR[p + 'Dos']; if (!D) { showToast('Dossier de visite indisponible — réessayez', 'error'); return; }
+  const N = s => String(s == null ? '' : s).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/^(M|MR|MME|MLLE)\.?\s+/, '').replace(/[^A-Z0-9]/g, '');
+  const genreDe = nom => { const k = N(nom); const x = (D.profs || []).find(q => N(q.nom) === k || N(q.nomOff) === k); return x && x.genre ? (x.genre === 'H' ? 'M' : x.genre) : ''; };
+  let n = 0; const ajoutes = [];
+  d.ce.forEach((c, i) => {
+    const vals = { disc: c.conseil, resp: c.resp, genre: genreDe(c.resp) };
+    Object.keys(vals).forEach(k => {
+      const cle = 'ce.' + i + '.' + k, v = String(vals[k] || '');
+      if (!v || vdrDosVal(p, cle) === v) return;
+      D._modif[cle] = v; ajoutes.push(cle); n++;
+    });
+  });
+  if (!n) { showToast('Le Dossier contient déjà ces Conseils', 'success'); return; }
+  if (!confirm('Reporter les ' + d.ce.length + ' Conseils d\'Enseignement dans le Dossier de visite de ' + currentStaff.ecole + ' ?\n(' + n + ' case(s) à écrire — contacts non modifiés)')) { ajoutes.forEach(k => delete D._modif[k]); return; }
+  if ((D.nbCE || 0) < d.ce.length) D.nbCE = d.ce.length;   // affiche les 14 lignes
+  await vdrDosEnregistrer(p);
 }
 function vdrCEImprimer(p) {
   const d = VDR[p + 'CE']; if (!d) return;
