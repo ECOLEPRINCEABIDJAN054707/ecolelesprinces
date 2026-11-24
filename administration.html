@@ -21904,6 +21904,7 @@ function vdrDosAfficher(p) {
   h += '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px"><b style="flex:1;min-width:200px">📄 Dossier de visite — ' + vdrEsc(D.ecole) + ' <small style="font-weight:normal;color:var(--gris)">(données du ' + vdrEsc(D.genere) + ')</small></b>'
     + '<button onclick="vdrDosEnregistrer(\'' + p + '\')" style="' + btn + 'background:var(--vert)">💾 Enregistrer</button>'
     + '<button onclick="vdrDosImprimer(\'' + p + '\')" style="' + btn + 'background:#1F3864">🖨️ Imprimer le dossier</button>'
+    + '<button onclick="vdrWord(vdrDosImprimer, \'' + p + '\')" style="' + btn + 'background:#2B579A">📝 Word modifiable</button>'
     + '<button onclick="vdrDosCharger(\'' + p + '\',true)" style="' + btn + 'background:var(--bleu)">🔄 Actualiser</button></div>';
   h += '<div style="font-size:0.78em;color:var(--gris);margin-bottom:8px">Complétez les cases blanches puis cliquez sur 💾 Enregistrer. Les effectifs, la liste des professeurs et les emplois du temps viennent de PSS (sections ci-dessous) — cliquez sur 🔄 après les avoir mis à jour.</div>';
 
@@ -22040,6 +22041,7 @@ function vdrDosImprimer(p) {
     + 'th{background:#1F3864;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}table.petit{font-size:9.5px}tr.tot td{font-weight:bold;background:#E7E6E6;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
     + '.pb{page-break-before:always}.nobr{page-break-inside:avoid}.c{text-align:center}.b{font-weight:bold}.titre{font-size:20px;font-weight:bold;color:#1F3864;margin-top:40px}'
     + '.st{font-size:16px;font-weight:bold}.petitp{font-size:8.5px;color:#666}.rouge{color:#B71C1C}.garde{padding-top:60px}';
+  if (VDR._word) { VDR._word = null; vdrVersWord(css, h); return; }   // 24/11/2026 — export Word modifiable
   const w = window.open('', '_blank');
   if (!w) { showToast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
   w.document.write('<html><head><meta charset="UTF-8"><title>Dossier visite DR — ' + vdrEsc(D.ecole) + '</title><style>' + css + '</style></head><body>' + h + '</body></html>');
@@ -22072,6 +22074,7 @@ function vdrCEAfficher(p) {
     + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">'
     + '<button onclick="vdrCECharger(\'' + p + '\', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>'
     + '<button onclick="vdrCEImprimer(\'' + p + '\')" style="padding:7px 12px;background:#1F3864;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ Imprimer la liste des Conseils</button>'
+    + '<button onclick="vdrWord(vdrCEImprimer, \'' + p + '\')" style="padding:7px 12px;background:#2B579A;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">📝 Word modifiable</button>'
     + '<button onclick="vdrCEVersDossier(\'' + p + '\')" style="padding:7px 12px;background:#6A1B9A;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">📄 Reporter dans le Dossier de visite</button></div>'
     + '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:0.8em;min-width:900px">'
     + '<tr style="background:#BF360C;color:#fff"><th style="padding:6px">N°</th><th style="padding:6px;text-align:left">Conseil</th><th style="padding:6px;text-align:left">Responsable</th><th style="padding:6px;text-align:left">Membres</th>'
@@ -22109,6 +22112,25 @@ async function vdrCEEnregistrer(p, i) {
   VDR[p + 'CE'] = r;
   vdrCEAfficher(p);
 }
+// ═══ 24/11/2026 — Export Word (.doc) modifiable des documents de la visite (même contenu que l'impression) ═══
+function vdrWord(fn, p) { VDR._word = true; try { fn(p); } finally { VDR._word = null; } }
+function vdrVersWord(css, h) {
+  const m = String(h).match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
+  const titre = (m ? m[1].replace(/<[^>]+>/g, '') : 'Document visite DR').replace(/&amp;/g, '&').replace(/&#39;/g, "'").replace(/&quot;/g, '"').trim();
+  const paysage = /size:\s*A4\s+landscape/i.test(css);
+  const cssW = String(css).replace(/@page\s*\{[^}]*\}/i, '@page Section1{size:' + (paysage ? '29.7cm 21cm;mso-page-orientation:landscape' : '21cm 29.7cm') + ';margin:1.5cm}')
+    + 'div.Section1{page:Section1}th{background:#1F3864;color:#ffffff}';
+  const html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">'
+    + '<head><meta charset="utf-8"><title>' + vdrEsc(titre) + '</title><!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->'
+    + '<style>' + cssW + '</style></head><body><div class="Section1">' + h + '</div></body></html>';
+  const ecole = (typeof currentStaff !== 'undefined' && currentStaff && currentStaff.ecole) ? currentStaff.ecole : '';
+  const nom = (titre + (ecole ? ' - ' + ecole : '')).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9 _-]+/g, ' ').replace(/\s+/g, '_').slice(0, 90) + '.doc';
+  const blob = new Blob(['\ufeff', html], { type: 'application/msword' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nom;
+  document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  showToast('📝 Fichier Word téléchargé : ' + nom + ' — ouvrez-le avec Word pour le modifier', 'success');
+}
+
 // 24/11/2026 — reporte les Conseils (VISITE_CE) dans le tableau « Responsables des CE » du Dossier de visite (clés ce.i.*)
 async function vdrCEVersDossier(p) {
   const d = VDR[p + 'CE']; if (!d || !d.ce || !d.ce.length) { showToast('Chargez d\'abord les Conseils', 'error'); return; }
@@ -22142,6 +22164,7 @@ function vdrCEImprimer(p) {
   const css = '@page{size:A4 landscape;margin:12mm}body{font-family:Arial,sans-serif;font-size:11px;color:#000}h1{font-size:15px;color:#1F3864;border-bottom:2px solid #1F3864;margin:12px 0 8px}'
     + 'table{width:100%;border-collapse:collapse}th,td{border:1px solid #888;padding:4px 6px;text-align:left;vertical-align:top}'
     + 'th{background:#1F3864;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.c{text-align:center}.b{font-weight:bold}.petitp{font-size:8.5px;color:#666}';
+  if (VDR._word) { VDR._word = null; vdrVersWord(css, h); return; }   // 24/11/2026 — export Word modifiable
   const w = window.open('', '_blank');
   if (!w) { showToast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
   w.document.write('<html><head><meta charset="UTF-8"><title>Conseils d\'Enseignement — CPP TECH / CPP PRO</title><style>' + css + '</style></head><body>' + h + '</body></html>');
@@ -22445,12 +22468,14 @@ function vdrDocsAfficher(p) {
   h += '<h4 style="margin:6px 0">' + vdrEsc(doc.titre) + '</h4>';
   if (doc.special === 'dossier') {
     h += '<p style="font-size:0.85em">Le guide de visite correspond au dossier complet. Complétez-le dans « 📄 Dossier de visite », puis imprimez-le.</p>'
-      + '<button onclick="vdrDosImprimer(\'' + p + '\')" style="' + btn + 'background:#1F3864">🖨️ Imprimer le dossier complet</button></div>';
+      + '<button onclick="vdrDosImprimer(\'' + p + '\')" style="' + btn + 'background:#1F3864">🖨️ Imprimer le dossier complet</button>'
+      + '<button onclick="vdrWord(vdrDosImprimer, \'' + p + '\')" style="' + btn + 'background:#2B579A">📝 Word modifiable</button></div>';
     zone.innerHTML = h; return;
   }
   if (doc.special === 'edtprofs') {
     h += '<p style="font-size:0.85em">' + D.profs.length + ' professeur(s). Corrigez d\'abord les emplois du temps des classes si besoin (🗓️), puis 🔄 Actualiser.</p>'
-      + '<button onclick="vdrDocImprimer(\'' + p + '\')" style="' + btn + 'background:#1F3864">🖨️ Imprimer les emplois du temps des professeurs</button></div>';
+      + '<button onclick="vdrDocImprimer(\'' + p + '\')" style="' + btn + 'background:#1F3864">🖨️ Imprimer les emplois du temps des professeurs</button>'
+      + '<button onclick="vdrWord(vdrDocImprimer, \'' + p + '\')" style="' + btn + 'background:#2B579A">📝 Word modifiable</button></div>';
     zone.innerHTML = h; return;
   }
   if (doc.multi) {
@@ -22484,7 +22509,8 @@ function vdrDocsAfficher(p) {
   }
   h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">'
     + '<button onclick="vdrDocEnregistrer(\'' + p + '\')" style="' + btn + 'background:var(--vert)">💾 Enregistrer</button>'
-    + '<button onclick="vdrDocImprimer(\'' + p + '\')" style="' + btn + 'background:#1F3864">🖨️ Imprimer</button></div></div>';
+    + '<button onclick="vdrDocImprimer(\'' + p + '\')" style="' + btn + 'background:#1F3864">🖨️ Imprimer</button>'
+    + '<button onclick="vdrWord(vdrDocImprimer, \'' + p + '\')" style="' + btn + 'background:#2B579A">📝 Word modifiable</button></div></div>';
   zone.innerHTML = h;
 }
 
@@ -22543,6 +22569,7 @@ function vdrDocImprimer(p) {
     + 'th{background:#1F3864;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}table.ent td,table.sig td{border:none}table.ent td.dr{text-align:right}table.sig td{text-align:center;padding-top:16px}'
     + 'h1{font-size:15px;text-align:center;text-transform:uppercase;margin:16px 0 10px;text-decoration:underline}h2{font-size:12px}h3{font-size:11.5px;margin:8px 0 3px}.lab{font-weight:bold;margin:8px 0 2px}'
     + '.bloc{border:1px solid #bbb;padding:6px;min-height:40px}.nobr{page-break-inside:avoid}.rouge{color:#B71C1C}.pied{text-align:right;margin-top:14px}';
+  if (VDR._word) { VDR._word = null; vdrVersWord(css, h); return; }   // 24/11/2026 — export Word modifiable
   const w = window.open('', '_blank');
   if (!w) { showToast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
   w.document.write('<html><head><meta charset="UTF-8"><title>' + vdrEsc(doc.titre) + '</title><style>' + css + '</style></head><body>' + h + '</body></html>');
