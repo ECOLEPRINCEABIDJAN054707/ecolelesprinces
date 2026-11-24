@@ -666,6 +666,7 @@ table tr:nth-child(even){background:#F8FAFD}
         <label style="font-size:0.8em;display:flex;align-items:center;gap:4px"><input type="checkbox" id="dirISLReste" onchange="islAfficher('dir')"> Non vérifiés seulement</label>
         <button onclick="islCharger('dir', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
         <button onclick="islImprimer('dir')" style="padding:7px 12px;background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ Liste de contrôle</button>
+        <button onclick="islAffichage('dir')" style="padding:7px 12px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">📋 Affichage au tableau</button>
       </div>
       <div id="dirISLReseau" style="padding:0 14px"></div>   <!-- 11/11/2026 — décompte des 14 écoles, visible à CPP LES PRINCES -->
       <div id="dirISLDecompte" style="padding:0 14px"></div>
@@ -3281,6 +3282,7 @@ async function sauvegarderPersonnelDir(idx) {
         <label style="font-size:0.8em;display:flex;align-items:center;gap:4px"><input type="checkbox" id="comISLReste" onchange="islAfficher('com')"> Non vérifiés seulement</label>
         <button onclick="islCharger('com', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
         <button onclick="islImprimer('com')" style="padding:7px 12px;background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ Liste de contrôle</button>
+        <button onclick="islAffichage('com')" style="padding:7px 12px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">📋 Affichage au tableau</button>
       </div>
       <div id="comISLReseau" style="padding:0 14px"></div>   <!-- 11/11/2026 — décompte des 14 écoles, visible à CPP LES PRINCES -->
       <div id="comISLDecompte" style="padding:0 14px"></div>
@@ -4260,6 +4262,7 @@ async function attribuerMatriculeCom() {
         <label style="font-size:0.8em;display:flex;align-items:center;gap:4px"><input type="checkbox" id="eduISLReste" onchange="islAfficher('edu')"> Non vérifiés seulement</label>
         <button onclick="islCharger('edu', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
         <button onclick="islImprimer('edu')" style="padding:7px 12px;background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ Liste de contrôle</button>
+        <button onclick="islAffichage('edu')" style="padding:7px 12px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">📋 Affichage au tableau</button>
       </div>
       <div id="eduISLDecompte" style="padding:0 14px"></div>
       <div id="eduISLZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Ouvrez la section pour charger les élèves.</p></div>
@@ -21422,6 +21425,34 @@ async function islStatut(pfx, mat, sel) {
   sel.disabled = false;
 }
 
+// 24/11/2026 — Liste à afficher au tableau : une page par classe, sans téléphones, élèves SANS inscription en ligne mis en évidence
+function islAffichage(pfx) {
+  var d = ISL[pfx]; if (!d) { alert('Ouvrez d\'abord la section.'); return; }
+  var cl = document.getElementById(pfx + 'ISLClasse').value;
+  var cls = cl ? [cl] : Object.keys(d.eleves.reduce(function (a, e) { a[e.classe] = 1; return a; }, {})).sort(function (a, b) { return a.localeCompare(b, 'fr', { numeric: true }); });
+  var corps = cls.map(function (c, i) {
+    var l = d.eleves.filter(function (e) { return e.classe === c; }).sort(function (a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
+    var reste = l.filter(function (e) { return !e.insc; });
+    return '<div class="page"' + (i ? ' style="page-break-before:always"' : '') + '>'
+      + '<div class="ent">' + _islEsc(currentStaff.ecole) + ' — Année scolaire 2026-2027</div>'
+      + '<h1>CLASSE : ' + _islEsc(c) + '</h1>'
+      + '<p class="resume">' + l.length + ' élèves — <b class="rouge">' + reste.length + ' n\'ont pas encore fait leur inscription en ligne</b></p>'
+      + (reste.length ? '<p class="avis">⚠️ Les élèves marqués <b class="rouge">✘ À FAIRE</b> doivent faire leur <b>inscription en ligne</b> (MENA) au plus vite, avec leur matricule, puis présenter le reçu à l\'Éducateur.</p>'
+                      : '<p class="avis vert">✔ Tous les élèves de cette classe ont fait leur inscription en ligne. Félicitations !</p>')
+      + '<table><tr><th style="width:7%">N°</th><th style="width:20%">Matricule</th><th>Nom et prénoms</th><th style="width:24%">Inscription en ligne</th></tr>'
+      + l.map(function (e, k) {
+          return '<tr' + (e.insc ? '' : ' class="afaire"') + '><td>' + (k + 1) + '</td><td>' + _islEsc(e.matricule) + '</td><td>' + _islEsc(e.nom) + '</td>'
+            + '<td class="c">' + (e.insc ? '✔ Faite' : '<b>✘ À FAIRE</b>') + '</td></tr>'; }).join('')
+      + '</table><p class="pied">Liste arrêtée le ' + new Date().toLocaleDateString('fr-FR') + ' — L\'Éducateur</p></div>';
+  }).join('');
+  var css = '@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;font-size:14px;color:#000}.ent{font-size:12px;color:#444}'
+    + 'h1{font-size:24px;margin:6px 0 4px;color:#1F3864}.resume{font-size:15px;margin:2px 0 6px}.avis{border:2px solid #C62828;padding:6px 8px;font-size:13px;margin:6px 0 8px}.avis.vert{border-color:#2E7D32}'
+    + 'table{width:100%;border-collapse:collapse}th,td{border:1px solid #777;padding:5px 7px;text-align:left}th{background:#1F3864;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    + 'tr.afaire td{background:#FFEBEE;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}td.c{text-align:center}.rouge,tr.afaire td.c{color:#C62828}.pied{text-align:right;font-size:11px;margin-top:8px}';
+  var w = window.open('', '_blank'); if (!w) { alert('Autorisez les fenêtres pop-up pour imprimer.'); return; }
+  w.document.write('<html><head><meta charset="UTF-8"><title>Inscription en ligne — affichage par classe</title><style>' + css + '</style></head><body>' + corps + '</body></html>');
+  w.document.close(); setTimeout(function () { w.focus(); w.print(); }, 500);
+}
 function islImprimer(pfx) {
   var d = ISL[pfx]; if (!d) { alert('Ouvrez d\'abord la section.'); return; }
   var cl = document.getElementById(pfx + 'ISLClasse').value;
