@@ -3824,6 +3824,7 @@ function goToScreen(nom) {
   if (sc) sc.classList.add('active');
   // Actions spécifiques à chaque écran
   if (nom === 'accueil') _dessinerMesCoursDuJour(); // ⚠️ 07/10/2026 — cours terminés grisés à chaque retour à l'accueil
+  if (nom === 'accueil') setTimeout(chargerSuiviEvaluations, 300); // ⚠️ 24/11/2026 — compteur devoirs / interrogations recalculé à chaque retour à l'accueil (après publication des notes)
   if (nom === 'edt') chargerMonEdt();               // ⚠️ 07/10/2026 — mon emploi du temps de la semaine
   if (nom === 'notes') initNotes();
   if (nom === 'cahier') { restaurerCoursActuel(); _preparerEcranCahier(); afficherEstimCahier(); }
