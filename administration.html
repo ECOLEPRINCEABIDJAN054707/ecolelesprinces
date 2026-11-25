@@ -21429,6 +21429,23 @@ async function islStatut(pfx, mat, sel) {
 }
 
 // 24/11/2026 — Liste à afficher au tableau : une page par classe, sans téléphones, élèves SANS inscription en ligne mis en évidence
+// 25/11/2026 — nom officiel de l'école en tête des affichages (tableau, matricules MENA)
+var ISL_NOMS_OFFICIELS = {   // noms et codes tels qu'ils figurent sur la plateforme MENA
+  'CPP TECH': { nom: 'COLLÈGE PRIVÉ TECHNIQUE LES PRINCES D\'ABIDJAN D\'ABOBO', code: '780202' },
+  'CPP PRO':  { nom: 'COLLÈGE PRIVÉ PROFESSIONNEL LES PRINCES D\'ABIDJAN D\'ABOBO', code: '790219' },
+  'ETL PRINCES KOUIBLY': { nom: 'ÉTABLISSEMENT PRIVÉ TECHNIQUE LES PRINCES DE KOUIBLY', code: '782410',
+                           pro: { nom: 'ÉTABLISSEMENT PRIVÉ PROFESSIONNEL LES PRINCES DE KOUIBLY', code: '792410' } }
+};
+// classe facultative : à Kouibly, la SMS (1A/2A) relève de l'établissement professionnel
+function _islEcoleInfo(e, classe) {
+  var k = String(e || '').toUpperCase().trim(), o = ISL_NOMS_OFFICIELS[k];
+  if (!o) return { nom: k, code: '' };
+  if (o.pro && classe && /SMS|^\s*[12]A\b/i.test(String(classe))) return o.pro;
+  return o;
+}
+function _islNomEcole(e, classe) { var o = _islEcoleInfo(e, classe); return o.nom + (o.code ? ' — Code : ' + o.code : ''); }
+function _islNomEcoleTous(e) { var o = ISL_NOMS_OFFICIELS[String(e || '').toUpperCase().trim()]; if (!o) return _islNomEcole(e);
+  return o.nom + ' — Code : ' + o.code + (o.pro ? '<br>' + o.pro.nom + ' — Code : ' + o.pro.code : ''); }
 function islAffichage(pfx) {
   var d = ISL[pfx]; if (!d) { alert('Ouvrez d\'abord la section.'); return; }
   var cl = document.getElementById(pfx + 'ISLClasse').value;
@@ -21437,7 +21454,8 @@ function islAffichage(pfx) {
     var l = d.eleves.filter(function (e) { return e.classe === c; }).sort(function (a, b) { return a.nom.localeCompare(b.nom, 'fr'); });
     var reste = l.filter(function (e) { return !e.insc; });
     return '<div class="page"' + (i ? ' style="page-break-before:always"' : '') + '>'
-      + '<div class="ent">' + _islEsc(currentStaff.ecole) + ' — Année scolaire 2026-2027</div>'
+      + '<div class="ecole">' + _islEsc(_islEcoleInfo(currentStaff.ecole, c).nom) + (_islEcoleInfo(currentStaff.ecole, c).code ? '<br><span class="code">Code établissement : ' + _islEsc(_islEcoleInfo(currentStaff.ecole, c).code) + '</span>' : '') + '</div>'
+      + '<div class="ent">Année scolaire 2026-2027</div>'
       + '<h1>CLASSE : ' + _islEsc(c) + '</h1>'
       + '<p class="resume">' + l.length + ' élèves — <b class="rouge">' + reste.length + ' n\'ont pas encore fait leur inscription en ligne</b></p>'
       + (reste.length ? '<p class="avis">⚠️ Les élèves marqués <b class="rouge">✘ À FAIRE</b> doivent faire leur <b>inscription en ligne</b> (MENA) au plus vite, avec leur matricule, puis présenter le reçu à l\'Éducateur.</p>'
@@ -21448,7 +21466,8 @@ function islAffichage(pfx) {
             + '<td class="c">' + (e.insc ? '✔ Faite' : '<b>✘ À FAIRE</b>') + '</td></tr>'; }).join('')
       + '</table><p class="pied">Liste arrêtée le ' + new Date().toLocaleDateString('fr-FR') + ' — L\'Éducateur</p></div>';
   }).join('');
-  var css = '@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;font-size:14px;color:#000}.ent{font-size:12px;color:#444}'
+  var css = '@page{size:A4;margin:12mm}body{font-family:Arial,sans-serif;font-size:14px;color:#000}.ent{font-size:12px;color:#444;text-align:center;margin-bottom:4px}'
+    + '.ecole{font-size:19px;font-weight:bold;text-align:center;color:#fff;background:#1F3864;padding:8px 6px;border-radius:4px;letter-spacing:.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}.code{font-size:14px;font-weight:normal;letter-spacing:1px}'
     + 'h1{font-size:24px;margin:6px 0 4px;color:#1F3864}.resume{font-size:15px;margin:2px 0 6px}.avis{border:2px solid #C62828;padding:6px 8px;font-size:13px;margin:6px 0 8px}.avis.vert{border-color:#2E7D32}'
     + 'table{width:100%;border-collapse:collapse}th,td{border:1px solid #777;padding:5px 7px;text-align:left}th{background:#1F3864;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
     + 'tr.afaire td{background:#FFEBEE;font-weight:bold;-webkit-print-color-adjust:exact;print-color-adjust:exact}td.c{text-align:center}.rouge,tr.afaire td.c{color:#C62828}.pied{text-align:right;font-size:11px;margin-top:8px}';
@@ -21481,7 +21500,7 @@ async function islMatriculesMena(pfx) {
   w.document.open();
   w.document.write('<html><head><meta charset="UTF-8"><title>Matricules à valider — MENA — ' + _islEsc(currentStaff.ecole) + '</title><style>' + css + '</style></head><body>'
     + '<button class="btn" onclick="print()">🖨️ Imprimer</button>'
-    + '<h1>' + _islEsc(currentStaff.ecole) + ' — Inscriptions en ligne MENA à valider</h1>'
+    + '<h1>' + _islNomEcoleTous(currentStaff.ecole).split('<br>').map(_islEsc).join('<br>') + '<br><span style="font-size:14px;color:#000">Inscriptions en ligne MENA à valider</span></h1>'
     + '<div class="info">' + L.length + ' élèves inscrits en ligne (payé · en attente de validation) — liste du ' + _islEsc(r.date || '') + '<br>'
     + '<span style="background:#FDE9D9">Rouge : matricule à demander à l\'élève (bulletin, reçu MENA) — ' + nbRouge + '</span>'
     + (nbJaune ? '<span style="background:#FFF2CC">Jaune : NE PAS VALIDER ici (élève maintenu dans une autre école) — ' + nbJaune + '</span>' : '') + '</div>'
