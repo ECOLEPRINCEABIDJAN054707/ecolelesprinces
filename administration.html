@@ -667,6 +667,7 @@ table tr:nth-child(even){background:#F8FAFD}
         <button onclick="islCharger('dir', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
         <button onclick="islImprimer('dir')" style="padding:7px 12px;background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ Liste de contrôle</button>
         <button onclick="islAffichage('dir')" style="padding:7px 12px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">📋 Affichage au tableau</button>
+        <button onclick="islMatriculesMena('dir')" style="padding:7px 12px;background:#1B5E20;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🎓 Matricules à valider (MENA)</button>
       </div>
       <div id="dirISLReseau" style="padding:0 14px"></div>   <!-- 11/11/2026 — décompte des 14 écoles, visible à CPP LES PRINCES -->
       <div id="dirISLDecompte" style="padding:0 14px"></div>
@@ -3283,6 +3284,7 @@ async function sauvegarderPersonnelDir(idx) {
         <button onclick="islCharger('com', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
         <button onclick="islImprimer('com')" style="padding:7px 12px;background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ Liste de contrôle</button>
         <button onclick="islAffichage('com')" style="padding:7px 12px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">📋 Affichage au tableau</button>
+        <button onclick="islMatriculesMena('com')" style="padding:7px 12px;background:#1B5E20;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🎓 Matricules à valider (MENA)</button>
       </div>
       <div id="comISLReseau" style="padding:0 14px"></div>   <!-- 11/11/2026 — décompte des 14 écoles, visible à CPP LES PRINCES -->
       <div id="comISLDecompte" style="padding:0 14px"></div>
@@ -4263,6 +4265,7 @@ async function attribuerMatriculeCom() {
         <button onclick="islCharger('edu', true)" style="padding:7px 12px;background:var(--bleu);color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🔄 Actualiser</button>
         <button onclick="islImprimer('edu')" style="padding:7px 12px;background:#fff;color:var(--bleu);border:1.5px solid var(--bleu);border-radius:8px;font-size:0.8em;cursor:pointer">🖨️ Liste de contrôle</button>
         <button onclick="islAffichage('edu')" style="padding:7px 12px;background:#C62828;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">📋 Affichage au tableau</button>
+        <button onclick="islMatriculesMena('edu')" style="padding:7px 12px;background:#1B5E20;color:#fff;border:none;border-radius:8px;font-size:0.8em;cursor:pointer">🎓 Matricules à valider (MENA)</button>
       </div>
       <div id="eduISLDecompte" style="padding:0 14px"></div>
       <div id="eduISLZone" style="padding:0 14px 14px;overflow-x:auto"><p style="padding:14px;text-align:center;color:var(--gris);font-size:0.82em">Ouvrez la section pour charger les élèves.</p></div>
@@ -21452,6 +21455,38 @@ function islAffichage(pfx) {
   var w = window.open('', '_blank'); if (!w) { alert('Autorisez les fenêtres pop-up pour imprimer.'); return; }
   w.document.write('<html><head><meta charset="UTF-8"><title>Inscription en ligne — affichage par classe</title><style>' + css + '</style></head><body>' + corps + '</body></html>');
   w.document.close(); setTimeout(function () { w.focus(); w.print(); }, 500);
+}
+// ── 25/11/2026 — Liste des inscrits en ligne MENA avec leur MATRICULE, pour la validation sur la plateforme (serveur : INSC_MATRICULES_MENA) ──
+async function islMatriculesMena(pfx) {
+  var w = window.open('', '_blank'); if (!w) { alert('Autorisez les fenêtres pop-up pour afficher la liste.'); return; }
+  w.document.write('<p style="font-family:Arial;padding:20px">⏳ Chargement de la liste des matricules…</p>');
+  var r;
+  try { r = await _appelPerm({ type: 'INSC_MATRICULES_MENA', ecole: currentStaff.ecole }); }
+  catch (e) { w.document.body.innerHTML = '<p style="font-family:Arial;padding:20px;color:#C62828">❌ ' + _islEsc(e.message || e) + '</p>'; return; }
+  if (!r || !r.success || !r.lignes || !r.lignes.length) {
+    w.document.body.innerHTML = '<p style="font-family:Arial;padding:20px">' + _islEsc((r && r.message) || 'Aucune liste de matricules MENA n\'a encore été préparée pour cette école.') + '</p>'; return;
+  }
+  var H = r.entetes, L = r.lignes;
+  var iRem = H.length - 1, nbRouge = 0, nbJaune = 0;
+  var lignes = L.map(function (l) {
+    var rem = String(l[iRem] || ''), cls = /AUCUN|PLUSIEURS/.test(rem) ? 'rouge' : (/SOAKP/.test(rem) ? 'jaune' : '');
+    if (cls === 'rouge') nbRouge++; if (cls === 'jaune') nbJaune++;
+    return '<tr class="' + cls + '">' + l.map(function (x, j) { return '<td' + (H[j] === 'MATRICULE' ? ' class="mat"' : '') + '>' + _islEsc(x) + '</td>'; }).join('') + '</tr>';
+  }).join('');
+  var css = '@page{size:A4 landscape;margin:10mm}body{font-family:Arial,sans-serif;font-size:12px;color:#000;padding:10px}h1{font-size:18px;color:#1F3864;margin:0 0 4px}'
+    + '.info{font-size:12px;margin:4px 0 10px}.info span{display:inline-block;padding:2px 8px;border-radius:4px;margin-right:6px}'
+    + 'table{width:100%;border-collapse:collapse}th,td{border:1px solid #999;padding:4px 6px;text-align:left}th{background:#1F3864;color:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    + 'td.mat{font-weight:bold;font-family:monospace;font-size:13px}tr.rouge td{background:#FDE9D9;-webkit-print-color-adjust:exact;print-color-adjust:exact}tr.jaune td{background:#FFF2CC;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    + '.btn{padding:8px 14px;border:none;border-radius:6px;background:#1F3864;color:#fff;cursor:pointer;margin:0 6px 10px 0}@media print{.btn{display:none}}';
+  w.document.open();
+  w.document.write('<html><head><meta charset="UTF-8"><title>Matricules à valider — MENA — ' + _islEsc(currentStaff.ecole) + '</title><style>' + css + '</style></head><body>'
+    + '<button class="btn" onclick="print()">🖨️ Imprimer</button>'
+    + '<h1>' + _islEsc(currentStaff.ecole) + ' — Inscriptions en ligne MENA à valider</h1>'
+    + '<div class="info">' + L.length + ' élèves inscrits en ligne (payé · en attente de validation) — liste du ' + _islEsc(r.date || '') + '<br>'
+    + '<span style="background:#FDE9D9">Rouge : matricule à demander à l\'élève (bulletin, reçu MENA) — ' + nbRouge + '</span>'
+    + (nbJaune ? '<span style="background:#FFF2CC">Jaune : NE PAS VALIDER ici (élève maintenu dans une autre école) — ' + nbJaune + '</span>' : '') + '</div>'
+    + '<table><tr>' + H.map(function (h) { return '<th>' + _islEsc(h) + '</th>'; }).join('') + '</tr>' + lignes + '</table></body></html>');
+  w.document.close();
 }
 function islImprimer(pfx) {
   var d = ISL[pfx]; if (!d) { alert('Ouvrez d\'abord la section.'); return; }
