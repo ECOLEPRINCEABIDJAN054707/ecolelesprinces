@@ -14454,7 +14454,7 @@ function exporterEdtClassePDF() {
   y += 6;
 
   doc.setFontSize(11);
-  doc.text('Année scolaire : 2026-2027', pageWidth / 2, y, { align: 'center' });
+  doc.text('Année scolaire : 2026-2027   —   Volume horaire : ' + edtVolumeTexte(_edtClasseCourante.lignes), pageWidth / 2, y, { align: 'center' });
   y += 8;
 
   doc.setFontSize(10);
@@ -14688,7 +14688,7 @@ function exporterEdtProfPDF() {
   y += 6;
 
   doc.setFontSize(11);
-  doc.text('Année scolaire : 2026-2027', pageWidth / 2, y, { align: 'center' });
+  doc.text('Année scolaire : 2026-2027   —   Volume horaire : ' + edtVolumeTexte(_edtProfCourant.lignes), pageWidth / 2, y, { align: 'center' });
   y += 10;
 
   const colWidths = [30, 42, 42, 42, 42, 42, 42];
@@ -14855,7 +14855,7 @@ function exporterEdtClassePDFCom() {
   doc.text(String(currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
   y += 6;
   doc.setFontSize(11);
-  doc.text('Année scolaire : 2026-2027', pageWidth / 2, y, { align: 'center' });
+  doc.text('Année scolaire : 2026-2027   —   Volume horaire : ' + edtVolumeTexte(_edtClasseCouranteCom.lignes), pageWidth / 2, y, { align: 'center' });
   y += 8;
   doc.setFontSize(10);
   doc.text('Professeur Principal : ' + (_edtClasseCouranteCom.profPrincipal || '______________________________'), 14, y);
@@ -15036,7 +15036,7 @@ function exporterEdtProfPDFCom() {
   doc.text(String(currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
   y += 6;
   doc.setFontSize(11);
-  doc.text('Année scolaire : 2026-2027', pageWidth / 2, y, { align: 'center' });
+  doc.text('Année scolaire : 2026-2027   —   Volume horaire : ' + edtVolumeTexte(_edtProfCourantCom.lignes), pageWidth / 2, y, { align: 'center' });
   y += 10;
 
   const colWidths = [30, 42, 42, 42, 42, 42, 42];
@@ -15201,7 +15201,7 @@ function exporterEdtClassePDFEdu() {
   doc.text(String(currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
   y += 6;
   doc.setFontSize(11);
-  doc.text('Année scolaire : 2026-2027', pageWidth / 2, y, { align: 'center' });
+  doc.text('Année scolaire : 2026-2027   —   Volume horaire : ' + edtVolumeTexte(_edtClasseCouranteEdu.lignes), pageWidth / 2, y, { align: 'center' });
   y += 8;
   doc.setFontSize(10);
   doc.text('Professeur Principal : ' + (_edtClasseCouranteEdu.profPrincipal || '______________________________'), 14, y);
@@ -15382,7 +15382,7 @@ function exporterEdtProfPDFEdu() {
   doc.text(String(currentStaff.ecole || ''), pageWidth / 2, y, { align: 'center' });
   y += 6;
   doc.setFontSize(11);
-  doc.text('Année scolaire : 2026-2027', pageWidth / 2, y, { align: 'center' });
+  doc.text('Année scolaire : 2026-2027   —   Volume horaire : ' + edtVolumeTexte(_edtProfCourantEdu.lignes), pageWidth / 2, y, { align: 'center' });
   y += 10;
 
   const colWidths = [30, 42, 42, 42, 42, 42, 42];
@@ -21673,7 +21673,7 @@ async function edtLotClassesPdf(pfx, niveau) {
   liste.forEach(function (c, i) {
     var r = lus[i]; if (!r || !r.ok || _edtLotVide(r.lignes)) { vides.push(c); return; }
     if (pages++) doc.addPage();
-    _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + c, 'Niveau : ' + _edtLotNiveau(c), 'Professeur Principal : ' + (r.profPrincipal || '______________________'), r.lignes);
+    _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + c, 'Niveau : ' + _edtLotNiveau(c) + '   —   Volume horaire : ' + edtVolumeTexte(r.lignes), 'Professeur Principal : ' + (r.profPrincipal || '______________________'), r.lignes);
   });
   if (!pages) { z.innerHTML = '<p style="color:var(--rouge);font-size:0.8em">Aucun EDT rempli.</p>'; return; }
   doc.save('EDT_CLASSES_' + (niveau || 'TOUS') + '_' + String(currentStaff.ecole).replace(/\s+/g, '_') + '.pdf');
@@ -21719,7 +21719,7 @@ function edtLotProfsPdf(pfx, matiere) {
       if (pages++) doc.addPage();
       var nb = 0; p.lignes.forEach(function (l) { JOURS_EDT.forEach(function (j) { if (String(l[j] || '').trim()) nb++; }); });
       var l2 = P.lib === 'filière' ? 'Filière : ' + m + '   —   Matière(s) : ' + p.matieres.join(', ') : 'Matière : ' + m + (p.matieres.length > 1 ? '   (enseigne aussi : ' + p.matieres.filter(function (x) { return x !== m; }).join(', ') + ')' : '');
-      _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + p.nom, l2, 'Volume hebdomadaire : ' + nb + ' créneau(x)' + (P.lib === 'filière' && p.filieres.length > 1 ? '   —   Filières : ' + p.filieres.join(', ') : ''), p.lignes);
+      _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + p.nom, l2, 'Volume horaire : ' + edtVolumeTexte(p.lignes) + (P.lib === 'filière' && p.filieres.length > 1 ? '   —   Filières : ' + p.filieres.join(', ') : ''), p.lignes);
     });
   });
   doc.save('EDT_PROFESSEURS_' + (matiere || 'TOUTES_MATIERES').replace(/\s+/g, '_') + '_' + String(currentStaff.ecole).replace(/\s+/g, '_') + '.pdf');
@@ -21828,7 +21828,7 @@ function edtReseauPdf(pfx, multiSeulement, seul) {
   var doc = new jspdf.jsPDF({ orientation: 'landscape' });
   liste.forEach(function (p, k) {
     if (k) doc.addPage();
-    _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + p.cle, 'Écoles : ' + Object.keys(p.ecoles).join(', ') + '   —   ' + p.cours.length + ' créneau(x) par semaine',
+    _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + p.cle, 'Écoles : ' + Object.keys(p.ecoles).join(', ') + '   —   ' + 'Volume horaire : ' + edtHFmt(p.cours.reduce(function (t, x) { return t + (x.b - x.a); }, 0)) + ' par semaine (' + p.cours.length + ' cours)',
       p.conflits ? 'ATTENTION : ' + p.conflits + ' cours en conflit d\'horaire (marqués [CONFLIT]) — même heure, deux écoles ou deux classes/matières différentes' : 'Aucun conflit d\'horaire', _erLignes(p), 'Réseau CPP Les Princes — Princes + TECH + PRO — Année scolaire 2026-2027');
   });
   doc.save('EDT_RESEAU_' + (seul != null ? liste[0].cle.replace(/\s+/g, '_') : (multiSeulement ? 'PROFS_MULTI_ECOLES' : 'TOUS_PROFS_3_ECOLES')) + '.pdf');
@@ -22734,7 +22734,7 @@ async function edtTpEcole(pfx, ecole) {
   var coul = ecole === 'CPP TECH' ? '#1565C0' : '#2E7D32';
   z.innerHTML = '<div style="font-size:0.82em;margin:6px 0"><b>' + ecole + '</b> — ' + profs.length + ' professeur(s) avec emploi du temps. Cliquez sur un nom :</div>'
     + '<button onclick="edtTpPdf(\'' + pfx + '\',-1)" style="padding:6px 11px;margin:2px;border-radius:6px;border:none;background:#4A148C;color:#fff;font-size:0.78em;cursor:pointer">🖨️ PDF — tous les professeurs de ' + ecole + ' (' + profs.length + ')</button><br>'
-    + profs.map(function (p, i) { return '<button onclick="edtTpVoir(\'' + pfx + '\',' + i + ')" style="padding:5px 9px;margin:2px;border-radius:6px;border:1px solid ' + coul + ';background:#fff;color:' + coul + ';font-size:0.76em;cursor:pointer">' + _edtLotEsc(p.nom) + ' <span style="opacity:0.7">(' + p.nb + ')</span></button>'; }).join('')
+    + profs.map(function (p, i) { return '<button onclick="edtTpVoir(\'' + pfx + '\',' + i + ')" style="padding:5px 9px;margin:2px;border-radius:6px;border:1px solid ' + coul + ';background:#fff;color:' + coul + ';font-size:0.76em;cursor:pointer">' + _edtLotEsc(p.nom) + ' <span style="opacity:0.7">(' + edtHFmt(edtMinutes(p.lignes)) + ')</span></button>'; }).join('')
     + (sans.length ? '<div style="font-size:0.72em;color:#E65100;margin-top:4px">Sans emploi du temps : ' + _edtLotEsc(sans.join(', ')) + '</div>' : '');
 }
 
@@ -22742,7 +22742,7 @@ function edtTpVoir(pfx, i) {
   var T = EDT_TP[pfx]; if (!T) return; var p = T.profs[i], d = document.getElementById(pfx + 'EdtTpDetail');
   var th = 'style="padding:5px;border:1px solid var(--border);background:#1F3864;color:#fff;font-size:0.75em"';
   var td = 'style="padding:5px;border:1px solid var(--border);font-size:0.74em;vertical-align:top;min-width:90px"';
-  var h = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin:4px 0"><b style="font-size:0.9em">📅 ' + _edtLotEsc(p.nom) + ' — ' + T.ecole + ' — ' + p.nb + ' créneau(x) / semaine</b>'
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin:4px 0"><b style="font-size:0.9em">📅 ' + _edtLotEsc(p.nom) + ' — ' + T.ecole + ' — ' + edtVolumeTexte(p.lignes) + '</b>'
     + '<button onclick="edtTpPdf(\'' + pfx + '\',' + i + ')" style="padding:5px 10px;border-radius:6px;border:none;background:var(--vert);color:#fff;font-size:0.78em;cursor:pointer">💾 PDF de ce professeur</button></div>'
     + '<table style="border-collapse:collapse;width:100%"><tr><th ' + th + '>Horaire</th>' + JOURS_LABELS.map(function (j) { return '<th ' + th + '>' + j + '</th>'; }).join('') + '</tr>';
   p.lignes.forEach(function (l) {
@@ -22758,10 +22758,30 @@ function edtTpPdf(pfx, i) {
   var liste = i < 0 ? T.profs : [T.profs[i]], doc = new jspdf.jsPDF({ orientation: 'landscape' });
   liste.forEach(function (p, k) {
     if (k) doc.addPage();
-    _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + p.nom, 'École : ' + T.ecole, 'Volume hebdomadaire : ' + p.nb + ' créneau(x)', p.lignes, (EDT_TP_NOMS[T.ecole] || T.ecole) + ' — 2026-2027');
+    _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + p.nom, 'École : ' + T.ecole, 'Volume horaire : ' + edtVolumeTexte(p.lignes), p.lignes, (EDT_TP_NOMS[T.ecole] || T.ecole) + ' — 2026-2027');
   });
   doc.save('EDT_' + (i < 0 ? 'TOUS_PROFS' : liste[0].nom.replace(/\s+/g, '_')) + '_' + T.ecole.replace(/\s+/g, '_') + '.pdf');
 }
+</script>
+
+
+<script>
+// ═══ 27/11/2026 — NOMBRE D'HEURES SUR LES EMPLOIS DU TEMPS ═══
+// Chaque case remplie compte pour la durée de son créneau (ex. « 07h30 - 09h20 » = 1h50).
+// Récréation / déjeuner / pause ne comptent pas. Une case regroupant plusieurs classes compte une seule fois.
+function _edtMinCr(t) { var m = String(t || '').match(/(\d{1,2})\s*[hH:.]\s*(\d{2})?/); return m ? (+m[1]) * 60 + (+(m[2] || 0)) : null; }
+function edtMinutes(lignes) {
+  var tot = 0;
+  (lignes || []).forEach(function (l) {
+    if (/RÉCR|RECR|DÉJEUNER|DEJEUNER|PAUSE/i.test(l.creneau || '')) return;
+    var p = String(l.creneau || '').split(/\s*[-–]\s*|\s+[àa]\s+/), a = _edtMinCr(p[0]), b = p.length > 1 ? _edtMinCr(p[1]) : null;
+    if (a == null || b == null || b <= a) return;
+    JOURS_EDT.forEach(function (j) { if (String(l[j] || '').trim()) tot += b - a; });
+  });
+  return tot;
+}
+function edtHFmt(m) { m = Math.round(m || 0); return Math.floor(m / 60) + 'h' + ('0' + (m % 60)).slice(-2); }
+function edtVolumeTexte(lignes) { return edtHFmt(edtMinutes(lignes)) + ' par semaine'; }
 </script>
 
 </body>
