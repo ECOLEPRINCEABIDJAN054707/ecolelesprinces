@@ -423,6 +423,7 @@ table tr:nth-child(even){background:#F8FAFD}
     <div style="padding:8px">
       <div style="font-size:0.8em;margin-bottom:6px">Une page par classe, &eacute;l&egrave;ves par ordre alphab&eacute;tique, sans num&eacute;ros de t&eacute;l&eacute;phone. Choisissez l'&eacute;cole :</div>
       <div id="dirListesBtns"></div>
+      <label style="display:inline-block;margin:6px 0;font-size:0.8em;cursor:pointer"><input type="checkbox" id="dirListesTel"> &#128222; Avec les <b>contacts des parents</b> (document interne, ne pas afficher)</label>
       <div id="dirListesTpZone" style="padding:6px 0;font-size:0.8em"></div>
     </div>
   </div>
@@ -3480,6 +3481,7 @@ async function sauvegarderPersonnelDir(idx) {
     <div style="padding:8px">
       <div style="font-size:0.8em;margin-bottom:6px">Une page par classe, &eacute;l&egrave;ves par ordre alphab&eacute;tique, sans num&eacute;ros de t&eacute;l&eacute;phone. Choisissez l'&eacute;cole :</div>
       <div id="comListesBtns"></div>
+      <label style="display:inline-block;margin:6px 0;font-size:0.8em;cursor:pointer"><input type="checkbox" id="comListesTel"> &#128222; Avec les <b>contacts des parents</b> (document interne, ne pas afficher)</label>
       <div id="comListesTpZone" style="padding:6px 0;font-size:0.8em"></div>
     </div>
   </div>
@@ -5032,6 +5034,7 @@ async function attribuerMatriculeCom() {
     <div style="padding:8px">
       <div style="font-size:0.8em;margin-bottom:6px">Une page par classe, &eacute;l&egrave;ves par ordre alphab&eacute;tique, sans num&eacute;ros de t&eacute;l&eacute;phone. Choisissez l'&eacute;cole :</div>
       <div id="eduListesBtns"></div>
+      <label style="display:inline-block;margin:6px 0;font-size:0.8em;cursor:pointer"><input type="checkbox" id="eduListesTel"> &#128222; Avec les <b>contacts des parents</b> (document interne, ne pas afficher)</label>
       <div id="eduListesTpZone" style="padding:6px 0;font-size:0.8em"></div>
     </div>
   </div>
@@ -22829,6 +22832,7 @@ function edtVolumeTexte(lignes) { var n = edtNbCreneaux(lignes); return edtHFmt(
 var LISTES_CACHE = {};
 var LISTES_CODES = { 'CPP LES PRINCES': '054707', 'CPP TECH': '780202', 'CPP PRO': '790219' };
 function _ltNorm(s) { return String(s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim(); }
+function _ltTel(t) { var d = String(t || '').replace(/\D/g, ''); if (/^225\d{10}$/.test(d)) d = d.slice(3); if (d.length === 9) d = '0' + d; return d.length === 10 ? d : ''; }
 function _ltEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 var _LT_NIV = ['PS', 'PSA', 'MS', 'MSA', 'GS', 'GSA', 'MATERNELLE', 'CP1', 'CP2', 'CE1', 'CE2', 'CM1', 'CM2', '6EME', '5EME', '4EME', '3EME', '2NDE', '1ERE', 'TLE', '1A', '2A', '3A', 'SERIE'];
 function _ltOrdre(cl) {
@@ -22853,7 +22857,7 @@ async function listesCharger(pfx, ecole) {
     var v = (rv[0] && rv[0].values) || [], onglets = {};
     ((rv[1] && rv[1].sheets) || []).forEach(function (s) { onglets[_ltNorm(s.properties.title)] = 1; });
     var h = (v[0] || []).map(_ltNorm);
-    var iM = h.indexOf('MATRICULE'), iC = h.indexOf('CLASSE'), iN = h.indexOf('NOM ET PRENOMS'), iS = h.indexOf('SEXE'), iSt = h.indexOf('STATUT_ELEVE');
+    var iM = h.indexOf('MATRICULE'), iC = h.indexOf('CLASSE'), iN = h.indexOf('NOM ET PRENOMS'), iS = h.indexOf('SEXE'), iSt = h.indexOf('STATUT_ELEVE'), iT1 = h.indexOf('TEL1'), iT2 = h.indexOf('TEL2');
     if (iM < 0) { z.innerHTML = '<span style="color:var(--rouge)">Colonne MATRICULE introuvable dans SYNTHESE.</span>'; return; }
     if (iC < 0) iC = iM - 1;                                    // CPP LES PRINCES : colonne classe sans en-tête
     if (iN < 0) {                                               // colonne du nom = la plus remplie de texte après le matricule
@@ -22868,7 +22872,8 @@ async function listesCharger(pfx, ecole) {
       if (!onglets[cl] && !_LT_RX.test(cl)) return;              // seulement de vraies classes
       var k = (m || nm) + '|' + cl; if (vus[k]) return; vus[k] = 1;
       var sx = _ltNorm(iS >= 0 ? l[iS] : ''), st = _ltNorm(iSt >= 0 ? l[iSt] : '');
-      (cls[cl] = cls[cl] || []).push({ m: m, n: nm, s: /^F/.test(sx) ? 'F' : (/^M/.test(sx) ? 'M' : ''), st: /NON|NAFF/.test(st) ? 'NAFF' : (/AFF/.test(st) ? 'AFF' : '') });
+      var tels = [iT1, iT2].map(function (i) { return i >= 0 ? _ltTel(l[i]) : ''; }).filter(function (t, k, a) { return t && a.indexOf(t) === k; });
+      (cls[cl] = cls[cl] || []).push({ m: m, n: nm, s: /^F/.test(sx) ? 'F' : (/^M/.test(sx) ? 'M' : ''), st: /NON|NAFF/.test(st) ? 'NAFF' : (/AFF/.test(st) ? 'AFF' : ''), tel: tels.join(' / ') });
     });
     var ordre = Object.keys(cls).sort(function (a, b) { return _ltOrdre(a).localeCompare(_ltOrdre(b), 'fr', { numeric: true }); });
     if (!ordre.length) { z.innerHTML = 'Aucun élève trouvé.'; return; }
@@ -22884,6 +22889,7 @@ function listesPdf(pfx, idx) {
   var L = LISTES_CACHE[pfx], res = document.getElementById(pfx + 'ListesRes'); if (!L) return;
   if (!window.jspdf) { alert('Module PDF non chargé, rechargez la page.'); return; }
   var ecole = L.ecole, liste = idx < 0 ? L.ordre : [L.ordre[idx]];
+  var cb = document.getElementById(pfx + 'ListesTel'), avecTel = !!(cb && cb.checked);
   var doc = new jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }), pw = 210, ph = 297, total = 0;
   var dateTxt = new Date().toLocaleDateString('fr-FR');
   liste.forEach(function (c, k) {
@@ -22900,16 +22906,18 @@ function listesPdf(pfx, idx) {
     var g = el.filter(function (e) { return e.s === 'M'; }).length, f = el.filter(function (e) { return e.s === 'F'; }).length;
     doc.text('Effectif : ' + el.length + ' élève(s)' + (g + f ? '   (garçons : ' + g + ' — filles : ' + f + ')' : ''), 10, 47);
     doc.text('Professeur principal / Maître : ____________________', pw - 10, 47, { align: 'right' });
-    var cols = [['N°', 10], ['MATRICULE', 24], ['NOM ET PRÉNOMS', 84], ['SEXE', 13], ['STATUT', 16], ['ÉMARGEMENT', 43]];
+    var cols = avecTel ? [['N°', 9], ['MATRICULE', 23], ['NOM ET PRÉNOMS', 78], ['SEXE', 11], ['STATUT', 14], ['CONTACT PARENT', 55]]
+                       : [['N°', 10], ['MATRICULE', 24], ['NOM ET PRÉNOMS', 84], ['SEXE', 13], ['STATUT', 16], ['ÉMARGEMENT', 43]];
+    if (avecTel) { doc.setTextColor(198, 40, 40); doc.setFont(undefined, 'bold'); doc.setFontSize(8.5); doc.text('DOCUMENT INTERNE — CONTACTS DES PARENTS — NE PAS AFFICHER', pw / 2, 27, { align: 'center' }); doc.setTextColor(0, 0, 0); doc.setFont(undefined, 'normal'); doc.setFontSize(9.5); }
     var x0 = 10, y = 51, rh = Math.min(7, (ph - 18 - y - 8) / Math.max(el.length, 1)), fs = rh >= 6 ? 9.5 : (rh >= 5 ? 8.5 : (rh >= 4 ? 7.5 : 6.5));
     doc.setFillColor(230, 230, 230); doc.rect(x0, y, 190, 8, 'F'); doc.setFont(undefined, 'bold'); doc.setFontSize(8.5);
     var x = x0; cols.forEach(function (cc) { doc.rect(x, y, cc[1], 8); doc.text(cc[0], x + cc[1] / 2, y + 5.3, { align: 'center' }); x += cc[1]; });
     y += 8; doc.setFont(undefined, 'normal'); doc.setFontSize(fs);
     el.forEach(function (e, i) {
-      var vals = [String(i + 1), e.m, e.n, e.s, e.st, ''];
+      var vals = [String(i + 1), e.m, e.n, e.s, e.st, avecTel ? (e.tel || '') : ''];
       x = x0; cols.forEach(function (cc, j) {
         doc.rect(x, y, cc[1], rh);
-        var t = vals[j]; if (j === 2) { while (doc.getTextWidth(t) > cc[1] - 3 && t.length > 3) t = t.slice(0, -1); }
+        var t = vals[j]; if (j === 2 || j === 5) { while (doc.getTextWidth(t) > cc[1] - 3 && t.length > 3) t = t.slice(0, -1); }
         if (t) doc.text(t, j === 2 ? x + 1.5 : x + cc[1] / 2, y + rh / 2 + fs * 0.13, { align: j === 2 ? 'left' : 'center' });
         x += cc[1];
       });
@@ -22920,8 +22928,8 @@ function listesPdf(pfx, idx) {
     doc.text('Page ' + (k + 1) + ' / ' + liste.length, pw - 10, ph - 8, { align: 'right' });
     doc.setTextColor(0, 0, 0);
   });
-  doc.save('LISTES_DE_CLASSE_' + ecole.replace(/\s+/g, '_') + (idx < 0 ? '' : '_' + liste[0].replace(/\s+/g, '_')) + '_' + dateTxt.replace(/\//g, '-') + '.pdf');
-  if (res) res.innerHTML = '<span style="color:#2E7D32">✅ PDF créé : ' + liste.length + ' classe(s), ' + total + ' élève(s).</span>';
+  doc.save((avecTel ? 'CONTACTS_PARENTS_' : '') + 'LISTES_DE_CLASSE_' + ecole.replace(/\s+/g, '_') + (idx < 0 ? '' : '_' + liste[0].replace(/\s+/g, '_')) + '_' + dateTxt.replace(/\//g, '-') + '.pdf');
+  if (res) res.innerHTML = '<span style="color:#2E7D32">✅ PDF' + (avecTel ? ' avec contacts parents' : '') + ' créé : ' + liste.length + ' classe(s), ' + total + ' élève(s).</span>';
 }
 </script>
 
