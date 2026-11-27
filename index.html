@@ -1457,10 +1457,13 @@ async function afficherEspaceParent(eleve) {
       };
     }
     // ★ Cas 2 : eleve.sheetsId est encore l'ancienne base — verifier si une inscription 2026-2027 existe
-    else if (base2026 && eleve.ecoleCode !== 'CPP_PRO') {
-      window._sheetsId2026 = base2026;
+    // FIX 27/11/2026 : en Cas 1 aussi, on relit SYNTHESE en direct (la session gardee dans le telephone
+    // contient les montants de la derniere visite et ne voyait pas les nouveaux paiements)
+    const baseALire = estDejaBase2026 ? eleve.sheetsId : base2026;
+    if (baseALire && (estDejaBase2026 || eleve.ecoleCode !== 'CPP_PRO')) {
+      window._sheetsId2026 = baseALire;
       const rangeBasc = encodeURIComponent('SYNTHESE!A2:J5000');
-      const urlBasc = 'https://sheets.googleapis.com/v4/spreadsheets/' + base2026 +
+      const urlBasc = 'https://sheets.googleapis.com/v4/spreadsheets/' + baseALire +
         '/values/' + rangeBasc + '?key=' + CONFIG.API_KEY + '&valueRenderOption=UNFORMATTED_VALUE';
       const resBasc = await pssFetch(urlBasc);
       if (resBasc.ok) {
@@ -1480,6 +1483,11 @@ async function afficherEspaceParent(eleve) {
               du: du2026, verse: verse2026, solde: solde2026,
               statut: String(row[9] || '').trim().toUpperCase()
             };
+            if (estDejaBase2026) {   // garder la fiche et la session a jour
+              eleve.du = du2026; eleve.verse = verse2026; eleve.solde = solde2026;
+              try { var sv = JSON.parse(localStorage.getItem('pss_session_parent') || 'null');
+                if (sv && sv.e) { sv.e.du = du2026; sv.e.verse = verse2026; sv.e.solde = solde2026; localStorage.setItem('pss_session_parent', JSON.stringify(sv)); } } catch (eS) {}
+            }
             break;
           }
         }
