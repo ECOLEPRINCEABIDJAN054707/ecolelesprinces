@@ -415,6 +415,20 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div>
+<div class="section" id="dirSecEdtTP" style="display:none">
+  <div class="sec-head sec-or" onclick="toggleSec(this)">
+    <h3>&#128203; EDT de chaque professeur &mdash; CPP TECH / CPP PRO</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:8px">
+      <div style="font-size:0.8em;margin-bottom:6px">Choisissez l'&eacute;cole, puis le professeur (un emploi du temps par professeur et par &eacute;cole) :</div>
+      <button onclick="edtTpEcole('dir','CPP TECH')" style="padding:7px 14px;border-radius:6px;background:#1565C0;border:none;color:#fff;margin:2px">&#127979; CPP TECH</button>
+      <button onclick="edtTpEcole('dir','CPP PRO')" style="padding:7px 14px;border-radius:6px;background:#2E7D32;border:none;color:#fff;margin:2px">&#127979; CPP PRO</button>
+      <div id="dirEdtTpZone" style="padding:6px 0"></div>
+      <div id="dirEdtTpDetail" style="padding:6px 0;overflow-x:auto"></div>
+    </div>
+  </div>
+</div>
   <div class="section" id="dirSecEdtProf">
   <div class="sec-head sec-or" onclick="toggleSec(this);peuplerEdtProfSelect()">
     <h3>&#128197; Emploi du temps &mdash; Enseignant</h3><span class="arr">&#9660;</span>
@@ -3446,6 +3460,20 @@ async function sauvegarderPersonnelDir(idx) {
     </div>
   </div>
 </div>
+<div class="section" id="comSecEdtTP" style="display:none">
+  <div class="sec-head sec-or" onclick="toggleSec(this)">
+    <h3>&#128203; EDT de chaque professeur &mdash; CPP TECH / CPP PRO</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:8px">
+      <div style="font-size:0.8em;margin-bottom:6px">Choisissez l'&eacute;cole, puis le professeur (un emploi du temps par professeur et par &eacute;cole) :</div>
+      <button onclick="edtTpEcole('com','CPP TECH')" style="padding:7px 14px;border-radius:6px;background:#1565C0;border:none;color:#fff;margin:2px">&#127979; CPP TECH</button>
+      <button onclick="edtTpEcole('com','CPP PRO')" style="padding:7px 14px;border-radius:6px;background:#2E7D32;border:none;color:#fff;margin:2px">&#127979; CPP PRO</button>
+      <div id="comEdtTpZone" style="padding:6px 0"></div>
+      <div id="comEdtTpDetail" style="padding:6px 0;overflow-x:auto"></div>
+    </div>
+  </div>
+</div>
   <div class="section" id="comSecEdtProf">
   <div class="sec-head sec-or" onclick="toggleSec(this);peuplerEdtProfSelectCom()">
     <h3>&#128197; Emploi du temps &mdash; Enseignant</h3><span class="arr">&#9660;</span>
@@ -4969,6 +4997,20 @@ async function attribuerMatriculeCom() {
       <div id="eduEdtLotZone" style="padding:6px 0"></div>
 <button id="eduEdtClasseSaveBtn" onclick="sauvegarderEdtClasseEdu()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="eduEdtClasseBody" style="padding:12px 0"></div>
+    </div>
+  </div>
+</div>
+<div class="section" id="eduSecEdtTP" style="display:none">
+  <div class="sec-head sec-or" onclick="toggleSec(this)">
+    <h3>&#128203; EDT de chaque professeur &mdash; CPP TECH / CPP PRO</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:8px">
+      <div style="font-size:0.8em;margin-bottom:6px">Choisissez l'&eacute;cole, puis le professeur (un emploi du temps par professeur et par &eacute;cole) :</div>
+      <button onclick="edtTpEcole('edu','CPP TECH')" style="padding:7px 14px;border-radius:6px;background:#1565C0;border:none;color:#fff;margin:2px">&#127979; CPP TECH</button>
+      <button onclick="edtTpEcole('edu','CPP PRO')" style="padding:7px 14px;border-radius:6px;background:#2E7D32;border:none;color:#fff;margin:2px">&#127979; CPP PRO</button>
+      <div id="eduEdtTpZone" style="padding:6px 0"></div>
+      <div id="eduEdtTpDetail" style="padding:6px 0;overflow-x:auto"></div>
     </div>
   </div>
 </div>
@@ -22659,6 +22701,66 @@ function vdrDocImprimer(p) {
   if (!w) { showToast('Autorisez les fenêtres pop-up pour imprimer', 'error'); return; }
   w.document.write('<html><head><meta charset="UTF-8"><title>' + vdrEsc(doc.titre) + '</title><style>' + css + '</style></head><body>' + h + '</body></html>');
   w.document.close(); w.focus(); setTimeout(() => w.print(), 700);
+}
+</script>
+
+
+<script>
+// ═══ 27/11/2026 — EDT DE CHAQUE PROFESSEUR, CPP TECH / CPP PRO ═══
+// Section visible dans les espaces Directeur, Comptable et Éducateur de CPP TECH et CPP PRO.
+// Lit LISTER_ENSEIGNANTS_ACTIFS + LIRE_EDT_PROF de l'école choisie (TECH ou PRO), comme l'EDT réseau.
+var EDT_TP = {};
+var EDT_TP_NOMS = { 'CPP TECH': "COLLÈGE PRIVÉ TECHNIQUE LES PRINCES D'ABIDJAN D'ABOBO — Code 780202",
+                    'CPP PRO': "COLLÈGE PRIVÉ PROFESSIONNEL LES PRINCES D'ABIDJAN D'ABOBO — Code 790219" };
+function edtTpVisibilite() {
+  if (typeof currentStaff === 'undefined' || !currentStaff) return;
+  var ok = /^(CPP TECH|CPP PRO)$/i.test(String(currentStaff.ecole || '').trim());
+  ['dir', 'com', 'edu'].forEach(function (p) { var el = document.getElementById(p + 'SecEdtTP'); if (el) el.style.display = ok ? '' : 'none'; });
+}
+setInterval(edtTpVisibilite, 3000);
+function _edtTpNb(lignes) { var nb = 0; (lignes || []).forEach(function (l) { JOURS_EDT.forEach(function (j) { if (String(l[j] || '').trim()) nb++; }); }); return nb; }
+
+async function edtTpEcole(pfx, ecole) {
+  var z = document.getElementById(pfx + 'EdtTpZone'), d = document.getElementById(pfx + 'EdtTpDetail'); if (!z) return;
+  d.innerHTML = ''; z.innerHTML = '<p style="font-size:0.8em;color:var(--gris)">⏳ Enseignants de ' + ecole + '…</p>';
+  var r = await appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LISTER_ENSEIGNANTS_ACTIFS', ecole: ecole }, 30000);
+  var noms = ((r && r.noms) || []).slice().sort(function (a, b) { return a.localeCompare(b, 'fr'); });
+  if (!noms.length) { z.innerHTML = '<p style="color:var(--rouge);font-size:0.8em">Aucun enseignant trouvé pour ' + ecole + '.</p>'; return; }
+  var lus = await _edtLotPool(noms, 5, function (n) { return appelJSONP(APPS_SCRIPT_POINTAGE, { type: 'LIRE_EDT_PROF', ecole: ecole, prof: n }, 30000); },
+    function (f, t) { z.innerHTML = '<p style="font-size:0.8em;color:var(--gris)">⏳ Lecture des EDT de ' + ecole + ' : ' + f + ' / ' + t + '…</p>'; });
+  var profs = [], sans = [];
+  noms.forEach(function (n, i) { var x = lus[i]; if (!x || !x.ok || _edtLotVide(x.lignes)) sans.push(n); else profs.push({ nom: n, lignes: x.lignes, nb: _edtTpNb(x.lignes) }); });
+  EDT_TP[pfx] = { ecole: ecole, profs: profs };
+  var coul = ecole === 'CPP TECH' ? '#1565C0' : '#2E7D32';
+  z.innerHTML = '<div style="font-size:0.82em;margin:6px 0"><b>' + ecole + '</b> — ' + profs.length + ' professeur(s) avec emploi du temps. Cliquez sur un nom :</div>'
+    + '<button onclick="edtTpPdf(\'' + pfx + '\',-1)" style="padding:6px 11px;margin:2px;border-radius:6px;border:none;background:#4A148C;color:#fff;font-size:0.78em;cursor:pointer">🖨️ PDF — tous les professeurs de ' + ecole + ' (' + profs.length + ')</button><br>'
+    + profs.map(function (p, i) { return '<button onclick="edtTpVoir(\'' + pfx + '\',' + i + ')" style="padding:5px 9px;margin:2px;border-radius:6px;border:1px solid ' + coul + ';background:#fff;color:' + coul + ';font-size:0.76em;cursor:pointer">' + _edtLotEsc(p.nom) + ' <span style="opacity:0.7">(' + p.nb + ')</span></button>'; }).join('')
+    + (sans.length ? '<div style="font-size:0.72em;color:#E65100;margin-top:4px">Sans emploi du temps : ' + _edtLotEsc(sans.join(', ')) + '</div>' : '');
+}
+
+function edtTpVoir(pfx, i) {
+  var T = EDT_TP[pfx]; if (!T) return; var p = T.profs[i], d = document.getElementById(pfx + 'EdtTpDetail');
+  var th = 'style="padding:5px;border:1px solid var(--border);background:#1F3864;color:#fff;font-size:0.75em"';
+  var td = 'style="padding:5px;border:1px solid var(--border);font-size:0.74em;vertical-align:top;min-width:90px"';
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin:4px 0"><b style="font-size:0.9em">📅 ' + _edtLotEsc(p.nom) + ' — ' + T.ecole + ' — ' + p.nb + ' créneau(x) / semaine</b>'
+    + '<button onclick="edtTpPdf(\'' + pfx + '\',' + i + ')" style="padding:5px 10px;border-radius:6px;border:none;background:var(--vert);color:#fff;font-size:0.78em;cursor:pointer">💾 PDF de ce professeur</button></div>'
+    + '<table style="border-collapse:collapse;width:100%"><tr><th ' + th + '>Horaire</th>' + JOURS_LABELS.map(function (j) { return '<th ' + th + '>' + j + '</th>'; }).join('') + '</tr>';
+  p.lignes.forEach(function (l) {
+    if (/RÉCR|RECR|DÉJEUNER|DEJEUNER|PAUSE/i.test(l.creneau || '')) { h += '<tr><td colspan="7" style="text-align:center;background:#eee;font-size:0.72em;font-weight:bold;padding:3px">' + _edtLotEsc(l.creneau) + '</td></tr>'; return; }
+    h += '<tr><td ' + td + '><b>' + _edtLotEsc(l.creneau) + '</b></td>' + JOURS_EDT.map(function (j) { var v = String(l[j] || '').trim(); return '<td ' + td + (v ? ' bgcolor="#E8F5E9"' : '') + '>' + _edtLotEsc(v) + '</td>'; }).join('') + '</tr>';
+  });
+  d.innerHTML = h + '</table>';
+  d.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function edtTpPdf(pfx, i) {
+  var T = EDT_TP[pfx]; if (!T || !window.jspdf) { showToast('Chargez d\'abord une école', 'error'); return; }
+  var liste = i < 0 ? T.profs : [T.profs[i]], doc = new jspdf.jsPDF({ orientation: 'landscape' });
+  liste.forEach(function (p, k) {
+    if (k) doc.addPage();
+    _edtLotPage(doc, 'EMPLOI DU TEMPS — ' + p.nom, 'École : ' + T.ecole, 'Volume hebdomadaire : ' + p.nb + ' créneau(x)', p.lignes, (EDT_TP_NOMS[T.ecole] || T.ecole) + ' — 2026-2027');
+  });
+  doc.save('EDT_' + (i < 0 ? 'TOUS_PROFS' : liste[0].nom.replace(/\s+/g, '_')) + '_' + T.ecole.replace(/\s+/g, '_') + '.pdf');
 }
 </script>
 
