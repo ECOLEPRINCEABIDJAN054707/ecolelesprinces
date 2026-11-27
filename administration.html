@@ -415,6 +415,18 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div>
+<div class="section" id="dirSecListesTP">
+  <div class="sec-head sec-or" onclick="toggleSec(this);listesBoutons('dir')">
+    <h3>&#128424; Listes de classe &agrave; imprimer</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:8px">
+      <div style="font-size:0.8em;margin-bottom:6px">Une page par classe, &eacute;l&egrave;ves par ordre alphab&eacute;tique, sans num&eacute;ros de t&eacute;l&eacute;phone. Choisissez l'&eacute;cole :</div>
+      <div id="dirListesBtns"></div>
+      <div id="dirListesTpZone" style="padding:6px 0;font-size:0.8em"></div>
+    </div>
+  </div>
+</div>
 <div class="section" id="dirSecEdtTP" style="display:none">
   <div class="sec-head sec-or" onclick="toggleSec(this)">
     <h3>&#128203; EDT de chaque professeur &mdash; CPP TECH / CPP PRO</h3><span class="arr">&#9660;</span>
@@ -3460,6 +3472,18 @@ async function sauvegarderPersonnelDir(idx) {
     </div>
   </div>
 </div>
+<div class="section" id="comSecListesTP">
+  <div class="sec-head sec-or" onclick="toggleSec(this);listesBoutons('com')">
+    <h3>&#128424; Listes de classe &agrave; imprimer</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:8px">
+      <div style="font-size:0.8em;margin-bottom:6px">Une page par classe, &eacute;l&egrave;ves par ordre alphab&eacute;tique, sans num&eacute;ros de t&eacute;l&eacute;phone. Choisissez l'&eacute;cole :</div>
+      <div id="comListesBtns"></div>
+      <div id="comListesTpZone" style="padding:6px 0;font-size:0.8em"></div>
+    </div>
+  </div>
+</div>
 <div class="section" id="comSecEdtTP" style="display:none">
   <div class="sec-head sec-or" onclick="toggleSec(this)">
     <h3>&#128203; EDT de chaque professeur &mdash; CPP TECH / CPP PRO</h3><span class="arr">&#9660;</span>
@@ -4997,6 +5021,18 @@ async function attribuerMatriculeCom() {
       <div id="eduEdtLotZone" style="padding:6px 0"></div>
 <button id="eduEdtClasseSaveBtn" onclick="sauvegarderEdtClasseEdu()" style="padding:6px 12px;border-radius:6px;background:var(--bleu);border:none;color:#fff;margin-left:6px;display:none">&#128190; Enregistrer</button>
       <div id="eduEdtClasseBody" style="padding:12px 0"></div>
+    </div>
+  </div>
+</div>
+<div class="section" id="eduSecListesTP">
+  <div class="sec-head sec-or" onclick="toggleSec(this);listesBoutons('edu')">
+    <h3>&#128424; Listes de classe &agrave; imprimer</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:8px">
+      <div style="font-size:0.8em;margin-bottom:6px">Une page par classe, &eacute;l&egrave;ves par ordre alphab&eacute;tique, sans num&eacute;ros de t&eacute;l&eacute;phone. Choisissez l'&eacute;cole :</div>
+      <div id="eduListesBtns"></div>
+      <div id="eduListesTpZone" style="padding:6px 0;font-size:0.8em"></div>
     </div>
   </div>
 </div>
@@ -22781,7 +22817,112 @@ function edtMinutes(lignes) {
   return tot;
 }
 function edtHFmt(m) { m = Math.round(m || 0); return Math.floor(m / 60) + 'h' + ('0' + (m % 60)).slice(-2); }
-function edtVolumeTexte(lignes) { return edtHFmt(edtMinutes(lignes)) + ' par semaine'; }
+function edtNbCreneaux(lignes) { var n = 0; (lignes || []).forEach(function (l) { if (/RÉCR|RECR|DÉJEUNER|DEJEUNER|PAUSE/i.test(l.creneau || '')) return; JOURS_EDT.forEach(function (j) { if (String(l[j] || '').trim()) n++; }); }); return n; }
+function edtVolumeTexte(lignes) { var n = edtNbCreneaux(lignes); return edtHFmt(edtMinutes(lignes)) + ' par semaine (' + n + ' créneau' + (n > 1 ? 'x' : '') + ')'; }
+</script>
+
+
+<script>
+// ═══ 27/11/2026 — LISTES DE CLASSE À IMPRIMER — TOUTES LES ÉCOLES PSS ═══
+// Espaces Directeur / Comptable / Éducateur : l'école de la personne connectée (+ l'autre école pour CPP TECH / CPP PRO, même site).
+// Lit SYNTHESE ; une page A4 par classe ; élèves triés A → Z ; N° 1…n ; aucun numéro de téléphone.
+var LISTES_CACHE = {};
+var LISTES_CODES = { 'CPP LES PRINCES': '054707', 'CPP TECH': '780202', 'CPP PRO': '790219' };
+function _ltNorm(s) { return String(s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').trim(); }
+function _ltEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+var _LT_NIV = ['PS', 'PSA', 'MS', 'MSA', 'GS', 'GSA', 'MATERNELLE', 'CP1', 'CP2', 'CE1', 'CE2', 'CM1', 'CM2', '6EME', '5EME', '4EME', '3EME', '2NDE', '1ERE', 'TLE', '1A', '2A', '3A', 'SERIE'];
+function _ltOrdre(cl) {
+  var c = _ltNorm(cl), m = c.match(/^(PSA|MSA|GSA|PS|MS|GS|MATERNELLE|CP\d|CE\d|CM\d|\dEME|2NDE|1ERE|TLE|\dA|SERIE)/), i = m ? _LT_NIV.indexOf(m[1]) : -1;
+  return ('0' + (i < 0 ? 99 : i)).slice(-2) + ' ' + c;
+}
+var _LT_RX = /^(PSA|MSA|GSA|PS|MS|GS|MATERNELLE|CP\s?\d|CE\s?\d|CM\s?\d|\dEME|2NDE|1ERE|TLE|\dA\s|SERIE)/;
+function listesBoutons(pfx) {
+  var d = document.getElementById(pfx + 'ListesBtns'); if (!d || typeof currentStaff === 'undefined' || !currentStaff) return;
+  var e = String(currentStaff.ecole || '').trim().toUpperCase(), ecoles = [e];
+  if (e === 'CPP TECH') ecoles.push('CPP PRO'); if (e === 'CPP PRO') ecoles.push('CPP TECH');
+  d.innerHTML = ecoles.map(function (x, i) { return '<button onclick="listesCharger(\'' + pfx + '\',\'' + x + '\')" style="padding:7px 14px;border-radius:6px;border:none;color:#fff;margin:2px;background:' + (i ? '#2E7D32' : '#1565C0') + '">🏫 ' + _ltEsc(x) + '</button>'; }).join('');
+}
+async function listesCharger(pfx, ecole) {
+  var z = document.getElementById(pfx + 'ListesTpZone'); if (!z) return;
+  z.innerHTML = '⏳ Lecture des élèves de ' + _ltEsc(ecole) + '…';
+  try {
+    var id = (typeof SHEETS_IDS_2026_2027 !== 'undefined' && SHEETS_IDS_2026_2027[ecole]); if (!id) { z.innerHTML = 'École non configurée.'; return; }
+    var base = 'https://sheets.googleapis.com/v4/spreadsheets/' + id;
+    var rv = await Promise.all([fetch(base + '/values/SYNTHESE?key=' + API_KEY + '&valueRenderOption=FORMATTED_VALUE').then(function (r) { return r.json(); }),
+                                fetch(base + '?fields=sheets.properties.title&key=' + API_KEY).then(function (r) { return r.json(); }).catch(function () { return {}; })]);
+    var v = (rv[0] && rv[0].values) || [], onglets = {};
+    ((rv[1] && rv[1].sheets) || []).forEach(function (s) { onglets[_ltNorm(s.properties.title)] = 1; });
+    var h = (v[0] || []).map(_ltNorm);
+    var iM = h.indexOf('MATRICULE'), iC = h.indexOf('CLASSE'), iN = h.indexOf('NOM ET PRENOMS'), iS = h.indexOf('SEXE'), iSt = h.indexOf('STATUT_ELEVE');
+    if (iM < 0) { z.innerHTML = '<span style="color:var(--rouge)">Colonne MATRICULE introuvable dans SYNTHESE.</span>'; return; }
+    if (iC < 0) iC = iM - 1;                                    // CPP LES PRINCES : colonne classe sans en-tête
+    if (iN < 0) {                                               // colonne du nom = la plus remplie de texte après le matricule
+      var best = -1, sc = -1;
+      for (var c = iM + 1; c <= iM + 3; c++) { var n = 0; v.slice(1, 200).forEach(function (l) { if (/[A-Z]{3,}/i.test(String(l[c] || '')) && !/^\d/.test(String(l[c] || ''))) n++; }); if (n > sc) { sc = n; best = c; } }
+      iN = best;
+    }
+    var cls = {}, vus = {};
+    v.slice(1).forEach(function (l) {
+      var cl = _ltNorm(l[iC]), nm = String(l[iN] || '').replace(/\s+/g, ' ').trim(), m = String(l[iM] || '').trim().toUpperCase();
+      if (!cl || !nm || cl === 'CLASSE') return;
+      if (!onglets[cl] && !_LT_RX.test(cl)) return;              // seulement de vraies classes
+      var k = (m || nm) + '|' + cl; if (vus[k]) return; vus[k] = 1;
+      var sx = _ltNorm(iS >= 0 ? l[iS] : ''), st = _ltNorm(iSt >= 0 ? l[iSt] : '');
+      (cls[cl] = cls[cl] || []).push({ m: m, n: nm, s: /^F/.test(sx) ? 'F' : (/^M/.test(sx) ? 'M' : ''), st: /NON|NAFF/.test(st) ? 'NAFF' : (/AFF/.test(st) ? 'AFF' : '') });
+    });
+    var ordre = Object.keys(cls).sort(function (a, b) { return _ltOrdre(a).localeCompare(_ltOrdre(b), 'fr', { numeric: true }); });
+    if (!ordre.length) { z.innerHTML = 'Aucun élève trouvé.'; return; }
+    LISTES_CACHE[pfx] = { ecole: ecole, cls: cls, ordre: ordre };
+    var tot = ordre.reduce(function (t, c) { return t + cls[c].length; }, 0);
+    z.innerHTML = '<div style="margin:4px 0"><b>' + _ltEsc(ecole) + '</b> — ' + ordre.length + ' classe(s), ' + tot + ' élève(s). Choisissez :</div>'
+      + '<button onclick="listesPdf(\'' + pfx + '\',-1)" style="padding:6px 11px;margin:2px;border-radius:6px;border:none;background:#4A148C;color:#fff;cursor:pointer">🖨️ Toutes les classes (' + ordre.length + ')</button><br>'
+      + ordre.map(function (c, i) { return '<button onclick="listesPdf(\'' + pfx + '\',' + i + ')" style="padding:4px 8px;margin:2px;border-radius:6px;border:1px solid var(--bleu);background:#fff;color:var(--bleu);font-size:0.95em;cursor:pointer">' + _ltEsc(c) + ' (' + cls[c].length + ')</button>'; }).join('')
+      + '<div id="' + pfx + 'ListesRes"></div>';
+  } catch (e) { z.innerHTML = '<span style="color:var(--rouge)">Erreur : ' + _ltEsc(e.message) + '</span>'; }
+}
+function listesPdf(pfx, idx) {
+  var L = LISTES_CACHE[pfx], res = document.getElementById(pfx + 'ListesRes'); if (!L) return;
+  if (!window.jspdf) { alert('Module PDF non chargé, rechargez la page.'); return; }
+  var ecole = L.ecole, liste = idx < 0 ? L.ordre : [L.ordre[idx]];
+  var doc = new jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }), pw = 210, ph = 297, total = 0;
+  var dateTxt = new Date().toLocaleDateString('fr-FR');
+  liste.forEach(function (c, k) {
+    var info = (typeof _islEcoleInfo === 'function') ? _islEcoleInfo(ecole, c) : { nom: ecole, code: '' };
+    var nomOff = info.nom || ecole, code = info.code || LISTES_CODES[ecole] || '';
+    var el = L.cls[c].slice().sort(function (a, b) { return _ltNorm(a.n).localeCompare(_ltNorm(b.n), 'fr'); }); total += el.length;
+    if (k) doc.addPage();
+    if (_logoCppBase64) { try { doc.addImage(_logoCppBase64, 'PNG', 12, 8, 20, 20); } catch (e) {} }
+    doc.setFont(undefined, 'bold'); doc.setFontSize(11); doc.text(nomOff, pw / 2 + 8, 14, { align: 'center' });
+    doc.setFont(undefined, 'normal'); doc.setFontSize(9); doc.text((code ? 'Code établissement : ' + code + '   —   ' : '') + 'Année scolaire 2026-2027', pw / 2 + 8, 20, { align: 'center' });
+    doc.setFillColor(31, 56, 100); doc.rect(10, 31, pw - 20, 10, 'F');
+    doc.setTextColor(255, 255, 255); doc.setFont(undefined, 'bold'); doc.setFontSize(14); doc.text('LISTE DE CLASSE — ' + c, pw / 2, 38, { align: 'center' });
+    doc.setTextColor(0, 0, 0); doc.setFontSize(9.5); doc.setFont(undefined, 'normal');
+    var g = el.filter(function (e) { return e.s === 'M'; }).length, f = el.filter(function (e) { return e.s === 'F'; }).length;
+    doc.text('Effectif : ' + el.length + ' élève(s)' + (g + f ? '   (garçons : ' + g + ' — filles : ' + f + ')' : ''), 10, 47);
+    doc.text('Professeur principal / Maître : ____________________', pw - 10, 47, { align: 'right' });
+    var cols = [['N°', 10], ['MATRICULE', 24], ['NOM ET PRÉNOMS', 84], ['SEXE', 13], ['STATUT', 16], ['ÉMARGEMENT', 43]];
+    var x0 = 10, y = 51, rh = Math.min(7, (ph - 18 - y - 8) / Math.max(el.length, 1)), fs = rh >= 6 ? 9.5 : (rh >= 5 ? 8.5 : (rh >= 4 ? 7.5 : 6.5));
+    doc.setFillColor(230, 230, 230); doc.rect(x0, y, 190, 8, 'F'); doc.setFont(undefined, 'bold'); doc.setFontSize(8.5);
+    var x = x0; cols.forEach(function (cc) { doc.rect(x, y, cc[1], 8); doc.text(cc[0], x + cc[1] / 2, y + 5.3, { align: 'center' }); x += cc[1]; });
+    y += 8; doc.setFont(undefined, 'normal'); doc.setFontSize(fs);
+    el.forEach(function (e, i) {
+      var vals = [String(i + 1), e.m, e.n, e.s, e.st, ''];
+      x = x0; cols.forEach(function (cc, j) {
+        doc.rect(x, y, cc[1], rh);
+        var t = vals[j]; if (j === 2) { while (doc.getTextWidth(t) > cc[1] - 3 && t.length > 3) t = t.slice(0, -1); }
+        if (t) doc.text(t, j === 2 ? x + 1.5 : x + cc[1] / 2, y + rh / 2 + fs * 0.13, { align: j === 2 ? 'left' : 'center' });
+        x += cc[1];
+      });
+      y += rh;
+    });
+    doc.setFontSize(8); doc.setTextColor(90, 90, 90);
+    doc.text(ecole + ' — ' + c + ' — édité le ' + dateTxt + ' — Princes Smart School', 10, ph - 8);
+    doc.text('Page ' + (k + 1) + ' / ' + liste.length, pw - 10, ph - 8, { align: 'right' });
+    doc.setTextColor(0, 0, 0);
+  });
+  doc.save('LISTES_DE_CLASSE_' + ecole.replace(/\s+/g, '_') + (idx < 0 ? '' : '_' + liste[0].replace(/\s+/g, '_')) + '_' + dateTxt.replace(/\//g, '-') + '.pdf');
+  if (res) res.innerHTML = '<span style="color:#2E7D32">✅ PDF créé : ' + liste.length + ' classe(s), ' + total + ' élève(s).</span>';
+}
 </script>
 
 </body>
