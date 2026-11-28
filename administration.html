@@ -13,8 +13,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
-@import url('https://fonts.googleapis.com/csrds2?family=DM+Sans:wght@300;400;500;600&family=Cinzel:wght@600;700&display=swap');
-*{margin:0;padding:0;box-sizing:boer-box;-webkit-tap-highlight-color:transparent}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Cinzel:wght@600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
   --bleu:#1F4E79;--bleu2:#2E75B6;--vert:#2E7D32;--rouge:#C62828;
   --or:#D4AF37;--or2:#F0C94A;--orange:#E65100;--violet:#4A148C;
@@ -23251,6 +23251,17 @@ async function bvDetail(pfx, code) {
   for (var i = 1; i <= nb; i++) { doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(110, 110, 110); doc.text('Document confidentiel — Détail des cours ' + _bvMois(mois) + ' — ' + p.nom, 10, 289); doc.text('Page ' + i + ' / ' + nb, 200, 289, { align: 'right' }); doc.setTextColor(0, 0, 0); }
   doc.save('DETAIL_COURS_' + p.nom.replace(/[^A-Za-z0-9]+/g, '_') + '_' + mois + '.pdf');
   if (r) r.innerHTML = '<span style="color:#2E7D32">✅ Détail des cours de ' + _ltEsc(p.nom) + ' : ' + lignes.length + ' cours, ' + _bvF(total) + '.</span>';
+}
+</script>
+
+<script>
+// 28/11/2026 — couleur des listes OUI / NON (vérification MENA)
+function coloreSelectOuiNon(sel){
+  if(!sel)return;
+  var v=sel.value;
+  sel.style.background=v==='OUI'?'#E8F5E9':v==='NON'?'#FFEBEE':'#fff';
+  sel.style.borderColor=v==='OUI'?'#2E7D32':v==='NON'?'#C62828':'var(--border)';
+  sel.style.color=v==='OUI'?'#2E7D32':v==='NON'?'#C62828':'#1A1A2E';
 }
 </script>
 
