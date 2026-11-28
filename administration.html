@@ -428,6 +428,17 @@ table tr:nth-child(even){background:#F8FAFD}
     </div>
   </div>
 </div>
+<div class="section" id="dirSecBulVac" style="display:none">
+  <div class="sec-head sec-or" onclick="toggleSec(this);if(this.classList.contains('open'))bvCharger('dir')">
+    <h3>&#129534; Bulletins de salaire &mdash; vacataires (CPP LES PRINCES + CPP TECH + CPP PRO)</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:8px;font-size:0.82em">
+      <div style="margin-bottom:6px">Un seul bulletin par enseignant, avec le d&eacute;tail de chaque &eacute;cole. <b>Document confidentiel.</b> Le d&eacute;tail des cours (&#128196;) ne s'imprime que pour un enseignant qui conteste.</div>
+      <div id="dirBvZone">Ouverture&hellip;</div>
+    </div>
+  </div>
+</div>
 <div class="section" id="dirSecEdtTP" style="display:none">
   <div class="sec-head sec-or" onclick="toggleSec(this)">
     <h3>&#128203; EDT de chaque professeur &mdash; CPP TECH / CPP PRO</h3><span class="arr">&#9660;</span>
@@ -3483,6 +3494,17 @@ async function sauvegarderPersonnelDir(idx) {
       <div id="comListesBtns"></div>
       <label style="display:inline-block;margin:6px 0;font-size:0.8em;cursor:pointer"><input type="checkbox" id="comListesTel"> &#128222; Avec les <b>contacts des parents</b> (document interne, ne pas afficher)</label>
       <div id="comListesTpZone" style="padding:6px 0;font-size:0.8em"></div>
+    </div>
+  </div>
+</div>
+<div class="section" id="comSecBulVac" style="display:none">
+  <div class="sec-head sec-or" onclick="toggleSec(this);if(this.classList.contains('open'))bvCharger('com')">
+    <h3>&#129534; Bulletins de salaire &mdash; vacataires (CPP LES PRINCES + CPP TECH + CPP PRO)</h3><span class="arr">&#9660;</span>
+  </div>
+  <div class="sec-body">
+    <div style="padding:8px;font-size:0.82em">
+      <div style="margin-bottom:6px">Un seul bulletin par enseignant, avec le d&eacute;tail de chaque &eacute;cole. <b>Document confidentiel.</b> Le d&eacute;tail des cours (&#128196;) ne s'imprime que pour un enseignant qui conteste.</div>
+      <div id="comBvZone">Ouverture&hellip;</div>
     </div>
   </div>
 </div>
@@ -23014,6 +23036,221 @@ function listesNiveauPdf(pfx, idx) {
   }
   doc.save((L.parFiliere ? 'LISTES_PAR_FILIERE_' : 'LISTES_PAR_NIVEAU_') + ecole.replace(/\s+/g, '_') + (idx < 0 ? '' : '_' + liste[0]) + '_' + dateTxt.replace(/\//g, '-') + '.pdf');
   if (res) res.innerHTML = '<span style="color:#2E7D32">✅ PDF créé : ' + liste.length + (L.parFiliere ? ' filière(s), ' : ' niveau(x), ') + total + ' élève(s), ' + nb + ' page(s).</span>';
+}
+</script>
+
+
+<script>
+// ═══ 28/11/2026 — BULLETINS DE SALAIRE DES VACATAIRES (CPP LES PRINCES + CPP TECH + CPP PRO SUR UN SEUL BULLETIN) ═══
+// Espaces Directeur et Comptable de CPP LES PRINCES uniquement. Données figées par BS_FIGER_APPLIQUER :
+//   BULLETINS_VAC (1 ligne par enseignant et par école + 1 ligne TOTAL), BULLETINS_VAC_DETAIL (1 ligne par cours payé).
+// La PART FIXE n'est pas figée : elle est lue au moment de l'impression dans PERSONNEL_SALAIRES (colonne PART FIXE).
+// Pas de retenue CNPS / CMU / ITS sur les vacataires (décision du 23/10/2026). Bulletin signé par le Comptable.
+var BV = {};
+var BV_ECOLES = ['CPP LES PRINCES', 'CPP TECH', 'CPP PRO'];
+var BV_MOIS_NOMS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+function bvVisibilite() {
+  if (typeof currentStaff === 'undefined' || !currentStaff) return;
+  var ok = String(currentStaff.ecole || '').trim().toUpperCase() === 'CPP LES PRINCES';
+  ['dir', 'com'].forEach(function (p) { var el = document.getElementById(p + 'SecBulVac'); if (el) el.style.display = ok ? '' : 'none'; });
+}
+setInterval(bvVisibilite, 3000);
+function _bvN(x) { return Number(String(x == null ? '' : x).replace(/[\s\u00a0\u202f]/g, '').replace(/F|CFA/gi, '').replace(',', '.')) || 0; }   // valeurs lues en texte (dates et mois restent tels qu'affichés)
+function _bvF(n) { n = Math.round(Number(n) || 0); return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' F'; }
+function _bvMots(s) { return _ltNorm(s).replace(/[^A-Z ]/g, ' ').split(' ').filter(function (m) { return m.length > 1; }); }
+function _bvMois(m) { var p = String(m).split('-'); return p.length === 2 ? BV_MOIS_NOMS[+p[1] - 1] + ' ' + p[0] : m; }
+async function _bvLire(onglet, rendu) {
+  var id = SHEETS_IDS_2026_2027['CPP LES PRINCES'];
+  var r = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values/' + encodeURIComponent(onglet) + '?key=' + API_KEY + '&valueRenderOption=' + (rendu || 'FORMATTED_VALUE'));
+  var j = await r.json(); return (j && j.values) || [];
+}
+async function bvCharger(pfx) {
+  var z = document.getElementById(pfx + 'BvZone'); if (!z) return;
+  z.innerHTML = '⏳ Lecture des bulletins figés…';
+  try {
+    var v = await _bvLire('BULLETINS_VAC'), h = (v[0] || []).map(_ltNorm), c = function (n) { return h.indexOf(n); };
+    if (v.length < 2) { z.innerHTML = 'Aucun bulletin figé pour le moment.'; return; }
+    var mois = {};
+    v.slice(1).forEach(function (l) {
+      var m = String(l[c('MOIS_PAIE')] || ''), code = String(l[c('CODE')] || ''); if (!m || !code) return;
+      var M = mois[m] = mois[m] || { periode: l[c('PERIODE')], fige: l[c('FIGE_LE')], profs: {} };
+      var p = M.profs[code] = M.profs[code] || { code: code, nom: String(l[c('NOM')] || ''), mat: String(l[c('MATIERE')] || ''), ecoles: [], total: 0, h: 0, nb: 0 };
+      var ec = String(l[c('ECOLE')] || '');
+      if (ec === 'TOTAL') { p.total = _bvN(l[c('MONTANT')]); p.h = _bvN(l[c('HEURES')]); p.nb = _bvN(l[c('NB_COURS')]); }
+      else p.ecoles.push({ ecole: ec, nb: _bvN(l[c('NB_COURS')]), h: _bvN(l[c('HEURES')]), det: String(l[c('DETAIL_TAUX')] || ''), f: _bvN(l[c('MONTANT')]) });
+    });
+    // part fixe actuelle (PERSONNEL_SALAIRES, colonne PART FIXE) — lue en direct
+    var fixes = {};
+    try {
+      var ps = await _bvLire('PERSONNEL_SALAIRES'), k = 0;
+      var estPF = function (x) { x = _ltNorm(x).replace(/_/g, ' '); return x.indexOf('PART') >= 0 && x.indexOf('FIXE') >= 0; };
+      while (k < ps.length && !(ps[k] || []).some(estPF)) k++;
+      if (k < ps.length) {
+        var iF = -1, iN = -1; ps[k].forEach(function (x, i) { if (iF < 0 && estPF(x)) iF = i; if (iN < 0 && _ltNorm(x).indexOf('NOM') === 0) iN = i; });
+        ps.slice(k + 1).forEach(function (l) { var mt = _bvN(l[iF]); if (mt > 0 && l[iN]) fixes[_bvMots(l[iN]).join(' ')] = (fixes[_bvMots(l[iN]).join(' ')] || 0) + mt; });
+      }
+    } catch (e) {}
+    BV[pfx] = { mois: mois, fixes: fixes, detail: null };
+    var ms = Object.keys(mois).sort().reverse();
+    z.innerHTML = 'Mois de paie : <select id="' + pfx + 'BvMois" onchange="bvListe(\'' + pfx + '\')" style="padding:4px">' + ms.map(function (m) { return '<option value="' + m + '">' + _bvMois(m) + '</option>'; }).join('') + '</select> '
+      + '<input id="' + pfx + 'BvCherche" oninput="bvListe(\'' + pfx + '\')" placeholder="🔎 Rechercher un nom" style="padding:4px;width:180px"> '
+      + '<button onclick="bvPdf(\'' + pfx + '\',null)" style="padding:6px 11px;border-radius:6px;border:none;background:#4A148C;color:#fff;cursor:pointer">🧾 Imprimer tous les bulletins</button>'
+      + '<div id="' + pfx + 'BvListe" style="margin-top:8px"></div><div id="' + pfx + 'BvRes"></div>';
+    bvListe(pfx);
+  } catch (e) { z.innerHTML = '<span style="color:var(--rouge)">Erreur : ' + _ltEsc(e.message) + '</span>'; }
+}
+function _bvFixe(pfx, p) {
+  var F = BV[pfx].fixes, m = _bvMots(p.nom), cle = m.join(' ');
+  if (F[cle]) return F[cle];
+  var best = 0, bn = 0; Object.keys(F).forEach(function (k) { var w = k.split(' '), n = w.filter(function (x) { return m.indexOf(x) >= 0; }).length; if (n > bn) { bn = n; best = F[k]; } });
+  return bn >= 2 ? best : 0;
+}
+function _bvProfs(pfx) {
+  var m = document.getElementById(pfx + 'BvMois').value, M = BV[pfx].mois[m];
+  return Object.keys(M.profs).map(function (k) { var p = M.profs[k]; p.fixe = _bvFixe(pfx, p); p.net = p.total + p.fixe; return p; })
+    .sort(function (a, b) { return _ltNorm(a.nom).localeCompare(_ltNorm(b.nom), 'fr'); });
+}
+function bvListe(pfx) {
+  var d = document.getElementById(pfx + 'BvListe'); if (!d || !BV[pfx]) return;
+  var q = _ltNorm((document.getElementById(pfx + 'BvCherche') || {}).value || ''), tous = _bvProfs(pfx);
+  var L = tous.filter(function (p) { return !q || _ltNorm(p.nom).indexOf(q) >= 0 || _ltNorm(p.code).indexOf(q) >= 0; });
+  var tot = tous.reduce(function (t, p) { return t + p.net; }, 0);
+  d.innerHTML = '<div style="margin:4px 0"><b>' + tous.length + ' bulletin(s)</b> — total net à payer : <b>' + _bvF(tot) + '</b></div>'
+    + '<div class="tbl-wrap"><table><thead><tr><th>Enseignant</th><th>Écoles</th><th>Heures</th><th>Part fixe</th><th>Net à payer</th><th></th></tr></thead><tbody>'
+    + L.map(function (p) {
+        return '<tr><td><b>' + _ltEsc(p.nom) + '</b><br><span style="font-size:0.8em;color:var(--gris)">' + _ltEsc(p.code) + '</span></td><td style="font-size:0.85em">' + p.ecoles.map(function (e) { return _ltEsc(e.ecole); }).join('<br>') + '</td><td>' + p.h + 'h</td><td>' + (p.fixe ? _bvF(p.fixe) : '—') + '</td><td><b>' + _bvF(p.net) + '</b></td>'
+          + '<td style="white-space:nowrap"><button onclick="bvPdf(\'' + pfx + '\',\'' + p.code + '\')" style="padding:4px 8px;border-radius:6px;border:none;background:#1565C0;color:#fff;cursor:pointer">🧾 Bulletin</button> '
+          + '<button onclick="bvDetail(\'' + pfx + '\',\'' + p.code + '\')" style="padding:4px 8px;border-radius:6px;border:1px solid #1565C0;background:#fff;color:#1565C0;cursor:pointer">📄 Détail des cours</button></td></tr>';
+      }).join('') + '</tbody></table></div>';
+}
+function _bvEntete(doc, titre, sousTitre) {
+  var pw = 210;
+  if (_logoCppBase64) { try { doc.addImage(_logoCppBase64, 'PNG', 13, 5, 15, 24); } catch (e) {} }
+  doc.setTextColor(0, 0, 0); doc.setFont(undefined, 'bold'); doc.setFontSize(11); doc.text("COLLÈGE PRIVÉ LES PRINCES D'ABIDJAN", pw / 2 + 8, 14, { align: 'center' });
+  doc.setFont(undefined, 'normal'); doc.setFontSize(9); doc.text('Code établissement : 054707   —   Année scolaire 2026-2027', pw / 2 + 8, 20, { align: 'center' });
+  doc.setFillColor(31, 56, 100); doc.rect(10, 31, pw - 20, 10, 'F');
+  doc.setTextColor(255, 255, 255); doc.setFont(undefined, 'bold'); doc.setFontSize(13); doc.text(titre, pw / 2, 38, { align: 'center' });
+  doc.setTextColor(0, 0, 0); doc.setFont(undefined, 'normal'); doc.setFontSize(9.5); doc.text(sousTitre, pw / 2, 47, { align: 'center' });
+}
+function _bvCase(doc, x, y, w, h, t, opt) {
+  opt = opt || {}; if (opt.fond) { doc.setFillColor.apply(doc, opt.fond); doc.rect(x, y, w, h, 'F'); }
+  doc.rect(x, y, w, h); if (t === '' || t == null) return;
+  doc.setFont(undefined, opt.gras ? 'bold' : 'normal'); doc.setFontSize(opt.fs || 9);
+  t = String(t); while (doc.getTextWidth(t) > w - 3 && t.length > 3) t = t.slice(0, -1);
+  var al = opt.al || 'left', tx = al === 'right' ? x + w - 1.5 : (al === 'center' ? x + w / 2 : x + 1.5);
+  doc.text(t, tx, y + h / 2 + 1.2, { align: al });
+}
+var BV_SMIG = 75000, BV_TRANSPORT = 30000;
+function _bvIts(base) {   // ITS barème 2024 (Ordonnance 2023-719), mensuel, 1 part (pas de RICF)
+  var T = [[75000, 0], [240000, 0.16], [800000, 0.21], [2400000, 0.24], [8000000, 0.28], [Infinity, 0.32]], bas = 0, its = 0;
+  T.forEach(function (t) { if (base > bas) its += (Math.min(base, t[0]) - bas) * t[1]; bas = t[0]; });
+  return Math.round(its);
+}
+function _bvElements(brut) {   // prime de transport incluse dans le montant (net inchangé), retirée si le salaire de base passe sous le SMIG
+  if (brut < BV_SMIG) return { smig: false };
+  var tr = brut - BV_TRANSPORT >= BV_SMIG ? BV_TRANSPORT : 0, base = brut - tr;
+  return { smig: true, base: base, transport: tr, cnps: Math.round(base * 0.063), cmu: 500, its: _bvIts(base) };
+}
+function _bvBulletin(doc, p, mois, periode) {
+  var pw = 210;
+  _bvEntete(doc, 'BULLETIN DE SALAIRE — ' + _bvMois(mois).toUpperCase(), 'Période de paie : ' + (periode || ''));
+  var y = 53;
+  [['Nom et prénoms', p.nom], ['Code enseignant', p.code], ['Matière', p.mat || '—'], ['Contrat', 'CDD — Enseignant vacataire'], ['Employeur', 'CPP LES PRINCES (cours effectués à CPP LES PRINCES, CPP TECH et CPP PRO)']]
+    .forEach(function (r) { _bvCase(doc, 10, y, 45, 7, r[0], { gras: true, fond: [240, 240, 240] }); _bvCase(doc, 55, y, 145, 7, r[1], { gras: r[0] === 'Nom et prénoms' }); y += 7; });
+  y += 6; doc.setFont(undefined, 'bold'); doc.setFontSize(10.5); doc.text('RÉMUNÉRATION PAR ÉTABLISSEMENT', 10, y); y += 3;
+  var cols = [['Établissement', 42], ['Cours', 16], ['Heures', 18], ['Détail (heures x taux horaire)', 84], ['Montant', 30]];
+  var x = 10; cols.forEach(function (cc) { _bvCase(doc, x, y, cc[1], 8, cc[0], { gras: true, fond: [220, 230, 241], al: 'center', fs: 8.5 }); x += cc[1]; }); y += 8;
+  BV_ECOLES.forEach(function (ec) {
+    var e = p.ecoles.filter(function (z) { return z.ecole === ec; })[0];
+    var vals = e ? [ec, String(e.nb), e.h + 'h', e.det, _bvF(e.f)] : [ec, '—', '—', 'aucun cours ce mois', '0 F'];
+    x = 10; cols.forEach(function (cc, j) { _bvCase(doc, x, y, cc[1], 8, vals[j], { al: j === 0 || j === 3 ? 'left' : (j === 4 ? 'right' : 'center'), gras: j === 0, fs: j === 3 ? 8 : 9 }); x += cc[1]; }); y += 8;
+  });
+  _bvCase(doc, 10, y, 160, 8, 'Total des cours (' + p.nb + ' cours, ' + p.h + 'h)', { gras: true, fond: [245, 245, 245] }); _bvCase(doc, 170, y, 30, 8, _bvF(p.total), { gras: true, al: 'right', fond: [245, 245, 245] }); y += 8;
+  if (p.fixe) { _bvCase(doc, 10, y, 160, 8, 'Part fixe CPP LES PRINCES', { gras: true }); _bvCase(doc, 170, y, 30, 8, _bvF(p.fixe), { al: 'right', gras: true }); y += 8; }
+  // 28/11/2026 — à partir du SMIG : tous les éléments du bulletin (prime de transport, CNPS, CMU, ITS), retenues AFFICHÉES mais NON PRÉLEVÉES pour l'instant
+  var E = _bvElements(p.net);
+  if (E.smig) {
+    y += 7; doc.setFont(undefined, 'bold'); doc.setFontSize(10.5); doc.text('ÉLÉMENTS DU SALAIRE', 10, y); y += 3;
+    _bvCase(doc, 10, y, 160, 7, 'Salaire de base'); _bvCase(doc, 170, y, 30, 7, _bvF(E.base), { al: 'right' }); y += 7;
+    _bvCase(doc, 10, y, 160, 7, E.transport ? 'Prime de transport (non imposable)' : 'Prime de transport — non attribuée (salaire de base sous le SMIG)'); _bvCase(doc, 170, y, 30, 7, _bvF(E.transport), { al: 'right' }); y += 7;
+    _bvCase(doc, 10, y, 160, 7, 'SALAIRE BRUT', { gras: true, fond: [245, 245, 245] }); _bvCase(doc, 170, y, 30, 7, _bvF(p.net), { al: 'right', gras: true, fond: [245, 245, 245] }); y += 12;
+    doc.setFont(undefined, 'bold'); doc.setFontSize(9.5); doc.text('Retenues calculées — POUR INFORMATION, NON PRÉLEVÉES CE MOIS', 10, y); y += 3;
+    [['CNPS part salariale (6,3 % du salaire de base)', E.cnps], ['CMU (forfait)', E.cmu], ['ITS (barème 2024, sur le salaire de base)', E.its]].forEach(function (r) {
+      _bvCase(doc, 10, y, 160, 6.5, r[0], { fs: 8.5 }); _bvCase(doc, 170, y, 30, 6.5, _bvF(r[1]), { al: 'right', fs: 8.5 }); y += 6.5; });
+    _bvCase(doc, 10, y, 160, 6.5, 'Total des retenues calculées (non prélevé)', { gras: true, fs: 8.5 }); _bvCase(doc, 170, y, 30, 6.5, _bvF(E.cnps + E.cmu + E.its), { al: 'right', gras: true, fs: 8.5 }); y += 6.5;
+    _bvCase(doc, 10, y, 160, 6.5, 'Retenues effectivement prélevées', { fs: 8.5 }); _bvCase(doc, 170, y, 30, 6.5, '0 F', { al: 'right', fs: 8.5 }); y += 10;
+  } else {
+    _bvCase(doc, 10, y, 160, 8, 'SALAIRE BRUT'); _bvCase(doc, 170, y, 30, 8, _bvF(p.net), { al: 'right' }); y += 8;
+    _bvCase(doc, 10, y, 160, 8, 'Salaire inférieur au SMIG (75 000 F) : pas de cotisation ni d\'impôt'); _bvCase(doc, 170, y, 30, 8, '0 F', { al: 'right' }); y += 12;
+  }
+  doc.setFillColor(0, 77, 64); doc.rect(110, y, 90, 13, 'F'); doc.setTextColor(255, 255, 255); doc.setFont(undefined, 'bold'); doc.setFontSize(10);
+  doc.text('NET À PAYER', 114, y + 8.3); doc.setFontSize(14); doc.text(_bvF(p.net), 196, y + 8.6, { align: 'right' }); doc.setTextColor(0, 0, 0);
+  y += 20; doc.setFont(undefined, 'normal'); doc.setFontSize(8.5); doc.setTextColor(80, 80, 80);
+  doc.text('Montants établis à partir des cours validés dans Princes Smart School (appel et cahier de textes). Le détail de chaque cours,', 10, y);
+  doc.text('école par école (date, classe, horaire, heures, taux), est disponible auprès du Comptable en cas de contestation.', 10, y + 4.5);
+  doc.setTextColor(0, 0, 0); y += 16; doc.setFontSize(9.5);
+  doc.text('Fait à Abidjan, le ' + new Date().toLocaleDateString('fr-FR'), 10, y);
+  y += 10; doc.setFont(undefined, 'bold'); doc.text('Le Comptable', 30, y, { align: 'center' }); doc.text("L'enseignant(e)", 175, y, { align: 'center' });
+  doc.setFont(undefined, 'normal'); doc.setFontSize(8); doc.text('(signature et cachet)', 30, y + 5, { align: 'center' }); doc.text('(signature, « reçu »)', 175, y + 5, { align: 'center' });
+  doc.setFontSize(7.5); doc.setTextColor(110, 110, 110); doc.text('Document confidentiel — Bulletin de salaire ' + _bvMois(mois) + ' — ' + p.nom + ' — Princes Smart School', 10, 289); doc.setTextColor(0, 0, 0);
+}
+function _bvAssurerLogo() {   // le logo (logo_cpp.png) est chargé au démarrage ; s'il ne l'est pas encore, on l'attend (4 s maximum)
+  return new Promise(function (ok) {
+    if (_logoCppBase64) return ok();
+    var img = new Image(), fin = false, t = setTimeout(function () { if (!fin) { fin = true; ok(); } }, 4000);
+    img.crossOrigin = 'Anonymous';
+    img.onload = function () { try { var c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0); _logoCppBase64 = c.toDataURL('image/png'); } catch (e) {} if (!fin) { fin = true; clearTimeout(t); ok(); } };
+    img.onerror = function () { if (!fin) { fin = true; clearTimeout(t); ok(); } };
+    img.src = 'logo_cpp.png?v=' + Date.now();
+  });
+}
+async function bvPdf(pfx, code) {
+  if (!BV[pfx]) return; await _bvAssurerLogo(); if (!window.jspdf) { alert('Module PDF non chargé, rechargez la page.'); return; }
+  var mois = document.getElementById(pfx + 'BvMois').value, M = BV[pfx].mois[mois];
+  var L = _bvProfs(pfx).filter(function (p) { return !code || p.code === code; }); if (!L.length) return;
+  var doc = new jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  L.forEach(function (p, i) { if (i) doc.addPage(); _bvBulletin(doc, p, mois, M.periode); });
+  doc.save('BULLETIN_SALAIRE_' + (code ? L[0].nom.replace(/[^A-Za-z0-9]+/g, '_') : 'TOUS') + '_' + mois + '.pdf');
+  var r = document.getElementById(pfx + 'BvRes'); if (r) r.innerHTML = '<span style="color:#2E7D32">✅ ' + L.length + ' bulletin(s) créé(s).</span>';
+}
+async function bvDetail(pfx, code) {
+  var r = document.getElementById(pfx + 'BvRes'); if (!BV[pfx]) return;
+  if (!window.jspdf) { alert('Module PDF non chargé, rechargez la page.'); return; }
+  var mois = document.getElementById(pfx + 'BvMois').value, p = _bvProfs(pfx).filter(function (x) { return x.code === code; })[0]; if (!p) return;
+  await _bvAssurerLogo();
+  if (!BV[pfx].detail) { if (r) r.innerHTML = '⏳ Lecture du détail des cours…'; BV[pfx].detail = await _bvLire('BULLETINS_VAC_DETAIL'); }
+  var v = BV[pfx].detail, h = (v[0] || []).map(_ltNorm), c = function (n) { return h.indexOf(n); };
+  var lignes = v.slice(1).filter(function (l) { return String(l[c('MOIS_PAIE')]) === mois && String(l[c('CODE')]) === code; });
+  var doc = new jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }), y, bas = 280;
+  _bvEntete(doc, 'DÉTAIL DES COURS PAYÉS — ' + _bvMois(mois).toUpperCase(), p.nom + '  (' + p.code + ')  —  ' + (BV[pfx].mois[mois].periode || ''));
+  y = 53;
+  var cols = [['Date', 22], ['Classe', 38], ['Matière', 30], ['Horaire', 28], ['Heures', 16], ['Taux', 24], ['Montant', 32]];
+  var ent = function () { var x = 10; cols.forEach(function (cc) { _bvCase(doc, x, y, cc[1], 7, cc[0], { gras: true, fond: [220, 230, 241], al: 'center', fs: 8.5 }); x += cc[1]; }); y += 7; };
+  var nouvelle = function () { doc.addPage(); doc.setFont(undefined, 'bold'); doc.setFontSize(10); doc.text('DÉTAIL DES COURS — ' + p.nom + ' (suite)', 10, 13); y = 18; };
+  var total = 0;
+  BV_ECOLES.forEach(function (ec) {
+    var L = lignes.filter(function (l) { return String(l[c('ECOLE')]) === ec; }); if (!L.length) return;
+    L.sort(function (a, b) { var A = String(a[c('DATE')]).split('/').reverse().join(''), B = String(b[c('DATE')]).split('/').reverse().join(''); return A < B ? -1 : A > B ? 1 : 0; });
+    if (y + 24 > bas) nouvelle();
+    doc.setFont(undefined, 'bold'); doc.setFontSize(10.5); doc.setTextColor(31, 56, 100); doc.text(ec + ' — ' + L.length + ' cours', 10, y + 4); doc.setTextColor(0, 0, 0); y += 6; ent();
+    var st = 0, sh = 0;
+    L.forEach(function (l) {
+      if (y + 6.5 > bas) { nouvelle(); ent(); }
+      var vals = [l[c('DATE')], l[c('CLASSE')], l[c('MATIERE')], l[c('HORAIRE')], _bvN(l[c('HEURES')]) + 'h', _bvF(_bvN(l[c('TAUX')])), _bvF(_bvN(l[c('MONTANT')]))], x = 10;
+      cols.forEach(function (cc, j) { _bvCase(doc, x, y, cc[1], 6.5, vals[j], { al: j >= 4 ? 'right' : (j === 0 || j === 3 ? 'center' : 'left'), fs: 8.5 }); x += cc[1]; });
+      y += 6.5; st += _bvN(l[c('MONTANT')]); sh += _bvN(l[c('HEURES')]);
+    });
+    _bvCase(doc, 10, y, 118, 7, 'Sous-total ' + ec, { gras: true, fond: [245, 245, 245] }); _bvCase(doc, 128, y, 16, 7, sh + 'h', { gras: true, al: 'right', fond: [245, 245, 245] });
+    _bvCase(doc, 144, y, 24, 7, '', { fond: [245, 245, 245] }); _bvCase(doc, 168, y, 32, 7, _bvF(st), { gras: true, al: 'right', fond: [245, 245, 245] });
+    y += 11; total += st;
+  });
+  if (y + 12 > bas) nouvelle();
+  _bvCase(doc, 10, y, 158, 9, 'TOTAL DES COURS PAYÉS (' + lignes.length + ' cours)', { gras: true, fond: [220, 230, 241] }); _bvCase(doc, 168, y, 32, 9, _bvF(total), { gras: true, al: 'right', fond: [220, 230, 241] });
+  if (Math.round(total) !== Math.round(p.total)) { y += 13; doc.setTextColor(198, 40, 40); doc.setFontSize(8.5); doc.text('Attention : ce total diffère du bulletin (' + _bvF(p.total) + ').', 10, y); doc.setTextColor(0, 0, 0); }
+  var nb = doc.getNumberOfPages();
+  for (var i = 1; i <= nb; i++) { doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(110, 110, 110); doc.text('Document confidentiel — Détail des cours ' + _bvMois(mois) + ' — ' + p.nom, 10, 289); doc.text('Page ' + i + ' / ' + nb, 200, 289, { align: 'right' }); doc.setTextColor(0, 0, 0); }
+  doc.save('DETAIL_COURS_' + p.nom.replace(/[^A-Za-z0-9]+/g, '_') + '_' + mois + '.pdf');
+  if (r) r.innerHTML = '<span style="color:#2E7D32">✅ Détail des cours de ' + _ltEsc(p.nom) + ' : ' + lignes.length + ' cours, ' + _bvF(total) + '.</span>';
 }
 </script>
 
