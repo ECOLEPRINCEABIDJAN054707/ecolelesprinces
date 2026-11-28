@@ -22882,7 +22882,8 @@ async function listesCharger(pfx, ecole) {
     z.innerHTML = '<div style="margin:4px 0"><b>' + _ltEsc(ecole) + '</b> — ' + ordre.length + ' classe(s), ' + tot + ' élève(s). Choisissez :</div>'
       + '<button onclick="listesPdf(\'' + pfx + '\',-1)" style="padding:6px 11px;margin:2px;border-radius:6px;border:none;background:#4A148C;color:#fff;cursor:pointer">🖨️ Toutes les classes (' + ordre.length + ')</button><br>'
       + ordre.map(function (c, i) { return '<button onclick="listesPdf(\'' + pfx + '\',' + i + ')" style="padding:4px 8px;margin:2px;border-radius:6px;border:1px solid var(--bleu);background:#fff;color:var(--bleu);font-size:0.95em;cursor:pointer">' + _ltEsc(c) + ' (' + cls[c].length + ')</button>'; }).join('')
-      + '<div id="' + pfx + 'ListesRes"></div>';
+      + '<div id="' + pfx + 'ListesNiv"></div><div id="' + pfx + 'ListesRes"></div>';
+    if (typeof listesNiveauBoutons === 'function') listesNiveauBoutons(pfx);
   } catch (e) { z.innerHTML = '<span style="color:var(--rouge)">Erreur : ' + _ltEsc(e.message) + '</span>'; }
 }
 function listesPdf(pfx, idx) {
@@ -22930,6 +22931,89 @@ function listesPdf(pfx, idx) {
   });
   doc.save((avecTel ? 'CONTACTS_PARENTS_' : '') + 'LISTES_DE_CLASSE_' + ecole.replace(/\s+/g, '_') + (idx < 0 ? '' : '_' + liste[0].replace(/\s+/g, '_')) + '_' + dateTxt.replace(/\//g, '-') + '.pdf');
   if (res) res.innerHTML = '<span style="color:#2E7D32">✅ PDF' + (avecTel ? ' avec contacts parents' : '') + ' créé : ' + liste.length + ' classe(s), ' + total + ' élève(s).</span>';
+}
+</script>
+
+
+<script>
+// ═══ 28/11/2026 — LISTES DES ÉLÈVES PAR NIVEAU (ORDRE ALPHABÉTIQUE) — TOUTES LES ÉCOLES PSS ═══
+// Espaces Directeur / Comptable / Éducateur, dans la section « Listes de classe à imprimer ».
+// Toutes les classes d'un même niveau (ex. 6EME 1, 6EME 2…) réunies, élèves triés A → Z.
+// Colonnes : N° | MATRICULE | NOM ET PRÉNOMS | CLASSE | STATUT | SEXE | OBSERVATION — aucun numéro de téléphone.
+function _lnNiveau(cl) {
+  var c = _ltNorm(cl), m = c.match(/^(PSA|MSA|GSA|PS|MS|GS|MATERNELLE ?\d?|CP ?\d|CE ?\d|CM ?\d|\dEME|2NDE|1ERE|TLE|\dA)(?![A-Z])/);
+  return m ? m[1].replace(/\s+/g, '') : c.split(' ')[0];
+}
+// CPP PRO et CPP TECH : regroupement par FILIÈRE (toutes années réunies : 1A BT TOPO + 2A BT TOPO → TOPO ; 2NDE G1 + 1ERE G1 + TLE G1 → G1)
+var LN_PAR_FILIERE = { 'CPP PRO': 1, 'CPP TECH': 1 };
+function _lnFiliere(cl) {
+  var c = _ltNorm(cl).replace(/^(\dA|\dEME|2NDE|1ERE|TLE)\s*/, '').replace(/^BT\s+/, '').trim();
+  return c || _ltNorm(cl);
+}
+function listesNiveauBoutons(pfx) {
+  var L = LISTES_CACHE[pfx], d = document.getElementById(pfx + 'ListesNiv'); if (!L || !d) return;
+  var niv = {}, vus = {}, fil = !!LN_PAR_FILIERE[L.ecole]; L.parFiliere = fil;
+  L.ordre.forEach(function (c) {
+    var k = fil ? _lnFiliere(c) : _lnNiveau(c);
+    L.cls[c].forEach(function (e) {
+      var cle = k + '|' + (e.m || e.n); if (vus[cle]) return; vus[cle] = 1;
+      (niv[k] = niv[k] || []).push({ m: e.m, n: e.n, s: e.s, st: e.st, cl: c });
+    });
+  });
+  L.niv = niv; L.nivOrdre = Object.keys(niv).sort(function (a, b) { return fil ? a.localeCompare(b, 'fr') : _ltOrdre(a).localeCompare(_ltOrdre(b), 'fr', { numeric: true }); });
+  d.innerHTML = '<div style="margin:10px 0 4px;padding-top:8px;border-top:1px dashed #bbb"><b>📚 Listes des élèves par ' + (fil ? 'filière' : 'niveau') + '</b> (ordre alphabétique, ' + (fil ? 'toutes les années de la filière réunies' : 'toutes classes du niveau réunies') + ') :</div>'
+    + '<button onclick="listesNiveauPdf(\'' + pfx + '\',-1)" style="padding:6px 11px;margin:2px;border-radius:6px;border:none;background:#00695C;color:#fff;cursor:pointer">🖨️ ' + (fil ? 'Toutes les filières' : 'Tous les niveaux') + ' (' + L.nivOrdre.length + ')</button><br>'
+    + L.nivOrdre.map(function (k, i) { return '<button onclick="listesNiveauPdf(\'' + pfx + '\',' + i + ')" style="padding:4px 8px;margin:2px;border-radius:6px;border:1px solid #00695C;background:#fff;color:#00695C;font-size:0.95em;cursor:pointer">' + _ltEsc(k) + ' (' + niv[k].length + ')</button>'; }).join('');
+}
+function listesNiveauPdf(pfx, idx) {
+  var L = LISTES_CACHE[pfx], res = document.getElementById(pfx + 'ListesRes'); if (!L || !L.niv) return;
+  if (!window.jspdf) { alert('Module PDF non chargé, rechargez la page.'); return; }
+  var ecole = L.ecole, liste = idx < 0 ? L.nivOrdre : [L.nivOrdre[idx]];
+  var doc = new jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }), pw = 210, ph = 297, total = 0, premiere = true;
+  var dateTxt = new Date().toLocaleDateString('fr-FR'), rh = 6.5, bas = ph - 16, mot = L.parFiliere ? 'FILIÈRE ' : 'NIVEAU ';
+  var cols = [['N°', 10], ['MATRICULE', 24], ['NOM ET PRÉNOMS', 64], ['CLASSE', 32], ['STATUT', 14], ['SEXE', 12], ['OBSERVATION', 34]];
+  var entete = function (y) {
+    doc.setFillColor(230, 230, 230); doc.rect(10, y, 190, 8, 'F'); doc.setFont(undefined, 'bold'); doc.setFontSize(8.5);
+    var x = 10; cols.forEach(function (cc) { doc.rect(x, y, cc[1], 8); doc.text(cc[0], x + cc[1] / 2, y + 5.3, { align: 'center' }); x += cc[1]; });
+    doc.setFont(undefined, 'normal'); doc.setFontSize(9); return y + 8;
+  };
+  var pages = [];   // [n° de page, niveau] pour le pied de page
+  liste.forEach(function (k) {
+    var el = L.niv[k].slice().sort(function (a, b) { return _ltNorm(a.n).localeCompare(_ltNorm(b.n), 'fr'); }); total += el.length;
+    var info = (typeof _islEcoleInfo === 'function') ? _islEcoleInfo(ecole, el[0] ? el[0].cl : k) : { nom: ecole, code: '' };
+    var nomOff = info.nom || ecole, code = info.code || LISTES_CODES[ecole] || '';
+    if (!premiere) doc.addPage(); premiere = false;
+    if (_logoCppBase64) { try { doc.addImage(_logoCppBase64, 'PNG', 12, 8, 20, 20); } catch (e) {} }
+    doc.setFont(undefined, 'bold'); doc.setFontSize(11); doc.text(nomOff, pw / 2 + 8, 14, { align: 'center' });
+    doc.setFont(undefined, 'normal'); doc.setFontSize(9); doc.text((code ? 'Code établissement : ' + code + '   —   ' : '') + 'Année scolaire 2026-2027', pw / 2 + 8, 20, { align: 'center' });
+    doc.setFillColor(0, 77, 64); doc.rect(10, 31, pw - 20, 10, 'F');
+    doc.setTextColor(255, 255, 255); doc.setFont(undefined, 'bold'); doc.setFontSize(14); doc.text('LISTE DES ÉLÈVES — ' + mot + k, pw / 2, 38, { align: 'center' });
+    doc.setTextColor(0, 0, 0); doc.setFontSize(9.5); doc.setFont(undefined, 'normal');
+    var g = el.filter(function (e) { return e.s === 'M'; }).length, f = el.filter(function (e) { return e.s === 'F'; }).length;
+    var aff = el.filter(function (e) { return e.st === 'AFF'; }).length, naff = el.filter(function (e) { return e.st === 'NAFF'; }).length;
+    doc.text('Effectif : ' + el.length + ' élève(s)' + (g + f ? '   —   garçons : ' + g + ', filles : ' + f : ''), 10, 47);
+    pages.push(k);
+    var y = entete(51);
+    el.forEach(function (e, i) {
+      if (y + rh > bas) { doc.addPage(); pages.push(k); doc.setFont(undefined, 'bold'); doc.setFontSize(10); doc.text(nomOff + ' — ' + mot + k + ' (suite)', 10, 13); y = entete(17); }
+      var vals = [String(i + 1), e.m, e.n, e.cl, '', e.s, ''], x = 10;   // STATUT laissé vide : rempli à la main par l'école
+      cols.forEach(function (cc, j) {
+        doc.rect(x, y, cc[1], rh);
+        var t = vals[j] || ''; doc.setFontSize(j === 3 ? 7.5 : 9); if (j === 2 && doc.getTextWidth(t) > cc[1] - 2) doc.setFontSize(7.5); if (j === 2 || j === 3) { while (doc.getTextWidth(t) > cc[1] - 2 && t.length > 3) t = t.slice(0, -1); }
+        if (t) doc.text(t, j === 2 ? x + 1.5 : x + cc[1] / 2, y + rh / 2 + 1.2, { align: j === 2 ? 'left' : 'center' });
+        x += cc[1];
+      });
+      y += rh;
+    });
+  });
+  var nb = doc.getNumberOfPages();
+  for (var p = 1; p <= nb; p++) {
+    doc.setPage(p); doc.setFontSize(8); doc.setTextColor(90, 90, 90);
+    doc.text(ecole + ' — ' + mot.toLowerCase() + (pages[p - 1] || '') + ' — édité le ' + dateTxt + ' — Princes Smart School', 10, ph - 8);
+    doc.text('Page ' + p + ' / ' + nb, pw - 10, ph - 8, { align: 'right' }); doc.setTextColor(0, 0, 0);
+  }
+  doc.save((L.parFiliere ? 'LISTES_PAR_FILIERE_' : 'LISTES_PAR_NIVEAU_') + ecole.replace(/\s+/g, '_') + (idx < 0 ? '' : '_' + liste[0]) + '_' + dateTxt.replace(/\//g, '-') + '.pdf');
+  if (res) res.innerHTML = '<span style="color:#2E7D32">✅ PDF créé : ' + liste.length + (L.parFiliere ? ' filière(s), ' : ' niveau(x), ') + total + ' élève(s), ' + nb + ' page(s).</span>';
 }
 </script>
 
